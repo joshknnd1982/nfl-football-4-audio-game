@@ -5,6 +5,7 @@ Key messages are posted straight to the hidden window while its message loop run
 keyboard from the player. The window is a plain Win32 window made through ctypes. Only WM_KEYDOWN is posted: the
 message loop's TranslateMessage makes the WM_CHAR itself (posting both would give every letter twice, B-W3).
 """
+import ctypes
 import threading
 import time
 
@@ -18,6 +19,30 @@ from nfl4.game.texts import CAPTION  # noqa: E402
 from nfl4.ui.window import GameWindow  # noqa: E402
 
 KEYS = [27, 13, 9, 32, 38, 40, 37, 39, 49, 65, 112, 113, 114, 115, 121, 16, 17, 186, 96, 8, 46]
+
+
+def possible_chars(vk: int) -> set:
+    """What a key can type on this PC's keyboard layout with no modifier, with Shift down and with Caps Lock on.
+
+    TranslateMessage builds a posted key's character from the REAL keyboard's state (TESTED in S7.1: while the owner
+    held Shift, a posted 'a' typed "A" and '1' typed "!", fixesforgames B-X18), so a test may not expect one case.
+    ToUnicodeEx with an explicit key state (flag 4: leave the keyboard state alone) gives the choices."""
+    user32 = ctypes.WinDLL("user32")
+    user32.GetKeyboardLayout.restype = ctypes.c_void_p
+    user32.ToUnicodeEx.argtypes = [ctypes.c_uint, ctypes.c_uint, ctypes.POINTER(ctypes.c_ubyte), ctypes.c_wchar_p,
+                                   ctypes.c_int, ctypes.c_uint, ctypes.c_void_p]
+    layout = user32.GetKeyboardLayout(0)
+    scan = user32.MapVirtualKeyW(vk, 0)
+    found = set()
+    for key, value in ((None, 0), (0x10, 0x80), (0x14, 0x01)):        # nothing, Shift down, Caps Lock on
+        state = (ctypes.c_ubyte * 256)()
+        if key is not None:
+            state[key] = value
+        buffer = ctypes.create_unicode_buffer(8)
+        count = user32.ToUnicodeEx(vk, scan, state, buffer, 8, 4, layout)
+        if count > 0:
+            found.add(buffer.value[:count])
+    return found
 
 
 def run_window(window, send, settle=0.3):
@@ -77,8 +102,41 @@ def test_keys_that_type_are_followed_by_their_character_and_others_by_none():
         if kind == "char":
             assert got[i - 1][0] == "key"                               # each character right after its key
             chars[got[i - 1][1]] = value
-    assert chars == {65: "a", 90: "z", 49: "1", 48: "0", 32: " ", 97: "1", 105: "9"}   # keypad types digits (D-022)
-    assert len([g for g in got if g[0] == "char"]) == 7                   # Enter, Backspace, Esc, arrows, F1, Shift: none
+    assert {65, 90, 32} <= set(chars) <= {65, 90, 49, 48, 32, 97, 105}  # Enter, Backspace, Esc, Up, F1, Shift: none
+    for vk, char in chars.items():
+        assert char in possible_chars(vk), (vk, char)                   # B-X18: the case follows the real keyboard
+    assert {"a", "A"} >= possible_chars(65) and "a" in possible_chars(65)
+    for vk, digit in ((97, "1"), (105, "9")):                           # keypad digits type digits (D-022)
+        assert chars.get(vk, digit) == digit
+
+
+@pytest.mark.window
+def test_shift_down_in_the_keyboard_state_makes_the_posted_keys_type_their_shifted_characters():
+    """The cause of the S7.1 repeat-run failures, shown on purpose (B-X18): the window thread's keyboard state, not the
+    posted message, decides the case. Only this thread's state is changed and it is put back."""
+    user32 = ctypes.WinDLL("user32")
+    saved = (ctypes.c_ubyte * 256)()
+    user32.GetKeyboardState(saved)
+    shifted = (ctypes.c_ubyte * 256)(*saved)
+    shifted[0x10] = shifted[0xA0] = 0x80          # VK_SHIFT, VK_LSHIFT down
+    shifted[0x14] = 0                             # Caps Lock off
+    got = []
+    window = GameWindow(lambda code: got.append(("key", code)), lambda: None, on_char=lambda ch: got.append(("char", ch)))
+
+    def send():
+        for vk in (65, 49):
+            win32api.PostMessage(window.handle, win32con.WM_KEYDOWN, vk, 0)
+
+    user32.SetKeyboardState(shifted)
+    try:
+        run_window(window, send)
+    finally:
+        user32.SetKeyboardState(saved)
+    chars = [value for kind, value in got if kind == "char"]
+    shifted_a = possible_chars(65) - {"a"}
+    assert got[0] == ("key", 65) and got[2] == ("key", 49)
+    assert chars[0] in shifted_a and chars[0] != "a"                       # "A": the real keyboard state decides
+    assert chars[1] in possible_chars(49) and chars[1] != "1"              # "!" on a US layout
 
 
 @pytest.mark.window
@@ -109,7 +167,10 @@ def test_typed_characters_reach_the_key_input_in_order_with_their_keys():
     for _ in range(4):
         code = keys.read_key()
         read.append((code, keys.char, keys.take_typed(0.01)))
-    assert read == [(74, "j", "j"), (79, "o", "o"), (69, "e", "e"), (38, "&", "")]   # g2 stays LCase(Chr(code))
+    # g2 stays LCase(Chr(code)); the typed character's case follows the real keyboard's Shift and Caps Lock (B-X18)
+    assert [(code, char, typed.lower()) for code, char, typed in read] == \
+           [(74, "j", "j"), (79, "o", "o"), (69, "e", "e"), (38, "&", "")]
+    assert all(typed in possible_chars(code) for code, _, typed in read[:3])
 
 
 @pytest.mark.window
