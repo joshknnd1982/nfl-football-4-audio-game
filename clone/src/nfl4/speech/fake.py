@@ -26,6 +26,7 @@ class FakeBackend(SpeechBackend):
         self.events: list[tuple[str, str]] = []  # ("speak", text), ("stop", ""), ("wait", ""), settings
         self.said: list[tuple[str, str | None, int]] = []   # (text, speaker, rate step) of every text taken
         self.genders: dict[str, str] = {}   # speaker -> the Gender attribute of its voice (role_details)
+        self.role_voices: dict[str, str] = {}   # speaker -> the voice id it resolves to (set_role_voice, role_details)
         self._end = 0.0
         self._lock = threading.Lock()
         self._clock = clock
@@ -73,13 +74,18 @@ class FakeBackend(SpeechBackend):
 
     def set_role_voice(self, role, voice_id):
         self.events.append(("role_voice", f"{role}={voice_id or ''}"))
+        if voice_id:
+            self.role_voices[role] = voice_id
+        else:
+            self.role_voices.pop(role, None)
 
     def set_role_volume(self, role, volume):
         self.events.append(("role_volume", f"{role}={volume}"))
 
     def role_details(self, role, timeout=3.0):
         from .sapi5 import VoiceDetails
-        return VoiceDetails(f"token-{role}", f"voice of {role}", self.genders.get(role, ""))
+        voice_id = self.role_voices.get(role, f"token-{role}")
+        return VoiceDetails(voice_id, f"voice of {role}", self.genders.get(role, ""))
 
     def spoken(self) -> list[str]:
         return [text for kind, text in self.events if kind == "speak"]

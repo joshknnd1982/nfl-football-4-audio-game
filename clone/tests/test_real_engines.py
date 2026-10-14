@@ -8,8 +8,10 @@ import time
 
 import pytest
 
+from nfl4.game.texts import TITLE_SPOKEN
 from nfl4.speech.nvda import NvdaBackend, dll_path
-from nfl4.speech.sapi5 import SapiBackend
+from nfl4.speech.roles import ANNOUNCER, ROLES
+from nfl4.speech.sapi5 import RoleVoice, SapiBackend
 from nfl4.speech.voices import VoiceCatalog
 
 win32com = pytest.importorskip("win32com.client")
@@ -36,7 +38,7 @@ def test_first_voice_is_sapi_item_0(silent_sapi):
 def test_speak_waits_for_real_end_of_speech(silent_sapi):
     backend, _ = silent_sapi
     start = time.monotonic()
-    backend.speak("My Brain by Josh Kennedy, inspired by Jim Kitchen.")
+    backend.speak(TITLE_SPOKEN)
     assert time.monotonic() - start < 0.1
     backend.wait_until_done()
     took = time.monotonic() - start
@@ -107,10 +109,10 @@ def test_a_voice_saved_in_settings_txt_comes_back_and_a_missing_one_falls_back(s
         pytest.skip("only one voice installed")
     store = SettingsStore(str(tmp_path))
     store.load()
-    store.settings.speech.voice_id = other.voice_id
+    store.settings.speech.voices[ANNOUNCER] = other.voice_id
     store.save()
     again = SettingsStore(str(tmp_path))
-    saved = again.load().speech.voice_id
+    saved = again.load().speech.voices[ANNOUNCER]
     backend = SapiBackend(voice_id=saved, volume=0)
     started = backend.start()
     try:
@@ -145,7 +147,7 @@ def test_rendered_speech_waits_for_the_real_end_of_speech(silent_rendered_sapi):
     if backend._player is None:
         pytest.skip("no audio device for rendered speech here")
     start = time.monotonic()
-    backend.speak("My Brain by Josh Kennedy, inspired by Jim Kitchen.")
+    backend.speak(TITLE_SPOKEN)
     assert time.monotonic() - start < 0.1
     backend.wait_until_done()
     assert 0.3 < time.monotonic() - start < 10
@@ -172,6 +174,36 @@ def test_rendered_stop_and_next_item_start_fast(silent_rendered_sapi):
         time.sleep(0.08)
     backend.stop()
     assert worst < 0.25, worst
+
+
+@pytest.mark.sapi
+def test_five_speakers_with_real_voices_speak_in_order_silently_and_report_their_gender():
+    """nfl4 S7.1 (G-S6, B-S21): the first five voices of SAPI's list as the five speakers, all at volume 0."""
+    tokens = win32com.Dispatch("SAPI.SpVoice").GetVoices("", "")
+    if tokens.Count < 2:
+        pytest.skip("fewer than two SAPI 5 voices here")
+    picks = [tokens.Item(i % tokens.Count) for i in range(len(ROLES))]
+    roles = {role: RoleVoice(str(token.Id), 0) for role, token in zip(ROLES, picks)}
+    backend = SapiBackend(render=True, roles=roles, default_role=ANNOUNCER)
+    started = backend.start()
+    if not started.ok:
+        pytest.skip(f"SAPI 5 not usable here: {started.error}")
+    try:
+        start = time.monotonic()
+        for role in ROLES:
+            backend.speak(" Hike! ", role)
+        backend.wait_until_done()
+        assert time.monotonic() - start < 60 and not backend.is_speaking()
+        assert len(backend._voices) == len({str(t.Id).lower() for t in picks})     # one object per distinct voice
+        for role, token in zip(ROLES, picks):
+            details = backend.role_details(role)
+            try:
+                gender = str(token.GetAttribute("Gender"))
+            except Exception:
+                gender = ""
+            assert details.voice_id == str(token.Id) and details.gender == gender
+    finally:
+        backend.close()
 
 
 @pytest.mark.sapi

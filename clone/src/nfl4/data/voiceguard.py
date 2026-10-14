@@ -1,16 +1,19 @@
 """Remember a voice that killed the program, so the next start cannot be killed by it again.
 This is inspired by Jim Kitchen.
 
-A SAPI 5 voice is native code running inside Brain's process. Some voices (SmoothTalker, an emulator of a 1990 DOS
-engine) can bring the whole process down, and a crash cannot be caught. If the crashing voice is the saved one, every
-later start crashes the same way and the player is locked out (owner bug 2026-10-13).
+A SAPI 5 voice is native code running inside the game's process. Some voices (SmoothTalker, an emulator of a 1990 DOS
+engine) can bring the whole process down, and a crash cannot be caught. If the crashing voice is a saved one, every
+later start crashes the same way and the player is locked out (owner bug on Brain, 2026-10-13; playbook 7.4.5).
 
 The guard is a file protocol, written before the dangerous moment and removed after it:
-- arm(voice): before a voice is opened (at start, or when the player picks one in F2), `voice_trial.txt` holds its id.
-- clear(): once the voice has spoken something to the end, or when the program closes normally, the file is removed.
+- arm(voice): before a voice is opened (the SAPI 5 backend calls it for each new voice, nfl4 has one per speaker, and
+  again when the player picks one), `voice_trial.txt` holds its id. The first voice of SAPI's list is never armed.
+- clear(voice): once that voice has made or spoken something to the end the file is removed, unless it holds another
+  voice by then; clear() with no voice (the program closes normally) always removes it.
 - recover(): at the next start, a file that is still there means the program died while the voice was in trial: the
-  voice is added to `crashed_voices.txt` and Brain starts with the default voice instead, saying so once.
-- forget(voice): picking the voice again in F2 is the player asking for another try: it leaves the list.
+  voice is added to `crashed_voices.txt`; every speaker saved with a voice on that list starts with the first voice
+  instead, and the game says so once.
+- forget(voice): picking the voice again is the player asking for another try: it leaves the list.
 Every call survives a missing or read-only folder: the guard must never be the thing that stops the game.
 """
 from __future__ import annotations
@@ -48,7 +51,16 @@ class VoiceGuard:
         except OSError as exc:
             log.debug("voice trial not recorded: %s", exc)
 
-    def clear(self) -> None:
+    def clear(self, voice_id: str | None = None) -> None:
+        """Remove the trial. With a voice: only when the trial holds that voice (another one may be on trial now)."""
+        if voice_id:
+            try:
+                with open(self._trial, encoding="utf-8", errors="replace") as handle:
+                    held = handle.readline().strip()
+            except OSError:
+                return
+            if held.lower() != voice_id.strip().lower():
+                return
         try:
             os.remove(self._trial)
         except OSError:

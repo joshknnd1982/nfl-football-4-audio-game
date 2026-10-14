@@ -1,7 +1,8 @@
 """Spoken texts of the clone's added functions (help, settings, sounds, about, notices). This is inspired by Jim Kitchen.
 
-None of these exist in the original (spec/STRINGS.md lists them as clone additions S21 onward).
-The original's own texts stay in texts.py.
+None of these exist in the original; the original's own texts stay in texts.py. The help texts below are still the
+starter kit's (Brain's F1 to F4 menus): S7.4 rewrites them for nfl4's F9 menu (GAP_REGISTER G-K2, section 8); the
+about text and the names are nfl4's since S7.1.
 """
 from __future__ import annotations
 
@@ -35,10 +36,12 @@ HELP_LINES = (
     "and Escape goes back.",
 )
 
-ABOUT_TITLE = "About Brain"
+ABOUT_TITLE = "About NFL Football 4"
 ABOUT_LINES = (
-    f"My Brain by Josh Kennedy, inspired by Jim Kitchen. Version {VERSION}. A new version of a sound toy.",
-    "Jim Kitchen was blind from birth. He made his games free for the blind community. He died in 2015.",
+    f"NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen. Version {VERSION}. "
+    "A new version of Jim Kitchen's N. F. L. football version 4.",
+    "This is inspired by Jim Kitchen. Jim Kitchen was blind from birth. "
+    "He made his games free for the blind community. He died in 2015.",
     "This version is new code, written from a description of how his program behaves. "
     "It plays his original sound files.",
 )
@@ -133,7 +136,7 @@ def voice_chosen(name: str) -> str:
     return f"Voice set to {name}."
 
 
-VOICE_SAMPLE = "This is how Brain will speak."
+VOICE_SAMPLE = "This is how this voice will speak in N. F. L. football."
 
 
 # ----- sounds menu (F3) -----
@@ -223,7 +226,7 @@ def restored_all(result) -> str:
 
 FAILED = "Something went wrong, details are in the log."
 FAILED_BACK_TO_MENU = "Something went wrong, details are in the log. Back to the main menu."
-GIVING_UP = "Brain keeps running into the same problem and has to close. Details are in the log."
+GIVING_UP = "The game keeps running into the same problem and has to close. Details are in the log."
 
 # ----- notices at startup and at playback -----
-NO_SOUND_DEVICE = "No sound device was found, so Brain will run without sound."
+NO_SOUND_DEVICE = "No sound device was found, so the game will run without sound."

@@ -1,5 +1,5 @@
-# Brain clone: create or refresh the 64-bit and 32-bit Python environments (P6 S6.2).
-# Inspired by Jim Kitchen.
+# NFL Football 4 clone: create or refresh the 64-bit and 32-bit Python environments (the kit's recipe; nfl4 P6 made
+# them as plain commands, fixesforgames B-T29). Inspired by Jim Kitchen.
 # Needs Python 3.14 64-bit and 32-bit installed for this user (py -3.14-64, py -3.14-32).
 # Environments live in C:\Users\joshk\.kitchensinc-venvs, outside OneDrive (thousands of files)
 # and outside AppData\Local (the Claude app redirects new folders there into its private storage).
