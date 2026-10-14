@@ -76,17 +76,58 @@ class ModifierWatch:
         return False
 
 
-def unless_a_person_held_a_modifier(body, tries=5):
-    """Run a test body whose characters depend on the keyboard state. When it fails while a modifier of the real
-    keyboard was down, it runs again (after half a second); a failure with the real keyboard untouched fails at once."""
+def keyboard_snapshot() -> str:
+    """This thread's own key state (what TranslateMessage uses: the window loop runs on this thread), the physical
+    state, Caps Lock, the keyboard layout and the class of the window in front (not its title: titles can be private).
+
+    nfl4 S7.2: three repeat runs failed within three minutes with no modifier physically held (the watch saw none): in
+    one no posted key typed anything, in another the Shift state the test had set was overwritten. The cause is not
+    known yet; a failure prints this so the next one shows it (fixesforgames B-X21)."""
+    user32 = ctypes.WinDLL("user32")
+    user32.GetKeyboardLayout.restype = ctypes.c_void_p
+    user32.GetForegroundWindow.restype = ctypes.c_void_p              # a 64-bit handle must not be cut to 32 bits
+    user32.GetClassNameW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_int]
+    names = (("shift", 0x10), ("ctrl", 0x11), ("alt", 0x12), ("lwin", 0x5B), ("rwin", 0x5C))
+    own = [name for name, vk in names if user32.GetKeyState(vk) & 0x8000]
+    physical = [name for name, vk in names if user32.GetAsyncKeyState(vk) & 0x8000]
+    caps = bool(user32.GetKeyState(0x14) & 1)
+    layout = hex((user32.GetKeyboardLayout(0) or 0) & 0xFFFFFFFF)
+    front = ctypes.create_unicode_buffer(256)
+    user32.GetClassNameW(user32.GetForegroundWindow(), front, 256)
+    return (f"this thread's keys down {own or 'none'}, physically down {physical or 'none'}, caps lock {caps}, "
+            f"layout {layout}, window in front of class {front.value!r}")
+
+
+def modifiers_released(timeout: float) -> bool:
+    """Wait until no modifier key of the real keyboard is down (True), or timeout seconds pass (False)."""
+    user32 = ctypes.WinDLL("user32")
+    end = time.monotonic() + timeout
+    while any(user32.GetAsyncKeyState(vk) & 0x8000 for vk in MODIFIER_VKS):
+        if time.monotonic() > end:
+            return False
+        time.sleep(0.05)
+    return True
+
+
+def unless_a_person_held_a_modifier(body, tries=5, release_wait=60.0):
+    """Run a test body whose characters depend on the keyboard state. Each attempt first waits until every modifier of
+    the real keyboard is up (S7.2: the owner held Ctrl in REAPER for about a minute; a person holding one longer than
+    release_wait makes the test SKIP, not fail). An attempt that fails while a modifier was down runs again; a failure
+    with the real keyboard untouched fails at once, with the keyboard state before and after in its message."""
     for attempt in range(tries):
+        if not modifiers_released(release_wait):
+            pytest.skip(f"a modifier key of the real keyboard was held for {release_wait:.0f} s (B-X21): "
+                        f"{keyboard_snapshot()}")
+        before = keyboard_snapshot()
         with ModifierWatch() as watch:
             try:
                 body()
                 return
-            except (AssertionError, IndexError):
+            except (AssertionError, IndexError) as exc:
                 if not watch.touched or attempt == tries - 1:
-                    raise
+                    raise AssertionError(f"{type(exc).__name__}: {exc}\nkeyboard before: {before}\n"
+                                         f"keyboard after: {keyboard_snapshot()}\nmodifier held during the test: "
+                                         f"{watch.touched}") from exc
         time.sleep(0.5)
 
 
