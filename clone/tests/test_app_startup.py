@@ -23,6 +23,14 @@ from nfl4.speech.sapi5 import SapiStart
 SMOOTH = r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\TokenEnums\SmoothTalker\SmoothTalker"
 
 
+@pytest.fixture(autouse=True)
+def window_stays_in_the_background(monkeypatch):
+    """The program's show() brings its window to the front and takes the keyboard; in a test that would interrupt the
+    owner's screen reader every run (and a key of the owner could land in it, B-X14). The window exists and gets the
+    posted messages either way."""
+    monkeypatch.setattr(window_module.GameWindow, "show", lambda self: False)
+
+
 class Made:
     """A fake create_speech: records what main() asked for and hands back fakes."""
 
