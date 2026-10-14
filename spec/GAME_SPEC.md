@@ -770,8 +770,8 @@ None of them changes what the player hears in the clone:
 - GUESS 0 and UNKNOWN 0 in sections 1 to 16; INFERRED 13 times, each listed with its context in `work/spec_inferred_s51.txt` and covered by 18.2.
 - Procedures: 64 of 64 done (`spec/PROCEDURE_INDEX.md` section 2).
 - Strings: 3,155 in `spec/strings_all.tsv`; 615 have no referencing procedure: BUILD-PATH 1, ERROR-MESSAGE 1, IMPORT-NAME 177, JUNK 1, JUNK-ASCII 370, PE-HEADER 3, TYPELIB-NAME 3, VB-IDENTIFIER 41, VB-PROJECT-NAME 3, VERSION-INFO 15; all are compiler, linker, type library, version, header or junk items except ERROR-MESSAGE 1, the dead text (B-P35, SOUND_DESIGN 2).
-- Gap register (its generated count line, `work/check_gap_register_s43.py`): Count: 37 entries. SETTLED 6, DEFAULT 26, NOTED 5. Entries naming each closing session: S7.2 2, S7.4 7, S7.5 3, S7.7 1, S8.1 15, S8.2 14, S8.3 5, S9.2 1 (an entry can name several; SETTLED entries that also name a session close their test there).
-- Decisions: D-001 to D-037, 37 entries, none missing or doubled (`spec/DECISIONS.md`).
+- Gap register (its generated count line, `work/check_gap_register_s43.py`): Count: 37 entries. SETTLED 6, DEFAULT 26, NOTED 5. Entries naming each closing session: S7.4 7, S7.5 3, S7.7 1, S8.1 15, S8.2 14, S8.3 5, S9.2 1 (an entry can name several; SETTLED entries that also name a session close their test there).
+- Decisions: D-001 to D-038, 38 entries, none missing or doubled (`spec/DECISIONS.md`).
 - Quirks: 60 (Q1 to Q60), each classified in 17.5.
 <!-- CHECKS-END -->
 

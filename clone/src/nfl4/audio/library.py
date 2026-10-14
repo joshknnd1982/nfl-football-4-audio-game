@@ -136,7 +136,10 @@ class SoundLibrary:
     def _resolve(self, key: str) -> Pick:
         entry = self._config.get(key)
         trim = entry.volume if entry else 1.0
-        off = bool(entry and entry.off)
+        if entry and entry.off:
+            # GAP_REGISTER G-A3, D-038: a sound switched off plays nothing and nothing waits for it (a player who wants
+            # a pause uses a silent file of that length, which plays like any other sound)
+            return Pick(key, None, "off", None, trim)
         for source, path in self._candidates(key, entry):
             try:
                 stat = os.stat(path)
@@ -148,10 +151,10 @@ class SoundLibrary:
                 self._report(("bad", path, stat.st_mtime_ns, stat.st_size),
                              f"{key}: {os.path.basename(path)} cannot be used ({exc})", speak=True)
                 continue
-            return Pick(key, sound.silenced() if off else sound, "off" if off else source, path, trim)
+            return Pick(key, sound, source, path, trim)
         fallback = generated(key)
         if fallback is not None:
-            return Pick(key, fallback.silenced() if off else fallback, "off" if off else "generated", None, trim)
+            return Pick(key, fallback, "generated", None, trim)
         if key in SOUND_IDS:
             self._report(("silent", key), f"{key}: no usable sound file, it stays silent", speak=True)
         else:

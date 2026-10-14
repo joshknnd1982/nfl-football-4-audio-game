@@ -129,8 +129,7 @@ def test_sounds_txt_can_name_another_file_trim_volume_and_switch_off(tmp_path):
     lib.refresh()
     kick, contact, bleep = lib.pick("snd_foot7"), lib.pick("snd_foot12"), lib.pick("snd_foot13")
     assert kick.source == "player" and kick.rate == 22050 and kick.volume == 0.5
-    assert contact.source == "off" and contact.sound is not None and not any(contact.sound.pcm)
-    assert contact.sound.frames == 220                       # keeps its length: the game waits as long
+    assert contact.source == "off" and contact.sound is None and contact.rate is None   # G-A3: nothing plays or waits
     assert bleep.source == "original" and bleep.volume == 0.25
 
 

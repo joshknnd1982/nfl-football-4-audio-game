@@ -45,6 +45,51 @@ def possible_chars(vk: int) -> set:
     return found
 
 
+MODIFIER_VKS = (0x10, 0x11, 0x12, 0x5B, 0x5C)          # Shift, Ctrl, Alt, the left and right Windows keys
+
+
+class ModifierWatch:
+    """Watches the REAL keyboard's modifier keys every millisecond while a test runs (GetAsyncKeyState).
+
+    nfl4 S7.2 repeat runs: three character tests failed together because Ctrl was held (Ctrl+Backspace typed 127,
+    Ctrl+Space a space, Ctrl+letters only control characters the window drops); an NVDA user presses Ctrl to stop
+    speech all the time (fixesforgames B-X21, after B-X18 for Shift)."""
+
+    def __enter__(self):
+        self.touched = False
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._watch, daemon=True)
+        self._thread.start()
+        time.sleep(0.005)                                            # a key already held counts too
+        return self
+
+    def _watch(self):
+        user32 = ctypes.WinDLL("user32")
+        while not self._stop.is_set():
+            if any(user32.GetAsyncKeyState(vk) & 0x8000 for vk in MODIFIER_VKS):
+                self.touched = True
+            time.sleep(0.001)
+
+    def __exit__(self, *exc):
+        self._stop.set()
+        self._thread.join(1.0)
+        return False
+
+
+def unless_a_person_held_a_modifier(body, tries=5):
+    """Run a test body whose characters depend on the keyboard state. When it fails while a modifier of the real
+    keyboard was down, it runs again (after half a second); a failure with the real keyboard untouched fails at once."""
+    for attempt in range(tries):
+        with ModifierWatch() as watch:
+            try:
+                body()
+                return
+            except (AssertionError, IndexError):
+                if not watch.touched or attempt == tries - 1:
+                    raise
+        time.sleep(0.5)
+
+
 def run_window(window, send, settle=0.3):
     """Run the message loop; `send` posts messages from another thread; then the window is closed."""
     def worker():
@@ -86,6 +131,10 @@ def test_posted_key_messages_arrive_as_virtual_key_codes():
 
 @pytest.mark.window
 def test_keys_that_type_are_followed_by_their_character_and_others_by_none():
+    unless_a_person_held_a_modifier(keys_that_type_are_followed_by_their_character_and_others_by_none)
+
+
+def keys_that_type_are_followed_by_their_character_and_others_by_none():
     got = []
     window = GameWindow(lambda code: got.append(("key", code)), lambda: None, on_char=lambda ch: got.append(("char", ch)))
     sent = [65, 90, 49, 48, 32, 97, 105, 13, 8, 27, 38, 112, 16]       # a z 1 0 space, keypad 1 and 9, Enter ...
@@ -112,12 +161,18 @@ def test_keys_that_type_are_followed_by_their_character_and_others_by_none():
 
 @pytest.mark.window
 def test_shift_down_in_the_keyboard_state_makes_the_posted_keys_type_their_shifted_characters():
+    unless_a_person_held_a_modifier(shift_down_in_the_keyboard_state_makes_the_posted_keys_type_their_shifted_characters)
+
+
+def shift_down_in_the_keyboard_state_makes_the_posted_keys_type_their_shifted_characters():
     """The cause of the S7.1 repeat-run failures, shown on purpose (B-X18): the window thread's keyboard state, not the
     posted message, decides the case. Only this thread's state is changed and it is put back."""
     user32 = ctypes.WinDLL("user32")
     saved = (ctypes.c_ubyte * 256)()
     user32.GetKeyboardState(saved)
     shifted = (ctypes.c_ubyte * 256)(*saved)
+    for vk in (0x11, 0xA2, 0xA3, 0x12, 0xA4, 0xA5, 0x5B, 0x5C):    # Ctrl, Alt and Windows up (B-X21)
+        shifted[vk] = 0
     shifted[0x10] = shifted[0xA0] = 0x80          # VK_SHIFT, VK_LSHIFT down
     shifted[0x14] = 0                             # Caps Lock off
     got = []
@@ -154,6 +209,10 @@ def test_a_window_without_a_character_handler_still_gets_every_key():
 
 @pytest.mark.window
 def test_typed_characters_reach_the_key_input_in_order_with_their_keys():
+    unless_a_person_held_a_modifier(typed_characters_reach_the_key_input_in_order_with_their_keys)
+
+
+def typed_characters_reach_the_key_input_in_order_with_their_keys():
     keys = KeyInput()
     window = GameWindow(keys.post, keys.close, on_char=keys.post_char)
 

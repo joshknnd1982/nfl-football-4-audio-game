@@ -80,7 +80,7 @@ When a sound file cannot be used (a player's replacement that is empty or corrup
 
 ## 8. What closes this
 
-- S7.2 (audio): the seven slots and the extra channel, the chain for all 27 IDs, `beep_exit`'s chain and checks, the notice of section 5.
+- S7.2 (audio): the seven slots and the extra channel, the chain for all 27 IDs, `beep_exit`'s chain and checks, the notice of section 5. DONE 2026-10-14 (D-038): built in `clone\src\nfl4\audio` and `game\sounds.py` and tested (the slot log on the virtual clock, the mixed samples through SDL's disk driver, the real device at volume 0); the blip's checks pass (80 ms, 880 Hz, peak 0.35, no click, deterministic, exports to a wav); "off" plays nothing and waits nothing (GAP_REGISTER G-A3).
 - S7.4 (menus and flow): the exit sequence of section 4, the crowd beds at the return to the week loop (G-A5).
 - S8.1: tests of the exit sequence, the chain, the notice.
 - S8.2 (owner playtest): the exit sounds right, no silence that confuses (G-A7), the crowd beds are back in the menus after a game.

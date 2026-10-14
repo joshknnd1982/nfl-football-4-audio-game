@@ -37,7 +37,8 @@ DEFAULT_TEXT = f"""# NFL Football 4 sounds, format {FORMAT_VERSION}. Lines start
 #
 # For more control, add a line here: the sound name, an equals sign, then settings separated by
 # semicolons. Settings: file=NAME (use another file in this folder), volume=PERCENT (0 to 200,
-# 100 is unchanged), off (this sound stays silent; the game waits as long as the sound would play).
+# 100 is unchanged), off (this sound is not played and the game does not wait for it; for a pause
+# instead, use a silent wav file as long as the pause you want).
 # Examples, remove the # to use one:
 # snd_foot7 = file=my kick.wav; volume=80
 # snd_foot13 = off

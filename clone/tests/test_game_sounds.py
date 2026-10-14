@@ -265,6 +265,24 @@ def test_a_key_typed_during_play_stays_for_the_caller(rig):
     assert rig.clock() - t0 == pytest.approx(0.4, abs=0.002) and rig.keys.code_text == str(KEY_ENTER)
 
 
+def test_a_waited_sound_switched_off_takes_no_time_and_a_silent_file_takes_its_length(tmp_path):
+    """G-A3, D-038: "off" plays nothing and waits nothing; a silent wav of the player's plays and is waited."""
+    from nfl4.audio.soundsconfig import DEFAULT_TEXT, FILE_NAME
+    from wavmaker import write
+    player = tmp_path / "sounds"
+    player.mkdir()
+    (player / FILE_NAME).write_text(DEFAULT_TEXT + "snd_foot25 = off\nfoot15 = off\n", encoding="utf-8")
+    write(player / "foot13.wav", [0.0] * 11025, rate=11025)            # one second of silence for the bleep
+    rig = Rig(sounds_dir=player, rng=ScriptedRnd([rnd_for(0, 10), rnd_for(30, 40)]))
+    t0 = rig.clock()
+    rig.sounds.play(25, 0)                                              # the Super Bowl piece, 11.5 s in the original
+    assert rig.clock() - t0 < 0.002
+    rig.sounds.celebration_sound()                                      # foot15, switched off: draws as usual, no wait
+    assert rig.clock() - t0 < 0.004 and rig.sounds.rng.drawn == 2
+    rig.sounds.play(13, 0)
+    assert rig.clock() - t0 == pytest.approx(1.0, abs=0.006)
+
+
 def test_play_of_foot2_uses_the_one_shot_slot_beside_the_crowd_bed(rig):
     """The end of an overtime period: play("2", 0) loads foot2 into the one-shot buffer; crowd 2 keeps looping."""
     rig.sounds.start_crowds()

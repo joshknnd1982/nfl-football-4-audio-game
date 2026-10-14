@@ -154,7 +154,7 @@ def test_the_last_sample_is_held_not_dropped():
 
 
 def test_every_shipped_wav_renders_at_both_extremes_without_gaining_level():
-    """All 26 files, 7 formats (B-A13), at their own rate and at the celebration extremes (floor 8000 Hz), with the
+    """All 26 files, 8 formats (B-A13), at their own rate and at the celebration extremes (floor 8000 Hz), with the
     extreme pans of foot10: exact lengths, never louder than the file."""
     for number in range(26):
         sound = load_sound_file(os.path.join(SHIPPED, f"foot{number}.wav"))

@@ -156,13 +156,16 @@ def test_pan_reaches_the_output_and_the_far_channel_is_attenuated(rig):
     assert channel_peak(pcm, 1) / channel_peak(pcm, 0) == pytest.approx(10 ** (-15 / 20), rel=0.02)
 
 
-def test_a_sound_switched_off_is_silent_and_takes_its_time(rig):
+def test_a_sound_switched_off_plays_nothing_and_takes_no_time(rig):
+    """G-A3, D-038: "off" is not a silence of the sound's length; nothing plays and nothing waits."""
     audio, output, clock, lib, beeper, tmp_path, log = rig
+    audio.play(SLOT_ONESHOT, "snd_foot0", 0, loop=True)
     (tmp_path / "player" / FILE_NAME).write_text(DEFAULT_TEXT + "snd_foot7 = off\n", encoding="utf-8")
     audio.refresh()
-    seconds = audio.play(SLOT_ONESHOT, "snd_foot7", -1500)
-    assert seconds == pytest.approx(0.6, abs=0.001) and not any(output.played[-1][1])
-    assert audio.busy(SLOT_ONESHOT) and log[-1].source == "off"
+    played = len(output.played)
+    assert audio.play(SLOT_ONESHOT, "snd_foot7", -1500) == 0.0
+    assert len(output.played) == played and not audio.busy(SLOT_ONESHOT)      # the slot's old sound is stopped too
+    assert log[-1].source == "off" and log[-1].sound_id == "snd_foot7"
 
 
 def test_the_players_trim_is_baked_into_the_samples(rig):
@@ -239,8 +242,8 @@ def test_exit_beep_switched_off_is_silent_and_skips_the_system_sound(rig):
     audio, output, clock, lib, beeper, tmp_path, log = rig
     (tmp_path / "player" / FILE_NAME).write_text(DEFAULT_TEXT + "beep_exit = off\n", encoding="utf-8")
     audio.refresh()
-    audio.beep_exit()
-    assert beeper.calls == 0 and not any(output.played[-1][1])
+    assert audio.beep_exit() is True
+    assert beeper.calls == 0 and output.played == [] and not audio.busy(EXTRA_SLOT)
 
 
 def test_system_beeper_calls_messagebeep_zero(monkeypatch):
