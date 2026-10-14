@@ -1,6 +1,6 @@
 """Generated sounds. This is inspired by Jim Kitchen.
 
-Brain needs almost none (SOUND_DESIGN.md: every silent event stays silent). The one generated
+NFL Football 4 needs almost none (SOUND_DESIGN 1 and 7, D-032: every silent event stays silent). The one generated
 sound is the fallback for the exit beep when the system's default sound cannot be played.
 A sound is a list of segments held as data (playbook 7.8); synthesis is deterministic.
 

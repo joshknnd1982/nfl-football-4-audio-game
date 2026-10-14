@@ -5,8 +5,9 @@ the way the original's Form_Load did (waits, DoEvents-style key pumping); the SA
 Closing the window ends the game thread at its next key pump or speech wait.
 Process lifetime (CLAUDE.md 0.10, playbook 7.2.1): the working directory leaves the program folder first thing, the
 window's close arms an exit deadline, and the entry points end with finish(main()), so nothing stays behind.
-P7 S7.1: speech, window, settings, the voice crash guard and the lifecycle; the sound (S7.2) and the game (S7.3 to
-S7.5) come next.
+P7 S7.1: speech, window, settings, the voice crash guard and the lifecycle. P7 S7.2: the sound layer (the mixer with
+the original's seven slots, every sound resolved once at start so a bad file is reported then, the sound procedures
+handed to the game). The game itself (S7.3 to S7.5) comes next.
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ import os
 import threading
 
 from . import VERSION
+from .audio import Audio, SoundLibrary
 from .data import paths
 from .data.lifecycle import arm_exit_deadline, leave_program_folder
 from .data.logsetup import install_exception_logging, setup_logging
@@ -23,6 +25,7 @@ from .data.voiceguard import VoiceGuard, voice_label
 from .game import texts
 from .game.flow import Game
 from .game.keys import GameQuit, KeyInput
+from .game.sounds import GameSounds
 from .speech import create_speech
 from .speech.roles import ROLES
 
@@ -73,10 +76,12 @@ def main() -> int:
         return 1
     note_voices(store, speech, settings, skipped)
     store.voice_name = lambda role: _voice_name(speech, role)   # the note above each saved voice in settings.txt
+    audio = start_audio(settings)
+    sounds = GameSounds(audio, keys, settings.audio)
 
     def game_thread():
         try:
-            Game(speech, keys, notice_sources=(store,)).run()
+            Game(speech, keys, notice_sources=(store, audio), sounds=sounds).run()
         except GameQuit:
             pass
         except Exception:
@@ -91,12 +96,26 @@ def main() -> int:
     log.debug("main loop ended")
     keys.close()
     thread.join(2.0)
+    audio.close()
     speech.close()
     guard.clear()                           # closed normally: whatever voice was in use did not crash
     for timer in deadlines:
         timer.cancel()                      # main() ends: the entry point ends the process (data/lifecycle.finish)
     log.info("NFL Football 4 clone closed")
     return 0
+
+
+def start_audio(settings) -> Audio:
+    """The mixer (or silent running when no device opens, G-A4) and every sound resolved once, so a sound file that
+    cannot be used is reported among the start-up notices (G-A6). Never raises."""
+    audio = Audio(SoundLibrary(), settings.audio)
+    try:
+        problems = audio.library.check_all()
+        if problems:
+            log.warning("sound problems at start: %s", "; ".join(problems))
+    except Exception:
+        log.exception("checking the sound files failed; each sound is tried again when it plays")
+    return audio
 
 
 def _voice_name(speech, role: str) -> str:

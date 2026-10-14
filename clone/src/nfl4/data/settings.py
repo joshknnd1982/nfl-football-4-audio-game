@@ -33,11 +33,8 @@ class GameSettings:
 @dataclass
 class AudioSettings:
     sound_level: int = 0         # wavol: 0 (full) down to -5000 hundredths of a decibel, added to every sound (GAME_SPEC 10)
-    # The kit's audio engine (Brain's) still reads the three fields below; S7.2 builds nfl4's seven sound slots on it
-    # and removes them. They are not saved in settings.txt (G-S11: nfl4 has no "sounds start right away" setting).
-    effects_volume: int = 100
-    pitch_spread: int = 20
-    start_early: bool = False
+    # S7.2 removed the kit's Brain-only fields (effects volume, pitch spread, sounds start early): nfl4's only sound
+    # level is wavol (D-038), and it has no "sounds start right away" setting (G-S11).
 
 
 @dataclass

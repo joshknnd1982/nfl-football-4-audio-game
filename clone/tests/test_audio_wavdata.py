@@ -105,20 +105,30 @@ def test_random_bytes_in_a_wav_file(tmp_path):
 
 
 def test_very_long_sound_is_refused(tmp_path):
-    path = write(tmp_path / "long.wav", [0.0] * (8000 * 31), rate=8000, bits=8)
+    """D-038: up to 120 s is accepted (a player's crowd bed may be a long loop); longer falls back."""
+    assert wavdata.MAX_SECONDS == 120.0
+    path = write(tmp_path / "long.wav", [0.0] * (2000 * 121), rate=2000, bits=8)
     with pytest.raises(SoundLoadError, match="long"):
         load_sound_file(path)
+    path = write(tmp_path / "loop.wav", [0.0] * (2000 * 119), rate=2000, bits=8)
+    assert load_sound_file(path).seconds == pytest.approx(119.0)
 
 
 def test_every_shipped_wav_loads_and_matches_the_standard_reader():
+    """All 26 of nfl4, in their 8 formats (B-A13; S7.2 corrected the count of 7 quoted there, its own list names 8)."""
     folder = os.path.join(paths.program_dir(), "assets", "sounds")
-    for number in range(1, 43):
-        path = os.path.join(folder, f"brain{number}.wav")
+    formats = set()
+    for number in range(26):
+        path = os.path.join(folder, f"foot{number}.wav")
         ours = load_sound_file(path)
         with wave.open(path, "rb") as ref:
             assert ours.rate == ref.getframerate(), number
             assert ours.frames == ref.getnframes(), number
-            assert ours.channels == ref.getnchannels() == 1, number
+            assert ours.channels == ref.getnchannels(), number
+            formats.add((ref.getnchannels(), ref.getsampwidth(), ref.getframerate()))
+    assert formats == {(1, 1, 22050), (1, 1, 11000), (1, 1, 11025), (1, 1, 8363), (1, 1, 10989),   # 8-bit mono
+                       (1, 2, 11025), (1, 2, 44100),                                             # 16-bit mono
+                       (2, 2, 22050)}                                                            # 16-bit stereo
 
 
 def test_ogg_flac_mp3_need_the_mixer_and_decode_with_it(monkeypatch):

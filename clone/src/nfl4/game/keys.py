@@ -183,3 +183,16 @@ class KeyInput:
             self._sleep(0.001)
             self.pump()
         speech.stop()
+
+    def getkey2(self, speech, ambient) -> None:
+        """The game's key wait with ambient sounds (GAME_SPEC 7, WAV_EVENT_MAP 4): st4 = now + 5, clk, then on every
+        pass DoEvents and PlayRan until a key, then stop speech. ambient: game.sounds.GameSounds."""
+        ambient.start_ambient_wait()
+        self.clk()
+        while True:
+            self.pump()
+            ambient.play_ran()
+            if self.code_text != "":
+                break
+            self._sleep(0.001)
+        speech.stop()

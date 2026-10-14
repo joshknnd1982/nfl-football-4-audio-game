@@ -1,23 +1,25 @@
-"""The audio layer the game logic uses, with a silent timed output. This is inspired by Jim Kitchen."""
+"""The audio layer: the original's DirectSound calls on seven slots, with a silent timed output and a slot log.
+This is inspired by Jim Kitchen.
+
+WAV_EVENT_MAP 1, 3, 4; GAP_REGISTER G-A1 (a new sound in a slot stops that slot's sound, different slots mix, one extra
+channel), G-A4 (no device), D-023 (volume, pan, frequency without the +1 Hz).
+"""
 import audioop
+import os
 
 import pytest
 
 from nfl4.audio import engine
-from nfl4.audio.engine import Audio
-from nfl4.audio.library import Pick, SoundLibrary, shipped_sounds_dir
-from nfl4.audio.output import BEEP_SLOT, TimedOutput
-from nfl4.audio.render import MIX_RATE, channel_peak, frames_of
+from nfl4.audio.engine import NO_SOUND_NOTICE, Audio, SlotEvent
+from nfl4.audio.library import SoundLibrary, shipped_sounds_dir
+from nfl4.audio.output import (CHANNELS, EXTRA_SLOT, SLOT_AMBIENT, SLOT_COUNT, SLOT_CROWD1, SLOT_CROWD2, SLOT_HIKE,
+                               SLOT_NOISE, SLOT_ONESHOT, SLOT_TACKLE, TimedOutput)
+from nfl4.audio.render import MIX_RATE, channel_peak, frames_of, level_gain
 from nfl4.audio.soundsconfig import DEFAULT_TEXT, FILE_NAME
-from nfl4.audio.tonegen import GENERATED_SOUNDS, generated, synthesize, write_wav, Segment
-from nfl4.audio.wavdata import Sampled, load_sound_file
+from nfl4.audio.tonegen import GENERATED_SOUNDS, Segment, generated, synthesize, write_wav
+from nfl4.audio.wavdata import load_sound_file
 from nfl4.data.settings import AudioSettings
 from wavmaker import floats, sine, write
-
-
-def peak(pcm):
-    """Largest absolute sample of rendered stereo sound."""
-    return audioop.max(pcm, 2)
 
 
 class Clock:
@@ -44,127 +46,197 @@ def rig(tmp_path):
     output = TimedOutput(clock)
     lib = SoundLibrary(shipped_sounds_dir(), str(tmp_path / "player"))
     beeper = FakeBeeper()
-    audio = Audio(lib, AudioSettings(), output=output, beeper=beeper)
-    return audio, output, clock, lib, beeper, tmp_path
+    log = []
+    audio = Audio(lib, AudioSettings(), output=output, beeper=beeper, clock=clock, slot_log=log)
+    return audio, output, clock, lib, beeper, tmp_path, log
+
+
+def test_the_seven_original_slots_and_the_extra_channel():
+    assert (SLOT_ONESHOT, SLOT_CROWD1, SLOT_CROWD2, SLOT_HIKE, SLOT_AMBIENT, SLOT_TACKLE, SLOT_NOISE) == tuple(range(7))
+    assert SLOT_COUNT == 7 and EXTRA_SLOT == 7 and CHANNELS == 8 and Audio.SLOTS == 7
 
 
 def test_play_returns_the_real_length_and_the_slot_is_busy_until_then(rig):
-    audio, output, clock, lib, *_ = rig
-    pick = lib.pick_number(36)                                       # 5,564 Hz, 1,155 bytes of 8-bit
-    seconds = audio.play(0, pick, pick.rate - 2000, 0)
-    assert seconds == pytest.approx(0.324, abs=0.001)               # GAME_SPEC 5.3
-    assert audio.busy(0)
+    audio, output, clock, lib, *_ , log = rig
+    seconds = audio.play(SLOT_TACKLE, "snd_foot6", -1500)              # 2,930 ms at its own 22,050 Hz
+    assert seconds == pytest.approx(2.930, abs=0.001)
+    assert audio.busy(SLOT_TACKLE)
     clock.now += seconds - 0.001
-    assert audio.busy(0)
+    assert audio.busy(SLOT_TACKLE)
     clock.now += 0.002
-    assert not audio.busy(0)
+    assert not audio.busy(SLOT_TACKLE)
+    assert log == [SlotEvent(100.0, SLOT_TACKLE, "play", "snd_foot6", -1500, 22050, 0, False, "original")]
 
 
-def test_stop_and_stop_all_touch_only_the_nine_slots(rig):
-    audio, output, clock, lib, *_ = rig
-    pick = lib.pick_number(9)
-    for slot in range(9):
-        audio.play(slot, pick, pick.rate + 100, 0)
-    audio.play(BEEP_SLOT, pick, pick.rate + 100, 0)
-    assert all(audio.busy(s) for s in range(9))                      # nine at once
-    audio.stop(3)
-    assert not audio.busy(3) and audio.busy(4)
-    audio.stop_all()
-    assert not any(audio.busy(s) for s in range(9))
-    assert audio.busy(BEEP_SLOT)
+def test_a_new_sound_in_a_slot_stops_that_slots_sound(rig):
+    """G-A1: PlayTackle within the first tackle's length cuts it; the slot plays only the new one."""
+    audio, output, clock, lib, *_, log = rig
+    audio.play(SLOT_TACKLE, "snd_foot4", -1500)                       # 4.3 s
+    clock.now += 2.5
+    seconds = audio.play(SLOT_TACKLE, "snd_foot11", -1500)            # 1.95 s, starts at 2.5 s
+    clock.now += seconds + 0.001
+    assert not audio.busy(SLOT_TACKLE)                                # the first one would still run until 4.3 s
+    assert [e.sound_id for e in log if e.action == "play"] == ["snd_foot4", "snd_foot11"]
 
 
-def test_a_new_sound_replaces_the_slots_old_one(rig):
-    audio, output, clock, lib, *_ = rig
-    long_pick, short_pick = lib.pick_number(36), lib.pick_number(8)
-    audio.play(0, long_pick, long_pick.rate, 0)
-    audio.play(0, short_pick, short_pick.rate, 0)
-    clock.now += 0.05
-    assert not audio.busy(0)                                         # the long one was cut, not left running
+def test_different_slots_mix(rig):
+    audio, output, clock, *_ = rig
+    audio.play(SLOT_CROWD1, "snd_foot1", -1200, loop=True)
+    audio.play(SLOT_CROWD2, "snd_foot2", -1200, loop=True)
+    audio.play(SLOT_HIKE, "snd_foot3", -1600)
+    audio.play(SLOT_NOISE, "snd_foot14", -2750, loop=True)
+    audio.play(SLOT_TACKLE, "snd_foot5", -1500)
+    audio.play(SLOT_AMBIENT, "snd_foot8", -250)
+    audio.play(SLOT_ONESHOT, "snd_foot7", -1500)
+    assert all(audio.busy(slot) for slot in range(SLOT_COUNT))
+    assert not audio.busy(EXTRA_SLOT)
+
+
+def test_a_loop_plays_until_it_is_stopped(rig):
+    audio, output, clock, *_ , log = rig
+    one_pass = audio.play(SLOT_NOISE, "snd_foot14", -2750, loop=True)
+    assert one_pass == pytest.approx(2.2, abs=0.001)
+    clock.now += 600
+    assert audio.busy(SLOT_NOISE)
+    audio.stop(SLOT_NOISE)
+    assert not audio.busy(SLOT_NOISE)
+    assert output.played[-1][3] is True and log[-1] == SlotEvent(clock.now, SLOT_NOISE, "stop")
+
+
+def test_volume_is_hundredths_of_a_decibel_and_a_playing_loop_can_change(rig):
+    audio, output, clock, *_ , log = rig
+    audio.play(SLOT_CROWD2, "snd_foot2", -1200, loop=True)
+    assert output.gains[SLOT_CROWD2] == pytest.approx(level_gain(-1200)) == pytest.approx(0.2512, abs=0.0001)
+    assert audio.volume(SLOT_CROWD2) == -1200
+    audio.set_volume(SLOT_CROWD2, -600)
+    assert output.gains[SLOT_CROWD2] == pytest.approx(10 ** (-6 / 20)) and audio.volume(SLOT_CROWD2) == -600
+    assert audio.busy(SLOT_CROWD2)                                    # the loop goes on at the new level
+    assert len(output.played) == 1                                    # not restarted
+    assert log[-1] == SlotEvent(clock.now, SLOT_CROWD2, "volume", volume=-600)
+
+
+def test_a_slot_never_set_reads_full_volume_like_directsound(rig):
+    audio, *_ = rig
+    assert [audio.volume(slot) for slot in range(CHANNELS)] == [0] * CHANNELS
+
+
+def test_the_level_is_the_mixers_and_the_samples_stay_unchanged(rig):
+    """The volume is applied by the mixer (so ramps work); the rendered samples carry only the player's trim."""
+    audio, output, *_ = rig
+    audio.play(SLOT_ONESHOT, "snd_foot12", -1000)
+    loud = output.played[-1][1]
+    audio.play(SLOT_ONESHOT, "snd_foot12", -5000)
+    assert output.played[-1][1] == loud
+    sound = load_sound_file(os.path.join(shipped_sounds_dir(), "foot12.wav"))
+    assert audioop.max(loud, 2) <= sound.peak + 2 and audioop.max(loud, 2) > sound.peak - 400
+
+
+def test_frequency_none_is_the_files_own_rate_and_a_change_scales_the_length(rig):
+    """D-023: no +1 Hz; the celebration's own rate + 100 x k changes the length by the ratio."""
+    audio, output, clock, *_ , log = rig
+    own = audio.play(SLOT_ONESHOT, "snd_foot15")                      # 44,100 Hz
+    assert log[-1].freq == 44100 and own == pytest.approx(0.127, abs=0.001)
+    faster = audio.play(SLOT_ONESHOT, "snd_foot15", -300, freq=44100 + 1900)
+    assert faster == pytest.approx(own * 44100 / 46000, abs=0.0001) and log[-1].freq == 46000
 
 
 def test_frequency_outside_directsound_range_plays_at_the_files_own_rate(rig):
-    audio, output, clock, lib, *_ = rig
-    pick = lib.pick_number(8)                                        # 44,100 Hz, 178 frames
-    own = audio.play(0, pick, None, 0)
-    assert own == pytest.approx(pick.sound.frames / pick.rate, abs=0.0001)
-    assert audio.play(0, pick, 50, 0) == pytest.approx(own)          # too low: SetFrequency would fail
-    assert audio.play(0, pick, 300_000, 0) == pytest.approx(own)
-    assert audio.play(0, pick, -2000, 0) == pytest.approx(own)       # negative walks happen after bad wavs
+    audio, output, clock, *_ , log = rig
+    seconds = audio.play(SLOT_ONESHOT, "snd_foot12", 0, freq=50)
+    assert seconds == pytest.approx(0.4, abs=0.001) and log[-1].freq == 22050
 
 
-def test_nothing_playable_plays_nothing(rig):
-    audio, output, clock, lib, *_ = rig
-    before = len(output.played)
-    assert audio.play(0, Pick("brain99", None, None, "none"), 11025, 0) == 0.0
-    assert len(output.played) == before and not audio.busy(0)
-
-
-def test_effects_volume_and_sound_trim_scale_the_level(rig):
-    audio, output, clock, lib, *_ = rig
-    pick = lib.pick_number(9)
-    audio.play(0, pick, pick.rate + 100, 0)
-    full = peak(output.played[-1][1])
-    audio.settings.effects_volume = 50
-    audio.play(0, pick, pick.rate + 100, 0)
-    assert peak(output.played[-1][1]) == pytest.approx(full / 2, abs=2)
-    trimmed = Pick(pick.sound_id, pick.sound, pick.size, pick.source, pick.path, volume=0.5)
-    audio.play(0, trimmed, pick.rate + 100, 0)
-    assert peak(output.played[-1][1]) == pytest.approx(full / 4, abs=2)
-    audio.settings.effects_volume = 0
-    audio.play(0, pick, pick.rate + 100, 0)
-    assert not any(output.played[-1][1])
-
-
-def test_default_volume_leaves_the_file_unchanged(rig):
-    audio, output, clock, lib, *_ = rig
-    pick = lib.pick_number(21)
-    audio.play(0, pick, pick.rate + 1, 0)
-    assert peak(output.played[-1][1]) == pytest.approx(pick.sound.peak * 32767 / 32768, abs=6)   # integer resampling: a few steps of 32,768
-
-
-def test_pan_reaches_the_output(rig):
-    audio, output, clock, lib, *_ = rig
-    pick = lib.pick_number(9)
-    audio.play(0, pick, pick.rate + 100, -750)
+def test_pan_reaches_the_output_and_the_far_channel_is_attenuated(rig):
+    audio, output, *_ = rig
+    audio.play(SLOT_AMBIENT, "snd_foot10", -1500, pan=1400)           # right: the left is 14 dB down
     pcm = output.played[-1][1]
-    assert channel_peak(pcm, 1) == pytest.approx(channel_peak(pcm, 0) * 10 ** (-7.5 / 20), rel=0.02)
+    assert channel_peak(pcm, 0) / channel_peak(pcm, 1) == pytest.approx(10 ** (-14 / 20), rel=0.02)
+    audio.play(SLOT_AMBIENT, "snd_foot10", -1500, pan=-1500)
+    pcm = output.played[-1][1]
+    assert channel_peak(pcm, 1) / channel_peak(pcm, 0) == pytest.approx(10 ** (-15 / 20), rel=0.02)
 
 
-def test_silent_wav_brain7_plays_as_a_silent_sound_of_its_length(rig):
-    audio, output, clock, lib, *_ = rig
-    pick = lib.pick_number(7)
-    seconds = audio.play(0, pick, pick.rate, 0)
-    assert seconds == pytest.approx(0.049, abs=0.001) and not any(output.played[-1][1])
-    assert audio.busy(0)                                             # silent but it takes its time
+def test_a_sound_switched_off_is_silent_and_takes_its_time(rig):
+    audio, output, clock, lib, beeper, tmp_path, log = rig
+    (tmp_path / "player" / FILE_NAME).write_text(DEFAULT_TEXT + "snd_foot7 = off\n", encoding="utf-8")
+    audio.refresh()
+    seconds = audio.play(SLOT_ONESHOT, "snd_foot7", -1500)
+    assert seconds == pytest.approx(0.6, abs=0.001) and not any(output.played[-1][1])
+    assert audio.busy(SLOT_ONESHOT) and log[-1].source == "off"
 
+
+def test_the_players_trim_is_baked_into_the_samples(rig):
+    audio, output, clock, lib, beeper, tmp_path, log = rig
+    audio.play(SLOT_ONESHOT, "snd_foot12", 0)
+    full = audioop.max(output.played[-1][1], 2)
+    (tmp_path / "player" / FILE_NAME).write_text(DEFAULT_TEXT + "foot12 = volume=50\n", encoding="utf-8")
+    audio.refresh()
+    audio.play(SLOT_ONESHOT, "snd_foot12", 0)
+    assert audioop.max(output.played[-1][1], 2) == pytest.approx(full / 2, abs=2)
+
+
+def test_nothing_playable_plays_nothing_and_stops_the_slot(rig):
+    audio, output, clock, lib, beeper, tmp_path, log = rig
+    audio.play(SLOT_ONESHOT, "snd_foot0", 0)
+    assert audio.play(SLOT_ONESHOT, "no_such_sound", 0) == 0.0
+    assert not audio.busy(SLOT_ONESHOT) and log[-1].source == "none"
+
+
+def test_a_render_is_kept_for_the_next_start_and_dropped_on_reload(rig):
+    audio, output, *_ = rig
+    audio.play(SLOT_TACKLE, "snd_foot6", -1500)
+    audio.play(SLOT_TACKLE, "snd_foot6", -1500)
+    assert output.played[-1][1] is output.played[-2][1]
+    audio.refresh()
+    audio.play(SLOT_TACKLE, "snd_foot6", -1500)
+    assert output.played[-1][1] is not output.played[-2][1] and output.played[-1][1] == output.played[-2][1]
+
+
+def test_stop_all_stops_the_seven_slots_and_the_extra_channel(rig):
+    audio, *_ = rig
+    for slot in range(CHANNELS):
+        audio.play(slot, "snd_foot1", 0, loop=True)
+    audio.stop_all()
+    assert not any(audio.busy(slot) for slot in range(CHANNELS))
+
+
+def test_preview_uses_the_extra_channel_only(rig):
+    audio, output, clock, lib, beeper, tmp_path, log = rig
+    assert audio.preview("snd_foot7") == "original"
+    assert audio.busy(EXTRA_SLOT) and not any(audio.busy(s) for s in range(SLOT_COUNT))
+    audio.stop_preview()
+    assert not audio.busy(EXTRA_SLOT)
+
+
+# ----- the exit beep (SOUND_DESIGN 4 step 3) -----
 
 def test_exit_beep_uses_the_system_sound_first(rig):
-    audio, output, clock, lib, beeper, _ = rig
+    audio, output, clock, lib, beeper, tmp_path, log = rig
     assert audio.beep_exit() is True
     assert beeper.calls == 1 and output.played == []
+    assert log[-1] == SlotEvent(clock.now, EXTRA_SLOT, "play", "beep_exit", source="system")
 
 
 def test_exit_beep_falls_back_to_the_generated_blip(rig):
-    audio, output, clock, lib, beeper, _ = rig
+    audio, output, clock, lib, beeper, tmp_path, log = rig
     beeper.works = False
     assert audio.beep_exit() is True
-    slot, pcm = output.played[-1]
-    assert slot == BEEP_SLOT and frames_of(pcm) == pytest.approx(0.080 * MIX_RATE, abs=2)
-    assert audio.busy(BEEP_SLOT)
+    slot, pcm, gain, loop = output.played[-1]
+    assert slot == EXTRA_SLOT and frames_of(pcm) == pytest.approx(0.080 * MIX_RATE, abs=2) and gain == 1.0
+    assert audio.busy(EXTRA_SLOT) and log[-1].source == "generated"
 
 
 def test_exit_beep_player_file_replaces_both(rig):
-    audio, output, clock, lib, beeper, tmp_path = rig
+    audio, output, clock, lib, beeper, tmp_path, log = rig
     write(tmp_path / "player" / "beep_exit.wav", sine(500, 0.05, 22050), rate=22050)
     audio.refresh()
     audio.beep_exit()
-    assert beeper.calls == 0 and output.played[-1][0] == BEEP_SLOT
+    assert beeper.calls == 0 and output.played[-1][0] == EXTRA_SLOT
     assert frames_of(output.played[-1][1]) == pytest.approx(0.05 * MIX_RATE, abs=2)
 
 
 def test_exit_beep_switched_off_is_silent_and_skips_the_system_sound(rig):
-    audio, output, clock, lib, beeper, tmp_path = rig
+    audio, output, clock, lib, beeper, tmp_path, log = rig
     (tmp_path / "player" / FILE_NAME).write_text(DEFAULT_TEXT + "beep_exit = off\n", encoding="utf-8")
     audio.refresh()
     audio.beep_exit()
@@ -180,22 +252,39 @@ def test_system_beeper_calls_messagebeep_zero(monkeypatch):
     assert engine.SystemBeeper().beep() is False
 
 
-def test_no_sound_device_means_silent_running_not_a_crash(tmp_path, monkeypatch):
+# ----- no sound device (G-A4) -----
+
+def test_no_sound_device_means_silent_running_and_one_notice(tmp_path, monkeypatch):
     def broken(buffer):
         raise engine.OutputError("no device")
     monkeypatch.setattr(engine, "PygameOutput", broken)
     audio = Audio(SoundLibrary(shipped_sounds_dir(), str(tmp_path)), AudioSettings(), beeper=FakeBeeper())
     assert audio.ok is False and "no device" in audio.error
-    pick = audio.library.pick_number(9)
-    seconds = audio.play(0, pick, pick.rate + 100, 0)
-    assert seconds > 0 and audio.busy(0)                             # timing still works for the game logic
+    seconds = audio.play(SLOT_TACKLE, "snd_foot6", -1500)
+    assert seconds > 0 and audio.busy(SLOT_TACKLE)                     # timing still works for the game logic
+    assert audio.take_notices() == [NO_SOUND_NOTICE]
+    assert audio.take_notices() == []
     audio.close()
 
 
 def test_unexpected_start_up_failure_is_also_caught(tmp_path, monkeypatch):
     monkeypatch.setattr(engine, "PygameOutput", lambda buffer: (_ for _ in ()).throw(ValueError("odd")))
     audio = Audio(SoundLibrary(shipped_sounds_dir(), str(tmp_path)), AudioSettings(), beeper=FakeBeeper())
-    assert not audio.ok
+    assert not audio.ok and audio.take_notices() == [NO_SOUND_NOTICE]
+
+
+def test_a_failing_mixer_never_raises_into_the_game(rig):
+    audio, output, *_ = rig
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("mixer gone")
+    for name in ("play", "set_gain", "busy", "stop"):
+        setattr(output, name, boom)
+    assert audio.play(SLOT_ONESHOT, "snd_foot12", 0) == 0.0
+    audio.set_volume(SLOT_CROWD2, -600)
+    assert audio.busy(SLOT_CROWD2) is False
+    audio.stop(SLOT_CROWD2)
+    audio.stop_all()
 
 
 # ----- generated sounds -----
@@ -220,7 +309,7 @@ def test_synthesis_waveforms_sweeps_and_rests():
     assert not any(sound.samples()[int(0.052 * MIX_RATE):int(0.068 * MIX_RATE)])      # the rest is silent
     with pytest.raises(ValueError):
         synthesize((Segment("flute", 1, 1, 10, 1.0),))
-    assert set(GENERATED_SOUNDS) == {"beep_exit"}
+    assert set(GENERATED_SOUNDS) == {"beep_exit"}                    # D-032: the only generated sound
 
 
 def test_generated_sound_exports_to_a_playable_wav(tmp_path):

@@ -1,13 +1,13 @@
 """The player's sounds.txt: per-sound file, volume trim, off switch. This is inspired by Jim Kitchen.
 
-Playbook 7.7 names this file sounds.json; 7.9 warns that strict JSON breaks on one missing comma,
-so Brain uses plain lines instead (DECISIONS P7 S7.2):
+Playbook 7.7 names this file sounds.json; 7.9 warns that strict JSON breaks on one missing comma, so the starter kit
+uses plain lines instead (fixesforgames B-A1; SOUND_DESIGN 6):
 
-    brain05 = file=my best bell.wav; volume=80
-    brain07 = off
+    snd_foot7 = file=my kick.wav; volume=80
+    snd_foot13 = off
 
-Lines starting with # are notes. Bad lines are skipped and counted, never fatal. A file that is
-empty, unreadable or of an unknown format version is copied aside and recreated (playbook 7.10).
+Lines starting with # are notes. Bad lines are skipped and counted, never fatal. A file that is empty, unreadable or
+of an unknown format version is copied aside and recreated (playbook 7.10).
 """
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ import re
 from dataclasses import dataclass, field
 
 from ..data.healing import read_player_text, save_damaged_copy, write_text_atomic
+from .ids import EVENT_NAMES, FOOT_COUNT, canonical_id, is_known
 
 log = logging.getLogger("nfl4.audio")
 
@@ -24,34 +25,29 @@ FORMAT_VERSION = 1
 FILE_NAME = "sounds.txt"
 MAX_VOLUME_PERCENT = 200
 
-DEFAULT_TEXT = f"""# Brain sounds, format {FORMAT_VERSION}. Lines starting with # are notes and are ignored.
+_SOUND_LIST = "\n".join(f"#   foot{n}: {EVENT_NAMES[n]}" for n in range(FOOT_COUNT))
+
+DEFAULT_TEXT = f"""# NFL Football 4 sounds, format {FORMAT_VERSION}. Lines starting with # are notes and are ignored.
 #
-# To replace a sound, put a wav file (ogg, flac and mp3 also work) in this folder and name it like
-# the sound: brain5.wav replaces sound number 5. Old Brain sound sets work as they are: copy their
-# brain1.wav, brain2.wav and so on here. Add brain43.wav, brain44.wav and so on to add sounds, but
-# keep the numbers in a row (no gaps), as Jim Kitchen's own readme says.
-# The file beep_exit.wav replaces the beep played when Brain ends without the game menu.
+# To replace a sound, put a wav file (ogg, flac and mp3 also work) in this folder and give it the
+# name of the original file: foot7.wav replaces the kick. The name snd_foot7.wav works too.
+# The file beep_exit.wav replaces the two beeps played when the game ends.
+# The sounds of the game:
+{_SOUND_LIST}
 #
 # For more control, add a line here: the sound name, an equals sign, then settings separated by
 # semicolons. Settings: file=NAME (use another file in this folder), volume=PERCENT (0 to 200,
-# 100 is unchanged), off (this sound stays silent but keeps its place). Examples, remove the #:
-# brain5 = file=my best bell.wav; volume=80
-# brain7 = off
+# 100 is unchanged), off (this sound stays silent; the game waits as long as the sound would play).
+# Examples, remove the # to use one:
+# snd_foot7 = file=my kick.wav; volume=80
+# snd_foot13 = off
 # beep_exit = volume=50
 #
-# If this file is damaged, Brain saves a copy next to it (sounds.txt.damaged1) and makes a new one.
+# The sound volume of the whole game is in the F11 menu.
+# If this file is damaged, the game saves a copy next to it (sounds.txt.damaged1) and makes a new one.
 """
 
-_ID = re.compile(r"^(brain\d+|beep_exit)$", re.IGNORECASE)
-_NUMBERED = re.compile(r"^brain0*(\d+)$")
-
-
-def canonical_id(sound_id: str) -> str:
-    """brain5, Brain05 and brain005 are one sound: brain05. Other IDs are lower-cased."""
-    key = sound_id.strip().lower()
-    match = _NUMBERED.match(key)
-    return f"brain{int(match.group(1)):02d}" if match else key
-_VERSION = re.compile(r"^#\s*Brain sounds,\s*format\s+(\d+)", re.IGNORECASE)
+_VERSION = re.compile(r"^#\s*NFL Football 4 sounds,\s*format\s+(\d+)", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -90,7 +86,7 @@ def parse(text: str) -> SoundsConfig:
             continue
         sound_id, sep, rest = line.partition("=")
         sound_id = sound_id.strip()
-        if not sep or not _ID.match(sound_id):
+        if not sep or not is_known(sound_id):
             config.problems.append(f"line {number}: '{line[:40]}' is not 'sound name = settings'")
             continue
         entry = _parse_settings(sound_id, rest, number, config.problems)
@@ -173,9 +169,10 @@ def load_or_heal(sounds_dir: str) -> tuple[SoundsConfig, list[str]]:
     return config, notices
 
 
-UNWRITABLE_NOTICE = ("sounds.txt could not be written, so Brain uses the original sound settings. "
-                     "It belongs in the sounds folder inside the Brain folder of Kitchensinc Revival in your AppData Roaming folder.")
-IN_USE_NOTICE = "sounds.txt is in use by another program, so Brain uses the original sound settings this time."
+UNWRITABLE_NOTICE = ("sounds.txt could not be written, so the game uses the original sound settings. "
+                     "It belongs in the sounds folder inside the NFL Football 4 folder of Kitchensinc Revival "
+                     "in your AppData Roaming folder.")
+IN_USE_NOTICE = "sounds.txt is in use by another program, so the game uses the original sound settings this time."
 
 
 def drop_entry(sounds_dir: str, sound_id: str) -> bool:
@@ -193,7 +190,7 @@ def drop_entry(sounds_dir: str, sound_id: str) -> bool:
     for raw in text.splitlines():
         line = raw.strip().lstrip("﻿")
         name, sep, _ = line.partition("=")
-        if sep and not line.startswith("#") and _ID.match(name.strip()) and canonical_id(name) == wanted:
+        if sep and not line.startswith("#") and is_known(name) and canonical_id(name) == wanted:
             dropped = True
             continue
         kept.append(raw)

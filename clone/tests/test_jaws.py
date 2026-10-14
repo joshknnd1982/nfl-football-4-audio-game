@@ -276,6 +276,7 @@ def test_nfl4_has_no_sound_start_setting_the_original_wait_stays():
     from nfl4.data.settings import Settings
     from nfl4.data.settingsfile import parse, render
     s = Settings.defaults()
-    assert s.audio.start_early is False and "sound_start" not in render(s)
+    assert not hasattr(s.audio, "start_early") and "sound_start" not in render(s)      # S7.2 removed the kit's field
+    assert not hasattr(s.audio, "effects_volume") and not hasattr(s.audio, "pitch_spread")
     back, problems = parse("sound_volume = -5\nsound_start = right_away\n")
-    assert back.audio.start_early is False and len(problems) == 1          # an unknown setting, reported
+    assert back.audio.sound_level == -500 and len(problems) == 1           # an unknown setting, reported

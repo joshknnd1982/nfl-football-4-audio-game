@@ -25,12 +25,13 @@ log = logging.getLogger("nfl4.game")
 
 class Game:
     def __init__(self, speech, keys: KeyInput, clock: Callable[[], float] = time.monotonic,
-                 sleep: Callable[[float], None] = time.sleep, notice_sources=()):
+                 sleep: Callable[[float], None] = time.sleep, notice_sources=(), sounds=None):
         self.speech = speech
         self.keys = keys
         self.clock = clock
         self.sleep = sleep
-        self.notice_sources = tuple(notice_sources)   # objects with take_notices() (the settings file)
+        self.notice_sources = tuple(notice_sources)   # objects with take_notices() (the settings file, the audio layer)
+        self.sounds = sounds                          # game.sounds.GameSounds: the original's sound procedures (S7.2)
 
     # ----- the original's speakers: GAME_SPEC 9.1 (S7.3 and S7.4 add say3, say4, say5, say6 and the log) -----
 

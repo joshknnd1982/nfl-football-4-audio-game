@@ -1,7 +1,9 @@
-"""The real pygame mixer, on SDL's silent dummy driver (no sound reaches the speakers).
+"""The real pygame mixer, on SDL's silent dummy driver (no sound reaches the speakers): logic only.
 This is inspired by Jim Kitchen.
 
-The dummy driver consumes audio at the real rate, so end-of-sound timing here is the mixer's own.
+fixesforgames B-A2: the dummy driver's timing is not trustworthy, so these tests check what plays where, loops, cuts,
+levels and threads; the timing is measured on the real device at volume 0 (test_audio_realdevice.py) and the mixed
+output itself with SDL's disk driver (test_audio_disk.py).
 """
 import random
 import threading
@@ -11,8 +13,9 @@ import pytest
 
 from nfl4.audio.engine import Audio
 from nfl4.audio.library import SoundLibrary, shipped_sounds_dir
-from nfl4.audio.output import BEEP_SLOT, PygameOutput, OutputError
-from nfl4.audio.render import MIX_RATE
+from nfl4.audio.output import (CHANNELS, EXTRA_SLOT, SLOT_COUNT, SLOT_CROWD2, SLOT_NOISE, SLOT_ONESHOT, SLOT_TACKLE,
+                               OutputError, PygameOutput, split_gain)
+from nfl4.audio.render import MIX_RATE, level_gain
 from nfl4.data.settings import AudioSettings
 
 pytestmark = pytest.mark.mixer
@@ -40,91 +43,119 @@ def busy_time(audio, slot, limit=1.0):
     return time.perf_counter() - start
 
 
-def test_mixer_format_and_channels(audio):
+def test_mixer_format_and_eight_channels(audio):
     import pygame
     assert pygame.mixer.get_init() == (MIX_RATE, -16, 2)
-    assert pygame.mixer.get_num_channels() == 10
+    assert pygame.mixer.get_num_channels() == CHANNELS == 8
 
 
-@pytest.mark.parametrize("number,offset", [(36, -2000), (21, 1900), (8, 1900), (13, -2000), (1, 100)])
-def test_end_of_sound_is_seen_close_to_the_computed_length(audio, number, offset):
-    """GAME_SPEC 5.4: the slot starts its next sound when the buffer reports stopped."""
-    pick = audio.library.pick_number(number)
-    expected = audio.play(0, pick, pick.rate + offset, 0)
-    heard = busy_time(audio, 0)
-    # SDL's dummy driver paces itself with coarse sleeps, so only a loose bound is reliable here;
-    # tools/audio_selfcheck.py measures the exact lag on the real device at volume 0 (silent).
-    assert expected * 0.75 - 0.01 <= heard <= expected + 0.06, (number, expected, heard)
-
-
-def test_nine_slots_and_the_beep_channel_play_at_once(audio):
-    pick = audio.library.pick_number(36)
-    for slot in range(9):
-        audio.play(slot, pick, pick.rate, 0)
-    audio.output.play(BEEP_SLOT, bytes(4410 * 4))
-    assert sum(audio.busy(s) for s in range(10)) == 10
+def test_the_seven_slots_and_the_extra_channel_play_at_once(audio):
+    for slot in range(CHANNELS):
+        audio.play(slot, "snd_foot1", -1200, loop=True)
+    assert all(audio.busy(slot) for slot in range(CHANNELS))
     audio.stop_all()
-    assert sum(audio.busy(s) for s in range(9)) == 0 and audio.busy(BEEP_SLOT)
+    assert not any(audio.busy(slot) for slot in range(CHANNELS))
 
 
 def test_stop_takes_effect_at_once(audio):
-    pick = audio.library.pick_number(36)
-    audio.play(2, pick, pick.rate - 2000, 0)
-    start = time.perf_counter()
-    audio.stop(2)
-    assert not audio.busy(2) and time.perf_counter() - start < 0.01     # the 10 ms key rule (DECISIONS P5)
+    audio.play(SLOT_TACKLE, "snd_foot4", -1500)
+    assert audio.busy(SLOT_TACKLE)
+    audio.stop(SLOT_TACKLE)
+    assert not audio.busy(SLOT_TACKLE)
 
 
 def test_a_new_sound_in_a_busy_slot_replaces_it(audio):
-    long_pick, short_pick = audio.library.pick_number(36), audio.library.pick_number(8)
-    audio.play(0, long_pick, long_pick.rate - 2000, 0)
-    seconds = audio.play(0, short_pick, short_pick.rate + 1900, 0)
-    assert busy_time(audio, 0) < seconds + 0.045                        # not the 324 ms of the first
+    import pygame
+    audio.play(SLOT_TACKLE, "snd_foot4", -1500)
+    first = pygame.mixer.Channel(SLOT_TACKLE).get_sound()
+    audio.play(SLOT_TACKLE, "snd_foot12", -1500)
+    second = pygame.mixer.Channel(SLOT_TACKLE).get_sound()
+    assert second is not first and second.get_length() == pytest.approx(0.4, abs=0.001)
+    assert busy_time(audio, SLOT_TACKLE, limit=3.0) < 3.0     # the short one ends, not foot4's 4.3 s (timing: real device)
+
+
+def test_a_loop_keeps_playing_past_its_length_until_stopped(audio):
+    audio.play(SLOT_NOISE, "snd_foot13", -2750, loop=True)                # 0.366 s per pass
+    time.sleep(0.9)
+    assert audio.busy(SLOT_NOISE)
+    audio.stop(SLOT_NOISE)
+    assert not audio.busy(SLOT_NOISE)
+
+
+def test_a_level_change_reaches_the_playing_sound_without_restarting_it(audio):
+    import pygame
+    audio.play(SLOT_CROWD2, "snd_foot2", -1200, loop=True)
+    sound = pygame.mixer.Channel(SLOT_CROWD2).get_sound()
+    chunk, _ = split_gain(level_gain(-1200))
+    assert sound.get_volume() == pytest.approx(chunk / 128)
+    audio.set_volume(SLOT_CROWD2, 0)
+    assert pygame.mixer.Channel(SLOT_CROWD2).get_sound() is sound and sound.get_volume() == 1.0
+    audio.set_volume(SLOT_CROWD2, -600)
+    assert sound.get_volume() == pytest.approx(split_gain(level_gain(-600))[0] / 128)
+
+
+def test_split_gain_reaches_any_level_closely():
+    """Chunk volume (128 steps) times the panning effect (255 steps): within half a percent down to -50 dB; below
+    that the product of two whole numbers is the limit, still within 1 dB at -79 dB, the quietest the game sets."""
+    import math
+    for hundredths in range(0, -7901, -50):           # -2900 + wavol -5000: foot10 centered at the lowest volume
+        want = level_gain(hundredths)
+        chunk, effect = split_gain(want)
+        got = chunk / 128 * effect / 255
+        assert 0 <= chunk <= 128 and 0 <= effect <= 255
+        if hundredths >= -5000:
+            assert got == pytest.approx(want, rel=0.005), hundredths
+        else:
+            assert abs(20 * math.log10(got / want)) < 1.0, hundredths
+    assert split_gain(1.0) == (128, 255) and split_gain(0.0) == (0, 0) and split_gain(2.0) == (128, 255)
+
+
+def test_master_volume_zero_makes_every_sound_silent(audio):
+    audio.output.volume = 0.0
+    audio.play(SLOT_ONESHOT, "snd_foot0", 0)
+    import pygame
+    assert pygame.mixer.Channel(SLOT_ONESHOT).get_sound().get_volume() == 0.0
+    assert audio.busy(SLOT_ONESHOT)                                       # it still takes its time
 
 
 def test_playing_from_another_thread(audio):
-    pick = audio.library.pick_number(9)
-    seen = {}
+    done = []
 
-    def run():
-        seen["seconds"] = audio.play(1, pick, pick.rate + 100, 300)
-        seen["busy"] = audio.busy(1)
-
-    thread = threading.Thread(target=run)
+    def worker():
+        audio.play(SLOT_ONESHOT, "snd_foot12", -1000)
+        done.append(audio.busy(SLOT_ONESHOT))
+    thread = threading.Thread(target=worker)
     thread.start()
     thread.join(2)
-    assert seen["busy"] and seen["seconds"] > 0.05
+    assert done == [True]
 
 
-def test_exit_beep_blip_plays_on_its_own_channel(audio):
+def test_exit_beep_blip_plays_on_the_extra_channel(audio):
     assert audio.beep_exit()
-    assert audio.busy(BEEP_SLOT) and not any(audio.busy(s) for s in range(9))
-    assert busy_time(audio, BEEP_SLOT) == pytest.approx(0.080, abs=0.045)
+    assert audio.busy(EXTRA_SLOT) and not any(audio.busy(s) for s in range(SLOT_COUNT))
+    import pygame
+    assert pygame.mixer.Channel(EXTRA_SLOT).get_sound().get_length() == pytest.approx(0.080, abs=0.001)
+    assert busy_time(audio, EXTRA_SLOT, limit=2.0) < 2.0       # it ends (its timing: the real device, B-A2)
 
 
-def test_the_slot_loop_keeps_nine_slots_going_without_gaps(audio):
-    """A rough version of GAME_SPEC 5.4 over the real mixer: restart a slot as soon as it stops."""
+def test_many_starts_on_seven_slots_never_fail(audio):
+    """Random restarts and level changes on every slot for a second, as a busy game would make them."""
     rng = random.Random(7)
-    starts = [0] * 9
-    last_end = [None] * 9
-    gaps = []
-    pool = audio.library.pool_size()
-    end = time.perf_counter() + 1.2
+    ids = [f"snd_foot{n}" for n in range(26)]
+    end = time.perf_counter() + 1.0
+    starts = 0
     while time.perf_counter() < end:
-        for slot in range(9):
-            if not audio.busy(slot):
-                now = time.perf_counter()
-                if last_end[slot] is not None:
-                    gaps.append(now - last_end[slot])
-                pick = audio.library.pick_number(rng.randint(1, pool))
-                freq = pick.rate + rng.choice([r for r in range(-20, 20) if r]) * 100
-                seconds = audio.play(slot, pick, freq, rng.randint(-100, 99) * 10)
-                last_end[slot] = now + seconds
-                starts[slot] += 1
-        time.sleep(0.001)
-    assert min(starts) >= 3 and len(gaps) > 20
-    late = [g for g in gaps if g > 0.05]
-    assert len(late) <= len(gaps) * 0.05                                # nearly every restart within 50 ms of the end
+        slot = rng.randrange(SLOT_COUNT)
+        if rng.random() < 0.3:
+            audio.set_volume(slot, rng.randrange(-5000, 1, 100))
+        else:
+            audio.play(slot, rng.choice(ids), rng.randrange(-5000, 1, 100), pan=rng.randrange(-1500, 1401, 100),
+                       freq=None if rng.random() < 0.5 else rng.randrange(8000, 46001, 100), loop=rng.random() < 0.2)
+            starts += 1
+        time.sleep(0.002)
+    assert starts > 100
+    audio.stop_all()
+    assert not any(audio.busy(slot) for slot in range(CHANNELS))
 
 
 def test_buffer_size_falls_back_when_the_first_is_refused(monkeypatch):

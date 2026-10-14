@@ -1,7 +1,7 @@
 """Reset commands for the player's sounds: one sound or all (playbook 7.7, 7.10). This is inspired by Jim Kitchen.
 
 "Restore" means: the original plays again. A sound the player put in the sounds folder under the
-sound's own name (brain5.wav, beep_exit.wav) would keep overriding it, so it is moved, never
+sound's own name (foot7.wav, snd_foot7.wav, beep_exit.wav) would keep overriding it, so it is moved, never
 deleted, into the folder "removed sounds" inside the sounds folder, where the player can take it
 back. Files named freely and pointed at by a `file=` entry stay where they are (other sounds may use
 them); with the entry gone they are simply not used.
@@ -10,18 +10,17 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 from dataclasses import dataclass, field
 
 from ..data.healing import save_backup_copy, write_text_atomic
-from .soundsconfig import DEFAULT_TEXT, FILE_NAME, canonical_id, drop_entry
+from .ids import canonical_id, file_stems, is_known
+from .soundsconfig import DEFAULT_TEXT, FILE_NAME, drop_entry
 from .wavdata import DECODER_EXTENSIONS
 
 log = logging.getLogger("nfl4.audio")
 
 REMOVED_FOLDER = "removed sounds"
 BACKUP_SUFFIX = ".before-reset"
-_ID_NAMED = re.compile(r"^(brain0*\d+|beep_exit)$", re.IGNORECASE)
 
 
 @dataclass
@@ -35,6 +34,11 @@ class RestoreResult:
         return bool(self.moved) or self.entry_removed
 
 
+def _own_name(stem: str) -> bool:
+    """A file name the library uses for a sound by itself (audio/ids.file_stems)."""
+    return is_known(stem) and stem.lower() in file_stems(canonical_id(stem))
+
+
 def _id_named_files(player_dir: str, only: str | None = None) -> list[str]:
     try:
         names = sorted(os.listdir(player_dir))
@@ -43,7 +47,7 @@ def _id_named_files(player_dir: str, only: str | None = None) -> list[str]:
     found = []
     for name in names:
         stem, ext = os.path.splitext(name)
-        if ext.lower() not in DECODER_EXTENSIONS or not _ID_NAMED.match(stem):
+        if ext.lower() not in DECODER_EXTENSIONS or not _own_name(stem):
             continue
         if only is not None and canonical_id(stem) != canonical_id(only):
             continue
@@ -88,7 +92,7 @@ def restore_sound(player_dir: str, sound_id: str) -> RestoreResult:
 
 def restore_all_sounds(player_dir: str) -> RestoreResult:
     """Every sound back to the original: sounds.txt is rewritten (the old one kept once as sounds.txt.before-reset)
-    and every own-named sound file is moved aside, the added brain43, brain44 ... included."""
+    and every own-named sound file is moved aside."""
     result = RestoreResult()
     path = os.path.join(player_dir, FILE_NAME)
     if os.path.isfile(path):

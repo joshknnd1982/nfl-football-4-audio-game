@@ -12,7 +12,11 @@ import time
 import pytest
 
 import nfl4.app as app
+import nfl4.audio.engine as audio_engine
 import nfl4.ui.window as window_module
+from nfl4.audio.engine import NO_SOUND_NOTICE
+from nfl4.audio.library import SOUND_FILE_NOTICE
+from nfl4.audio.output import OutputError
 from nfl4.data.voiceguard import CRASHED_FILE, TRIAL_FILE
 from nfl4.game import texts
 from nfl4.speech.fake import FakeBackend
@@ -21,6 +25,12 @@ from nfl4.speech.roles import ANNOUNCER, OPPONENT_PUNTER, OWN_QUARTERBACK
 from nfl4.speech.sapi5 import SapiStart
 
 SMOOTH = r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\TokenEnums\SmoothTalker\SmoothTalker"
+
+
+@pytest.fixture(autouse=True)
+def sound_on_the_dummy_driver(monkeypatch):
+    """The program starts the mixer (S7.2); here on SDL's silent dummy driver, so no test depends on a sound device."""
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
 
 
 @pytest.fixture(autouse=True)
@@ -87,6 +97,39 @@ def test_a_normal_start_says_the_title_and_closes_cleanly(tmp_path, monkeypatch)
     log_text = (tmp_path / "logs" / "nfl4.log").read_text(encoding="utf-8")
     assert "NFL Football 4 clone closed" in log_text
     assert os.path.normcase(os.getcwd()) == os.path.normcase(str(tmp_path))  # left the program folder (7.2.1)
+
+
+@pytest.mark.window
+def test_a_sound_file_that_cannot_be_used_is_reported_once_at_start(tmp_path, monkeypatch):
+    """G-A6: every sound is resolved at start, so the notice comes with the start-up notices, once."""
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    (tmp_path / "sounds").mkdir()
+    (tmp_path / "sounds" / "foot7.wav").write_bytes(b"RIFF this is not a sound")
+    (tmp_path / "sounds" / "foot12.wav").write_bytes(b"")
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
+    assert app.main() == 0
+    spoken = made.sapi.spoken()
+    assert spoken[0] == texts.TITLE_SPOKEN and spoken.count(SOUND_FILE_NOTICE) == 1
+    assert (tmp_path / "sounds" / "sounds.txt").is_file()
+    log_text = (tmp_path / "logs" / "nfl4.log").read_text(encoding="utf-8")
+    assert "foot7.wav cannot be used" in log_text and "foot12.wav cannot be used" in log_text
+
+
+@pytest.mark.window
+def test_no_sound_device_is_said_once_and_the_program_runs_on(tmp_path, monkeypatch):
+    """G-A4: the game goes on without sound and says so once."""
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+
+    def no_device(*args, **kwargs):
+        raise OutputError("no sound device")
+    monkeypatch.setattr(audio_engine, "PygameOutput", no_device)
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
+    assert app.main() == 0
+    assert made.sapi.spoken().count(NO_SOUND_NOTICE) == 1
 
 
 @pytest.mark.window

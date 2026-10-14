@@ -1,13 +1,12 @@
-"""Pitch and pan rendering. This is inspired by Jim Kitchen.
+"""Frequency, pan and level. This is inspired by Jim Kitchen.
 
-The original set DirectSound's buffer frequency and pan (GAME_SPEC 5.3, 5.5). Here a sound is
-resampled (linear interpolation, as a software mixer does) to the length it has when its buffer
-plays at the new frequency, mixed at a fixed 44,100 Hz, and pan becomes left and right gains.
+The original set each DirectSound buffer's frequency, pan and volume (WAV_EVENT_MAP 1, 3 and 4). Here a sound is
+resampled (linear interpolation, as a software mixer does) to the length it has when its buffer plays at the new
+frequency, mixed at a fixed 44,100 Hz, and pan becomes left and right gains. The volume is applied by the mixer
+(output.py), so a playing sound's level can change; `level_gain` turns DirectSound's hundredths of a decibel into it.
 
-No numpy (version 1.0.3; the user chose this on 2026-10-13 after a trial; tag brain-1.0.2-numpy is the numpy version): `audioop` (package audioop-lts, 30 KB) does the resampling
-(`ratecv`) and the gains with clipping (`tostereo`) in C. Measured against the numpy version on
-all 42 shipped wavs at ten pitches and five pans: at most 2 of 32,768 steps apart, same lengths.
-Rendered sound is 16-bit stereo PCM bytes, 4 bytes per frame.
+No numpy (rule 0.11, D-036): `audioop` (package audioop-lts, 30 KB) does the resampling (`ratecv`) and the gains with
+clipping (`tostereo`) in C. Rendered sound is 16-bit stereo PCM bytes, 4 bytes per frame.
 """
 from __future__ import annotations
 
@@ -16,15 +15,27 @@ import audioop
 from .wavdata import Sampled
 
 MIX_RATE = 44_100
-MIN_FREQ = 100            # DirectSound's documented SetFrequency limits (GAME_SPEC 5.3);
-MAX_FREQ = 200_000        # outside them the original's call failed and the pitch stayed unchanged
+MIN_FREQ = 100            # DirectSound's documented SetFrequency limits; outside them the call failed and
+MAX_FREQ = 200_000        # the frequency stayed unchanged
 MAX_PAN = 10_000
+SILENT_VOLUME = -10_000   # DSBVOLUME_MIN: hundredths of a decibel; this and below is silence
 STEREO_FRAME = 4          # bytes of one rendered frame: two 16-bit samples
 
 
+def level_gain(volume: int) -> float:
+    """DirectSound volume (hundredths of a decibel, 0 = the file unchanged) as a linear gain: 10 ** (v / 2000)
+    (D-023). 0 and above is full; -10000 and below is silence."""
+    v = int(volume)
+    if v >= 0:
+        return 1.0
+    if v <= SILENT_VOLUME:
+        return 0.0
+    return 10.0 ** (v / 2000.0)
+
+
 def pan_gains(pan: int) -> tuple[float, float]:
-    """DirectSound pan (hundredths of a dB, negative = left): only the far channel is attenuated
-    by |pan|/100 dB (DECISIONS P5)."""
+    """DirectSound pan (hundredths of a dB, negative = left): only the far channel is attenuated by |pan|/100 dB
+    (D-023, WAV_EVENT_MAP 3: SetPan)."""
     p = max(-MAX_PAN, min(MAX_PAN, int(pan)))
     far = 10.0 ** (-abs(p) / 2000.0)
     return (far, 1.0) if p > 0 else (1.0, far)
@@ -59,7 +70,8 @@ def resample(sound: Sampled, freq: int) -> bytes:
 
 
 def render_stereo(sound: Sampled, freq: int, pan: int, volume: float) -> bytes:
-    """16-bit stereo PCM bytes ready for the mixer. volume is a linear gain (1.0 = the file unchanged)."""
+    """16-bit stereo PCM bytes ready for the mixer. volume is a linear gain baked into the samples: the player's trim
+    from sounds.txt (1.0 = the file unchanged); the game's own levels are the mixer's (level_gain)."""
     pitched = resample(sound, freq)
     left_gain, right_gain = pan_gains(pan)
     scale = max(0.0, volume) * 32767.0 / 32768.0

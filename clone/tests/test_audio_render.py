@@ -6,8 +6,8 @@ from array import array
 
 import pytest
 
-from nfl4.audio.render import (MIX_RATE, channel_peak, frames_of, output_frames, pan_gains, render_stereo,
-                                resample, usable_frequency)
+from nfl4.audio.render import (MIX_RATE, channel_peak, frames_of, level_gain, output_frames, pan_gains,
+                                render_stereo, resample, usable_frequency)
 from nfl4.audio.wavdata import load_sound_file
 from nfl4.data import paths
 from wavmaker import floats, sampled, sine
@@ -57,12 +57,24 @@ def test_usable_frequency_range_is_directsounds():
 
 
 def test_real_lengths_at_the_pitch_extremes_match_the_spec():
-    """GAME_SPEC 5.3: real length 2.8 ms (brain8 at 46,000 Hz) to 324 ms (brain36 at 3,564 Hz)."""
-    b8 = load_sound_file(os.path.join(SHIPPED, "brain8.wav"))
-    b36 = load_sound_file(os.path.join(SHIPPED, "brain36.wav"))
-    assert b8.rate == 44100 and b36.rate == 5564
-    assert output_frames(b8.frames, b8.rate + 1900) / MIX_RATE == pytest.approx(0.0028, abs=0.0003)
-    assert output_frames(b36.frames, b36.rate - 2000) / MIX_RATE == pytest.approx(0.324, abs=0.001)
+    """WAV_EVENT_MAP 2 and 4: the celebration sounds play at their own rate + 100 x k (k -20 to 19, not 0), at least
+    8000 Hz: foot21 (44,100 Hz, 87 ms) is shortest at 46,000 Hz, foot19 (8,363 Hz) longest at the 8,000 Hz floor."""
+    f21 = load_sound_file(os.path.join(SHIPPED, "foot21.wav"))
+    f19 = load_sound_file(os.path.join(SHIPPED, "foot19.wav"))
+    assert f21.rate == 44100 and f19.rate == 8363
+    assert f21.seconds == pytest.approx(0.087, abs=0.001)
+    assert output_frames(f21.frames, f21.rate + 1900) / MIX_RATE == pytest.approx(0.087 * 44100 / 46000, abs=0.0005)
+    assert output_frames(f19.frames, 8000) / MIX_RATE == pytest.approx(f19.seconds * 8363 / 8000, abs=0.0001)
+
+
+def test_level_gain_is_hundredths_of_a_decibel():
+    """D-023: amplitude = 10 ^ (v / 2000); 0 and above is the file unchanged, -10000 and below is silence."""
+    assert level_gain(0) == 1.0 and level_gain(250) == 1.0
+    assert level_gain(-600) == pytest.approx(10 ** (-6 / 20))
+    assert level_gain(-1200) == pytest.approx(0.2512, abs=0.0001)
+    assert level_gain(-2750) == pytest.approx(0.0422, abs=0.0001)
+    assert level_gain(-7900) == pytest.approx(10 ** (-79 / 20))         # the quietest the game sets: -2900 - 5000
+    assert level_gain(-10000) == 0.0 and level_gain(-12000) == 0.0
 
 
 def test_pitch_changes_by_the_frequency_ratio():
@@ -142,11 +154,12 @@ def test_the_last_sample_is_held_not_dropped():
 
 
 def test_every_shipped_wav_renders_at_both_extremes_without_gaining_level():
-    for number in range(1, 43):
-        sound = load_sound_file(os.path.join(SHIPPED, f"brain{number}.wav"))
-        for freq in (sound.rate - 2000, sound.rate + 1900):
-            if not usable_frequency(freq):
-                continue
-            pcm = render_stereo(sound, freq, 0, 1.0)
-            assert len(pcm) % 4 == 0 and len(pcm) > 0
-            assert audioop.max(pcm, 2) <= sound.peak + 2, (number, freq)
+    """All 26 files, 7 formats (B-A13), at their own rate and at the celebration extremes (floor 8000 Hz), with the
+    extreme pans of foot10: exact lengths, never louder than the file."""
+    for number in range(26):
+        sound = load_sound_file(os.path.join(SHIPPED, f"foot{number}.wav"))
+        for freq in (sound.rate, max(8000, sound.rate - 2000), sound.rate + 1900):
+            for pan in (0, -1500, 1400):
+                pcm = render_stereo(sound, freq, pan, 1.0)
+                assert frames_of(pcm) == output_frames(sound.frames, freq), (number, freq)
+                assert audioop.max(pcm, 2) <= sound.peak + 2, (number, freq, pan)

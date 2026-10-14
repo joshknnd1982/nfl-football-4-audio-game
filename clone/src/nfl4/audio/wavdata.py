@@ -4,8 +4,8 @@ Any rate, depth, channel count (1 or 2) and length is accepted (playbook 7.7); e
 unreadable or very long files raise SoundLoadError so the caller can fall back to the next
 choice in the resolution chain. Wav files are parsed here (PCM 8/16/24/32 bit, float,
 WAVE_FORMAT_EXTENSIBLE); other wav codecs and ogg, flac and mp3 go through pygame's decoder,
-which hands back the mixer's own rate (44,100 Hz), so for those files the pitch step of
-GAME_SPEC 5.3 is relative to 44,100 Hz instead of the file's own rate.
+which hands back the mixer's own rate (44,100 Hz), so for those files the celebration sounds'
+pitch step (own rate + 100 x k, WAV_EVENT_MAP 4) is relative to 44,100 Hz instead of the file's own rate.
 
 No numpy (version 1.0.3; the user chose this on 2026-10-13 after a trial; numpy was 28 MB of the install; tag brain-1.0.2-numpy is the numpy version): samples are plain bytes of
 16-bit PCM and the sample math is `audioop` (the package audioop-lts, 30 KB, because Python 3.13
@@ -21,7 +21,8 @@ from array import array
 from dataclasses import dataclass
 
 MAX_FILE_BYTES = 64 * 1024 * 1024
-MAX_SECONDS = 30.0            # "very long" files fall back (7.7); the shipped wavs are at most 250 ms
+MAX_SECONDS = 120.0           # "very long" files fall back (7.7); the longest shipped wav is foot25, 11.5 s; a
+                              # player's crowd bed may be a long loop (D-038)
 MAX_RATE = 384_000
 DECODER_EXTENSIONS = (".wav", ".ogg", ".flac", ".mp3")   # lookup order for player files
 
