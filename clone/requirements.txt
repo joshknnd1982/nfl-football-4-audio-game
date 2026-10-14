@@ -1,0 +1,9 @@
+# Brain clone runtime and build dependencies (P6 S6.2, 2026-10-12).
+# Python 3.14.8, installed twice: 64-bit and 32-bit (playbook 7.1, 7.2).
+# Install into each environment with: python -m pip install -r requirements.txt
+pygame-ce==2.5.8
+audioop-lts==0.2.2
+pywin32==312
+pyinstaller==6.22.3
+pytest==9.1.1
+pefile==2024.8.26

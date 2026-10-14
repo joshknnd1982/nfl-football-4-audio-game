@@ -1,0 +1,25 @@
+My Brain by Josh Kennedy, inspired by Jim Kitchen
+Version 1.0.3
+
+This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many free games for the blind community. He died in 2015. My Brain is a sound toy: you choose how many sounds play at once and how they pan across your speakers, and random sounds then play at random pitch until you press a key. This clone is new code written from a description of how his program behaves. It plays his original sound files, which are included on the maintainer's own responsibility: Jim Kitchen gave Josh Kennedy permission to use his wav files, but the original email is lost. A rights holder can ask for the files to be removed and they will be.
+
+How to play
+- Press a number from 1 to 9 for the number of sounds at once.
+- Press Up or Down to choose how the sounds pan, then Enter. Any key stops the sounds. Escape leaves the program.
+- F1 is help, F2 speech settings, F3 sounds, F4 about.
+
+Speech
+My Brain speaks through NVDA or JAWS when one is running (setting: automatic, NVDA only or JAWS only), or through any Windows SAPI 5 voice, which is the default. Pick the voice, rate, volume and pitch in F2.
+
+Where things go
+- The program goes in the folder you choose in this installer. Per-user install is the default and needs no administrator rights.
+- Your settings, your own sounds and the log are in your AppData Roaming folder, in Kitchensinc Revival, then Brain. The installer never changes them, and installing a newer version keeps them.
+- Uninstalling removes the whole program folder, closing My Brain first if it is running. It asks whether to delete your settings, own sounds and log too. The default is to keep them. Put your own sounds in the Brain folder in AppData, not in the program folder, because the program folder is removed completely.
+
+Windows SmartScreen
+This installer is not code-signed, because signing costs money. Windows may say it protected your PC. Choose "More info", then "Run anyway".
+
+License
+The program code is under the MIT License. Jim Kitchen's sound files are not. The license text was on the page before this one and is also in LICENSE.txt in the program folder; SOUNDS_NOTICE.txt there explains the sound files. Third-party parts are listed in THIRD_PARTY_NOTICES.txt in the program folder.
+
+Source code and updates: https://github.com/joshknnd1982

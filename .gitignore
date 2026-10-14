@@ -1,0 +1,27 @@
+# Original program files (section 10): never committed. Only the wavs, copied into clone/assets/sounds, are shipped.
+/original/
+/football.exe
+/football.txt
+/foot*.wav
+# Original-derived working material, working notes and the maintainer's private playbook copies
+/extracted/
+/observations/
+/work/
+/CLAUDE.md
+/playbook-*.md
+/NEXT_PROMPT.txt
+/PROJECT_STATE.md
+/SESSION_LOG.md
+# Build output and release files (attached to the GitHub release, not committed)
+/release/*.exe
+/release/*.zip
+/release/build/
+/release/build_manifest_*.txt
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+/release/checksums.txt
+/release/nfl4-portable-*/
+/fixesforgames.md

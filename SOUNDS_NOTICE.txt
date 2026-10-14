@@ -1,0 +1,8 @@
+My Brain by Josh Kennedy, inspired by Jim Kitchen
+Notice about the sound files and the license
+
+The MIT License in the file LICENSE covers the new program code, tests and documents written for this clone. That code was written from a description of how Jim Kitchen's original program behaves and contains none of his program code.
+
+It does not cover the 42 sound files in assets\sounds. Those are Jim Kitchen's original wav files. He was blind from birth, made his games free for the blind community, and died in 2015. His permission to use the wav files was given to Josh Kennedy; the original email is lost, and a later phone call was not recorded. They are included on the maintainer's own responsibility. If a rights holder asks for them to be removed, they will be removed.
+
+Third-party parts keep their own licenses: see THIRD_PARTY_NOTICES.txt.

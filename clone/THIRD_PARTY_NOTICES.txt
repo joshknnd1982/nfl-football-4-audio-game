@@ -1,0 +1,25 @@
+My Brain by Josh Kennedy, inspired by Jim Kitchen
+Third-party parts that ship inside the program folder
+
+These parts are used unmodified and keep their own licenses. Versions are those of the 1.0.0 build.
+
+NVDA Controller Client 2026.2, NV Access Limited. License: GNU LGPL 2.1.
+  Two small DLLs, x86 and x64 (nvdaControllerClient.dll), loaded so Brain can speak through NVDA.
+  License text: _internal\nfl4\speech\nvda_client\license.txt
+  Source: https://download.nvaccess.org/releases/2026.2/nvda_2026.2_controllerClient.zip
+
+Python 3.14.8, Python Software Foundation License. https://www.python.org/
+
+pygame-ce 2.5.8 (with SDL 2 and SDL_mixer), GNU LGPL 2.1 (SDL: zlib license). Sound output.
+  https://pyga.me/ and https://www.libsdl.org/
+
+audioop-lts 0.2.2, Python Software Foundation License (the standard-library audioop module that Python 3.13 removed, as a 30 KB package). Pitch and pan.
+  https://pypi.org/project/audioop-lts/
+
+pywin32 312, Python Software Foundation License. Speech through SAPI 5, Windows calls.
+  https://github.com/mhammond/pywin32
+
+PyInstaller 6.22.3, GPL 2 or later with an exception that allows its output to be distributed under any license. Used to build nfl4.exe.
+  https://pyinstaller.org/
+
+Because pygame-ce and SDL are LGPL-style libraries, they are shipped as separate files in the _internal folder and can be replaced by the user with compatible versions. The source code of Brain is at https://github.com/joshknnd1982 (the Brain repository).
