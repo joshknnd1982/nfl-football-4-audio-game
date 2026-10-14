@@ -1,4 +1,4 @@
-"""Where finished sounds go: the mixer. This is inspired by Jim Kitchen's Brain.
+"""Where finished sounds go: the mixer. This is inspired by Jim Kitchen.
 
 Portability seam (playbook 7.2): the rest of the clone talks to `Output`. PygameOutput is the real
 mixer (pygame-ce, SDL); TimedOutput makes no sound but keeps time, so it serves the tests and

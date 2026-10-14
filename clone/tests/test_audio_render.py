@@ -1,4 +1,4 @@
-"""Pitch and pan rendering. This is inspired by Jim Kitchen's Brain."""
+"""Pitch and pan rendering. This is inspired by Jim Kitchen."""
 import audioop
 import math
 import os

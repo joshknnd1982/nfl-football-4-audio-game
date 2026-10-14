@@ -1,4 +1,4 @@
-"""Scripted verification of the installer (P10 S10.3, playbook 8.2). Inspired by Jim Kitchen's Brain.
+"""Scripted verification of the installer (P10 S10.3, playbook 8.2). Inspired by Jim Kitchen.
 
 Runs the real setup file silently into a scratch folder (NOT AppData\\Local, which the Claude desktop app redirects),
 current-user mode, and checks: files and registry entry, the installed exe starts and exits, settings and player sounds

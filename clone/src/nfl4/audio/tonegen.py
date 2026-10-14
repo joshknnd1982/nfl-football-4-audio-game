@@ -1,4 +1,4 @@
-"""Generated sounds. This is inspired by Jim Kitchen's Brain.
+"""Generated sounds. This is inspired by Jim Kitchen.
 
 Brain needs almost none (SOUND_DESIGN.md: every silent event stays silent). The one generated
 sound is the fallback for the exit beep when the system's default sound cannot be played.

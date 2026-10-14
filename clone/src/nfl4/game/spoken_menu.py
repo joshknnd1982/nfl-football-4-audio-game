@@ -1,4 +1,4 @@
-"""Keyboard menus that speak, for the clone's added functions. This is inspired by Jim Kitchen's Brain.
+"""Keyboard menus that speak, for the clone's added functions. This is inspired by Jim Kitchen.
 
 The original had no settings, help or about. The added functions (F1 to F4, DECISIONS P7 S7.4) use
 three small menu kinds, all driven by keys alone and all speaking through the same voice:

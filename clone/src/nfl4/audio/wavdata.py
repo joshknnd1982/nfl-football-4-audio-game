@@ -1,4 +1,4 @@
-"""Reading sound files into 16-bit samples. This is inspired by Jim Kitchen's Brain.
+"""Reading sound files into 16-bit samples. This is inspired by Jim Kitchen.
 
 Any rate, depth, channel count (1 or 2) and length is accepted (playbook 7.7); empty, cut-off,
 unreadable or very long files raise SoundLoadError so the caller can fall back to the next

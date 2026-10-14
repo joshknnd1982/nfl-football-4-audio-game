@@ -1,4 +1,4 @@
-"""Test setup shared by all test files. This is inspired by Jim Kitchen's Brain.
+"""Test setup shared by all test files. This is inspired by Jim Kitchen.
 
 A new clone (made from the starter kit) has no shipped sound files yet: the tests that need them are skipped until
 assets\\sounds holds wav files, so a fresh clone starts with a green test run (fixesforgames.md B-X, section C).

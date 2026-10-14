@@ -1,14 +1,20 @@
-"""Speech manager: the only speech entry point the game uses. This is inspired by Jim Kitchen's Brain.
+"""Speech manager: the only speech entry point the game uses. This is inspired by Jim Kitchen.
 
-The original had three speech calls (GAME_SPEC 7, PROCEDURE_INDEX):
-  say(text)    speak and wait until spoken            -> SpeechManager.say
-  say2(text)   queue after current speech, go on      -> SpeechManager.say_async
-  stopspeech   stop at once                           -> SpeechManager.stop
+The original spoke in three ways on one SAPI voice (GAME_SPEC 7 item 1, 9.1; GAP_REGISTER G-S1):
+  flags 0, synchronous (say, say3, say4)      speak and wait until EVERYTHING queued is spoken -> SpeechManager.say
+  flags 1, asynchronous (say2, say5, say6)     queue after current speech, go on                 -> SpeechManager.say_async
+  flags 2 with "" (stopspeech)                  purge at once                                     -> SpeechManager.stop
+nfl4 S7.1 (D-031 items 1 and 3): every call names its speaker (`role`: the announcer, a quarterback or a punter,
+speech/roles.py). The SAPI 5 engine speaks each text with that speaker's voice and volume in ONE queue, so a synchronous
+line is a barrier for everything queued before it and nothing is cut by a voice change. NVDA and JAWS ignore the
+speaker (the screen reader's own voice speaks everything). `rate_step` speaks one text faster (banter line 113, Q38);
+only SAPI 5 applies it. The rate counter vr (set_rate) reaches only SAPI 5: with NVDA or JAWS it changes only the game's
+pauses and the number it speaks (G-S4).
 
-Output modes (playbook 7.2, 7.3.1): "sapi" (Brain's default: the original always used its SAPI voice),
-"nvda" (NVDA, else SAPI 5), "jaws" (JAWS, else SAPI 5) and "auto" (NVDA if it runs, else JAWS if it runs,
-else SAPI 5). Whatever the mode, if the chosen engine is missing or fails, another one is used, so the
-game is never silent and never crashes.
+Output modes (playbook 7.2, 7.3.1): "sapi" (nfl4's default, G-S7: the five voices are part of the game and the
+original always spoke through SAPI), "nvda" (NVDA, else SAPI 5), "jaws" (JAWS, else SAPI 5) and "auto" (NVDA if it
+runs, else JAWS if it runs, else SAPI 5). Whatever the mode, if the chosen engine is missing or fails, another one is
+used, so the game is never silent and never crashes; every engine call is guarded here (fixesforgames B-X2).
 """
 from __future__ import annotations
 
@@ -32,6 +38,7 @@ class SpeechManager:
         self._mode = mode if mode in MODES else "sapi"
         self._lock = threading.Lock()
         self._fallback_logged = False
+        self.last_role: str | None = None     # the speaker of the last text (the original's say6 speaks with it)
 
     @property
     def mode(self) -> str:
@@ -55,11 +62,28 @@ class SpeechManager:
             order = [self.nvda, self.jaws, self.sapi]
         return [b for b in order if b is not None]
 
-    def _send(self, text: str) -> SpeechBackend | None:
+    def active_engine(self) -> SpeechBackend | None:
+        """The engine that would speak the next text: the first available one in the mode's order."""
+        for backend in self._order():
+            try:
+                if backend.is_available():
+                    return backend
+            except Exception as exc:
+                log.warning("%s availability check failed: %s", backend.name, exc)
+        return None
+
+    def _send(self, text: str, role: str | None, rate_step: int) -> SpeechBackend | None:
         """Queue text on the first engine that takes it. Returns that engine."""
+        self.last_role = role
         for i, backend in enumerate(self._order()):
             try:
-                if backend.is_available() and backend.speak(text):
+                if not backend.is_available():
+                    continue
+                if getattr(backend, "takes_roles", False):
+                    taken = backend.speak(text, role=role, rate_step=rate_step)
+                else:
+                    taken = backend.speak(text)
+                if taken:
                     if i and not self._fallback_logged:
                         self._fallback_logged = True
                         log.warning("speech mode %s: preferred engine unavailable, using %s",
@@ -70,18 +94,19 @@ class SpeechManager:
         log.warning("no speech engine could say %r", text)
         return None
 
-    def say(self, text: str, abort: threading.Event | None = None) -> None:
-        """Speak and wait until spoken (the original's say). abort ends the wait early."""
-        backend = self._send(text)
+    def say(self, text: str, abort: threading.Event | None = None, *, role: str | None = None,
+            rate_step: int = 0) -> None:
+        """Speak and wait until everything queued is spoken (the original's say). abort ends the wait early."""
+        backend = self._send(text, role, rate_step)
         if backend is not None:
             try:
                 backend.wait_until_done(abort)
             except Exception as exc:  # a dying engine must not turn a wait into a program error
                 log.warning("%s wait failed: %s", backend.name, exc)
 
-    def say_async(self, text: str) -> None:
+    def say_async(self, text: str, *, role: str | None = None, rate_step: int = 0) -> None:
         """Queue after current speech and return at once (the original's say2)."""
-        self._send(text)
+        self._send(text, role, rate_step)
 
     def stop(self) -> None:
         """Stop speech at once (the original's stopspeech), on every engine."""
@@ -92,7 +117,16 @@ class SpeechManager:
                 except Exception as exc:
                     log.warning("%s stop failed: %s", backend.name, exc)
 
-    # ----- settings menu (clone additions): passed to SAPI 5, the one engine that has them -----
+    def is_speaking(self) -> bool:
+        """True while the engine in use still has speech queued or playing (the original's RunningState = 2)."""
+        backend = self.active_engine()
+        try:
+            return bool(backend is not None and getattr(backend, "is_speaking", lambda: False)())
+        except Exception as exc:
+            log.warning("%s speaking check failed: %s", backend.name, exc)
+            return False
+
+    # ----- settings (clone additions): passed to SAPI 5, the one engine that has them -----
 
     def _on_sapi(self, what: str, call, default=None):
         """One call to the SAPI 5 engine; a failing engine is logged, never raised into the game."""
@@ -116,6 +150,24 @@ class SpeechManager:
     def set_voice(self, voice_id: str | None) -> None:
         self._on_sapi("set_voice", lambda s: s.set_voice(voice_id))
 
+    def set_role_voice(self, role: str, voice_id: str | None) -> None:
+        self._on_sapi("set_role_voice", lambda s: s.set_role_voice(role, voice_id))
+
+    def set_role_volume(self, role: str, volume: int) -> None:
+        self._on_sapi("set_role_volume", lambda s: s.set_role_volume(role, volume))
+
+    def role_details(self, role: str):
+        """The id, name and Gender attribute of a speaker's SAPI voice (None when SAPI 5 is not running)."""
+        return self._on_sapi("role_details", lambda s: s.role_details(role))
+
+    def role_gender(self, role: str) -> str:
+        """The Gender attribute of the voice that speaks for `role` now: the SAPI voice's when SAPI 5 speaks, "" with
+        NVDA or JAWS (so GetSexOf says " He ", G-S6)."""
+        if self.sapi is None or self.active_engine() is not self.sapi:
+            return ""
+        details = self.role_details(role)
+        return details.gender if details is not None else ""
+
     @property
     def voice_name(self) -> str:
         return self._on_sapi("voice_name", lambda s: s.voice_name, "")
@@ -133,6 +185,15 @@ class SpeechManager:
         if self.sapi is not None and hasattr(self.sapi, "on_healthy"):
             self.sapi.on_healthy = callback
 
+    def watch_voice_trials(self, arm, clear) -> None:
+        """The crash guard for every voice (playbook 7.4.5): arm(voice_id) before SAPI 5 opens or probes a voice,
+        clear(voice_id) when that voice has made or spoken its first text."""
+        if self.sapi is not None:
+            if hasattr(self.sapi, "on_voice_trial"):
+                self.sapi.on_voice_trial = arm
+            if hasattr(self.sapi, "on_voice_proven"):
+                self.sapi.on_voice_proven = clear
+
     def nvda_running(self) -> bool:
         try:
             return self.nvda is not None and bool(self.nvda.is_available())
@@ -148,7 +209,7 @@ class SpeechManager:
             return False
 
     def screen_reader_message(self, text: str) -> bool:
-        """Say text through NVDA, else JAWS, if one runs (used when SAPI 5 has no voices, GAME_SPEC 15)."""
+        """Say text through NVDA, else JAWS, if one runs (used when SAPI 5 has no voices, GAP_REGISTER G-F9)."""
         for backend in (self.nvda, self.jaws):
             try:
                 if backend is not None and backend.is_available() and backend.speak(text):

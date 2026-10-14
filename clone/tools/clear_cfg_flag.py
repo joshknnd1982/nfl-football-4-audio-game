@@ -1,4 +1,4 @@
-"""Clear the Control Flow Guard flag in the header of a PyInstaller exe. Inspired by Jim Kitchen's Brain.
+"""Clear the Control Flow Guard flag in the header of a PyInstaller exe. Inspired by Jim Kitchen.
 
 PyInstaller's bootloader is built with Control Flow Guard (IMAGE_DLLCHARACTERISTICS_GUARD_CF). A process with that
 flag kills itself with 0xC0000409 (fast fail) when code calls an address that is not a valid indirect-call target,

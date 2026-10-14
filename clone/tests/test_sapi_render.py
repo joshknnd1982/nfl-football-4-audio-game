@@ -1,4 +1,4 @@
-"""SAPI 5 rendered mode with a fake voice and a fake player. This is inspired by Jim Kitchen's Brain.
+"""SAPI 5 rendered mode with a fake voice and a fake player. This is inspired by Jim Kitchen.
 
 Rendered mode (DECISIONS 2026-10-13, speech latency): SAPI makes each text into memory and a player
 plays it, so stopping speech never waits for SAPI's audio output.

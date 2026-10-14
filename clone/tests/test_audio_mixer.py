@@ -1,5 +1,5 @@
 """The real pygame mixer, on SDL's silent dummy driver (no sound reaches the speakers).
-This is inspired by Jim Kitchen's Brain.
+This is inspired by Jim Kitchen.
 
 The dummy driver consumes audio at the real rate, so end-of-sound timing here is the mixer's own.
 """

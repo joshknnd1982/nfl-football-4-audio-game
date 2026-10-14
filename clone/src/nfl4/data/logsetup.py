@@ -1,4 +1,4 @@
-"""Log file setup. This is inspired by Jim Kitchen's Brain.
+"""Log file setup. This is inspired by Jim Kitchen.
 
 One plain-text log in the per-user logs folder, rotated so it never grows without limit.
 If the folder cannot be written, logging goes nowhere and the game carries on (playbook 7.10).

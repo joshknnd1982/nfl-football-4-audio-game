@@ -1,4 +1,4 @@
-"""Real SAPI 5 (volume 0, silent) and the real NVDA DLL (never speaks). This is inspired by Jim Kitchen's Brain.
+"""Real SAPI 5 (volume 0, silent) and the real NVDA DLL (never speaks). This is inspired by Jim Kitchen.
 
 Run in both builds: 64-bit and 32-bit Python. Skips itself where SAPI or the DLL is missing.
 """

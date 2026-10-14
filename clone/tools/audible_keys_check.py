@@ -1,4 +1,4 @@
-"""Arrowing quickly, heard at the speakers: key to audible speech in the real program. Inspired by Jim Kitchen's Brain.
+"""Arrowing quickly, heard at the speakers: key to audible speech in the real program. Inspired by Jim Kitchen.
 
 Runs tools/key_latency_check.py (real window, game and SAPI 5 voice; F2 menu, 7 Down then 7 Up keys) while
 recording the speakers by WASAPI loopback (package soundcard, run this with a Python that has it and numpy),

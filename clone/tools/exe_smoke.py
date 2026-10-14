@@ -1,4 +1,4 @@
-"""Smoke test of a BUILT nfl4.exe (P9 S9.2). Inspired by Jim Kitchen's Brain.
+"""Smoke test of a BUILT nfl4.exe (P9 S9.2). Inspired by Jim Kitchen.
 
 Starts the exe with ITS OWN PROGRAM FOLDER as the working directory (what a double click in Explorer or an old shortcut
 does, and what used to lock the folder) and a scratch data folder, speech volume 0 and sound volume 2 percent

@@ -1,4 +1,4 @@
-"""NVDA speech backend through the NVDA controller client DLL. This is inspired by Jim Kitchen's Brain.
+"""NVDA speech backend through the NVDA controller client DLL. This is inspired by Jim Kitchen.
 
 NVDA Controller Client 2026.2 (LGPL 2.1, NV Access, shipped unmodified in nvda_client/):
 x86/nvdaControllerClient.dll for 32-bit builds, x64/ for 64-bit. Functions used (nvdaController.h):

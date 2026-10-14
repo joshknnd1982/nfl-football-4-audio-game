@@ -1,4 +1,4 @@
-"""From the Enter key that starts playback to the first sound at the speakers, in a BUILT nfl4.exe. Inspired by Jim Kitchen's Brain.
+"""From the Enter key that starts playback to the first sound at the speakers, in a BUILT nfl4.exe. Inspired by Jim Kitchen.
 
 Splits the wait into: key to the speech command, the spoken prompt itself (" Press the space bar to stop.", which the
 original also waited for), and what the game adds after the speech ends (rescan, decode, render, start) up to the

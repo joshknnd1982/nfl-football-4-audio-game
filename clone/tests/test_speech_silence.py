@@ -1,5 +1,5 @@
 """Silence at the ends of rendered speech is cut (owner bug 2026-10-13: "a long silence before the sounds").
-This is inspired by Jim Kitchen's Brain.
+This is inspired by Jim Kitchen.
 
 Some voices end every utterance with half a second of digital silence (FlexVoice2 Bill: 0.66 s after a 1.9 s prompt).
 The game waits for "the speech is done", so that silence delayed the first sound of every playback.

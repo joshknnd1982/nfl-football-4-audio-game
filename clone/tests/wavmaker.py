@@ -1,4 +1,4 @@
-"""Builds small wav files and sounds for the audio tests. This is inspired by Jim Kitchen's Brain.
+"""Builds small wav files and sounds for the audio tests. This is inspired by Jim Kitchen.
 
 No numpy: samples are plain lists of floats in -1..1, one number per frame for mono or one
 (left, right) pair per frame for stereo.

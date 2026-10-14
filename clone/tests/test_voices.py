@@ -1,4 +1,4 @@
-"""Voice list with thousands of entries and broken ones (playbook 7.4). This is inspired by Jim Kitchen's Brain."""
+"""Voice list with thousands of entries and broken ones (playbook 7.4). This is inspired by Jim Kitchen."""
 import time
 
 from nfl4.speech.voices import VoiceCatalog, enumerate_voices, search

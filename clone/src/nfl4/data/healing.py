@@ -1,4 +1,4 @@
-"""Helpers for self-healing resource files (playbook 7.10). This is inspired by Jim Kitchen's Brain.
+"""Helpers for self-healing resource files (playbook 7.10). This is inspired by Jim Kitchen.
 
 A damaged file is copied beside itself first (.damaged1, .damaged2, ...; the latest three are
 kept), then the caller recreates it from the built-in originals. Reading is tolerant (UTF-8 with or

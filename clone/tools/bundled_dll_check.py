@@ -1,4 +1,4 @@
-"""Load the NVDA controller DLL of a BUILT Brain with this Python's bitness and ask if NVDA runs. Inspired by Jim Kitchen's Brain.
+"""Load the NVDA controller DLL of a BUILT Brain with this Python's bitness and ask if NVDA runs. Inspired by Jim Kitchen.
 
 Never speaks (only nvdaController_testIfRunning). Run with nfl4-64 Python for the 64-bit build and
 nfl4-32 Python for the 32-bit build, from any folder:

@@ -1,4 +1,4 @@
-"""Pitch and pan rendering. This is inspired by Jim Kitchen's Brain.
+"""Pitch and pan rendering. This is inspired by Jim Kitchen.
 
 The original set DirectSound's buffer frequency and pan (GAME_SPEC 5.3, 5.5). Here a sound is
 resampled (linear interpolation, as a software mixer does) to the length it has when its buffer

@@ -1,4 +1,4 @@
-"""Time the sound library: construction, first decode of every sound, rescan, cached picks. Inspired by Jim Kitchen's Brain.
+"""Time the sound library: construction, first decode of every sound, rescan, cached picks. Inspired by Jim Kitchen.
 Usage: python sound_load_timing.py <folder with the shipped wavs>   (playbook 7.4.3)"""
 import os
 import sys

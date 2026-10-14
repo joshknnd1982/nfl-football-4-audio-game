@@ -1,4 +1,4 @@
-"""Speech backend interface. This is inspired by Jim Kitchen's Brain.
+"""Speech backend interface. This is inspired by Jim Kitchen.
 
 Every speech engine (SAPI 5, NVDA, a test fake, later Speech Dispatcher on Linux)
 offers the same small set of calls, so the rest of the clone never touches COM or DLLs

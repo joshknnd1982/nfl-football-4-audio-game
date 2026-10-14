@@ -1,4 +1,4 @@
-"""Sound library: finds the sound for an ID. This is inspired by Jim Kitchen's Brain.
+"""Sound library: finds the sound for an ID. This is inspired by Jim Kitchen.
 
 Resolution chain (playbook 7.7), first that loads wins:
   1. the player's file for the ID (sounds folder in per-user data; sounds.txt may name another file)

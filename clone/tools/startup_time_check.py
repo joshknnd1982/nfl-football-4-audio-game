@@ -1,4 +1,4 @@
-"""Time from starting nfl4.exe to its window, its log's first line and the first speech command (playbook 7.4.3). Inspired by Jim Kitchen's Brain.
+"""Time from starting nfl4.exe to its window, its log's first line and the first speech command (playbook 7.4.3). Inspired by Jim Kitchen.
 Usage: <python with pywin32> startup_time_check.py <nfl4.exe> [runs]   (speech volume 0, sound volume 0)"""
 import datetime
 import os

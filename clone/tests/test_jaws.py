@@ -1,4 +1,4 @@
-"""JAWS backend and its place in the speech manager (playbook 7.3.1). This is inspired by Jim Kitchen's Brain.
+"""JAWS backend and its place in the speech manager (playbook 7.3.1). This is inspired by Jim Kitchen.
 
 The COM object is replaced by a fake with the interface read from the type library on the owner's PC
 (IJawsApi: SayString(text, flush) -> bool, StopSpeech()). One test makes the real COM object
@@ -266,23 +266,16 @@ def test_jaws_output_is_saved_read_back_and_accepted_in_any_spelling():
     assert back.speech.mode == "jaws" and problems == []
     back, problems = parse("speech_output =  JAWS \n")
     assert back.speech.mode == "jaws" and problems == []
-    back, problems = parse("sound_volume = 50\nspeech_output = jawz\n")
+    back, problems = parse("sound_volume = -5\nspeech_output = jawz\n")
     assert back.speech.mode == "sapi" and len(problems) == 1
 
 
-# ----- the F3 setting "sounds start right away" (latency of the first sound) -----
+# ----- no "sounds start right away" setting in nfl4 (GAP_REGISTER G-S11, D-031 item 1; Brain had one in F3) -----
 
-def test_sound_start_setting_is_saved_read_back_and_defaults_to_the_original_wait():
+def test_nfl4_has_no_sound_start_setting_the_original_wait_stays():
     from nfl4.data.settings import Settings
     from nfl4.data.settingsfile import parse, render
     s = Settings.defaults()
-    assert s.audio.start_early is False
-    assert "sound_start = after_prompt" in render(s)
-    s.audio.start_early = True
-    back, problems = parse(render(s))
-    assert back.audio.start_early is True and problems == []
-    for word, expected in (("Right away", True), ("early", True), ("after prompt", False), ("original", False)):
-        back, problems = parse(f"sound_volume = 50\nsound_start = {word}\n")
-        assert back.audio.start_early is expected and problems == []
-    back, problems = parse("sound_volume = 50\nsound_start = soon\n")
-    assert back.audio.start_early is False and len(problems) == 1
+    assert s.audio.start_early is False and "sound_start" not in render(s)
+    back, problems = parse("sound_volume = -5\nsound_start = right_away\n")
+    assert back.audio.start_early is False and len(problems) == 1          # an unknown setting, reported

@@ -1,4 +1,4 @@
-"""NVDA backend with a fake controller DLL (never speaks). This is inspired by Jim Kitchen's Brain.
+"""NVDA backend with a fake controller DLL (never speaks). This is inspired by Jim Kitchen.
 
 The fake DLL behaves as the real one was measured on the owner's NVDA (2026-10-13): speakSsml with
 asynchronous=False returns when the speech has ended, or at once with code 1223 when cancelSpeech is called from

@@ -1,4 +1,4 @@
-"""Spoken texts of the clone's added functions (help, settings, sounds, about, notices). This is inspired by Jim Kitchen's Brain.
+"""Spoken texts of the clone's added functions (help, settings, sounds, about, notices). This is inspired by Jim Kitchen.
 
 None of these exist in the original (spec/STRINGS.md lists them as clone additions S21 onward).
 The original's own texts stay in texts.py.

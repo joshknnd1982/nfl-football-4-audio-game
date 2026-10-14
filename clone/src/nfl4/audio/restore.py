@@ -1,4 +1,4 @@
-"""Reset commands for the player's sounds: one sound or all (playbook 7.7, 7.10). This is inspired by Jim Kitchen's Brain.
+"""Reset commands for the player's sounds: one sound or all (playbook 7.7, 7.10). This is inspired by Jim Kitchen.
 
 "Restore" means: the original plays again. A sound the player put in the sounds folder under the
 sound's own name (brain5.wav, beep_exit.wav) would keep overriding it, so it is moved, never

@@ -1,4 +1,4 @@
-"""Start and end of the process: never hold the program folder, always really end. This is inspired by Jim Kitchen's Brain.
+"""Start and end of the process: never hold the program folder, always really end. This is inspired by Jim Kitchen.
 
 Owner bug 2026-10-13: after uninstalling, the program folder (C:\\Program Files\\My Brain) was left behind and could
 not be deleted ("folder in use") until the computer was restarted. Three things in the program itself can cause that,

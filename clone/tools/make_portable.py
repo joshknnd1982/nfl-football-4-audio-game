@@ -1,4 +1,4 @@
-"""Make the portable zip and the checksums file for a release (playbook 8.2). Inspired by Jim Kitchen's Brain.
+"""Make the portable zip and the checksums file for a release (playbook 8.2). Inspired by Jim Kitchen.
 
 Usage: python clone/tools/make_portable.py [version]      (any Python 3; default version from nfl4.VERSION)
 Reads the builds in %USERPROFILE%\\.kitchensinc-builds\\nfl4\\{64,32}\\dist\\nfl4 (run build.ps1 first).

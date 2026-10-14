@@ -1,4 +1,4 @@
-"""Speech manager modes and fallbacks (playbook 7.2, 7.3). This is inspired by Jim Kitchen's Brain."""
+"""Speech manager modes and fallbacks (playbook 7.2, 7.3). This is inspired by Jim Kitchen."""
 import threading
 import time
 

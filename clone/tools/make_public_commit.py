@@ -1,4 +1,4 @@
-"""Make the next PUBLIC commit from the working tree without touching the private history. Inspired by Jim Kitchen's Brain.
+"""Make the next PUBLIC commit from the working tree without touching the private history. Inspired by Jim Kitchen.
 
 The private local history (branch master) holds material that must never be published (string dumps of the original
 program, working notes, playbook copies). The public history is a separate chain of commits made with a temporary

@@ -1,4 +1,4 @@
-"""A small Windows audio output that stops at once. This is inspired by Jim Kitchen's Brain.
+"""A small Windows audio output that stops at once. This is inspired by Jim Kitchen.
 
 Used by the SAPI 5 backend's rendered mode (DECISIONS 2026-10-13, speech latency): SAPI makes the
 speech into memory and this plays it through winmm waveOut. With SAPI's own audio output the

@@ -1,4 +1,4 @@
-# Brain clone. This is inspired by Jim Kitchen's Brain.
+# Brain clone. This is inspired by Jim Kitchen.
 [project]
 name = "brain-clone"
 version = "1.0.3"

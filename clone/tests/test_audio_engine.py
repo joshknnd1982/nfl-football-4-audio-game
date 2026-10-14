@@ -1,4 +1,4 @@
-"""The audio layer the game logic uses, with a silent timed output. This is inspired by Jim Kitchen's Brain."""
+"""The audio layer the game logic uses, with a silent timed output. This is inspired by Jim Kitchen."""
 import audioop
 
 import pytest

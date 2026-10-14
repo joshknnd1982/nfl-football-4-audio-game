@@ -1,4 +1,4 @@
-"""Runtime check for the Brain clone (P6 S6.2). Inspired by Jim Kitchen's Brain.
+"""Runtime check for the Brain clone (P6 S6.2). Inspired by Jim Kitchen.
 
 Checks, silently, that every library the clone will use loads and works in the
 running Python (run once with the 64-bit and once with the 32-bit environment):

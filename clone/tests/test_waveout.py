@@ -1,4 +1,4 @@
-"""WaveOut: the real device in silence, and a stuck device (fake library). This is inspired by Jim Kitchen's Brain."""
+"""WaveOut: the real device in silence, and a stuck device (fake library). This is inspired by Jim Kitchen."""
 import time
 
 import pytest

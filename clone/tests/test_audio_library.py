@@ -1,4 +1,4 @@
-"""Sound library: the resolution chain and the pool. This is inspired by Jim Kitchen's Brain."""
+"""Sound library: the resolution chain and the pool. This is inspired by Jim Kitchen."""
 import os
 import shutil
 

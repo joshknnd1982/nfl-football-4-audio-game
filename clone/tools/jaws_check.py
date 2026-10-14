@@ -1,4 +1,4 @@
-"""Check Brain's JAWS backend against a RUNNING JAWS. This is inspired by Jim Kitchen's Brain.
+"""Check Brain's JAWS backend against a RUNNING JAWS. This is inspired by Jim Kitchen.
 
 Start JAWS first, then run (from the clone folder; the 32-bit environment checks the 32-bit registration):
   C:\\Users\\joshk\\.kitchensinc-venvs\\nfl4-64\\Scripts\\python.exe tools\\jaws_check.py <report file>

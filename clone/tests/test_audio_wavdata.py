@@ -1,4 +1,4 @@
-"""Reading sound files. This is inspired by Jim Kitchen's Brain."""
+"""Reading sound files. This is inspired by Jim Kitchen."""
 import os
 import wave
 

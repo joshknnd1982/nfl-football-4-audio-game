@@ -1,4 +1,4 @@
-"""Silence between the end of the spoken prompt and the first sound, as heard at the speakers. Inspired by Jim Kitchen's Brain.
+"""Silence between the end of the spoken prompt and the first sound, as heard at the speakers. Inspired by Jim Kitchen.
 
 Starts the game (a built nfl4.exe, or python.exe to run from source), chooses 3 sounds and the first panning mode, and
 records the speakers (WASAPI loopback, package soundcard) while the prompt " Press the space bar to stop." is spoken

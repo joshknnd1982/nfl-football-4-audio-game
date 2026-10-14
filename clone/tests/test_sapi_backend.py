@@ -1,4 +1,4 @@
-"""SAPI 5 backend logic with a fake COM voice (no real engine). This is inspired by Jim Kitchen's Brain."""
+"""SAPI 5 backend logic with a fake COM voice (no real engine). This is inspired by Jim Kitchen."""
 import time
 
 import pytest

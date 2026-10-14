@@ -1,4 +1,4 @@
-"""The player's sounds.txt: per-sound file, volume trim, off switch. This is inspired by Jim Kitchen's Brain.
+"""The player's sounds.txt: per-sound file, volume trim, off switch. This is inspired by Jim Kitchen.
 
 Playbook 7.7 names this file sounds.json; 7.9 warns that strict JSON breaks on one missing comma,
 so Brain uses plain lines instead (DECISIONS P7 S7.2):

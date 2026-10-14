@@ -1,5 +1,5 @@
 """Remember a voice that killed the program, so the next start cannot be killed by it again.
-This is inspired by Jim Kitchen's Brain.
+This is inspired by Jim Kitchen.
 
 A SAPI 5 voice is native code running inside Brain's process. Some voices (SmoothTalker, an emulator of a 1990 DOS
 engine) can bring the whole process down, and a crash cannot be caught. If the crashing voice is the saved one, every

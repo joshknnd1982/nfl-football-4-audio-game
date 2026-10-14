@@ -1,4 +1,4 @@
-"""JAWS arrowing latency at the speakers, by loopback capture. Inspired by Jim Kitchen's Brain.
+"""JAWS arrowing latency at the speakers, by loopback capture. Inspired by Jim Kitchen.
 
 The arrowing case: an item is being spoken, a key arrives, the item is cut and the next item is spoken. Records the
 speakers (WASAPI loopback, package soundcard) and, for several ways of asking JAWS, times from the command to the

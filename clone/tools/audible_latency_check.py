@@ -1,4 +1,4 @@
-"""Audible speech latency: command to sound leaving the speakers, by loopback capture. Inspired by Jim Kitchen's Brain.
+"""Audible speech latency: command to sound leaving the speakers, by loopback capture. Inspired by Jim Kitchen.
 
 Records what Windows plays on the default speakers (WASAPI loopback, package soundcard) and measures,
 for each way of speaking, the time from the speak command to the first audible sound, and from a

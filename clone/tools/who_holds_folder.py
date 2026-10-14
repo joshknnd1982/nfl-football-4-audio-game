@@ -1,4 +1,4 @@
-"""Which processes hold files of a folder open? (Windows Restart Manager, the same service installers use.) Inspired by Jim Kitchen's Brain.
+"""Which processes hold files of a folder open? (Windows Restart Manager, the same service installers use.) Inspired by Jim Kitchen.
 
 Usage: python who_holds_folder.py <folder> [more files or folders]
 Lists every process the Restart Manager says uses any file under the folder (exe, dlls, wavs, anything), with its

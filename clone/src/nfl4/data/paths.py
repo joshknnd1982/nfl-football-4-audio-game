@@ -1,8 +1,10 @@
-"""Where Brain keeps per-user files and finds its own files. This is inspired by Jim Kitchen's Brain.
+"""Where NFL Football 4 keeps per-user files and finds its own files. This is inspired by Jim Kitchen.
 
 Portability seam (playbook 7.2, 9.3): only this module knows Windows folder names.
-Per-user data: %APPDATA%\\Kitchensinc Revival\\Brain (settings, player sounds, logs).
-Program folder: the folder of brain.exe in a build, clone/ when run from source.
+Per-user data: %APPDATA%\\Kitchensinc Revival\\NFL Football 4 (settings, the season files, saved game, the player's
+sounds and customization files, logs). GAP_REGISTER G-F8 and D-024 item 3: the original kept its files in
+Documents\\kitchensinc, shared with Jim Kitchen's other programs; the clone never reads or writes that folder.
+Program folder: the folder of nfl4.exe in a build, clone/ when run from source.
 """
 from __future__ import annotations
 
@@ -10,7 +12,7 @@ import os
 import sys
 
 VENDOR_FOLDER = "Kitchensinc Revival"
-GAME_FOLDER = "Brain"
+GAME_FOLDER = "NFL Football 4"
 
 
 def user_data_dir() -> str:
@@ -24,6 +26,12 @@ def user_data_dir() -> str:
 
 def log_dir() -> str:
     return os.path.join(user_data_dir(), "logs")
+
+
+def customize_dir() -> str:
+    """The player's customization files (teams.txt, divisions.txt, surnames.txt, footplay.txt, banter.txt and the
+    sounds subfolder; D-032 item 11, D-035). Written in S7.7."""
+    return os.path.join(user_data_dir(), "customize")
 
 
 def export_dir() -> str:

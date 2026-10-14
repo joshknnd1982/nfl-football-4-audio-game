@@ -1,4 +1,4 @@
-"""SAPI 5 voice list for the voice setting. This is inspired by Jim Kitchen's Brain.
+"""SAPI 5 voice list for the voice setting. This is inspired by Jim Kitchen.
 
 Taken from SAPI's own enumeration (GetVoices), not the registry: on the owner's PC SAPI lists
 1,789 voices and the registry 249, and Brain's default is SAPI's item 0 (DECISIONS P6).

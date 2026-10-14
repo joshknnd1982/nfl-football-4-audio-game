@@ -1,4 +1,4 @@
-# Build Brain (PyInstaller, onedir, windowed) for 64-bit and 32-bit. This is inspired by Jim Kitchen's Brain.
+# Build Brain (PyInstaller, onedir, windowed) for 64-bit and 32-bit. This is inspired by Jim Kitchen.
 # Usage: powershell -ExecutionPolicy Bypass -File clone\tools\build.ps1 [-Bits "64,32"]
 # Builds from a COPY of clone\src in a scratch folder, so the build cannot see the source tree or the
 # original files (playbook 8.1: catches files that are missing from the bundle).

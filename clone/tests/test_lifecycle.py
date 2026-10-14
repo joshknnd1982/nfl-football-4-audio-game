@@ -1,5 +1,5 @@
 """The process never holds the program folder and always really ends (owner bug 2026-10-13: the program folder could not
-be deleted after uninstalling, "folder in use"). This is inspired by Jim Kitchen's Brain.
+be deleted after uninstalling, "folder in use"). This is inspired by Jim Kitchen.
 """
 import logging
 import os

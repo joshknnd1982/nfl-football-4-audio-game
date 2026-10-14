@@ -1,4 +1,4 @@
-"""Speech interrupted by new speech, heard at the speakers: how long until the new item is audible. Inspired by Jim Kitchen's Brain.
+"""Speech interrupted by new speech, heard at the speakers: how long until the new item is audible. Inspired by Jim Kitchen.
 
 The arrowing case: an item is speaking, a key arrives, the item is cut and the next item is spoken.
 Records the speakers by WASAPI loopback (package soundcard). For each way of playing speech (the

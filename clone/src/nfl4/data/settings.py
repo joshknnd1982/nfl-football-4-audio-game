@@ -1,34 +1,50 @@
-"""Settings with the original's values as defaults. This is inspired by Jim Kitchen's Brain.
+"""Settings with the original's values as defaults. This is inspired by Jim Kitchen.
 
-S7.1 holds the speech settings in memory only; P7 S7.5 saves and loads them (per user, plain
-text, self-healing per playbook 7.10).
+The original kept the five voice numbers and the rate vr in footbal0.dat, and the five voice volumes, the sound volume
+wavol and the comments flag comtog in football.vol (GAME_SPEC 12). The clone keeps them all in its own settings.txt in
+the per-user data folder (data/settingsfile.py; GAP_REGISTER G-F8, D-024 item 3): voices as voice ids, because voice
+numbers mean nothing on another PC (G-S8); footbal0.dat and football.vol are neither written nor imported.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..speech.roles import DEFAULT_VOLUME, ROLES
+
+SOUND_LEVEL_MIN, SOUND_LEVEL_MAX = -5000, 0     # wavol, hundredths of a decibel (F11 part 2, GAME_SPEC 4.6)
+
 
 @dataclass
 class SpeechSettings:
-    mode: str = "sapi"           # "sapi" (original), "nvda", "jaws", "auto"  (DECISIONS P6, P10 JAWS)
-    voice_id: str | None = None  # None = first voice in SAPI's list (GAME_SPEC 3.1)
-    rate: int | None = None      # None = the voice's own rate, read and kept (GAME_SPEC 3.1)
-    volume: int = 90             # GAME_SPEC 3.1
+    mode: str = "sapi"           # "sapi" (G-S7: the five voices are part of the game), "nvda", "jaws", "auto"
+    voices: dict[str, str | None] = field(default_factory=lambda: {role: None for role in ROLES})
+    # None = the first voice in SAPI's list (the original's voice 0, GAME_SPEC 3 step 4)
+    volumes: dict[str, int] = field(default_factory=lambda: {role: DEFAULT_VOLUME for role in ROLES})
+    rate: int | None = None      # vr; None = the first voice's own rate, read and kept (GAME_SPEC 3 step 3)
     pitch: int = 0               # clone addition; 0 sends text exactly as the original did
     list_letters: str = "type"   # clone addition: letter keys in lists: "type" = type-ahead search, "first" = first-letter jump
 
 
 @dataclass
+class GameSettings:
+    comments: bool = True        # F8 (ctog, GAME_SPEC 4.5): comtog 0 or Empty = the announcer's comments are on
+
+
+@dataclass
 class AudioSettings:
-    effects_volume: int = 100    # percent; 100 = the original's SetVolume 0 (full volume, GAME_SPEC 5.4)
-    pitch_spread: int = 20       # steps of 100 Hz: the original's r = Int(Rnd * 40) - 20 (GAME_SPEC 5.3); 0 = no change
-    start_early: bool = False    # clone addition: False = the sounds wait for the spoken prompt (original); True = they start at once
+    sound_level: int = 0         # wavol: 0 (full) down to -5000 hundredths of a decibel, added to every sound (GAME_SPEC 10)
+    # The kit's audio engine (Brain's) still reads the three fields below; S7.2 builds nfl4's seven sound slots on it
+    # and removes them. They are not saved in settings.txt (G-S11: nfl4 has no "sounds start right away" setting).
+    effects_volume: int = 100
+    pitch_spread: int = 20
+    start_early: bool = False
 
 
 @dataclass
 class Settings:
     speech: SpeechSettings
     audio: AudioSettings = field(default_factory=AudioSettings)
+    game: GameSettings = field(default_factory=GameSettings)
 
     @classmethod
     def defaults(cls) -> "Settings":

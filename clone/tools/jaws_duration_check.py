@@ -1,4 +1,4 @@
-"""How long does a RUNNING JAWS really take to say Brain's texts? Inspired by Jim Kitchen's Brain.
+"""How long does a RUNNING JAWS really take to say the game's texts? Inspired by Jim Kitchen.
 
 Speaks each text through the JAWS backend and records what Windows plays on the default speakers (WASAPI loopback,
 package soundcard). The first loud sample is the start of speech, the last loud sample before 0.6 s of quiet is the end.
@@ -23,9 +23,8 @@ CHUNK = 480
 THRESHOLD = 0.01     # the idle loopback level is 0.0002; JAWS peaks near 1.0
 QUIET_SECONDS = 0.6
 
-SAMPLES = [texts.PRESS_SPACE, texts.MAIN_PROMPT, "One.", "Brain.", "Speech settings.",
-           "Voice: Microsoft David. Speech rate: 0, original.",
-           "My Brain by Josh Kennedy, inspired by Jim Kitchen."]
+SAMPLES = [texts.TITLE_SPOKEN, texts.NO_GAME_MENU, " Hike! ", "One.", "Speech settings.",
+           "Voice: Microsoft David. Speech rate: 0, original.", texts.THANK_YOU]
 
 
 def record(seconds, send, chunks):

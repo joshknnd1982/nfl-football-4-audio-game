@@ -1,4 +1,4 @@
-"""Speech latency on the real SAPI 5 voices: key to speech start, direct mode and rendered mode. Inspired by Jim Kitchen's Brain.
+"""Speech latency on the real SAPI 5 voices: key to speech start, direct mode and rendered mode. Inspired by Jim Kitchen.
 
 Plays nothing audible (voice volume 0). Types what a player does when arrowing quickly: stop speech,
 say the next item, every 80 ms, then lets the last one finish. For each voice and mode prints the

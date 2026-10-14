@@ -1,13 +1,18 @@
-"""The original's key fields and waits, without any window. This is inspired by Jim Kitchen's Brain.
+"""The original's key fields and waits, without any window. This is inspired by Jim Kitchen.
 
-GAME_SPEC 8.1 and 8.4: the original kept two fields, the key code text CStr(KeyCode) and the key
-character LCase(Chr(KeyCode)), filled by Form_KeyDown, which only runs when the program calls
-DoEvents. The window thread posts key codes here; pump() is DoEvents. Waiting speech does not
-pump, so keys typed during it are delivered afterwards, exactly as in the original.
+GAME_SPEC 8.1: the original kept two fields, g = the key code text CStr(KeyCode) and g2 = the key character
+LCase(Chr(KeyCode)), filled by Form_KeyDown, which only runs when the program calls DoEvents. The window thread posts
+key codes here; pump() is DoEvents. Waiting speech does not pump, so keys typed during it are delivered afterwards,
+exactly as in the original (TESTED in nfl4 S4.3: a synchronous SAPI Speak lets no message through, G-K1).
 Key codes are Windows virtual-key codes, the same numbers VB's KeyDown received.
+
+Typed characters (nfl4 S7.1, B-W3, G-K5): the window also posts the character a key typed (its WM_CHAR, which Windows
+makes right after the key), in the same ordered queue. pump() keeps it in `typed`; a name prompt reads it with
+take_typed() right after its key. The original's two fields do not change: g2 is still LCase(Chr(KeyCode)).
 """
 from __future__ import annotations
 
+import collections
 import queue
 import threading
 import time
@@ -49,18 +54,62 @@ def key_char(key_code: int) -> str:
     return char.lower()
 
 
+class _KeyQueue:
+    """What the window posted, in order: key codes (int) and typed characters (str). Like queue.SimpleQueue, plus a
+    look at the next item, so the character a key typed can be taken right after that key."""
+
+    def __init__(self):
+        self._items: collections.deque = collections.deque()
+        self._cv = threading.Condition()
+
+    def put(self, item) -> None:
+        with self._cv:
+            self._items.append(item)
+            self._cv.notify_all()
+
+    def get(self, timeout: float | None = None):
+        with self._cv:
+            if not self._items and not self._cv.wait_for(lambda: bool(self._items), timeout):
+                raise queue.Empty
+            return self._items.popleft()
+
+    def get_nowait(self):
+        with self._cv:
+            if not self._items:
+                raise queue.Empty
+            return self._items.popleft()
+
+    def empty(self) -> bool:
+        with self._cv:
+            return not self._items
+
+    def take_text(self, wait: float) -> str:
+        """The next item if it is a typed character (waiting up to `wait` seconds for an item to come), else ""."""
+        with self._cv:
+            if not self._items:
+                self._cv.wait_for(lambda: bool(self._items), wait)
+            if self._items and isinstance(self._items[0], str):
+                return self._items.popleft()
+            return ""
+
+
 class KeyInput:
     def __init__(self, clock=time.monotonic, sleep=time.sleep):
-        self.code_text = ""   # "" when no key is waiting, else e.g. "27", "49"
-        self.char = ""        # e.g. "1", "a", "&" for the Up arrow
+        self.code_text = ""   # g: "" when no key is waiting, else e.g. "27", "49"
+        self.char = ""        # g2: e.g. "1", "a", "&" for the Up arrow
+        self.typed = ""       # the character the last key typed on the player's keyboard ("" for keys that type none)
         self.quit = threading.Event()
-        self._posted: queue.SimpleQueue = queue.SimpleQueue()
+        self._posted = _KeyQueue()
         self._clock = clock
         self._sleep = sleep
 
     # called by the window thread
     def post(self, key_code: int) -> None:
-        self._posted.put(key_code)
+        self._posted.put(int(key_code))
+
+    def post_char(self, char: str) -> None:
+        if char:
+            self._posted.put(str(char))
 
     def close(self) -> None:
         self.quit.set()
@@ -72,11 +121,15 @@ class KeyInput:
             raise GameQuit()
         while True:
             try:
-                code = self._posted.get_nowait()
+                item = self._posted.get_nowait()
             except queue.Empty:
                 return
-            self.code_text = str(code)
-            self.char = key_char(code)
+            if isinstance(item, str):
+                self.typed = item
+                continue
+            self.code_text = str(item)
+            self.char = key_char(item)
+            self.typed = ""
 
     def clk(self) -> None:
         """Clear the key code text, DoEvents, clear the key character, DoEvents (that order)."""
@@ -103,14 +156,25 @@ class KeyInput:
             if self.quit.is_set():
                 raise GameQuit()
             try:
-                code = self._posted.get(timeout=0.01)
+                item = self._posted.get(timeout=0.01)
             except queue.Empty:
                 continue
-            if code in MODIFIER_KEYS:
+            if isinstance(item, str):
+                self.typed = item
                 continue
-            self.code_text = str(code)
-            self.char = key_char(code)
-            return code
+            if item in MODIFIER_KEYS:
+                continue
+            self.code_text = str(item)
+            self.char = key_char(item)
+            self.typed = ""
+            return item
+
+    def take_typed(self, wait: float = 0.05) -> str:
+        """The character the key just read typed: the window posts it right after the key. "" when the key typed
+        nothing (arrows, F keys, Enter). Sets `typed` too."""
+        if not self.typed:
+            self.typed = self._posted.take_text(wait)
+        return self.typed
 
     def getkey(self, speech) -> None:
         """clk, wait with DoEvents for a key, then stop speech at once."""

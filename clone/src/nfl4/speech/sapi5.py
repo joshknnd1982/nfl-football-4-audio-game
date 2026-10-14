@@ -1,31 +1,42 @@
-"""SAPI 5 speech backend. This is inspired by Jim Kitchen's Brain.
+"""SAPI 5 speech backend: several voices, one queue. This is inspired by Jim Kitchen.
 
-Brain's own voice (GAME_SPEC 3.1, 9): the first voice in SAPI's list, volume 90, the voice's
-own rate kept as the base rate. One dedicated thread owns the SpVoice COM object in a
-single-threaded apartment, as the original VB6 form did; other threads send it commands.
-That keeps odd third-party engines happy and lets any thread speak or stop speech.
+The start-up voice (GAME_SPEC 3 step 3): the first voice in SAPI's list, its default rate kept as the base rate.
+One dedicated thread owns every SpVoice COM object in a single-threaded apartment, as the original VB6 form did; other
+threads send it commands. That keeps odd third-party engines happy and lets any thread speak or stop speech.
 
-The original's say (Speak flags 0) is done here as an async Speak plus a wait for the end of
-speech: SAPI parses the same text the same way (flags 0 and 1 differ only in waiting), and the
-wait can be broken when the window closes.
+Speakers with their own voices (nfl4 S7.1, D-031 items 1 and 3, GAP_REGISTER G-S1 and G-S6). NFL Football 4 has five
+speakers (speech/roles.py), each with a voice and a volume. The original loaded a voice on one SpVoice object whenever
+the speaker changed; the clone keeps ONE SpVoice object per distinct voice, made the first time a speaker with that
+voice talks (B-S21: five objects at once work in both bitnesses), and every text goes through ONE first-in-first-out
+queue: a text is made or spoken only after the one before it has been heard to its end, whatever voice either has, so
+nothing is ever cut by a voice change (the original cut the tail of an unguarded " Hike! ", Q52, not reproduced). Two
+speakers with the same voice share the object and keep their own volumes (D-022 item 5): the volume and the rate are set
+on the object just before each text. A text may ask for a rate step (banter line 113 is one step faster, Q38).
 
-Rendered mode (DECISIONS 2026-10-13, speech latency). With SAPI's own audio output, stopping
-speech (purge) blocked the speech thread for up to 700 ms on some voices, so a key pressed
-while a voice was talking waited for the old speech before the new speech began. In rendered
-mode SAPI makes each text into memory (10 to 60 ms for a menu item, about 30 times faster than
-real time), and the thread plays it through waveout.WaveOut, which stops at once. Long texts are
-made and played sentence by sentence so they start quickly. If no audio device opens, the
-backend falls back to the direct mode above.
+The original's say (Speak flags 0) is done here as an async Speak plus a wait for the end of speech: SAPI parses the
+same text the same way (flags 0 and 1 differ only in waiting), and the wait can be broken when the window closes.
 
-Two things were tried and rejected (DECISIONS 2026-10-13, speech skipping words): playing the
-memory stream while the engine is still writing it (the stream's contents change after they are
-read, so words were skipped), and rendering with engines that make speech no faster than they
-speak it (Orpheus, Prose 2000, neural voices: the player would wait the length of the text).
-Instead each voice gets a speed probe when it is chosen: if it cannot make a short text within
-PROBE_LIMIT_SECONDS, that voice speaks in the direct mode above, as the original did.
+Rendered mode (Brain, DECISIONS 2026-10-13, speech latency). With SAPI's own audio output, stopping speech (purge)
+blocked the speech thread for up to 700 ms on some voices, so a key pressed while a voice was talking waited for the old
+speech before the new speech began. In rendered mode SAPI makes each text into memory (10 to 60 ms for a menu item,
+about 30 times faster than real time), and the thread plays it through waveout.WaveOut, which stops at once. Long
+texts are made and played sentence by sentence so they start quickly. If no audio device opens, every voice speaks in
+the direct mode (SAPI's own output), one text after the other.
+
+Two things were tried and rejected (Brain, DECISIONS 2026-10-13, speech skipping words): playing the memory stream
+while the engine is still writing it (the stream's contents change after they are read, so words were skipped), and
+rendering with engines that make speech no faster than they speak it (Orpheus, Prose 2000, neural voices: the player
+would wait the length of the text). Instead each voice gets a speed probe when it is opened or chosen: if it cannot make
+a short text within PROBE_LIMIT_SECONDS, that voice speaks in the direct mode, as the original did. A direct text starts
+only when the player has played everything before it, and the next text waits for it, so the order stays one queue.
+
+Crash guard (playbook 7.4.5, data/voiceguard.py): `on_voice_trial(voice_id)` is called before a voice is opened or
+chosen again, and `on_voice_proven(voice_id)` once that voice has made or spoken a text to the end. The first voice of
+SAPI's list is reported as "" (it is the fallback and is never set aside).
 """
 from __future__ import annotations
 
+import collections
 import logging
 import queue
 import re
@@ -48,15 +59,16 @@ SVSF_IS_XML = 8
 RATE_MIN, RATE_MAX = -10, 10
 VOLUME_MIN, VOLUME_MAX = 0, 100
 PITCH_MIN, PITCH_MAX = -10, 10
-ORIGINAL_VOLUME = 90  # GAME_SPEC 3.1 step 5
-WAIT_SLICE_MS = 5     # how long the speech thread waits inside SAPI per pass while speaking
+ORIGINAL_VOLUME = 90  # GAME_SPEC 3 step 3: the first voice at volume 90 until a speaker's own volume is applied
+WAIT_SLICE_MS = 5     # how long the speech thread waits inside SAPI per pass while a voice speaks directly
 SAFT_44KHZ_16BIT_MONO = 34  # SpeechAudioFormatType; matches WaveOut's fixed format
 RENDER_RATE = 44100
 CHUNK_FROM_CHARS = 60  # longer texts are made and played sentence by sentence
 CHUNK_MIN_CHARS = 25   # a sentence shorter than this is joined to the next one
-PROBE_TEXT = "Select. no panning"
+PROBE_TEXT = "Select. no panning"   # Brain's calibration text for the 0.25 s limit (any short text works)
 PROBE_LIMIT_SECONDS = 0.25  # a voice slower than this for the probe text is spoken directly, not rendered
 STALL_SECONDS = 8.0   # no progress this long while speaking = deadlock with another program
+DEFAULT_ROLE = "main"   # the one speaker when no roles are given (the kit's single-voice use)
 
 
 def clamp(value: int, low: int, high: int) -> int:
@@ -114,7 +126,7 @@ def speech_variants(text: str) -> list[str]:
     the voice list) for: two numbers with only a space between them ("Infovox230 1.12 American"; with a
     comma it is fine) and any letter outside plain ASCII ("Français", "d’homme"). Tried in order:
     commas between numbers; then also plain ASCII letters; then also every digit spelled as a word."""
-    cleaned = re.sub(r"[\ufffd\x00-\x08\x0b-\x1f]", " ", text)
+    cleaned = re.sub(r"[�\x00-\x08\x0b-\x1f]", " ", text)
     commas = re.sub(r"(?<=\d)\s+(?=\d)", ", ", cleaned)
     folded = ascii_fold(commas)
     with_points = re.sub(r"(?<=\d)\.(?=\d)", " point ", folded)
@@ -164,17 +176,77 @@ class SapiStart:
     error: str = ""
 
 
+@dataclass
+class RoleVoice:
+    """The voice and the volume of one speaker."""
+    voice_id: str | None = None      # None or "" = the first voice in SAPI's list (the original's voice 0)
+    volume: int = ORIGINAL_VOLUME
+
+
+@dataclass(frozen=True)
+class VoiceDetails:
+    """What a speaker's voice is, read from its voice token without opening the voice."""
+    voice_id: str
+    name: str
+    gender: str          # the token's Gender attribute ("Female", "Male"; "" when it has none)
+
+
+class _Voice:
+    """One SpVoice object for one voice token (speech thread only)."""
+
+    def __init__(self, com, token_id: str, name: str):
+        self.com = com
+        self.token_id = token_id
+        self.name = name
+        self.direct = True       # spoken through SAPI's own output (no player, or too slow to render)
+        self.rate = None         # what was last set on the object
+        self.volume = None
+        self.proven = False      # has made or spoken a text to the end (the crash guard's all clear)
+
+
+@dataclass
+class _Entry:
+    """One text waiting in the queue."""
+    role: str
+    text: str
+    rate_step: int = 0
+    chunked: bool = False        # already one sentence of a longer text (rendered mode)
+    alts: list | None = None     # other ways to write it still to try; None = not tried yet
+
+
+class _Work:
+    """The text being made (render) or spoken (direct) now."""
+
+    def __init__(self, kind: str, entry: _Entry, voice: _Voice, stream=None):
+        self.kind = kind
+        self.entry = entry
+        self.voice = voice
+        self.stream = stream
+        self.progress = None
+        self.progress_time = time.monotonic()
+
+
 class SapiBackend(SpeechBackend):
     name = "SAPI 5"
+    takes_roles = True        # the manager passes role and rate_step to speak()
 
     def __init__(self, voice_id: str | None = None, rate: int | None = None,
                  volume: int = ORIGINAL_VOLUME, pitch: int = 0,
                  voice_factory=default_voice_factory, token_factory=default_token_factory,
                  com_init=True, render: bool = False, player_factory=default_player_factory,
-                 stream_factory=default_stream_factory):
-        self._want_voice_id = voice_id
+                 stream_factory=default_stream_factory, roles: dict[str, RoleVoice] | None = None,
+                 default_role: str | None = None):
+        if roles:
+            self._roles = {name: RoleVoice(r.voice_id or None, clamp(r.volume, VOLUME_MIN, VOLUME_MAX))
+                           for name, r in roles.items()}
+            self._default_role = default_role if default_role in self._roles else next(iter(self._roles))
+        else:
+            self._roles = {DEFAULT_ROLE: RoleVoice(voice_id or None, clamp(volume, VOLUME_MIN, VOLUME_MAX))}
+            self._default_role = DEFAULT_ROLE
+        self._role_lock = threading.Lock()
         self._want_rate = rate
-        self._volume = clamp(volume, VOLUME_MIN, VOLUME_MAX)
+        self._rate = 0                 # vr: the rate every voice speaks at (set at start)
+        self._base_rate = 0
         self._pitch = clamp(pitch, PITCH_MIN, PITCH_MAX)
         self._voice_factory = voice_factory
         self._token_factory = token_factory
@@ -183,21 +255,27 @@ class SapiBackend(SpeechBackend):
         self._player_factory = player_factory
         self._stream_factory = stream_factory
         self._player = None
-        self._direct = True       # speak through SAPI's own output (no player, or a voice too slow to render)
+        self._tokens = None            # SAPI's voice list (GetVoices), read once at start
+        self._resolved: dict[str, object] = {}     # wanted voice id (lower case) -> its token
+        self._voices: dict[str, _Voice] = {}       # token id (lower case) -> the voice object
+        self._reprobe: set[str] = set()            # voices chosen again: probe them when nothing is speaking
+        self._last_voice: _Voice | None = None     # the voice that spoke last (a stop with nothing in hand purges it)
         self.last_start_at = 0.0  # time.monotonic() when speech was last handed to the output (latency tool)
         self._commands: queue.Queue = queue.Queue()
         self._cv = threading.Condition()
-        self._queued = 0        # speak commands sent but not yet given to SAPI
-        self._busy = False      # SAPI is speaking or has speech queued
+        self._queued = 0        # speak commands sent but not yet taken by the speech thread
+        self._busy = False      # something is being made, spoken or played, or waits in the queue
         self._ready = threading.Event()
         self._thread: threading.Thread | None = None
         self._errors_logged = 0
-        self.on_healthy = None    # called once when speech has ended after this was set (the voice guard, data/voiceguard.py)
+        self.on_healthy = None        # called once when speech has ended after this was set (the kit's voice guard hook)
+        self.on_voice_trial = None    # called with a voice id before that voice is opened (data/voiceguard.py arm)
+        self.on_voice_proven = None   # called with a voice id when that voice has made its first text (guard clear)
         self.started = SapiStart(ok=False, error="not started")
 
     # ----- life cycle -------------------------------------------------------------
     def start(self, timeout: float = 15.0) -> SapiStart:
-        """Start the speech thread and wait until the voice is ready (or found missing)."""
+        """Start the speech thread and wait until the start-up voice is ready (or found missing)."""
         if self._thread is None:
             self._thread = threading.Thread(target=self._run, name="sapi5-speech", daemon=True)
             self._thread.start()
@@ -219,12 +297,13 @@ class SapiBackend(SpeechBackend):
     def is_available(self) -> bool:
         return self.started.ok and self._thread is not None and self._thread.is_alive()
 
-    def speak(self, text: str) -> bool:
+    def speak(self, text: str, role: str | None = None, rate_step: int = 0) -> bool:
+        """Queue text for the speaker `role` (None: the default speaker), rate_step steps faster than the rate."""
         if not self.is_available():
             return False
         with self._cv:
             self._queued += 1
-        self._commands.put(("speak", text))
+        self._commands.put(("speak", text, role if role in self._roles else self._default_role, int(rate_step)))
         return True
 
     def stop(self) -> None:
@@ -242,7 +321,47 @@ class SapiBackend(SpeechBackend):
         with self._cv:
             return bool(self._queued or self._busy)
 
-    # ----- settings (clone additions, GAME_SPEC 17) -------------------------------------
+    # ----- speakers ---------------------------------------------------------------------
+    @property
+    def roles(self) -> tuple[str, ...]:
+        return tuple(self._roles)
+
+    @property
+    def default_role(self) -> str:
+        return self._default_role
+
+    def role_voice(self, role: str) -> RoleVoice:
+        """The voice and volume wanted for a speaker (a copy)."""
+        with self._role_lock:
+            wanted = self._roles.get(role) or self._roles[self._default_role]
+            return RoleVoice(wanted.voice_id, wanted.volume)
+
+    def set_role_voice(self, role: str, voice_id: str | None) -> None:
+        """Choose a speaker's voice (None: the first voice). The voice is opened and probed by the speech thread."""
+        if role not in self._roles:
+            return
+        with self._role_lock:
+            self._roles[role].voice_id = voice_id or None
+        self._commands.put(("role_voice", role))
+
+    def set_role_volume(self, role: str, volume: int) -> None:
+        if role not in self._roles:
+            return
+        with self._role_lock:
+            self._roles[role].volume = clamp(volume, VOLUME_MIN, VOLUME_MAX)
+
+    def role_details(self, role: str, timeout: float = 3.0) -> VoiceDetails | None:
+        """The id, name and Gender attribute of a speaker's voice, read from its token by the speech thread (the voice
+        itself is not opened, so a voice that would crash cannot crash here). None when SAPI is not running."""
+        if not self.is_available():
+            return None
+        answer: list = []
+        done = threading.Event()
+        self._commands.put(("details", role, answer, done))
+        done.wait(timeout)
+        return answer[0] if answer else None
+
+    # ----- settings (clone additions) -------------------------------------------------
     @property
     def voice_name(self) -> str:
         return self.started.voice_name
@@ -255,19 +374,31 @@ class SapiBackend(SpeechBackend):
     def base_rate(self) -> int:
         return self.started.base_rate
 
+    @property
+    def rate(self) -> int:
+        """vr: the rate every voice speaks at now."""
+        return self._rate
+
     def set_rate(self, rate: int | None) -> None:
-        """None restores the voice's own base rate (the original's behavior)."""
+        """None restores the first voice's own base rate (the original's start value of vr)."""
         self._commands.put(("rate", None if rate is None else clamp(rate, RATE_MIN, RATE_MAX)))
 
     def set_volume(self, volume: int) -> None:
-        self._commands.put(("volume", clamp(volume, VOLUME_MIN, VOLUME_MAX)))
+        """The default speaker's volume (the kit's single-voice setting)."""
+        self.set_role_volume(self._default_role, volume)
 
     def set_pitch(self, pitch: int) -> None:
         self._commands.put(("pitch", clamp(pitch, PITCH_MIN, PITCH_MAX)))
 
     def set_voice(self, voice_id: str | None) -> None:
-        """None selects the first voice in SAPI's list (the original's choice)."""
-        self._commands.put(("voice", voice_id))
+        """The default speaker's voice; None selects the first voice in SAPI's list (the original's choice)."""
+        self.set_role_voice(self._default_role, voice_id)
+
+    @property
+    def rendered(self) -> bool:
+        """True when the default speaker's voice is spoken in rendered mode (tools and tests)."""
+        voice = self._voices.get(self.started.voice_id.lower()) if self.started.voice_id else None
+        return self._player is not None and voice is not None and not voice.direct
 
     # ----- speech thread ------------------------------------------------------------
     def _run(self) -> None:
@@ -275,26 +406,23 @@ class SapiBackend(SpeechBackend):
         if self._com_init:
             import pythoncom
             pythoncom.CoInitialize()
-        voice = None
         try:
-            voice = self._open_voice()
-            if voice is None:
-                return
-            if self._player is not None:
-                self._loop_render(voice, pythoncom)
-            else:
-                self._loop(voice, pythoncom)
+            if self._open():
+                self._loop(pythoncom)
         except Exception as exc:  # the speech thread must never take the game down
             log.exception("SAPI 5 speech thread failed: %s", exc)
             self.started = SapiStart(ok=False, error=f"{type(exc).__name__}: {exc}")
         finally:
             self._ready.set()
-            if voice is not None:
+            for voice in list(self._voices.values()):
                 try:
-                    voice.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)
+                    voice.com.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)
                 except Exception:
                     pass
-            voice = None
+            self._voices.clear()
+            self._resolved.clear()
+            self._tokens = None
+            self._last_voice = None
             if self._player is not None:
                 try:
                     self._player.close()
@@ -308,211 +436,243 @@ class SapiBackend(SpeechBackend):
             if pythoncom is not None:
                 pythoncom.CoUninitialize()
 
-    def _open_voice(self):
-        """GAME_SPEC 3.1 steps 3 and 5. Returns the voice, or None after reporting why not."""
+    def _open(self) -> bool:
+        """GAME_SPEC 3 steps 3 and 4: SAPI's voice list, the first voice's rate as vr, the default speaker's voice."""
         try:
-            voice = self._voice_factory()
-            tokens = voice.GetVoices("", "")
+            com = self._voice_factory()
+            tokens = com.GetVoices("", "")
             count = tokens.Count
         except Exception as exc:
             self.started = SapiStart(ok=False, error=f"SAPI 5 unavailable: {type(exc).__name__}: {exc}")
             log.error(self.started.error)
             self._ready.set()
-            return None
+            return False
         if count == 0:
             self.started = SapiStart(ok=False, voice_count=0, error="no SAPI 5 voices installed")
             log.error(self.started.error)
             self._ready.set()
-            return None
-        self._select_voice(voice, tokens, self._want_voice_id)
-        base_rate = int(voice.Rate)
-        # The original reads the rate and writes it back unchanged; the clone may override it.
-        voice.Rate = base_rate if self._want_rate is None else clamp(self._want_rate, RATE_MIN, RATE_MAX)
-        voice.Volume = self._volume
-        token = voice.Voice
-        self.started = SapiStart(ok=True, voice_count=count, voice_id=str(token.Id),
-                                 voice_name=str(token.GetDescription()), base_rate=base_rate)
+            return False
+        self._tokens = tokens
+        base_rate = int(com.Rate)        # the original reads the rate and keeps it in vr
         self._base_rate = base_rate
+        self._rate = base_rate if self._want_rate is None else clamp(self._want_rate, RATE_MIN, RATE_MAX)
         if self._render:
             try:
                 self._player = self._player_factory()
             except Exception as exc:
                 log.warning("rendered speech unavailable (%s: %s); SAPI 5 plays through its own output",
                             type(exc).__name__, exc)
-            else:
-                self._choose_mode(voice)
-        log.info("SAPI 5 ready: %d voices, using %r, base rate %d, volume %d",
-                 count, self.started.voice_name, base_rate, self._volume)
+        role = self.role_voice(self._default_role)
+        voice = self._adopt(com, self._resolve(role.voice_id), role.voice_id)
+        com.Rate = self._rate            # a voice load sets Rate = vr and the speaker's volume (GAME_SPEC 9.1)
+        com.Volume = role.volume
+        voice.rate, voice.volume = self._rate, role.volume
+        self._last_voice = voice
+        self.started = SapiStart(ok=True, voice_count=count, voice_id=voice.token_id, voice_name=voice.name,
+                                 base_rate=base_rate)
+        log.info("SAPI 5 ready: %d voices, %r for the %s, rate %d (base %d), %d speakers",
+                 count, voice.name, self._default_role, self._rate, base_rate, len(self._roles))
         self._ready.set()
-        return voice
+        return True
 
-    def _select_voice(self, voice, tokens, voice_id: str | None) -> None:
-        """Pick a saved voice by its token ID, else the first voice (GetVoices Item(0))."""
-        if voice_id:
-            try:  # cheap direct lookup, 2 ms on the owner's PC
-                token = self._token_factory()
-                token.SetId(voice_id)
-                voice.Voice = token
-                return
-            except Exception:
-                pass
+    # ----- voices: tokens, objects, probes ----------------------------------------------
+    def _first_token(self):
+        return self._tokens.Item(0)
+
+    def _resolve(self, voice_id: str | None):
+        """The token of a wanted voice; the first voice when it is None or not installed (logged once)."""
+        if not voice_id:
+            return self._first_token()
+        key = voice_id.strip().lower()
+        if key in self._resolved:
+            return self._resolved[key]
+        token = None
+        try:  # cheap direct lookup, 2 ms on the owner's PC
+            candidate = self._token_factory()
+            candidate.SetId(voice_id)
+            token = candidate
+        except Exception:
+            pass
+        if token is None:
             try:  # tokens from token enumerators may not accept SetId: scan the list
-                for i in range(tokens.Count):
-                    token = tokens.Item(i)
-                    if str(token.Id) == voice_id:
-                        voice.Voice = token
-                        return
+                for i in range(self._tokens.Count):
+                    candidate = self._tokens.Item(i)
+                    if str(candidate.Id).strip().lower() == key:
+                        token = candidate
+                        break
             except Exception as exc:
                 log.warning("voice list scan failed: %s", exc)
+        if token is None:
             log.warning("saved voice %r not found, using the first voice", voice_id)
-        voice.Voice = tokens.Item(0)
+            token = self._first_token()
+        self._resolved[key] = token
+        return token
 
-    @property
-    def rendered(self) -> bool:
-        """True when the current voice is spoken in rendered mode (tools and tests)."""
-        return self._player is not None and not self._direct
+    def _token_name(self, token) -> tuple[str, str]:
+        token_id = str(token.Id)
+        try:
+            name = str(token.GetDescription())
+        except Exception:
+            name = token_id.rsplit("\\", 1)[-1]
+        return token_id, name
 
-    def _choose_mode(self, voice) -> None:
-        """Probe the current voice: rendered if it makes a short text fast enough, else direct."""
-        fast = self._renders_fast(voice)
-        self._direct = not fast
-        log.info("speech mode for %r: %s", self.started.voice_name,
+    def _is_first(self, token_id: str) -> bool:
+        try:
+            return token_id.lower() == str(self._first_token().Id).lower()
+        except Exception:
+            return False
+
+    def _trial(self, token_id: str) -> None:
+        hook = self.on_voice_trial
+        if hook is not None:
+            try:
+                hook("" if self._is_first(token_id) else token_id)
+            except Exception as exc:
+                log.debug("voice trial hook failed: %s", exc)
+
+    def _adopt(self, com, token, wanted_id: str | None) -> _Voice:
+        """Put a voice token on a SpVoice object and probe it. Falls back to the first voice if the token is refused."""
+        token_id, name = self._token_name(token)
+        self._trial(token_id)
+        try:
+            com.Voice = token
+        except Exception as exc:
+            self._log_error(f"select voice {name!r}", exc)
+            token = self._first_token()
+            token_id, name = self._token_name(token)
+            try:
+                com.Voice = token
+            except Exception as exc2:
+                self._log_error("select the first voice", exc2)
+        voice = _Voice(com, token_id, name)
+        self._voices[token_id.lower()] = voice
+        self._probe(voice)
+        return voice
+
+    def _probe(self, voice: _Voice) -> None:
+        """Rendered if the voice makes a short text fast enough, else direct (there is no player: direct)."""
+        if self._player is None:
+            voice.direct = True
+            return
+        fast = self._renders_fast(voice.com)
+        voice.direct = not fast
+        if fast:
+            self._prove(voice)
+        log.info("speech mode for %r: %s", voice.name,
                  "rendered" if fast else "direct (this voice makes speech too slowly to render)")
 
-    def _renders_fast(self, voice) -> bool:
+    def _renders_fast(self, com) -> bool:
         """Make PROBE_TEXT into memory; True if it finishes within PROBE_LIMIT_SECONDS. Leaves the
         voice on its default audio output when it did not, so direct speech works afterwards."""
         try:
-            voice.AudioOutputStream = self._stream_factory()
-            voice.Speak(PROBE_TEXT, SVSF_ASYNC)
-            fast = bool(voice.WaitUntilDone(int(PROBE_LIMIT_SECONDS * 1000)))
+            com.AudioOutputStream = self._stream_factory()
+            com.Speak(PROBE_TEXT, SVSF_ASYNC)
+            fast = bool(com.WaitUntilDone(int(PROBE_LIMIT_SECONDS * 1000)))
         except Exception as exc:
             self._log_error("speed probe", exc)
             fast = False
         if not fast:
             try:
-                voice.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)   # still writing to memory: returns at once
-                voice.AudioOutput = voice.GetAudioOutputs().Item(0)
+                com.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)   # still writing to memory: returns at once
+                com.AudioOutput = com.GetAudioOutputs().Item(0)
             except Exception as exc:
                 self._log_error("back to the default output", exc)
         return fast
 
-    def _loop(self, voice, pythoncom) -> None:
-        # Stall watchdog (S7.1 test): when two programs speak through SAPI at once, Windows can
-        # deadlock them; one waits for the audio device (state "not started") while the other
-        # holds it at word 0, forever. Plain SAPI does the same, so the original would freeze or
-        # lose speech too. If the voice's status shows no progress for STALL_SECONDS, this copy
-        # stops its own speech and goes on; the test showed the other program then continues.
-        state = [None, time.monotonic()]    # progress, progress_time
-        while True:
-            if self._direct_step(voice, pythoncom, state):
-                return
-
-    def _direct_step(self, voice, pythoncom, state) -> bool:
-        """One pass of the direct loop. Returns True when told to quit."""
-        progress, progress_time = state
+    def _voice_for(self, role: str) -> _Voice | None:
+        """The voice object of a speaker, opened the first time a speaker with that voice talks."""
+        wanted = self.role_voice(role)
+        token = self._resolve(wanted.voice_id)
+        token_id, _name = self._token_name(token)
+        voice = self._voices.get(token_id.lower())
+        if voice is not None:
+            return voice
         try:
-            command = self._commands.get_nowait() if self._busy else self._commands.get(timeout=0.05)
-        except queue.Empty:
-            command = None
-        if command is not None:
-            if command[0] == "quit":
-                return True
-            self._handle(voice, command)
-        if pythoncom is not None:
-            pythoncom.PumpWaitingMessages()
-        if self._busy and self._commands.empty():
-            try:
-                done = bool(voice.WaitUntilDone(WAIT_SLICE_MS))
-            except Exception as exc:
-                self._log_error("WaitUntilDone", exc)
-                done = True
-            if not done:
-                now = time.monotonic()
-                current = self._progress(voice)
-                if current != progress:
-                    progress, progress_time = current, now
-                elif current is not None and now - progress_time > STALL_SECONDS:
-                    log.warning("SAPI 5 speech made no progress for %s s (another program "
-                                "speaking?); speech stopped", STALL_SECONDS)
-                    try:
-                        voice.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)
-                    except Exception as exc:
-                        self._log_error("purge after stall", exc)
-                    done = True
-            if done:
-                log.debug("speech done")
-                self._note_healthy()
-                progress = None
-                with self._cv:
-                    self._busy = False
-                    self._cv.notify_all()
-        state[0], state[1] = progress, progress_time
-        return False
+            com = self._voice_factory()
+        except Exception as exc:
+            self._log_error("open another voice", exc)
+            return self._voices.get(self.started.voice_id.lower())
+        return self._adopt(com, token, wanted.voice_id)
 
-    def _loop_render(self, voice, pythoncom) -> None:
-        """Rendered mode: SAPI makes each chunk of text into memory, the player plays it."""
-        player = self._player
-        pending: list = []          # (chunk, other ways to write it or None) not yet made
-        current = None              # the entry being made
-        stream = None               # the memory stream SAPI is filling, None when not making
-        direct_state = [None, time.monotonic()]
-        while True:
-            if self._direct:
-                if self._direct_step(voice, pythoncom, direct_state):
-                    return
-                continue
-            making = stream is not None
-            playing = False if making else player.busy()
-            wait = 0.05 if not (pending or making or playing) else 0.002
+    def _choose_again(self, role: str) -> None:
+        """A speaker's voice was chosen (role_voice command): open it now, or probe it again when it is open."""
+        wanted = self.role_voice(role)
+        token = self._resolve(wanted.voice_id)
+        token_id, name = self._token_name(token)
+        voice = self._voices.get(token_id.lower())
+        if voice is None:
             try:
-                command = self._commands.get(timeout=wait)
+                voice = self._adopt(self._voice_factory(), token, wanted.voice_id)
+            except Exception as exc:
+                self._log_error("open the chosen voice", exc)
+        else:
+            self._reprobe.add(token_id.lower())        # probed when nothing is speaking (see _loop)
+        if role == self._default_role and voice is not None:
+            self.started.voice_id = voice.token_id
+            self.started.voice_name = voice.name
+
+    def _details(self, role: str) -> VoiceDetails:
+        token = self._resolve(self.role_voice(role).voice_id)
+        token_id, name = self._token_name(token)
+        try:
+            gender = str(token.GetAttribute("Gender") or "")
+        except Exception:
+            gender = ""                          # no Gender attribute: the original says " He "
+        return VoiceDetails(token_id, name, gender)
+
+    def _prove(self, voice: _Voice) -> None:
+        if voice.proven:
+            return
+        voice.proven = True
+        hook = self.on_voice_proven
+        if hook is not None:
+            try:
+                hook("" if self._is_first(voice.token_id) else voice.token_id)
+            except Exception as exc:
+                log.debug("voice proven hook failed: %s", exc)
+
+    # ----- the queue -----------------------------------------------------------------------
+    def _loop(self, pythoncom) -> None:
+        pending: collections.deque[_Entry] = collections.deque()
+        work: _Work | None = None
+        while True:
+            playing = self._player is not None and work is None and self._player.busy()
+            active = bool(pending) or work is not None or playing
+            try:
+                command = self._commands.get(timeout=0.002 if active else 0.05)
             except queue.Empty:
                 command = None
             if command is not None:
                 kind = command[0]
                 if kind == "quit":
+                    self._purge(work, pending)
                     return
                 if kind == "speak":
-                    chunks = [c for c in split_chunks(command[1]) if c.strip()]
+                    _kind, text, role, step = command
                     with self._cv:
-                        pending.extend((c, None) for c in chunks)
                         self._queued -= 1
-                        self._busy = self._busy or bool(chunks)
+                        if text.strip():         # the original's Speak " " is only a barrier: say() waits for the queue
+                            pending.append(_Entry(role, text, step))
+                            self._busy = True
                         self._cv.notify_all()
                 elif kind == "purge":
-                    pending.clear()
-                    if stream is not None:
-                        try:  # memory output: returns at once
-                            voice.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)
-                        except Exception as exc:
-                            self._log_error("purge", exc)
-                        stream = None
-                    player.reset()
-                    log.debug("purge")
+                    work = self._purge(work, pending)
                 else:
-                    self._handle(voice, command)
+                    self._handle(command)
             if pythoncom is not None:
                 pythoncom.PumpWaitingMessages()
-            if stream is None and pending:
-                current = pending.pop(0)
-                stream = self._start_chunk(voice, current[0])
-            if stream is not None:
-                try:
-                    done = bool(voice.WaitUntilDone(1))
-                except Exception as exc:
-                    self._log_error("WaitUntilDone", exc)
-                    done = True
-                if done:
-                    if not self._play_chunk(stream) and current is not None:
-                        # the voice made no sound for this text: try the next way of writing it
-                        alts = speech_variants(current[0]) if current[1] is None else current[1]
-                        if alts:
-                            log.debug("no audio for %r, trying %r", current[0], alts[0])
-                            pending.insert(0, (alts[0], alts[1:]))
-                    stream = None
-            idle = stream is None and not pending and not player.busy()
-            if idle and self._busy:
+            if work is None:
+                for key in list(self._reprobe):
+                    self._reprobe.discard(key)
+                    voice = self._voices.get(key)
+                    if voice is not None:
+                        self._trial(voice.token_id)
+                        self._probe(voice)
+                if pending:
+                    work = self._start_next(pending)
+            if work is not None and self._step(work, pending):
+                work = None
+            if self._busy and work is None and not pending and not (self._player is not None and self._player.busy()):
                 log.debug("speech done")
                 self._note_healthy()
                 with self._cv:
@@ -520,18 +680,124 @@ class SapiBackend(SpeechBackend):
                         self._busy = False
                     self._cv.notify_all()
 
-    def _start_chunk(self, voice, text: str):
-        """Begin making text into a new memory stream. Returns the stream, or None on failure."""
+    def _apply(self, voice: _Voice, entry: _Entry) -> None:
+        """The speaker's volume and the rate (plus the text's rate step) on the voice object, just before its text."""
+        volume = self.role_voice(entry.role).volume
+        rate = clamp(self._rate + entry.rate_step, RATE_MIN, RATE_MAX)
+        try:
+            if voice.volume != volume:
+                voice.com.Volume = volume
+                voice.volume = volume
+            if voice.rate != rate:
+                voice.com.Rate = rate
+                voice.rate = rate
+        except Exception as exc:
+            self._log_error("rate or volume", exc)
+
+    def _start_next(self, pending) -> _Work | None:
+        """Begin the next text: make it into memory (rendered voice) or speak it (direct voice, only when the player
+        has played everything before it). None when it must wait or there was nothing to do."""
+        entry = pending[0]
+        voice = self._voice_for(entry.role)
+        if voice is None:
+            pending.popleft()
+            log.warning("no voice could say %r", entry.text)
+            return None
+        if voice.direct or self._player is None:
+            if self._player is not None and self._player.busy():
+                return None                          # rendered speech before it is still playing: keep the order
+            pending.popleft()
+            self._apply(voice, entry)
+            text, flags = apply_pitch(entry.text, self._pitch)
+            try:
+                voice.com.Speak(text, SVSF_ASYNC | flags)
+            except Exception as exc:
+                self._log_error("Speak", exc)
+                return None
+            self.last_start_at = time.monotonic()
+            self._last_voice = voice
+            log.debug("speak %r (%s, direct)", entry.text, entry.role)
+            return _Work("direct", entry, voice)
+        pending.popleft()
+        if not entry.chunked:
+            chunks = [c for c in split_chunks(entry.text) if c.strip()]
+            if not chunks:
+                return None
+            for chunk in reversed(chunks[1:]):
+                pending.appendleft(_Entry(entry.role, chunk, entry.rate_step, True))
+            entry = _Entry(entry.role, chunks[0], entry.rate_step, True)
         try:
             stream = self._stream_factory()
-            voice.AudioOutputStream = stream
-            text, flags = apply_pitch(text, self._pitch)
-            voice.Speak(text, SVSF_ASYNC | flags)
-            log.debug("speak %r", text)
-            return stream
+            voice.com.AudioOutputStream = stream
+            self._apply(voice, entry)
+            text, flags = apply_pitch(entry.text, self._pitch)
+            voice.com.Speak(text, SVSF_ASYNC | flags)
         except Exception as exc:
             self._log_error("Speak", exc)
             return None
+        self._last_voice = voice
+        log.debug("speak %r (%s)", entry.text, entry.role)
+        return _Work("render", entry, voice, stream)
+
+    def _step(self, work: _Work, pending) -> bool:
+        """One pass on the current text. True when it is finished (made and handed to the player, or spoken)."""
+        com = work.voice.com
+        if work.kind == "render":
+            try:
+                done = bool(com.WaitUntilDone(1))
+            except Exception as exc:
+                self._log_error("WaitUntilDone", exc)
+                done = True
+            if not done:
+                return False
+            if self._play_chunk(work.stream):
+                self._prove(work.voice)
+            else:
+                # the voice made no sound for this text: try the next way of writing it
+                entry = work.entry
+                alts = speech_variants(entry.text) if entry.alts is None else entry.alts
+                if alts:
+                    log.debug("no audio for %r, trying %r", entry.text, alts[0])
+                    pending.appendleft(_Entry(entry.role, alts[0], entry.rate_step, True, alts[1:]))
+            return True
+        try:
+            done = bool(com.WaitUntilDone(WAIT_SLICE_MS))
+        except Exception as exc:
+            self._log_error("WaitUntilDone", exc)
+            done = True
+        if done:
+            self._prove(work.voice)
+            return True
+        # Stall watchdog (Brain S7.1 test): when two programs speak through SAPI at once, Windows can deadlock them;
+        # one waits for the audio device (state "not started") while the other holds it at word 0, forever. If the
+        # voice's status shows no progress for STALL_SECONDS, this copy stops its own speech and goes on.
+        now = time.monotonic()
+        current = self._progress(com)
+        if current != work.progress:
+            work.progress, work.progress_time = current, now
+        elif current is not None and now - work.progress_time > STALL_SECONDS:
+            log.warning("SAPI 5 speech made no progress for %s s (another program speaking?); speech stopped",
+                        STALL_SECONDS)
+            try:
+                com.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)
+            except Exception as exc:
+                self._log_error("purge after stall", exc)
+            return True
+        return False
+
+    def _purge(self, work: _Work | None, pending) -> None:
+        """Stop at once: drop the queue, cut the text being made or spoken, silence the player."""
+        pending.clear()
+        voice = work.voice if work is not None else (self._last_voice if self._player is None else None)
+        if voice is not None:
+            try:  # memory output returns at once; a direct voice may take longer (B-S1)
+                voice.com.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)
+            except Exception as exc:
+                self._log_error("purge", exc)
+        if self._player is not None:
+            self._player.reset()
+        log.debug("purge")
+        return None
 
     def _play_chunk(self, stream) -> bool:
         """Give the finished audio to the player. False when the voice made none."""
@@ -548,54 +814,30 @@ class SapiBackend(SpeechBackend):
             return True      # an error is not "no sound for this text": do not try other texts
 
     @staticmethod
-    def _progress(voice):
+    def _progress(com):
         """What changes while speech moves on: (running state, stream, word position). None if unknown."""
         try:
-            status = voice.Status
+            status = com.Status
             return (int(status.RunningState), int(status.CurrentStreamNumber),
                     int(status.InputWordPosition))
         except Exception:
             return None
 
-    def _handle(self, voice, command) -> None:
+    def _handle(self, command) -> None:
         kind = command[0]
         try:
-            if kind == "speak":
-                text, flags = apply_pitch(command[1], self._pitch)
-                try:
-                    voice.Speak(text, SVSF_ASYNC | flags)
-                    self.last_start_at = time.monotonic()
-                    log.debug("speak %r", command[1])
-                    started = True
-                except Exception as exc:
-                    self._log_error("Speak", exc)
-                    started = False
-                with self._cv:
-                    self._queued -= 1
-                    self._busy = self._busy or started
-                    self._cv.notify_all()
-            elif kind == "purge":
-                voice.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)
-                log.debug("purge")
-                with self._cv:
-                    self._busy = False
-                    self._cv.notify_all()
-            elif kind == "rate":
-                voice.Rate = self._base_rate if command[1] is None else command[1]
-            elif kind == "volume":
-                self._volume = command[1]
-                voice.Volume = command[1]
+            if kind == "rate":
+                self._rate = self._base_rate if command[1] is None else command[1]
             elif kind == "pitch":
                 self._pitch = command[1]
-            elif kind == "voice":
-                rate, volume = int(voice.Rate), int(voice.Volume)
-                self._select_voice(voice, voice.GetVoices("", ""), command[1])
-                voice.Rate, voice.Volume = rate, volume  # keep the player's settings
-                token = voice.Voice
-                self.started.voice_id = str(token.Id)
-                self.started.voice_name = str(token.GetDescription())
-                if self._player is not None:
-                    self._choose_mode(voice)
+            elif kind == "role_voice":
+                self._choose_again(command[1])
+            elif kind == "details":
+                _kind, role, answer, done = command
+                try:
+                    answer.append(self._details(role))
+                finally:
+                    done.set()
         except Exception as exc:
             self._log_error(kind, exc)
 

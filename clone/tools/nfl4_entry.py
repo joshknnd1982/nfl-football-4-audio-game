@@ -1,4 +1,4 @@
-"""PyInstaller entry point for Brain. This is inspired by Jim Kitchen's Brain.
+"""PyInstaller entry point for Brain. This is inspired by Jim Kitchen.
 
 Same as `python -m nfl4`; a separate file because PyInstaller wants a script to start from.
 """

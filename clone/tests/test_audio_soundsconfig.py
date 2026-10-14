@@ -1,4 +1,4 @@
-"""sounds.txt: reading and healing. This is inspired by Jim Kitchen's Brain."""
+"""sounds.txt: reading and healing. This is inspired by Jim Kitchen."""
 import os
 
 import pytest

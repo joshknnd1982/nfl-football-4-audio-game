@@ -1,4 +1,4 @@
-"""The audio layer the game logic uses. This is inspired by Jim Kitchen's Brain.
+"""The audio layer the game logic uses. This is inspired by Jim Kitchen.
 
 Mirrors what the original did with DirectSound (GAME_SPEC 5.4): start a sound in a slot at a
 chosen frequency and pan, ask whether a slot is still playing, stop a slot. The logic never sees

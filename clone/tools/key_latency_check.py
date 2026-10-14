@@ -1,4 +1,4 @@
-"""Key to speech in the real program: arrowing through the speech settings menu. Inspired by Jim Kitchen's Brain.
+"""Key to speech in the real program: arrowing through the speech settings menu. Inspired by Jim Kitchen.
 
 Starts brain.app.main() (window, real SAPI 5 voice, real mixer) with the voice at volume 1 and the
 sound volume at 0, opens F2, then presses Down every INTERVAL seconds (like a player arrowing

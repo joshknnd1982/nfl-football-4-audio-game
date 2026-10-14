@@ -1,4 +1,4 @@
-"""Record tool versions and SHA-256 of a finished build in release/ (playbook 8.1). Inspired by Jim Kitchen's Brain.
+"""Record tool versions and SHA-256 of a finished build in release/ (playbook 8.1). Inspired by Jim Kitchen.
 
 Usage: python clone/tools/record_build.py   (any Python 3; reads %USERPROFILE%\\.kitchensinc-builds\\nfl4)
 Writes release/build_manifest_64.txt and build_manifest_32.txt (every file: SHA-256, size, path) and

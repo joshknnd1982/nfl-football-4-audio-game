@@ -1,4 +1,4 @@
-"""Start a BUILT nfl4.exe with a given SAPI 5 voice saved in its settings and report whether it survives. Inspired by Jim Kitchen's Brain.
+"""Start a BUILT nfl4.exe with a given SAPI 5 voice saved in its settings and report whether it survives. Inspired by Jim Kitchen.
 Usage: <python> exe_voice_check.py <nfl4.exe> [seconds] [voice id]   (default voice: SmoothTalker; speech volume 0)
 A native crash of the voice shows as exit code 3221226505 (0xC0000409) or 3221225477 (0xC0000005) within a second."""
 import os

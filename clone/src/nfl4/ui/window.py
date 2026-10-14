@@ -1,15 +1,22 @@
-"""The game window: no controls, only a caption, and every key goes to the game. This is inspired by Jim Kitchen's Brain.
+"""The game window: no controls, only a caption, and every key goes to the game. This is inspired by Jim Kitchen.
 
-A plain Win32 window made through ctypes (no GUI toolkit: the toolkit alone was 22 MB of the 92 MB install, P10).
-It has no child controls, so it keeps the keyboard focus itself and gets WM_KEYDOWN and WM_SYSKEYDOWN for
-every key, like the original's Form1 (GAME_SPEC 8.1). The message's wParam is the virtual-key code VB's
-Form_KeyDown received. Keys are not passed on, so no default handler acts on them, with two exceptions:
+A plain Win32 window made through ctypes (no GUI toolkit: the toolkit alone was 22 MB of Brain's first 92 MB install).
+It has no child controls, so it keeps the keyboard focus itself and gets WM_KEYDOWN and WM_SYSKEYDOWN for every key,
+like the original's Form1 (GAME_SPEC 8.1). The message's wParam is the virtual-key code VB's Form_KeyDown received.
+Keys are not passed on, so no default handler acts on them, with two exceptions:
 - Alt+F4 is passed on, so Windows still closes the window.
-- Releasing Alt or F10 is swallowed, so Windows does not enter system-menu mode and later arrow
-  keys still reach the game (DECISIONS P5: Alt and F10 are plain keys). Alt+letter beeps are swallowed too.
-TranslateMessage is never called: no WM_CHAR is wanted. Tests post key messages to a hidden window, so the
-keyboard is never taken from the player. Only the thread that made the window may run its message loop;
-`close()` may be called from any thread.
+- Releasing Alt or F10 is swallowed, so Windows does not enter system-menu mode and later arrow keys still reach the
+  game (GAME_SPEC 8.1: Alt and F10 are keys of the game). Alt+letter beeps are swallowed too.
+Typed characters (nfl4 S7.1, fixesforgames B-W3, GAP_REGISTER G-K5): the message loop calls TranslateMessage, so a
+key that types something makes a WM_CHAR, passed to `on_char` (letters as shown, keypad digits as digits, Shift+a as
+"A"; GAME_SPEC 8.2, D-022 item 2). TranslateMessage POSTS that WM_CHAR behind whatever is already in the queue, so keys
+that were posted before it would come first (TESTED in S7.1: five posted keys arrived as five keys, then five
+characters). The loop therefore takes the WM_CHAR out at once with PeekMessage and hands the key and its character
+over together: `on_key(code)` and right after it `on_char(char)`. Characters below 32 (Enter, Backspace, Escape, Tab)
+and half surrogate pairs are not passed: those keys come as key codes. A test that posts both WM_KEYDOWN and WM_CHAR
+gets every letter twice, because the loop makes the second one itself: tests post only WM_KEYDOWN.
+Tests post key messages to a hidden window, so the keyboard is never taken from the player. Only the thread that made
+the window may run its message loop; `close()` may be called from any thread.
 """
 from __future__ import annotations
 
@@ -26,13 +33,14 @@ VK_F4 = 115
 VK_F10 = 121
 
 WM_DESTROY, WM_CLOSE = 0x0002, 0x0010
-WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_SYSCHAR = 0x0100, 0x0101, 0x0104, 0x0105, 0x0106
+WM_KEYDOWN, WM_KEYUP, WM_CHAR, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_SYSCHAR = 0x0100, 0x0101, 0x0102, 0x0104, 0x0105, 0x0106
 WS_OVERLAPPEDWINDOW = 0x00CF0000
 CW_USEDEFAULT = -2147483648
 SW_SHOW = 5
 COLOR_WINDOW = 5
 IDC_ARROW = 32512
 MB_OK = 0
+PM_REMOVE = 1
 
 LRESULT = ctypes.c_ssize_t
 WNDPROC = ctypes.WINFUNCTYPE(LRESULT, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
@@ -57,6 +65,11 @@ user32.CreateWindowExW.argtypes = [wintypes.DWORD, wintypes.LPCWSTR, wintypes.LP
 user32.CreateWindowExW.restype = wintypes.HWND
 user32.GetMessageW.argtypes = [ctypes.POINTER(wintypes.MSG), wintypes.HWND, wintypes.UINT, wintypes.UINT]
 user32.GetMessageW.restype = ctypes.c_int
+user32.TranslateMessage.argtypes = [ctypes.POINTER(wintypes.MSG)]
+user32.TranslateMessage.restype = wintypes.BOOL
+user32.PeekMessageW.argtypes = [ctypes.POINTER(wintypes.MSG), wintypes.HWND, wintypes.UINT, wintypes.UINT,
+                                wintypes.UINT]
+user32.PeekMessageW.restype = wintypes.BOOL
 user32.DispatchMessageW.argtypes = [ctypes.POINTER(wintypes.MSG)]
 user32.DispatchMessageW.restype = LRESULT
 user32.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
@@ -64,6 +77,13 @@ user32.PostMessageW.restype = wintypes.BOOL
 user32.PostQuitMessage.argtypes = [ctypes.c_int]
 user32.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
 user32.SetForegroundWindow.argtypes = [wintypes.HWND]
+user32.BringWindowToTop.argtypes = [wintypes.HWND]
+user32.SetFocus.argtypes = [wintypes.HWND]
+user32.GetForegroundWindow.restype = wintypes.HWND
+user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+user32.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, wintypes.BOOL]
+user32.AttachThreadInput.restype = wintypes.BOOL
 user32.DestroyWindow.argtypes = [wintypes.HWND]
 user32.IsWindow.argtypes = [wintypes.HWND]
 user32.MessageBoxW.argtypes = [wintypes.HWND, wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.UINT]
@@ -72,9 +92,10 @@ user32.LoadCursorW.restype = wintypes.HANDLE
 user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
 kernel32.GetModuleHandleW.argtypes = [wintypes.LPCWSTR]
 kernel32.GetModuleHandleW.restype = wintypes.HMODULE
+kernel32.GetCurrentThreadId.restype = wintypes.DWORD
 
-_CLASS_NAME = "KitchensincBrainWindow"
-_windows: dict = {}          # window handle -> BrainWindow, for the one window procedure of the class
+_CLASS_NAME = "KitchensincNfl4Window"
+_windows: dict = {}          # window handle -> GameWindow, for the one window procedure of the class
 _pending: list = []          # the window being made: messages arrive before CreateWindowEx returns its handle
 
 
@@ -105,15 +126,16 @@ def _register() -> None:
     _class_registered = True
 
 
-class BrainWindow:
-    def __init__(self, on_key, on_close):
+class GameWindow:
+    def __init__(self, on_key, on_close, on_char=None, title: str = CAPTION):
         self._on_key = on_key
         self._on_close = on_close
+        self._on_char = on_char
         self._looping = False
         _register()
         _pending.append(self)
         try:
-            self.handle = user32.CreateWindowExW(0, _CLASS_NAME, CAPTION, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+            self.handle = user32.CreateWindowExW(0, _CLASS_NAME, title, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
                                                  CW_USEDEFAULT, 420, 160, None, None,
                                                  kernel32.GetModuleHandleW(None), None)
         finally:
@@ -128,6 +150,9 @@ class BrainWindow:
                 if wparam == VK_F4 and msg == WM_SYSKEYDOWN:
                     return user32.DefWindowProcW(hwnd, msg, wparam, lparam)   # Alt+F4: Windows closes the window
                 self._on_key(int(wparam))
+                return 0
+            if msg == WM_CHAR:                     # one the loop did not pair with its key (not expected)
+                self._deliver_char(int(wparam))
                 return 0
             if msg in (WM_KEYUP, WM_SYSKEYUP):
                 if wparam in (VK_MENU, VK_F10):
@@ -148,6 +173,13 @@ class BrainWindow:
             log.exception("window message %s failed", msg)
         return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
 
+    def _deliver_char(self, code: int) -> None:
+        if self._on_char is not None and code >= 32 and not 0xD800 <= code <= 0xDFFF:
+            try:
+                self._on_char(chr(code))
+            except Exception:
+                log.exception("character handler failed")
+
     # ----- what the program uses -----
     @property
     def title(self) -> str:
@@ -155,16 +187,46 @@ class BrainWindow:
         user32.GetWindowTextW(self.handle, buffer, 256)
         return buffer.value
 
-    def show(self) -> None:
+    def in_front(self) -> bool:
+        return user32.GetForegroundWindow() == self.handle
+
+    def show(self) -> bool:
+        """Show the window and take the keyboard. Windows may refuse a program that was not started by the foreground
+        program (one started from a console that is not in front): joining the input queue of the foreground thread for
+        the moment of the call is the usual way (found with the listening tool, nfl4 S4.1). True when it is in front."""
         user32.ShowWindow(self.handle, SW_SHOW)
-        user32.SetForegroundWindow(self.handle)
+        if not self.in_front():
+            foreground = user32.GetForegroundWindow()
+            other = user32.GetWindowThreadProcessId(foreground, None) if foreground else 0
+            mine = kernel32.GetCurrentThreadId()
+            attached = bool(other) and other != mine and bool(user32.AttachThreadInput(mine, other, True))
+            try:
+                user32.BringWindowToTop(self.handle)
+                user32.SetForegroundWindow(self.handle)
+                user32.SetFocus(self.handle)
+            finally:
+                if attached:
+                    user32.AttachThreadInput(mine, other, False)
+        return self.in_front()
 
     def run(self) -> None:
         """The message loop; returns when the window has been destroyed."""
         msg = wintypes.MSG()
+        char = wintypes.MSG()
         self._looping = True
         try:
             while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
+                if msg.message == WM_KEYDOWN and msg.hWnd == self.handle:
+                    # makes the WM_CHAR of a key that types (B-W3); take it out now so it follows its own key
+                    typed = None
+                    if user32.TranslateMessage(ctypes.byref(msg)) and user32.PeekMessageW(
+                            ctypes.byref(char), self.handle, WM_CHAR, WM_CHAR, PM_REMOVE):
+                        typed = int(char.wParam)
+                    user32.DispatchMessageW(ctypes.byref(msg))
+                    if typed is not None:
+                        self._deliver_char(typed)
+                    continue
+                user32.TranslateMessage(ctypes.byref(msg))
                 user32.DispatchMessageW(ctypes.byref(msg))
         finally:
             self._looping = False
@@ -178,4 +240,5 @@ class BrainWindow:
             user32.DestroyWindow(self.handle)
 
     def message_box(self, text: str, title: str) -> None:
+        """A plain box, OK only, no icon: the kind the original's MsgBox showed, with the same Windows sound (D-032 item 3)."""
         user32.MessageBoxW(self.handle, text, title, MB_OK)

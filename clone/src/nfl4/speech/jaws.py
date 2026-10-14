@@ -1,4 +1,4 @@
-"""JAWS speech backend through Freedom Scientific's COM interface. This is inspired by Jim Kitchen's Brain.
+"""JAWS speech backend through Freedom Scientific's COM interface. This is inspired by Jim Kitchen.
 
 Nothing is bundled: the player's own installed JAWS provides FSAPI.dll and registers the COM class
 FreedomSci.JawsApi (both the 64-bit and the 32-bit registration exist on a JAWS 2026 PC, so a 32-bit
