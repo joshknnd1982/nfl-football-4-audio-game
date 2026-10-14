@@ -12,6 +12,7 @@ from nfl4.audio.output import TimedOutput
 from nfl4.data.settings import AudioSettings
 from nfl4.game.flow import Game
 from nfl4.game.keys import MODIFIER_KEYS, GameQuit, KeyInput
+from nfl4.game.rnd import GameRandom
 from nfl4.game.sounds import GameSounds
 from nfl4.speech.fake import FakeBackend
 from nfl4.speech.manager import SpeechManager
@@ -134,7 +135,9 @@ class Rig:
     """The game on a virtual clock with a SAPI-like fake (it takes speakers) and an NVDA fake.
 
     sounds_dir: the player's sounds folder (a tmp_path); with it the rig also has the audio layer (`audio`, `sounds`,
-    `slot_log`, `output`), on the shipped wavs unless shipped_dir names another folder. rng: the sounds' generator."""
+    `slot_log`, `output`), on the shipped wavs unless shipped_dir names another folder. rng: the source of the game's ONE
+    random function (`rig.rnd`, game/rnd.py; anything with random(): a seeded random.Random, a scripted source), shared by
+    the game's draws and the sounds' draws as in the program (G-D2)."""
 
     def __init__(self, answers=(), speech_per_char=0.0, mode="sapi", nvda_running=False, notice_sources=(),
                  sounds_dir=None, shipped_dir=None, rng=None, sound_level=0):
@@ -145,6 +148,7 @@ class Rig:
                                 clock=self.clock, sleep=self.clock.sleep)
         self.speech = SpeechManager(self.sapi, self.nvda, mode)
         self.keys = ScriptedKeys(self.clock, answers)
+        self.rnd = GameRandom(rng)
         self.audio = self.sounds = self.output = None
         self.slot_log = []
         if sounds_dir is not None:
@@ -154,10 +158,10 @@ class Rig:
             library = SoundLibrary(shipped_dir or shipped_sounds_dir(), str(sounds_dir))
             self.audio = Audio(library, self.audio_settings, output=self.output, beeper=self.beeper,
                                clock=self.clock, slot_log=self.slot_log)
-            self.sounds = GameSounds(self.audio, self.keys, self.audio_settings, rng=rng, clock=self.clock,
+            self.sounds = GameSounds(self.audio, self.keys, self.audio_settings, rng=self.rnd, clock=self.clock,
                                      sleep=self.clock.sleep)
         self.game = Game(self.speech, self.keys, clock=self.clock, sleep=self.clock.sleep,
-                         notice_sources=notice_sources, sounds=self.sounds)
+                         notice_sources=notice_sources, sounds=self.sounds, rnd=self.rnd)
 
     def run(self):
         self.game.run()

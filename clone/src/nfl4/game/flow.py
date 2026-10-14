@@ -9,6 +9,11 @@ P7 S7.1 is the SKELETON: the spoken title once per launch (rule 0.5.1, GAP_REGIS
 file and the voice crash guard collected (said once, playbook 7.10), then a key wait that ends the program on Escape.
 S7.4 replaces run() with the start-up of GAME_SPEC 3 (intro music, first-run welcome, season set-up, the week loop, the
 main menu, the exit sequence with its beeps and sentence); Escape does not end the original from the main menu.
+
+P7 S7.3a adds the season frame the later sessions stand on: the speakers (game/speakers.py), the one random function
+(game/rnd.py), the league, the name pool, the season state, and the original's procedures SayStand, SayScore,
+SayFinalScore and sgc as methods (say_stand, say_score, say_final_score, sgc) and `makes` (make_schedule), `GetTeams`
+and `SetPlayerNames` (the league and the pool), pag's set-up (new_game_setup).
 """
 from __future__ import annotations
 
@@ -16,37 +21,103 @@ import logging
 import time
 from typing import Callable
 
-from ..speech.roles import ANNOUNCER
-from . import texts
+from . import scorespeech, texts
+from .gameclock import QuarterClock
 from .keys import KEY_ESCAPE, KeyInput
+from .league import League
+from .names import NamePool
+from .rnd import GameRandom
+from .season import SeasonState
+from .setup import GameSetup, Roster, new_game_setup
+from .speakers import Speakers
+from .standings import standings_speech
 
 log = logging.getLogger("nfl4.game")
 
+KEY_CODE_F1 = "112"     # the key code text a global menu and sgc leave in g: the waiting prompt then repeats
 
-class Game:
+
+class Game(Speakers):
     def __init__(self, speech, keys: KeyInput, clock: Callable[[], float] = time.monotonic,
-                 sleep: Callable[[float], None] = time.sleep, notice_sources=(), sounds=None):
-        self.speech = speech
-        self.keys = keys
+                 sleep: Callable[[float], None] = time.sleep, notice_sources=(), sounds=None,
+                 rnd: GameRandom | None = None, league: League | None = None, pool: NamePool | None = None):
+        super().__init__(speech, keys, rnd)
         self.clock = clock
         self.sleep = sleep
         self.notice_sources = tuple(notice_sources)   # objects with take_notices() (the settings file, the audio layer)
         self.sounds = sounds                          # game.sounds.GameSounds: the original's sound procedures (S7.2)
+        self.league = league if league is not None else League()      # GetTeams (S7.7 fills it from teams.txt)
+        self._pool = pool                             # SetPlayerNames: the 1,708 surnames, loaded when first needed
+        self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
+        self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
+        self.coach_source = lambda: self.season.coach
 
-    # ----- the original's speakers: GAME_SPEC 9.1 (S7.3 and S7.4 add say3, say4, say5, say6 and the log) -----
+    @property
+    def pool(self) -> NamePool:
+        if self._pool is None:
+            self._pool = NamePool(self.rnd)
+        return self._pool
 
-    def say(self, text: str, role: str = ANNOUNCER) -> None:
-        """Speak and wait until everything queued is spoken (the original's say: flags 0, a barrier)."""
-        if text:
-            self.speech.say(text, self.keys.quit, role=role)
+    # ----- the season frame: the original's procedures -----
 
-    def say2(self, text: str, role: str = ANNOUNCER) -> None:
-        """Queue and go on (the original's say2: flags 1)."""
-        if text:
-            self.speech.say_async(text, role=role)
+    def own_team(self) -> str:
+        """Me.m294(tn1 + tn2 * 9): the player's team."""
+        return self.league.team(self.season.tn1, self.season.tn2)
 
-    def stopspeech(self) -> None:
-        self.speech.stop()
+    def opponent_team(self) -> str:
+        """Me.m294(tn3 + tn4 * 9): this week's opponent."""
+        return self.league.team(self.season.tn3, self.season.tn4)
+
+    def make_schedule(self):
+        """makes (GAME_SPEC 5.1): a new schedule for the player's team."""
+        return self.season.make_schedule(self.rnd)
+
+    def new_game_setup(self, own_names: Roster | None = None) -> GameSetup:
+        """pag's set-up GoSub (GAME_SPEC 5.5): the rosters, the banter names, the periods' lengths and the warnings; the
+        three warning lengths also go to the clock."""
+        setup = new_game_setup(self.rnd, self.pool, own_names)
+        self.quarter_clock.set_warnings(*setup.warnings)
+        self.quarter_clock.start_quarter()
+        return setup
+
+    def sgc(self, played: int, total: int, quarter: int) -> None:
+        """The game clock (GAME_SPEC 5.3): say5 the made-up time, clk, then g = "112" so the waiting prompt repeats."""
+        self.say5(self.quarter_clock.advance(played, total, quarter, self.rnd))
+        self.keys.clk()
+        self.keys.code_text = KEY_CODE_F1
+
+    def say_score(self, own_score: int, opponent_score: int) -> None:
+        """SayScore (F3): " The score is ", the sentence (waited), then two lines to the log whatever ptf is, DoEvents."""
+        self.say5(scorespeech.THE_SCORE_IS)
+        sentence = scorespeech.score_sentence(self.own_team(), self.opponent_team(), own_score, opponent_score)
+        self.say(sentence)
+        self.log_print("")
+        self.log_print(scorespeech.THE_SCORE_IS + sentence)
+        self.keys.pump()
+
+    def say_final_score(self, own_score: int, opponent_score: int) -> None:
+        """SayFinalScore: ptf = 1, " The Final score is", the sentence (waited), ptf = 0."""
+        self.ptf = 1
+        self.say5(scorespeech.THE_FINAL_SCORE_IS)
+        self.say(scorespeech.score_sentence(self.own_team(), self.opponent_team(), own_score, opponent_score))
+        self.ptf = 0
+
+    def say_stand(self) -> None:
+        """SayStand (GAME_SPEC 5.2): the standings after the week just played, nothing when gtp is 0 or above 17. The
+        original clears the key twice (clk) on the way, the second time only when it will speak."""
+        self.keys.clk()
+        speech = standings_speech(self.league, self.season.records, self.season.gtp)
+        if speech is None:
+            return
+        self.keys.clk()
+        self.ptf = 1
+        self.say2(speech.heading)
+        for division_text, lines in speech.divisions:
+            self.say2(division_text)
+            for line in lines:
+                self.say2(line)
+            self.log_print("")
+        self.ptf = 0
 
     # ----- the flow -----
 

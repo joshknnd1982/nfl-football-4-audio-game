@@ -25,6 +25,7 @@ from .data.voiceguard import VoiceGuard, voice_label
 from .game import texts
 from .game.flow import Game
 from .game.keys import GameQuit, KeyInput
+from .game.rnd import GameRandom
 from .game.sounds import GameSounds
 from .speech import create_speech
 from .speech.roles import ROLES
@@ -77,11 +78,12 @@ def main() -> int:
     note_voices(store, speech, settings, skipped)
     store.voice_name = lambda role: _voice_name(speech, role)   # the note above each saved voice in settings.txt
     audio = start_audio(settings)
-    sounds = GameSounds(audio, keys, settings.audio)
+    rnd = GameRandom()                      # ONE random function for the game and the sounds (G-D2)
+    sounds = GameSounds(audio, keys, settings.audio, rng=rnd)
 
     def game_thread():
         try:
-            Game(speech, keys, notice_sources=(store, audio), sounds=sounds).run()
+            Game(speech, keys, notice_sources=(store, audio), sounds=sounds, rnd=rnd).run()
         except GameQuit:
             pass
         except Exception:

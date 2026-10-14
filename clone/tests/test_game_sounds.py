@@ -278,7 +278,7 @@ def test_a_waited_sound_switched_off_takes_no_time_and_a_silent_file_takes_its_l
     rig.sounds.play(25, 0)                                              # the Super Bowl piece, 11.5 s in the original
     assert rig.clock() - t0 < 0.002
     rig.sounds.celebration_sound()                                      # foot15, switched off: draws as usual, no wait
-    assert rig.clock() - t0 < 0.004 and rig.sounds.rng.drawn == 2
+    assert rig.clock() - t0 < 0.004 and rig.rnd.source.drawn == 2       # S7.3a: the rig's generator wraps the scripted source
     rig.sounds.play(13, 0)
     assert rig.clock() - t0 == pytest.approx(1.0, abs=0.006)
 
