@@ -10,7 +10,7 @@ from . import phrases as P
 from .gamestate import other
 from .playtables import (FIELD_GOAL_DRAWS, FIELD_GOAL_NEEDED, RETURN_KIND_ODDS, RETURN_RANGE, RETURN_RANGES,
                          RETURN_SHORTEST)
-from .rules import NORMAL_KICKOFF
+from .rules import NORMAL_KICKOFF, PERIOD_OVER
 
 KEY_F1, KEY_F2, KEY_F3, KEY_F4 = "112", "113", "114", "115"
 KEY_ENTER, KEY_UP, KEY_DOWN = "13", "38", "40"
@@ -139,6 +139,8 @@ class KickSteps:
         """The receiving side is wisoff, the kicking side L504."""
         g, s, snd, rnd = self.g, self.s, self.snd, self.rnd
         kind = self.rules.before_kickoff(s, s.defense)       # H4: the kind (Classic: "normal", no question)
+        if kind == PERIOD_OVER:                              # N. F. L. rules (SX.2): a score as time ran out in the
+            return self.next_play                            # second or fourth quarter: the period ends, no kick-off
         if kind != NORMAL_KICKOFF:
             raise NotImplementedError("kick-off kind %r: the onside kick is built in SX.4" % (kind,))
         if s.first_kickoff:                                  # L8a8 = 1: the first kick-off records its receiver

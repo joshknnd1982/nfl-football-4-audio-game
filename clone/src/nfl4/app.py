@@ -27,6 +27,7 @@ from .data.lifecycle import arm_exit_deadline, leave_program_folder
 from .data.logsetup import install_exception_logging, setup_logging
 from .data.settingsfile import SettingsStore
 from .data.voiceguard import VoiceGuard, voice_label
+from .extras.nfl_rules import is_nfl, rules_from_settings
 from .game import texts
 from .game.flow import Game
 from .game.keys import GameQuit, KeyInput
@@ -98,8 +99,11 @@ def main() -> int:
     files = FileProgramStore(paths.user_data_dir(), paths.customize_dir(), first=first_start)
     # the player's names and banter (teams.txt, divisions.txt, surnames.txt, banter.txt in the same folder, S7.7): read and
     # healed once now, so their notices come with the start-up notices too
+    # nfl4 only (rule 0.13, SX.2): the Rules setting chooses Classic or the N. F. L. rules; their files (remarks.txt) are read
+    # only with the N. F. L. rules
+    rules = rules_from_settings(settings.game)
     try:
-        custom = Customization(paths.customize_dir())
+        custom = Customization(paths.customize_dir(), extras=is_nfl(rules))
     except Exception:                       # cannot happen (it never raises); the game plays with the original names
         log.exception("the customization files could not be loaded")
         custom = None
@@ -109,7 +113,7 @@ def main() -> int:
             sources = tuple(source for source in (store, audio, files, custom) if source is not None)
             game = Game(speech, keys, notice_sources=sources, sounds=sounds, rnd=rnd, options=options,
                         program_store=files, open_folder=paths.open_folder, settings_dir=store.folder,
-                        customization=custom)
+                        customization=custom, rules=rules)
             game.season_store = game.setup_store = files        # the files the season engine and the prompts write
             game.log_sink = files.log_line                      # footballlog.txt (Print #3, G-S10)
             game.run()

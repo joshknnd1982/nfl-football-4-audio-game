@@ -16,8 +16,18 @@ with the original's behavior: an identity or nothing, and never a random number 
     H11 extra_stats_lines(state)           after " Points Scored" in the statistics        no lines
     H13 extra_situation(state)             after F1's position and down in a play menu     no lines
     H12 extra_help(key)                    F5, F6, F7 after the original text (S7.4a)     no lines
-H12 is read by the hot-key menus (game/hotkeys.py) through Game.rules, the rules of the whole program; key is the code
-text of the key ("116" F5, "117" F6, "118" F7).
+H12 is read by the hot-key menus (game/hotkeys.py) through the rules of the game in progress, else Game.rules, the rules
+of the whole program; key is the code text of the key ("116" F5, "117" F6, "118" F7).
+
+Added in PX SX.2 (the real clock and the timeouts, D-049), each an identity or a no-op in Classic:
+    H2 after_tackle(state)                 after the tackle sentence of a play that ends     nothing
+                                           in the field of play (0x4506ef)
+    H3 menu_action(state, action)          Enter on an item whose action is neither a play   never called (the lists
+                                           nor Save Game (an item the extras added)           of 4.15 have none)
+    H4 before_kickoff -> PERIOD_OVER       a score as time ran out ends the period first      never returned
+    H1 before_snap() -> True               a pending runoff ran the period out at the snap   None
+    H1 warning_given()                     the engine said the two-minute warning            nothing
+    for_game()                             the rules object of one game                       itself
 """
 from __future__ import annotations
 
@@ -28,17 +38,24 @@ from .playtables import NEUTRAL, Modifiers
 
 GO_ON = "go on"
 NORMAL_KICKOFF = "normal"
+PERIOD_OVER = "period over"     # H4: no kick-off, the period ends first (N. F. L. rules mode only, SX.2)
 
 
 class ClassicRules:
     name = "Classic"
     modifiers: Modifiers = NEUTRAL
 
+    def for_game(self) -> "ClassicRules":
+        return self
+
     def period_clock(self, game, state) -> ClassicPeriodClock:
         return ClassicPeriodClock(game, state)
 
     def before_snap(self, state, offense_play: int, defense_play: int) -> str:
         return GO_ON
+
+    def after_tackle(self, state) -> None:
+        return None
 
     def after_outcome(self, state, outcome: PlayOutcome) -> PlayOutcome:
         return outcome
@@ -48,6 +65,9 @@ class ClassicRules:
 
     def defense_menu(self, state) -> list[menus.MenuItem]:
         return menus.defense_menu()
+
+    def menu_action(self, state, action: tuple[str, int]) -> bool:
+        return False
 
     def before_kickoff(self, state, kicking_side: int) -> str:
         return NORMAL_KICKOFF

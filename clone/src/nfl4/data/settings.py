@@ -28,6 +28,9 @@ class SpeechSettings:
 @dataclass
 class GameSettings:
     comments: bool = True        # F8 (ctog, GAME_SPEC 4.5): comtog 0 or Empty = the announcer's comments are on
+    # nfl4 only (rule 0.13, NFL_EXTRAS_DESIGN 12.1, PX SX.2): the Rules setting and the switches of the extra features
+    rules: str = "classic"       # "classic" (the original, the default until SX.9: NQ2) or "nfl" (the N. F. L. rules)
+    nx_timeouts: bool = True     # the real clock's timeouts in N. F. L. rules mode
 
 
 @dataclass

@@ -326,10 +326,26 @@ def test_a_start_makes_the_customization_files_and_says_nothing_about_them(tmp_p
     monkeypatch.setattr(app, "create_speech", made)
     monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
     assert app.main() == 0
+    # Classic (the default Rules): no file of the extras (remarks.txt) is made (nfl4 only, CUSTOMIZABLE_CONTENT 13, SX.2)
     assert sorted(p.name for p in (tmp_path / "customize").iterdir()) == ["banter.txt", "divisions.txt", "sounds",
                                                                          "surnames.txt", "teams.txt"]
     spoken = " ".join(made.sapi.spoken())
     assert "teams.txt" not in spoken and "banter.txt" not in spoken and "customiz" not in spoken
+
+
+@pytest.mark.window
+def test_a_start_with_the_nfl_rules_also_makes_remarks_txt_and_says_nothing_about_it(tmp_path, monkeypatch):
+    """nfl4 only (rule 0.13, PX SX.2): settings.txt says rules = nfl, so the extras' file is read (made) at the start."""
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    write_settings(tmp_path, ["rules = nfl"])
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
+    assert app.main() == 0
+    remarks = tmp_path / "customize" / "remarks.txt"
+    assert remarks.is_file() and b"TO01 = " in remarks.read_bytes()
+    assert "remarks" not in " ".join(made.sapi.spoken())
+    assert "rules = nfl" in (tmp_path / "settings.txt").read_text(encoding="utf-8")
 
 
 @pytest.mark.window

@@ -19,6 +19,10 @@ Customize menu and never changes it. `sounds` below it holds the player's own so
 
 Nothing here raises. The names are what the voice speaks (the original has no written form), 1 to 30 characters, no comma, no
 semicolon, no control character; the count of teams (32), divisions (8) and surnames (1,708) is fixed (CUSTOMIZABLE_CONTENT 5).
+
+nfl4 only (rule 0.13, CUSTOMIZABLE_CONTENT 13, PX SX.2): remarks.txt holds the remark pools of the extra features
+(extras/remarks.py). It is one more list in the same format with the same healing, but it is in use only while the Rules
+setting is the N. F. L. rules (`extras` / `use_extras`): with Classic it is never read, made, checked or reset.
 """
 from __future__ import annotations
 
@@ -45,6 +49,7 @@ SOUNDS_FOLDER = "sounds"
 NAME_MIN, NAME_MAX = 1, 30
 
 TEAMS, DIVISIONS, SURNAMES, BANTER = "teams", "divisions", "surnames", "banter"
+REMARKS = "remarks"         # nfl4 only (rule 0.13): the extras' remark pools, read only with the N. F. L. rules (SX.2)
 
 
 @dataclass(frozen=True)
@@ -61,7 +66,12 @@ SPECS: tuple[ListSpec, ...] = (
     ListSpec(SURNAMES, "surnames.txt", "surnames", "the original surnames"),
     ListSpec(BANTER, "banter.txt", "banter lines", "the original banter lines"),
 )
-SPEC_BY_KEY = {spec.key: spec for spec in SPECS}
+# CUSTOMIZABLE_CONTENT 13: the files of the extra features are read, made, checked and reset only while the Rules setting is
+# the N. F. L. rules (`Customization.use_extras`); with Classic none of them is ever opened
+EXTRA_SPECS: tuple[ListSpec, ...] = (
+    ListSpec(REMARKS, "remarks.txt", "remarks", "the original remarks"),
+)
+SPEC_BY_KEY = {spec.key: spec for spec in SPECS + EXTRA_SPECS}
 
 # The texts the clone adds (CLONE texts, GAP_REGISTER section 8; S8.2 listens to them)
 DAMAGED_RESET = " The file %s was damaged and has been reset to %s. A copy was saved. "
@@ -197,6 +207,7 @@ class Snapshot:
     notices: list[str] = field(default_factory=list)                # the spoken sentences of this load
     sound_files: list[str] = field(default_factory=list)            # the sound files the player's banter lines name
     kept: set[str] = field(default_factory=set)                     # lists whose file could not be read: the earlier values stay
+    remarks: object = None              # extras.remarks.RemarkPools with the N. F. L. rules; None while they are not used
 
     def problem_count(self, key: str) -> int:
         problems = self.problems.get(key)
@@ -212,19 +223,45 @@ class ResetResult:
 
 class Customization:
     def __init__(self, folder: str, default_surnames: Callable[[], list[str]] | None = None,
-                 sound_probe: Callable[[str], str | None] | None = None):
+                 sound_probe: Callable[[str], str | None] | None = None, extras: bool = False):
         self.folder = folder
         self.sounds_dir = os.path.join(folder, SOUNDS_FOLDER)
         self._default_surnames = default_surnames or load_surnames
         self._surname_defaults: list[str] | None = None
         self.sound_probe = sound_probe or probe_sound_file
+        self.extras = bool(extras)        # nfl4 only: the N. F. L. rules are in use, so remarks.txt is read too (SX.2)
         self.files: dict[str, cl.ListFile] = {
             spec.key: cl.ListFile(folder, spec.file_name, GAME, spec.key, lambda key=spec.key: self.default_text(key))
-            for spec in SPECS}
+            for spec in SPECS + EXTRA_SPECS}
         self._notices: list[str] = []
         self._unwritable_told: set[str] = set()
         self.snapshot = self._load()
         self._notices.extend(self.snapshot.notices)
+
+    @property
+    def specs(self) -> tuple[ListSpec, ...]:
+        """The lists in use: the four of the classic game, and the extras' files only with the N. F. L. rules."""
+        return SPECS + EXTRA_SPECS if self.extras else SPECS
+
+    def use_extras(self, on: bool) -> None:
+        """The Rules setting changed (nfl4 only, SX.2). On: remarks.txt is read (made or healed as every list) and its
+        sentences join the next notices; off: it is not read any more and the game uses no remark of the file."""
+        on = bool(on)
+        if on == self.extras:
+            return
+        self.extras = on
+        if not on:
+            self.snapshot.remarks = None
+            for spec in EXTRA_SPECS:
+                self.snapshot.statuses.pop(spec.key, None)
+                self.snapshot.problems.pop(spec.key, None)
+            return
+        from ..extras.remarks import DEFAULT_POOLS
+        self.snapshot.remarks = DEFAULT_POOLS
+        before = len(self.snapshot.notices)
+        self._load_into(self.snapshot, EXTRA_SPECS, None)
+        self._notices_of(self.snapshot, EXTRA_SPECS)
+        self._notices.extend(self.snapshot.notices[before:])
 
     # ----- the built-in text of each file -----
 
@@ -252,22 +289,33 @@ class Customization:
             return cl.render_list(GAME, SURNAMES, SURNAME_NOTES, [("S%04d" % n, name) for n, name in enumerate(names, start=1)])
         if key == BANTER:
             return cl.render_list(GAME, BANTER, BANTER_NOTES, [(banter_id(line.number), line.markup) for line in DEFAULT_LINES])
+        if key == REMARKS:
+            from ..extras import remarks
+            return cl.render_list(GAME, REMARKS, remarks.NOTES, remarks.default_entries())
         raise KeyError(key)
 
     # ----- loading -----
 
     def _load(self, previous: Snapshot | None = None) -> Snapshot:
-        """Read every list; never raises. `previous` is the snapshot in use: a list whose file cannot be read now (held by
-        another program, damaged and not replaceable, unreadable) keeps the values it had (playbook 7.10: keep the loaded copy),
-        and only the very first load falls back to the originals."""
+        """Read every list in use; never raises. `previous` is the snapshot in use: a list whose file cannot be read now (held
+        by another program, damaged and not replaceable, unreadable) keeps the values it had (playbook 7.10: keep the loaded
+        copy), and only the very first load falls back to the originals."""
+        snapshot = Snapshot(league_module.DEFAULT_TEAM_NAMES, league_module.DEFAULT_DIVISION_NAMES,
+                            None, BanterPool(DEFAULT_LINES))
+        if self.extras:
+            from ..extras.remarks import DEFAULT_POOLS
+            snapshot.remarks = DEFAULT_POOLS
+        self._load_into(snapshot, self.specs, previous)
+        self._notices_of(snapshot, self.specs)
+        return snapshot
+
+    def _load_into(self, snapshot: Snapshot, specs, previous: Snapshot | None) -> None:
         try:
             os.makedirs(self.sounds_dir, exist_ok=True)
         except OSError:
             log.warning("could not make the folder %s", self.sounds_dir, exc_info=True)
-        snapshot = Snapshot(league_module.DEFAULT_TEAM_NAMES, league_module.DEFAULT_DIVISION_NAMES,
-                            None, BanterPool(DEFAULT_LINES))
-        loads = {spec.key: self.files[spec.key].load() for spec in SPECS}
-        for spec in SPECS:
+        loads = {spec.key: self.files[spec.key].load() for spec in specs}
+        for spec in specs:
             load = loads[spec.key]
             problems = cl.Problems(spec.file_name)
             snapshot.statuses[spec.key] = load.status
@@ -282,8 +330,6 @@ class Customization:
                 log.exception("the list %s could not be used; the original values stay", spec.file_name)
             if load.status in HOLD_STATUSES and previous is not None:
                 self._keep_previous(spec.key, snapshot, previous)
-        self._notices_of(snapshot)
-        return snapshot
 
     @staticmethod
     def _keep_previous(key: str, snapshot: Snapshot, previous: Snapshot) -> None:
@@ -295,6 +341,10 @@ class Customization:
             snapshot.surnames = previous.surnames
         elif key == BANTER:
             snapshot.banter, snapshot.sound_files = previous.banter, previous.sound_files
+        elif key == REMARKS:
+            if previous.remarks is None:            # the extras were just switched on: nothing loaded before, originals
+                return
+            snapshot.remarks = previous.remarks
         snapshot.kept.add(key)
 
     def _apply_list(self, key: str, entries, snapshot: Snapshot, problems: cl.Problems) -> None:
@@ -332,11 +382,15 @@ class Customization:
             snapshot.banter = build_pool(overrides, problems)
             snapshot.sound_files = sorted({piece.file for line in snapshot.banter.lines if not line.builtin
                                            for piece in line.pieces if isinstance(piece, Sound)})
+        elif key == REMARKS:
+            from ..extras import remarks
+            snapshot.remarks = remarks.build_pools(remarks.overrides_of(entries, problems), problems)
 
-    def _notices_of(self, snapshot: Snapshot) -> None:
-        unwritable = [spec for spec in SPECS if snapshot.statuses[spec.key] == cl.UNWRITABLE]
-        self._unwritable_told = {spec.key for spec in unwritable}     # tend() does not say it again
-        for spec in SPECS:
+    def _notices_of(self, snapshot: Snapshot, specs) -> None:
+        unwritable = [spec for spec in specs if snapshot.statuses[spec.key] == cl.UNWRITABLE]
+        told = {spec.key for spec in unwritable}                       # tend() does not say it again
+        self._unwritable_told = (self._unwritable_told - {spec.key for spec in specs}) | told
+        for spec in specs:
             status = snapshot.statuses[spec.key]
             if status == cl.RESET:
                 snapshot.notices.append(DAMAGED_RESET % (spec.file_name, spec.original_nouns))
@@ -373,7 +427,7 @@ class Customization:
             os.makedirs(self.sounds_dir, exist_ok=True)
         except OSError:
             log.warning("could not make the folder %s", self.sounds_dir, exc_info=True)
-        for spec in SPECS:
+        for spec in self.specs:
             file = self.files[spec.key]
             if file.exists():
                 continue
@@ -392,7 +446,7 @@ class Customization:
         but nothing is applied. Returns what is read aloud."""
         snapshot = self._load()
         parts = [notice.strip() for notice in snapshot.notices if "found in" not in notice]
-        for spec in SPECS:
+        for spec in self.specs:
             count = snapshot.problem_count(spec.key)
             status = snapshot.statuses[spec.key]
             if status in HOLD_STATUSES or status == cl.UNWRITABLE:       # nothing was read: do not say "no problems"
@@ -403,6 +457,11 @@ class Customization:
         if names:
             bad = [name for name in names if self.sound_probe(os.path.join(self.sounds_dir, name))]
             parts.append("The banter names %s, %s." % (cl.plural(len(names), "sound file"),
+                                                       "all can be used" if not bad else "%d cannot be used" % len(bad)))
+        remark_sounds = remark_sound_files(snapshot.remarks)
+        if remark_sounds:
+            bad = [name for name in remark_sounds if self.sound_probe(os.path.join(self.sounds_dir, name))]
+            parts.append("The remarks name %s, %s." % (cl.plural(len(remark_sounds), "sound file"),
                                                        "all can be used" if not bad else "%d cannot be used" % len(bad)))
         parts.append(self._check_names())
         parts.append("Details of every problem are in the log.")
@@ -428,7 +487,7 @@ class Customization:
         """Write the originals again: one list, or all (the player's file is kept as <name>.before-reset). The own roster
         footplay.txt and the player's sound files are never touched. The values are not applied: call `reload` after."""
         result = ResetResult()
-        for spec in SPECS:
+        for spec in self.specs:
             if key is not None and spec.key != key:
                 continue
             file = self.files[spec.key]
@@ -448,6 +507,14 @@ class Customization:
 
 def capital(text: str) -> str:
     return text[:1].upper() + text[1:]
+
+
+def remark_sound_files(pools) -> list[str]:
+    """The sound files the player's remark lines name (nfl4 extras, SX.2); none while the extras are not in use."""
+    if pools is None:
+        return []
+    return sorted({piece.file for pool in pools.pools.values() for line in pool if not line.builtin
+                   for piece in line.pieces if isinstance(piece, Sound)})
 
 
 def probe_sound_file(path: str) -> str | None:

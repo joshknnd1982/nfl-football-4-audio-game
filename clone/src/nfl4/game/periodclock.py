@@ -57,6 +57,10 @@ class ClassicPeriodClock:
         point = self._warning_point()
         return point is not None and self.state.counter == point
 
+    def warning_given(self) -> None:
+        """The engine said the warning: nothing to remember in Classic (the counter moves on). The N. F. L. rules clock
+        (extras/clock.py, SX.2) marks it given."""
+
     def speak(self) -> None:
         """F4: sgc(L738, L2cc(L3c0), L3c0)."""
         self.game.sgc(self.state.counter, self._total(), self.state.quarter)
@@ -70,4 +74,6 @@ class ClassicPeriodClock:
         self.state.counter = counter
 
     def before_snap(self) -> None:
-        """A pending runoff (N. F. L. rules mode); nothing in Classic."""
+        """A pending runoff (N. F. L. rules mode); nothing in Classic. The N. F. L. rules clock returns True when the runoff
+        ran the period out, and the engine then ends the period before the snap (SX.2); None here never does."""
+        return None

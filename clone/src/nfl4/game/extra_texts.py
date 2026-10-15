@@ -26,7 +26,8 @@ def menu_opening(title: str, count: int) -> str:
 
 # ----- the added functions (F9): help and about -----
 F9_TITLE = "Added functions"
-F9_HELP = (MENU_HELP + " The four items are the speech settings, the sounds, the names and the banter, and the about text. "
+F9_HELP = (MENU_HELP + " The five items are the speech settings, the sounds, the names and the banter, the rules, and the "
+           "about text. "
            "The original's own keys work as always: Control sets the speech rate, F11 the volumes, F12 the voices.")
 SPEECH_ITEM = "Speech settings."
 SOUNDS_ITEM = "Sounds."

@@ -116,6 +116,7 @@ class ResultSteps:
             snd.play(12, -1000)
             g.say2(s.tackle_sentence)
             snd.play_tackle(s.tackle_sound)
+        self.rules.after_tackle(s)                        # H2 (SX.2): out of bounds in N. F. L. rules mode; Classic: nothing
         snd.c2df()
         if s.yards > 0:
             g.say4(P.GAIN + trim(self.str_(s.yards)) + P.YARD + (P.PLURAL if s.yards > 1 else "") + P.ON_THE_PLAY)

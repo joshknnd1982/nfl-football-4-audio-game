@@ -21,9 +21,16 @@ class BreakSteps:
     # ----- the next-play step (L_43cc68) -----
 
     def next_play(self):
-        g, s, clock, snd = self.g, self.s, self.clock, self.snd
+        s = self.s
         s.defense = other(s.wisoff)
-        clock.after_play(self.last_outcome)
+        self.clock.after_play(self.last_outcome)
+        return self.period_checks()
+
+    def period_checks(self):
+        """The rest of the next-play step: the warnings and the ends of the periods. Also a step of its own (N. F. L.
+        rules mode, SX.2): a pending runoff that ran the period out at the snap ends the period here, without counting
+        another play (Classic never takes that way: its clock never says so)."""
+        g, s, clock, snd = self.g, self.s, self.clock, self.snd
         if s.quarter <= 1:
             if clock.period_over():
                 self._end_of_quarter(1)
@@ -85,6 +92,7 @@ class BreakSteps:
             g.log_print("")
             g.say4(P.TWO_MINUTE_WARNING)
             self.snd.play_tackle(8)
+            clock.warning_given()                                    # H1 (Classic: nothing; the N. F. L. clock: once)
         g.ptf = 0
 
     # ----- GoSub 0x45f30f: the key wait between periods and after a score -----

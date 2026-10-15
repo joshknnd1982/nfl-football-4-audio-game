@@ -110,13 +110,19 @@ class QuarterClock:
                                    lambda: self.secs, "clock seconds")
         if quarter == 3 and played == 0:
             self.mins, self.secs = 15, 0
-        text = " "
-        if self.mins > 0:
-            text = str_(self.mins) + MINUTE
-            if self.mins > 1:
-                text += PLURAL
-        if self.secs > 0:
-            text += " " + str_(self.secs) + SECOND
-            if self.secs > 1:
-                text += PLURAL
-        return text + REMAINING_IN_THE + word + QUARTER_END
+        return clock_sentence(self.mins, self.secs, word)
+
+
+def clock_sentence(mins: int, secs: int, word: str) -> str:
+    """sgc's sentence for minutes and seconds (also the real clock's F4 in N. F. L. rules mode, SX.2): " " or Str$(mins)
+    & " minute(s)", then " " & Str$(secs) & " second(s)" when there are seconds, " remaining in the <word> quarter. "."""
+    text = " "
+    if mins > 0:
+        text = str_(mins) + MINUTE
+        if mins > 1:
+            text += PLURAL
+    if secs > 0:
+        text += " " + str_(secs) + SECOND
+        if secs > 1:
+            text += PLURAL
+    return text + REMAINING_IN_THE + word + QUARTER_END

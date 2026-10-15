@@ -1,0 +1,72 @@
+"""F9's Rules item: Classic or the N. F. L. rules, and the switches of the features that exist (nfl4 only, rule 0.13). This is inspired by Jim Kitchen.
+
+NFL_EXTRAS_DESIGN 12.1 and 12.2 (NQ7, D-042). The design's menu has ten items; an item is in the menu once its feature is
+built (SX.2: 1 Rules, 2 Time outs, then Reset the rules to the defaults last; SX.3 to SX.7 insert theirs before Reset), so
+the player never meets a switch that does nothing. Up and Down move, Enter or Space changes the current item and speaks its
+new value, Left and Right change it too, the digits go to an item, Escape leaves (game/spoken_menu.py). A switch says
+" used with the N. F. L. rules " after its value while Rules is Classic. Every change is saved in settings.txt at once and
+applies from the next game (" the new rules apply from the next game. "): a game in progress keeps the rules it began with.
+Rules = N. F. L. rules also makes the program read the extras' files (remarks.txt, CUSTOMIZABLE_CONTENT 13).
+"""
+from __future__ import annotations
+
+from ..game.spoken_menu import Item, SpokenMenu
+from . import nx_texts as X
+
+CLASSIC, NFL = "classic", "nfl"
+DEFAULTS = {"rules": CLASSIC, "nx_timeouts": True}        # design 12.1 (NQ2: Classic until SX.9 passes)
+
+
+def rules_label(game_settings) -> str:
+    return X.text("NXM-09") if game_settings.rules == NFL else X.text("NXM-08")
+
+
+def switch_label(game_settings, name_id: str, value: bool) -> str:
+    text = X.text(name_id) + (X.text("NXM-20") if value else X.text("NXM-21"))
+    if game_settings.rules != NFL:
+        text += X.text("NXM-22")
+    return text
+
+
+def rules_menu(game, speech, keys) -> None:
+    """The menu itself (F9, Rules). `game` is the Game: its options hold the settings, `apply_rules_setting` takes them."""
+    options = game.options
+    settings = options.settings.game
+
+    def apply() -> None:
+        options.save()
+        game.apply_rules_setting()
+
+    def toggle_rules(step: int = 1) -> None:
+        settings.rules = CLASSIC if settings.rules == NFL else NFL
+        apply()
+
+    def toggle_timeouts(step: int = 1) -> None:
+        settings.nx_timeouts = not settings.nx_timeouts
+        apply()
+
+    def changed(label) -> str:
+        return label() + X.text("NXM-23")
+
+    def rules_item() -> str:
+        return rules_label(settings)
+
+    def timeouts_item() -> str:
+        return switch_label(settings, "NXM-10", settings.nx_timeouts)
+
+    def reset() -> str:
+        before = (settings.rules, settings.nx_timeouts)
+        settings.rules, settings.nx_timeouts = DEFAULTS["rules"], DEFAULTS["nx_timeouts"]
+        text = rules_item() + ". " + timeouts_item()
+        if (settings.rules, settings.nx_timeouts) == before:
+            return text
+        apply()
+        return text + X.text("NXM-23")
+
+    items = [
+        Item(rules_item, enter=lambda: (toggle_rules(), changed(rules_item))[1], change=toggle_rules),
+        Item(timeouts_item, enter=lambda: (toggle_timeouts(), changed(timeouts_item))[1], change=toggle_timeouts),
+        Item(lambda: X.text("NXM-19"), enter=reset),
+    ]
+    SpokenMenu(speech, keys, X.text("NXM-07"), items, help_text=X.text("NXM-36"), space_enters=True,
+               digits_jump=True).run()

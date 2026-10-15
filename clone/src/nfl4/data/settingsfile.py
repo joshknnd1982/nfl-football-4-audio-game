@@ -32,6 +32,7 @@ MODES = ("sapi", "nvda", "jaws", "auto")
 _MODE_WORDS = {"sapi": "sapi", "sapi5": "sapi", "sapi 5": "sapi", "nvda": "nvda", "jaws": "jaws", "auto": "auto",
                "automatic": "auto"}
 _ON_WORDS = {"on": True, "yes": True, "true": True, "1": True, "off": False, "no": False, "false": False, "0": False}
+_RULES_WORDS = {"classic": "classic", "nfl": "nfl", "n f l": "nfl", "n f l rules": "nfl", "nfl rules": "nfl"}
 _VERSION = re.compile(r"^#\s*NFL Football 4 settings,\s*format\s+(\d+)", re.IGNORECASE)
 _NAME = re.compile(r"^[a-z_]+$")
 GAME_NAME = "NFL Football 4"
@@ -56,6 +57,9 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     next name that starts with it (press it again for the one after)
 # sound_volume        0 to -50: how many decibels below full volume the sounds play (original 0); F11 changes it
 # comments            on or off: the announcer's comments (original on); F8 switches them
+# rules               classic = the game exactly as the original (original), nfl = the N. F. L. rules with a real clock
+#                     and the added features; the Rules item of the F9 menu changes it, from the next game on
+# nx_timeouts         on or off: the time outs of the N. F. L. rules (default on)
 #
 """
 
@@ -86,6 +90,8 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"list_letters = {sp.list_letters}",
         f"sound_volume = {au.sound_level // 100}",
         f"comments = {'on' if game.comments else 'off'}",
+        f"rules = {game.rules}",
+        f"nx_timeouts = {'on' if game.nx_timeouts else 'off'}",
     ]
     return "\n".join(lines) + "\n"
 
@@ -174,6 +180,16 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if word is None:
             raise ValueError(f"'{value[:20]}' is not on or off")
         game.comments = word
+    elif name == "rules":
+        rules = _RULES_WORDS.get(" ".join(value.lower().replace(".", " ").split()))
+        if rules is None:
+            raise ValueError(f"'{value[:20]}' is not classic or nfl")
+        game.rules = rules
+    elif name == "nx_timeouts":
+        word = _ON_WORDS.get(value.lower())
+        if word is None:
+            raise ValueError(f"'{value[:20]}' is not on or off")
+        game.nx_timeouts = word
     else:
         raise KeyError(name)
 

@@ -60,6 +60,7 @@ class Game(Speakers):
         self._pool = pool                             # SetPlayerNames: the 1,708 surnames, loaded when first needed
         self.banter_pool: BanterPool = DEFAULT_POOL   # the 142 lines plus the player's (S7.7, banter.txt)
         self.banter_sounds_dir: str | None = None     # customize\sounds: the player's files for [sound file] in a line
+        self.remark_pools = None                      # the extras' remarks.txt (nfl4 only, SX.2); None = the defaults
         self.customization = None                     # data.customize.Customization: the player's files (S7.7)
         self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
         self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
@@ -126,8 +127,21 @@ class Game(Speakers):
                     self._pool.replace_names(snapshot.surnames)
             self.banter_pool = snapshot.banter
             self.banter_sounds_dir = custom.sounds_dir
+            self.remark_pools = snapshot.remarks              # None while the Rules are Classic (the file is not read)
         except Exception:
             log.exception("the player's customization could not be applied")
+
+    def apply_rules_setting(self) -> None:
+        """The Rules setting changed (F9, nfl4 only, SX.2): the program's rules for the next game, and the extras' files
+        read only when the rules are the N. F. L. rules (CUSTOMIZABLE_CONTENT 13). A game in progress keeps its rules."""
+        from ..extras.nfl_rules import is_nfl, rules_from_settings
+        self.rules = rules_from_settings(self.options.settings.game)
+        if self.customization is not None:
+            try:
+                self.customization.use_extras(is_nfl(self.rules))
+            except Exception:
+                log.exception("the extras' customization files could not be loaded")
+            self.apply_customization()
 
     # ----- the season frame: the original's procedures -----
 
@@ -179,7 +193,11 @@ class Game(Speakers):
 
     def sgc(self, played: int, total: int, quarter: int) -> None:
         """The game clock (GAME_SPEC 5.3): say5 the made-up time, clk, then g = "112" so the waiting prompt repeats."""
-        self.say5(self.quarter_clock.advance(played, total, quarter, self.rnd))
+        self.say_clock(self.quarter_clock.advance(played, total, quarter, self.rnd))
+
+    def say_clock(self, text: str) -> None:
+        """sgc's ending for a clock sentence: say5, clk, g = "112" (the real clock of the N. F. L. rules mode uses it too)."""
+        self.say5(text)
         self.keys.clk()
         self.keys.code_text = KEY_CODE_F1
 
@@ -195,7 +213,8 @@ class Game(Speakers):
         conceded); m414 is kept for the season engine. rules: game.rules.ClassicRules (the original) unless the
         N. F. L. rules mode hands its own (nfl4 only, phase PX)."""
         from .pag import PlayEngine
-        engine = PlayEngine(self, rules or self.rules, own_names=own_names, saved=saved,
+        rules = (rules or self.rules).for_game()       # the N. F. L. rules get a fresh object per game; Classic is itself
+        engine = PlayEngine(self, rules, own_names=own_names, saved=saved,
                             quarterback_names=quarterback_names, save_sink=save_sink, roster_sink=roster_sink)
         self.play_engine = engine
         try:

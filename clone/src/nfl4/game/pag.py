@@ -322,7 +322,9 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
         return self.defense_menu if self.s.wisoff == 2 else self.offense_menu
 
     def _menu(self, items, prompt: str):
-        """The loop of both play menus. Returns ("chosen", action), ("concede", None)."""
+        """The loop of both play menus. Returns ("chosen", action), ("concede", None). An item the extras added (an action
+        that is neither a play nor Save Game, N. F. L. rules mode) goes to Rules.menu_action and the menu stays: from the
+        top when it was done, at the same item when it was refused. Classic's lists have no such item and no letter."""
         g, s = self.g, self.s
         current = 1
         speak_prompt = True
@@ -334,7 +336,12 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
             self.getkey2()
             code = self.g_code
             if code == KEY_ENTER:
-                return "chosen", items[current - 1].action
+                action = items[current - 1].action
+                if action[0] in (PLAY, SAVE):
+                    return "chosen", action
+                if self.rules.menu_action(s, action):
+                    current, speak_prompt = 1, True
+                continue
             if code == KEY_ESCAPE:
                 return "concede", None
             if code == KEY_UP:
@@ -358,6 +365,9 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
                 continue
             digit = self.menu_digit()
             chosen = next((n for n, item in enumerate(items, start=1) if item.digit == digit), 0) if digit else 0
+            if not chosen:                                 # the extras' letters (T, S); Classic's items have none
+                char = self.g_char.lower()
+                chosen = next((n for n, item in enumerate(items, start=1) if item.letter and item.letter == char), 0)
             if chosen:
                 current = chosen
                 speak_prompt = False

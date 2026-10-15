@@ -80,8 +80,11 @@ class HotKeys:
         self.keys.code_text = KEY_F1
 
     def _extra_help(self, key: str) -> None:
-        """H12: the added help of the N. F. L. rules mode after the original text (Classic: none)."""
-        for line in self.g.rules.extra_help(key):
+        """H12: the added help of the N. F. L. rules mode after the original text (Classic: none). During a game the rules
+        that game was started with (a change of the Rules setting applies from the next game, SX.2), else the program's."""
+        engine = self.g.play_engine
+        rules = engine.rules if engine is not None else self.g.rules
+        for line in rules.extra_help(key):
             self.g.say5(line)
 
     def _wait_speech(self) -> None:

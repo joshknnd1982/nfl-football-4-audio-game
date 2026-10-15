@@ -16,7 +16,7 @@ from typing import Callable
 
 from . import extra_texts as words
 from .keys import (KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESCAPE, KEY_F1, KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN,
-                   KEY_PAGE_UP, KEY_RIGHT, KEY_UP, KeyInput, typed_character)
+                   KEY_PAGE_UP, KEY_RIGHT, KEY_SPACE, KEY_UP, KeyInput, typed_character)
 
 TYPE_AHEAD_SECONDS = 1.0
 
@@ -47,12 +47,28 @@ class _Speaker:
 
 
 class SpokenMenu(_Speaker):
-    def __init__(self, speech, keys: KeyInput, title: str, items: list[Item], help_text: str = words.MENU_HELP):
+    """`space_enters`: Space acts as Enter; `digits_jump`: the digits 1 to 9 (and 0 for the tenth) go to that item. Both
+    are off unless a menu asks (nfl4's F9 Rules menu, NFL_EXTRAS_DESIGN 12.2)."""
+
+    def __init__(self, speech, keys: KeyInput, title: str, items: list[Item], help_text: str = words.MENU_HELP,
+                 space_enters: bool = False, digits_jump: bool = False):
         super().__init__(speech, keys)
         self.title = title
         self.items = items
         self.help_text = help_text
+        self.space_enters = space_enters
+        self.digits_jump = digits_jump
         self.index = 0
+
+    def _digit_item(self, code) -> int | None:
+        """The item a digit key goes to (main row or keypad), or None."""
+        if not self.digits_jump:
+            return None
+        char = typed_character(code) if isinstance(code, int) else ""
+        if len(char) != 1 or not char.isdigit():
+            return None
+        number = int(char) or 10
+        return number - 1 if number <= len(self.items) else None
 
     def run(self) -> None:
         self.say(words.menu_opening(self.title, len(self.items)) + " " + self.items[0].label())
@@ -62,7 +78,13 @@ class SpokenMenu(_Speaker):
             if code == KEY_ESCAPE:
                 self.leave()
                 return
-            if code in (KEY_UP, KEY_DOWN):
+            if self.space_enters and code == KEY_SPACE:
+                code = KEY_ENTER
+            jump = self._digit_item(code)
+            if jump is not None:
+                self.index = jump
+                self.say(self.items[self.index].label())
+            elif code in (KEY_UP, KEY_DOWN):
                 self.index = (self.index + (1 if code == KEY_DOWN else -1)) % len(self.items)
                 self.say(self.items[self.index].label())
             elif code in (KEY_HOME, KEY_END):

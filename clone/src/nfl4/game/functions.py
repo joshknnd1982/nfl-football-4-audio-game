@@ -2,7 +2,7 @@
 
 GAP_REGISTER G-K2 (F9 is the one function key the original does not use; it gave the invalid-key character "x"), D-018,
 D-045. F9 is a global key like F5 to F12: `HotKeys.added["120"]` runs `Functions.run`, which clears the key, stops the speech,
-opens one spoken menu with three items and ends like every global menu with clk and g = "112". The menus are the starter kit's
+opens one spoken menu with five items and ends like every global menu with clk and g = "112". The menus are the starter kit's
 (game/spoken_menu.py) with this game's items; they read keys with `KeyInput.read_key`, so a key typed ahead is never lost.
 
 * Speech settings: the speech output (SAPI 5 voice only, which is nfl4's default, NVDA only, JAWS only, automatic), the speech
@@ -12,6 +12,8 @@ opens one spoken menu with three items and ends like every global menu with clk 
   one, reload, check, the sounds folder, restore one or all. Nothing to export: the game has no generated sound but the exit
   beep (SOUND_DESIGN 3); a sound-system failure (G-A4) is said as the first item.
 * Customize (S7.7, 7.9: the names and the commentary): open the folder, reload, check, reset one list, reset all.
+* Rules (nfl4 only, rule 0.13, PX SX.2): Classic or the N. F. L. rules and the switches of the extra features
+  (extras/rules_menu.py, NFL_EXTRAS_DESIGN 12.2).
 * About: the attribution of rule 0.5 and the note of the original's author.
 """
 from __future__ import annotations
@@ -25,7 +27,6 @@ from ..audio.ids import SOUND_IDS, canonical_id, describe
 from ..audio.output import EXTRA_SLOT
 from ..audio.restore import restore_all_sounds, restore_sound
 from ..data import paths
-from ..data.customize import SPECS
 from ..data.settings import SOUND_LEVEL_MAX, SOUND_LEVEL_MIN
 from ..speech.manager import MODES
 from . import extra_texts as words
@@ -83,6 +84,7 @@ class Functions:
             items = [Item(lambda: words.SPEECH_ITEM, enter=self._enter(self.speech_menu)),
                      Item(lambda: words.SOUNDS_ITEM, enter=self._enter(self.sounds_menu)),
                      Item(lambda: words.CUSTOMIZE_ITEM, enter=self._enter(self.customize_menu)),
+                     Item(self.rules_item, enter=self._enter(self.rules_menu)),
                      Item(lambda: words.ABOUT_ITEM, enter=self._enter(self.about))]
             SpokenMenu(self.speech, self.keys, words.F9_TITLE, items, help_text=words.F9_HELP).run()
         except GameQuit:
@@ -108,6 +110,16 @@ class Functions:
 
     def about(self) -> None:
         TextPages(self.speech, self.keys, words.ABOUT_TITLE, words.ABOUT_LINES).run()
+
+    @staticmethod
+    def rules_item() -> str:
+        from ..extras import nx_texts
+        return nx_texts.text("NXM-07") + "."
+
+    def rules_menu(self) -> None:
+        """Classic or the N. F. L. rules and their switches (nfl4 only, rule 0.13; NFL_EXTRAS_DESIGN 12.2, SX.2)."""
+        from ..extras.rules_menu import rules_menu
+        rules_menu(self.g, self.speech, self.keys)
 
     # ----- speech settings -----
 
@@ -266,11 +278,13 @@ class Functions:
         def check() -> str:
             return custom.check()
 
+        specs = custom.specs                           # the four lists, and remarks.txt with the N. F. L. rules (SX.2)
+
         def list_name(index: int) -> str:
-            return SPECS[index].nouns.capitalize()
+            return specs[index].nouns.capitalize()
 
         def reset_one(index: int) -> str:
-            spec = SPECS[index]
+            spec = specs[index]
             return guarded(lambda: reset_spec(spec))()
 
         def reset_spec(spec) -> str:
@@ -280,7 +294,7 @@ class Functions:
             return " ".join([words.customize_reset_one(spec.file_name, result)] + [n.strip() for n in notices])
 
         def reset_one_menu() -> None:
-            ListPicker(self.speech, self.keys, words.CUSTOMIZE_RESET_ONE_TITLE, len(SPECS), list_name, on_enter=reset_one,
+            ListPicker(self.speech, self.keys, words.CUSTOMIZE_RESET_ONE_TITLE, len(specs), list_name, on_enter=reset_one,
                        close_on_enter=False, help_text=words.CUSTOMIZE_RESET_ONE_HELP, clock=self.clock).run()
 
         def reset_all() -> str:

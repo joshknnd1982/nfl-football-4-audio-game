@@ -22,6 +22,8 @@ from typing import Iterable
 
 VT_EMPTY, VT_INTEGER, VT_LONG, VT_SINGLE, VT_DOUBLE = 0, 2, 3, 4, 5
 VT_CURRENCY, VT_DATE, VT_BOOLEAN, VT_BYTE = 6, 7, 11, 17
+VT_STRING = 8               # a String Variant: its type word, a two-byte length, the bytes (nfl4 SX.2: football.sav's extras)
+STRING_LIMIT = 65535
 
 INTEGER_RANGE = (-32768, 32767)
 LONG_RANGE = (-2147483648, 2147483647)
@@ -89,6 +91,14 @@ def pack_numbers(values: Iterable[int | float]) -> bytes:
     return b"".join(pack_number(value) for value in values)
 
 
+def pack_string(data: bytes) -> bytes:
+    """A String Variant as VB's Put writes one to a Binary file: the type word 8, the length in two bytes, the bytes. The
+    clone writes only bytes it can read back (football.sav's extras section, nfl4 SX.2); the original never reads them."""
+    if len(data) > STRING_LIMIT:
+        raise VariantFileError("a string of %d bytes does not fit a Variant record" % len(data))
+    return struct.pack("<HH", VT_STRING, len(data)) + bytes(data)
+
+
 def _as_whole(value: int | float) -> int:
     if isinstance(value, int):
         return value
@@ -136,6 +146,25 @@ class VariantReader:
 
     def next_int(self) -> int:
         return _as_whole(self.next())
+
+    def peek_type(self) -> int | None:
+        """The type word of the next record, or None at the end (the reader does not move)."""
+        if self.position + 2 > len(self.raw):
+            return None
+        return struct.unpack_from("<H", self.raw, self.position)[0]
+
+    def next_string(self) -> bytes:
+        """The bytes of the next record, which must be a String Variant (`next` reads numbers only)."""
+        raw, at = self.raw, self.position
+        if self.peek_type() != VT_STRING:
+            raise VariantFileError("a string was expected at byte %d" % at)
+        if at + 4 > len(raw):
+            raise VariantFileError("the file ends inside a string's length at byte %d" % (at + 2))
+        (size,) = struct.unpack_from("<H", raw, at + 2)
+        if at + 4 + size > len(raw):
+            raise VariantFileError("the file ends inside a string of %d bytes at byte %d" % (size, at + 4))
+        self.position = at + 4 + size
+        return raw[at + 4:at + 4 + size]
 
     def ints(self, count: int) -> list[int]:
         return [self.next_int() for _ in range(count)]

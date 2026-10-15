@@ -6,15 +6,15 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 195.
-- The clock (design section 5): 4.
-- Timeouts (design 6.3): 15.
+- Texts: 204.
+- The clock (design section 5): 9.
+- Timeouts (design 6.3): 18.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 38.
 - Quarterback runs (design section 7): 10.
 - Onside kicks (design section 8): 14.
 - Penalties (design section 9): 58.
 - Playbooks (design section 10): 9.
-- Menus and settings (design 10.4, 12): 35.
+- Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 3.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4.
@@ -25,6 +25,11 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXC-02 (sentence, say5): " the clock is stopped ". F1 addition (H13)
 - NXC-03 (sentence, say5): " the clock is running with <n> seconds left. ". first line of a play menu when the pending runoff is at least the time left (design 5.5, C9)
 - NXC-04 (sentence, say2): " and is pushed out of bounds ". after the tackle sentence of a run, keeper or catch that ends out of bounds (design 5.2)
+- NXH-02 (help, say5): " F4. announce the real game clock. F1. also says whether the clock is running and the time outs left. ". F5 addition (H12, C6)
+- NXH-03 (help, say5): " With the N. F. L. rules every quarter has a real clock of 15 minutes. The clock keeps running after a run or a catch in bounds and after a sack. ". F6 addition (H12, C6), after the football instructions
+- NXH-04 (help, say5): " It stops after an incomplete pass, a score, a change of possession and a play out of bounds late in a half. The quarter ends when the clock runs out. ". F6 addition (H12, C6)
+- NXH-06 (help, say5): " The two minute warning stops the clock at two minutes left in the second and the fourth quarter. ". F6 addition (H12, C6)
+- NXH-08 (help, say5): " Two minute warning: The automatic stop of the clock at two minutes left in each half. Out of bounds: A runner or receiver stopped outside the side line. ". F7 addition (H12, C6)
 
 ## Timeouts (design 6.3)
 
@@ -43,6 +48,9 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - TO03 (remark, say): " they had to use that one, the clock was really running. ". pool TO default
 - TO04 (remark, say): " a time out to talk things over on the side line. ". pool TO default
 - TO05 (remark, say): " I would have saved that one, Ghip. ". pool TO default
+- NXH-01 (help, say5): " With the N. F. L. rules. T. in a play menu, go to Time Out, then Enter calls the time out. ". F5 addition (H12, C6), when time outs are on
+- NXH-05 (help, say5): " Each team has three time outs in each half, and more in over time. A time out stops the clock until the next snap. ". F6 addition (H12, C6), when time outs are on
+- NXH-07 (help, say5): " Time out: A stop of the game clock that a team asks for. ". F7 addition (H12, C6), when time outs are on
 
 ## Challenges and reviews (design 6.1, 6.2, 6.4)
 
@@ -225,6 +233,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXM-33 (menu, say5): "Option". playbook name
 - NXM-34 (menu, say5): "Pressure". playbook name
 - NXM-35 (menu, say5): "Team playbook". playbook choice: the team's assigned style
+- NXM-36 (help, say5): "Up and Down move through the items. Enter or Space changes the current item, and the digits go to an item. Escape goes back. The new rules apply from the next game.". F1 in the F9 Rules menu (design 12.2)
 
 ## Statistics lines (C7, H11)
 

@@ -7,7 +7,9 @@ and wrap, a digit 1 to the number of items makes that item current, Enter takes 
 lists; during a two-point try the offense list is items 1 to 5 (the original's bounds at 0x43e2db and 0x43e498).
 
 NFL_EXTRAS_DESIGN 3 H3: one function builds the lists, and the extras (a playbook, more items) pass other lists through
-the Rules object; the menu code never changes for them. Letter keys are not used in Classic.
+the Rules object; the menu code never changes for them. Letter keys are not used in Classic (every item's letter is "").
+An action other than PLAY and SAVE is an item the extras added (SX.2: the timeout); the menu hands it to
+Rules.menu_action and stays open.
 """
 from __future__ import annotations
 
@@ -21,7 +23,8 @@ PLAY, SAVE = "play", "save"
 class MenuItem(NamedTuple):
     text: str               # what say5 speaks, e.g. " 1. Line Plunge "
     digit: int              # the digit key that makes it current
-    action: tuple[str, int]  # (PLAY, play number) or (SAVE, 0)
+    action: tuple[str, int]  # (PLAY, play number) or (SAVE, 0); the extras add their own kinds
+    letter: str = ""        # the letter key that makes it current (the extras' T and S; none in Classic)
 
 
 def offense_menu(two_point_try: bool = False) -> list[MenuItem]:

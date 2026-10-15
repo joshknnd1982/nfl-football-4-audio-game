@@ -66,6 +66,11 @@ class SavedGame:
     to_go: int                        # L82c
     opponent_quarterback: str         # Me.m2b8(2), as its length and the character codes
     opening_receiver: int | None = None   # L158, the clone's added value (D-027 item 3); None in an original file
+    # nfl4 only (rule 0.13, NFL_EXTRAS_DESIGN 12.3, SX.2): a game played with the N. F. L. rules writes its extras record
+    # after them (a marker, a format number, one JSON string). extras_marked: the marker was there; extras: the JSON text,
+    # None when there was none or it could not be read (then the extras start from their start values, C10)
+    extras: str | None = None
+    extras_marked: bool = False
 
 
 @dataclass
@@ -149,10 +154,12 @@ class GameState:
         return copy.deepcopy(self)
 
     def saved(self, countdown: float) -> SavedGame:
-        """What Save Game writes (the order of the original's Put statements), with D-027's opening receiver."""
+        """What Save Game writes (the order of the original's Put statements), with D-027's opening receiver and, with the
+        N. F. L. rules, the extras record (H5; None in Classic, so a Classic save is the S7.5 file byte for byte)."""
+        extras = self.extras.to_json() if self.extras is not None else None
         return SavedGame(self.wisoff, self.defense, self.half, self.quarter, self.counter, list(self.plays), countdown,
                          copy.deepcopy(self.stats), self.yard_line, self.down, self.to_go, self.quarterbacks.get(2, ""),
-                         self.opening_receiver)
+                         self.opening_receiver, extras, extras is not None)
 
     def load(self, saved: SavedGame) -> None:
         """The reads of a loaded game (0x43afb7 to 0x43b80c). The interception counts restart (Q28) and M2W, M4W and M5W
@@ -168,3 +175,5 @@ class GameState:
         if saved.opening_receiver is not None:
             self.opening_receiver = saved.opening_receiver
             self.first_kickoff = False
+        if self.extras is not None:                     # N. F. L. rules (H5): the save's record, or the start values
+            self.extras.load_saved(saved)

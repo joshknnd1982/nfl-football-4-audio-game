@@ -272,7 +272,11 @@ class Program:
         self.saved_game = False                                 # SavedGame = 0 when the game is loaded (0x43bb41)
         own_names = store.player_names()                        # footplay.txt read (pag 0x4544e1), repaired when it has a problem
         g.speak_notices()                                       # S7.5: a damaged saved game or footplay.txt, said before the game
-        result = g.play_game(own_names=own_names, saved=saved, save_sink=store.save_game,
+        rules = None                                            # the program's rules; a save of the N. F. L. rules may ask
+        if getattr(saved, "extras_marked", False):              # (nfl4 only, rule 0.13, SX.2: NFL_EXTRAS_DESIGN 12.3)
+            from ..extras.saved import rules_for_saved_game
+            rules = rules_for_saved_game(g, saved)
+        result = g.play_game(rules=rules, own_names=own_names, saved=saved, save_sink=store.save_game,
                              roster_sink=store.write_player_names)   # 0x489ddb
         if result.saved:                                        # 0x489e2c: SavedGame = 1 skips pog and the standings
             self.saved_game = True

@@ -194,3 +194,12 @@ PN01	penalties	remark	say	 another flag, Ghip. 	pool PN default
 PN02	penalties	remark	say	 that is a drive killer. 	pool PN default
 PN03	penalties	remark	say	 the officials are busy today. 	pool PN default
 PN04	penalties	remark	say	 you cannot do that in this league. 	pool PN default
+NXH-01	timeouts	help	say5	 With the N. F. L. rules. T. in a play menu, go to Time Out, then Enter calls the time out. 	F5 addition (H12, C6), when time outs are on
+NXH-02	clock	help	say5	 F4. announce the real game clock. F1. also says whether the clock is running and the time outs left. 	F5 addition (H12, C6)
+NXH-03	clock	help	say5	 With the N. F. L. rules every quarter has a real clock of 15 minutes. The clock keeps running after a run or a catch in bounds and after a sack. 	F6 addition (H12, C6), after the football instructions
+NXH-04	clock	help	say5	 It stops after an incomplete pass, a score, a change of possession and a play out of bounds late in a half. The quarter ends when the clock runs out. 	F6 addition (H12, C6)
+NXH-05	timeouts	help	say5	 Each team has three time outs in each half, and more in over time. A time out stops the clock until the next snap. 	F6 addition (H12, C6), when time outs are on
+NXH-06	clock	help	say5	 The two minute warning stops the clock at two minutes left in the second and the fourth quarter. 	F6 addition (H12, C6)
+NXH-07	timeouts	help	say5	 Time out: A stop of the game clock that a team asks for. 	F7 addition (H12, C6), when time outs are on
+NXH-08	clock	help	say5	 Two minute warning: The automatic stop of the clock at two minutes left in each half. Out of bounds: A runner or receiver stopped outside the side line. 	F7 addition (H12, C6)
+NXM-36	menus	help	say5	Up and Down move through the items. Enter or Space changes the current item, and the digits go to an item. Escape goes back. The new rules apply from the next game.	F1 in the F9 Rules menu (design 12.2)

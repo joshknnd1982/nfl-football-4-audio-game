@@ -21,7 +21,8 @@ class ScrimmageSteps:
         s = self.s
         if self.rules.before_snap(s, s.offense_play, s.defense_play) != GO_ON:   # H2 step 2 (Classic: always on)
             return self.play_menu
-        self.clock.before_snap()                                                 # H1 (Classic: nothing)
+        if self.clock.before_snap():                     # H1: a pending runoff ran the period out (N. F. L. rules only;
+            return self.period_checks                    # Classic returns None): the period ends before the snap
         self.mark_spot()
         if s.offense_play == 6:
             return self.field_goal

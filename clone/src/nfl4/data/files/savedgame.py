@@ -15,6 +15,11 @@ and, added by the clone (D-027 item 3, Q28), one more Integer after the name: th
 kick-off. An original's file stops after the name and is accepted (the original's own rule then applies); a clone's file
 stays readable by the original, which reads only its own 36 values and the name.
 
+nfl4 only (rule 0.13, NFL_EXTRAS_DESIGN 12.3, PX SX.2): a game played with the N. F. L. rules adds three more Variants: the
+String "NX-EXTRAS", the Integer 1 (the format) and one String with the extras record as UTF-8 JSON. A marker with another
+format number, or a record that is not UTF-8, keeps the marker and drops the record (the extras then start from their start
+values with one notice, C10); everything before it still loads. A Classic game writes none of it.
+
 `decode` raises `FileDamaged` for a file that is short, holds a value outside what a game can have, or has a name that is
 not text. Nothing here reads the disk.
 """
@@ -23,9 +28,12 @@ from __future__ import annotations
 import math
 
 from ...game.gamestate import SavedGame, SideStats
-from .variant import FileDamaged, VariantFileError, VariantReader, pack_integer, pack_long, pack_number
+from .variant import (VT_STRING, FileDamaged, VariantFileError, VariantReader, pack_integer, pack_long, pack_number,
+                      pack_string)
 
 FILE_NAME = "football.sav"
+EXTRAS_MARKER = b"NX-EXTRAS"
+EXTRAS_FORMAT = 1
 STATISTICS = ("pass_attempts", "completions", "passing_yards", "sacked", "intercepted", "running_plays", "running_yards",
               "fumbles_lost", "first_downs", "score")
 NAME_LIMIT = 200           # a name is at most 30 typed characters (G-K5) or a pool surname; the bound keeps junk out
@@ -44,6 +52,8 @@ def encode(saved: SavedGame) -> bytes:
     out += pack_long(len(codes)) + b"".join(pack_integer(c) for c in codes)
     if saved.opening_receiver is not None:
         out += pack_integer(saved.opening_receiver)
+    if saved.extras is not None:
+        out += pack_string(EXTRAS_MARKER) + pack_integer(EXTRAS_FORMAT) + pack_string(saved.extras.encode("utf-8"))
     return bytes(out)
 
 
@@ -78,13 +88,32 @@ def decode(raw: bytes) -> SavedGame:
         if any(not 0 <= code <= 255 for code in codes):
             raise FileDamaged("the quarterback's name holds a character code outside 0 to 255")
         opening = None
-        if not reader.at_end:
+        if not reader.at_end and reader.peek_type() != VT_STRING:
             opening = _within(reader.next_int(), 1, 2, "the side that received the opening kick-off")
-            if not reader.at_end:
-                raise FileDamaged("the file holds more than a game")
+        extras, marked = None, False
+        if not reader.at_end:
+            extras, marked = _extras(reader)
     except FileDamaged:
         raise
     except VariantFileError as exc:
         raise FileDamaged(str(exc)) from exc
     name = "".join(chr(code) for code in codes)
-    return SavedGame(wisoff, defense, half, quarter, counter, plays, countdown, stats, yard_line, down, to_go, name, opening)
+    return SavedGame(wisoff, defense, half, quarter, counter, plays, countdown, stats, yard_line, down, to_go, name, opening,
+                     extras, marked)
+
+
+def _extras(reader: VariantReader) -> tuple[str | None, bool]:
+    """The extras section (nfl4 SX.2): (the JSON text, True), or (None, True) for a marker whose record cannot be used.
+    Anything else after the game is a damaged file, as before."""
+    if reader.peek_type() != VT_STRING or reader.next_string() != EXTRAS_MARKER:
+        raise FileDamaged("the file holds more than a game")
+    try:
+        version = reader.next_int()
+        record = reader.next_string()
+        if not reader.at_end:
+            raise VariantFileError("the file holds more after the extras")
+        if version != EXTRAS_FORMAT:
+            raise VariantFileError("the extras are format %r, this game reads format %d" % (version, EXTRAS_FORMAT))
+        return record.decode("utf-8"), True
+    except (VariantFileError, UnicodeDecodeError):
+        return None, True
