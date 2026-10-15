@@ -133,6 +133,11 @@ class JawsBackend(SpeechBackend):
         if playing:
             self._call("SayString", " ", True)
 
+    def is_speaking(self) -> bool:
+        """The original's RunningState = 2 (nfl4 S7.4a): JAWS gives no signal, so the estimated end of our speech."""
+        with self._cv:
+            return self._clock() < self._deadline
+
     def wait_until_done(self, abort: threading.Event | None = None) -> None:
         with self._cv:
             while True:

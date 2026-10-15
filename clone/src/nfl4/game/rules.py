@@ -15,7 +15,9 @@ with the original's behavior: an identity or nothing, and never a random number 
     H10 between_plays(state)               after the down sentence, before the next menu  nothing
     H11 extra_stats_lines(state)           after " Points Scored" in the statistics        no lines
     H13 extra_situation(state)             after F1's position and down in a play menu     no lines
-H12 (added help on F5, F6 and F7) comes with the hot-key menus in S7.4.
+    H12 extra_help(key)                    F5, F6, F7 after the original text (S7.4a)     no lines
+H12 is read by the hot-key menus (game/hotkeys.py) through Game.rules, the rules of the whole program; key is the code
+text of the key ("116" F5, "117" F6, "118" F7).
 """
 from __future__ import annotations
 
@@ -57,6 +59,9 @@ class ClassicRules:
         return []
 
     def extra_situation(self, state) -> list[str]:
+        return []
+
+    def extra_help(self, key: str) -> list[str]:
         return []
 
 

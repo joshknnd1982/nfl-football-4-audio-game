@@ -142,10 +142,11 @@ class Speakers:
         self._logged(text)
         self._speak(text, ANNOUNCER, False)
 
-    def say6(self, text: str) -> None:
-        """The voice that spoke last, asynchronous; logged."""
+    def say6(self, text: str, role: str | None = None) -> None:
+        """The voice that spoke last, asynchronous; logged. role: the speaker whose voice the original had just loaded
+        (F11's adjvol loads each voice before its say6; the clone names it, D-022 item 5)."""
         self._logged(text)
-        self._speak(text, self.speech.last_role or ANNOUNCER, False)
+        self._speak(text, role or self.speech.last_role or ANNOUNCER, False)
 
     def stopspeech(self) -> None:
         """`Voice.Speak "", 2`: everything queued is dropped at once."""

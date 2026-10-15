@@ -21,12 +21,17 @@ import logging
 import time
 from typing import Callable
 
+from ..data.settings import Settings
 from . import scorespeech, texts
 from .gameclock import QuarterClock
+from .hotkeys import HotKeys
 from .keys import KEY_ESCAPE, KeyInput
 from .league import League
 from .names import NamePool
+from .options import Options
+from .prompts import Prompts
 from .rnd import GameRandom
+from .rules import CLASSIC
 from .season import SeasonState
 from .setup import GameSetup, Roster, new_game_setup
 from .speakers import Speakers
@@ -40,7 +45,8 @@ KEY_CODE_F1 = "112"     # the key code text a global menu and sgc leave in g: th
 class Game(Speakers):
     def __init__(self, speech, keys: KeyInput, clock: Callable[[], float] = time.monotonic,
                  sleep: Callable[[float], None] = time.sleep, notice_sources=(), sounds=None,
-                 rnd: GameRandom | None = None, league: League | None = None, pool: NamePool | None = None):
+                 rnd: GameRandom | None = None, league: League | None = None, pool: NamePool | None = None,
+                 options: Options | None = None, rules=None):
         super().__init__(speech, keys, rnd)
         self.clock = clock
         self.sleep = sleep
@@ -51,10 +57,25 @@ class Game(Speakers):
         self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
         self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
         self.coach_source = lambda: self.season.coach
-        self.comtog_source: Callable[[], int] = lambda: 0      # F8: 1 = the comments (banter) are off (S7.4 wires it)
+        # S7.4a: the values the hot keys change (vr, comtog, the volumes, wavol, the voices) and where they are saved;
+        # without one (the tests) the defaults, saved nowhere, sharing the sounds' AudioSettings
+        if options is None:
+            settings = Settings.defaults()
+            if sounds is not None:
+                settings.audio = sounds.settings
+            options = Options(settings, speech)
+        self.options = options
+        self.vr_source = lambda: self.options.vr       # rady's rate counter (Ctrl changes it)
+        self.comtog_source: Callable[[], int] = lambda: self.options.comtog   # F8: 1 = the comments (banter) are off
+        self.rules = rules if rules is not None else CLASSIC   # the program's rules (H12 reads them; pag gets them)
         self.m414: tuple[int, int] | None = None      # the last game's result for the season engine (S7.3c)
         self.season_store = None                      # S7.5: writes football.gtp, footbal3.dat, footbal4.dat, footbal5.dat
+        self.setup_store = None                       # S7.5: writes footbal1.dat, footbal2.dat and the quarterback line
         self._season_engine = None
+        self.play_engine = None                       # the running pag, so F12's GetSexOf reaches its He and She words
+        self.prompts = Prompts(self)                  # getter, GetCoach, ChooseTeam, Getqbs, SayScedual (S7.4a)
+        self.hotkeys = HotKeys(self)                  # F5 to F8, F11, F12, Ctrl inside every wait (S7.4a, D-018)
+        self.hotkeys.install()
 
     @property
     def pool(self) -> NamePool:
@@ -73,8 +94,34 @@ class Game(Speakers):
         return self.league.team(self.season.tn3, self.season.tn4)
 
     def make_schedule(self):
-        """makes (GAME_SPEC 5.1): a new schedule for the player's team."""
-        return self.season.make_schedule(self.rnd)
+        """makes (GAME_SPEC 5.1): a new schedule for the player's team, written to footbal2.dat (setup_store, S7.5)."""
+        schedule = self.season.make_schedule(self.rnd)
+        if self.setup_store is not None:
+            self.setup_store.write_schedule(schedule)
+        return schedule
+
+    # ----- the typed prompts and questions of the season (S7.4a, game/prompts.py) -----
+
+    def getter(self, prompt: str) -> str:
+        return self.prompts.getter(prompt)
+
+    def get_coach(self) -> str:
+        """GetCoach (GAME_SPEC 4.9): the coach's typed name, confirmed."""
+        return self.prompts.get_coach()
+
+    def choose_team(self) -> None:
+        """ChooseTeam (4.10): the player's team, confirmed, then footbal1.dat."""
+        self.prompts.choose_team()
+
+    def say_schedule(self) -> None:
+        """SayScedual (4.11): the schedule, and before week 1 the question whether the player likes it."""
+        self.prompts.say_schedule()
+
+    def get_sex_of(self) -> None:
+        """GetSexOf at the end of F12 (0x428e38): the He and She words of the game in progress follow the new voices
+        (pag runs it again at the start of every game)."""
+        if self.play_engine is not None:
+            self.play_engine.get_sex_of()
 
     def new_game_setup(self, own_names: Roster | None = None) -> GameSetup:
         """pag's set-up GoSub (GAME_SPEC 5.5): the rosters, the banter names, the periods' lengths and the warnings; the
@@ -102,17 +149,20 @@ class Game(Speakers):
         conceded); m414 is kept for the season engine. rules: game.rules.ClassicRules (the original) unless the
         N. F. L. rules mode hands its own (nfl4 only, phase PX)."""
         from .pag import PlayEngine
-        from .rules import CLASSIC
-        engine = PlayEngine(self, rules or CLASSIC, own_names=own_names, saved=saved,
+        engine = PlayEngine(self, rules or self.rules, own_names=own_names, saved=saved,
                             quarterback_names=quarterback_names, save_sink=save_sink)
-        result = engine.run()
+        self.play_engine = engine
+        try:
+            result = engine.run()
+        finally:
+            self.play_engine = None
         if result.scores is not None:
             self.m414 = result.scores
         return result
 
-    def getqbs(self, state):
-        """Getqbs (GAME_SPEC 4.12): the typed quarterback names are S7.4's prompt (getter, cqn)."""
-        raise NotImplementedError("Getqbs is built with the typed prompts in S7.4; hand the names to play_game")
+    def getqbs(self, state, saved: bool = False, own_from_file: str = "") -> tuple[str, str]:
+        """Getqbs (GAME_SPEC 4.12): the two quarterbacks' names (game/prompts.py)."""
+        return self.prompts.getqbs(state, saved=saved, own_from_file=own_from_file)
 
     def halftime(self) -> None:
         """halftime (p_485b80): foot0, 15 celebration sounds, foot0 (game/sounds.py)."""

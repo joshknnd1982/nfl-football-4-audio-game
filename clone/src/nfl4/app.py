@@ -7,7 +7,7 @@ Process lifetime (CLAUDE.md 0.10, playbook 7.2.1): the working directory leaves 
 window's close arms an exit deadline, and the entry points end with finish(main()), so nothing stays behind.
 P7 S7.1: speech, window, settings, the voice crash guard and the lifecycle. P7 S7.2: the sound layer (the mixer with
 the original's seven slots, every sound resolved once at start so a bad file is reported then, the sound procedures
-handed to the game). The game itself (S7.3 to S7.5) comes next.
+handed to the game). The game itself (S7.3 to S7.5) comes next. P7 S7.4a: the Options the hot keys change and save.
 """
 from __future__ import annotations
 
@@ -25,10 +25,12 @@ from .data.voiceguard import VoiceGuard, voice_label
 from .game import texts
 from .game.flow import Game
 from .game.keys import GameQuit, KeyInput
+from .game.options import Options
 from .game.rnd import GameRandom
 from .game.sounds import GameSounds
 from .speech import create_speech
 from .speech.roles import ROLES
+from .speech.voices import VoiceCatalog
 
 log = logging.getLogger("nfl4")
 
@@ -80,10 +82,14 @@ def main() -> int:
     audio = start_audio(settings)
     rnd = GameRandom()                      # ONE random function for the game and the sounds (G-D2)
     sounds = GameSounds(audio, keys, settings.audio, rng=rnd)
+    # what the hot keys change, saved to settings.txt where the original wrote footbal0.dat or football.vol (S7.4a);
+    # the voice list for F12 is read the first time F12 is pressed
+    options = Options(settings, speech, save=store.save, base_rate=lambda: speech.base_rate,
+                      voice_catalog=VoiceCatalog(), voice_guard=guard)
 
     def game_thread():
         try:
-            Game(speech, keys, notice_sources=(store, audio), sounds=sounds, rnd=rnd).run()
+            Game(speech, keys, notice_sources=(store, audio), sounds=sounds, rnd=rnd, options=options).run()
         except GameQuit:
             pass
         except Exception:

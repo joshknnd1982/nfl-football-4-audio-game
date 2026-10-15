@@ -155,6 +155,12 @@ class NvdaBackend(SpeechBackend):
         if speaking:                             # an idle cancel would leave a stale cancel that kills the next call
             self._call("nvdaController_cancelSpeech")
 
+    def is_speaking(self) -> bool:
+        """The original's RunningState = 2 (nfl4 S7.4a: F5, F6 and F7 wait while it is true): a call of ours in flight,
+        queued or held. Without it the help texts would be cut at once under NVDA."""
+        with self._cv:
+            return self._in_flight is not None or bool(self._queue) or self._clock() < self._hold_until
+
     def wait_until_done(self, abort: threading.Event | None = None) -> None:
         stuck = False
         with self._cv:

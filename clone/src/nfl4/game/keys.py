@@ -9,6 +9,11 @@ Key codes are Windows virtual-key codes, the same numbers VB's KeyDown received.
 Typed characters (nfl4 S7.1, B-W3, G-K5): the window also posts the character a key typed (its WM_CHAR, which Windows
 makes right after the key), in the same ordered queue. pump() keeps it in `typed`; a name prompt reads it with
 take_typed() right after its key. The original's two fields do not change: g2 is still LCase(Chr(KeyCode)).
+
+The global keys (nfl4 S7.4a, D-018, B-P13; Form_KeyDown p_42e5e0): pump() is Form_KeyDown as well as DoEvents. Alt (18)
+and F10 (121) become the Escape code "27" with no character (0x42e645 to 0x42e66e); every other key sets g and g2 and
+then `key_handler` is called with g, inside the pump, so F5 to F8, F11, F12 and Ctrl run their menus in the middle of
+whatever wait pumped (game/hotkeys.py). A menu waits for keys itself (nested pumps) and ends with g = "112".
 """
 from __future__ import annotations
 
@@ -28,6 +33,8 @@ KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_END, KEY_HOME = 33, 34, 35, 36
 KEY_LEFT, KEY_RIGHT = 37, 39
 # Shift, Ctrl, Alt, Caps Lock, Windows keys, Num Lock, Scroll Lock: never an answer in a menu
 MODIFIER_KEYS = frozenset({16, 17, 18, 20, 91, 92, 144, 145})
+KEY_ALT, KEY_F10 = 18, 121           # Form_KeyDown makes both the Escape code "27" with g2 = "" (GAME_SPEC 8.1)
+SPEAKING = 2                         # SpVoice.Status.RunningState while the voice speaks
 
 
 def typed_character(key_code: int) -> str:
@@ -102,6 +109,8 @@ class KeyInput:
         self._posted = _KeyQueue()
         self._clock = clock
         self._sleep = sleep
+        # Form_KeyDown's calls of the global menus: key_handler(g) after every key (game/hotkeys.py sets it)
+        self.key_handler = None
 
     # called by the window thread
     def post(self, key_code: int) -> None:
@@ -127,9 +136,24 @@ class KeyInput:
             if isinstance(item, str):
                 self.typed = item
                 continue
+            self.typed = ""
+            if item in (KEY_ALT, KEY_F10):         # 0x42e645: KeyCode = Empty, g = "27", g2 = "", no menu
+                self.code_text = "27"
+                self.char = ""
+                continue
             self.code_text = str(item)
             self.char = key_char(item)
-            self.typed = ""
+            if self.key_handler is not None:       # 0x42e6f0 to 0x42e811: F12, F11, F8, F7, F6, F5, Ctrl
+                self.key_handler(self.code_text)
+
+    def wait_speech(self, speech) -> None:
+        """`Do: DoEvents: Loop While g = "" And Voice.Status.RunningState = 2` (speckeys, readins, SayHints and the
+        standings' wait): until a key comes or the speech has ended. The caller clears the key first when it must."""
+        while True:
+            self.pump()
+            if self.code_text != "" or not speech.is_speaking():
+                return
+            self._sleep(0.001)
 
     def clk(self) -> None:
         """Clear the key code text, DoEvents, clear the key character, DoEvents (that order)."""

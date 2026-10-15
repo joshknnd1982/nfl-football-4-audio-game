@@ -217,11 +217,13 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
             self.s.he_she[index] = pronoun(gender)
 
     def getqbs(self) -> None:
-        """Getqbs (4.12) is the typed prompt of S7.4; until then the names are handed in."""
+        """Getqbs (4.12, game/prompts.py since S7.4a): the own quarterback from footplay.txt (the Roster's last item) or
+        asked, the opponent's asked unless a loaded game read footplay.txt. A test may hand the names in instead."""
         if self.quarterback_names is not None:
             own, opponent = self.quarterback_names(self.s)
         else:
-            own, opponent = self.g.getqbs(self.s)
+            own_from_file = self.own_names.quarterback if self.own_names is not None else ""
+            own, opponent = self.g.getqbs(self.s, saved=self.saved is not None, own_from_file=own_from_file)
         self.s.quarterbacks = {1: own, 2: opponent}
 
     # ----- the coin toss and the opening choice (4.14; 0x43bb4c to 0x43cc63) -----

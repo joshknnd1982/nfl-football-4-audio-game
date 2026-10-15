@@ -51,6 +51,9 @@ class Roster:
     defense: list[str] = field(default_factory=list)
     special_teams: list[str] = field(default_factory=list)
     kickers: list[str] = field(default_factory=list)
+    # The last item of footplay.txt (Getqbs reads the file with Input # to its end: normally the name after
+    # "Quarterback:"); S7.5 fills it when it reads the file, "" otherwise. Not one of the 33 names.
+    quarterback: str = ""
     # NFL_EXTRAS_DESIGN 3 H7 (nfl4 only): a rating per slot, keyed (section heading, number 1 to n), for the Franchise
     # mode (SX.8). Empty, and never read, in Classic.
     ratings: dict = field(default_factory=dict)

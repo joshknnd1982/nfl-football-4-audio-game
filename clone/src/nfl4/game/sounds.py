@@ -99,6 +99,16 @@ class GameSounds:
         self.crwd1 = int(base)
         self.audio.set_volume(SLOT_CROWD1, self.crwd1 + self.wavol)
 
+    def crowd2_level(self) -> int:
+        """Crowd 2's level now (GetVolume: base + wavol), which adjvol reads before its ramp to put it back (S7.4a)."""
+        return int(self.audio.volume(SLOT_CROWD2))
+
+    def set_crowd_levels(self, crowd1: int, crowd2: int | None = None) -> None:
+        """SetVolume of crowd 1 (and crowd 2) to levels that already hold wavol (adjvol's sound step, F11)."""
+        self.audio.set_volume(SLOT_CROWD1, int(crowd1))
+        if crowd2 is not None:
+            self.audio.set_volume(SLOT_CROWD2, int(crowd2))
+
     def stop_crowds(self) -> None:
         """The end of a game (pag 0x4608f8, 0x460951): crowd 1 and crowd 2 stop."""
         self.audio.stop(SLOT_CROWD1)
