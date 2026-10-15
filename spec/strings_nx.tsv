@@ -1,0 +1,196 @@
+id	feature	kind	speaker	text	note
+NXC-01	clock	sentence	say5	 the clock is running 	F1 addition (H13), after the position and down sentences
+NXC-02	clock	sentence	say5	 the clock is stopped 	F1 addition (H13)
+NXC-03	clock	sentence	say5	 the clock is running with <n> seconds left. 	first line of a play menu when the pending runoff is at least the time left (design 5.5, C9)
+NXC-04	clock	sentence	say2	 and is pushed out of bounds 	after the tackle sentence of a run, keeper or catch that ends out of bounds (design 5.2)
+NXT-01	timeouts	sentence	say4	 time out called by the <team>. 	after foot11 (design 6.3)
+NXT-02	timeouts	sentence	say4	 they have <n> time outs left. 	after NXT-01 for the computer's team
+NXT-03	timeouts	sentence	say4	 you have <n> time outs left. 	after NXT-01 for the player's team
+NXT-04	timeouts	sentence	say5	 you have no time outs left. 	refusal in a play menu
+NXT-05	timeouts	sentence	say5	 you have already called a time out. 	refusal: one per dead-ball period
+NXT-06	timeouts	sentence	say4	 each team has <n> time outs for this half. 	start of each half
+NXT-07	timeouts	sentence	say4	 each team has <n> time outs for this period. 	start of each overtime period or pair
+NXT-08	timeouts	sentence	say5	 you have <n> time outs left, and the <team> have <m>. 	F1 addition (H13)
+NXT-09	timeouts	sentence	say4	 they have no time outs left. 	after NXT-01 when the computer used its last
+NXT-10	timeouts	sentence	say4	 you have no time outs left. 	after NXT-01 when the player used the last
+NXR-01	replay	prompt	say5	 <coach> do you wish to challenge the ruling that <ruling>? 	challenge question (design 6.4)
+NXR-02	replay	prompt	say5	 you have <n> challenges and <m> time outs left. a time out is lost if the ruling stands. 	second line of the challenge question
+NXR-03	replay	sentence	say4	 the <team> have thrown the red flag. they are challenging the ruling that <ruling>. 	computer's challenge
+NXR-04	replay	sentence	say4	 the referee is going under the hood to look at the play. 	after foot11
+NXR-05	replay	sentence	say4	 after further review, the ruling on the field is reversed. 	then the corrected result
+NXR-06	replay	sentence	say4	 after further review, the ruling on the field stands. 	wrong but not clear and obvious
+NXR-07	replay	sentence	say4	 after further review, the ruling on the field is confirmed. 	the ruling was right
+NXR-08	replay	sentence	say4	 the replay official has stopped the game to review the play. 	booth review (design 6.2)
+NXR-09	replay	sentence	say4	 the <team> lose a time out. 	lost challenge
+NXR-10	replay	sentence	say5	 you have no challenges left. 	reason for refusing C
+NXR-11	replay	sentence	say5	 you need a time out to challenge. 	reason for refusing C
+NXR-12	replay	sentence	say5	 there are no challenges after the two minute warning. 	reason for refusing C
+NXR-13	replay	sentence	say5	 there are no challenges in over time. 	reason for refusing C
+NXR-14	replay	sentence	say5	 the replay official reviews scoring plays and turn overs. 	reason for refusing C
+NXR-15	replay	sentence	say5	 there is nothing to challenge on the last play. 	reason for refusing C
+NXR-R01	replay	ruling	piece	the pass was incomplete	inserted for <ruling>
+NXR-R02	replay	ruling	piece	the pass was complete	inserted for <ruling>
+NXR-R03	replay	ruling	piece	the runner was down before the fumble	inserted for <ruling>
+NXR-R04	replay	ruling	piece	the ball was fumbled	inserted for <ruling>
+NXR-R05	replay	ruling	piece	the runner was short of the goal line	inserted for <ruling>
+NXR-R06	replay	ruling	piece	the runner crossed the goal line	inserted for <ruling>
+NXR-R07	replay	ruling	piece	the runner was short of the first down	inserted for <ruling>
+NXR-R08	replay	ruling	piece	the runner made the first down	inserted for <ruling>
+NXR-R09	replay	ruling	piece	the receiver was out of bounds	inserted for <ruling>
+NXR-R10	replay	ruling	piece	the receiver was in bounds	inserted for <ruling>
+NXQ-01	qbruns	sentence	say4	 <quarterback> cannot find a receiver and takes off running 	the scramble, after the drop-back sentence
+NXQ-02	qbruns	sentence	say4	 <quarterback> slides feet first 	the slide (design 7.3)
+NXQ-03	qbruns	sentence	say2	 <quarterback> pushes forward behind the center 	the sneak's run sentence
+NXQ-04	qbruns	sentence	say2	 <quarterback> runs <dir> 	the keeper's run sentence (directions of 5.9, 4 to 7)
+NXQ-05	qbruns	sentence	say2	 <quarterback> runs straight up the middle 	the draw's run sentence
+NXP-01	penalties	sentence	say4	 there is a flag on the play. 	after foot11
+NXP-02	penalties	sentence	say4	 the play is dead. 	before NXP-01 for a dead-ball foul
+NXP-03	penalties	sentence	say4	 <foul name>, on the <team>, <surname>. 	the announcement
+NXP-04	penalties	prompt	say5	 <coach> if you accept the penalty, <situation>. 	accept or decline, first part
+NXP-05	penalties	prompt	say5	 if you decline it, <situation>. 	accept or decline, second part
+NXP-06	penalties	sentence	say4	 the <team> accept the penalty. 	computer's choice
+NXP-07	penalties	sentence	say4	 the <team> decline the penalty. 	computer's choice
+NXP-08	penalties	sentence	say4	 there are flags on both teams. the penalties offset. replay the down. 	double foul
+NXP-09	penalties	sentence	say4	 automatic first down. 	after the enforcement
+NXP-10	penalties	sentence	say4	 loss of down. 	after the enforcement
+NXP-11	penalties	sentence	say4	 half the distance to the goal. 	after the enforcement
+NXP-12	penalties	sentence	say4	 ten seconds run off the clock. 	runoff after the two-minute warning
+NXP-13	penalties	sentence	say4	 the kick will be made again. 	re-kick
+NXP-14	penalties	sentence	say4	 there will be one more play. 	untimed down after the period's last play
+NXP-S01	penalties	piece	piece	it will be <down> and <distance> on <side> <yard> yard line	situation: the offense keeps the ball; <side> is my, your or the (50)
+NXP-S02	penalties	piece	piece	it will be my ball, first and 10 on <side> <yard> yard line	situation: the computer gets the ball
+NXP-S03	penalties	piece	piece	it will be your ball, first and 10 on <side> <yard> yard line	situation: the player gets the ball
+NXP-S04	penalties	piece	piece	the touch down stands	situation
+NXP-S05	penalties	piece	piece	the touch down does not count	situation
+NXP-S06	penalties	piece	piece	the field goal is good	situation
+NXP-S07	penalties	piece	piece	the field goal does not count	situation
+NXP-S08	penalties	piece	piece	the half ends	situation
+NXP-S09	penalties	piece	piece	there will be one more play	situation
+NXP-S10	penalties	piece	piece	the play stands	situation (no change of down or spot to tell)
+NXP-A01	penalties	answer	say5	 accept 	answer
+NXP-A02	penalties	answer	say5	 decline 	answer
+NXP-A03	penalties	answer	say5	 accept with the ten second run off 	answer after the two-minute warning (4-7-1)
+NXP-A04	penalties	answer	say5	 accept the yards only 	answer after the two-minute warning (4-7-1)
+NXP-F01	penalties	foul	piece	false start	P01
+NXP-F02	penalties	foul	piece	delay of game	P02
+NXP-F03	penalties	foul	piece	off sides	P03 (spelled for speech)
+NXP-F04	penalties	foul	piece	neutral zone infraction	P04
+NXP-F05	penalties	foul	piece	encroachment	P05
+NXP-F06	penalties	foul	piece	illegal formation	P06
+NXP-F07	penalties	foul	piece	illegal shift	P07
+NXP-F08	penalties	foul	piece	holding	P08 (offense) and P25 (return)
+NXP-F09	penalties	foul	piece	defensive holding	P09
+NXP-F10	penalties	foul	piece	illegal use of hands	P10
+NXP-F11	penalties	foul	piece	illegal contact	P11
+NXP-F12	penalties	foul	piece	pass interference	P12
+NXP-F13	penalties	foul	piece	offensive pass interference	P13
+NXP-F14	penalties	foul	piece	roughing the passer	P14
+NXP-F15	penalties	foul	piece	intentional grounding	P15
+NXP-F16	penalties	foul	piece	ineligible receiver down field	P16
+NXP-F17	penalties	foul	piece	face mask	P17
+NXP-F18	penalties	foul	piece	unnecessary roughness	P18
+NXP-F19	penalties	foul	piece	illegal block in the back	P19
+NXP-F20	penalties	foul	piece	horse collar tackle	P20
+NXP-F21	penalties	foul	piece	unsportsmanlike conduct	P21
+NXP-F22	penalties	foul	piece	running into the kicker	P22
+NXP-F23	penalties	foul	piece	roughing the kicker	P23
+NXP-F24	penalties	foul	piece	off sides on the kick off	P24 (spelled for speech)
+NXP-F26	penalties	foul	piece	too many men on the field	P26
+NXP-F33	penalties	foul	piece	illegal touching of the kick	P33
+NXO-01	onside	prompt	say5	 <coach> do you wish to try an onside kick 	the question (design 8.2)
+NXO-02	onside	sentence	say4	 the <kicking team> line up for an onside kick. 	the kick
+NXO-03	onside	sentence	say4	 the <receiving team> send in their hands team. 	the kick
+NXO-04	onside	sentence	say4	 <kicker> bounces the ball along the ground. 	the kick, with foot7
+NXO-05	onside	sentence	say4	 there is a scramble for the ball. 	the kick
+NXO-06	onside	sentence	say4	 and the <kicking team> recover it. 	recovered by the kickers
+NXO-07	onside	sentence	say4	 and <returner> falls on the ball. 	recovered by the receivers
+NXO-08	onside	sentence	say4	 <returner> picks it up and runs 	the rare return
+NXO-09	onside	sentence	say4	 the <kicking team> will try an onside kick. 	the computer declares
+NXO-A01	onside	answer	say5	 no 	answer (the original's word)
+NXO-A02	onside	answer	say5	 yes 	answer (the original's word)
+NXB-01	playbooks	menu	say5	Inside Runs	group (design 10.4)
+NXB-02	playbooks	menu	say5	Outside Runs	group
+NXB-03	playbooks	menu	say5	Screens	group
+NXB-04	playbooks	menu	say5	Short Passes	group
+NXB-05	playbooks	menu	say5	Deep Passes	group
+NXB-06	playbooks	menu	say5	Play Action	group
+NXB-07	playbooks	menu	say5	Quarterback Runs	group
+NXB-08	playbooks	menu	say5	Field Goal	group (the original's item text without its number)
+NXB-09	playbooks	menu	say5	Punt	group (the original's item text without its number)
+NXM-01	menus	menu	say5	Quarterback Sneak	offense item (Classic playbook in N. F. L. rules mode)
+NXM-02	menus	menu	say5	Quarterback Keeper	offense item
+NXM-03	menus	menu	say5	Quarterback Draw	offense item
+NXM-04	menus	menu	say5	Challenge the Ruling	item, letter C, only while allowed
+NXM-05	menus	menu	say5	Time Out	item, letter T
+NXM-06	menus	menu	say5	Save Game	item, letter S (the original's text; Save Game moves to the end of the list in N. F. L. rules mode)
+NXM-07	menus	menu	say5	Rules	F9 item before About
+NXM-08	menus	menu	say5	Rules: Classic	F9 Rules item 1
+NXM-09	menus	menu	say5	Rules: N. F. L. rules	F9 Rules item 1
+NXM-10	menus	menu	say5	Time outs	F9 Rules item 2, followed by on or off
+NXM-11	menus	menu	say5	Replay challenges	F9 Rules item 3
+NXM-12	menus	menu	say5	Quarterback runs	F9 Rules item 4
+NXM-13	menus	menu	say5	Onside kicks	F9 Rules item 5
+NXM-14	menus	menu	say5	Onside question: when it makes sense	F9 Rules item 6
+NXM-15	menus	menu	say5	Onside question: always	F9 Rules item 6
+NXM-16	menus	menu	say5	Penalties	F9 Rules item 7
+NXM-17	menus	menu	say5	Offense playbook	F9 Rules item 8, followed by the playbook's name
+NXM-18	menus	menu	say5	Defense playbook	F9 Rules item 9
+NXM-19	menus	menu	say5	Reset the rules to the defaults	F9 Rules item 10
+NXM-20	menus	answer	say5	 on 	switch value
+NXM-21	menus	answer	say5	 off 	switch value
+NXM-22	menus	sentence	say5	 used with the N. F. L. rules 	after an item's value when Rules is Classic
+NXM-23	menus	sentence	say5	 the new rules apply from the next game. 	after a change during a season
+NXM-24	menus	prompt	say5	 this saved game was played with the N. F. L. rules. do you wish to play it with those rules? 	loading an extras save in Classic (design 12.3)
+NXM-25	menus	sentence	say5	 the saved rules could not be read. the game goes on with fresh time outs and a fresh clock. 	damaged extras string (C10)
+NXM-26	menus	sentence	say5	 the franchise uses the N. F. L. rules. 	F9 Rules item 1 during a Franchise season
+NXM-27	menus	menu	say5	Classic	playbook name
+NXM-28	menus	menu	say5	Pro Style	playbook name
+NXM-29	menus	menu	say5	West Coast	playbook name
+NXM-30	menus	menu	say5	Air Raid	playbook name
+NXM-31	menus	menu	say5	Power Run	playbook name
+NXM-32	menus	menu	say5	Zone Run	playbook name
+NXM-33	menus	menu	say5	Option	playbook name
+NXM-34	menus	menu	say5	Pressure	playbook name
+NXM-35	menus	menu	say5	Team playbook	playbook choice: the team's assigned style
+NXS-01	stats	stat	say2	 Penalties	statistics line (C7, H11), then the two teams as 4.19
+NXS-02	stats	stat	say2	 Penalty Yardage	statistics line
+NXS-03	stats	stat	say2	 Time Outs Used	statistics line
+NXS-04	stats	stat	say2	 Challenges Won	statistics line
+NXS-05	stats	stat	say2	 Challenges Lost	statistics line
+NXS-06	stats	stat	say2	 Onside Kicks Tried	statistics line
+NXS-07	stats	stat	say2	 Onside Kicks Recovered	statistics line
+NXS-08	stats	stat	say2	 Quarterback Runs	statistics line
+NXS-09	stats	stat	say2	 Quarterback Running Yardage	statistics line
+NXF-01	franchise	prompt	say5	 <coach> which kind of season do you wish to play 	new season, N. F. L. rules only (design 11.2)
+NXF-A01	franchise	answer	say5	 classic season 	answer
+NXF-A02	franchise	answer	say5	 franchise 	answer
+TO01	timeouts	remark	say	 smart move, they need to stop that clock. 	pool TO default (customizable, remarks.txt)
+TO02	timeouts	remark	say	 Ghip, that time out could come in handy later. 	pool TO default
+TO03	timeouts	remark	say	 they had to use that one, the clock was really running. 	pool TO default
+TO04	timeouts	remark	say	 a time out to talk things over on the side line. 	pool TO default
+TO05	timeouts	remark	say	 I would have saved that one, Ghip. 	pool TO default
+CHS01	replay	remark	say	 Ghip, I am not sure about that call. 	pool CHS default (strong hint)
+CHS02	replay	remark	say	 that one looked different from up here. 	pool CHS default
+CHS03	replay	remark	say	 the replay on the big screen does not agree with that call. 	pool CHS default
+CHS04	replay	remark	say	 the crowd does not like that call at all. 	pool CHS default
+CHC01	replay	remark	say	 that was a close one. 	pool CHC default (close call)
+CHC02	replay	remark	say	 Ghip, that could have gone either way. 	pool CHC default
+CHC03	replay	remark	say	 a bang bang play there. 	pool CHC default
+RVR01	replay	remark	say	 good challenge by the coach. 	pool RVR default (after a reversal)
+RVR02	replay	remark	say	 the replay showed it clearly, Ghip. 	pool RVR default
+RVR03	replay	remark	say	 the officials had to change that one. 	pool RVR default
+RVC01	replay	remark	say	 the officials got that one right. 	pool RVC default (after a ruling that stands or is confirmed)
+RVC02	replay	remark	say	 not enough there to change the call. 	pool RVC default
+RVC03	replay	remark	say	 that is a time out wasted, Ghip. 	pool RVC default (spoken only after a lost challenge, never after a booth review)
+ON01	onside	remark	say	 everybody in the stadium knows it is coming. 	pool ON default
+ON02	onside	remark	say	 this could be the ball game right here, Ghip. 	pool ON default
+ON03	onside	remark	say	 the hands team is on the field. 	pool ON default
+QB01	qbruns	remark	say4	 <quarterback> keeps the ball 	pool QB default: start of a keeper (never one of the last three)
+QB02	qbruns	remark	say4	 <quarterback> fakes the hand off and keeps it 	pool QB default
+QB03	qbruns	remark	say4	 <quarterback> takes the snap and runs 	pool QB default
+QB04	qbruns	remark	say4	 <quarterback> rolls out and takes off 	pool QB default
+QB05	qbruns	remark	say4	 <quarterback> drops back, then takes off 	pool QB default (draws)
+PN01	penalties	remark	say	 another flag, Ghip. 	pool PN default
+PN02	penalties	remark	say	 that is a drive killer. 	pool PN default
+PN03	penalties	remark	say	 the officials are busy today. 	pool PN default
+PN04	penalties	remark	say	 you cannot do that in this league. 	pool PN default
