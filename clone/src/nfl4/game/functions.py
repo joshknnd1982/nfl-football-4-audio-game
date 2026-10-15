@@ -271,6 +271,9 @@ class Functions:
 
         def reset_one(index: int) -> str:
             spec = SPECS[index]
+            return guarded(lambda: reset_spec(spec))()
+
+        def reset_spec(spec) -> str:
             result = custom.reset(spec.key)
             custom.reload()
             self.g.apply_customization()
@@ -290,12 +293,25 @@ class Functions:
             self.g.apply_customization()
             return words.customize_reset_all(result)
 
+        def guarded(action: Callable[[], str]) -> Callable[[], str]:
+            """An action that fails says so and leaves the menu open (the player's files are never a reason to stop)."""
+            def run() -> str:
+                try:
+                    return action()
+                except GameQuit:
+                    raise
+                except Exception:
+                    log.exception("a Customize action failed")
+                    self.speech.stop()
+                    return words.FAILED
+            return run
+
         items = [
-            Item(lambda: words.CUSTOMIZE_FOLDER_ITEM, enter=open_customize_folder),
-            Item(lambda: words.CUSTOMIZE_RELOAD_ITEM, enter=reload),
-            Item(lambda: words.CUSTOMIZE_CHECK_ITEM, enter=check),
+            Item(lambda: words.CUSTOMIZE_FOLDER_ITEM, enter=guarded(open_customize_folder)),
+            Item(lambda: words.CUSTOMIZE_RELOAD_ITEM, enter=guarded(reload)),
+            Item(lambda: words.CUSTOMIZE_CHECK_ITEM, enter=guarded(check)),
             Item(lambda: words.CUSTOMIZE_RESET_ONE_ITEM, enter=self._enter(reset_one_menu)),
-            Item(lambda: words.CUSTOMIZE_RESET_ALL_ITEM, enter=reset_all),
+            Item(lambda: words.CUSTOMIZE_RESET_ALL_ITEM, enter=guarded(reset_all)),
         ]
         SpokenMenu(self.speech, self.keys, words.CUSTOMIZE_TITLE, items, help_text=words.CUSTOMIZE_HELP).run()
 

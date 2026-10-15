@@ -285,7 +285,7 @@ def test_a_season_on_disk_is_announced_and_the_log_is_appended(tmp_path, monkeyp
     assert spoken[0] == texts.TITLE_SPOKEN and " This is week  5 of Jim's N. F. L. football " in spoken
     log = (tmp_path / "footballlog.txt").read_bytes()
     assert log.startswith(b"an earlier week\r\n") and b" This is week #5 of Jim's N. F. L. football " in log
-    assert not (tmp_path / "customize").exists() or not list((tmp_path / "customize").iterdir())
+    assert not (tmp_path / "customize" / "footplay.txt").exists()          # no game was played: no names of the player's own
 
 
 @pytest.mark.window
@@ -315,3 +315,50 @@ def test_a_start_with_no_files_asks_for_the_coach_and_writes_no_season_file_befo
     assert prompt_texts.ENTER_COACH in made.sapi.spoken()
     assert sorted(p.name for p in tmp_path.iterdir() if p.is_file() and p.name.endswith((".dat", ".gtp", ".sav", ".txt"))) \
         == ["settings.txt"]
+
+
+# ----- the player's names and banter (S7.7, data/customize.py) -----
+
+@pytest.mark.window
+def test_a_start_makes_the_customization_files_and_says_nothing_about_them(tmp_path, monkeypatch):
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
+    assert app.main() == 0
+    assert sorted(p.name for p in (tmp_path / "customize").iterdir()) == ["banter.txt", "divisions.txt", "sounds",
+                                                                         "surnames.txt", "teams.txt"]
+    spoken = " ".join(made.sapi.spoken())
+    assert "teams.txt" not in spoken and "banter.txt" not in spoken and "customiz" not in spoken
+
+
+@pytest.mark.window
+def test_a_damaged_banter_file_is_said_after_the_title_and_a_copy_is_kept(tmp_path, monkeypatch):
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    (tmp_path / "customize").mkdir()
+    junk = b"\x00\x01 not a list"
+    (tmp_path / "customize" / "banter.txt").write_bytes(junk)
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.2))
+    assert app.main() == 0
+    spoken = made.sapi.spoken()
+    notice = " The file banter.txt was damaged and has been reset to the original banter lines. A copy was saved. "
+    assert spoken[0] == texts.TITLE_SPOKEN and spoken[1] == notice and spoken.count(notice) == 1
+    assert (tmp_path / "customize" / "banter.txt.damaged1").read_bytes() == junk
+    assert b"B001 = " in (tmp_path / "customize" / "banter.txt").read_bytes()
+
+
+@pytest.mark.window
+def test_a_renamed_team_is_spoken_in_the_week_and_a_season_on_disk_still_finds_it_by_its_number(tmp_path, monkeypatch):
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    a_season_in(tmp_path, gtp=5)                                          # the player's team is division 3, place 2: T10
+    (tmp_path / "customize").mkdir()
+    (tmp_path / "customize" / "teams.txt").write_bytes(b"# NFL Football 4 teams, format 1.\r\nT10 = Mustangs\r\n")
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.5))
+    assert app.main() == 0
+    spoken = made.sapi.spoken()
+    assert any("Mustangs" in line for line in spoken) and not any("Chargers" in line for line in spoken)
+    assert not (tmp_path / "customize" / "teams.txt.damaged1").exists()
