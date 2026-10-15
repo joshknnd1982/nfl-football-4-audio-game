@@ -12,7 +12,7 @@ from nfl4.game import texts
 from test_prompt_texts import module_texts
 from specfiles import original_strings, strings_table
 
-CLONE_ONLY = {"SEASON_OVER", "FIRST_START_F9"}
+CLONE_ONLY = {"SEASON_OVER", "FIRST_START_F9", "SAVE_FAILED"}
 
 
 def owners():
@@ -27,7 +27,7 @@ def test_every_text_of_form_load_is_a_string_of_the_original_except_the_clones_o
     assert sorted(set(texts_of_module) - {n for n, t in texts_of_module.items() if t in strings}) == sorted(CLONE_ONLY)
     for name in CLONE_ONLY:
         assert getattr(P, name) not in strings                         # a text of the clone is not mistaken for the original's
-    assert len(texts_of_module) == 11
+    assert len(texts_of_module) == 12
 
 
 def test_the_menu_choices_and_the_week_names_are_form_loads_own_strings():

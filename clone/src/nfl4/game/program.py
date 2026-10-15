@@ -157,6 +157,7 @@ class Program:
         """Reads the week and says where the season stands: the week line (or the play-off week line), the log, the
         opponent, the records, today's game (0x488314 to 0x489845)."""
         g, season, keys = self.g, self.season, self.keys
+        g.speak_notices()                                       # S7.5: a file that could not be written, said once
         if self.beds_stopped and self.sounds is not None:       # G-A5: the beds start again, as at the start of the program
             self.sounds.start_crowds()
         self.beds_stopped = False
@@ -269,7 +270,10 @@ class Program:
         g, season, store = self.g, self.season, self.store
         saved = store.take_saved_game() if self.saved_game else None   # pag reads football.sav and deletes it (0x43afa4)
         self.saved_game = False                                 # SavedGame = 0 when the game is loaded (0x43bb41)
-        result = g.play_game(own_names=store.player_names(), saved=saved, save_sink=store.save_game)   # 0x489ddb
+        own_names = store.player_names()                        # footplay.txt read (pag 0x4544e1), repaired when it has a problem
+        g.speak_notices()                                       # S7.5: a damaged saved game or footplay.txt, said before the game
+        result = g.play_game(own_names=own_names, saved=saved, save_sink=store.save_game,
+                             roster_sink=store.write_player_names)   # 0x489ddb
         if result.saved:                                        # 0x489e2c: SavedGame = 1 skips pog and the standings
             self.saved_game = True
             self.ending = "saved"

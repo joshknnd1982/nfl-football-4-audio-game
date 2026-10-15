@@ -8,6 +8,7 @@ clock (H1).
 from __future__ import annotations
 
 from . import phrases as P
+from . import program_texts
 from .gamestate import other, own_half
 from .vbnum import trim
 
@@ -218,8 +219,10 @@ class BreakSteps:
         g, s = self.g, self.s
         self.result.saved = True                                    # SavedGame = 1
         record = s.saved(g.quarter_clock.countdown)
-        if self.save_sink is not None:
-            self.save_sink(record)                                  # S7.5 writes football.sav
+        if self.save_sink is not None and self.save_sink(record) is False:   # football.sav could not be written (S7.5)
+            self.result.saved = False
+            g.say(program_texts.SAVE_FAILED)                        # the game goes on: nothing was kept
+            return self.play_menu
         self.keys.pump()
         g.say(P.GAME_SAVED)
         self.keys.pump()

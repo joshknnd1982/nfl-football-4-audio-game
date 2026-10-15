@@ -3,9 +3,10 @@
 GAME_SPEC 3 and 12 (Form_Load reads football.sav, footbal0.dat, footbal1.dat to footbal5.dat, football.gtp and footplay.txt
 and opens footballlog.txt). S7.4b only needs the SHAPE of the files, as the earlier sessions did for SeasonStore (the
 engine's writes) and SetupStore (the set-up's writes): a `ProgramStore` is the read side and the few extra writes of the
-program itself. S7.5 implements it over the real files (the original's value order, GAME_SPEC 12, D-024 item 4);
-until then the program runs on `MemoryProgramStore`, which keeps everything for one run, so a season, a saved game and the
-log live exactly as long as the process, and the first start is shown once.
+program itself. S7.5 implements it over the real files in `data/files/store.py` (`FileProgramStore`: the original's value
+order, GAME_SPEC 12, D-024 item 4, which app.py hands to the Game); `MemoryProgramStore` keeps everything for one run, so
+a season, a saved game and the log live exactly as long as the process, and the first start is shown once: the tests'
+store.
 
 The reads happen once, at the start (`load_season`); the week loop then works on the Game's `SeasonState`, which the engine
 keeps in step with the files through the SeasonStore (the original re-reads football.gtp, footbal2.dat and footbal3.dat at
@@ -27,7 +28,9 @@ class ProgramStore(Protocol):
     def open_log(self, fresh: bool) -> None: ...                 # footballlog.txt: Output (fresh) or Append
     def player_names(self) -> Roster | None: ...                 # footplay.txt read and valid (pag's gpn)
     def take_saved_game(self) -> SavedGame | None: ...           # football.sav read, then deleted (pag)
-    def save_game(self, saved: SavedGame) -> None: ...           # football.sav written (Save Game)
+    def save_game(self, saved: SavedGame) -> bool | None: ...    # football.sav written (Save Game); False = it could not be
+    def write_player_names(self, roster: Roster) -> object: ...  # footplay.txt written after pag drew the player's names
+    def log_line(self, text: str) -> None: ...                   # footballlog.txt: one line (Print #3), the Game's log_sink
     def delete_season_files(self) -> None: ...                   # the season's end: footbal1 to 5, football.gtp, footplay.txt
 
 
@@ -41,6 +44,7 @@ class MemoryProgramStore:
         self.season_exists = False
         self.log_opened: list[bool] = []         # the `fresh` of every open_log (the original opens it once per run)
         self.deleted = 0                         # how many times the season files were deleted
+        self.log_lines: list[str] = []           # what the Game logged (Print #3)
 
     def first_run(self) -> bool:
         return self.first
@@ -63,6 +67,12 @@ class MemoryProgramStore:
 
     def save_game(self, saved: SavedGame) -> None:
         self.saved = saved
+
+    def write_player_names(self, roster: Roster) -> None:
+        self.names = roster
+
+    def log_line(self, text: str) -> None:
+        self.log_lines.append(text)
 
     def delete_season_files(self) -> None:
         self.deleted += 1

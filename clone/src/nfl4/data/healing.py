@@ -70,6 +70,46 @@ def write_text_atomic(path: str, text: str) -> bool:
             handle.write(text)
         os.replace(tmp, path)
         return True
+    except (OSError, UnicodeError):
+        log.exception("could not write %s", path)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        return False
+
+
+def read_bytes(path: str, retries: int = LOCK_RETRIES, pause: float = LOCK_PAUSE) -> bytes:
+    """Read a binary file whole (the season files and the saved game are a few hundred bytes).
+
+    FileNotFoundError: there is no such file. ValueError: it is far too large to be one of ours (damaged).
+    FileInUse: it exists but could not be opened after a few brief retries (locked, or no permission)."""
+    for attempt in range(max(1, retries)):
+        try:
+            if os.path.getsize(path) > MAX_FILE_BYTES:
+                raise ValueError("the file is far too large")
+            with open(path, "rb") as handle:
+                return handle.read(MAX_FILE_BYTES + 1)
+        except PermissionError as exc:
+            if attempt + 1 < retries:
+                time.sleep(pause)
+                continue
+            raise FileInUse(str(exc)) from exc
+    raise FileInUse(path)    # not reached; keeps the type checker calm
+
+
+def write_bytes_atomic(path: str, data: bytes) -> bool:
+    """Write a binary file in one step (a temporary file, then a rename) so a crash never leaves half a file. False if it
+    cannot be written."""
+    tmp = path + ".tmp"
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(tmp, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())          # a power loss must not leave an empty file after the rename
+        os.replace(tmp, path)
+        return True
     except OSError:
         log.exception("could not write %s", path)
         try:

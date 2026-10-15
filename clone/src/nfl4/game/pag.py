@@ -56,13 +56,15 @@ class GameResult:
 class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
     def __init__(self, game, rules=CLASSIC, own_names: Roster | None = None, saved: SavedGame | None = None,
                  quarterback_names: Callable[[GameState], tuple[str, str]] | None = None,
-                 save_sink: Callable[[SavedGame], None] | None = None):
+                 save_sink: Callable[[SavedGame], None] | None = None,
+                 roster_sink: Callable[[Roster], object] | None = None):
         self.g = game
         self.rules = rules
         self.own_names = own_names
         self.saved = saved
         self.quarterback_names = quarterback_names
         self.save_sink = save_sink
+        self.roster_sink = roster_sink                # S7.5: writes footplay.txt when the player's names were drawn
         self.s = GameState()
         self.clock = rules.period_clock(game, self.s)
         self.result = GameResult(None)
@@ -189,6 +191,8 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
         s.gpn = 0 if self.own_names is None else 1
         s.teams = {1: g.own_team(), 2: g.opponent_team()}
         s.rosters = setup.rosters
+        if setup.own_names_drawn and self.roster_sink is not None:
+            self.roster_sink(setup.rosters[1])               # the original's write of footplay.txt (0x455908 to 0x456f0b)
         s.banter_names = list(setup.banter_names)
         s.plays = list(setup.plays_per_period)
         s.quarter, s.counter = setup.quarter, setup.play_counter

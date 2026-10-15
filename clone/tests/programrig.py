@@ -90,8 +90,8 @@ def program_rig(tmp_path, answers=(), policy=None, first=False, preset=None, out
     rig.plays = []
     game = rig.game
 
-    def play_game(rules=None, own_names=None, saved=None, quarterback_names=None, save_sink=None):
-        rig.plays.append({"own_names": own_names, "saved": saved, "save_sink": save_sink})
+    def play_game(rules=None, own_names=None, saved=None, quarterback_names=None, save_sink=None, roster_sink=None):
+        rig.plays.append({"own_names": own_names, "saved": saved, "save_sink": save_sink, "roster_sink": roster_sink})
         outcome = rig.outcomes.pop(0)
         if callable(outcome):
             outcome = outcome(rig)

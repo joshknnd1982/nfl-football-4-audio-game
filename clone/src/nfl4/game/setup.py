@@ -116,15 +116,35 @@ def adopt_roster(pool: NamePool, names: Roster, banter: list[str] | None) -> Ros
                   list(names.kickers))
 
 
+def adopt_partial_roster(pool: NamePool, names: Roster, banter: list[str] | None) -> Roster:
+    """footplay.txt with a wrong or missing part (S7.5, D-025 d: only the broken part is repaired): the sections that hold
+    their full number of names are kept (each name blanks the first equal pool entry, in file order), the others are drawn
+    in the original's order, and the quarterback of the file stays. The roster then differs from the file, so the set-up
+    says the file has to be written again."""
+    sections = [section for _, section in names.sections()]
+    for section, count in zip(sections, COUNTS):
+        if len(section) == count:
+            for name in section:
+                pool.blank_exact(name)
+    parts = [list(section) if len(section) == count else [pool.take() for _ in range(count)]
+             for section, count in zip(sections, COUNTS)]
+    roster = Roster(*parts, quarterback=names.quarterback)
+    if banter is not None:
+        banter.extend(roster.running_backs + roster.receivers + roster.defense)
+    return roster
+
+
 def new_game_setup(rnd: GameRandom, pool: NamePool, own_names: Roster | None = None) -> GameSetup:
     """pag's set-up GoSub: the own roster (from the file when `own_names` is given, else drawn), the opponent's, the
     periods' lengths and the three warning lengths, each in the original's order."""
     banter: list[str] = []
-    if own_names is not None:
+    if own_names is not None and own_names.is_complete():
         own = adopt_roster(pool, own_names, banter)
+    elif own_names is not None:
+        own = adopt_partial_roster(pool, own_names, banter)
     else:
         own = draw_roster(pool, banter)
     opponent = draw_roster(pool, banter)
     plays = [rnd.below(8) + 30 for _ in range(PERIODS)]
     warnings = (rnd.below(3) + 5, rnd.below(3) + 5, rnd.below(3) + 5)
-    return GameSetup({1: own, 2: opponent}, banter, plays, warnings, own_names is None)
+    return GameSetup({1: own, 2: opponent}, banter, plays, warnings, own_names is None or not own_names.is_complete())

@@ -162,13 +162,13 @@ class Game(Speakers):
     # ----- the game itself: pag (S7.3b) -----
 
     def play_game(self, rules=None, own_names: Roster | None = None, saved=None, quarterback_names=None,
-                  save_sink=None):
+                  save_sink=None, roster_sink=None):
         """pag (GAME_SPEC 4.14 to 5.13): one game against this week's opponent. Returns a GameResult (Me.m414, saved,
         conceded); m414 is kept for the season engine. rules: game.rules.ClassicRules (the original) unless the
         N. F. L. rules mode hands its own (nfl4 only, phase PX)."""
         from .pag import PlayEngine
         engine = PlayEngine(self, rules or self.rules, own_names=own_names, saved=saved,
-                            quarterback_names=quarterback_names, save_sink=save_sink)
+                            quarterback_names=quarterback_names, save_sink=save_sink, roster_sink=roster_sink)
         self.play_engine = engine
         try:
             result = engine.run()

@@ -253,3 +253,65 @@ def test_a_saved_voice_that_is_not_installed_is_told_once(tmp_path, monkeypatch)
     assert app.main() == 0
     spoken = made.sapi.spoken()
     assert spoken.count("A voice saved in the settings was not found, so the first voice is used for it.") == 1
+
+
+# ----- the player's files (S7.5, data/files/store.py) -----
+
+def a_season_in(folder, gtp=5):
+    """What the program writes by week `gtp`: the files of the first game of week 1 and a records file after it."""
+    import random
+
+    from nfl4.data.files.store import FileProgramStore
+    from nfl4.game.rnd import GameRandom
+    from nfl4.game.schedule import make_schedule
+    from nfl4.game.standings import Records
+    store = FileProgramStore(str(folder), str(folder / "customize"))
+    store.write_coach_and_team(3, 2, "Kim Lee")
+    store.write_schedule(make_schedule(GameRandom(random.Random(5)), 3, 2))
+    store.write_gtp(gtp)
+    store.write_records(Records())
+
+
+@pytest.mark.window
+def test_a_season_on_disk_is_announced_and_the_log_is_appended(tmp_path, monkeypatch):
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    a_season_in(tmp_path, gtp=5)
+    (tmp_path / "footballlog.txt").write_bytes(b"an earlier week\r\n")
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.5))
+    assert app.main() == 0
+    spoken = made.sapi.spoken()
+    assert spoken[0] == texts.TITLE_SPOKEN and " This is week  5 of Jim's N. F. L. football " in spoken
+    log = (tmp_path / "footballlog.txt").read_bytes()
+    assert log.startswith(b"an earlier week\r\n") and b" This is week #5 of Jim's N. F. L. football " in log
+    assert not (tmp_path / "customize").exists() or not list((tmp_path / "customize").iterdir())
+
+
+@pytest.mark.window
+def test_a_damaged_season_is_said_after_the_title_and_a_copy_is_kept(tmp_path, monkeypatch):
+    from nfl4.data.files.store import SEASON_DAMAGED
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    a_season_in(tmp_path, gtp=5)
+    (tmp_path / "footbal2.dat").write_bytes(b"cut short")
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.5))
+    assert app.main() == 0
+    spoken = made.sapi.spoken()
+    assert spoken[0] == texts.TITLE_SPOKEN and spoken[1] == SEASON_DAMAGED and spoken.count(SEASON_DAMAGED) == 1
+    assert (tmp_path / "footbal2.dat.damaged1").is_file() and not (tmp_path / "footbal2.dat").exists()
+    assert not (tmp_path / "footbal1.dat").exists()                       # the new season has not been chosen yet
+
+
+@pytest.mark.window
+def test_a_start_with_no_files_asks_for_the_coach_and_writes_no_season_file_before_the_answers(tmp_path, monkeypatch):
+    from nfl4.game import prompt_texts
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
+    assert app.main() == 0
+    assert prompt_texts.ENTER_COACH in made.sapi.spoken()
+    assert sorted(p.name for p in tmp_path.iterdir() if p.is_file() and p.name.endswith((".dat", ".gtp", ".sav", ".txt"))) \
+        == ["settings.txt"]

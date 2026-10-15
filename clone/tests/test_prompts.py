@@ -330,3 +330,12 @@ def test_a_play_off_week_speaks_the_round_in_one_waited_text():
     assert said(rig) == [text]
     assert ("wait", "") in rig.sapi.events                 # say4 waits
     assert rig.game.replay == [text]                       # and is kept for F2
+
+
+def test_a_loaded_game_whose_footplay_txt_lacks_the_quarterback_asks_for_him_but_keeps_the_saved_opponent():
+    rig = qb_rig(["s", "m", "i", "t", "h", ENTER, ENTER])
+    state = GameState()
+    state.gpn, state.quarterbacks = 1, {2: "Unitas"}
+    assert rig.game.getqbs(state, saved=True, own_from_file="") == ("smith", "Unitas")
+    assert rig.store.calls == [("quarterback", "smith")]
+    assert not any("Jets quarter back" in text for text in said(rig))

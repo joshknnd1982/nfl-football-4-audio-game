@@ -257,6 +257,10 @@ class Prompts:
         g = self.g
         if state.gpn != 0:                               # 0x43158a
             own = own_from_file                          # 0x431b26: the last item of footplay.txt
+            if own == "":                                # S7.5: a footplay.txt without a quarterback asks for him, once
+                own = self._ask_quarterback(" " + g.season.coach + T.ENTER_OWN_QUARTERBACK,
+                                            lambda name: T.IS + name + T.OWN_QUARTERBACK_CORRECT)
+                self.store.append_quarterback(own)
             if saved:
                 return own, state.quarterbacks.get(2, "")    # 0x431b5e
         else:

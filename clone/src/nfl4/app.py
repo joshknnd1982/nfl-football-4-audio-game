@@ -8,8 +8,9 @@ window's close arms an exit deadline, and the entry points end with finish(main(
 P7 S7.1: speech, window, settings, the voice crash guard and the lifecycle. P7 S7.2: the sound layer (the mixer with
 the original's seven slots, every sound resolved once at start so a bad file is reported then, the sound procedures
 handed to the game). The game itself (S7.3 to S7.5) comes next. P7 S7.4a: the Options the hot keys change and save. P7 S7.4b: the
-start-up, week loop, main menu and exit of game/program.py; the files are S7.5's (until then one run keeps its season in
-memory and the first start is the one that made settings.txt).
+start-up, week loop, main menu and exit of game/program.py. P7 S7.5: the player's files (data/files: the season, the saved
+game, footplay.txt, footballlog.txt) handed to the Game as its program store, season store, set-up store and log sink; the
+first start is the one that made settings.txt.
 """
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ import threading
 from . import VERSION
 from .audio import Audio, SoundLibrary
 from .data import paths
+from .data.files.store import FileProgramStore
 from .data.lifecycle import arm_exit_deadline, leave_program_folder
 from .data.logsetup import install_exception_logging, setup_logging
 from .data.settingsfile import SettingsStore
@@ -28,7 +30,6 @@ from .game import texts
 from .game.flow import Game
 from .game.keys import GameQuit, KeyInput
 from .game.options import Options
-from .game.program_store import MemoryProgramStore
 from .game.rnd import GameRandom
 from .game.sounds import GameSounds
 from .speech import create_speech
@@ -91,17 +92,24 @@ def main() -> int:
     options = Options(settings, speech, save=store.save, base_rate=lambda: speech.base_rate,
                       voice_catalog=VoiceCatalog(), voice_guard=guard)
 
+    # the season, the saved game, footplay.txt and the log; every file is checked now, so a damaged one is told with the
+    # start-up notices (S7.5, D-024 item 5, G-F5, playbook 7.10)
+    files = FileProgramStore(paths.user_data_dir(), paths.customize_dir(), first=first_start)
+
     def game_thread():
         try:
-            Game(speech, keys, notice_sources=(store, audio), sounds=sounds, rnd=rnd, options=options,
-                 program_store=MemoryProgramStore(first=first_start), open_folder=paths.open_folder,
-                 settings_dir=store.folder).run()
+            game = Game(speech, keys, notice_sources=(store, audio, files), sounds=sounds, rnd=rnd, options=options,
+                        program_store=files, open_folder=paths.open_folder, settings_dir=store.folder)
+            game.season_store = game.setup_store = files        # the files the season engine and the prompts write
+            game.log_sink = files.log_line                      # footballlog.txt (Print #3, G-S10)
+            game.run()
         except GameQuit:
             pass
         except Exception:
             log.exception("unexpected error in the game thread")
         finally:
             log.debug("game thread ended")
+            files.close()
             frame.close()                   # thread-safe: posts WM_CLOSE to the window
 
     thread = threading.Thread(target=game_thread, name="game", daemon=True)

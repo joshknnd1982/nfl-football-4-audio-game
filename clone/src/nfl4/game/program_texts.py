@@ -32,4 +32,5 @@ LOG_TITLE_ORIGINAL = "NFL football  By Jim Kitchen"          # string 2558
 
 # ----- clone texts (not in the exe): GAME_SPEC 3, GAP_REGISTER G-F3 (a draft wording, S8.2 listens) -----
 SEASON_OVER = " The season is over. A new season begins. "
+SAVE_FAILED = " The game could not be saved. "                # G-F5: football.sav could not be written; the game goes on
 FIRST_START_F9 = " Press F9 for the added functions: the speech settings, the sounds and the about text. "
