@@ -51,6 +51,8 @@ class Game(Speakers):
         self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
         self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
         self.coach_source = lambda: self.season.coach
+        self.comtog_source: Callable[[], int] = lambda: 0      # F8: 1 = the comments (banter) are off (S7.4 wires it)
+        self.m414: tuple[int, int] | None = None      # the last game's result for the season engine (S7.3c)
 
     @property
     def pool(self) -> NamePool:
@@ -85,6 +87,42 @@ class Game(Speakers):
         self.say5(self.quarter_clock.advance(played, total, quarter, self.rnd))
         self.keys.clk()
         self.keys.code_text = KEY_CODE_F1
+
+    @property
+    def comtog(self) -> int:
+        return int(self.comtog_source())
+
+    # ----- the game itself: pag (S7.3b) -----
+
+    def play_game(self, rules=None, own_names: Roster | None = None, saved=None, quarterback_names=None,
+                  save_sink=None):
+        """pag (GAME_SPEC 4.14 to 5.13): one game against this week's opponent. Returns a GameResult (Me.m414, saved,
+        conceded); m414 is kept for the season engine. rules: game.rules.ClassicRules (the original) unless the
+        N. F. L. rules mode hands its own (nfl4 only, phase PX)."""
+        from .pag import PlayEngine
+        from .rules import CLASSIC
+        engine = PlayEngine(self, rules or CLASSIC, own_names=own_names, saved=saved,
+                            quarterback_names=quarterback_names, save_sink=save_sink)
+        result = engine.run()
+        if result.scores is not None:
+            self.m414 = result.scores
+        return result
+
+    def getqbs(self, state):
+        """Getqbs (GAME_SPEC 4.12): the typed quarterback names are S7.4's prompt (getter, cqn)."""
+        raise NotImplementedError("Getqbs is built with the typed prompts in S7.4; hand the names to play_game")
+
+    def halftime(self) -> None:
+        """halftime (p_485b80): foot0, 15 celebration sounds, foot0 (game/sounds.py)."""
+        self.sounds.halftime()
+
+    def superbowl(self, scores: tuple[int, int]) -> None:
+        """superbowl (p_484860): S7.3c builds the presentation (the winner sentence, 8 to 15 celebration sounds, foot25
+        when the player won, the F1 and F2 repeat). Until then only what pag depends on: the replay list emptied, the
+        log flag on and gtp = 42 at its end."""
+        self.empty_replay()
+        self.ptf = 1
+        self.season.gtp = 42
 
     def say_score(self, own_score: int, opponent_score: int) -> None:
         """SayScore (F3): " The score is ", the sentence (waited), then two lines to the log whatever ptf is, DoEvents."""

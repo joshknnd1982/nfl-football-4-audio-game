@@ -176,6 +176,13 @@ class KeyInput:
             self.typed = self._posted.take_text(wait)
         return self.typed
 
+    def wait_key(self) -> None:
+        """The bare `Do: DoEvents: Loop While g = ""` of pag's final score (0x45391f): no clk, no stopspeech, no ambient
+        sounds; the caller has called clk before."""
+        while self.code_text == "":
+            self._sleep(0.001)
+            self.pump()
+
     def getkey(self, speech) -> None:
         """clk, wait with DoEvents for a key, then stop speech at once."""
         self.clk()

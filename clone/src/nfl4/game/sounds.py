@@ -22,6 +22,7 @@ from ..audio.output import (SLOT_AMBIENT, SLOT_CROWD1, SLOT_CROWD2, SLOT_HIKE, S
                             SLOT_TACKLE)
 from ..data.settings import AudioSettings
 from .keys import KeyInput
+from .rnd import REDRAW_LIMIT
 
 log = logging.getLogger("nfl4.game")
 
@@ -152,6 +153,20 @@ class GameSounds:
         """The clone's stop of the play noise where the original forgets it (" is way to short", Q57, G-A2)."""
         self.audio.stop(SLOT_NOISE)
 
+    def play_noise_running(self) -> bool:
+        """True while foot14 loops (GAP_REGISTER G-A2: the engine's safety net looks at it before a key wait)."""
+        return self.audio.busy(SLOT_NOISE)
+
+    def halftime(self) -> None:
+        """halftime (p_485b80, called by pag at the end of the second quarter): foot0 waited, then the original draws
+        Int(Rnd * 10) + 10 and overwrites it with 15 (the draw still costs a random number), 15 celebration sounds,
+        foot0 waited."""
+        self.play(0, 0)
+        int(self._rnd() * 10)
+        for _ in range(15):
+            self.celebration_sound()
+        self.play(0, 0)
+
     def play_tackle(self, n: int) -> None:
         """PlayTackle(n), n = 1, 2, 3 or 8: foot(n + 3) once at -1500 + wavol (a second tackle within the first one's
         length cuts it), the play noise stops, then 2.5 s pass whatever the sound's length (keys do not shorten it)."""
@@ -181,10 +196,13 @@ class GameSounds:
         = own rate + 100 x k with k = Int(Rnd * 40) - 20 drawn again while 0, at least 8000 Hz, waited, stop."""
         sound_id = foot_id(int(self._rnd() * 10) + 15)
         rate = self.audio.rate(sound_id) or 0
-        while True:
+        for _ in range(REDRAW_LIMIT):           # G-D1: the original's loop has no bound; a stuck source must end
             k = int(self._rnd() * 40) - 20
             if k != 0:
                 break
+        else:
+            log.warning("celebration pitch: no draw other than 0 in %d tries, taking +100 Hz (G-D1)", REDRAW_LIMIT)
+            k = 1
         freq = max(MIN_CELEBRATION_FREQ, rate + 100 * k)
         self.audio.play(SLOT_ONESHOT, sound_id, -300 + self.wavol, freq=freq)
         self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT))

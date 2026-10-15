@@ -51,6 +51,9 @@ class Roster:
     defense: list[str] = field(default_factory=list)
     special_teams: list[str] = field(default_factory=list)
     kickers: list[str] = field(default_factory=list)
+    # NFL_EXTRAS_DESIGN 3 H7 (nfl4 only): a rating per slot, keyed (section heading, number 1 to n), for the Franchise
+    # mode (SX.8). Empty, and never read, in Classic.
+    ratings: dict = field(default_factory=dict)
 
     def sections(self) -> list[tuple[str, list[str]]]:
         """(heading, names) in the order of footplay.txt."""

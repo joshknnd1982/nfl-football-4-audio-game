@@ -61,6 +61,9 @@ class Speakers:
         self.qorp = 1                                          # 1: say3 speaks as a quarterback, else as a punter
         self.vr_source: Callable[[], int] = lambda: 0          # the speech rate counter vr (settings speech_rate)
         self.coach_source: Callable[[], str] = lambda: "coach"  # the coach's name for inrep's stop line
+        # S7.3b: every pause with the address of its call in the lifted code (None = not recorded). The tests compare
+        # the sites of a game with work/pause_table_s43.txt (GAME_SPEC 7 item 3).
+        self.pause_log: list[tuple[int | None, float]] | None = None
 
     # ----- the log -----
 
@@ -88,18 +91,35 @@ class Speakers:
         self.replay.append(text)
         self.replay_longest = max(self.replay_longest, len(self.replay))
 
-    def _speak(self, text: str, role: str, wait: bool) -> None:
+    def _speak(self, text: str, role: str, wait: bool, rate_step: int = 0) -> None:
         if text == "":
             return                                  # nothing to say (Speak "" is a no-op in flags 0 and 1)
         if wait:
-            self.speech.say(text, self.keys.quit, role=role)
+            self.speech.say(text, self.keys.quit, role=role, rate_step=rate_step)
         else:
-            self.speech.say_async(text, role=role)
+            self.speech.say_async(text, role=role, rate_step=rate_step)
 
-    def say(self, text: str) -> None:
-        """Announcer, waits for everything queued; logged."""
+    def say(self, text: str, rate_step: int = 0) -> None:
+        """Announcer, waits for everything queued; logged. rate_step: banter line 113 is one step faster (Q38)."""
         self._logged(text)
-        self._speak(text, ANNOUNCER, True)
+        self._speak(text, ANNOUNCER, True, rate_step)
+
+    def voice_speak(self, text: str, wait: bool) -> None:
+        """The bare `Voice.Speak text, flags` of pag (" Hike! " asynchronous, the " " after the score synchronous): the
+        voice that spoke last, neither logged nor kept for the replay."""
+        self._speak(text, self.speech.last_role or ANNOUNCER, wait)
+
+    def saykey(self) -> None:
+        """The key echo (p_42e3d0): the speech is purged, then the key's character g2 is queued in the voice that spoke
+        last, except for F1. Q58 (TESTED): heard at the normal rate, so the clone does not change it. A control
+        character (Escape, Tab, Backspace) is not sent: SAPI has nothing to say for it, a screen reader would read its
+        name (S7.3b; S8.2 listens)."""
+        self.stopspeech()
+        if self.keys.code_text == "112":
+            return
+        char = self.keys.char
+        if char and ord(char[0]) >= 32:
+            self._speak(char, self.speech.last_role or ANNOUNCER, False)
 
     def say2(self, text: str) -> None:
         """Announcer, asynchronous; logged, kept for the replay."""
@@ -149,11 +169,17 @@ class Speakers:
     def vr(self) -> int:
         return int(self.vr_source())
 
-    def dy(self, seconds: float) -> None:
-        """A fixed pause: keys are pumped but never end it."""
+    def dy(self, seconds: float, site: int | None = None) -> None:
+        """A fixed pause: keys are pumped but never end it. site: the address of the call (recorded when pause_log is
+        set)."""
+        if self.pause_log is not None:
+            self.pause_log.append((site, seconds))
         self.keys.dy(seconds)
 
-    def rady(self) -> None:
+    def rady(self, site: int | None = None) -> None:
         """A pause of random length: Int(Rnd * 30) / (max(vr, 1) * 25) seconds, keys pumped."""
         steps = self.rnd.below(RADY_STEPS)
-        self.keys.dy(steps / (max(self.vr, 1) * RADY_UNIT))
+        seconds = steps / (max(self.vr, 1) * RADY_UNIT)
+        if self.pause_log is not None:
+            self.pause_log.append((site, seconds))
+        self.keys.dy(seconds)

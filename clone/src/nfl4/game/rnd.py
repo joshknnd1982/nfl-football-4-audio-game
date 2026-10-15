@@ -31,17 +31,27 @@ class GameRandom:
         self.source = source if source is not None else random.Random()
         self.redraw_limit = REDRAW_LIMIT
         self.fallbacks = 0          # how often a redraw ran out of tries (a test asserts it stays 0 on the real data)
+        # S7.3b: when a list, every draw appends its size n (Int(Rnd * n)) or 0 (a bare Rnd), so a test can compare the
+        # sizes of a whole game's draws with the lifted lines and with a recorded game (the golden transcript).
+        self.trace: list[int] | None = None
 
-    def random(self) -> float:
-        """Rnd: the next number, 0 <= x < 1."""
+    def _next(self) -> float:
         x = self.source.random()
         if not 0.0 <= x < 1.0:
             raise ValueError("a random source gave %r, which is not below 1 and not negative" % (x,))
         return x
 
+    def random(self) -> float:
+        """Rnd: the next number, 0 <= x < 1."""
+        if self.trace is not None:
+            self.trace.append(0)
+        return self._next()
+
     def below(self, n: int) -> int:
         """Int(Rnd * n): 0 to n - 1."""
-        return min(int(self.random() * n), n - 1)
+        if self.trace is not None:
+            self.trace.append(n)
+        return min(int(self._next() * n), n - 1)
 
     def __call__(self, n: int) -> int:
         """Int(Rnd * n) + 1: 1 to n."""

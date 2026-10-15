@@ -82,6 +82,19 @@ class ScriptedKeys(KeyInput):
             raise AssertionError("the game waits for a key that the test never presses")
         speech.stop()
 
+    def wait_key(self):
+        """pag's bare DoEvents loop at the final score: the next answer is typed when it waits."""
+        self.waits += 1
+        self.pump()
+        if self.code_text == "":
+            self.type_next()
+        for _ in range(200000):
+            if self.code_text != "":
+                return
+            self._sleep(0.001)
+            self.pump()
+        raise AssertionError("the game waits for a key that the test never presses")
+
     def getkey2(self, speech, ambient):
         """The game's key wait with ambient sounds: a ("wait", s) answer lets virtual time pass in 1 ms steps, with
         DoEvents and PlayRan on every step as the original's loop does, before the next key is typed."""
