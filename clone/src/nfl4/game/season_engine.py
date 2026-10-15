@@ -177,6 +177,15 @@ class SeasonEngine:
                                    % (len(pairings), self.g.season.gtp, count))
         return list(pairings[:count])
 
+    def _byes(self, count: int = 4) -> list[TeamRef]:
+        """The four bye teams of footbal5.dat, checked BEFORE a round is drawn and spoken (a short list would otherwise
+        be found only after four results were heard and thrown away, or written short by a zip)."""
+        byes = self.g.season.playoffs.byes
+        if len(byes) < count:
+            raise SeasonStateError("the bye teams hold %d teams, week %d needs %d"
+                                   % (len(byes), self.g.season.gtp, count))
+        return list(byes[:count])
+
     def _write_next_round(self, pairings: list[Pairing]) -> None:
         """k4 (deletes footbal4.dat), then the pairings of the coming round."""
         self.g.season.playoffs.pairings = list(pairings)
@@ -187,6 +196,8 @@ class SeasonEngine:
     def pog(self) -> PogResult:
         """pog (GAME_SPEC 5.14 to 5.16): after the player's game."""
         g, season = self.g, self.g.season
+        if season.gtp < 1:                                        # the caller skips pog when gtp is 0 (GAME_SPEC 3 step 8)
+            raise SeasonStateError("pog is not called when the season is over (gtp %d)" % season.gtp)
         g.ptf = 1
         self.player_won = False                                   # L3d0 = 0 (0x4625a5)
         g.empty_replay()                                          # Me.ilc = 0 (0x4625ce)
@@ -218,7 +229,9 @@ class SeasonEngine:
         played: dict[TeamRef, int | None] = {TeamRef(d, p): None for d in range(1, DIVISIONS + 1)
                                              for p in range(1, PLACES + 1)}
         played[own], played[opponent] = own_score, opponent_score    # L270 (0x462a3f, 0x462b0e)
-        g.keys.clk()                                              # 0x462b54; footbal3.dat is read: the records are in memory
+        g.keys.clk()                                              # 0x462b54
+        # footbal3.dat is read here (0x462bb3 to 0x462ea5): the records are in memory
+        g.keys.clk()                                              # 0x462eb4
         lines = [T.GAMES_OF_WEEK + trim(str_(season.gtp)) + T.END]   # " Games of week number 5. "
         g.say2(lines[0])
         if own_score <= opponent_score:                           # If Me.m414(1) <= Me.m414(2): the opponent wins (Q41)
@@ -310,9 +323,10 @@ class SeasonEngine:
         """The player's team has a bye: the four wild card games are played and spoken (0x46fec8 to 0x4734fd), the
         division round's pairings written, the wait, gtp = 18."""
         g, season = self.g, self.g.season
+        pairings, byes = self._pairings(4), self._byes()
         g.empty_replay()
-        winners = self._computer_round(self._pairings(4), T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD)
-        self._write_next_round(list(zip(winners, season.playoffs.byes)))
+        winners = self._computer_round(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD)
+        self._write_next_round(list(zip(winners, byes)))
         self._round_wait()
         season.gtp += 1
         self.store.write_gtp(season.gtp)
@@ -369,9 +383,7 @@ class SeasonEngine:
 
     def _wild_card_week(self) -> None:
         g, season = self.g, self.g.season
-        pairings, byes = self._pairings(4), list(season.playoffs.byes)
-        if len(byes) < 4:
-            raise SeasonStateError("the bye teams hold %d teams, the wild card week needs 4" % len(byes))
+        pairings, byes = self._pairings(4), self._byes()
         season.gtp += 1                                           # 18
         g.empty_replay()
         winners = self._round_with_the_player(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD)
@@ -443,11 +455,8 @@ class SeasonEngine:
         self._fin_super_bowl()
 
     def _fin_wild_card_round(self) -> None:
-        season = self.g.season
-        winners = self._computer_round(self._pairings(4), T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD)
-        byes = list(season.playoffs.byes)
-        if len(byes) < 4:
-            raise SeasonStateError("the bye teams hold %d teams, the wild card round needs 4" % len(byes))
+        pairings, byes = self._pairings(4), self._byes()
+        winners = self._computer_round(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD)
         self._write_next_round(list(zip(winners, byes)))
         self._round_wait()
 

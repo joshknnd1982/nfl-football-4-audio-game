@@ -344,7 +344,7 @@ Classic (the original's plays and numbers, always first, the default) and seven 
 ### 11.2 Mode and flow
 
 - Chosen when a new season starts and Rules is N. F. L. rules: " <coach> which kind of season do you wish to play ", answers " classic season " (first) and " franchise ". With Rules = Classic the question is not asked (P1). A Franchise season always plays with N. F. L. rules (the feature switches still apply); the F9 Rules item then says " the franchise uses the N. F. L. rules. ".
-- The season itself is the original's: 16 weeks, the schedule maker, the season engine and the play-offs (5.1, 5.14 to 5.17) with their sentences; Franchise adds the offseason after the play-offs and the to-do list and news before each game.
+- The season itself is the original's: 16 weeks, the schedule maker, the season engine and the play-offs (5.1, 5.14 to 5.17) with their sentences; Franchise adds the offseason after the play-offs and the to-do list and news before each game. S7.3c (2026-10-14, D-044): the season itself is built as `game/season_engine.py` (class `SeasonEngine`: pog, finplay17, the Super Bowl presentation) over one state record, `SeasonState` with `PlayoffState`, and a `SeasonStore` protocol for the files; Franchise wraps or subclasses the engine and reads the same state; no hook was added or changed.
 - Ratings change only bounded modifiers (H8) and the shape of the computer games' score table (5.14), with neutral ratings equal to Classic (C3).
 
 ### 11.3 Data decided now (SX.8 may refine with a recorded reason)

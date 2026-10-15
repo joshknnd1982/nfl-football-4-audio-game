@@ -210,7 +210,9 @@ class GameSounds:
 
     def celebration_run(self) -> None:
         """8 to 15 celebration sounds (Int(Rnd * 8) + 8 of them, each waited): the run of playcel, of the Super Bowl
-        presentation (superbowl, twice) and of finplay17's Super Bowl (S7.3c, 0x484bab, 0x48541f, 0x483fbb)."""
+        presentation (superbowl: twice when the player's team won, once when the opponent won) and of finplay17's Super
+        Bowl (S7.3c; the Rnd calls at 0x484bab, 0x48541f and 0x483f73). Like the other sound procedures it draws a bare
+        Rnd (S7.2), so the draw trace records size 0 for these draws (the golden transcript holds the same sizes)."""
         for _ in range(int(self._rnd() * 8) + 8):
             self.celebration_sound()
 

@@ -96,10 +96,8 @@ def test_a_team_that_has_played_and_equal_scores_are_drawn_again(tmp_path):
     team_draws(draws, TeamRef(1, 2))                         # the same team again: it has played now
     team_draws(draws, TeamRef(1, 3)).rnd(32, 6)              # the Ravens, index 6 has the same 6 points: drawn again
     draws.rnd(32, 17)                                        # index 17: 17 points; 5 <= 17: the Ravens win
-    games = standard_games(start=1)
     # the first game used OTHERS[0], OTHERS[1] = Browns, Ravens; the remaining 14 games are OTHERS[2:] two at a time
-    rest = week_draws(standard_games(start=1))
-    draws.extend(rest)
+    draws.extend(week_draws(standard_games(start=1)))
     run(rig, rig.engine.pog, draws)
     line = texts(rig)[2]
     assert line == "Ravens over the Browns by the score of 17, to 6. "

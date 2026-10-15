@@ -62,7 +62,7 @@ The classic engine is built first and exact. So that the extras do not force a r
 - H8 The outcome tables of 5.9 and 5.10 are data (minimum, maximum, sack percent, completion percent, interception rule, fumble chance), read through one `modifiers` argument that Classic passes as neutral (playbooks, ratings, QB keepers).
 - H9 Speech and pause helpers (say to say6, dy, rady) are used as they are; extras add only new lines through them.
 
-S7.3b and S7.3c record the golden Classic transcript (C8) and say in their NEXT_PROMPT which hooks they built.
+S7.3b and S7.3c record the golden Classic transcript (C8) and say in their NEXT_PROMPT which hooks they built. S7.3c (2026-10-14, D-044) built and changed no hook: the golden transcript is unchanged (it plays week 1), and the season engine is one class over one state record so the Franchise mode can wrap it.
 
 SX.1 (2026-10-14): the hooks are refined in `spec\NFL_EXTRAS_DESIGN.md` section 3, which the classic sessions read with this section: H1 names its calls, H2 has five steps with a defined narration end point per kind of result, H4 has the decision point before a kick-off, H5's record can be copied (the snapshot for challenges), and four hooks are added: H10 between plays, H11 added statistics lines, H12 added help, H13 added situation speech on F1. All are identities or no-ops in Classic.
 

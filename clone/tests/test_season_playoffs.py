@@ -287,3 +287,23 @@ def test_missing_pairings_or_byes_raise_the_season_state_error_that_the_week_loo
     rig.game.season.playoffs.byes = refs((1, 2))
     with pytest.raises(SeasonStateError):
         rig.engine.pog()
+    assert rig.said == [] and rig.game.season.gtp == 17          # found before anything was drawn, spoken or counted
+
+
+def test_a_short_bye_list_is_found_before_finplay17_or_the_bye_games_speak_anything(tmp_path):
+    rig = season_rig(tmp_path, answers=[ENTER], own=(2, 3), opponent=(4, 4), gtp=17)
+    rig.game.season.playoffs.pairings = list(BASE_PAIRINGS)
+    rig.game.season.playoffs.byes = refs((1, 2), (3, 3))
+    with pytest.raises(SeasonStateError):
+        run(rig, rig.game.finplay17)
+    assert rig.said == [] and rig.store.events == []
+    with pytest.raises(SeasonStateError):
+        run(rig, rig.engine._wild_card_games_without_the_player)
+    assert rig.said == [] and rig.store.events == []
+
+
+def test_pog_is_not_called_when_the_season_is_over(tmp_path):
+    rig = season_rig(tmp_path, answers=[], gtp=0)
+    with pytest.raises(SeasonStateError):
+        rig.engine.pog()
+    assert rig.said == []
