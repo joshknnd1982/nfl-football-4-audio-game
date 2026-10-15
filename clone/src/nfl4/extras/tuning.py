@@ -168,8 +168,12 @@ COMPUTER_CHALLENGE_CLOSE_PERCENT = 30     # ... after a close-call hint
 # turnover, a failed fourth down, the last two minutes, overtime: the NFL's booth finds the ruling wrong 74 to 78 percent of the time
 # it stops the game) have their wrong windows doubled, and the close rates are 1.7 times the design's (more rulings that were right but
 # close, which are what the coaches lose on); the booth's chance on a close ruling is 14 percent and the computer's flag after a
-# strong hint 80 percent. Result in 3,000 games: 0.274 coach challenges per team per game, 48.1 percent changed the ruling, 76 /
-# 21 / 3 percent of the team-games with 0 / 1 / 2 challenges (NFL 77 / 21 / 2), 0.681 reviews a game, 74.7 percent changed.
+# strong hint 80 percent. Result in 3,000 games (before the review's fixes): 0.274 coach challenges per team per game, 48.1 percent
+# changed the ruling, 76 / 21 / 3 percent of the team-games with 0 / 1 / 2 challenges (NFL 77 / 21 / 2), 0.681 reviews a game, 74.7
+# percent changed. Final, in 10,000 games on the code after the independent review's fixes (work/calibrate_review_sx6_10000.txt):
+# 0.270 coach challenges per team per game, 51.0 percent changed the ruling, 76.4 / 20.4 / 3.0 / 0.2 percent of the team-games with
+# 0 / 1 / 2 / 3 challenges (NFL 77 / 21 / 2 / 0.3), 0.682 reviews a game, 74.5 percent changed; 3.65 charged time outs per team per
+# game (SX.2 had 3.76: a lost challenge is a time out and a coach keeps one in hand for a flag).
 REVIEW_PAUSE = 2.0                        # seconds: the referee under the hood (design 6.4), then two rady pauses
 REVIEW_REMARK_ONE_IN = 2                  # a remark of RVR or RVC after a review with chance 1 in 2 (comments on)
 
