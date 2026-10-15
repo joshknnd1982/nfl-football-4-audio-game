@@ -196,6 +196,8 @@ class SettingsStore:
         self._problems: list[str] = []
         self._save_blocked = False       # the file could not be read: never write over what we did not read
         self._unwritable_noted = False
+        self.created = False             # True when this start made settings.txt: the first start (the original's missing
+        #                                  footbal0.dat, GAME_SPEC 3 step 6, which shows the welcome and the voice choice)
 
     # ----- loading -----
 
@@ -211,6 +213,7 @@ class SettingsStore:
     def _load(self) -> None:
         self.settings = Settings.defaults()
         if not os.path.isfile(self.path):
+            self.created = True
             self._create("created")
             return
         try:

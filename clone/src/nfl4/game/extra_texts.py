@@ -24,17 +24,15 @@ def menu_opening(title: str, count: int) -> str:
     return f"{title}. {count} items. Press F1 for help."
 
 
-# ----- help (F1) and about (F4) -----
-HELP_TITLE = "Help"
-HELP_LINES = (
-    "In the main menu, press a number from 1 to 9 to choose how many sounds play at once. "
-    "Then press Up or Down to choose a panning style, and Enter to start. "
-    "Any key stops the sounds and returns to the main menu. Escape leaves the program.",
-    "F1 is this help. F2 opens the settings for speech. F3 opens the sounds menu. F4 tells about this program. "
-    "They work in the main menu and in the panning menu.",
-    "In a menu, Up and Down move, Left and Right change a value, Enter chooses or restores the original value, "
-    "and Escape goes back.",
-)
+# ----- the added functions (F9): help and about -----
+F9_TITLE = "Added functions"
+F9_HELP = (MENU_HELP + " The three items are the speech settings, the sounds and the about text. "
+           "The original's own keys work as always: Control sets the speech rate, F11 the volumes, F12 the voices.")
+SPEECH_ITEM = "Speech settings."
+SOUNDS_ITEM = "Sounds."
+ABOUT_ITEM = "About NFL Football 4."
+CHOOSE_VOICES_ITEM = "Choose the five voices, the same as F12."
+VOICES_DONE = "Back from the voices."
 
 ABOUT_TITLE = "About NFL Football 4"
 ABOUT_LINES = (
@@ -88,6 +86,7 @@ def output_label(mode: str, nvda_running: bool, original: bool, jaws_running: bo
 RESTORE_SPEECH = "Restore the original speech settings."
 SETTINGS_FOLDER_ITEM = "Open the folder with the settings file."
 SETTINGS_FOLDER_OPENING = "Opening the folder. The file is settings.txt."
+SETTINGS_FOLDER_FAILED = "The settings folder could not be opened. Its place is in the readme."
 SPEECH_RESTORED = "The original speech settings are back."
 
 # letter keys in lists (settings item, list help)
@@ -140,25 +139,19 @@ VOICE_SAMPLE = "This is how this voice will speak in N. F. L. football."
 
 
 # ----- sounds menu (F3) -----
-def volume_label(value: int, original: bool) -> str:
-    return percent_label("Sound volume", value, original)
+def volume_label(level: int, original: bool) -> str:
+    """The sound volume wavol (hundredths of a decibel, 0 to -5000): "Sound volume: full" or "minus 12 decibels"."""
+    decibels = -level // 100
+    text = "Sound volume: full" if decibels <= 0 else f"Sound volume: minus {decibels} decibel{'' if decibels == 1 else 's'}"
+    return f"{text}{', original' if original else ''}."
 
 
-def spread_label(spread: int, original: bool) -> str:
-    base = f"Pitch variation: {spread} of 20" if spread else "Pitch variation: none, every sound plays at its own pitch"
-    return f"{base}{', original' if original else ''}."
-
-
-def start_label(early: bool, original: bool) -> str:
-    base = "Sounds start: right away, while the prompt is spoken" if early else "Sounds start: after the spoken prompt"
-    return f"{base}{', original' if original else ''}."
-
+NO_SOUND_DEVICE_ITEM = "The sound system could not be started, so the game runs without sounds. Details are in the log."
 
 PREVIEW_ITEM = "Listen to the sounds one by one."
 RELOAD_ITEM = "Reload the sounds from the folder."
 CHECK_ITEM = "Check the sound files."
 FOLDER_ITEM = "Open the sounds folder."
-EXPORT_ITEM = "Save the generated sounds as wav files."
 RESTORE_SOUNDS = "Restore the original sound settings."
 SOUNDS_RESTORED = "The original sound settings are back."
 RESTORE_ONE_ITEM = "Restore one sound to the original."
@@ -173,10 +166,10 @@ PREVIEW_TITLE = "Listen to the sounds"
 EXIT_BEEP_NAME = "exit beep"
 
 
-def sound_name(number: int | None, source: str) -> str:
-    base = "Exit beep" if number is None else f"Sound {number}"
+def sound_name(described: str, source: str) -> str:
+    """"foot7, kick, your file": the sound as audio.ids.describe words it, and where the game takes it from."""
     extra = {"player": ", your file", "off": ", switched off", "none": ", no usable file"}.get(source, "")
-    return base + extra
+    return described + extra
 
 
 def reloaded(count: int) -> str:
@@ -196,20 +189,12 @@ def opening_folder() -> str:
 FOLDER_FAILED = "The sounds folder could not be opened. Its place is in the readme."
 
 
-def exported(count: int) -> str:
-    return (f"{count} generated sound{'s' if count != 1 else ''} saved as wav files, "
-            "in the exported sounds folder next to the sounds folder.")
-
-
-EXPORT_FAILED = "The generated sounds could not be saved, details are in the log."
-
-def restored_one(number: int | None, result) -> str:
-    name = "The exit beep" if number is None else f"Sound {number}"
+def restored_one(described: str, result) -> str:
     if result.failed:
-        return f"{name} could not be fully restored, details are in the log."
+        return f"{described} could not be fully restored, details are in the log."
     if not result.changed:
-        return f"{name} was already the original."
-    text = f"{name} is back to the original."
+        return f"{described} was already the original."
+    text = f"{described} is back to the original."
     if result.moved:
         text += " Your file was moved to the removed sounds folder."
     return text

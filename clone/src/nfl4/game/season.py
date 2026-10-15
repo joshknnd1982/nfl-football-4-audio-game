@@ -52,6 +52,18 @@ class SeasonState:
         self.schedule = make_schedule(rnd, self.tn1, self.tn2)
         return self.schedule
 
+    def reset_for_new_season(self) -> None:
+        """What the original's next START gives (it ends after every game, GAME_SPEC 3 step 7): the default coach, the
+        first team, week 1, no schedule, all records 0, no play-off pairings or byes. The clone calls this when a season is
+        over and the program goes on (GAP_REGISTER G-F3); the objects stay the same, the engine holds no copy."""
+        self.coach = DEFAULT_COACH
+        self.tn1 = self.tn2 = self.tn3 = self.tn4 = 1
+        self.vtrnt = 1
+        self.gtp = 1
+        self.schedule = []
+        self.records.reset()
+        self.playoffs.clear()
+
     def set_week_opponent(self) -> ScheduleEntry | None:
         """The week loop reads footbal2.dat's first gtp records and keeps the last: tn3, tn4 = the opponent and vtrnt =
         the flag (GAME_SPEC 3 step 7b). Only for the regular season (gtp 1 to 16)."""

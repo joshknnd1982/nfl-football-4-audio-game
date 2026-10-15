@@ -147,6 +147,8 @@ class ScriptedKeys(KeyInput):
         while True:
             if self.quit.is_set():
                 raise GameQuit()
+            while self._posted.take_text(0.0):
+                pass                                       # the character a key typed that no menu asked for (S7.4b)
             if self._posted.empty():
                 if not self.type_next():
                     raise AssertionError("the menu waits for a key that the test never presses")

@@ -7,7 +7,9 @@ Process lifetime (CLAUDE.md 0.10, playbook 7.2.1): the working directory leaves 
 window's close arms an exit deadline, and the entry points end with finish(main()), so nothing stays behind.
 P7 S7.1: speech, window, settings, the voice crash guard and the lifecycle. P7 S7.2: the sound layer (the mixer with
 the original's seven slots, every sound resolved once at start so a bad file is reported then, the sound procedures
-handed to the game). The game itself (S7.3 to S7.5) comes next. P7 S7.4a: the Options the hot keys change and save.
+handed to the game). The game itself (S7.3 to S7.5) comes next. P7 S7.4a: the Options the hot keys change and save. P7 S7.4b: the
+start-up, week loop, main menu and exit of game/program.py; the files are S7.5's (until then one run keeps its season in
+memory and the first start is the one that made settings.txt).
 """
 from __future__ import annotations
 
@@ -26,6 +28,7 @@ from .game import texts
 from .game.flow import Game
 from .game.keys import GameQuit, KeyInput
 from .game.options import Options
+from .game.program_store import MemoryProgramStore
 from .game.rnd import GameRandom
 from .game.sounds import GameSounds
 from .speech import create_speech
@@ -44,6 +47,7 @@ def main() -> int:
 
     store = SettingsStore()
     settings = store.load()     # creates, reads or heals settings.txt; the original values when anything is wrong
+    first_start = store.created # this start made settings.txt: the original's missing footbal0.dat (the welcome, S7.4b)
     keys = KeyInput()
     speech_holder: dict = {}
     deadlines: list = []                    # timers that end the process if closing hangs; cancelled when main() returns
@@ -89,7 +93,9 @@ def main() -> int:
 
     def game_thread():
         try:
-            Game(speech, keys, notice_sources=(store, audio), sounds=sounds, rnd=rnd, options=options).run()
+            Game(speech, keys, notice_sources=(store, audio), sounds=sounds, rnd=rnd, options=options,
+                 program_store=MemoryProgramStore(first=first_start), open_folder=paths.open_folder,
+                 settings_dir=store.folder).run()
         except GameQuit:
             pass
         except Exception:

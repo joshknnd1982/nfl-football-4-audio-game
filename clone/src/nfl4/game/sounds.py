@@ -264,6 +264,11 @@ class GameSounds:
 
     # ----- the exit -----
 
+    def exit_beep(self) -> None:
+        """One of the exit's two Beeps (SOUND_DESIGN 4 step 3): the player's beep_exit file, the Windows default sound, or the
+        generated blip."""
+        self.audio.beep_exit()
+
     def stop_all(self) -> None:
         """Every slot and the extra channel stop (the exit releases the DirectSound objects, SOUND_DESIGN 4 step 1)."""
         self.audio.stop_all()

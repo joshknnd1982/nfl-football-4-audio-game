@@ -18,11 +18,12 @@ from nfl4.audio.engine import NO_SOUND_NOTICE
 from nfl4.audio.library import SOUND_FILE_NOTICE
 from nfl4.audio.output import OutputError
 from nfl4.data.voiceguard import CRASHED_FILE, TRIAL_FILE
-from nfl4.game import texts
+from nfl4.game import program_texts, texts
 from nfl4.speech.fake import FakeBackend
 from nfl4.speech.manager import SpeechManager
 from nfl4.speech.roles import ANNOUNCER, OPPONENT_PUNTER, OWN_QUARTERBACK
 from nfl4.speech.sapi5 import SapiStart
+from wavmaker import sine, write
 
 SMOOTH = r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\TokenEnums\SmoothTalker\SmoothTalker"
 
@@ -39,6 +40,16 @@ def window_stays_in_the_background(monkeypatch):
     owner's screen reader every run (and a key of the owner could land in it, B-X14). The window exists and gets the
     posted messages either way."""
     monkeypatch.setattr(window_module.GameWindow, "show", lambda self: False)
+
+
+@pytest.fixture(autouse=True)
+def not_the_first_start(tmp_path):
+    """A settings.txt that is already there makes the start an ordinary one: no welcome, no key list, no voice choice (S7.4b).
+    The tests that want the first start delete it. A short foot0.wav of the player's stands in for the 3.4 s intro jingle,
+    which the program plays to its end before it says the title (G-F1): the windows here close after a second."""
+    write_settings(tmp_path, [])
+    (tmp_path / "sounds").mkdir(exist_ok=True)
+    write(tmp_path / "sounds" / "foot0.wav", sine(400, 0.05, 11025), rate=11025)
 
 
 class Made:
@@ -100,10 +111,24 @@ def test_a_normal_start_says_the_title_and_closes_cleanly(tmp_path, monkeypatch)
 
 
 @pytest.mark.window
+def test_the_start_that_makes_settings_txt_is_the_first_start_with_the_welcome(tmp_path, monkeypatch):
+    """The original's missing footbal0.dat (GAME_SPEC 3 step 6): the welcome, then the title, the key list and where F9 is."""
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    (tmp_path / "settings.txt").unlink()
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.5))
+    assert app.main() == 0
+    spoken = made.sapi.spoken()
+    assert spoken[:2] == [program_texts.WELCOME_TO, " "] and spoken[2] == texts.TITLE_SPOKEN
+    assert program_texts.FIRST_START_F9 in spoken and (tmp_path / "settings.txt").is_file()
+
+
+@pytest.mark.window
 def test_a_sound_file_that_cannot_be_used_is_reported_once_at_start(tmp_path, monkeypatch):
     """G-A6: every sound is resolved at start, so the notice comes with the start-up notices, once."""
     monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
-    (tmp_path / "sounds").mkdir()
+    (tmp_path / "sounds").mkdir(exist_ok=True)
     (tmp_path / "sounds" / "foot7.wav").write_bytes(b"RIFF this is not a sound")
     (tmp_path / "sounds" / "foot12.wav").write_bytes(b"")
     made = Made()

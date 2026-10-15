@@ -5,10 +5,8 @@ method, in the same order and with the same waits. There is no window, sound car
 module: it talks to a SpeechManager and a KeyInput, so the tests run it with fakes on a virtual clock
 (tests/gamerig.py). App code (app.py) wires the real ones.
 
-P7 S7.1 is the SKELETON: the spoken title once per launch (rule 0.5.1, GAP_REGISTER G-F1), the notices the settings
-file and the voice crash guard collected (said once, playbook 7.10), then a key wait that ends the program on Escape.
-S7.4 replaces run() with the start-up of GAME_SPEC 3 (intro music, first-run welcome, season set-up, the week loop, the
-main menu, the exit sequence with its beeps and sentence); Escape does not end the original from the main menu.
+P7 S7.1 was the SKELETON (the title, the notices, a key wait). P7 S7.4b replaced its run() with Form_Load's flow in
+game/program.py (start-up, season set-up, week loop, main menu, exit); the Game keeps the original's procedures as methods.
 
 P7 S7.3a adds the season frame the later sessions stand on: the speakers (game/speakers.py), the one random function
 (game/rnd.py), the league, the name pool, the season state, and the original's procedures SayStand, SayScore,
@@ -21,14 +19,17 @@ import logging
 import time
 from typing import Callable
 
+from ..data import paths
 from ..data.settings import Settings
-from . import scorespeech, texts
+from . import scorespeech
+from .functions import Functions
 from .gameclock import QuarterClock
 from .hotkeys import HotKeys
-from .keys import KEY_ESCAPE, KeyInput
+from .keys import KeyInput
 from .league import League
 from .names import NamePool
 from .options import Options
+from .program_store import MemoryProgramStore
 from .prompts import Prompts
 from .rnd import GameRandom
 from .rules import CLASSIC
@@ -46,7 +47,8 @@ class Game(Speakers):
     def __init__(self, speech, keys: KeyInput, clock: Callable[[], float] = time.monotonic,
                  sleep: Callable[[float], None] = time.sleep, notice_sources=(), sounds=None,
                  rnd: GameRandom | None = None, league: League | None = None, pool: NamePool | None = None,
-                 options: Options | None = None, rules=None):
+                 options: Options | None = None, rules=None, program_store=None,
+                 open_folder: Callable[[str], bool] = paths.open_folder, settings_dir: str | None = None):
         super().__init__(speech, keys, rnd)
         self.clock = clock
         self.sleep = sleep
@@ -76,6 +78,10 @@ class Game(Speakers):
         self.prompts = Prompts(self)                  # getter, GetCoach, ChooseTeam, Getqbs, SayScedual (S7.4a)
         self.hotkeys = HotKeys(self)                  # F5 to F8, F11, F12, Ctrl inside every wait (S7.4a, D-018)
         self.hotkeys.install()
+        self.program_store = program_store if program_store is not None else MemoryProgramStore()   # S7.4b, S7.5
+        self.functions = Functions(self, open_folder=open_folder, settings_dir=settings_dir)       # F9 (S7.4b, G-K2)
+        self.functions.install()
+        self.program = None                           # the running Program (game/program.py), for the tests and the exit
 
     @property
     def keys(self) -> KeyInput:
@@ -220,13 +226,13 @@ class Game(Speakers):
         self.say(scorespeech.score_sentence(self.own_team(), self.opponent_team(), own_score, opponent_score))
         self.ptf = 0
 
-    def say_stand(self) -> None:
+    def say_stand(self) -> bool:
         """SayStand (GAME_SPEC 5.2): the standings after the week just played, nothing when gtp is 0 or above 17. The
-        original clears the key twice (clk) on the way, the second time only when it will speak."""
+        original clears the key twice (clk) on the way, the second time only when it will speak. True when it spoke."""
         self.keys.clk()
         speech = standings_speech(self.league, self.season.records, self.season.gtp)
         if speech is None:
-            return
+            return False
         self.keys.clk()
         self.ptf = 1
         self.say2(speech.heading)
@@ -236,6 +242,7 @@ class Game(Speakers):
                 self.say2(line)
             self.log_print("")
         self.ptf = 0
+        return True
 
     # ----- the flow -----
 
@@ -251,10 +258,7 @@ class Game(Speakers):
                 self.say(notice)
 
     def run(self) -> None:
-        self.say(texts.TITLE_SPOKEN)              # once per launch (rule 0.5.1, G-F1)
-        self.speak_notices()
-        while True:                               # S7.1 skeleton: S7.4 builds the week loop and the main menu here
-            self.keys.getkey(self.speech)
-            if self.keys.code_text == str(KEY_ESCAPE):
-                log.info("skeleton: Escape ends the program")
-                return
+        """Form_Load (GAME_SPEC 3): start-up, the season set-up, the week loop with the main menu, the exit. game/program.py."""
+        from .program import Program
+        self.program = Program(self, self.program_store)
+        self.program.run()
