@@ -55,6 +55,14 @@ Added in PX SX.5 (quarterback runs, D-052), each never taken in Classic:
     H2 instead_of_sack -> SCRAMBLE         the original's draw gave a sack: the quarterback takes off running
     H2 instead_of_incompletion(state)      the original's draw gave an incompletion (before the throw sentence): a scramble
     H2 computer_offense(state)             the computer's offense may replace its drawn play by a sneak, keeper or draw
+
+Added in PX SX.6 (replay challenges, booth reviews and the ruling model, D-053), each never taken in Classic:
+    H2 after_outcome -> outcome.then       a booth review reversed the ruling on the field: the board is as it was at the end
+                                           point with the corrected result set (REVIEWED_FIELD, REVIEWED_TOUCHDOWN,
+                                           REVIEWED_FUMBLE: the engine's steps gain_and_end, touchdown_reached, reviewed_fumble)
+    H3 menu_action -> a continuation       the player's challenge reversed a ruling: the menu is left for the step it names
+    H3 menu_key(state, letter)             a letter that no item of the menu has (C when no challenge is allowed): it says why
+    H10 between_plays -> a continuation    the computer's challenge reversed a ruling: the engine goes on at the step it names
 """
 from __future__ import annotations
 
@@ -82,6 +90,11 @@ TRY_AGAIN = "try again"         # the two-point try is played again from the spo
 TRY_FAILS = "try fails"         # the two-point try fails (no points)
 KICK_AGAIN = "kick again"       # the kick-off is made again
 PERIOD_END = "period end"       # the period ends (a run off took its last seconds) without counting a play
+# What the engine does after a review changed the ruling of a play (N. F. L. rules mode only, SX.6). The extras have set the
+# board as it was at the narration end point of the play and the corrected result in the state (the yards, the kind).
+REVIEWED_FIELD = "reviewed field play"      # the gain sentence of the corrected yards, the end point, the downs (gain_and_end)
+REVIEWED_TOUCHDOWN = "reviewed touchdown"   # the score the ruling had denied: the touchdown step after its countdown
+REVIEWED_FUMBLE = "reviewed fumble"         # the fumble the ruling had called down: the ball turns over (reviewed_fumble)
 
 
 class ClassicRules:
@@ -130,7 +143,10 @@ class ClassicRules:
     def defense_menu(self, state) -> list[menus.MenuItem]:
         return menus.defense_menu()
 
-    def menu_action(self, state, action: tuple[str, int]) -> bool:
+    def menu_action(self, state, action: tuple[str, int]):
+        return False
+
+    def menu_key(self, state, letter: str) -> bool:
         return False
 
     def before_kickoff(self, state, kicking_side: int) -> str:

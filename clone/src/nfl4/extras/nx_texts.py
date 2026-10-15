@@ -245,6 +245,14 @@ TEXTS: dict[str, str] = {
     'NXH-20': ' A pass play may end with the quarterback running when nobody is open. A quarterback who gains eight yards or more may slide and end the play feet first. ',
     'NXH-21': ' Quarterback sneak: A short run by the quarterback straight ahead behind the center. Scramble: A pass play that turns into a run. Slide: The quarterback goes down feet first to end the play. ',
     'NXH-22': ' A late hit on a quarterback who slides is a foul. ',
+    'NXR-16': ' <ruling>. ',
+    'NXR-17': ' you have 1 challenge and <m> time outs left. a time out is lost if the ruling stands. ',
+    'NXR-18': ' you have <n> challenges and 1 time out left. a time out is lost if the ruling stands. ',
+    'NXR-19': ' you have 1 challenge and 1 time out left. a time out is lost if the ruling stands. ',
+    'NXH-23': ' C. in a play menu, go to Challenge the Ruling, then Enter asks if you wish to challenge. That item is in the menu only when a challenge is allowed. ',
+    'NXH-24': ' With the N. F. L. rules each team has two challenges in a game, and a third when one of them wins. A challenge needs a time out in hand, and a challenge that loses costs that time out. ',
+    'NXH-25': ' You may challenge a catch, a runner down or fumbling, the goal line, the first down line and the side line. The replay official reviews scoring plays, turn overs, the last two minutes and over time.',
+    'NXH-26': ' Challenge: A coach asks the referee to look at the video of the last play. Replay official: The official who reviews scoring plays and turn overs. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -485,6 +493,14 @@ SPEAKERS: dict[str, str] = {
     'NXH-20': 'say5',
     'NXH-21': 'say5',
     'NXH-22': 'say5',
+    'NXR-16': 'say4',
+    'NXR-17': 'say5',
+    'NXR-18': 'say5',
+    'NXR-19': 'say5',
+    'NXH-23': 'say5',
+    'NXH-24': 'say5',
+    'NXH-25': 'say5',
+    'NXH-26': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -725,6 +741,14 @@ KINDS: dict[str, str] = {
     'NXH-20': 'help',
     'NXH-21': 'help',
     'NXH-22': 'help',
+    'NXR-16': 'sentence',
+    'NXR-17': 'prompt',
+    'NXR-18': 'prompt',
+    'NXR-19': 'prompt',
+    'NXH-23': 'help',
+    'NXH-24': 'help',
+    'NXH-25': 'help',
+    'NXH-26': 'help',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

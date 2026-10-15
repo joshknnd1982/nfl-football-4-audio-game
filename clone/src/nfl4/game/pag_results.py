@@ -126,6 +126,14 @@ class ResultSteps:
             snd.play_tackle(s.tackle_sound)
         self.rules.after_tackle(s)                        # H2 (SX.2): out of bounds in N. F. L. rules mode; Classic: nothing
         snd.c2df()
+        return self.gain_and_end()
+
+    def gain_and_end(self):
+        """The gain or loss sentence, the narration end point and the downs of a play that ends in the field of play (the
+        second half of L_4506ef). Also a step of its own (N. F. L. rules mode, SX.6): a review that changed the ruling of
+        a run, a catch or an incompletion sets the corrected yards and kind in the state and the engine goes on here, so the
+        corrected gain is spoken and the downs follow from it as they would have had the play been called right."""
+        g, s = self.g, self.s
         if s.yards > 0:
             g.say4(P.GAIN + trim(self.str_(s.yards)) + P.YARD + (P.PLURAL if s.yards > 1 else "") + P.ON_THE_PLAY)
         if s.yards < 0:
@@ -243,7 +251,9 @@ class ResultSteps:
             if "mine" in line:
                 g.log_print("")
             g.log_print(line)
-        self.rules.between_plays(s)                       # H10 (Classic: nothing)
+        step = self.continuation(self.rules.between_plays(s))   # H10 (Classic: nothing; N. F. L. rules: the computer's
+        if step is not None:                              # challenge may have changed the ruling of the last play, SX.6)
+            return step
         if self._in_stats:
             return None                                   # L4b0 = 3: back into the quarter statistics' caller
         return self.next_play

@@ -7,8 +7,7 @@ calls at most one in a dead-ball period (4-5-1 Item 3). The menus refuse a reque
 
 The computer's rules (design 6.3, checked in H10 after every play in this order; the first that applies decides):
 1. none when it has none, or when it would leave none and a challenge is still possible for it (before the two-minute
-   warning of its half, quarters 1 to 4), unless rule 3 or 4 applies (challenges come with SX.6: until then none is
-   possible);
+   warning of its half, quarters 1 to 4), unless rule 3 or 4 applies (SX.6: `challenge_possible`);
 2. first half after the warning: the side with the ball next calls one when the clock runs, the pending runoff is more
    than 10 seconds and it is on its own 30 or beyond; the defense calls one when the clock runs and the offense is inside
    its own 35 on third down or later;
@@ -92,18 +91,31 @@ class Situation:
     own_half: bool            # the ball is in the half of the side that has it
     yard_line: int            # the ball's distance to the goal line of the half it is in
     down: int
+    challenges: int = 0       # the challenges it may still throw (SX.6; 0 when the Replay challenges switch is off)
+
+
+def challenges_left(record, side: int) -> int:
+    """The challenges a team may still throw (15-1-1 (f)): two in the game, a third once at least one of them changed the
+    ruling, never a fourth. Whether it has a time out in hand is a separate condition (15-1-1 (d))."""
+    limit = R.CHALLENGES_MAX if record.chal_won[side - 1] >= R.CHALLENGE_THIRD_AFTER_WINS else R.CHALLENGES_PER_GAME
+    return max(0, limit - record.chal_used[side - 1])
 
 
 def situation(state, record, side: int) -> Situation:
     other = 2 if side == 1 else 1
     return Situation(side, state.quarter, record.left, record.pending, record.running, state.wisoff == side,
                      state.score(side) - state.score(other), record.timeouts_of(side), record.warning_given,
-                     state.half == own_half(state.wisoff), state.yard_line, state.down)
+                     state.half == own_half(state.wisoff), state.yard_line, state.down,
+                     challenges_left(record, side) if record.challenges_on else 0)
 
 
 def challenge_possible(view: Situation) -> bool:
-    """Rule 1's challenge clause (NX2, built in SX.6): no challenge exists yet, so nothing is kept for one."""
-    return False
+    """Rule 1's challenge clause (design 6.3, NX2): a coach keeps a time out for a challenge until the two-minute warning of
+    the half (quarters 1 and 3, and quarters 2 and 4 before it) while it has a challenge left. After the warning, and in
+    overtime, a play is the replay official's (15-1-2) and nothing is kept."""
+    if view.challenges <= 0 or view.quarter > 4:
+        return False
+    return view.quarter in (1, 3) or not view.warning_given
 
 
 def _rule2(view: Situation) -> bool:

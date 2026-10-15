@@ -357,6 +357,18 @@ class PenaltyFlow:
                         break
         return facts
 
+    def redo(self, state, outcome, flags: list[Flag]) -> PEN.PlayFacts | None:
+        """N2.7 (15-7-3 Item 3, SX.6): a review changed the ruling of a play whose flags were declined: the same flags are offered
+        again against the corrected result, so no foul is drawn. A foul by the offense on a run keeps its spot inside the
+        corrected run. Returns the facts of the corrected play (None: no foul can be called on it)."""
+        facts = self.facts(state, outcome)
+        self.flags = list(flags) if facts is not None else []
+        for flag in self.flags:
+            if (flag.spot is not None and flag.foul.spot == F.THREE_AND_ONE and facts.kind == O.RUN and not facts.turnover
+                    and facts.end > self.down.los):
+                flag.spot = max(self.down.los - T.RUN_FOUL_BEHIND, min(flag.spot, facts.end))
+        return facts
+
     # ----- the announcement -----
 
     def announce(self, state, flags: list[Flag], dead: bool) -> None:

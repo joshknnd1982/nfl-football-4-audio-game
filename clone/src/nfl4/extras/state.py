@@ -79,6 +79,11 @@ class ExtrasRecord:
     qb_on: bool = False               # the Quarterback runs switch of the game (design 12.1)
     qb_runs: list = field(default_factory=lambda: [0, 0])      # runs by each side's quarterback: sneaks, keepers, draws and
     qb_yards: list = field(default_factory=lambda: [0, 0])     # scrambles, and their yards (the statistics, C7, design 7.4)
+    # replay challenges and booth reviews (design 6, SX.6); a record saved before SX.6 has none of them (challenges off). The
+    # ruling of the last play and its snapshot are NOT saved: a loaded game has no play to challenge (design 12.3 as built)
+    challenges_on: bool = False       # the Replay challenges switch of the game (design 12.1)
+    chal_used: list = field(default_factory=lambda: [0, 0])    # challenges thrown by each side in the game (15-1-1 (f))
+    chal_won: list = field(default_factory=lambda: [0, 0])     # and the ones that changed the ruling (the statistics, C7)
 
     # ----- per side -----
 
@@ -170,7 +175,8 @@ class ExtrasRecord:
         whole(self.last_offense, 0, 2, "the last offense")
         for name in ("timeouts_on", "postseason", "running", "warning_due", "warning_given", "last_two_point",
                      "out_of_bounds", "penalties_on", "foul_by_offense", "was_running", "extension", "extension_snap",
-                     "no_snap", "onside_on", "onside_always", "kick_again", "rekick", "safety_kick", "qb_on"):
+                     "no_snap", "onside_on", "onside_always", "kick_again", "rekick", "safety_kick", "qb_on",
+                     "challenges_on"):
             flag(getattr(self, name), name)
         whole(self.kick_back, 0, 50, "the yards the kick moved back")
         whole(self.kick_from, 1, R.KICKOFF_SPOT, "the yard line of the kick")
@@ -186,6 +192,10 @@ class ExtrasRecord:
         pair(self.onside_recovered, lambda v, w: whole(v, 0, 9999, w), "the onside kicks recovered")
         pair(self.qb_runs, lambda v, w: whole(v, 0, 9999, w), "the quarterback runs")
         pair(self.qb_yards, lambda v, w: whole(v, -99999, 999999, w), "the quarterback running yards")
+        pair(self.chal_used, lambda v, w: whole(v, 0, R.CHALLENGES_MAX, w), "the challenges used")
+        pair(self.chal_won, lambda v, w: whole(v, 0, R.CHALLENGES_MAX, w), "the challenges won")
+        if any(won > used for won, used in zip(self.chal_won, self.chal_used)):
+            raise ValueError("more challenges won than thrown: %r of %r" % (self.chal_won, self.chal_used))
         pair(self.flags, lambda v, w: whole(v, 0, 9999, w), "the penalties")
         pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
         if self.foul_clock not in FOUL_CLOCKS:

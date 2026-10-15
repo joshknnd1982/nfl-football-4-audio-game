@@ -308,3 +308,13 @@ class ScrimmageSteps:
         snd.c2df()
         s.text = P.THE_BALL_IS_NOW
         return self.end_point(O.FUMBLE, turnover=True) or self.turnover_spot
+
+    def reviewed_fumble(self):
+        """N. F. L. rules (SX.6; never in Classic): a review found the fumble that the ruling had called a runner down. The
+        extras have said the corrected ruling and set the flag and the statistics; the ball turns over as after the
+        original's fumble (the sound, the end point, the turnover spot and the possession sentence)."""
+        s, snd = self.s, self.snd
+        snd.play_tackle(3)
+        snd.c2df()
+        s.text = P.THE_BALL_IS_NOW
+        return self.end_point(O.FUMBLE, turnover=True) or self.turnover_spot

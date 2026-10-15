@@ -6,10 +6,10 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 237.
+- Texts: 245.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
-- Challenges and reviews (design 6.1, 6.2, 6.4): 38.
+- Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 77.
@@ -97,6 +97,14 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - RVC01 (remark, say): " the officials got that one right. ". pool RVC default (after a ruling that stands or is confirmed)
 - RVC02 (remark, say): " not enough there to change the call. ". pool RVC default
 - RVC03 (remark, say): " that is a time out wasted, Ghip. ". pool RVC default (spoken only after a lost challenge, never after a booth review)
+- NXR-16 (sentence, say4): " <ruling>. ". the corrected ruling, said after NXR-05 (a reversal, design 6.4)
+- NXR-17 (prompt, say5): " you have 1 challenge and <m> time outs left. a time out is lost if the ruling stands. ". NXR-02 with one challenge left
+- NXR-18 (prompt, say5): " you have <n> challenges and 1 time out left. a time out is lost if the ruling stands. ". NXR-02 with one time out left
+- NXR-19 (prompt, say5): " you have 1 challenge and 1 time out left. a time out is lost if the ruling stands. ". NXR-02 with one challenge and one time out left
+- NXH-23 (help, say5): " C. in a play menu, go to Challenge the Ruling, then Enter asks if you wish to challenge. That item is in the menu only when a challenge is allowed. ". F5 addition (H12, C6), when replay challenges are on
+- NXH-24 (help, say5): " With the N. F. L. rules each team has two challenges in a game, and a third when one of them wins. A challenge needs a time out in hand, and a challenge that loses costs that time out. ". F6 addition (H12, C6), when replay challenges are on
+- NXH-25 (help, say5): " You may challenge a catch, a runner down or fumbling, the goal line, the first down line and the side line. The replay official reviews scoring plays, turn overs, the last two minutes and over time.". F6 addition (H12, C6), when replay challenges are on, after NXH-24
+- NXH-26 (help, say5): " Challenge: A coach asks the referee to look at the video of the last play. Replay official: The official who reviews scoring plays and turn overs. ". F7 addition (H12, C6), when replay challenges are on
 
 ## Quarterback runs (design section 7)
 

@@ -35,6 +35,7 @@ class GameSettings:
     nx_onside: bool = True       # the onside kicks of the N. F. L. rules mode (SX.4)
     nx_onside_question: str = "sensible"   # "sensible": the player is asked when it makes sense; "always": at every kick-off
     nx_qb_runs: bool = True      # the quarterback sneak, keeper, draw and scramble of the N. F. L. rules mode (SX.5)
+    nx_challenges: bool = True   # the ruling model, booth reviews and replay challenges of the N. F. L. rules mode (SX.6)
 
 
 @dataclass

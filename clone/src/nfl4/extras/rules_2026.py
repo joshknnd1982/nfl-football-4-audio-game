@@ -62,6 +62,22 @@ DOUBLE_FOUL_REPLAY = True              # 14-5-1: fouls by both teams offset and 
 MAJOR_AGAINST_MINOR = 15               # Exception 1: a 15-yard foul against a 5-yard foul with no automatic first down,
 #                                        loss of down or run off is enforced alone
 
+# ----- challenges and reviews (SX.6; NFL_RULES_RESEARCH Part 3) -----
+CHALLENGES_PER_GAME = 2                # 15-1-1 (f): two challenges for each team in a game ...
+CHALLENGE_THIRD_AFTER_WINS = 1         # ... and a third once at least ONE of them changed the ruling (2024 amendment)
+CHALLENGES_MAX = 3                     # 15-1-1 (f): a fourth is never allowed
+CHALLENGE_NEEDS_TIMEOUT = True         # 15-1-1 (d): a team with no time out in hand may not challenge
+LOST_CHALLENGE_CHARGES_TIMEOUT = True  # 15-1-1 (e), 15-6-1: an unsuccessful challenge costs a time out, a won one costs nothing
+NO_COACH_CHALLENGE_AFTER_WARNING = True    # 15-1-2 (a): a play that BEGINS after the two-minute warning is the replay official's
+NO_COACH_CHALLENGE_IN_OVERTIME = True      # 15-1-2 (b), 16-5-d
+BOOTH_ONLY_SCORES_AND_TURNOVERS = True     # 15-1-2 (c) to (e): scores, tries, turnovers and a failed fourth down are the replay
+#                                            official's (he may start a review of them, no time out is charged, no cap)
+CLEAR_AND_OBVIOUS = True               # 15-2-1: a ruling is changed only on clear and obvious video evidence
+# The clone has no sidelines of its own, no pass interference to review and no video; the reviewable aspects it models are the
+# five of design 6.1 (15-3-2 catch or no catch, 15-3-3 down by contact and fumble, 15-3-4 goal line, 15-3-5 boundary line,
+# 15-3-7 line to gain). Judgment fouls are never reviewable (15-4). A review looks at every reviewable aspect of the play, not
+# only the stated one (15-2-2).
+
 # ----- free kicks and the onside kick (SX.4; NFL_RULES_RESEARCH Part 5) -----
 KICKOFF_SPOT = 35                      # 6-1-2: a kick-off is made from the kicking team's own 35
 SAFETY_KICK_SPOT = 20                  # 11-5-2, 6-1-6 (b): the team scored upon kicks from its own 20; an onside kick too

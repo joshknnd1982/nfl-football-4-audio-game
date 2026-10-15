@@ -138,6 +138,31 @@ QB_COMPUTER_SNEAK = (1, 2)            # the computer: third or fourth and 1 or 2
 QB_COMPUTER_SHORT = 2                 # "short" yardage: this many yards to go or fewer
 QB_COMPUTER_OTHER_ONE_IN = 150        # downs 1 to 3 otherwise: one draw rnd(this): 1 a keeper, 2 a draw (design 7.4)
 
+# ----- the ruling model, challenges and booth reviews, design 6 (SX.6) -----
+# The ruling on the field is what the engine narrated. A play with a reviewable aspect (design 6.1, extras/review.py) draws once,
+# `below(1000)`, over its categories: the wrong windows first, then the close ones. (wrong, close) per 1000 eligible plays:
+RULING_RATES = {"catch": (6, 17),         # a completion called incomplete or the reverse: 0.6 and 1.7 percent of the passes
+                "fumble": (80, 135),      # a fumble called down before the fumble: 8 and 13.5 percent of the fumbles
+                "down": (2, 0),           # a tackle called a fumble, the reverse: 0.2 percent of the runs and the catches
+                "goal": (60, 135),        # a run or catch within 2 yards of the goal line, called on the wrong side
+                "line": (30, 100),        #   within 1 yard of the line to gain
+                "boundary": (5, 17)}      # a catch called out of bounds or in bounds
+BOOTH_PLAY_WRONG_FACTOR = 2               # a play of the replay official's own (a score, a turnover, a failed fourth down, the last
+#                                           two minutes, overtime: 15-1-2) is wrong this many times as often (the wrong windows
+#                                           only): the ball is on the line there and every ruling is seen by the booth, which is why
+#                                           the NFL's booth reviews change the ruling 74 to 78 percent of the time (design 6.2)
+GOAL_REACH = 2                            # the goal line category: the ball ends within this many yards of it
+LINE_REACH = 1                            # the line to gain category: the ball ends within this many yards of it
+RULING_CLEAR_PERCENT = 85                 # a wrong ruling shows as clear and obvious on the replay with this chance (15-2-1)
+HINT_STRONG_PERCENT = 70                  # after a wrong ruling the announcer hints (pool CHS) with this chance ...
+HINT_CLOSE_PERCENT = 50                   # ... after a close one (pool CHC)
+BOOTH_CLOSE_PERCENT = 14                  # the replay official reviews a close ruling of a play of his own with this chance
+#                                           (a wrong one always: he "initiates when there is doubt", design 6.2)
+COMPUTER_CHALLENGE_STRONG_PERCENT = 80    # the computer's coach throws the flag after a strong hint with this chance ...
+COMPUTER_CHALLENGE_CLOSE_PERCENT = 30     # ... after a close-call hint
+REVIEW_PAUSE = 2.0                        # seconds: the referee under the hood (design 6.4), then two rady pauses
+REVIEW_REMARK_ONE_IN = 2                  # a remark of RVR or RVC after a review with chance 1 in 2 (comments on)
+
 # ----- a Classic save loaded in N. F. L. rules mode, design 12.3 -----
 SAVE_SECONDS_PER_COUNTED_PLAY = 28    # the clock at 15:00 minus 28 seconds per counted play,
 SAVE_LEAST_LEFT = 60                  # at least 1:00
@@ -162,3 +187,7 @@ TARGET_QB_SCRAMBLE_SHARE = (0.045, 0.065)       # scrambles as a share of the dr
 TARGET_QB_SCRAMBLE_YARDS = (7.0, 8.2)           # their mean yards (NFL 7.67; a slide cuts a little)
 TARGET_QB_SHORT_CONVERSION = (0.78, 0.88)       # third or fourth and 1, a designed quarterback run: first down or touchdown
 #                                                 (NFL 83.4 percent)
+TARGET_COACH_CHALLENGES_PER_TEAM_GAME = (0.20, 0.32)    # coach challenges per team per game (NFL 0.24 to 0.28, Part 3 section 7)
+TARGET_CHALLENGE_REVERSED = (0.38, 0.52)                # the share that changed the ruling (NFL 38 to 52 percent)
+TARGET_BOOTH_PER_GAME = (0.50, 0.80)                    # replay official reviews per game, both teams (NFL about 0.65)
+TARGET_BOOTH_REVERSED = (0.70, 0.82)                    # the share that changed the ruling (NFL 74 to 78 percent)

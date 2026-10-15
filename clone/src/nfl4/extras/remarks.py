@@ -15,7 +15,8 @@ after that. F8 (comments off) silences the pools of commentary before any draw. 
 A pool of the play-by-play (QB) is never silent: with every line switched off its default lines speak.
 Built so far: TO (SX.2), PN (SX.3, after an accepted penalty, design 9), ON (SX.4, when an onside kick is declared, design 8),
 QB (SX.5, the start of a keeper or a draw, design 7.2: play-by-play in the quarterback's sentence, said with say4 so that F2
-replays it, and never silenced by F8).
+replays it, and never silenced by F8), CHS and CHC (SX.6, the hints after a wrong or a close ruling, design 6.1), RVR and RVC
+(SX.6, after a review, design 6.4; RVC03 is drawn only after a lost challenge).
 Each later session adds its pool to POOLS_BUILT
 and its placeholders to PLACEHOLDERS.
 """
@@ -33,11 +34,16 @@ from .state import RECENT_REMARKS
 
 log = logging.getLogger("nfl4.extras")
 
-POOLS_BUILT = ("TO", "ON", "QB", "PN")                  # the pools whose feature exists (SX.2 timeouts, SX.4 onside kicks,
-#                                                         SX.5 quarterback runs, SX.3 penalties), in the order of remarks.txt
+POOLS_BUILT = ("TO", "CHS", "CHC", "RVR", "RVC", "ON", "QB", "PN")     # the pools whose feature exists (SX.2 timeouts, SX.6 replay
+#                                                         challenges, SX.4 onside kicks, SX.5 quarterback runs, SX.3 penalties),
+#                                                         in the order of remarks.txt (design 13)
 COMMENTARY_POOLS = frozenset(("TO", "CHS", "CHC", "RVR", "RVC", "ON", "PN"))   # F8 silences these; QB is play-by-play
 PLAY_BY_PLAY_POOLS = frozenset(("QB",))      # never silenced: with every line switched off the default lines speak (design 13, L13)
 PLACEHOLDERS = {"TO": ("<team>", "<coach>", "<quarterback>"),
+                "CHS": ("<team>", "<coach>", "<quarterback>"),
+                "CHC": ("<team>", "<coach>", "<quarterback>"),
+                "RVR": ("<team>", "<coach>", "<quarterback>"),
+                "RVC": ("<team>", "<coach>", "<quarterback>"),
                 "ON": ("<team>", "<coach>", "<quarterback>"),
                 "QB": ("<team>", "<coach>", "<quarterback>"),
                 "PN": ("<team>", "<coach>", "<quarterback>", "<surname>")}
@@ -198,14 +204,15 @@ def pick(pool_lines: tuple[Remark, ...], recent: list[str], rnd) -> Remark | Non
     return pool_lines[index - 1]
 
 
-def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=None) -> Remark | None:
+def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=None, exclude=()) -> Remark | None:
     """Draw and say one remark of `pool` (F8 silences the commentary pools before any draw). Returns the line said. `say` is
-    the speaker of its parts (None: the announcer's `say`; pool QB passes say4)."""
+    the speaker of its parts (None: the announcer's `say`; pool QB passes say4). `exclude`: IDs that may not be drawn this
+    time (RVC03 after a booth review, SX.6)."""
     if pool in COMMENTARY_POOLS and game.comtog == 1:
         return None
     pools = getattr(game, "remark_pools", None) or DEFAULT_POOLS
     recent = list(record.recent.get(pool, []))
-    lines = pools.lines(pool)
+    lines = tuple(line for line in pools.lines(pool) if line.id not in exclude)
     if not lines and pool in PLAY_BY_PLAY_POOLS:       # the play-by-play always has a sentence (CUSTOMIZABLE_CONTENT 13 L13)
         lines = DEFAULT_REMARKS[pool]
     remark = pick(lines, recent, game.rnd)
@@ -229,11 +236,14 @@ NOTES = (
     "These are the announcer's remarks of the N. F. L. rules. The game reads this file only when the Rules setting of the F9 "
     "menu is N. F. L. rules.",
     "Each line is an ID, an equals sign and the remark. The letters of the ID say the pool: TO are the remarks after a time out,",
+    "CHS the strong hints after a ruling that was wrong and CHC the hints after a close call, RVR the remarks after a review",
+    "changed a ruling and RVC after a ruling stood or was confirmed (RVC03 only after a challenge that lost),",
     "ON the remarks when an onside kick is declared, QB the sentences that start a quarterback keeper or draw (they are",
     "the play-by-play and stay on when you switch the comments off with F8), PN the remarks after a penalty is accepted.",
     "Change a line to say something else. Write TO03 = off to switch a line off. Delete a line to get the original back.",
     "Add your own lines with a new number in a pool, TO06 or PN05 and up. A remark is chosen by chance, never one of the last three.",
-    "In a line, <team> is the team that called the time out, kicked the onside kick, has the ball (QB) or was flagged,",
+    "In a line, <team> is the team that called the time out, kicked the onside kick, has the ball (QB), was flagged or, in the",
+    "replay pools, the team the ruling went against,",
     "<coach> is your name and",
     "<quarterback> that team's quarterback (in a QB line the quarterback who runs); in a PN line <surname> is the player the",
     "flag was on.",

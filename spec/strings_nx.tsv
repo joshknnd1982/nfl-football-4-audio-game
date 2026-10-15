@@ -236,3 +236,11 @@ NXH-19	qbruns	help	say5	 With the N. F. L. rules your quarterback may run the ba
 NXH-20	qbruns	help	say5	 A pass play may end with the quarterback running when nobody is open. A quarterback who gains eight yards or more may slide and end the play feet first. 	F6 addition (H12, C6), when quarterback runs are on, after NXH-19
 NXH-21	qbruns	help	say5	 Quarterback sneak: A short run by the quarterback straight ahead behind the center. Scramble: A pass play that turns into a run. Slide: The quarterback goes down feet first to end the play. 	F7 addition (H12, C6), when quarterback runs are on
 NXH-22	qbruns	help	say5	 A late hit on a quarterback who slides is a foul. 	F6 addition (H12, C6), when quarterback runs and penalties are on, after NXH-20
+NXR-16	replay	sentence	say4	 <ruling>. 	the corrected ruling, said after NXR-05 (a reversal, design 6.4)
+NXR-17	replay	prompt	say5	 you have 1 challenge and <m> time outs left. a time out is lost if the ruling stands. 	NXR-02 with one challenge left
+NXR-18	replay	prompt	say5	 you have <n> challenges and 1 time out left. a time out is lost if the ruling stands. 	NXR-02 with one time out left
+NXR-19	replay	prompt	say5	 you have 1 challenge and 1 time out left. a time out is lost if the ruling stands. 	NXR-02 with one challenge and one time out left
+NXH-23	replay	help	say5	 C. in a play menu, go to Challenge the Ruling, then Enter asks if you wish to challenge. That item is in the menu only when a challenge is allowed. 	F5 addition (H12, C6), when replay challenges are on
+NXH-24	replay	help	say5	 With the N. F. L. rules each team has two challenges in a game, and a third when one of them wins. A challenge needs a time out in hand, and a challenge that loses costs that time out. 	F6 addition (H12, C6), when replay challenges are on
+NXH-25	replay	help	say5	 You may challenge a catch, a runner down or fumbling, the goal line, the first down line and the side line. The replay official reviews scoring plays, turn overs, the last two minutes and over time.	F6 addition (H12, C6), when replay challenges are on, after NXH-24
+NXH-26	replay	help	say5	 Challenge: A coach asks the referee to look at the video of the last play. Replay official: The official who reviews scoring plays and turn overs. 	F7 addition (H12, C6), when replay challenges are on

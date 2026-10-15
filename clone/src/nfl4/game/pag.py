@@ -37,8 +37,8 @@ from .pag_kicks import KickSteps
 from .pag_results import ResultSteps
 from .pag_scrimmage import ScrimmageSteps
 from .playtables import DEFENSE_MATCH
-from .rules import (CLASSIC, KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, SAFETY_BY_PENALTY, TRY_AGAIN,
-                    TRY_FAILS)
+from .rules import (CLASSIC, KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, REVIEWED_FIELD, REVIEWED_FUMBLE,
+                    REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, TRY_AGAIN, TRY_FAILS)
 from .setup import Roster
 
 log = logging.getLogger("nfl4.game")
@@ -208,6 +208,12 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
             return self.kick_off
         if then == PERIOD_END:
             return self.period_checks
+        if then == REVIEWED_FIELD:                # N. F. L. rules (SX.6): a review changed the ruling; the extras restored the
+            return self.gain_and_end              # board of the end point and set the corrected yards and kind
+        if then == REVIEWED_TOUCHDOWN:
+            return self.touchdown_reached
+        if then == REVIEWED_FUMBLE:
+            return self.reviewed_fumble
         raise ValueError("unknown continuation %r" % (then,))
 
     def ran(self) -> bool:
@@ -369,9 +375,11 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         return self.defense_menu if self.s.wisoff == 2 else self.offense_menu
 
     def _menu(self, items, prompt: str):
-        """The loop of both play menus. Returns ("chosen", action), ("concede", None). An item the extras added (an action
-        that is neither a play nor Save Game, N. F. L. rules mode) goes to Rules.menu_action and the menu stays: from the
-        top when it was done, at the same item when it was refused. Classic's lists have no such item and no letter."""
+        """The loop of both play menus. Returns ("chosen", action), ("concede", None) or ("step", the engine's next step). An
+        item the extras added (an action that is neither a play nor Save Game, N. F. L. rules mode) goes to Rules.menu_action
+        and the menu stays: from the top when it was done, at the same item when it was refused; when it answers a
+        continuation (a challenge that changed a ruling, SX.6) the menu is left for that step. Classic's lists have no such
+        item and no letter."""
         g, s = self.g, self.s
         current = 1
         speak_prompt = True
@@ -386,7 +394,10 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                 action = items[current - 1].action
                 if action[0] in (PLAY, SAVE):
                     return "chosen", action
-                if self.rules.menu_action(s, action):
+                done = self.rules.menu_action(s, action)
+                if isinstance(done, str):                  # a continuation of the extras (SX.6): the menu is left
+                    return "step", self.continuation(done)
+                if done:
                     current, speak_prompt = 1, True
                 continue
             if code == KEY_ESCAPE:
@@ -421,6 +432,9 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                 current = chosen
                 speak_prompt = False
                 continue
+            if self.rules.menu_key(s, self.g_char.lower()):    # a letter the menu has no item for (SX.6: C): it said why
+                speak_prompt = False
+                continue
             g.saykey()
             current = 1
 
@@ -430,6 +444,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         what, action = self._menu(self.rules.offense_menu(s, s.two_point), P.SELECT_OFFENSE)
         if what == "concede":
             return self.concede
+        if what == "step":
+            return action
         kind, play = action
         if kind == SAVE:
             return self.save_game
@@ -442,6 +458,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         what, action = self._menu(self.rules.defense_menu(s), P.SELECT_DEFENSE)
         if what == "concede":
             return self.concede
+        if what == "step":
+            return action
         kind, play = action
         if kind == SAVE:
             return self.save_game

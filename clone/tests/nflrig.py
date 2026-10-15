@@ -54,8 +54,8 @@ def nfl_engine_rig(tmp_path, answers=(), comments=False, rules=None, extras=None
 
 class RecordingRules(NflRules):
     def __init__(self, timeouts_on=True, auto_sides=(1, 2), penalties_on=False, onside_on=False, onside_always=False,
-                 qb_on=False):
-        super().__init__(timeouts_on, auto_sides, penalties_on, onside_on, onside_always, qb_on)
+                 qb_on=False, challenges_on=False):
+        super().__init__(timeouts_on, auto_sides, penalties_on, onside_on, onside_always, qb_on, challenges_on)
         self.onsides = []           # (quarter, kicking side, seconds left, kicking team's lead, result) of every onside kick
         self.timeouts = []          # (quarter, side, seconds left after it, timeouts left of that side)
         self.periods = []           # (quarter, counted plays, seconds left) at each period end
