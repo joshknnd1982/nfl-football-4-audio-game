@@ -82,4 +82,6 @@ A line has at most 500 characters and 20 parts. A sound file goes in the sounds 
 - A file that is damaged as a whole (empty, not text, no first line, another format) is copied to a file with the ending damaged1 (the latest three are kept), and a new file with the original names is written. The game says so once.
 - A file that is missing is written again, without a word.
 - A file that another program holds open, or that cannot be written, is not changed. The original names are used that time.
-- "Reset one list to the original" and "Reset all lists to the original" write the original files again. Your own file is kept with the ending before-reset. Your sound files and footplay.txt are never touched.
+- "Reset one list to the original" and "Reset all lists to the original" write the original files again. Your own file is kept with the ending before-reset, and the two copies before it with the endings before-reset2 and before-reset3. If the copy cannot be made, nothing is written. Your sound files and footplay.txt are never touched.
+- If the game cannot read a file while it is running (another program has it open, for example), the names and lines it already loaded stay in use and it tells you once.
+- A file may be up to one megabyte. A banter line's own sounds together are cut at 30 seconds, and its pauses together may be at most 30 seconds.
