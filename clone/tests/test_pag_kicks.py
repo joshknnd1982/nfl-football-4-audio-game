@@ -276,3 +276,15 @@ def test_a_turnover_on_a_two_point_try_ends_the_try_without_points_q23(tmp_path)
                                                                         " The score is ", " tied 0 all", " "]
     s = rig.engine.s
     assert (s.two_point, s.wisoff, s.defense, s.fumble_flag) == (False, 2, 1, False)    # the opponent receives
+
+
+def test_a_return_flag_left_by_a_touchdown_return_skips_the_pause_of_the_next_play_in_the_field(tmp_path):
+    """L30c is reset only where a play ends in the field of play (0x45073e), so after a kick-off returned for a
+    touchdown the next such play has no pause of |yards| / 25 before its tackle (kept: the exact algorithm)."""
+    rig = engine_rig(tmp_path, wisoff=1, defense=2, half=2, yard_line=30, down=1, to_go=10, return_flag=True,
+                     offense_play=1, defense_play=1, result_kind=O.RUN)
+    rig.game.pause_log = []
+    rig.engine.s.yards = 1
+    run_steps(rig, rig.engine.end_of_play, Draws().rnd(4, 1))
+    assert 0x4507b8 not in [site for site, _ in rig.game.pause_log]
+    assert rig.engine.s.return_flag is False

@@ -41,7 +41,7 @@ def speak_banter(game, state: GameState) -> None:
                         lambda: next(n for n in range(1, len(lines) + 1) if n not in used), "banter line")
     state.banter_used.append(number)
     name_index = rnd(NAME_LIST_SIZE)
-    game.rady()
+    game.rady(0x459497)
     line = lines[number - 1]
     alternative = rnd(len(line.alternatives)) if line.alternatives else None
     names = state.banter_names

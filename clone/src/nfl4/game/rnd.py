@@ -16,6 +16,8 @@ import logging
 import random
 from typing import Callable, TypeVar
 
+from .vbnum import int_of, single
+
 log = logging.getLogger("nfl4.game")
 
 REDRAW_LIMIT = 10_000   # G-D1
@@ -52,6 +54,15 @@ class GameRandom:
         if self.trace is not None:
             self.trace.append(n)
         return min(int(self._next() * n), n - 1)
+
+    def below_single(self, n: int) -> int:
+        """Int(Rnd * n) where n is a Variant (S7.3b, B-P40): the original stores Rnd as a Single Variant and calls
+        VarMul and VarInt, so the product is rounded to a Single before Int (pag's yards 0x44da18, the kick-off
+        return 0x445cf6, the interception 0x44bc75). A constant n is multiplied on the FPU and needs no rounding
+        (`below`). The result is kept below n (a 53-bit source can come closer to 1 than VB's 24-bit Rnd)."""
+        if self.trace is not None:
+            self.trace.append(n)
+        return min(int_of(single(self._next() * n)), n - 1)
 
     def __call__(self, n: int) -> int:
         """Int(Rnd * n) + 1: 1 to n."""

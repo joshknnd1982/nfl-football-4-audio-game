@@ -157,7 +157,7 @@ class Speakers:
         stop_line = " " + self.coach_source() + " select your play "
         if self.norep == 0:
             self._speak(REPLAY_INTRO, ANNOUNCER, True)
-        self.dy(REPLAY_PAUSE)
+        self.dy(REPLAY_PAUSE, 0x4867c9)
         for line in list(self.replay):
             self._speak(line, ANNOUNCER, False)
             if line == stop_line:

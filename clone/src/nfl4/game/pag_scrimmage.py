@@ -185,7 +185,7 @@ class ScrimmageSteps:
         g.say4(s.text)
         s.tackle_sentence = P.AND
         odds = max(INTERCEPTION_FLOOR, entry.complete - stats.interception_count)
-        if rnd(odds) == INTERCEPTION_NUMBER:
+        if rnd.below_single(odds) + 1 == INTERCEPTION_NUMBER:    # Int(Rnd * L2fc) + 1, VarMul: a Single
             return self.interception()
         if complete_roll >= entry.complete:
             return self.incomplete()
@@ -236,7 +236,9 @@ class ScrimmageSteps:
                  9: P.OFF_THE_BACK_OF + rec + " "}
         s.tackle_sentence = texts[number]
         s.tackle_sound = 8
-        steps = self.rnd.below(s.offense_play) + s.offense_play              # L128 = Int(Rnd * L1d4) + L1d4
+        # L128 = Int(Rnd * L1d4) + L1d4: L1d4 is an Integer, a Single or (a menu digit, Val) a Double Variant, so the
+        # original rounds the product only sometimes; a pause of 1/9 s more or less on a set below 1e-5: kept in Double
+        steps = self.rnd.below(s.offense_play) + s.offense_play
         self.dy(steps / 9, 0x44d024)
         s.yards = 0
         s.result_kind = O.PASS_INCOMPLETE
@@ -257,7 +259,7 @@ class ScrimmageSteps:
         s, rnd = self.s, self.rnd
         if rnd(self.rules.modifiers.fumble_odds(s.wisoff)) == FUMBLE_NUMBER:
             return self.fumble()
-        s.yards = rnd.below(high - low) + low                               # Int(Rnd * (L548 - L44)) + L44
+        s.yards = rnd.below_single(high - low) + low                        # Int(Rnd * (L548 - L44)) + L44, VarMul
         stats = s.stats[s.wisoff]
         if s.play_kind == 1:
             stats.running_plays += 1                                        # not for a fumbled run (Q60)

@@ -205,7 +205,7 @@ class KickSteps:
         g.say4(P.RETURN_RUNS[run - 1])
         kind = rnd(RETURN_KIND_ODDS)
         reach = RETURN_RANGES.get(kind, RETURN_RANGE)
-        yards = rnd.below(reach) + RETURN_SHORTEST
+        yards = rnd.below_single(reach) + RETURN_SHORTEST         # a Variant range: VarMul, a Single
         self.rady(0x445d42)
         if yards > 4:
             self.rady(0x445dc0)
