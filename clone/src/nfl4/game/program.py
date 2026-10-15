@@ -217,9 +217,10 @@ class Program:
     # ----- the main menu (0x489857 to 0x489d6c) -----
 
     def menu_digit(self) -> int:
-        """Val(g2) as the main menu tests it ("1" to "4"); a keypad digit counts too (Q32 not reproduced, D-027)."""
+        """Val(g2) as the main menu tests it ("1" to "4"); the keypad's 1 to 4 count too (Q32 not reproduced, D-027). Any other
+        key, the keypad's 0 and 5 to 9 included, is "any other key" (0x489c69 to 0x489d2a test only "1" to "4")."""
         code = self.keys.code_text
-        if code.isdigit() and 96 <= int(code) <= 105:
+        if code.isdigit() and 97 <= int(code) <= 100:
             return int(code) - 96
         char = self.keys.char
         return int(char) if len(char) == 1 and char in "1234" else 0

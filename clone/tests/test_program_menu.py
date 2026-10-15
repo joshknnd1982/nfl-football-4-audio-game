@@ -117,6 +117,15 @@ def test_a_digit_sets_the_choice_the_keypad_too_q32(tmp_path, key, choice):
     assert menu_speech(rig)[1:] == [SELECT, CHOICE[1], CHOICE[choice], CHOICE[4]]
 
 
+@pytest.mark.parametrize("keypad", [96, 101, 102, 103, 104, 105])
+def test_the_keypad_s_0_and_5_to_9_are_any_other_key_and_never_a_choice(tmp_path, keypad):
+    # found by the independent review of S7.4b: they once gave choice 5 to 9 and a KeyError; the original tests "1" to "4" only
+    rig = program_rig(tmp_path, [keypad, DOWN, DOWN, DOWN, ENTER], preset=preset_season(gtp=2)).run()
+    speech = menu_speech(rig)
+    echo = chr(keypad).lower()                                                     # the original typed ` and the letters e to i
+    assert speech[1:] == [SELECT, CHOICE[1], echo, speech[0], SELECT, CHOICE[1], CHOICE[2], CHOICE[3], CHOICE[4]]
+
+
 def test_f1_says_everything_again_from_the_top_with_the_choice_kept(tmp_path):
     rig = program_rig(tmp_path, [DOWN, F1, DOWN, DOWN, ENTER], preset=preset_season(gtp=2)).run()
     speech = menu_speech(rig)
