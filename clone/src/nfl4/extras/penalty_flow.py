@@ -447,6 +447,7 @@ class PenaltyFlow:
             state.down, state.to_go = (1, 10) if result.new_series else (result.down, result.to_go)
             return NEXT_DOWN
         if result.kind == PEN.SAFETY:
+            x.safety_kick = True                                 # the team scored upon kicks from its own 20 (SX.4)
             return SAFETY_BY_PENALTY
         if result.kind == PEN.TRY_AGAIN:
             place(state, offense, result.los)
@@ -456,6 +457,8 @@ class PenaltyFlow:
         if result.kind == PEN.TRY_FAILS:
             return TRY_FAILS
         if result.kind == PEN.REPLAY_KICK:
+            x.kick_again = True                                  # the kick keeps its kind (SX.4); an onside kick made
+            x.kick_back = result.yards                           # again is made from the yards back (6-3-1)
             return KICK_AGAIN
         return None
 
@@ -499,6 +502,9 @@ class PenaltyFlow:
             return self.apply(state, flag, result)
         flag = flags[0]
         how, accepted, declined = PEN.answers(flag.foul, self.down, facts, flag.spot)
+        if accepted.kind == PEN.REPLAY_KICK and state.quarter in (2, 4) and x.left <= 0:
+            how = PEN.AUTO_DECLINE                     # no kick is made again when the half is over: a foul by the kicking
+            #                                            team does not extend a period (4-8-2 (a) is for the defense)
         if how == PEN.AUTO_DECLINE:                    # no real choice: said as the officials say it
             self.note(state, "not offered", flag)
             g.say4(X.text("NXP-07", team=state.teams.get(2 if flag.side == 1 else 1, "")))

@@ -235,6 +235,11 @@ TEXTS: dict[str, str] = {
     'NXH-12': ' Penalty: The yards a team loses for a foul. Automatic first down: A first down given by a penalty, whatever the distance. Loss of down: A penalty that also costs the down. ',
     'NXH-13': ' Offsetting penalties: Fouls by both teams on one play. They cancel each other and the down is played again. ',
     'NXP-21': ' <quarterback> throws the ball away to avoid the sack. ',
+    'NXP-S17': 'the kick will be made again',
+    'NXH-14': ' When you are asked about an onside kick, Y. says yes and N. says no. Up and Down change the answer and Enter takes it. ',
+    'NXH-15': ' With the N. F. L. rules you may try an onside kick instead of the normal kick off. You are asked when your team is behind in the second half or ahead by one score late in the game. ',
+    'NXH-16': ' The onside kick is short and the other team may fall on the ball, so the chance to recover it is small. ',
+    'NXH-17': ' Onside kick: A short kick off that the kicking team tries to recover for itself. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -465,6 +470,11 @@ SPEAKERS: dict[str, str] = {
     'NXH-12': 'say5',
     'NXH-13': 'say5',
     'NXP-21': 'say2',
+    'NXP-S17': 'piece',
+    'NXH-14': 'say5',
+    'NXH-15': 'say5',
+    'NXH-16': 'say5',
+    'NXH-17': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -695,6 +705,11 @@ KINDS: dict[str, str] = {
     'NXH-12': 'help',
     'NXH-13': 'help',
     'NXP-21': 'sentence',
+    'NXP-S17': 'piece',
+    'NXH-14': 'help',
+    'NXH-15': 'help',
+    'NXH-16': 'help',
+    'NXH-17': 'help',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

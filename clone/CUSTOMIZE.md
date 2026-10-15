@@ -80,9 +80,9 @@ A line has at most 500 characters and 20 parts. A sound file goes in the sounds 
 
 ## The remarks of the N. F. L. rules
 
-When the Rules item of the F9 menu is set to N. F. L. rules, the game also has remarks.txt in the same folder (with the Classic rules the game never makes or reads it). It holds the announcer's remarks of the added features. Today these are the remarks after a time out, TO01 to TO05, one said after a time out one time in three, and the remarks after a penalty is accepted, PN01 to PN04, also one time in three. It works like banter.txt: change a line, switch it off with `TO03 = off`, delete it to get the original back, or add your own with a new number, TO06 or PN05 and higher. The words in square brackets of the banter work here too, and these are filled in by the game:
+When the Rules item of the F9 menu is set to N. F. L. rules, the game also has remarks.txt in the same folder (with the Classic rules the game never makes or reads it). It holds the announcer's remarks of the added features. Today these are the remarks after a time out, TO01 to TO05, one said after a time out one time in three, the remarks when an onside kick is declared, ON01 to ON03, one said one time in three, and the remarks after a penalty is accepted, PN01 to PN04, also one time in three. It works like banter.txt: change a line, switch it off with `TO03 = off`, delete it to get the original back, or add your own with a new number, TO06, ON04 or PN05 and higher. The words in square brackets of the banter work here too, and these are filled in by the game:
 
-- `<team>` is the team that called the time out, or the team the flag is on.
+- `<team>` is the team that called the time out, the team that kicks the onside kick, or the team the flag is on.
 - `<coach>` is your name.
 - `<quarterback>` is that team's quarterback.
 - `<surname>` (PN lines only) is the player the flag is on.
@@ -90,6 +90,7 @@ When the Rules item of the F9 menu is set to N. F. L. rules, the game also has r
 For example:
 
     TO06 = the <team> stop the clock. [bleep]
+    ON04 = here comes the surprise that nobody is surprised by.
     PN05 = <surname> will hear about that one from the coach.
 
 A remark is never one of the last three said. F8 switches the remarks off with the banter.
@@ -106,6 +107,10 @@ Change the name to have it said your way. After the name you can add a semicolon
 - `P08 = holding; weight 50` and holding is called half as often. The weight goes from 0 to 200 percent; 100 is the usual.
 
 The yards and the rules of each penalty are the N. F. L.'s and cannot be changed in the file. To switch every foul off, set Penalties to off in the Rules item of the F9 menu. Delete a line to get the original back.
+
+## The onside kicks of the N. F. L. rules
+
+With the N. F. L. rules your team may try an onside kick instead of the normal kick off. The game asks you only when it makes sense: your team is behind in the third or fourth quarter, or ahead by one score (1 to 8 points) with five minutes or less left in the fourth. The answer starts at no. In the Rules item of the F9 menu, Onside kicks switches the whole feature on or off, and Onside question can be set to always, so that you are asked at every kick off and every kick after a safety. The computer tries an onside kick only in the fourth quarter, when it is behind and the game is nearly over. The remarks it says are the ON lines of remarks.txt; the fouls on the kick, offside and illegal touching, are P24 and P33 of penalties.txt.
 
 ## If something is wrong
 

@@ -108,13 +108,15 @@ FOULS: tuple[Foul, ...] = (
     Foul("P21", "UNS", "NXP-F21", OFFENSE, (AFTER,), 15, SUCCEEDING, 0.17 * 0.5, "12-3-1, 14-4-9", personal=True),
     Foul("P22", "RNK", "NXP-F22", DEFENSE, (O.PUNT, FIELD_GOAL), 5, PREVIOUS, 1.5, "12-2-12, 14-1-2 Item 5"),
     Foul("P23", "RRK", "NXP-F23", DEFENSE, (O.PUNT, FIELD_GOAL), 15, PREVIOUS, 0.5, "12-2-12", personal=True),
-    Foul("P24", "OFK", "NXP-F24", KICKING, KICKOFFS + (ONSIDE,), 5, DEAD_BALL, 1.0, "6-1-3, 14-4-7",
+    Foul("P24", "OFK", "NXP-F24", KICKING, KICKOFFS + (ONSIDE,), 5, DEAD_BALL, 1.0, "6-1-3, 6-1-6, 14-4-7",
          note="the receivers keep the ball: the yards from the dead ball spot (14-4-7's option); the clone's kick-off "
-              "has no kicking spot, so a kick made again would change nothing"),
+              "has no kicking spot, so a kick made again would change nothing there; an onside kick has one (35 or 20), "
+              "so when the kicking team recovered it the kick is made again from five yards back (SX.4)"),
     Foul("P25", "OH", "NXP-F08", RECEIVING, (O.KICKOFF_RETURN,), 10, SPOT_OF_FOUL, 2.0, "12-1-3 (c), 14-4-7"),
     Foul("P26", "DTM", "NXP-F26", DEFENSE, (SNAP,), 5, PREVIOUS, 0.12, "5-1-2, 14-1-2 Item 5", team_foul=True),
     Foul("P33", "ITK", "NXP-F33", KICKING, (ONSIDE,), 5, SPOT_OF_FOUL, 4.0, "6-2-5",
-         note="the onside kick (SX.4): five yards, or the receivers' ball at the spot; not drawn before SX.4 builds it"),
+         note="the onside kick (SX.4): five yards when the receivers have the ball, or the receivers' ball at the spot when "
+              "the kicking team recovered it (6-2-5 Item 1)"),
 )
 
 IDS: tuple[str, ...] = tuple(dict.fromkeys(f.id for f in FOULS))     # P01 ... P33 in order, each once

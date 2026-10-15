@@ -61,3 +61,15 @@ ONE_PENALTY_PER_TEAM = True            # 14-1-3: the offended team chooses one p
 DOUBLE_FOUL_REPLAY = True              # 14-5-1: fouls by both teams offset and the down is played again (no choice);
 MAJOR_AGAINST_MINOR = 15               # Exception 1: a 15-yard foul against a 5-yard foul with no automatic first down,
 #                                        loss of down or run off is enforced alone
+
+# ----- free kicks and the onside kick (SX.4; NFL_RULES_RESEARCH Part 5) -----
+KICKOFF_SPOT = 35                      # 6-1-2: a kick-off is made from the kicking team's own 35
+SAFETY_KICK_SPOT = 20                  # 11-5-2, 6-1-6 (b): the team scored upon kicks from its own 20; an onside kick too
+ONSIDE_ANY_TIME = True                 # 6-1-6 (2026): the kicking team may declare an onside kick at any time of the game,
+#                                        whatever the score and the period; the declaration is told to the receivers, so
+#                                        no kick is a surprise (the clone's computer and player both declare first)
+ONSIDE_MIN_DISTANCE = 10               # 6-1-6 (e), 6-2-5: the kicking team may touch the ball only after a receiver did or
+#                                        after it has gone 10 yards (the receivers' restraining line); the clone's kick
+#                                        goes 8 to 14 yards (a receiver may touch it first) and keeps this as a record
+ONSIDE_FOUL_YARDS = 5                  # 6-1-6 penalty, 6-2-5 Item 1, 6-3-1: loss of five yards, the kick made again; for an
+#                                        illegal touch the receivers may take the ball at the spot instead

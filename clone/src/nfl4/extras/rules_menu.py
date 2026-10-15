@@ -1,8 +1,9 @@
 """F9's Rules item: Classic or the N. F. L. rules, and the switches of the features that exist (nfl4 only, rule 0.13). This is inspired by Jim Kitchen.
 
 NFL_EXTRAS_DESIGN 12.1 and 12.2 (NQ7, D-042). The design's menu has ten items; an item is in the menu once its feature is
-built (SX.2: 1 Rules, 2 Time outs, then Reset the rules to the defaults last; SX.3 to SX.7 insert theirs before Reset), so
-the player never meets a switch that does nothing; SX.3 added 3 Penalties. Up and Down move, Enter or Space changes the current item and speaks its
+built (SX.2: 1 Rules, 2 Time outs, then Reset the rules to the defaults last; SX.3 to SX.7 insert theirs before Reset, in the
+design's order), so the player never meets a switch that does nothing; SX.3 added Penalties, SX.4 added Onside kicks and
+Onside question before it (1 Rules, 2 Time outs, 3 Onside kicks, 4 Onside question, 5 Penalties, 6 Reset). Up and Down move, Enter or Space changes the current item and speaks its
 new value, Left and Right change it too, the digits go to an item, Escape leaves (game/spoken_menu.py). A switch says
 " used with the N. F. L. rules " after its value while Rules is Classic. Every change is saved in settings.txt at once and
 applies from the next game (" the new rules apply from the next game. "): a game in progress keeps the rules it began with.
@@ -14,7 +15,9 @@ from ..game.spoken_menu import Item, SpokenMenu
 from . import nx_texts as X
 
 CLASSIC, NFL = "classic", "nfl"
-DEFAULTS = {"rules": CLASSIC, "nx_timeouts": True, "nx_penalties": True}    # design 12.1 (NQ2: Classic until SX.9)
+DEFAULTS = {"rules": CLASSIC, "nx_timeouts": True, "nx_penalties": True, "nx_onside": True,
+            "nx_onside_question": "sensible"}    # design 12.1 (NQ2: Classic until SX.9)
+SWITCHES = ("rules", "nx_timeouts", "nx_penalties", "nx_onside", "nx_onside_question")
 
 
 def rules_label(game_settings) -> str:
@@ -49,6 +52,14 @@ def rules_menu(game, speech, keys) -> None:
         settings.nx_penalties = not settings.nx_penalties
         apply()
 
+    def toggle_onside(step: int = 1) -> None:
+        settings.nx_onside = not settings.nx_onside
+        apply()
+
+    def toggle_question(step: int = 1) -> None:
+        settings.nx_onside_question = "sensible" if settings.nx_onside_question == "always" else "always"
+        apply()
+
     def changed(label) -> str:
         return label() + X.text("NXM-23")
 
@@ -61,12 +72,22 @@ def rules_menu(game, speech, keys) -> None:
     def penalties_item() -> str:
         return switch_label(settings, "NXM-16", settings.nx_penalties)
 
+    def onside_item() -> str:
+        return switch_label(settings, "NXM-13", settings.nx_onside)
+
+    def question_item() -> str:
+        text = X.text("NXM-15") if settings.nx_onside_question == "always" else X.text("NXM-14")
+        if settings.rules != NFL:
+            text += X.text("NXM-22")
+        return text
+
     def reset() -> str:
-        before = (settings.rules, settings.nx_timeouts, settings.nx_penalties)
-        settings.rules, settings.nx_timeouts = DEFAULTS["rules"], DEFAULTS["nx_timeouts"]
-        settings.nx_penalties = DEFAULTS["nx_penalties"]
-        text = rules_item() + ". " + timeouts_item().rstrip() + ". " + penalties_item()
-        if (settings.rules, settings.nx_timeouts, settings.nx_penalties) == before:
+        before = tuple(getattr(settings, name) for name in SWITCHES)
+        for name in SWITCHES:
+            setattr(settings, name, DEFAULTS[name])
+        text = (rules_item() + ". " + timeouts_item().rstrip() + ". " + onside_item().rstrip() + ". "
+                + question_item().rstrip() + ". " + penalties_item())
+        if tuple(getattr(settings, name) for name in SWITCHES) == before:
             return text
         apply()
         return text + X.text("NXM-23")
@@ -74,6 +95,8 @@ def rules_menu(game, speech, keys) -> None:
     items = [
         Item(rules_item, enter=lambda: (toggle_rules(), changed(rules_item))[1], change=toggle_rules),
         Item(timeouts_item, enter=lambda: (toggle_timeouts(), changed(timeouts_item))[1], change=toggle_timeouts),
+        Item(onside_item, enter=lambda: (toggle_onside(), changed(onside_item))[1], change=toggle_onside),
+        Item(question_item, enter=lambda: (toggle_question(), changed(question_item))[1], change=toggle_question),
         Item(penalties_item, enter=lambda: (toggle_penalties(), changed(penalties_item))[1], change=toggle_penalties),
         Item(lambda: X.text("NXM-19"), enter=reset),
     ]

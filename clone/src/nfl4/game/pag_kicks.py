@@ -10,7 +10,7 @@ from . import phrases as P
 from .gamestate import other
 from .playtables import (FIELD_GOAL_DRAWS, FIELD_GOAL_NEEDED, RETURN_KIND_ODDS, RETURN_RANGE, RETURN_RANGES,
                          RETURN_SHORTEST)
-from .rules import NORMAL_KICKOFF, PERIOD_OVER
+from .rules import NORMAL_KICKOFF, ONSIDE_KEPT, ONSIDE_KICKOFF, ONSIDE_RUN, PERIOD_OVER
 
 KEY_F1, KEY_F2, KEY_F3, KEY_F4 = "112", "113", "114", "115"
 KEY_ENTER, KEY_UP, KEY_DOWN = "13", "38", "40"
@@ -147,14 +147,16 @@ class KickSteps:
         kind = self.rules.before_kickoff(s, s.defense)       # H4: the kind (Classic: "normal", no question)
         if kind == PERIOD_OVER:                              # N. F. L. rules (SX.2): a score as time ran out in the
             return self.next_play                            # second or fourth quarter: the period ends, no kick-off
-        if kind != NORMAL_KICKOFF:
-            raise NotImplementedError("kick-off kind %r: the onside kick is built in SX.4" % (kind,))
+        if kind not in (NORMAL_KICKOFF, ONSIDE_KICKOFF):
+            raise ValueError("unknown kick-off kind %r" % (kind,))
         if s.first_kickoff:                                  # L8a8 = 1: the first kick-off records its receiver
             s.opening_receiver = s.wisoff
             s.first_kickoff = False
         g.empty_replay()
         s.offense_play = 0
         self.mark_spot()
+        if kind == ONSIDE_KICKOFF:                           # N. F. L. rules (SX.4): never in Classic
+            return self.onside_kick
         snd.c2uh()
         g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)
         self.dy(0.2, 0x444949)
@@ -177,6 +179,28 @@ class KickSteps:
         if s.wisoff == 2:                                    # the computer returns 1 time in 2
             return self.kick_return if rnd(2) == 1 else self.touch_back
         return self.run_it_out
+
+    def onside_kick(self):
+        """N. F. L. rules (SX.4, design 8.3; never in Classic): the kicking team's declared onside kick. The rules object
+        speaks and draws the kick up to its result (extras/onside.py) and leaves the ball where the kick ended; this step
+        ends the play like a kick-off: the receivers picked it up and run (the state is set like a kick-off return, the
+        return goes through the end of a play), or the narration end point (an accepted foul may take over) and then the
+        kicking team's possession sentence or the receivers' position sentence."""
+        s = self.s
+        result = self.rules.onside_kick(s)
+        if result == ONSIDE_RUN:
+            return self.end_of_play
+        kept = result == ONSIDE_KEPT
+        step = self.end_point(O.ONSIDE_KICK, yards=0, turnover=kept)
+        if step is not None:
+            return step
+        if kept:                                             # the kicking team has the ball: the possession sentence
+            s.text = P.ITS
+            return self.possession
+        s.text = P.ITS_CAPITAL                               # the receivers have it, as after a touch back
+        s.down = 1
+        s.to_go = 10
+        return self.position
 
     def run_it_out(self):
         """4.16: the player's returner, run it out or not (Q17: every key but Enter, F1, y and n toggles). The play

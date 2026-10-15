@@ -226,3 +226,8 @@ NXH-11	penalties	help	say5	 A penalty moves the ball at most half the distance t
 NXH-12	penalties	help	say5	 Penalty: The yards a team loses for a foul. Automatic first down: A first down given by a penalty, whatever the distance. Loss of down: A penalty that also costs the down. 	F7 addition (H12, C6), when penalties are on
 NXH-13	penalties	help	say5	 Offsetting penalties: Fouls by both teams on one play. They cancel each other and the down is played again. 	F7 addition (H12, C6), when penalties are on
 NXP-21	penalties	sentence	say2	 <quarterback> throws the ball away to avoid the sack. 	intentional grounding in place of a sack (design 9.2 P15): the tackle sentence of the pass
+NXP-S17	penalties	piece	piece	the kick will be made again	situation: accepting a foul by the kicking team on an onside kick that it recovered (6-3-1)
+NXH-14	onside	help	say5	 When you are asked about an onside kick, Y. says yes and N. says no. Up and Down change the answer and Enter takes it. 	F5 addition (H12, C6), when onside kicks are on
+NXH-15	onside	help	say5	 With the N. F. L. rules you may try an onside kick instead of the normal kick off. You are asked when your team is behind in the second half or ahead by one score late in the game. 	F6 addition (H12, C6), when onside kicks are on
+NXH-16	onside	help	say5	 The onside kick is short and the other team may fall on the ball, so the chance to recover it is small. 	F6 addition (H12, C6), when onside kicks are on, after NXH-15
+NXH-17	onside	help	say5	 Onside kick: A short kick off that the kicking team tries to recover for itself. 	F7 addition (H12, C6), when onside kicks are on

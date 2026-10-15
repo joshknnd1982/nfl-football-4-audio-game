@@ -32,6 +32,8 @@ class GameSettings:
     rules: str = "classic"       # "classic" (the original, the default until SX.9: NQ2) or "nfl" (the N. F. L. rules)
     nx_timeouts: bool = True     # the real clock's timeouts in N. F. L. rules mode
     nx_penalties: bool = True    # the penalties with accept or decline in N. F. L. rules mode (SX.3)
+    nx_onside: bool = True       # the onside kicks of the N. F. L. rules mode (SX.4)
+    nx_onside_question: str = "sensible"   # "sensible": the player is asked when it makes sense; "always": at every kick-off
 
 
 @dataclass

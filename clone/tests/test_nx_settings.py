@@ -21,7 +21,7 @@ from programrig import DOWN, ENTER, ESC, F1, said
 from test_functions import TOP, rig_for
 
 SPACE, LEFT = 32, 37
-OPEN = "Rules. 4 items. Press F1 for help. "                       # SX.3: Rules, Time outs, Penalties, Reset
+OPEN = "Rules. 6 items. Press F1 for help. "     # SX.4: Rules, Time outs, Onside kicks, Onside question, Penalties, Reset
 NEXT_GAME = X.text("NXM-23")
 
 
@@ -96,18 +96,25 @@ def test_a_switch_says_used_with_the_nfl_rules_while_rules_is_classic(rig):
 
 
 def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
-    spoken = rules_menu(rig, [ENTER, "2", ENTER, "3", ENTER, "4", ENTER, ENTER, "1"])
+    spoken = rules_menu(rig, [ENTER, "2", ENTER, "3", ENTER, "4", ENTER, "5", ENTER, "6", ENTER, ENTER, "1"])
     assert spoken[2] == "Time outs on "
     assert spoken[3] == "Time outs off " + NEXT_GAME
-    assert spoken[4] == "Penalties on "
-    assert spoken[5] == "Penalties off " + NEXT_GAME
-    assert spoken[6] == X.text("NXM-19")
-    defaults = "Rules: Classic. Time outs on  used with the N. F. L. rules. Penalties on  used with the N. F. L. rules "
-    assert spoken[7] == defaults + NEXT_GAME
-    assert spoken[8] == defaults                                        # nothing changed now
-    assert spoken[9] == "Rules: Classic"
+    assert spoken[4] == "Onside kicks on "
+    assert spoken[5] == "Onside kicks off " + NEXT_GAME
+    assert spoken[6] == "Onside question: when it makes sense"
+    assert spoken[7] == "Onside question: always" + NEXT_GAME
+    assert spoken[8] == "Penalties on "
+    assert spoken[9] == "Penalties off " + NEXT_GAME
+    assert spoken[10] == X.text("NXM-19")
+    defaults = ("Rules: Classic. Time outs on  used with the N. F. L. rules. Onside kicks on  used with the N. F. L. rules."
+                " Onside question: when it makes sense used with the N. F. L. rules. Penalties on  used with the N. F. L."
+                " rules ")
+    assert spoken[11] == defaults + NEXT_GAME
+    assert spoken[12] == defaults                                       # nothing changed now
+    assert spoken[13] == "Rules: Classic"
     game = rig.game.options.settings.game
     assert (game.rules, game.nx_timeouts, game.nx_penalties) == ("classic", True, True) and rig.game.rules is CLASSIC
+    assert (game.nx_onside, game.nx_onside_question) == (True, "sensible")
 
 
 def test_f1_says_the_help_of_the_rules_menu(rig):

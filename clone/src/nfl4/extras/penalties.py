@@ -114,6 +114,10 @@ def play_result(down: Down, play: PlayFacts) -> Result:
     offense, defense = down.offense, other(down.offense)
     if down.two_point:
         return Result(TRY_GOOD, offense, points=_points(offense, 2)) if play.score == "two-point" else Result(TRY_FAILS)
+    if play.kind == O.ONSIDE_KICK:                # SX.4: the kicking team kept it (`turnover`), or the receivers have it
+        if play.turnover:
+            return Result(NEW_DOWN, defense, 100 - play.end, new_series=True)
+        return Result(NEW_DOWN, offense, play.end, new_series=True)
     if play.score == "touchdown":
         return Result(TOUCHDOWN, offense, points=_points(offense, 6))
     if play.score == "field goal":
@@ -161,6 +165,8 @@ def enforcement_spot(foul: F.Foul, down: Down, play: PlayFacts, foul_spot: int |
 def accept(foul: F.Foul, down: Down, play: PlayFacts | None, foul_spot: int | None = None) -> Result:
     """The result of accepting `foul` (play None: a foul before the snap)."""
     by_offense = foul.offense_side
+    if play is not None and play.kind == O.ONSIDE_KICK:
+        return _accept_on_onside(foul, down, play)
     if play is not None and play.kind in (O.KICKOFF_RETURN, O.KICKOFF_TOUCH_BACK):
         return _accept_on_kickoff(foul, down, play, foul_spot)
     if F.AFTER in foul.phases:
@@ -277,6 +283,21 @@ def _accept_on_kickoff(foul: F.Foul, down: Down, play: PlayFacts, foul_spot: int
     new, moved, halved = move(min(end, 99), foul.yards, False)
     return Result(NEW_DOWN, down.offense, new, new_series=True, yards=moved, keeps_play=True,
                   play_first_down=play.kind == O.KICKOFF_RETURN, notes=(X.text("NXP-11"),) if halved else ())
+
+
+def _accept_on_onside(foul: F.Foul, down: Down, play: PlayFacts) -> Result:
+    """An onside kick (design 8.3; 6-1-6 penalty, 6-2-5, 6-3-1, 14-4-7; the receivers are the offense): a foul by the kicking
+    team. When the receivers have the ball, the yards are enforced from the dead ball spot (14-4-7's option when they keep
+    possession; the half distance applies). When the kicking team recovered it: offside (P24) loses five yards and the kick
+    is made again from there (`yards` says how far back); an illegal touch (P33) gives the receivers the ball at the spot
+    (6-2-5 Item 1: "or the receiving team takes possession at the spot of the illegal touch")."""
+    if not play.turnover:
+        new, moved, halved = move(min(play.end, 99), foul.yards, False)
+        return Result(NEW_DOWN, down.offense, new, new_series=True, yards=moved, keeps_play=True,
+                      notes=(X.text("NXP-11"),) if halved else ())
+    if foul.id == "P24":
+        return Result(REPLAY_KICK, down.offense, yards=foul.yards, notes=(X.text("NXP-13"),))
+    return Result(NEW_DOWN, down.offense, min(play.end, 99), new_series=True)
 
 
 def replay_down(down: Down, play: PlayFacts | None) -> Result:
@@ -439,6 +460,8 @@ def situation(result: Result, offense: int, player: int = 1) -> str:
         parts.append(X.text("NXP-S15"))
     elif kind == TRY_AGAIN:
         parts.append(X.text("NXP-S16", yard=100 - result.los))
+    elif kind == REPLAY_KICK:
+        parts.append(X.text("NXP-S17"))
     else:
         parts.append(X.text("NXP-S10"))
     parts.extend(result.pieces)                   # "the fumble stands", "the half ends"

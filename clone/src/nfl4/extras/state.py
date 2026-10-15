@@ -24,6 +24,7 @@ MARKER = "NX-EXTRAS"           # the string that starts the extras section of fo
 RECENT_REMARKS = 3             # a remark is never one of the last three spoken of its pool
 MAX_TIMEOUTS = max(R.TIMEOUTS_PER_HALF, R.OT_REGULAR_TIMEOUTS, R.OT_POST_TIMEOUTS)
 FOUL_CLOCKS = ("", "pre", "live", "runoff")
+KICK_KINDS = ("", "normal", "onside")
 
 
 @dataclass
@@ -63,6 +64,17 @@ class ExtrasRecord:
     extension: bool = False           # one more untimed down is due (4-8-2 (a))
     extension_snap: bool = False      # this snap took the untimed down (a foul before it gives it back)
     no_snap: bool = False             # the play that just ended was a foul before the snap: not a counted play (5.7)
+    # onside kicks (design 8, SX.4); a record saved before SX.4 has none of them (onside kicks off)
+    onside_on: bool = False           # the Onside kicks switch of the game (design 12.1)
+    onside_always: bool = False       # the Onside question setting "always" of the game (design 8.2)
+    onside_tried: list = field(default_factory=lambda: [0, 0])      # onside kicks of each KICKING side (the statistics, C7)
+    onside_recovered: list = field(default_factory=lambda: [0, 0])  # and the ones its team kept
+    kick_kind: str = ""               # "normal" or "onside": the kind of the last kick-off decided (a kick made again keeps it)
+    kick_again: bool = False          # a foul made the kick-off be made again: the next kick-off keeps its kind
+    rekick: bool = False              # the onside kick to come is a kick made again, not a new try
+    kick_back: int = 0                # yards an accepted foul moved the next kick back (6-3-1)
+    kick_from: int = R.KICKOFF_SPOT   # the kicking team's own yard line the next kick is made from
+    safety_kick: bool = False         # the next kick-off follows a safety: it is made from the 20 (11-5-2)
 
     # ----- per side -----
 
@@ -154,14 +166,20 @@ class ExtrasRecord:
         whole(self.last_offense, 0, 2, "the last offense")
         for name in ("timeouts_on", "postseason", "running", "warning_due", "warning_given", "last_two_point",
                      "out_of_bounds", "penalties_on", "foul_by_offense", "was_running", "extension", "extension_snap",
-                     "no_snap"):
+                     "no_snap", "onside_on", "onside_always", "kick_again", "rekick", "safety_kick"):
             flag(getattr(self, name), name)
+        whole(self.kick_back, 0, 50, "the yards the kick moved back")
+        whole(self.kick_from, 1, R.KICKOFF_SPOT, "the yard line of the kick")
+        if self.kick_kind not in KICK_KINDS:
+            raise ValueError("the kind of the kick is %r" % (self.kick_kind,))
         for name in ("last_kind", "unit", "announced"):
             if not isinstance(getattr(self, name), str) or len(getattr(self, name)) > 40:
                 raise ValueError("%s is %r" % (name, getattr(self, name)))
         pair(self.timeouts, lambda v, w: whole(v, 0, MAX_TIMEOUTS, w), "the timeouts")
         pair(self.used, lambda v, w: whole(v, 0, 999, w), "the timeouts used")
         pair(self.called, flag, "the timeouts called")
+        pair(self.onside_tried, lambda v, w: whole(v, 0, 9999, w), "the onside kicks tried")
+        pair(self.onside_recovered, lambda v, w: whole(v, 0, 9999, w), "the onside kicks recovered")
         pair(self.flags, lambda v, w: whole(v, 0, 9999, w), "the penalties")
         pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
         if self.foul_clock not in FOUL_CLOCKS:

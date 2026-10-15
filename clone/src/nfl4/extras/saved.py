@@ -72,4 +72,6 @@ def rules_for_saved_game(game, saved):
     if not usable:
         game.say5(X.text("NXM-25"))
     settings = game.options.settings.game
-    return NflRules(timeouts_on=settings.nx_timeouts, penalties_on=getattr(settings, "nx_penalties", True))
+    return NflRules(timeouts_on=settings.nx_timeouts, penalties_on=getattr(settings, "nx_penalties", True),
+                    onside_on=getattr(settings, "nx_onside", True),
+                    onside_always=getattr(settings, "nx_onside_question", "sensible") == "always")

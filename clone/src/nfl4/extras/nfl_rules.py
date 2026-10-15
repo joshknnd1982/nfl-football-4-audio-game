@@ -27,6 +27,15 @@ SX.3, the penalties (NX7, design 9; extras/penalty_flow.py, extras/penalties.py)
     H10 between_plays     the clock after a foul (4-3-2 (e), (g))
     H11, H12              " Penalties" and " Penalty Yardage"; the added help on penalties
 
+SX.4, the onside kicks (NX4, design 8; extras/onside.py), when the game's Onside kicks switch is on:
+    H4  before_kickoff    the kind of the kick: the player's question (D-041: only when it makes sense, or always) or the
+                          computer's declaration; the yard line of the kick (35, the 20 after a safety, moved back by an
+                          accepted foul); a kick made again keeps its kind
+        onside_kick       the kick's sentences, sounds and draws up to its result (the engine's step onside_kick)
+    H2  after_outcome     the live time of an onside kick 3 to 5 seconds; the statistics (kept, tried); the foul draws of
+                          the penalty flow include P24 and P33 for the kind
+    H11, H12              " Onside Kicks Tried" and " Onside Kicks Recovered"; the added help on onside kicks
+
 The order of the new draws inside a play (design 15, as built): out of bounds (after the tackle sentence), L (at the
 narration end point), then between plays R, the ready-signal cut, and for each side in turn (the side with the ball first)
 rule 6's draw and a timeout's u, its remark chance, its remark line, a name and the line's choices.
@@ -48,6 +57,7 @@ from . import rules_2026 as R
 from . import timeouts
 from . import tuning as T
 from .clock import RUNNING_KINDS, NflPeriodClock, late_window
+from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
 from .state import ExtrasRecord
 
@@ -67,28 +77,34 @@ def menu_item(position: int, text: str, action: tuple[str, int], letter: str = "
 class NflRules(ClassicRules):
     name = NAME
 
-    def __init__(self, timeouts_on: bool = True, auto_sides: tuple[int, ...] = (2,), penalties_on: bool = False):
+    def __init__(self, timeouts_on: bool = True, auto_sides: tuple[int, ...] = (2,), penalties_on: bool = False,
+                 onside_on: bool = False, onside_always: bool = False):
         # the switches for a new game; a game reads its own from state.extras (a loaded game keeps the switches it was saved
-        # with, C1). penalties_on is off unless given: the program's rules come from the settings (rules_from_settings,
-        # nx_penalties on by default), and a rules object made by hand (the clock's tests) has no fouls and no draws
+        # with, C1). penalties_on and onside_on are off unless given: the program's rules come from the settings
+        # (rules_from_settings, nx_penalties and nx_onside on by default), and a rules object made by hand (the clock's
+        # tests) has no fouls, no onside kicks and no draws for them
         self.timeouts_on = bool(timeouts_on)
         self.penalties_on = bool(penalties_on)
-        self.auto_sides = tuple(auto_sides)       # the sides whose timeouts and penalty choices the computer decides
+        self.onside_on = bool(onside_on)
+        self.onside_always = bool(onside_always)  # the player is asked about an onside kick at every kick-off (design 8.2)
+        self.auto_sides = tuple(auto_sides)       # the sides whose timeouts, penalty choices and onside kicks the computer decides
         self.game = None
         self.state = None
         self.clock: NflPeriodClock | None = None
         self.penalty = PenaltyFlow(self)
+        self.onside = OnsideFlow(self)
 
     def for_game(self) -> "NflRules":
         """A fresh object for one game, with the same switches (Game.play_game)."""
-        return type(self)(self.timeouts_on, self.auto_sides, self.penalties_on)
+        return type(self)(self.timeouts_on, self.auto_sides, self.penalties_on, self.onside_on, self.onside_always)
 
     # ----- H1 -----
 
     def period_clock(self, game, state) -> NflPeriodClock:
         self.game, self.state = game, state
         state.extras = ExtrasRecord(timeouts_on=self.timeouts_on, postseason=game.season.gtp >= 17,
-                                    penalties_on=self.penalties_on)
+                                    penalties_on=self.penalties_on, onside_on=self.onside_on,
+                                    onside_always=self.onside_always)
         self.clock = NflPeriodClock(game, state)
         return self.clock
 
@@ -140,6 +156,11 @@ class NflRules(ClassicRules):
         self.clock.play_time(outcome, self.rnd)
         if x.penalties_on:
             outcome.then = self.penalty.settle(state, outcome, facts)
+        if outcome.then is None:
+            if outcome.kind == O.SAFETY_KIND:
+                x.safety_kick = True                # the team scored upon kicks next, from its own 20 (11-5-2)
+            elif outcome.kind == O.ONSIDE_KICK and outcome.turnover:
+                x.onside_recovered[other(outcome.offense) - 1] += 1       # the kicking team kept it (no foul took it away)
         return outcome
 
     # ----- H3 -----
@@ -177,6 +198,10 @@ class NflRules(ClassicRules):
         x = state.extras
         x.out_of_bounds = False
         if x.left <= 0 and state.quarter in (2, 4):
+            # no kick-off is made: nothing of the kick that was to come is left over (a safety kick on the last play of a half,
+            # a kick to be made again): the next half starts with a kick-off from the 35
+            x.safety_kick = x.kick_again = x.rekick = False
+            x.kick_back = 0
             return PERIOD_OVER          # a score as time ran out: the half or the game ends after the try, no kick-off
         if x.timeouts_on and x.announced != x.unit:
             x.announced = x.unit
@@ -184,7 +209,20 @@ class NflRules(ClassicRules):
             self.game.say4(X.text(text_id, n=x.timeouts_of(1)))
         if x.penalties_on:
             self.penalty.take_kickoff(state)
-        return NORMAL_KICKOFF
+        # SX.4: where the kick is made from (6-1-2, 11-5-2: the 35, the 20 after a safety, moved back by an accepted foul
+        # on a kick made again, 6-3-1) and whether it is an onside kick
+        again, x.kick_again = x.kick_again, False
+        if again:                      # moved back by the yards of the foul, never more than half the distance to the goal
+            spot = x.kick_from - min(x.kick_back, x.kick_from // 2)      # line (14-2-1), so never to or past it
+        else:
+            spot = R.SAFETY_KICK_SPOT if x.safety_kick else R.KICKOFF_SPOT
+        x.kick_from, x.kick_back, x.safety_kick = spot, 0, False
+        if not x.onside_on:
+            return NORMAL_KICKOFF
+        return self.onside.decide(state, kicking_side, again)
+
+    def onside_kick(self, state) -> str:
+        return self.onside.kick(state)
 
     # ----- H10 -----
 
@@ -259,6 +297,11 @@ class NflRules(ClassicRules):
         if x.timeouts_on:
             lines += [X.text("NXS-03"), "%s %d" % (state.teams.get(1, ""), x.used_of(1)),
                       "%s %d" % (state.teams.get(2, ""), x.used_of(2))]
+        if x.onside_on:
+            lines += [X.text("NXS-06"), "%s %d" % (state.teams.get(1, ""), x.onside_tried[0]),
+                      "%s %d" % (state.teams.get(2, ""), x.onside_tried[1]),
+                      X.text("NXS-07"), "%s %d" % (state.teams.get(1, ""), x.onside_recovered[0]),
+                      "%s %d" % (state.teams.get(2, ""), x.onside_recovered[1])]
         return lines
 
     def extra_situation(self, state) -> list[str]:
@@ -270,15 +313,18 @@ class NflRules(ClassicRules):
         return lines
 
     def extra_help(self, key: str) -> list[str]:
-        ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-09"), KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06", "NXH-10", "NXH-11"),
-               KEY_F7: ("NXH-07", "NXH-08", "NXH-12", "NXH-13")}.get(key, ())
+        ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-09", "NXH-14"),
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06", "NXH-10", "NXH-11", "NXH-15", "NXH-16"),
+               KEY_F7: ("NXH-07", "NXH-08", "NXH-12", "NXH-13", "NXH-17")}.get(key, ())
         timeout_lines = ("NXH-01", "NXH-05", "NXH-07")
         penalty_lines = ("NXH-09", "NXH-10", "NXH-11", "NXH-12", "NXH-13")
+        onside_lines = ("NXH-14", "NXH-15", "NXH-16", "NXH-17")
         x = self.state.extras if self.state is not None else None        # a loaded game's own switches
         timeouts_on = x.timeouts_on if x is not None else self.timeouts_on
         penalties_on = x.penalties_on if x is not None else self.penalties_on
+        onside_on = x.onside_on if x is not None else self.onside_on
         return [X.text(i) for i in ids if (timeouts_on or i not in timeout_lines)
-                and (penalties_on or i not in penalty_lines)]
+                and (penalties_on or i not in penalty_lines) and (onside_on or i not in onside_lines)]
 
 
 def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
@@ -287,7 +333,9 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
     if getattr(game_settings, "rules", "classic") != "nfl":
         return CLASSIC
     return NflRules(timeouts_on=getattr(game_settings, "nx_timeouts", True), auto_sides=auto_sides,
-                    penalties_on=getattr(game_settings, "nx_penalties", True))
+                    penalties_on=getattr(game_settings, "nx_penalties", True),
+                    onside_on=getattr(game_settings, "nx_onside", True),
+                    onside_always=getattr(game_settings, "nx_onside_question", "sensible") == "always")
 
 
 def is_nfl(rules) -> bool:

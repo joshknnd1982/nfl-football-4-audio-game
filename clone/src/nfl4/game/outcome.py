@@ -13,7 +13,9 @@ engine calls the hook:
   that sentence, before the possession sentence);
 * a punt: after its last sentence and foot11 (and " IT IS A TOUCH BACK"), before the possession sentence;
 * a kick-off: a touch back after its sentence, foot11 and the crowd ramp, before the position sentence; a return like a
-  run in the field of play.
+  run in the field of play;
+* an onside kick (N. F. L. rules, SX.4): its result sentence, foot11 and the crowd ramp, before the possession or position
+  sentence; one that the receivers pick up and run is a kick-off return.
 The speech, sounds and pauses up to the end point are not replayed from the record: they have happened. In Classic the
 hook returns the record unchanged and the engine goes on as the original does.
 """
@@ -25,6 +27,7 @@ RUN, PASS_COMPLETE, PASS_INCOMPLETE, SACK = "run", "pass complete", "pass incomp
 INTERCEPTION, FUMBLE = "interception", "fumble"
 FIELD_GOAL_GOOD, FIELD_GOAL_MISSED, FIELD_GOAL_SHORT = "field goal good", "field goal missed", "field goal short"
 PUNT, KICKOFF_RETURN, KICKOFF_TOUCH_BACK = "punt", "kick-off return", "kick-off touch back"
+ONSIDE_KICK = "onside"             # N. F. L. rules (SX.4): an onside kick that nobody runs back; turnover = the kicking team kept it
 TOUCHDOWN, SAFETY_KIND, TWO_POINT_TRY = "touchdown", "safety", "two-point try"
 
 

@@ -39,6 +39,13 @@ Added in PX SX.3 (penalties with accept or decline, D-050), each never taken in 
     H2 instead_of_sack(state)              the original's draw gave a sack: the passer may     None
                                            throw the ball away (intentional grounding); the
                                            sentence that replaces the sack, or None
+
+Added in PX SX.4 (onside kicks, D-051), each never taken in Classic:
+    H4 before_kickoff -> ONSIDE_KICKOFF    the kick-off is an onside kick (the question or     never returned
+                                           the computer's declaration came first)
+    H4 onside_kick(state)                  the kick's sentences, sounds and draws up to its    never called
+                                           result: ONSIDE_KEPT, ONSIDE_LOST or ONSIDE_RUN
+    H4 safety_kick / kick again            kept by the extras' own record (no hook)
 """
 from __future__ import annotations
 
@@ -49,7 +56,11 @@ from .playtables import NEUTRAL, Modifiers
 
 GO_ON = "go on"
 NORMAL_KICKOFF = "normal"
+ONSIDE_KICKOFF = "onside"       # H4: the kick-off is an onside kick (N. F. L. rules mode only, SX.4)
 PERIOD_OVER = "period over"     # H4: no kick-off, the period ends first (N. F. L. rules mode only, SX.2)
+# What the extras' onside kick leaves for the engine (SX.4): the kicking team recovered it, the receivers fell on it, or the
+# receivers picked it up and the engine runs the return (the state is set like a kick-off return)
+ONSIDE_KEPT, ONSIDE_LOST, ONSIDE_RUN = "kept", "lost", "run"
 FOUL_BEFORE_SNAP = "foul before the snap"   # H2 step 2 (SX.3): a dead-ball foul, the play is not run
 
 # What the engine does after the extras took over a play (H2 step 4, `PlayOutcome.then`, or foul_before_snap's answer;
@@ -99,6 +110,9 @@ class ClassicRules:
 
     def before_kickoff(self, state, kicking_side: int) -> str:
         return NORMAL_KICKOFF
+
+    def onside_kick(self, state) -> str:
+        raise RuntimeError("Classic has no onside kicks: before_kickoff never answers ONSIDE_KICKOFF")
 
     def between_plays(self, state) -> None:
         return None

@@ -53,8 +53,9 @@ def nfl_engine_rig(tmp_path, answers=(), comments=False, rules=None, extras=None
 
 
 class RecordingRules(NflRules):
-    def __init__(self, timeouts_on=True, auto_sides=(1, 2), penalties_on=False):
-        super().__init__(timeouts_on, auto_sides, penalties_on)
+    def __init__(self, timeouts_on=True, auto_sides=(1, 2), penalties_on=False, onside_on=False, onside_always=False):
+        super().__init__(timeouts_on, auto_sides, penalties_on, onside_on, onside_always)
+        self.onsides = []           # (quarter, kicking side, seconds left, kicking team's lead, result) of every onside kick
         self.timeouts = []          # (quarter, side, seconds left after it, timeouts left of that side)
         self.periods = []           # (quarter, counted plays, seconds left) at each period end
         self.warnings = []          # (quarter, seconds left) when the warning was said
@@ -75,6 +76,14 @@ class RecordingRules(NflRules):
     def between_plays(self, state):
         super().between_plays(state)
         self.lefts.append((state.quarter, state.extras.left, state.extras.pending))
+
+    def onside_kick(self, state):
+        kicking = state.defense
+        lead = state.score(kicking) - state.score(3 - kicking)
+        left = state.extras.left
+        result = super().onside_kick(state)
+        self.onsides.append((state.quarter, kicking, left, lead, result))
+        return result
 
 
 class SimEngine(PlayEngine):
