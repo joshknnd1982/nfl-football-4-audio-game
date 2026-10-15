@@ -66,10 +66,12 @@ class ExtrasRecord:
 
     # ----- the save -----
 
-    def load_saved(self, saved) -> bool:
+    def load_saved(self, saved, state=None) -> bool:
         """GameState.load (H5) with the N. F. L. rules: the save's own record (its mode and state, C1), or the start values
         for this saved game (design 12.3: full timeouts, the clock at the period's length minus 28 seconds per counted play,
-        at least 1:00; no announcement and no warning already passed). Returns True when the save's record was used."""
+        at least 1:00; no announcement and no warning already passed). Returns True when the save's record was used.
+        `state`: the game state being loaded; the original's file does not hold the overtime number (L238), the record's
+        period does, so a game saved in overtime goes on with the right period numbers."""
         if saved.extras is not None:
             try:
                 loaded = ExtrasRecord.from_json(saved.extras)
@@ -78,6 +80,8 @@ class ExtrasRecord:
             else:
                 for f in fields(self):
                     setattr(self, f.name, getattr(loaded, f.name))
+                if state is not None and self.period > 4 and saved.quarter >= 5:
+                    state.overtime = self.period - 4
                 return True
         from .clock import is_warning_period, period_seconds
         from .timeouts import count_for, unit_for

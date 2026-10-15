@@ -266,7 +266,7 @@ def test_f5_f6_f7_add_their_lines_after_the_original_text_during_an_nfl_game(tmp
     from nfl4.game import help_texts as H
     rig = nfl_engine_rig(tmp_path)
     hot = rig.game.hotkeys
-    for menu, original, ids in ((hot.speckeys, H.SPECIAL_KEYS, ("NXH-01", "NXH-02")),
+    for menu, original, ids in ((hot.speckeys, H.SPECIAL_KEYS, ("NXH-02", "NXH-01")),       # the clock, then the T key
                                 (hot.say_hints, H.TERMINOLOGY + H.TERMINOLOGY_CLONE_END, ("NXH-07", "NXH-08"))):
         start = len(rig.said)
         menu()

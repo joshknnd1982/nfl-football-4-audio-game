@@ -24,7 +24,8 @@ from __future__ import annotations
 import math
 
 from ..game import outcome as O
-from ..game.gameclock import clock_sentence, quarter_word
+from ..game.gameclock import PLURAL, QUARTER_END, REMAINING_IN_THE, SECOND, clock_sentence, quarter_word
+from ..game.vbnum import str_
 from . import rules_2026 as R
 from . import timeouts
 from . import tuning as T
@@ -163,10 +164,16 @@ class NflPeriodClock:
         self.x.warning_given = True
 
     def speak(self) -> None:
-        """F4: the time at the end of the last play, with the original's sentence, then clk and g = F1 (as sgc)."""
+        """F4: the time at the end of the last play, with the original's sentence, then clk and g = F1 (as sgc). The
+        original's sentence has no form for no time at all (it says neither minutes nor seconds), so 0:00 (a try or the
+        wait after a last-second score) is said with its words as " 0 seconds"."""
         left = self.x.left
         word = quarter_word(min(max(self.state.quarter, 1), 10))
-        self.game.say_clock(clock_sentence(left // 60, left % 60, word))
+        if left <= 0:
+            text = " " + str_(0) + SECOND + PLURAL + REMAINING_IN_THE + word + QUARTER_END
+        else:
+            text = clock_sentence(left // 60, left % 60, word)
+        self.game.say_clock(text)
 
     # ----- what the engine does -----
 
@@ -189,12 +196,15 @@ class NflPeriodClock:
 
     def before_snap(self) -> bool:
         """H1 at the snap: the pending runoff runs. True when it ran the period out: the period ends before the snap
-        (design 5.4; nobody stopped the clock)."""
+        (design 5.4; nobody stopped the clock). A two-point try is untimed (4-3-2(h), 11-3-1): it is played even when the
+        touchdown used the last second, and the half or the game ends after it (at the kick-off, H4)."""
         x = self.x
         x.left = max(0, x.left - x.pending)
         x.pending = 0
         x.called = [False, False]                 # a new dead-ball period comes after this play
         x.out_of_bounds = False
+        if self.state.two_point:
+            return False
         return x.left <= 0
 
     # ----- the extras' own calls -----

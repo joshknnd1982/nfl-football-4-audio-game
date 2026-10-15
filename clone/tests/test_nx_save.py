@@ -149,6 +149,20 @@ def test_a_classic_save_loaded_with_the_nfl_rules_starts_the_extras_from_their_s
         assert x.timeouts == ([2, 2] if quarter == 5 else [3, 3]) and x.announced == x.unit
 
 
+def test_a_game_saved_in_overtime_goes_on_with_its_overtime_number(tmp_path):
+    rig = nfl_engine_rig(tmp_path)
+    state = GameState()
+    NflRules().period_clock(rig.game, state)
+    record = a_record(period=6, left=400, unit="OT2", announced="OT2", timeouts=[2, 1], pending=0, running=False)
+    state.load(a_save(quarter=5, counter=4, extras=record.to_json(), extras_marked=True))
+    assert state.overtime == 2 and state.extras.period == 6
+    state.extras.left = 0                                            # the period runs out: the next one is the third
+    from nfl4.extras.clock import NflPeriodClock
+    state.overtime += 1                                              # game_end, then start_period
+    NflPeriodClock(rig.game, state).start_period(0)
+    assert state.extras.period == 7 and state.extras.unit == "OT3" and state.extras.timeouts == [2, 2]
+
+
 def test_a_damaged_record_loads_with_the_start_values(tmp_path):
     rig = nfl_engine_rig(tmp_path)
     state = GameState()

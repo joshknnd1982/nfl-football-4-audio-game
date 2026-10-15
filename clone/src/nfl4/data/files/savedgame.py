@@ -88,7 +88,7 @@ def decode(raw: bytes) -> SavedGame:
         if any(not 0 <= code <= 255 for code in codes):
             raise FileDamaged("the quarterback's name holds a character code outside 0 to 255")
         opening = None
-        if not reader.at_end and reader.peek_type() != VT_STRING:
+        if not reader.at_end and reader.raw[reader.position] != VT_STRING:     # a String's type word begins with 8
             opening = _within(reader.next_int(), 1, 2, "the side that received the opening kick-off")
         extras, marked = None, False
         if not reader.at_end:
@@ -103,10 +103,16 @@ def decode(raw: bytes) -> SavedGame:
 
 
 def _extras(reader: VariantReader) -> tuple[str | None, bool]:
-    """The extras section (nfl4 SX.2): (the JSON text, True), or (None, True) for a marker whose record cannot be used.
-    Anything else after the game is a damaged file, as before."""
-    if reader.peek_type() != VT_STRING or reader.next_string() != EXTRAS_MARKER:
+    """The extras section (nfl4 SX.2): (the JSON text, True), or (None, True) for a marker whose record cannot be used,
+    including a file cut inside the marker itself (its bytes are then a beginning of the marker's record). Anything else
+    after the game is a damaged file, as before."""
+    marker = pack_string(EXTRAS_MARKER)
+    rest = reader.raw[reader.position:]
+    if len(rest) < len(marker) and marker.startswith(rest):
+        return None, True
+    if not rest.startswith(marker):
         raise FileDamaged("the file holds more than a game")
+    reader.next_string()
     try:
         version = reader.next_int()
         record = reader.next_string()

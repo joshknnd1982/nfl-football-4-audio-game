@@ -23,6 +23,7 @@ import logging
 from . import program_texts as P
 from . import prompt_texts as T
 from . import texts
+from .keys import GameQuit
 from .season_engine import NULL_STORE
 from .vbnum import str_, trim
 
@@ -275,7 +276,11 @@ class Program:
         rules = None                                            # the program's rules; a save of the N. F. L. rules may ask
         if getattr(saved, "extras_marked", False):              # (nfl4 only, rule 0.13, SX.2: NFL_EXTRAS_DESIGN 12.3)
             from ..extras.saved import rules_for_saved_game
-            rules = rules_for_saved_game(g, saved)
+            try:
+                rules = rules_for_saved_game(g, saved)
+            except GameQuit:                                    # the window closed at the question: football.sav was
+                store.save_game(saved)                          # already read and deleted, so it is written back
+                raise
         result = g.play_game(rules=rules, own_names=own_names, saved=saved, save_sink=store.save_game,
                              roster_sink=store.write_player_names)   # 0x489ddb
         if result.saved:                                        # 0x489e2c: SavedGame = 1 skips pog and the standings

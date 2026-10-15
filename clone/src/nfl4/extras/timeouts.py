@@ -131,8 +131,8 @@ def _rule4(view: Situation) -> bool:
 
 def computer_calls(view: Situation, rnd) -> bool:
     """Rules 1 to 6 for one side; rule 6 draws one number (`rnd.below(80)`), and only when it is reached."""
-    if view.timeouts <= 0:
-        return False                                                      # rule 1
+    if view.timeouts <= 0 or view.left <= 0:
+        return False                                                      # rule 1 (and a period that is over)
     rule3, rule4 = _rule3(view), _rule4(view)
     if view.timeouts == 1 and challenge_possible(view) and not (rule3 or rule4):
         return False                                                      # rule 1: one kept for a challenge

@@ -176,4 +176,4 @@ class GameState:
             self.opening_receiver = saved.opening_receiver
             self.first_kickoff = False
         if self.extras is not None:                     # N. F. L. rules (H5): the save's record, or the start values
-            self.extras.load_saved(saved)
+            self.extras.load_saved(saved, self)

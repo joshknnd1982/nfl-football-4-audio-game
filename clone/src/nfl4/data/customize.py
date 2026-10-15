@@ -26,6 +26,7 @@ setting is the N. F. L. rules (`extras` / `use_extras`): with Classic it is neve
 """
 from __future__ import annotations
 
+import dataclasses
 import logging
 import os
 import re
@@ -230,6 +231,7 @@ class Customization:
         self._surname_defaults: list[str] | None = None
         self.sound_probe = sound_probe or probe_sound_file
         self.extras = bool(extras)        # nfl4 only: the N. F. L. rules are in use, so remarks.txt is read too (SX.2)
+        self._parked_remarks = None       # the remarks loaded before the extras were switched off
         self.files: dict[str, cl.ListFile] = {
             spec.key: cl.ListFile(folder, spec.file_name, GAME, spec.key, lambda key=spec.key: self.default_text(key))
             for spec in SPECS + EXTRA_SPECS}
@@ -251,15 +253,20 @@ class Customization:
             return
         self.extras = on
         if not on:
+            self._parked_remarks = self.snapshot.remarks      # what was loaded: used again if the file cannot be read then
             self.snapshot.remarks = None
             for spec in EXTRA_SPECS:
                 self.snapshot.statuses.pop(spec.key, None)
                 self.snapshot.problems.pop(spec.key, None)
+                self.snapshot.kept.discard(spec.key)
             return
         from ..extras.remarks import DEFAULT_POOLS
+        previous = dataclasses.replace(self.snapshot, remarks=self._parked_remarks)
         self.snapshot.remarks = DEFAULT_POOLS
+        for spec in EXTRA_SPECS:
+            self.snapshot.kept.discard(spec.key)
         before = len(self.snapshot.notices)
-        self._load_into(self.snapshot, EXTRA_SPECS, None)
+        self._load_into(self.snapshot, EXTRA_SPECS, previous)
         self._notices_of(self.snapshot, EXTRA_SPECS)
         self._notices.extend(self.snapshot.notices[before:])
 

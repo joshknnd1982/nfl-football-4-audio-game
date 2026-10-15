@@ -96,6 +96,8 @@ class NflRules(ClassicRules):
     def after_outcome(self, state, outcome):
         x = state.extras
         x.plays += 1
+        x.running = False                          # the play is over: H10 decides whether the clock runs to the next snap
+        x.pending = 0
         x.last_kind = outcome.kind
         x.last_offense = outcome.offense
         x.last_two_point = bool(outcome.two_point_try)
@@ -137,7 +139,7 @@ class NflRules(ClassicRules):
             return PERIOD_OVER          # a score as time ran out: the half or the game ends after the try, no kick-off
         if x.timeouts_on and x.announced != x.unit:
             x.announced = x.unit
-            text_id = "NXT-06" if x.unit.startswith("H") else "NXT-07"
+            text_id = "NXT-06" if x.unit.startswith("H") else ("NXT-14" if x.unit.startswith("OTP") else "NXT-07")
             self.game.say4(X.text(text_id, n=x.timeouts_of(1)))
         return NORMAL_KICKOFF
 
@@ -157,14 +159,14 @@ class NflRules(ClassicRules):
                 ready = True                      # stopped, restarted on the ready signal: a shorter runoff
         lead = state.score(state.wisoff) - state.score(other(state.wisoff))
         self.clock.runoff(self.rnd, keeps, ready, lead)
-        if x.timeouts_on:
+        if x.timeouts_on and x.left > 0:          # at 0:00 the period is over: no timeout can be granted
             for side in (state.wisoff, other(state.wisoff)):
                 if side not in self.auto_sides or timeouts.refusal(x, side) is not None:
                     continue
                 if timeouts.computer_calls(timeouts.situation(state, x, side), self.rnd):
                     self.grant(state, side)
         if x.running and x.pending >= x.left > 0:
-            self.game.say5(X.text("NXC-03", n=x.left))
+            self.game.say5(X.text("NXC-05") if x.left == 1 else X.text("NXC-03", n=x.left))
 
     # ----- timeouts -----
 
@@ -190,9 +192,9 @@ class NflRules(ClassicRules):
         g.ptf = 1
         g.say4(X.text("NXT-01", team=state.teams.get(side, "")))
         if side == 1:
-            g.say4(X.text("NXT-03", n=left) if left else X.text("NXT-10"))
+            g.say4({0: X.text("NXT-10"), 1: X.text("NXT-12")}.get(left) or X.text("NXT-03", n=left))
         else:
-            g.say4(X.text("NXT-02", n=left) if left else X.text("NXT-09"))
+            g.say4({0: X.text("NXT-09"), 1: X.text("NXT-11")}.get(left) or X.text("NXT-02", n=left))
         g.ptf = 0
         if g.comtog == 0 and self.rnd(T.TIMEOUT_REMARK_CHANCE) == 1:
             values = {"<team>": state.teams.get(side, ""), "<coach>": g.season.coach,
@@ -212,11 +214,12 @@ class NflRules(ClassicRules):
         x = state.extras
         lines = [X.text("NXC-01") if x.running else X.text("NXC-02")]
         if x.timeouts_on:
-            lines.append(X.text("NXT-08", n=x.timeouts_of(1), team=state.teams.get(2, ""), m=x.timeouts_of(2)))
+            text_id = "NXT-13" if x.timeouts_of(1) == 1 else "NXT-08"
+            lines.append(X.text(text_id, n=x.timeouts_of(1), team=state.teams.get(2, ""), m=x.timeouts_of(2)))
         return lines
 
     def extra_help(self, key: str) -> list[str]:
-        ids = {KEY_F5: ("NXH-01", "NXH-02"), KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06"),
+        ids = {KEY_F5: ("NXH-02", "NXH-01"), KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06"),
                KEY_F7: ("NXH-07", "NXH-08")}.get(key, ())
         timeout_lines = ("NXH-01", "NXH-05", "NXH-07")
         on = self.state.extras.timeouts_on if self.state is not None else self.timeouts_on   # a loaded game's own switch
