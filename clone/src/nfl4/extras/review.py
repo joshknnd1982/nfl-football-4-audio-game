@@ -122,6 +122,12 @@ def base_kind(state, outcome) -> str:
     return outcome.kind
 
 
+def is_throw_away(state, outcome) -> bool:
+    """The incompletion is the passer throwing the ball away (the sentence of intentional grounding, NXP-21: the sack the
+    original drew turned into a foul or a play with no receiver in it, SX.3)."""
+    return state.tackle_sentence == X.text("NXP-21", quarterback=state.quarterbacks.get(outcome.offense, ""))
+
+
 def _make(category: str, ruled: str, corrected: str, against: int, how: str) -> Candidate:
     wrong, close = T.RULING_RATES[category]
     return Candidate(category, ruled, corrected, against, how, wrong, close)
@@ -159,11 +165,23 @@ def candidates(state, outcome, record) -> list[Candidate]:
             else:
                 found.append(_make(CATCH, COMPLETE, INCOMPLETE, defense, "incomplete"))
     elif outcome.kind == O.PASS_INCOMPLETE:
+        if is_throw_away(state, outcome):                       # no receiver was ever near it: there is no catch to rule on
+            return []
         if state.tackle_sentence.endswith(P.OUT_OF_BOUNDS):     # the incompletion "catches it out of bounds"
             found.append(_make(BOUNDARY, OUT_OF_BOUNDS, IN_BOUNDS, offense, "complete"))
         else:
             found.append(_make(CATCH, INCOMPLETE, COMPLETE, offense, "complete"))
     return sorted(found, key=lambda c: PRIORITY.index(c.category))
+
+
+def plain_choice(found: list[Candidate], outcome) -> Candidate:
+    """The aspect a challenge is about when the draw hit none (the ruling is right and plain): the first of PRIORITY, except
+    that on a pass the catch (or the side line) is what a coach would be looking at, not whether the runner fumbled."""
+    if not is_run(outcome):
+        for cand in found:
+            if cand.category != DOWN:
+                return cand
+    return found[0]
 
 
 def booth_reason(state, outcome, record) -> str:
@@ -261,6 +279,7 @@ class Ruling:
     result: str                   # ruled_result
     run: bool
     left_before: int = 0          # the time left in the period before the ruled play's live time L was charged (a reversal restores it)
+    left_after: int = 0           # ... and after it: the clock when the play ended (0: the play used the last second of the period)
     flags: list = field(default_factory=list)    # the flags of the play that were declined (N2.7: offered again after a reversal)
     challenged: bool = False      # a coach threw the flag on it (once: a review looks at every aspect, 15-2-2)
 
@@ -270,7 +289,10 @@ class ReviewFlow:
         self.rules = rules
         self.pending: Ruling | None = None
         self.replaying = False         # the play's corrected end point is next: not ruled and not drawn again (module note)
+        self.clock_held = False        # a time out was called in this dead-ball period before the reversal: the corrected play's
+        #                                runoff is not drawn, the clock stays stopped to the snap (nfl_rules.between_plays)
         self.redo: list = []           # the flags of that play, to be offered again against the corrected result (15-7-3 Item 3)
+        self.corrected = 0                 # the corrected end points that passed the hook: one for every reversal (the tests)
         self.rulings: list[tuple] = []     # (quarter, category, wrong, close, hint, booth reason): the tests and the calibration
         self.events: list[tuple] = []      # (quarter, "coach" or "booth", side, category, wrong, result, ruled piece, booth reason,
         #                                    time outs the side had when it threw the flag): ditto
@@ -290,6 +312,8 @@ class ReviewFlow:
         then every end point is ruled again."""
         replaying, redo = self.replaying, self.redo
         self.replaying, self.redo = False, []
+        if replaying:
+            self.corrected += 1
         return replaying, redo
 
     def forget(self) -> None:
@@ -320,7 +344,7 @@ class ReviewFlow:
                 if value < total:
                     hit = cand
                     break
-        primary = hit or found[0]
+        primary = hit or plain_choice(found, outcome)
         truth, clear = None, False
         if wrong:
             truth = self.make_truth(primary, state, outcome)
@@ -330,7 +354,7 @@ class ReviewFlow:
             if rnd.below(100) < (T.HINT_STRONG_PERCENT if wrong else T.HINT_CLOSE_PERCENT):
                 hint = "strong" if wrong else "close"
         ruling = Ruling(x.plays, state.quarter, primary, wrong, clear, hit is not None and not wrong, hint, truth, reason,
-                        board, outcome, ruled_result(state, outcome), is_run(outcome), left_before, list(flags))
+                        board, outcome, ruled_result(state, outcome), is_run(outcome), left_before, x.left, list(flags))
         self.pending = ruling
         self.rulings.append((state.quarter, primary.category, wrong, ruling.close, hint, reason))
         if hint:
@@ -401,30 +425,38 @@ class ReviewFlow:
         """The referee goes under the hood (the replay official stopped the game when `side` is 0): the whistle, the pause, the
         verdict. No game time passes. Returns REVERSED, STANDS (wrong, but not clear and obvious) or CONFIRMED (right)."""
         g = self.game
-        logged = g.ptf                                           # the log flag: on for the review's sentences, as it was after
-        g.ptf = 1
         g.sounds.play_tackle(8)                                  # foot11, the referee's whistle
         if side == 0:
-            g.say4(X.text("NXR-08"))
-        g.say4(X.text("NXR-04"))
+            self.announce(X.text("NXR-08"))
+        self.announce(X.text("NXR-04"))
         g.dy(T.REVIEW_PAUSE)
         g.rady(None)
         g.rady(None)
         if ruling.wrong and ruling.clear:
             result = REVERSED
-            g.say4(X.text("NXR-05"))
-            g.say4(X.text("NXR-16", ruling=X.text(ruling.primary.corrected)))
+            self.announce(X.text("NXR-05"))
+            self.announce(X.text("NXR-16", ruling=X.text(ruling.primary.corrected)))
         elif ruling.wrong:
             result = STANDS
-            g.say4(X.text("NXR-06"))
+            self.announce(X.text("NXR-06"))
         else:
             result = CONFIRMED
-            g.say4(X.text("NXR-07"))
-        g.ptf = logged
+            self.announce(X.text("NXR-07"))
         return result
 
+    def announce(self, text: str) -> None:
+        """A sentence of a review: waited and logged like the play-by-play, but not kept for F2 (N2.6: the instant replay
+        speaks the play again, never a review)."""
+        g = self.game
+        logged, kept = g.ptf, len(g.replay)                      # the log flag: on for the review's sentences, as it was after
+        g.ptf = 1
+        g.say4(text)
+        del g.replay[kept:]
+        g.ptf = logged
+
     def after_review(self, state, ruling: Ruling, result: str, side: int) -> None:
-        """What follows the verdict: the lost time out of a challenge that did not change the ruling, then a remark with
+        """What follows the verdict: the lost time out of a challenge that did not change the ruling (also with the Time outs
+        switch off: that switch only takes the Time Out item and the computer's own calls away, D-053), then a remark with
         chance 1 in 2 (comments on): RVR after a reversal, RVC after a ruling that stands or is confirmed (RVC03 only after
         a lost challenge)."""
         g, x = self.game, state.extras
@@ -432,10 +464,8 @@ class ReviewFlow:
         if lost:
             x.timeouts[side - 1] = max(0, x.timeouts[side - 1] - 1)      # charged: one fewer left, one more used
             x.used[side - 1] += 1
-            logged = g.ptf
-            g.ptf = 1
-            g.say4(X.text("NXR-09", team=state.teams.get(side, "")))
-            g.ptf = logged
+            x.called[side - 1] = True                                    # one charged time out a dead-ball period (4-5-1 Item 3)
+            self.announce(X.text("NXR-09", team=state.teams.get(side, "")))
         if g.comtog == 0 and self.rnd(T.REVIEW_REMARK_ONE_IN) == 1:
             pool = "RVR" if result == REVERSED else "RVC"
             exclude = () if lost else ("RVC03",)
@@ -466,9 +496,15 @@ class ReviewFlow:
             state.half, state.yard_line = o.spot_before
         else:
             state.half, state.yard_line = moved(o.spot_before, o.offense, t.yards)
-        length = period_seconds(x.period, x.postseason)         # the clock goes back to before the ruled play's live time (15-5-1)
-        x.left = min(length, ruling.left_before)
-        x.pending, x.running, x.out_of_bounds = 0, False, False
+        length = period_seconds(x.period, x.postseason)         # the clock goes back to before the ruled play's live time (15-5-1),
+        ran_off = max(0, ruling.left_after - x.left)            # less what ran off since the play (the signal time of a time out)
+        x.left = max(0, min(length, ruling.left_before) - ran_off)
+        self.clock_held = bool(x.called[0] or x.called[1])      # a time out of this dead-ball period (never a lost challenge: that
+        x.pending, x.running = 0, False                         # ruling cannot be challenged again) keeps the clock stopped; else
+        #                                                         the corrected play draws its own runoff (H10)
+        if t.kind == "fumble" or t.result_kind == O.PASS_INCOMPLETE or ruling.primary.category == BOUNDARY:
+            x.out_of_bounds = False                             # no run ended at the side line (a fumble, an incompletion, a catch that
+        #                                                         was made in or out) in the corrected play; every other reversal keeps the fact
         if x.warning_due and not x.warning_given and x.left > R.WARNING_SECONDS:
             x.warning_due = False
         self.pending = None
@@ -486,10 +522,13 @@ class ReviewFlow:
             return "nothing"
         if r.reason:
             return r.reason
+        if r.left_after <= 0:
+            return "nothing"                  # the play that used the last second of a period is over for a coach: a reversal
+        #                                       would have to reopen the finished period (the replay official still reviews it)
         if challenges_left(x, side) <= 0:
             return "none left"
-        if x.timeouts_of(side) <= 0:
-            return "no timeout"
+        if x.timeouts_of(side) <= 0:                          # (also with the Time outs switch off: the teams keep their time outs
+            return "no timeout"                               # for the challenges, D-053)
         return None
 
     def can_challenge(self, state, side: int) -> bool:
@@ -578,9 +617,10 @@ class ReviewFlow:
         return True if then is None else then
 
     def computer_challenge(self, state) -> str | None:
-        """H10: the coach of the side the ruling went against throws the flag when it may and has heard a hint: with chance 70
+        """H10: the coach of the side the ruling went against throws the flag when it may and has heard a hint: with chance 80
         percent after a strong one, 30 after a close-call one (design 6.4, N2.5; it hears what the announcer says, so it can lose
-        a challenge on a close call). Returns the continuation of a reversal, else None."""
+        a challenge on a close call). The hint is a fact of the play: F8 only mutes the announcer for the player, so the
+        computer's coach hears it either way and no draw depends on F8 (D-053). Returns the continuation of a reversal, else None."""
         ruling = self.pending
         if ruling is None or not ruling.hint:
             return None
@@ -590,11 +630,7 @@ class ReviewFlow:
         chance = T.COMPUTER_CHALLENGE_STRONG_PERCENT if ruling.hint == "strong" else T.COMPUTER_CHALLENGE_CLOSE_PERCENT
         if self.rnd.below(100) >= chance:
             return None
-        g = self.game
-        logged = g.ptf
-        g.ptf = 1
-        g.say4(X.text("NXR-03", team=state.teams.get(side, ""), ruling=X.text(ruling.primary.ruled)))
-        g.ptf = logged
+        self.announce(X.text("NXR-03", team=state.teams.get(side, ""), ruling=X.text(ruling.primary.ruled)))
         return self.throw(state, side, ruling)
 
     # ----- the statistics (C7) -----

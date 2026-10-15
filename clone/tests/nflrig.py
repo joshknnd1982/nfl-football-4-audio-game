@@ -75,8 +75,9 @@ class RecordingRules(NflRules):
         self.dead_balls.append((side, state.quarter, x.plays))
 
     def between_plays(self, state):
-        super().between_plays(state)
+        then = super().between_plays(state)            # a computer's won challenge answers the step of the corrected play (SX.6)
         self.lefts.append((state.quarter, state.extras.left, state.extras.pending))
+        return then
 
     def onside_kick(self, state):
         kicking = state.defense

@@ -374,10 +374,11 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         """L_43dd89: the menu of the side with the ball."""
         return self.defense_menu if self.s.wisoff == 2 else self.offense_menu
 
-    def _menu(self, items, prompt: str):
+    def _menu(self, items, prompt: str, rebuild=None):
         """The loop of both play menus. Returns ("chosen", action), ("concede", None) or ("step", the engine's next step). An
         item the extras added (an action that is neither a play nor Save Game, N. F. L. rules mode) goes to Rules.menu_action
-        and the menu stays: from the top when it was done, at the same item when it was refused; when it answers a
+        and the menu stays: from the top when it was done (with the items made again by `rebuild`: a lost challenge or a
+        last time out takes its item away, SX.6), at the same item when it was refused; when it answers a
         continuation (a challenge that changed a ruling, SX.6) the menu is left for that step. Classic's lists have no such
         item and no letter."""
         g, s = self.g, self.s
@@ -399,6 +400,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                     return "step", self.continuation(done)
                 if done:
                     current, speak_prompt = 1, True
+                    if rebuild is not None:
+                        items = rebuild()
                 continue
             if code == KEY_ESCAPE:
                 return "concede", None
@@ -441,7 +444,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
     def offense_menu(self):
         """L_43ddc0: the player's offense (items 1 to 8; 1 to 5 during a two-point try)."""
         s = self.s
-        what, action = self._menu(self.rules.offense_menu(s, s.two_point), P.SELECT_OFFENSE)
+        what, action = self._menu(self.rules.offense_menu(s, s.two_point), P.SELECT_OFFENSE,
+                                  lambda: self.rules.offense_menu(s, s.two_point))
         if what == "concede":
             return self.concede
         if what == "step":
@@ -455,7 +459,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
     def defense_menu(self):
         """L_43e9ab: the player's defense (items 1 to 7)."""
         s = self.s
-        what, action = self._menu(self.rules.defense_menu(s), P.SELECT_DEFENSE)
+        what, action = self._menu(self.rules.defense_menu(s), P.SELECT_DEFENSE, lambda: self.rules.defense_menu(s))
         if what == "concede":
             return self.concede
         if what == "step":

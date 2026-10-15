@@ -148,7 +148,7 @@ class NflRules(ClassicRules):
 
     def before_snap(self, state, offense_play: int, defense_play: int) -> str:
         """Step 2: a foul before or at the snap (design 9.1)."""
-        self.review.replaying = False                  # SX.6: a new play: no corrected end point is still waited for
+        self.review.replaying = self.review.clock_held = False    # SX.6: a new play: no corrected end point is still waited for
         if not state.extras.penalties_on:
             return GO_ON
         self.penalty.take_snap(state)
@@ -292,6 +292,7 @@ class NflRules(ClassicRules):
     def before_kickoff(self, state, kicking_side: int) -> str:
         x = state.extras
         x.out_of_bounds = False
+        self.review.clock_held = False             # SX.6: a kick-off is a new dead-ball period
         if x.left <= 0 and state.quarter in (2, 4):
             # no kick-off is made: nothing of the kick that was to come is left over (a safety kick on the last play of a half,
             # a kick to be made again): the next half starts with a kick-off from the 35
@@ -342,6 +343,9 @@ class NflRules(ClassicRules):
             keeps, ready = clock_after_foul(x, state.quarter, keeps)
             cap = R.RUNOFF_PLAY_CLOCK if x.foul_clock == "runoff" else R.PLAY_CLOCK_AFTER_PENALTY
             x.foul_clock = ""
+        if self.review.clock_held:                # SX.6: a time out was called in this dead-ball period before a challenge that
+            keeps = ready = False                 # changed the play: the clock stays stopped to the snap
+            self.review.clock_held = False
         lead = state.score(state.wisoff) - state.score(other(state.wisoff))
         self.clock.runoff(self.rnd, keeps, ready, lead, cap)
         if x.timeouts_on and x.left > 0:          # at 0:00 the period is over: no timeout can be granted

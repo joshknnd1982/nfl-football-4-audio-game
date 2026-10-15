@@ -251,7 +251,7 @@ TEXTS: dict[str, str] = {
     'NXR-19': ' you have 1 challenge and 1 time out left. a time out is lost if the ruling stands. ',
     'NXH-23': ' C. in a play menu, go to Challenge the Ruling, then Enter asks if you wish to challenge. That item is in the menu only when a challenge is allowed. ',
     'NXH-24': ' With the N. F. L. rules each team has two challenges in a game, and a third when one of them wins. A challenge needs a time out in hand, and a challenge that loses costs that time out. ',
-    'NXH-25': ' You may challenge a catch, a runner down or fumbling, the goal line, the first down line and the side line. The replay official reviews scoring plays, turn overs, the last two minutes and over time.',
+    'NXH-25': ' You may challenge a catch, a runner down or fumbling, the goal line, the first down line and the side line. The replay official reviews scoring plays, turn overs, the last two minutes and over time. ',
     'NXH-26': ' Challenge: A coach asks the referee to look at the video of the last play. Replay official: The official who reviews scoring plays and turn overs. ',
 }
 

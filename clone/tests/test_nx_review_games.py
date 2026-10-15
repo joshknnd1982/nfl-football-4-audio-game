@@ -87,6 +87,17 @@ def test_a_booth_reversal_is_followed_by_the_corrected_end_point_of_the_same_pla
         assert not rules.review.replaying, seed
 
 
+def test_every_reversal_the_computers_too_has_exactly_one_corrected_end_point(games):
+    """Review finding 3: the rig dropped the step a computer's won challenge answers, so only the booth's reversals were proven.
+    A reversal sets the corrected end point and the hook counts it once: as many as there were reversals, coach or booth."""
+    coach_reversals = 0
+    for seed, (rig, engine, rules, result) in games.items():
+        reversals = [e for e in rules.review.events if e[5] == RV.REVERSED]
+        assert rules.review.corrected == len(reversals), seed
+        coach_reversals += sum(1 for e in reversals if e[1] == "coach")
+    assert coach_reversals >= 1                                  # (the twenty seeded games have three of them)
+
+
 def test_the_statistics_stay_whole_after_the_takings_back(games):
     for seed, (rig, engine, rules, result) in games.items():
         for side in (1, 2):

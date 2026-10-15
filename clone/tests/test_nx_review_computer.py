@@ -28,7 +28,7 @@ def computer_scene(tmp_path, ruling: Draws, **kwargs):
 
 
 def test_the_computer_throws_the_flag_after_a_strong_hint_and_the_review_reverses_the_ruling(tmp_path):
-    """The hint was heard (0 is below 70) and the flag chance is 70 percent (0 is below it). The pauses of the review, then the
+    """The hint was heard (0 is below 70) and the flag chance is 80 percent (0 is below it). The pauses of the review, then the
     corrected play (4 yards: fourth and 1) is told again with its live time, the banter draw and the runoff."""
     rig, d = computer_scene(tmp_path, Draws().below(1000, 10).below(100, 0).below(100, 0))
     d.below(100, 0).rady().rady().below(4, 0).rnd(4, 1).below(11, 0)
@@ -45,7 +45,8 @@ def test_the_computer_throws_the_flag_after_a_strong_hint_and_the_review_reverse
 
 def test_the_computer_throws_the_flag_after_a_close_call_hint_with_30_percent_and_may_lose(tmp_path):
     """The ruling was right but close (40), the hint is the close-call kind (0 is below 50), the flag draw 29 is below 30: the
-    review confirms the call, the Jets lose a time out, and the play goes on as it was (the runoff is drawn)."""
+    review confirms the call, the Jets lose a time out, and the play goes on as it was (the runoff is drawn; the time out the
+    lost challenge charged is their one of this dead-ball period, so their own time out rule draws nothing, finding 6)."""
     rig, d = computer_scene(tmp_path, Draws().below(1000, 40).below(100, 0))
     d.below(100, 29).rady().rady().below(11, 0)
     assert run_steps(rig, rig.engine.gain_and_end, d) == "next_play"
@@ -220,13 +221,14 @@ def test_a_reversal_on_the_last_play_of_a_half_runs_the_corrected_play_to_0_00_a
 
 
 def test_a_reversal_puts_the_clock_back_to_before_the_live_time_and_never_past_the_length_of_the_period(tmp_path):
-    """The ruled play was charged 7 seconds from 900; a computer timeout used 5 more; the challenge goes back to 900. A damaged
-    record that said more than the period holds is capped at the period's length (15:00)."""
-    rig, record = scene(tmp_path, RUN, yards=4, down=3, to_go=5)
-    rule(rig, record, Draws().below(1000, 10).below(100, 0).below(100, 99))
+    """The ruled play was charged 7 seconds from 900; a computer time out used 5 more (its signal time ran off after the play);
+    the challenge gives the 7 seconds back and keeps the 5: 900 - 5 (review finding 1). A damaged record that said more than
+    the period holds is capped at the period's length (15:00)."""
+    rig, record = scene(tmp_path, RUN, yards=4, down=3, to_go=5, extras={"left": 900 - 7})
+    rule(rig, record, Draws().below(1000, 10).below(100, 0).below(100, 99), before=900)
     rig.engine.s.extras.left = 900 - 7 - 5
     assert throw(rig, Draws().rady().rady()) == "reviewed field play"
-    assert rig.engine.s.extras.left == 900
+    assert rig.engine.s.extras.left == 900 - 5
     rig, record = scene(tmp_path / "cap", RUN, yards=4, down=3, to_go=5)
     rule(rig, record, Draws().below(1000, 10).below(100, 0).below(100, 99))
     rig.rules.review.pending.left_before = 5000

@@ -196,6 +196,9 @@ class ExtrasRecord:
         pair(self.chal_won, lambda v, w: whole(v, 0, R.CHALLENGES_MAX, w), "the challenges won")
         if any(won > used for won, used in zip(self.chal_won, self.chal_used)):
             raise ValueError("more challenges won than thrown: %r of %r" % (self.chal_won, self.chal_used))
+        if any(used > R.CHALLENGES_PER_GAME and won < R.CHALLENGE_THIRD_AFTER_WINS
+               for won, used in zip(self.chal_won, self.chal_used)):
+            raise ValueError("a third challenge without a win: %r of %r" % (self.chal_won, self.chal_used))
         pair(self.flags, lambda v, w: whole(v, 0, 9999, w), "the penalties")
         pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
         if self.foul_clock not in FOUL_CLOCKS:

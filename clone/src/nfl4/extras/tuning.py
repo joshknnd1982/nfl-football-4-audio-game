@@ -160,6 +160,16 @@ BOOTH_CLOSE_PERCENT = 14                  # the replay official reviews a close 
 #                                           (a wrong one always: he "initiates when there is doubt", design 6.2)
 COMPUTER_CHALLENGE_STRONG_PERCENT = 80    # the computer's coach throws the flag after a strong hint with this chance ...
 COMPUTER_CHALLENGE_CLOSE_PERCENT = 30     # ... after a close-call hint
+# SX.6 calibration (D-053, work/calibrate_review_sx6.py): the design's start values (the close rates 10, 80, 0, 80, 60 and 10, no
+# factor for a booth play, the booth's chance on a close ruling 7 percent, the computer's flag after a strong hint 70 percent)
+# gave, in 200 games with both sides played by the computer, 0.198 coach challenges per team per game (NFL 0.24 to 0.28) that
+# changed the ruling 53.2 percent of the time (NFL 38 to 52), and 0.32 replay official reviews a game (NFL about 0.65) that changed it
+# 82.8 percent (NFL 74 to 78). The two targets share the rates, so two knobs were found: the replay official's plays (a score, a
+# turnover, a failed fourth down, the last two minutes, overtime: the NFL's booth finds the ruling wrong 74 to 78 percent of the time
+# it stops the game) have their wrong windows doubled, and the close rates are 1.7 times the design's (more rulings that were right but
+# close, which are what the coaches lose on); the booth's chance on a close ruling is 14 percent and the computer's flag after a
+# strong hint 80 percent. Result in 3,000 games: 0.274 coach challenges per team per game, 48.1 percent changed the ruling, 76 /
+# 21 / 3 percent of the team-games with 0 / 1 / 2 challenges (NFL 77 / 21 / 2), 0.681 reviews a game, 74.7 percent changed.
 REVIEW_PAUSE = 2.0                        # seconds: the referee under the hood (design 6.4), then two rady pauses
 REVIEW_REMARK_ONE_IN = 2                  # a remark of RVR or RVC after a review with chance 1 in 2 (comments on)
 

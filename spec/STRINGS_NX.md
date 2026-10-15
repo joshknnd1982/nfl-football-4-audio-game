@@ -103,7 +103,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXR-19 (prompt, say5): " you have 1 challenge and 1 time out left. a time out is lost if the ruling stands. ". NXR-02 with one challenge and one time out left
 - NXH-23 (help, say5): " C. in a play menu, go to Challenge the Ruling, then Enter asks if you wish to challenge. That item is in the menu only when a challenge is allowed. ". F5 addition (H12, C6), when replay challenges are on
 - NXH-24 (help, say5): " With the N. F. L. rules each team has two challenges in a game, and a third when one of them wins. A challenge needs a time out in hand, and a challenge that loses costs that time out. ". F6 addition (H12, C6), when replay challenges are on
-- NXH-25 (help, say5): " You may challenge a catch, a runner down or fumbling, the goal line, the first down line and the side line. The replay official reviews scoring plays, turn overs, the last two minutes and over time.". F6 addition (H12, C6), when replay challenges are on, after NXH-24
+- NXH-25 (help, say5): " You may challenge a catch, a runner down or fumbling, the goal line, the first down line and the side line. The replay official reviews scoring plays, turn overs, the last two minutes and over time. ". F6 addition (H12, C6), when replay challenges are on, after NXH-24
 - NXH-26 (help, say5): " Challenge: A coach asks the referee to look at the video of the last play. Replay official: The official who reviews scoring plays and turn overs. ". F7 addition (H12, C6), when replay challenges are on
 
 ## Quarterback runs (design section 7)

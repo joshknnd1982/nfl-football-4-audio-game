@@ -137,8 +137,9 @@ def test_a_challenge_that_wins_gives_the_first_down_and_costs_nothing(tmp_path):
 
 def test_a_challenge_that_loses_costs_a_time_out_and_the_item_then_says_there_is_nothing_to_challenge(tmp_path):
     """The ruling was right but close (the close window 32 to 91 is hit by 40): the review confirms it, the Bengals lose a time
-    out (15-1-1 (e)), and a second C on the same play is refused: a review looked at every aspect already (15-2-2)."""
-    rig = line_scene(tmp_path, CLOSE(), answers=["c", ENTER, "y", ENTER, "c", ENTER, ESCAPE])
+    out (15-1-1 (e)), and the item is gone from the menu that starts again (review finding 5): a second C on the same play says
+    why, a review looked at every aspect already (15-2-2), and the menu goes on at its first item."""
+    rig = line_scene(tmp_path, CLOSE(), answers=["c", ENTER, "y", ENTER, "c", ESCAPE])
     at_the_menu(rig)
     mark = len(rig.said)
     assert the_menu(rig, Draws().rady().rady()) == "concede"
@@ -147,7 +148,7 @@ def test_a_challenge_that_loses_costs_a_time_out_and_the_item_then_says_there_is
         " Kim do you wish to challenge the ruling that " + LINE_SHORT + "? ",
         " you have 2 challenges and 3 time outs left. a time out is lost if the ruling stands. ", NO, YES,
         X.text("NXR-04"), X.text("NXR-07"), " the Bengals lose a time out. ",
-        SELECT, " 1. Line Plunge ", " 8. Challenge the Ruling ", X.text("NXR-15"), " 8. Challenge the Ruling "]
+        SELECT, " 1. Line Plunge ", X.text("NXR-15"), " 1. Line Plunge "]
     x, s = rig.engine.s.extras, rig.engine.s
     assert (x.chal_used, x.chal_won, x.timeouts, x.used) == ([1, 0], [0, 0], [2, 3], [1, 0])
     assert (s.down, s.to_go, s.yard_line) == (4, 1, 34)                                  # nothing changed

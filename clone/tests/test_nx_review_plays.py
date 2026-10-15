@@ -77,13 +77,14 @@ def used_up(rig, draws: Draws) -> None:
     assert rig.rnd.source.left == 0
 
 
-def rule(rig, record, draws: Draws, flags=()):
+def rule(rig, record, draws: Draws, flags=(), before=None):
     """review.rule at the end point (what NflRules.after_outcome calls, after the live time and the fouls), with exactly these
-    draws. The clock is as it was before the live time (`left_before`)."""
+    draws. The clock is as it was before the live time (`left_before`) unless `before` says what it was (then the record's clock
+    is the one after the live time)."""
     s = rig.engine.s
     board = RV.capture(s)
     feed(rig, draws)
-    then = rig.rules.review.rule(s, record, board, s.extras.left, list(flags))
+    then = rig.rules.review.rule(s, record, board, s.extras.left if before is None else before, list(flags))
     used_up(rig, draws)
     return then
 
