@@ -280,3 +280,16 @@ def test_nfl4_has_no_sound_start_setting_the_original_wait_stays():
     assert not hasattr(s.audio, "effects_volume") and not hasattr(s.audio, "pitch_spread")
     back, problems = parse("sound_volume = -5\nsound_start = right_away\n")
     assert back.audio.sound_level == -500 and len(problems) == 1           # an unknown setting, reported
+
+
+def test_is_speaking_is_the_estimated_end_of_our_speech_so_the_help_menus_wait_under_jaws():
+    """nfl4 S7.4a: JAWS gives no signal, so F5, F6 and F7 wait on the estimate a blocking say uses."""
+    backend, com, _, clock = make()
+    assert not backend.is_speaking()
+    backend.speak("hello there")
+    assert backend.is_speaking()
+    clock.now += estimated_seconds("hello there") + 0.01
+    assert not backend.is_speaking()
+    backend.speak("again")
+    backend.stop()
+    assert not backend.is_speaking()

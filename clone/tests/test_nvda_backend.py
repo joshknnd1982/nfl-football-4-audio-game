@@ -279,3 +279,19 @@ def test_closing_while_idle_leaves_no_stale_cancel_behind():
     backend.wait_until_done()
     backend.close()
     assert ("cancel",) not in dll.calls and not dll.stale_cancel
+
+
+def test_is_speaking_follows_our_calls_so_the_help_menus_wait_under_nvda():
+    """nfl4 S7.4a: F5, F6 and F7 wait while the engine speaks (the original's RunningState = 2); under NVDA that is a
+    call of ours in flight or queued, and a stop ends it."""
+    dll = FakeDll(speech_seconds=10.0)
+    backend = make(dll)
+    assert not backend.is_speaking()
+    backend.speak("a long sentence")
+    assert backend.is_speaking()
+    backend.stop()
+    deadline = time.monotonic() + 2.0
+    while backend.is_speaking() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    assert not backend.is_speaking()
+    backend.close()

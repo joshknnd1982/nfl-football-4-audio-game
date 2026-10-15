@@ -156,7 +156,8 @@ class KeyInput:
             self._sleep(0.001)
 
     def clk(self) -> None:
-        """Clear the key code text, DoEvents, clear the key character, DoEvents (that order)."""
+        """Clear the key code text, DoEvents, clear the key character, DoEvents (that order; clk p_429ac0: 0x429b07,
+        0x429b0f, 0x429b19, 0x429b1b)."""
         self.code_text = ""
         self.pump()
         self.char = ""
@@ -208,7 +209,7 @@ class KeyInput:
             self.pump()
 
     def getkey(self, speech) -> None:
-        """clk, wait with DoEvents for a key, then stop speech at once."""
+        """clk, wait with DoEvents for a key, then stop speech at once (getkey p_429b40: 0x429b7c, 0x429ba4, 0x429bb8)."""
         self.clk()
         while self.code_text == "":
             self._sleep(0.001)
@@ -217,7 +218,8 @@ class KeyInput:
 
     def getkey2(self, speech, ambient) -> None:
         """The game's key wait with ambient sounds (GAME_SPEC 7, WAV_EVENT_MAP 4): st4 = now + 5, clk, then on every
-        pass DoEvents and PlayRan until a key, then stop speech. ambient: game.sounds.GameSounds."""
+        pass DoEvents and PlayRan until a key, then stop speech. ambient: game.sounds.GameSounds. (getkey2 p_429c00:
+        0x429c63, 0x429c6c, 0x429c98, 0x429c9d, 0x429ccb.)"""
         ambient.start_ambient_wait()
         self.clk()
         while True:

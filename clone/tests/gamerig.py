@@ -51,6 +51,7 @@ class ScriptedKeys(KeyInput):
         super().__init__(clock=clock, sleep=clock.sleep)
         self.answers = list(answers)
         self.waits = 0
+        self.speech_waits = 0
         self.read = []
 
     def type_next(self) -> bool:
@@ -81,6 +82,30 @@ class ScriptedKeys(KeyInput):
         else:
             raise AssertionError("the game waits for a key that the test never presses")
         speech.stop()
+
+    def wait_speech(self, speech):
+        """F5, F6, F7's wait while the voice speaks (S7.4a). Nothing is typed unless the next answer is
+        ("cut", seconds, key): then `key` is typed `seconds` of virtual time into the wait (an answer as above).
+        ("end",) says that this wait runs to the end of the speech, so the next "cut" belongs to a later wait."""
+        self.speech_waits += 1
+        cut = None
+        if self.answers and isinstance(self.answers[0], tuple) and self.answers[0][0] == "cut":
+            _, after, key = self.answers.pop(0)
+            cut = (self._clock() + after, key)
+        elif self.answers and self.answers[0] == ("end",):
+            self.answers.pop(0)
+        while True:
+            self.pump()
+            if self.code_text != "" or not speech.is_speaking():
+                if cut is not None:
+                    raise AssertionError("the speech ended before the test's key was typed")
+                return
+            if cut is not None and self._clock() >= cut[0]:
+                self.answers.insert(0, cut[1])
+                cut = None
+                self.type_next()
+                continue
+            self._sleep(0.001)
 
     def wait_key(self):
         """pag's bare DoEvents loop at the final score: the next answer is typed when it waits."""

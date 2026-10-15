@@ -49,7 +49,9 @@ class HotKeys:
     # ----- Form_KeyDown -----
 
     def dispatch(self, code: str) -> None:
-        """0x42e6f0 to 0x42e811: F12, F11, F8, F7, F6, F5, Ctrl, each test reading g after the menu before."""
+        """0x42e6f0 to 0x42e811: F12, F11, F8, F7, F6, F5, Ctrl, each test reading g after the menu before (the calls at
+        0x42e6f5 ChangeVoice, 0x42e730 adjvol, 0x42e75d ctog, 0x42e78a SayHints, 0x42e7b7 readins, 0x42e7e4 speckeys,
+        0x42e811 adjrate)."""
         keys = self.g.keys
         for key, menu in ((KEY_F12, self.change_voice), (KEY_F11, self.adjvol), (KEY_F8, self.ctog),
                           (KEY_F7, self.say_hints), (KEY_F6, self.readins), (KEY_F5, self.speckeys),
@@ -167,10 +169,10 @@ class HotKeys:
             while True:                                  # L_4236c9
                 keys.code_text = ""                      # 0x4236eb
                 keys.wait_key()                          # L_4236f1
-                if keys.code_text == KEY_UP:
-                    options.set_vr(options.vr + 1)       # 0x423737 (kept in -10 to 10, D-022 item 3)
-                elif keys.code_text == KEY_DOWN:
-                    options.set_vr(options.vr - 1)       # 0x42377e
+                if keys.code_text == KEY_UP:             # vr + 1 (0x423737) and Voice.Rate (0x4237bf)
+                    options.set_vr(options.vr + 1)       # kept in -10 to 10 (D-022 item 3)
+                elif keys.code_text == KEY_DOWN:         # vr - 1 (0x42377e) and Voice.Rate (0x4237bf)
+                    options.set_vr(options.vr - 1)
                 elif keys.code_text == KEY_ENTER:
                     keys.clk()                           # 0x4238ae
                     keys.code_text = KEY_F1              # 0x4238d1
@@ -187,7 +189,9 @@ class HotKeys:
         g, keys, options = self.g, self.keys, self.options
         g.stopspeech()                                   # 0x421a26
         for role in VOLUME_ORDER:                        # For L88 = 1 To 5 (0x421aef)
-            keys.clk()                                   # 0x421b00; the role's voice, rate and volume follow
+            # 0x421b00 clk; the voice load 0x421b7a, Rate 0x422298 and Volume 0x422330 are the speaker's own voice,
+            # rate and volume, which the clone applies at every text of that speaker (D-022 item 5)
+            keys.clk()
             prompt = T.VOLUME_PROMPT_START + F11_NAMES[role] + T.VOLUME_PROMPT_MIDDLE + T.VOLUME_PROMPT_END
             while True:                                  # L_4223c2
                 g.say6(prompt, role=role)                # 0x4223c9
@@ -197,18 +201,18 @@ class HotKeys:
                     if keys.code_text == KEY_UP:
                         volume = options.volume(role) + VOLUME_STEP
                         if volume < 100:                 # 0x42250b
-                            options.set_volume(role, volume)
+                            options.set_volume(role, volume)         # Voice.Volume 0x42269c
                             g.say6(T.VOLUME_HIGHER, role=role)       # 0x4228b4
                         else:
-                            options.set_volume(role, 100)
+                            options.set_volume(role, 100)            # Voice.Volume 0x4225d0
                             g.say6(T.VOLUME_MAXIMUM, role=role)      # 0x422611
                     elif keys.code_text == KEY_DOWN:
                         volume = options.volume(role) - VOLUME_STEP
                         if volume > 0:                   # 0x4227ae
-                            options.set_volume(role, volume)
+                            options.set_volume(role, volume)         # Voice.Volume 0x42293f
                             g.say6(T.VOLUME_LOWER, role=role)        # 0x422980
                         else:
-                            options.set_volume(role, 0)
+                            options.set_volume(role, 0)              # Voice.Volume 0x422873
                             g.say6(T.VOLUME_MINIMUM, role=role)      # 0x4228b4
                     else:
                         break
@@ -222,7 +226,7 @@ class HotKeys:
         """adjvol's part 2 (0x422a0f to 0x423443): the sound volume with the crowd beds and foot0 as the demo."""
         g, keys, options = self.g, self.keys, self.options
         sounds = g.sounds
-        keys.clk()                                       # 0x422a0f; the announcer's voice is loaded again
+        keys.clk()                                       # 0x422a0f; the announcer's voice 0x422a89, 0x422c31, 0x422ca7
         entry = options.wavol
         crowd2_base = None
         if sounds is not None:
@@ -255,7 +259,7 @@ class HotKeys:
                 else:
                     break
                 if sounds is not None:                   # L_4230af: the beds at the new level (D-023), the demo
-                    sounds.set_crowd_levels(-100 + options.wavol, 0 + options.wavol)
+                    sounds.set_crowd_levels(-100 + options.wavol, 0 + options.wavol)   # 0x4230f2, 0x423151
                     sounds.play2(T.DEMO_SOUND)           # 0x423186: a key stops it and is lost
                 keys.clk()                               # 0x4231ad
             if keys.code_text == KEY_ENTER:              # 0x4231d2
@@ -263,7 +267,7 @@ class HotKeys:
             if keys.code_text != KEY_F1:                 # 0x4231e1
                 g.saykey()                               # 0x4231ea
         if sounds is not None:                           # L_42320b
-            sounds.set_crowd_levels(sounds.crwd1 + options.wavol, crowd2_base + options.wavol)
+            sounds.set_crowd_levels(sounds.crwd1 + options.wavol, crowd2_base + options.wavol)   # 0x42324b, 0x4232a2
             sounds.make_hike()                           # 0x423310: the hike at -1600 + wavol
         options.save()                                   # 0x423341 to 0x42342a: football.vol
         keys.code_text = KEY_F1                          # 0x423438 (no clk here)
@@ -291,6 +295,8 @@ class HotKeys:
             options.set_voice(role, None if chosen.index == 0 else chosen.voice_id)
             g.speech.stop()
             g.speech.say(words.voice_chosen(chosen.name) + " " + words.VOICE_SAMPLE, g.keys.quit, role=role)
-        self._hand_back()                                # 0x4287a9 and the clk before it
+        # the announcer again (0x428323, Rate 0x42860f, Volume 0x428709: every speaker's own at every text), clk
+        # 0x42875c, g = "112" 0x4287a9
+        self._hand_back()
         options.save()                                   # 0x4287c9 to 0x42892e: footbal0.dat
         g.get_sex_of()                                   # 0x428e38

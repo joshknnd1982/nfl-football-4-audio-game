@@ -113,7 +113,8 @@ class Speakers:
         """The key echo (p_42e3d0): the speech is purged, then the key's character g2 is queued in the voice that spoke
         last, except for F1. Q58 (TESTED): heard at the normal rate, so the clone does not change it. A control
         character (Escape, Tab, Backspace) is not sent: SAPI has nothing to say for it, a screen reader would read its
-        name (S7.3b; S8.2 listens)."""
+        name (S7.3b; S8.2 listens). saykey p_42e3d0: Rate vr + 5 at 0x42e469 and back to vr at 0x42e580 (not heard, Q58,
+        so not done), the purge 0x42e4ce, the character 0x42e531."""
         self.stopspeech()
         if self.keys.code_text == "112":
             return
@@ -149,7 +150,7 @@ class Speakers:
         self._speak(text, role or self.speech.last_role or ANNOUNCER, False)
 
     def stopspeech(self) -> None:
-        """`Voice.Speak "", 2`: everything queued is dropped at once."""
+        """`Voice.Speak "", 2`: everything queued is dropped at once (stopspeech p_42e300, 0x42e371)."""
         self.speech.stop()
 
     def inrep(self) -> None:

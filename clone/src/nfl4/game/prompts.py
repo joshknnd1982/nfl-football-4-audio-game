@@ -158,7 +158,10 @@ class Prompts:
     def _confirm(self, question: str, ask, answer_speaker) -> bool:
         """The yes or no question of GetCoach and Getqbs (0x43126d to 0x431482, 0x431702 to 0x431900, 0x431d08 to
         0x431fb7): True when the name is to be asked again. Enter takes the answer, Up and Down toggle it, F1 asks again
-        with the answer yes, y accepts, n asks the name again, any other key is echoed and asks again with yes."""
+        with the answer yes, y accepts, n asks the name again, any other key is echoed and asks again with yes.
+        The calls it makes, per caller (question say5, answer say2 " yes " or " no ", getkey, saykey):
+        GetCoach 0x4312cb, 0x431319, 0x43133a, 0x43135e, 0x431419; Getqbs own 0x431743, 0x4317ab, 0x4317cc, 0x4317f0,
+        0x431894; Getqbs opponent 0x431dbb, 0x431e33, 0x431e50, 0x431e74, 0x431f41."""
         while True:                                      # the question, answer yes
             answer = YES
             ask(question)
@@ -228,7 +231,7 @@ class Prompts:
             answer = YES                                 # 0x430d57
             g.say2(text)                                 # 0x430d64
             while True:                                  # L_430d8a
-                self._answer(answer, g.say2)
+                self._answer(answer, g.say2)             # 0x430dc6 " yes ", 0x430de7 " no "
                 code = self._getkey()                    # 0x430e0b
                 if code == KEY_ENTER:
                     return answer != NO                  # L_430f60
@@ -335,7 +338,7 @@ class Prompts:
                     return SCHEDULE_LIKED                # L_42f8f0
                 if self.keys.char == "n":
                     return SCHEDULE_REJECTED             # L_42f906
-            self._answer(answer, g.say5)                 # L_42f85b
+            self._answer(answer, g.say5)                 # L_42f85b: 0x42f8a0 " yes ", 0x42f8c7 " no "
 
     def _say_playoff_games(self) -> None:
         """gtp 17 to 20: one say4 text, " games for the <week name> are. " and " the <A> verses the <B>. " for every

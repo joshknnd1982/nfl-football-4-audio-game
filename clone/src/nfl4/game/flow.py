@@ -78,6 +78,18 @@ class Game(Speakers):
         self.hotkeys.install()
 
     @property
+    def keys(self) -> KeyInput:
+        return self._keys
+
+    @keys.setter
+    def keys(self, keys: KeyInput) -> None:
+        """The hot keys follow the Game's key input: a test rig that swaps it keeps F5 to F12 and Ctrl working."""
+        self._keys = keys
+        hotkeys = self.__dict__.get("hotkeys")
+        if hotkeys is not None:
+            hotkeys.install()
+
+    @property
     def pool(self) -> NamePool:
         if self._pool is None:
             self._pool = NamePool(self.rnd)
