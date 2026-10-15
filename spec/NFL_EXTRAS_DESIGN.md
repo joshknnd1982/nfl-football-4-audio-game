@@ -39,6 +39,7 @@ The classic engine is built first and exact. Each hook below is a plain function
 - H11 (new) Added statistics. The quarter statistics of 4.19 call `extra_stats_lines()` after " Points Scored"; Classic returns nothing (C7).
 - H12 (new) Added help. F5, F6 and F7 call `extra_help(key)` after the original text; Classic returns nothing (C6).
 - H13 (new) Situation speech. F1 in a play menu calls `extra_situation()` after the original's position and down sentences; Classic returns nothing (N. F. L. rules mode adds the clock state and the timeouts, section 5.6).
+- Built in P7 S7.3b (2026-10-14, D-043): H1 (`game/periodclock.py`, ClassicPeriodClock, with one more call `warning_zone()`: the original turns its log flag on from L2cc - W on), H2 (`game/outcome.py`, the record at every narration end point listed there, through `Rules.after_outcome`; `Rules.before_snap`), H3 (`game/menus.py`), H4 (`Rules.before_kickoff`; a kind other than "normal" raises until SX.4), H5 (`game/gamestate.py`: GameState with `extras`, `snapshot`, `saved` and `load`), H6 (`game/rules.py`, ClassicRules), H7 (`Roster.ratings`), H8 (`game/playtables.py`, Modifiers and NEUTRAL), H9 (the speakers), H10, H11 and H13 (`Rules.between_plays`, `extra_stats_lines`, `extra_situation`). H12 waits for S7.4. The golden Classic transcript: `clone/tests/data/golden_classic_s73b.txt` with `clone/tests/test_pag_golden.py`.
 
 ## 4. The rules table `nfl_rules_2026`
 
@@ -414,3 +415,4 @@ Each build session documents its draws again in its tests with the strict script
 ## 16. History
 
 - 1.0 (2026-10-14, SX.1): written from NFL_EXTRA_FEATURES.md 0.1 and the SX.0 research; the owner's three decisions (D-041); the design decisions (D-042).
+- 1.0, note of S7.3b (2026-10-14, D-043): section 3 says which hooks were built and where; no design changed.
