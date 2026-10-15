@@ -16,6 +16,7 @@ It holds these plain text files. Any text editor will do, and a screen reader re
 - banter.txt, the announcer's remarks.
 - footplay.txt, the names of your own team's players. The game writes it at the first game of a season (see below).
 - the folder sounds, for your own sound files used in the banter.
+- remarks.txt, the remarks of the N. F. L. rules, only when that rule set is chosen in F9 (see below).
 
 After you save a file, choose Reload in the Customize menu, or start the game again. A game in progress keeps the players it already has.
 
@@ -75,6 +76,20 @@ A line that is only a sound:
     B145 = [sound crowd boo.wav]
 
 A line has at most 500 characters and 20 parts. A sound file goes in the sounds folder inside the customize folder, and the line names it without a folder. Wav files work; if your files are ogg, flac or mp3, they work too when this game's sound layer can read them. A sound file that cannot be used is skipped, the rest of the line is said, and the game tells you once.
+
+## The remarks of the N. F. L. rules
+
+When the Rules item of the F9 menu is set to N. F. L. rules, the game also has remarks.txt in the same folder (with the Classic rules the game never makes or reads it). It holds the announcer's remarks of the added features. Today these are the remarks after a time out, TO01 to TO05; one is said after a time out, one time in three. It works like banter.txt: change a line, switch it off with `TO03 = off`, delete it to get the original back, or add your own with a new number, TO06 or higher. The words in square brackets of the banter work here too, and three more are filled in by the game:
+
+- `<team>` is the team that called the time out.
+- `<coach>` is your name.
+- `<quarterback>` is that team's quarterback.
+
+For example:
+
+    TO06 = the <team> stop the clock. [bleep]
+
+A remark is never one of the last three said. F8 switches the remarks off with the banter.
 
 ## If something is wrong
 

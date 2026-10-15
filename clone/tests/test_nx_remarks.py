@@ -82,6 +82,15 @@ def test_ids_that_are_not_remarks_twice_or_empty_are_problems():
     assert problems.count == 4
 
 
+def test_the_example_of_the_players_guide_works_as_written():
+    from pathlib import Path
+    guide = (Path(__file__).resolve().parent.parent / "CUSTOMIZE.md").read_text(encoding="utf-8")
+    example = next(line.strip() for line in guide.splitlines() if line.strip().startswith("TO06 = "))
+    pools, problems = pools_of(example + "\n")
+    assert problems.count == 0
+    assert pools.lines("TO")[-1].pieces == (Speak((Text("the <team> stop the clock."),)), Bleep())
+
+
 def test_every_line_off_means_silence():
     pools, _ = pools_of("".join("TO%02d = off\n" % n for n in range(1, 6)))
     assert pools.lines("TO") == ()
