@@ -123,6 +123,8 @@ class SoundLibrary:
         with self._lock:
             try:
                 stat = os.stat(path)
+                if not os.path.isfile(path):                  # a folder, a device: never opened
+                    raise OSError("not a file")
             except OSError:
                 self._report(("missing file", path.lower()), f"{label}: the file was not found", speak=True)
                 return Pick(label, None, "none", path)

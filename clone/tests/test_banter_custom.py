@@ -56,7 +56,7 @@ def record(rig):
     def clk_(): events.append("clk"); return clk()
     def say_(text, rate_step=0): events.append(("say", text, rate_step)); return say(text, rate_step=rate_step)
     def play_(n, v): events.append(("play", n)); return play(n, v)
-    def play_file_(path): events.append(("file", os.path.basename(path))); return play_file(path)
+    def play_file_(path, limit=None): events.append(("file", os.path.basename(path))); return play_file(path, limit=limit)
 
     rig.keys.clk, rig.game.say, rig.sounds.play, rig.sounds.play_file = clk_, say_, play_, play_file_
     return events

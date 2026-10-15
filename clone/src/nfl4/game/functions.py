@@ -275,9 +275,9 @@ class Functions:
 
         def reset_spec(spec) -> str:
             result = custom.reset(spec.key)
-            custom.reload()
+            notices = custom.reload()
             self.g.apply_customization()
-            return words.customize_reset_one(spec.file_name, result)
+            return " ".join([words.customize_reset_one(spec.file_name, result)] + [n.strip() for n in notices])
 
         def reset_one_menu() -> None:
             ListPicker(self.speech, self.keys, words.CUSTOMIZE_RESET_ONE_TITLE, len(SPECS), list_name, on_enter=reset_one,
@@ -289,9 +289,9 @@ class Functions:
             if self.keys.read_key() != KEY_ENTER:
                 return words.NOTHING_CHANGED
             result = custom.reset(None)
-            custom.reload()
+            notices = custom.reload()
             self.g.apply_customization()
-            return words.customize_reset_all(result)
+            return " ".join([words.customize_reset_all(result)] + [n.strip() for n in notices])
 
         def guarded(action: Callable[[], str]) -> Callable[[], str]:
             """An action that fails says so and leaves the menu open (the player's files are never a reason to stop)."""

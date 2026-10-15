@@ -48,6 +48,7 @@ KEPT_DAMAGED = "damaged"     # it was unusable and could not be replaced: the bu
 LOCKED = "locked"            # another program holds it: the built-in values are used this time
 UNWRITABLE = "unwritable"    # it was missing and could not be written: the built-in values are used
 FAILED = "failed"            # an unexpected error (logged): the built-in values are used
+UNREADABLE = "unreadable"    # it exists but could not be read for another reason than a sharing violation
 
 _ENTRY = re.compile(r"^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$")
 
@@ -91,8 +92,8 @@ def parse_list(text: str, game: str, kind: str) -> ParsedList:
         index += 1
     if index >= len(lines):
         raise ListFormatError("the file is empty")
-    header = re.fullmatch(r"#\s*" + re.escape(game) + r"\s+" + re.escape(kind) + r"\s*,\s*format\s+(\d+)\s*\.?",
-                          lines[index].strip(), re.IGNORECASE)
+    header = re.match(r"#\s*" + re.escape(game) + r"\s+" + re.escape(kind) + r"\s*,\s*format\s+(\d+)",
+                      lines[index].strip(), re.IGNORECASE)          # words after the version on that line do not matter
     if header is None:
         raise ListFormatError("the first line is not the header '%s'" % header_line(game, kind))
     version = int(header.group(1))
@@ -107,7 +108,8 @@ def parse_list(text: str, game: str, kind: str) -> ParsedList:
         if match is None:
             parsed.bad_lines.append((number + 1, "the line is not an ID, an equals sign and a value"))
         else:
-            parsed.entries.append(Entry(number + 1, match.group(1).upper(), match.group(2).strip()))
+            value = match.group(2).replace("\t", " ").strip()      # a tab inside a value is a space (7.10: tolerant reading)
+            parsed.entries.append(Entry(number + 1, match.group(1).upper(), value))
     return parsed
 
 
@@ -158,9 +160,15 @@ class ListFile:
             text = read_player_text(path)
         except ValueError as exc:                      # binary, undecodable or far too large (UnicodeError is one too)
             return self._damaged(str(exc))
-        except OSError as exc:                         # FileInUse or any other read error: not damage
-            log.warning("%s could not be read (%s): the built-in values are used this time", path, exc)
+        except FileNotFoundError:                      # it went away between the test and the read: the same as missing
+            ok = self.write_defaults()
+            return ListLoad(self.name, CREATED if ok else UNWRITABLE)
+        except FileInUse as exc:                       # held by another program: not damage
+            log.warning("%s is held by another program (%s): the built-in values are used this time", path, exc)
             return ListLoad(self.name, LOCKED, None, str(exc))
+        except OSError as exc:                         # any other read error: not damage either
+            log.warning("%s could not be read (%s): the built-in values are used this time", path, exc)
+            return ListLoad(self.name, UNREADABLE, None, str(exc))
         try:
             return ListLoad(self.name, OK, parse_list(text, self.game, self.kind))
         except ListFormatError as exc:
@@ -168,8 +176,10 @@ class ListFile:
 
     def _damaged(self, why: str) -> ListLoad:
         log.warning("%s is damaged (%s)", self.path, why)
-        if save_damaged_copy(self.path) is None:       # never replace a file whose copy could not be made
-            return ListLoad(self.name, KEPT_DAMAGED, None, why)
+        # a file that cannot be replaced is found damaged again at every reload: one copy of the same bytes is enough, so the
+        # player's older copies are not pushed out of the three that are kept
+        if not _newest_copy_is_same(self.path) and save_damaged_copy(self.path) is None:    # never replace a file whose
+            return ListLoad(self.name, KEPT_DAMAGED, None, why)                              # copy could not be made
         if self.write_defaults():
             return ListLoad(self.name, RESET, None, why)
         return ListLoad(self.name, KEPT_DAMAGED, None, why)
@@ -184,11 +194,52 @@ class ListFile:
     def exists(self) -> bool:
         return os.path.lexists(self.path)
 
-    def reset(self) -> bool:
-        """The player asked: their file is kept as <name>.before-reset (one copy), the built-in text is written."""
-        if os.path.isfile(self.path):
-            save_backup_copy(self.path, BACKUP_SUFFIX)
-        return self.write_defaults()
+    def reset(self) -> tuple[bool, bool]:
+        """The player asked. Returns (written, kept): `kept` is True when their file was kept as <name>.before-reset.
+
+        Their file is never replaced unless its copy was made (a copy that cannot be made, a full disk, a folder or a
+        read-only file in the way: nothing is written and `written` is False). A file that already is the built-in text
+        needs no copy, so a second reset never pushes the player's earlier copy out; and the copies before it are moved
+        to .before-reset2 and .before-reset3 (the newest three are kept)."""
+        if not os.path.isfile(self.path):
+            return self.write_defaults(), False
+        try:
+            current = open(self.path, "rb").read()
+            builtin = self.default_text().replace("\n", "\r\n").encode("utf-8")
+        except Exception:
+            log.exception("could not read %s to reset it", self.path)
+            return False, False
+        if current == builtin:
+            return True, False
+        if not _rotate_backups(self.path) or save_backup_copy(self.path, BACKUP_SUFFIX) is None:
+            return False, False
+        return self.write_defaults(), True
+
+
+def _newest_copy_is_same(path: str) -> bool:
+    """True when the newest <name>.damagedN copy has exactly the bytes of the file."""
+    folder, name = os.path.split(path)
+    pattern = re.compile(re.escape(name) + r"\.damaged(\d+)$", re.IGNORECASE)
+    try:
+        numbers = sorted(int(m.group(1)) for m in map(pattern.match, os.listdir(folder)) if m)
+        return bool(numbers) and open(f"{path}.damaged{numbers[-1]}", "rb").read() == open(path, "rb").read()
+    except OSError:
+        return False
+
+
+def _rotate_backups(path: str) -> bool:
+    """<name>.before-reset becomes .before-reset2 and that .before-reset3 (the oldest is dropped), so a reset never replaces
+    the copy of an earlier one. False when the move failed (then nothing may be overwritten)."""
+    try:
+        first, second, third = path + BACKUP_SUFFIX, path + BACKUP_SUFFIX + "2", path + BACKUP_SUFFIX + "3"
+        if os.path.exists(second):
+            os.replace(second, third)
+        if os.path.exists(first):
+            os.replace(first, second)
+        return True
+    except OSError:
+        log.warning("could not move the earlier copies of %s", path, exc_info=True)
+        return False
 
 
 class Problems:
@@ -222,5 +273,6 @@ def problems_notice(file_name: str, count: int) -> str:
 
 
 __all__ = ["FORMAT_VERSION", "BACKUP_SUFFIX", "OK", "CREATED", "RESET", "KEPT_DAMAGED", "LOCKED", "UNWRITABLE", "FAILED",
+           "UNREADABLE",
            "ListFormatError", "Entry", "ParsedList", "ListLoad", "ListFile", "header_line", "parse_list", "render_list",
            "Problems", "problems_notice", "plural", "FileInUse"]

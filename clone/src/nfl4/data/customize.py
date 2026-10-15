@@ -25,6 +25,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Callable
 
@@ -64,8 +65,9 @@ SPEC_BY_KEY = {spec.key: spec for spec in SPECS}
 
 # The texts the clone adds (CLONE texts, GAP_REGISTER section 8; S8.2 listens to them)
 DAMAGED_RESET = " The file %s was damaged and has been reset to %s. A copy was saved. "
-DAMAGED_KEPT = " The file %s is damaged and could not be replaced. %s are used this time. "
-LOCKED_NOTICE = " The file %s is in use by another program. %s are used this time. "
+HOLD_STATUSES = (cl.KEPT_DAMAGED, cl.LOCKED, cl.FAILED, cl.UNREADABLE)      # the file cannot be used now and stays as it is
+HOLD_REASONS = {cl.KEPT_DAMAGED: "is damaged and could not be replaced", cl.LOCKED: "is in use by another program",
+                cl.FAILED: "could not be used", cl.UNREADABLE: "could not be read"}
 UNWRITABLE_ONE = " The file %s could not be made, so %s are used. "
 UNWRITABLE_MANY = " The game could not write its customization files, so the original names and lines are used. "
 
@@ -117,6 +119,8 @@ def name_problem(name: str) -> str | None:
         return "a name cannot have a comma or a semicolon"
     if any(ord(c) < 32 or ord(c) == 127 for c in name):
         return "a name cannot have a control character"
+    if not any(unicodedata.category(c)[0] in "LNPS" for c in name):
+        return "a name needs at least one letter, digit or sign that can be seen and spoken"
     return None
 
 
@@ -192,6 +196,7 @@ class Snapshot:
     problems: dict[str, cl.Problems] = field(default_factory=dict)  # list key -> what was wrong inside the file
     notices: list[str] = field(default_factory=list)                # the spoken sentences of this load
     sound_files: list[str] = field(default_factory=list)            # the sound files the player's banter lines name
+    kept: set[str] = field(default_factory=set)                     # lists whose file could not be read: the earlier values stay
 
     def problem_count(self, key: str) -> int:
         problems = self.problems.get(key)
@@ -217,7 +222,7 @@ class Customization:
             spec.key: cl.ListFile(folder, spec.file_name, GAME, spec.key, lambda key=spec.key: self.default_text(key))
             for spec in SPECS}
         self._notices: list[str] = []
-        self._told_unwritable = False
+        self._unwritable_told: set[str] = set()
         self.snapshot = self._load()
         self._notices.extend(self.snapshot.notices)
 
@@ -251,8 +256,10 @@ class Customization:
 
     # ----- loading -----
 
-    def _load(self) -> Snapshot:
-        """Read every list; never raises."""
+    def _load(self, previous: Snapshot | None = None) -> Snapshot:
+        """Read every list; never raises. `previous` is the snapshot in use: a list whose file cannot be read now (held by
+        another program, damaged and not replaceable, unreadable) keeps the values it had (playbook 7.10: keep the loaded copy),
+        and only the very first load falls back to the originals."""
         try:
             os.makedirs(self.sounds_dir, exist_ok=True)
         except OSError:
@@ -273,8 +280,22 @@ class Customization:
                 self._apply_list(spec.key, entries, snapshot, problems)
             except Exception:
                 log.exception("the list %s could not be used; the original values stay", spec.file_name)
-        self._notices_of(snapshot, loads)
+            if load.status in HOLD_STATUSES and previous is not None:
+                self._keep_previous(spec.key, snapshot, previous)
+        self._notices_of(snapshot)
         return snapshot
+
+    @staticmethod
+    def _keep_previous(key: str, snapshot: Snapshot, previous: Snapshot) -> None:
+        if key == TEAMS:
+            snapshot.team_names = previous.team_names
+        elif key == DIVISIONS:
+            snapshot.division_names = previous.division_names
+        elif key == SURNAMES:
+            snapshot.surnames = previous.surnames
+        elif key == BANTER:
+            snapshot.banter, snapshot.sound_files = previous.banter, previous.sound_files
+        snapshot.kept.add(key)
 
     def _apply_list(self, key: str, entries, snapshot: Snapshot, problems: cl.Problems) -> None:
         if key == TEAMS:
@@ -312,16 +333,17 @@ class Customization:
             snapshot.sound_files = sorted({piece.file for line in snapshot.banter.lines if not line.builtin
                                            for piece in line.pieces if isinstance(piece, Sound)})
 
-    def _notices_of(self, snapshot: Snapshot, loads) -> None:
+    def _notices_of(self, snapshot: Snapshot) -> None:
         unwritable = [spec for spec in SPECS if snapshot.statuses[spec.key] == cl.UNWRITABLE]
+        self._unwritable_told = {spec.key for spec in unwritable}     # tend() does not say it again
         for spec in SPECS:
             status = snapshot.statuses[spec.key]
             if status == cl.RESET:
                 snapshot.notices.append(DAMAGED_RESET % (spec.file_name, spec.original_nouns))
-            elif status in (cl.KEPT_DAMAGED, cl.FAILED):
-                snapshot.notices.append(DAMAGED_KEPT % (spec.file_name, capital(spec.original_nouns)))
-            elif status == cl.LOCKED:
-                snapshot.notices.append(LOCKED_NOTICE % (spec.file_name, capital(spec.original_nouns)))
+            elif status in HOLD_STATUSES:
+                tail = ("The %s you already had stay in use." % spec.nouns if spec.key in snapshot.kept
+                        else "%s are used this time." % capital(spec.original_nouns))
+                snapshot.notices.append(" The file %s %s. %s " % (spec.file_name, HOLD_REASONS[status], tail))
             elif status == cl.UNWRITABLE and len(unwritable) == 1:
                 snapshot.notices.append(UNWRITABLE_ONE % (spec.file_name, spec.original_nouns))
             count = snapshot.problem_count(spec.key)
@@ -334,7 +356,7 @@ class Customization:
 
     def reload(self) -> list[str]:
         """The Customize menu's reload: read every file again. The new values are `snapshot`; the sentences are returned."""
-        self.snapshot = self._load()
+        self.snapshot = self._load(self.snapshot)
         return list(self.snapshot.notices)
 
     def take_notices(self) -> list[str]:
@@ -359,9 +381,11 @@ class Customization:
                 os.makedirs(self.folder, exist_ok=True)
             except OSError:
                 pass
-            if not file.write_defaults() and not self._told_unwritable:
-                self._told_unwritable = True
-                self._notices.append(UNWRITABLE_MANY)
+            if file.write_defaults():
+                self._unwritable_told.discard(spec.key)
+            elif spec.key not in self._unwritable_told:       # said once per file, and not again for one the start said
+                self._unwritable_told.add(spec.key)
+                self._notices.append(UNWRITABLE_ONE % (spec.file_name, spec.original_nouns))
 
     def check(self) -> str:
         """The Customize menu's check: every file is read as a reload does (a damaged one is healed, the sentences say so)
@@ -370,7 +394,11 @@ class Customization:
         parts = [notice.strip() for notice in snapshot.notices if "found in" not in notice]
         for spec in SPECS:
             count = snapshot.problem_count(spec.key)
-            parts.append("%s: %s." % (spec.file_name, "no problems" if not count else cl.plural(count, "problem")))
+            status = snapshot.statuses[spec.key]
+            if status in HOLD_STATUSES or status == cl.UNWRITABLE:       # nothing was read: do not say "no problems"
+                parts.append("%s: it could not be read or made, so it was not checked." % spec.file_name)
+            else:
+                parts.append("%s: %s." % (spec.file_name, "no problems" if not count else cl.plural(count, "problem")))
         names = snapshot.sound_files
         if names:
             bad = [name for name in names if self.sound_probe(os.path.join(self.sounds_dir, name))]
@@ -404,17 +432,16 @@ class Customization:
             if key is not None and spec.key != key:
                 continue
             file = self.files[spec.key]
-            had_file = os.path.isfile(file.path)
             try:
-                ok = file.reset()
+                ok, kept = file.reset()
             except Exception:
                 log.exception("could not reset %s", file.path)
-                ok = False
+                ok, kept = False, False
             if not ok:
                 result.failed.append(spec.file_name)
                 continue
             result.done.append(spec.file_name)
-            if had_file:
+            if kept:
                 result.kept.append(spec.file_name)
         return result
 

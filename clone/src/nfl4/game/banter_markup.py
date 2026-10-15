@@ -35,7 +35,8 @@ MAX_TOTAL_PAUSE = 30.0              # the pauses of one line together (keys neve
 MAX_FILE_NAME = 100
 BAD_FILE_CHARACTERS = '\\/:*?"<>|'
 DEVICE_NAMES = frozenset(["con", "prn", "aux", "nul", "conin$", "conout$"]
-                         + ["com%d" % n for n in range(10)] + ["lpt%d" % n for n in range(10)])
+                         + ["com%d" % n for n in range(10)] + ["lpt%d" % n for n in range(10)]
+                         + ["com¹", "com²", "com³", "lpt¹", "lpt²", "lpt³"])
 
 
 @dataclass(frozen=True)

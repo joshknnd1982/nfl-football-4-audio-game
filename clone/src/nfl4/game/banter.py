@@ -32,6 +32,7 @@ log = logging.getLogger("nfl4.game")
 
 NAME_LIST_SIZE = 58
 BLEEP_SOUND = 13
+MAX_LINE_SOUND_SECONDS = 30       # the player's sounds of one line together (like the 30 seconds of pauses)
 
 
 def line_texts(line: BanterLine, name: str, opponent_qb: str, alternative: int | None) -> tuple[str, str]:
@@ -79,6 +80,7 @@ def play_line(game, pieces: tuple, name: str, opponent_qb: str, choices: list[in
     keys.clk()
     groups = groups_of(pieces)
     remaining = iter(choices)
+    sound_left = [MAX_LINE_SOUND_SECONDS]                 # what is left of the 30 seconds of the player's sounds in this line
     for group in groups:
         for piece in group:
             if isinstance(piece, Speak):
@@ -88,7 +90,7 @@ def play_line(game, pieces: tuple, name: str, opponent_qb: str, choices: list[in
             elif isinstance(piece, Bleep):
                 game.sounds.play(BLEEP_SOUND, 0)
             elif isinstance(piece, Sound):
-                play_player_sound(game, piece.file)
+                play_player_sound(game, piece.file, sound_left)
             elif isinstance(piece, Pause):
                 if piece.seconds is None:
                     game.rady()
@@ -99,11 +101,17 @@ def play_line(game, pieces: tuple, name: str, opponent_qb: str, choices: list[in
         keys.clk()
 
 
-def play_player_sound(game, file_name: str) -> None:
+def play_player_sound(game, file_name: str, sound_left: list[float]) -> None:
     """[sound file]: the player's file from customize\\sounds, played like the bleep. A file that cannot be used is skipped
-    (the library logs it and gives its one spoken notice) and the rest of the line is said."""
+    (the library logs it and gives its one spoken notice) and the rest of the line is said. `sound_left` is the seconds of
+    player's sound the line may still use (one item list, shared by the line): a longer sound is cut there."""
     folder = getattr(game, "banter_sounds_dir", None)
     if not folder:
         log.warning("banter sound %s skipped: there is no folder for the player's sounds", file_name)
         return
-    game.sounds.play_file(os.path.join(folder, file_name))
+    if sound_left[0] <= 0:
+        log.warning("banter sound %s skipped: the line already used its %d seconds of sound", file_name, MAX_LINE_SOUND_SECONDS)
+        return
+    started = game.sounds.clock()
+    game.sounds.play_file(os.path.join(folder, file_name), limit=sound_left[0])
+    sound_left[0] -= game.sounds.clock() - started

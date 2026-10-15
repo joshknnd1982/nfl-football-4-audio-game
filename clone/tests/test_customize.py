@@ -111,7 +111,7 @@ def test_a_team_may_take_the_name_of_another_when_that_one_is_renamed_too(tmp_pa
 
 
 @pytest.mark.parametrize("value,reason", [("", "1 to 30"), ("x" * 31, "1 to 30"), ("a,b", "comma"), ("a;b", "semicolon"),
-                                          ("tab\there", "control")])
+                                          ("​", "seen and spoken")])
 def test_a_team_name_the_rules_refuse_keeps_the_original_and_is_counted(tmp_path, value, reason):
     make(tmp_path)
     edit(tmp_path, "teams.txt", "T05 = Bills", "T05 = " + value)
@@ -369,7 +369,7 @@ def test_reset_all_writes_the_four_lists_and_never_touches_footplay_or_the_sound
     sound = (folder_of(tmp_path) / "sounds" / "mine.wav").read_bytes()
     result = custom.reset(None)
     assert result.done == ["teams.txt", "divisions.txt", "surnames.txt", "banter.txt"] and result.failed == []
-    assert result.kept == result.done                                     # all four files existed
+    assert result.kept == ["teams.txt", "divisions.txt", "banter.txt"]    # surnames.txt was the built-in text: no copy needed
     custom.reload()
     assert custom.snapshot.team_names == DEFAULT_TEAMS and custom.snapshot.banter.size == 142
     assert (folder_of(tmp_path) / "footplay.txt").read_bytes() == footplay

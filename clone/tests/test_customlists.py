@@ -176,13 +176,74 @@ def test_reset_keeps_the_players_file_as_before_reset_and_writes_the_built_in_te
     file = a_file(tmp_path)
     file.load()
     open(file.path, "wb").write(default_text().replace("two", "TWO").encode("utf-8"))
-    assert file.reset() is True
+    assert file.reset() == (True, True)
     assert open(file.path + ".before-reset", "rb").read().decode("utf-8").count("TWO") == 1
     assert "TWO" not in open(file.path, "rb").read().decode("utf-8")
-    assert file.reset() is True                                           # a second reset replaces the one copy
-    assert "TWO" not in open(file.path + ".before-reset", "rb").read().decode("utf-8")
+
+
+def test_a_second_reset_never_pushes_the_players_copy_out(tmp_path):
+    file = a_file(tmp_path)
+    file.load()
+    open(file.path, "wb").write(default_text().replace("two", "TWO").encode("utf-8"))
+    file.reset()
+    assert file.reset() == (True, False)                                  # the file already is the built-in text: no copy
+    assert open(file.path + ".before-reset", "rb").read().decode("utf-8").count("TWO") == 1
+
+
+def test_three_resets_with_three_edits_keep_three_copies_newest_first(tmp_path):
+    file = a_file(tmp_path)
+    file.load()
+    for word in ("ONE", "TWO", "THREE", "FOUR"):
+        open(file.path, "wb").write(default_text().replace("two", word).encode("utf-8"))
+        assert file.reset() == (True, True)
+    texts = [open(file.path + suffix, "rb").read().decode("utf-8") for suffix in (".before-reset", ".before-reset2", ".before-reset3")]
+    assert [("FOUR" in t, "THREE" in t, "TWO" in t) for t in texts] == [(True, False, False), (False, True, False),
+                                                                           (False, False, True)]
+    assert not os.path.exists(file.path + ".before-reset4")
+
+
+def test_a_reset_whose_copy_cannot_be_made_writes_nothing(tmp_path):
+    file = a_file(tmp_path)
+    file.load()
+    edited = default_text().replace("two", "MINE").encode("utf-8")
+    open(file.path, "wb").write(edited)
+    open(file.path + ".before-reset", "wb").write(b"an earlier copy")
+    open(file.path + ".before-reset2", "wb").write(b"an older copy")
+    os.makedirs(os.path.join(file.path + ".before-reset3", "not empty"))   # the earlier copy cannot be moved on
+    assert file.reset() == (False, False)
+    assert open(file.path, "rb").read() == edited and open(file.path + ".before-reset", "rb").read() == b"an earlier copy"
 
 
 def test_reset_of_a_missing_file_just_writes_it(tmp_path):
     file = a_file(tmp_path)
-    assert file.reset() is True and os.path.exists(file.path) and not os.path.exists(file.path + ".before-reset")
+    assert file.reset() == (True, False) and os.path.exists(file.path) and not os.path.exists(file.path + ".before-reset")
+
+
+def test_words_after_the_header_and_tabs_inside_a_value_do_not_matter():
+    parsed = cl.parse_list("# Test Game things, format 1. my own note here\nA1 =\tone\ttwo\t\n", GAME, KIND)
+    assert [(e.id, e.value) for e in parsed.entries] == [("A1", "one two")]
+    with pytest.raises(cl.ListFormatError):
+        cl.parse_list("# Test Game things, format 12. note\n", GAME, KIND)
+
+
+def test_a_file_that_vanishes_between_the_test_and_the_read_is_made_again_not_called_locked(tmp_path, monkeypatch):
+    file = a_file(tmp_path)
+    file.load()
+    monkeypatch.setattr(cl, "read_player_text", lambda path: (_ for _ in ()).throw(FileNotFoundError(path)))
+    assert file.load().status == cl.CREATED
+    monkeypatch.setattr(cl, "read_player_text", lambda path: (_ for _ in ()).throw(OSError("odd")))
+    assert file.load().status == cl.UNREADABLE
+
+
+def test_a_damaged_file_that_cannot_be_replaced_is_copied_once_not_at_every_load(tmp_path):
+    file = a_file(tmp_path)
+    file.load()
+    open(file.path, "wb").write(b"junk one")
+    file.load()                                                           # replaced: copy 1 holds junk one
+    open(file.path, "wb").write(b"junk two")
+    with read_only(file.path):
+        for _ in range(4):
+            assert file.load().status == cl.KEPT_DAMAGED
+    copies = sorted(n for n in os.listdir(file.folder) if ".damaged" in n)
+    assert copies == ["things.txt.damaged1", "things.txt.damaged2"]
+    assert open(file.path + ".damaged1", "rb").read() == b"junk one" and open(file.path + ".damaged2", "rb").read() == b"junk two"

@@ -193,13 +193,15 @@ class GameSounds:
         self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT))
         self.audio.stop(SLOT_ONESHOT)
 
-    def play_file(self, path: str) -> None:
+    def play_file(self, path: str, limit: float | None = None) -> None:
         """The banter's [sound file] (D-048): clk, the player's file once at wavol and its own rate on the one-shot slot,
         waited to its end (a key does not stop it, like play), stop. A file that cannot be used plays nothing and nothing
-        waits for it."""
+        waits for it. `limit`: the most seconds to wait (the banter caps the sounds of one line, so a line of long files
+        cannot hold the game for minutes); the sound is stopped then."""
         self.keys.clk()
         self.audio.play_file(SLOT_ONESHOT, path, self.wavol)
-        self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT))
+        end = None if limit is None else self.clock() + limit
+        self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT) and (end is None or self.clock() < end))
         self.audio.stop(SLOT_ONESHOT)
 
     def play2(self, stem: str) -> None:
