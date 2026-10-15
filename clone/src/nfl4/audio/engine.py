@@ -122,7 +122,14 @@ class Audio:
         """Stop the slot, then start the sound at volume (hundredths of a dB, 0 = full), pan and freq (Hz), once or
         looping. freq None, or outside DirectSound's 100 to 200,000 Hz, plays the file at its own rate.
         Returns the seconds one pass of the sound takes (0 when nothing plays)."""
-        pick = self.library.pick(sound_id)
+        return self._start(slot, self.library.pick(sound_id), volume, pan, freq, loop)
+
+    def play_file(self, slot: int, path: str, volume: int = 0, pan: int = 0) -> float:
+        """The same for a sound file of the player's named by its place (the banter's [sound file.wav], D-048): once, at the
+        file's own rate. A file that cannot be used plays nothing (the library logs it and speaks its one notice)."""
+        return self._start(slot, self.library.pick_file(path), volume, pan, None, False)
+
+    def _start(self, slot: int, pick: Pick, volume: int, pan: int, freq: int | None, loop: bool) -> float:
         self.stop(slot, log_it=False)
         sound = pick.sound
         self._volumes[slot] = int(volume)

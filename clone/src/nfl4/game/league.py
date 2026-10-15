@@ -40,6 +40,13 @@ class League:
         self.team_names = tuple(team_names)
         self.division_names = tuple(division_names)
 
+    def rename(self, team_names, division_names) -> None:
+        """The player's teams.txt and divisions.txt, loaded or reloaded (S7.7): the same 32 and 8 slots with new names."""
+        if len(team_names) != TEAM_COUNT or len(division_names) != DIVISIONS:
+            raise ValueError("a league has %d teams and %d divisions" % (TEAM_COUNT, DIVISIONS))
+        self.team_names = tuple(team_names)
+        self.division_names = tuple(division_names)
+
     @staticmethod
     def _check(division: int, place: int) -> None:
         if not (1 <= division <= DIVISIONS and 1 <= place <= PLACES):

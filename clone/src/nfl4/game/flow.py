@@ -22,6 +22,7 @@ from typing import Callable
 from ..data import paths
 from ..data.settings import Settings
 from . import scorespeech
+from .banter_pool import DEFAULT_POOL, BanterPool
 from .functions import Functions
 from .gameclock import QuarterClock
 from .hotkeys import HotKeys
@@ -48,7 +49,8 @@ class Game(Speakers):
                  sleep: Callable[[float], None] = time.sleep, notice_sources=(), sounds=None,
                  rnd: GameRandom | None = None, league: League | None = None, pool: NamePool | None = None,
                  options: Options | None = None, rules=None, program_store=None,
-                 open_folder: Callable[[str], bool] = paths.open_folder, settings_dir: str | None = None):
+                 open_folder: Callable[[str], bool] = paths.open_folder, settings_dir: str | None = None,
+                 customization=None):
         super().__init__(speech, keys, rnd)
         self.clock = clock
         self.sleep = sleep
@@ -56,6 +58,9 @@ class Game(Speakers):
         self.sounds = sounds                          # game.sounds.GameSounds: the original's sound procedures (S7.2)
         self.league = league if league is not None else League()      # GetTeams (S7.7 fills it from teams.txt)
         self._pool = pool                             # SetPlayerNames: the 1,708 surnames, loaded when first needed
+        self.banter_pool: BanterPool = DEFAULT_POOL   # the 142 lines plus the player's (S7.7, banter.txt)
+        self.banter_sounds_dir: str | None = None     # customize\sounds: the player's files for [sound file] in a line
+        self.customization = None                     # data.customize.Customization: the player's files (S7.7)
         self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
         self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
         self.coach_source = lambda: self.season.coach
@@ -82,6 +87,9 @@ class Game(Speakers):
         self.functions = Functions(self, open_folder=open_folder, settings_dir=settings_dir)       # F9 (S7.4b, G-K2)
         self.functions.install()
         self.program = None                           # the running Program (game/program.py), for the tests and the exit
+        if customization is not None:
+            self.customization = customization
+            self.apply_customization()
 
     @property
     def keys(self) -> KeyInput:
@@ -100,6 +108,26 @@ class Game(Speakers):
         if self._pool is None:
             self._pool = NamePool(self.rnd)
         return self._pool
+
+    def apply_customization(self) -> None:
+        """Take the values of the player's loaded files (S7.7): the team and division names, the surnames the next draws use
+        (a game in progress keeps the roster it drew), the banter pool and the folder of the banter's own sounds. Never
+        raises: what cannot be applied stays as it was."""
+        custom = self.customization
+        if custom is None:
+            return
+        try:
+            snapshot = custom.snapshot
+            self.league.rename(snapshot.team_names, snapshot.division_names)
+            if snapshot.surnames is not None:
+                if self._pool is None:
+                    self._pool = NamePool(self.rnd, snapshot.surnames)
+                else:
+                    self._pool.replace_names(snapshot.surnames)
+            self.banter_pool = snapshot.banter
+            self.banter_sounds_dir = custom.sounds_dir
+        except Exception:
+            log.exception("the player's customization could not be applied")
 
     # ----- the season frame: the original's procedures -----
 

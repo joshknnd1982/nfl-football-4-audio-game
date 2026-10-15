@@ -21,6 +21,7 @@ import threading
 from . import VERSION
 from .audio import Audio, SoundLibrary
 from .data import paths
+from .data.customize import Customization
 from .data.files.store import FileProgramStore
 from .data.lifecycle import arm_exit_deadline, leave_program_folder
 from .data.logsetup import install_exception_logging, setup_logging
@@ -95,11 +96,20 @@ def main() -> int:
     # the season, the saved game, footplay.txt and the log; every file is checked now, so a damaged one is told with the
     # start-up notices (S7.5, D-024 item 5, G-F5, playbook 7.10)
     files = FileProgramStore(paths.user_data_dir(), paths.customize_dir(), first=first_start)
+    # the player's names and banter (teams.txt, divisions.txt, surnames.txt, banter.txt in the same folder, S7.7): read and
+    # healed once now, so their notices come with the start-up notices too
+    try:
+        custom = Customization(paths.customize_dir())
+    except Exception:                       # cannot happen (it never raises); the game plays with the original names
+        log.exception("the customization files could not be loaded")
+        custom = None
 
     def game_thread():
         try:
-            game = Game(speech, keys, notice_sources=(store, audio, files), sounds=sounds, rnd=rnd, options=options,
-                        program_store=files, open_folder=paths.open_folder, settings_dir=store.folder)
+            sources = tuple(source for source in (store, audio, files, custom) if source is not None)
+            game = Game(speech, keys, notice_sources=sources, sounds=sounds, rnd=rnd, options=options,
+                        program_store=files, open_folder=paths.open_folder, settings_dir=store.folder,
+                        customization=custom)
             game.season_store = game.setup_store = files        # the files the season engine and the prompts write
             game.log_sink = files.log_line                      # footballlog.txt (Print #3, G-S10)
             game.run()

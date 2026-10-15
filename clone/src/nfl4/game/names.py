@@ -55,6 +55,14 @@ class NamePool:
         """Me.m278(slot), slots 1 to 1,708."""
         return self.slots[slot - 1]
 
+    def replace_names(self, names: list[str]) -> None:
+        """The player reloaded surnames.txt (S7.7): the names change, the used (blank) slots stay blank, so a name already
+        drawn is not drawn again and a game in progress keeps its roster (its names are copies)."""
+        if len(names) != POOL_SIZE:
+            raise ValueError("the surname pool has %d names, not %d" % (len(names), POOL_SIZE))
+        self.original = list(names)
+        self.slots = [new if old != "" else "" for old, new in zip(self.slots, names)]
+
     def available(self) -> int:
         return sum(1 for name in self.slots if name != "")
 

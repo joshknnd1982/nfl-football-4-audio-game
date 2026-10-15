@@ -16,7 +16,7 @@ from programrig import DOWN, ENTER, ESC, F1, F9, UP, preset_season, program_rig,
 from wavmaker import sine, write
 
 LEFT, RIGHT, END, HOME = 37, 39, 35, 36
-TOP = "Added functions. 3 items. Press F1 for help. "
+TOP = "Added functions. 4 items. Press F1 for help. "
 
 
 class Saves:
@@ -73,10 +73,11 @@ def test_f9_opens_the_menu_with_its_title_its_size_and_the_first_item_and_escape
     assert rig.saves.count == 0
 
 
-def test_up_and_down_move_through_the_three_items_and_wrap(tmp_path):
-    rig = rig_for(tmp_path, [DOWN, DOWN, DOWN, UP, UP, END, HOME, ESC])
-    assert run_f9(rig) == [TOP + "Speech settings.", "Sounds.", "About NFL Football 4.", "Speech settings.",
-                           "About NFL Football 4.", "Sounds.", "About NFL Football 4.", "Speech settings."]
+def test_up_and_down_move_through_the_four_items_and_wrap(tmp_path):
+    rig = rig_for(tmp_path, [DOWN, DOWN, DOWN, DOWN, UP, UP, END, HOME, ESC])
+    assert run_f9(rig) == [TOP + "Speech settings.", "Sounds.", words.CUSTOMIZE_ITEM, "About NFL Football 4.",
+                           "Speech settings.", "About NFL Football 4.", words.CUSTOMIZE_ITEM, "About NFL Football 4.",
+                           "Speech settings."]
 
 
 def test_f1_in_the_menu_says_its_help(tmp_path):
@@ -115,10 +116,10 @@ def test_closing_the_window_in_the_menu_unwinds_the_game(tmp_path):
 # ----- about -----
 
 def test_about_reads_the_attribution_and_the_note_about_the_author(tmp_path):
-    rig = rig_for(tmp_path, [DOWN, DOWN, ENTER, ESC, ESC])
+    rig = rig_for(tmp_path, [DOWN, DOWN, DOWN, ENTER, ESC, ESC])
     spoken = run_f9(rig)
-    assert spoken[:3] == [TOP + "Speech settings.", "Sounds.", "About NFL Football 4."]
-    text = " ".join(spoken[3:])
+    assert spoken[:4] == [TOP + "Speech settings.", "Sounds.", words.CUSTOMIZE_ITEM, "About NFL Football 4."]
+    text = " ".join(spoken[4:])
     assert "About NFL Football 4." in spoken and "inspired by Jim Kitchen" in text and "He died in 2015" in text
     assert spoken[-1] == "About NFL Football 4."                         # back in the menu: the item again
 

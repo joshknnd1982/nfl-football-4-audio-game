@@ -11,12 +11,13 @@ opens one spoken menu with three items and ends like every global menu with clk 
 * Sounds: the sound volume (the same value as F11's second part, in steps of 5 decibels here), listen to the sounds one by
   one, reload, check, the sounds folder, restore one or all. Nothing to export: the game has no generated sound but the exit
   beep (SOUND_DESIGN 3); a sound-system failure (G-A4) is said as the first item.
+* Customize (S7.7, 7.9: the names and the commentary): open the folder, reload, check, reset one list, reset all.
 * About: the attribution of rule 0.5 and the note of the original's author.
-Customize (7.9: the names and the commentary) joins this menu in S7.7.
 """
 from __future__ import annotations
 
 import logging
+import os
 import time
 from typing import Callable
 
@@ -24,6 +25,7 @@ from ..audio.ids import SOUND_IDS, canonical_id, describe
 from ..audio.output import EXTRA_SLOT
 from ..audio.restore import restore_all_sounds, restore_sound
 from ..data import paths
+from ..data.customize import SPECS
 from ..data.settings import SOUND_LEVEL_MAX, SOUND_LEVEL_MIN
 from ..speech.manager import MODES
 from . import extra_texts as words
@@ -80,6 +82,7 @@ class Functions:
         try:
             items = [Item(lambda: words.SPEECH_ITEM, enter=self._enter(self.speech_menu)),
                      Item(lambda: words.SOUNDS_ITEM, enter=self._enter(self.sounds_menu)),
+                     Item(lambda: words.CUSTOMIZE_ITEM, enter=self._enter(self.customize_menu)),
                      Item(lambda: words.ABOUT_ITEM, enter=self._enter(self.about))]
             SpokenMenu(self.speech, self.keys, words.F9_TITLE, items, help_text=words.F9_HELP).run()
         except GameQuit:
@@ -236,6 +239,65 @@ class Functions:
             Item(lambda: words.RESTORE_ALL_ITEM, enter=self.restore_all_sounds),
         ]
         SpokenMenu(self.speech, self.keys, words.SOUNDS_TITLE, items).run()
+
+    # ----- customize (S7.7, G-K2, D-048) -----
+
+    def customize_menu(self) -> None:
+        """The names and the banter: open the folder, reload, check, reset one list, reset all (playbook 7.9, 7.10). Every
+        action ends by applying the files' values to the game, so what is spoken next uses them."""
+        custom = self.g.customization
+        if custom is None:                             # a rig or a program without the player's files
+            self.speech.stop()
+            self.speech.say_async(words.CUSTOMIZE_NOT_AVAILABLE)
+            return
+
+        def open_customize_folder() -> str:
+            try:
+                os.makedirs(custom.sounds_dir, exist_ok=True)
+            except OSError:
+                log.warning("could not make %s", custom.sounds_dir, exc_info=True)
+            return words.CUSTOMIZE_FOLDER_OPENING if self.open_folder(custom.folder) else words.CUSTOMIZE_FOLDER_FAILED
+
+        def reload() -> str:
+            notices = custom.reload()
+            self.g.apply_customization()
+            return words.customize_reloaded(custom.snapshot.banter.size, notices)
+
+        def check() -> str:
+            return custom.check()
+
+        def list_name(index: int) -> str:
+            return SPECS[index].nouns.capitalize()
+
+        def reset_one(index: int) -> str:
+            spec = SPECS[index]
+            result = custom.reset(spec.key)
+            custom.reload()
+            self.g.apply_customization()
+            return words.customize_reset_one(spec.file_name, result)
+
+        def reset_one_menu() -> None:
+            ListPicker(self.speech, self.keys, words.CUSTOMIZE_RESET_ONE_TITLE, len(SPECS), list_name, on_enter=reset_one,
+                       close_on_enter=False, help_text=words.CUSTOMIZE_RESET_ONE_HELP, clock=self.clock).run()
+
+        def reset_all() -> str:
+            self.speech.stop()
+            self.speech.say_async(words.CUSTOMIZE_CONFIRM_RESET_ALL)
+            if self.keys.read_key() != KEY_ENTER:
+                return words.NOTHING_CHANGED
+            result = custom.reset(None)
+            custom.reload()
+            self.g.apply_customization()
+            return words.customize_reset_all(result)
+
+        items = [
+            Item(lambda: words.CUSTOMIZE_FOLDER_ITEM, enter=open_customize_folder),
+            Item(lambda: words.CUSTOMIZE_RELOAD_ITEM, enter=reload),
+            Item(lambda: words.CUSTOMIZE_CHECK_ITEM, enter=check),
+            Item(lambda: words.CUSTOMIZE_RESET_ONE_ITEM, enter=self._enter(reset_one_menu)),
+            Item(lambda: words.CUSTOMIZE_RESET_ALL_ITEM, enter=reset_all),
+        ]
+        SpokenMenu(self.speech, self.keys, words.CUSTOMIZE_TITLE, items, help_text=words.CUSTOMIZE_HELP).run()
 
     def sample(self) -> None:
         """Let the player hear the sound volume: the sound F11 plays as its demo, once, at the new level."""

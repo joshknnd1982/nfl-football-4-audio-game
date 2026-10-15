@@ -61,6 +61,7 @@ class SoundLibrary:
         self._player: dict[str, str] = {}
         self._picks: dict[str, Pick] = {}
         self._decoded: dict[tuple, Sampled] = {}
+        self._file_picks: dict[tuple, Pick] = {}
         self._reported: dict[tuple, str] = {}
         self._notices: list[str] = []
         self._file_notice_given = False      # G-A6: one notice per start
@@ -81,6 +82,7 @@ class SoundLibrary:
             self._shipped = _listing(self.shipped_dir)
             self._player = _listing(self.player_dir)
             self._picks.clear()
+            self._file_picks.clear()
 
     @property
     def problems(self) -> list[str]:
@@ -110,6 +112,36 @@ class SoundLibrary:
                 cached = self._resolve(key)
                 self._picks[key] = cached
             return cached
+
+    def pick_file(self, path: str) -> Pick:
+        """A sound file of the player's that is named by its place, not by an ID (the banter's `[sound file.wav]`, D-048).
+
+        The same rules as an ID's file: a file that is missing, empty, damaged or very long gives a Pick with no sound (it
+        plays nothing and nothing waits for it), is logged once per file state, and gives the one spoken sound notice of
+        G-A6 per start. The Pick is kept so the render cache of a sound that plays often is kept too."""
+        label = "file " + os.path.basename(path)
+        with self._lock:
+            try:
+                stat = os.stat(path)
+            except OSError:
+                self._report(("missing file", path.lower()), f"{label}: the file was not found", speak=True)
+                return Pick(label, None, "none", path)
+            key = (path.lower(), stat.st_mtime_ns, stat.st_size)
+            cached = self._file_picks.get(key)
+            if cached is not None:
+                return cached
+            try:
+                sound = self._decode(path, stat)
+            except SoundLoadError as exc:
+                self._report(("bad", path, stat.st_mtime_ns, stat.st_size),
+                             f"{label} cannot be used ({exc})", speak=True)
+                pick = Pick(label, None, "none", path)
+            else:
+                pick = Pick(label, sound, "player", path)
+            if len(self._file_picks) >= _MAX_DECODED:
+                self._file_picks.clear()
+            self._file_picks[key] = pick
+            return pick
 
     def _candidates(self, key: str, entry: SoundEntry | None) -> list[tuple[str, str]]:
         found: list[tuple[str, str]] = []

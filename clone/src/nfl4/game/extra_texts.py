@@ -26,7 +26,7 @@ def menu_opening(title: str, count: int) -> str:
 
 # ----- the added functions (F9): help and about -----
 F9_TITLE = "Added functions"
-F9_HELP = (MENU_HELP + " The three items are the speech settings, the sounds and the about text. "
+F9_HELP = (MENU_HELP + " The four items are the speech settings, the sounds, the names and the banter, and the about text. "
            "The original's own keys work as always: Control sets the speech rate, F11 the volumes, F12 the voices.")
 SPEECH_ITEM = "Speech settings."
 SOUNDS_ITEM = "Sounds."
@@ -208,6 +208,51 @@ def restored_all(result) -> str:
         text += f" {len(result.moved)} of your sound file{'s were' if len(result.moved) != 1 else ' was'} moved to the removed sounds folder."
     return text
 
+
+
+# ----- customize menu (S7.7, G-K2, D-048) -----
+CUSTOMIZE_ITEM = "Customize the names and the banter."
+CUSTOMIZE_TITLE = "Customize"
+CUSTOMIZE_HELP = (MENU_HELP + " The files are plain text. Open the folder, change a file in any text editor, save it, "
+                  "then choose Reload. A game in progress keeps the players it already has.")
+CUSTOMIZE_NOT_AVAILABLE = "The customization files are not available."
+CUSTOMIZE_FOLDER_ITEM = "Open the folder with the names and banter files."
+CUSTOMIZE_FOLDER_OPENING = ("Opening the folder. The files are teams.txt, divisions.txt, surnames.txt and banter.txt. "
+                            "Your own sound files for the banter go in the sounds folder inside it.")
+CUSTOMIZE_FOLDER_FAILED = "The customization folder could not be opened. Its place is in the readme."
+CUSTOMIZE_RELOAD_ITEM = "Reload the names and the banter from the files."
+CUSTOMIZE_CHECK_ITEM = "Check the customization files."
+CUSTOMIZE_RESET_ONE_ITEM = "Reset one list to the original."
+CUSTOMIZE_RESET_ALL_ITEM = "Reset all lists to the original."
+CUSTOMIZE_RESET_ONE_TITLE = "Reset one list"
+CUSTOMIZE_RESET_ONE_HELP = ("Up and Down move through the lists. Enter puts the original back. Your file is kept with the "
+                            "ending before-reset. Escape goes back.")
+CUSTOMIZE_CONFIRM_RESET_ALL = ("This puts the original team names, division names, surnames and banter lines back. Your files "
+                               "are kept with the ending before-reset. Your sound files and footplay.txt are not touched. "
+                               "Press Enter to do it, or any other key to cancel.")
+
+
+def customize_reloaded(banter_lines: int, notices: list[str]) -> str:
+    text = f"The files were read again. {banter_lines} banter line{'s are' if banter_lines != 1 else ' is'} on."
+    return " ".join([text] + [notice.strip() for notice in notices])
+
+
+def customize_reset_one(file_name: str, result) -> str:
+    if result.failed:
+        return f"{file_name} could not be reset, details are in the log."
+    text = f"{file_name} is back to the original."
+    if result.kept:
+        text += f" Your file was kept as {file_name}.before-reset."
+    return text
+
+
+def customize_reset_all(result) -> str:
+    if result.failed:
+        return "Not every list could be reset, details are in the log."
+    text = "All lists are back to the original."
+    if result.kept:
+        text += " Your files were kept with the ending before-reset."
+    return text
 
 FAILED = "Something went wrong, details are in the log."
 FAILED_BACK_TO_MENU = "Something went wrong, details are in the log. Back to the main menu."
