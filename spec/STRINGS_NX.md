@@ -6,13 +6,13 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 209.
+- Texts: 227.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 38.
 - Quarterback runs (design section 7): 10.
 - Onside kicks (design section 8): 14.
-- Penalties (design section 9): 58.
+- Penalties (design section 9): 76.
 - Playbooks (design section 10): 9.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
@@ -188,6 +188,24 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - PN02 (remark, say): " that is a drive killer. ". pool PN default
 - PN03 (remark, say): " the officials are busy today. ". pool PN default
 - PN04 (remark, say): " you cannot do that in this league. ". pool PN default
+- NXP-15 (sentence, say4): " <foul name>, on the <team>. ". the announcement of a team foul with no player named (delay of game, too many men on the field)
+- NXP-16 (sentence, say4): " the score stands, and the penalty will be enforced on the try. ". a personal foul by the defense on a touchdown play (14-2-3): no choice
+- NXP-17 (prompt, say5): " with the ten second run off, <n> seconds will be left. ". the third answer after the two-minute warning (4-7-1), between NXP-04 and NXP-05
+- NXP-18 (prompt, say5): " with the ten second run off, 1 second will be left. ". NXP-17 with one second left
+- NXP-19 (prompt, say5): " with the ten second run off, the clock runs out. ". NXP-17 when the run off ends the period
+- NXP-20 (sentence, say4): " only the fifteen yard penalty counts. ". a 15-yard foul against a 5-yard foul (14-5-1 Exception 1), after the two announcements
+- NXP-S11 (piece, piece): "the interception stands". situation
+- NXP-S12 (piece, piece): "the fumble stands". situation
+- NXP-S13 (piece, piece): "the safety stands". situation
+- NXP-S14 (piece, piece): "the try is good". situation (a two-point try)
+- NXP-S15 (piece, piece): "the try fails". situation (a two-point try)
+- NXP-S16 (piece, piece): "the try will be played again from the <yard> yard line". situation (a two-point try)
+- NXH-09 (help, say5): " When you are asked about a penalty, A. accepts it and D. declines it. Up and Down change the answer and Enter takes it. ". F5 addition (H12, C6), when penalties are on
+- NXH-10 (help, say5): " With the N. F. L. rules the officials throw flags for fouls. When the other team fouls, you may accept the penalty or decline it and keep the result of the play. ". F6 addition (H12, C6), when penalties are on
+- NXH-11 (help, say5): " A penalty never moves the ball more than half the distance to the goal. Most fouls by the defense also give an automatic first down. ". F6 addition (H12, C6), when penalties are on
+- NXH-12 (help, say5): " Penalty: The yards a team loses for a foul. Automatic first down: A first down given by a penalty, whatever the distance. Loss of down: A penalty that also costs the down. ". F7 addition (H12, C6), when penalties are on
+- NXH-13 (help, say5): " Offsetting penalties: Fouls by both teams on one play. They cancel each other and the down is played again. ". F7 addition (H12, C6), when penalties are on
+- NXP-21 (sentence, say2): " <quarterback> throws the ball away to avoid the sack. ". intentional grounding in place of a sack (design 9.2 P15): the tackle sentence of the pass
 
 ## Playbooks (design section 10)
 

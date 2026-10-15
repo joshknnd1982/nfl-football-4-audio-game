@@ -17,6 +17,7 @@ It holds these plain text files. Any text editor will do, and a screen reader re
 - footplay.txt, the names of your own team's players. The game writes it at the first game of a season (see below).
 - the folder sounds, for your own sound files used in the banter.
 - remarks.txt, the remarks of the N. F. L. rules, only when that rule set is chosen in F9 (see below).
+- penalties.txt, the fouls of the N. F. L. rules: their names, and which are called and how often (see below).
 
 After you save a file, choose Reload in the Customize menu, or start the game again. A game in progress keeps the players it already has.
 
@@ -79,17 +80,32 @@ A line has at most 500 characters and 20 parts. A sound file goes in the sounds 
 
 ## The remarks of the N. F. L. rules
 
-When the Rules item of the F9 menu is set to N. F. L. rules, the game also has remarks.txt in the same folder (with the Classic rules the game never makes or reads it). It holds the announcer's remarks of the added features. Today these are the remarks after a time out, TO01 to TO05; one is said after a time out, one time in three. It works like banter.txt: change a line, switch it off with `TO03 = off`, delete it to get the original back, or add your own with a new number, TO06 or higher. The words in square brackets of the banter work here too, and three more are filled in by the game:
+When the Rules item of the F9 menu is set to N. F. L. rules, the game also has remarks.txt in the same folder (with the Classic rules the game never makes or reads it). It holds the announcer's remarks of the added features. Today these are the remarks after a time out, TO01 to TO05, one said after a time out one time in three, and the remarks after a penalty is accepted, PN01 to PN04, also one time in three. It works like banter.txt: change a line, switch it off with `TO03 = off`, delete it to get the original back, or add your own with a new number, TO06 or PN05 and higher. The words in square brackets of the banter work here too, and these are filled in by the game:
 
-- `<team>` is the team that called the time out.
+- `<team>` is the team that called the time out, or the team the flag is on.
 - `<coach>` is your name.
 - `<quarterback>` is that team's quarterback.
+- `<surname>` (PN lines only) is the player the flag is on.
 
 For example:
 
     TO06 = the <team> stop the clock. [bleep]
+    PN05 = <surname> will hear about that one from the coach.
 
 A remark is never one of the last three said. F8 switches the remarks off with the banter.
+
+## The penalties of the N. F. L. rules
+
+With the N. F. L. rules the game also has penalties.txt. It lists the fouls the officials call, one line each, P01 to P26 and P33, with the name the announcer says:
+
+    P08 = holding
+
+Change the name to have it said your way. After the name you can add a semicolon and one setting:
+
+- `P08 = holding; off` and holding is never called.
+- `P08 = holding; weight 50` and holding is called half as often. The weight goes from 0 to 200 percent; 100 is the usual.
+
+The yards and the rules of each penalty are the N. F. L.'s and cannot be changed in the file. To switch every foul off, set Penalties to off in the Rules item of the F9 menu. Delete a line to get the original back.
 
 ## If something is wrong
 

@@ -12,7 +12,8 @@ last three spoken in this game when the pool has more than three lines on (`Int(
 of them; bounded, G-D1); a line with [name] draws a name of the banter's list after it, a line with [one of:] its choices
 after that. F8 (comments off) silences the pools of commentary before any draw. A pool with no line on says nothing.
 
-Built so far: TO (SX.2). Each later session adds its pool to POOLS_BUILT and its placeholders to PLACEHOLDERS.
+Built so far: TO (SX.2), PN (SX.3, after an accepted penalty, design 9). Each later session adds its pool to POOLS_BUILT
+and its placeholders to PLACEHOLDERS.
 """
 from __future__ import annotations
 
@@ -28,9 +29,10 @@ from .state import RECENT_REMARKS
 
 log = logging.getLogger("nfl4.extras")
 
-POOLS_BUILT = ("TO",)                                    # the pools whose feature exists (SX.2: the timeout remarks)
+POOLS_BUILT = ("TO", "PN")                              # the pools whose feature exists (SX.2 timeouts, SX.3 penalties)
 COMMENTARY_POOLS = frozenset(("TO", "CHS", "CHC", "RVR", "RVC", "ON", "PN"))   # F8 silences these; QB is play-by-play
-PLACEHOLDERS = {"TO": ("<team>", "<coach>", "<quarterback>")}
+PLACEHOLDERS = {"TO": ("<team>", "<coach>", "<quarterback>"),
+                "PN": ("<team>", "<coach>", "<quarterback>", "<surname>")}
 ID_PATTERN = re.compile(r"([A-Z]{2,3})(\d{1,4})", re.IGNORECASE)
 MAX_NUMBER = 9999
 _PLACEHOLDER = re.compile(r"<[^<>]{1,30}>")
@@ -214,10 +216,12 @@ def say_remark(game, state, record, pool: str, values: Mapping[str, str]) -> Rem
 NOTES = (
     "These are the announcer's remarks of the N. F. L. rules. The game reads this file only when the Rules setting of the F9 "
     "menu is N. F. L. rules.",
-    "Each line is an ID, an equals sign and the remark. The letters of the ID say the pool: TO are the remarks after a time out.",
+    "Each line is an ID, an equals sign and the remark. The letters of the ID say the pool: TO are the remarks after a time out,",
+    "PN the remarks after a penalty is accepted.",
     "Change a line to say something else. Write TO03 = off to switch a line off. Delete a line to get the original back.",
-    "Add your own lines with a new number in a pool, TO06 and up. A remark is chosen by chance, never one of the last three.",
-    "In a line, <team> is the team that called the time out, <coach> is your name and <quarterback> that team's quarterback.",
+    "Add your own lines with a new number in a pool, TO06 or PN05 and up. A remark is chosen by chance, never one of the last three.",
+    "In a line, <team> is the team that called the time out or was flagged, <coach> is your name and <quarterback> that team's",
+    "quarterback; in a PN line <surname> is the player the flag was on.",
     "The words in square brackets of banter.txt work here too: [sound my laugh.wav], [pause], [bleep], [one of: a | b].",
     "A line has at most 500 characters and 20 parts. The F8 key switches all comments off, these too.",
 )

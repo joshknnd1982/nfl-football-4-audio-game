@@ -28,6 +28,17 @@ Added in PX SX.2 (the real clock and the timeouts, D-049), each an identity or a
     H1 before_snap() -> True               a pending runoff ran the period out at the snap   None
     H1 warning_given()                     the engine said the two-minute warning            nothing
     for_game()                             the rules object of one game                       itself
+
+Added in PX SX.3 (penalties with accept or decline, D-050), each never taken in Classic:
+    H2 before_snap -> FOUL_BEFORE_SNAP     a dead-ball foul before the snap: the snap count   never returned
+                                           stops after " hut 1 ", foul_before_snap(state)
+                                           says it and returns what the engine does next
+    H2 after_outcome: outcome.then         the extras took over the end of the play (an        None
+                                           accepted penalty): the engine goes on with the
+                                           step `then` names instead of the original's
+    H2 instead_of_sack(state)              the original's draw gave a sack: the passer may     None
+                                           throw the ball away (intentional grounding); the
+                                           sentence that replaces the sack, or None
 """
 from __future__ import annotations
 
@@ -39,6 +50,17 @@ from .playtables import NEUTRAL, Modifiers
 GO_ON = "go on"
 NORMAL_KICKOFF = "normal"
 PERIOD_OVER = "period over"     # H4: no kick-off, the period ends first (N. F. L. rules mode only, SX.2)
+FOUL_BEFORE_SNAP = "foul before the snap"   # H2 step 2 (SX.3): a dead-ball foul, the play is not run
+
+# What the engine does after the extras took over a play (H2 step 4, `PlayOutcome.then`, or foul_before_snap's answer;
+# N. F. L. rules mode only, SX.3). The extras have set the ball, the down and the distance in the state.
+NEXT_DOWN = "next down"         # the position and down sentences (5.11 item 5), then the next play
+ON_DOWNS = "on downs"           # the ball turned over on downs at the spot the extras set (the possession sentence)
+SAFETY_BY_PENALTY = "safety"    # " in the end zone for a safety", 2 points to the defense, the free kick
+TRY_AGAIN = "try again"         # the two-point try is played again from the spot the extras set
+TRY_FAILS = "try fails"         # the two-point try fails (no points)
+KICK_AGAIN = "kick again"       # the kick-off is made again
+PERIOD_END = "period end"       # the period ends (a run off took its last seconds) without counting a play
 
 
 class ClassicRules:
@@ -53,6 +75,12 @@ class ClassicRules:
 
     def before_snap(self, state, offense_play: int, defense_play: int) -> str:
         return GO_ON
+
+    def foul_before_snap(self, state) -> str:
+        raise RuntimeError("Classic has no penalties: before_snap never answers FOUL_BEFORE_SNAP")
+
+    def instead_of_sack(self, state) -> str | None:
+        return None
 
     def after_tackle(self, state) -> None:
         return None

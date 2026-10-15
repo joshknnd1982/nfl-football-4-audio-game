@@ -44,3 +44,6 @@ class PlayOutcome:
     two_point_try: bool = False
     # the ruling fields that only the extras fill (NFL_EXTRAS_DESIGN 6.1); empty in Classic
     ruling: object = None
+    # what the engine does next when the extras took over the end of the play (game/rules.py NEXT_DOWN and the others;
+    # SX.3, an accepted penalty); None in Classic: the engine goes on as the original
+    then: str | None = None

@@ -31,3 +31,30 @@ OT_POST_TIMEOUTS = 3                   # 16-4-g: three per pair of play-off over
 ONE_CHARGED_TIMEOUT_PER_DEAD_BALL = True   # 4-5-1 Item 3
 # A request with no timeout left is ignored (4-5-1 Item 3): the clone's menu refuses it with a sentence and never grants
 # it, so the delay-of-game foul for a granted excess timeout and the foul of 4-5-1 Item 4 cannot arise (design 4).
+
+# ----- penalties (SX.3; the fouls themselves are extras/fouls_2026.py; NFL_RULES_RESEARCH Part 6) -----
+HALF_DISTANCE = True                   # 14-2-1: never more than half the distance from the spot of enforcement to the
+#                                        offender's goal line; not for the spot fouls (pass interference, 8-5) nor for
+#                                        intentional grounding at the spot of the pass (8-2-1). The clone has whole yards
+#                                        only: the ball moves half the distance rounded down, so it stays on the 1 (Part
+#                                        1.5 default: never on or behind the goal line)
+NO_AUTOMATIC_FIRST_DOWN = ("DOF", "ENC", "NZI", "DOG", "DOD", "ILS", "EXT", "RNK", "DTM", "DIF")
+#                                        14-1-2 Item 5: offside, encroachment, neutral zone infraction, delay of game,
+#                                        illegal substitution, excess timeout, running into the kicker, more than 11 at the
+#                                        snap or in the formation, the defense's illegal formation on a scrimmage kick; every
+#                                        other foul by the defense gives a first down
+FIRST_DOWN_ONLY_PAST_THE_LINE = True   # 14-1-2 Item 4: a foul by the offense gives a first down only when the ball ends
+#                                        beyond the line to gain (Part 1.5 default for the ball exactly on it)
+DPI_GOAL_LINE_SPOT = 1                 # 8-5: pass interference in the end zone is a first down on the 1 (halfway to the
+#                                        goal line when the previous spot is inside the 2)
+GROUNDING_YARDS = 10                   # 8-2-1: loss of down and 10 from the previous spot, or at the spot of the pass when
+#                                        that is worse for the offense; a safety when the passer is in his own end zone
+RUNOFF_SECONDS = 10                    # 4-7-1: an offense foul that stops a running clock after the two-minute warning of
+#                                        either half: ten seconds off, the defense may take the yards only; never against
+#                                        the defense (4-5-4 Note 9); the clock then starts on the ready signal (4-3-2 (g))
+UNTIMED_DOWN = True                    # 4-8-2 (a): an accepted foul by the defense on the last play of a half gives the
+#                                        offense one untimed down
+ONE_PENALTY_PER_TEAM = True            # 14-1-3: the offended team chooses one penalty of a multiple foul
+DOUBLE_FOUL_REPLAY = True              # 14-5-1: fouls by both teams offset and the down is played again (no choice);
+MAJOR_AGAINST_MINOR = 15               # Exception 1: a 15-yard foul against a 5-yard foul with no automatic first down,
+#                                        loss of down or run off is enforced alone

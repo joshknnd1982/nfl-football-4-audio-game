@@ -34,7 +34,9 @@ class ResultSteps:
             s.yard_line = 20
         if s.punt_flag == 1:
             s.punt_flag = 2
-            self.outcome(O.PUNT, turnover=True)
+            step = self.end_point(O.PUNT, turnover=True)
+            if step is not None:
+                return step
             s.text = P.ITS_SPACE
             return self.possession
         if s.yard_line <= 0:
@@ -49,7 +51,9 @@ class ResultSteps:
         g.ptf = 1
         g.say4(s.tackle_sentence)
         self.snd.play_tackle(2)
-        self.outcome(O.SAFETY_KIND, score="safety")
+        step = self.end_point(O.SAFETY_KIND, score="safety")
+        if step is not None:
+            return step
         g.say4(P.SAFETY)
         g.ptf = 0
         s.stats[s.defense].score += 2
@@ -87,10 +91,14 @@ class ResultSteps:
         """L_44f322."""
         g, s, snd = self.g, self.s, self.snd
         if s.two_point:
-            self.outcome(O.TWO_POINT_TRY, score="two-point")
+            step = self.end_point(O.TWO_POINT_TRY, score="two-point")
+            if step is not None:
+                return step
             s.try_good = True
             return self.try_result
-        self.outcome(O.TOUCHDOWN, score="touchdown")
+        step = self.end_point(O.TOUCHDOWN, score="touchdown")
+        if step is not None:
+            return step
         g.say4(P.TOUCH_DOWN)
         self.log_replay_list()
         snd.play_tackle(8)
@@ -124,12 +132,16 @@ class ResultSteps:
             g.say2(P.LOSS + trim(self.str_(abs(s.yards))) + P.YARD + (P.PLURAL if s.yards < -1 else "")
                    + P.ON_THE_PLAY_STOP)
         if s.two_point:                                   # the try failed: no announcement (Q22)
-            self.outcome(O.TWO_POINT_TRY)
+            step = self.end_point(O.TWO_POINT_TRY)
+            if step is not None:
+                return step
             s.try_good = False
             return self.try_result
         if s.yards == 0:
             g.say2(P.NO_GAIN)
-        self.outcome(s.result_kind)
+        step = self.end_point(s.result_kind)
+        if step is not None:
+            return step
         s.down += 1
         s.to_go -= s.yards
         if s.to_go < 1:
@@ -141,6 +153,19 @@ class ResultSteps:
             s.downs_flag = True
             return self.possession
         return self.banter_position
+
+    def penalty_safety(self):
+        """N. F. L. rules (SX.3; never in Classic): a safety by enforcement (a foul by the offense in its own end zone, or
+        intentional grounding there; the extras announced it): the original's sentence, 2 points to the defense, then
+        what follows the original's safety."""
+        g, s = self.g, self.s
+        g.ptf = 1
+        g.say4(P.SAFETY)
+        g.ptf = 0
+        s.stats[s.defense].score += 2
+        if s.quarter == 5:
+            return self.game_end
+        return self.after_score
 
     # ----- turnovers and the change of possession -----
 

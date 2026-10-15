@@ -63,7 +63,9 @@ class KickSteps:
             snd.play(12, -1200)
             g.say4(P.WAY_TO_SHORT)                         # the log flag stays on (Q30)
             snd.stop_play_noise()                         # Q57 not reproduced (D-034, G-A2)
-            self.outcome(O.FIELD_GOAL_SHORT)
+            step = self.end_point(O.FIELD_GOAL_SHORT)
+            if step is not None:
+                return step
             s.text = P.ITS_SPACE
             return self.possession
         odds = self.rules.modifiers.field_goal_odds(s.wisoff)
@@ -77,7 +79,9 @@ class KickSteps:
             g.say4(P.IS_GOOD)
             g.ptf = 0
             snd.play_tackle(8)
-            self.outcome(O.FIELD_GOAL_GOOD, score="field goal")
+            step = self.end_point(O.FIELD_GOAL_GOOD, score="field goal")
+            if step is not None:
+                return step
             s.points = 3
             return self.score
         miss = self.rnd(6)
@@ -89,7 +93,9 @@ class KickSteps:
         g.say4(P.FG_MISSES[miss - 1])
         g.ptf = 0
         snd.play_tackle(8)
-        self.outcome(O.FIELD_GOAL_MISSED, turnover=True)
+        step = self.end_point(O.FIELD_GOAL_MISSED, turnover=True)
+        if step is not None:
+            return step
         s.text = P.ITS_SPACE
         return self.possession
 
@@ -243,7 +249,9 @@ class KickSteps:
         g.say4(P.DOWNS_IN_END_ZONE)
         snd.play_tackle(8)
         snd.c2df()
-        self.outcome(O.KICKOFF_TOUCH_BACK, yards=0)
+        step = self.end_point(O.KICKOFF_TOUCH_BACK, yards=0)
+        if step is not None:
+            return step
         s.text = P.ITS_CAPITAL
         s.yard_line = 20
         s.to_go = 10

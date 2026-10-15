@@ -23,6 +23,7 @@ FORMAT = 1                     # the Integer written after the marker in footbal
 MARKER = "NX-EXTRAS"           # the string that starts the extras section of football.sav
 RECENT_REMARKS = 3             # a remark is never one of the last three spoken of its pool
 MAX_TIMEOUTS = max(R.TIMEOUTS_PER_HALF, R.OT_REGULAR_TIMEOUTS, R.OT_POST_TIMEOUTS)
+FOUL_CLOCKS = ("", "pre", "live", "runoff")
 
 
 @dataclass
@@ -52,6 +53,16 @@ class ExtrasRecord:
     called: list = field(default_factory=lambda: [False, False])  # a timeout in this dead-ball period (4-5-1 Item 3)
     # the remarks of the extras: the IDs spoken last, per pool (CUSTOMIZABLE_CONTENT 13)
     recent: dict = field(default_factory=dict)
+    # penalties (design 9, SX.3)
+    penalties_on: bool = False        # the Penalties switch of the game (design 12.1); a record saved before SX.3 has none
+    flags: list = field(default_factory=lambda: [0, 0])          # accepted penalties of each side (the statistics, C7)
+    flag_yards: list = field(default_factory=lambda: [0, 0])     # and their yards
+    foul_clock: str = ""              # how the clock goes on after a foul (H10): "", "pre", "live" or "runoff"
+    foul_by_offense: bool = False     # that foul was by the team with the ball
+    was_running: bool = False         # a foul before the snap: the clock was running when it came
+    extension: bool = False           # one more untimed down is due (4-8-2 (a))
+    extension_snap: bool = False      # this snap took the untimed down (a foul before it gives it back)
+    no_snap: bool = False             # the play that just ended was a foul before the snap: not a counted play (5.7)
 
     # ----- per side -----
 
@@ -142,7 +153,8 @@ class ExtrasRecord:
         whole(self.handled, 0, 100000, "the handled play")
         whole(self.last_offense, 0, 2, "the last offense")
         for name in ("timeouts_on", "postseason", "running", "warning_due", "warning_given", "last_two_point",
-                     "out_of_bounds"):
+                     "out_of_bounds", "penalties_on", "foul_by_offense", "was_running", "extension", "extension_snap",
+                     "no_snap"):
             flag(getattr(self, name), name)
         for name in ("last_kind", "unit", "announced"):
             if not isinstance(getattr(self, name), str) or len(getattr(self, name)) > 40:
@@ -150,6 +162,10 @@ class ExtrasRecord:
         pair(self.timeouts, lambda v, w: whole(v, 0, MAX_TIMEOUTS, w), "the timeouts")
         pair(self.used, lambda v, w: whole(v, 0, 999, w), "the timeouts used")
         pair(self.called, flag, "the timeouts called")
+        pair(self.flags, lambda v, w: whole(v, 0, 9999, w), "the penalties")
+        pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
+        if self.foul_clock not in FOUL_CLOCKS:
+            raise ValueError("the clock after a foul is %r" % (self.foul_clock,))
         if not isinstance(self.recent, dict) or len(self.recent) > 20:
             raise ValueError("the recent remarks are %r" % (self.recent,))
         for pool, ids in self.recent.items():

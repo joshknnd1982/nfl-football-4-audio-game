@@ -150,7 +150,9 @@ class NflPeriodClock:
         return x.left <= (T.LAST_PLAY_RUNNING if x.running else T.LAST_PLAY_STOPPED)
 
     def period_over(self) -> bool:
-        return self.x.left <= 0
+        """The clock is at 0, unless an untimed down is due (an accepted foul by the defense on the last play of a half,
+        4-8-2 (a), SX.3)."""
+        return self.x.left <= 0 and not self.x.extension
 
     def warning_zone(self) -> bool:
         return self.x.warning_due and self.x.left > 0
@@ -178,7 +180,11 @@ class NflPeriodClock:
     # ----- what the engine does -----
 
     def after_play(self, outcome=None) -> None:
-        """The next-play step: L738 = L738 + 1 (the counted plays, design 5.7's unit)."""
+        """The next-play step: L738 = L738 + 1 (the counted plays, design 5.7's unit). A foul before the snap ran no play:
+        not counted (SX.3)."""
+        if self.x.no_snap:
+            self.x.no_snap = False
+            return
         self.state.counter += 1
 
     def start_period(self, counter: int) -> None:
@@ -192,6 +198,8 @@ class NflPeriodClock:
         x.warning_due = x.warning_given = False
         x.out_of_bounds = False
         x.called = [False, False]
+        x.extension = x.extension_snap = x.no_snap = False
+        x.foul_clock = ""
         timeouts.enter_unit(x, x.period)
 
     def before_snap(self) -> bool:
@@ -203,6 +211,11 @@ class NflPeriodClock:
         x.pending = 0
         x.called = [False, False]                 # a new dead-ball period comes after this play
         x.out_of_bounds = False
+        x.extension_snap = False
+        if x.extension:                           # SX.3: the untimed down after an accepted foul by the defense on the
+            x.extension = False                   # last play of a half (4-8-2 (a)) is played at 0:00
+            x.extension_snap = True
+            return False
         if self.state.two_point:
             return False
         return x.left <= 0

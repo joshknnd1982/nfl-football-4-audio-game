@@ -9,7 +9,7 @@ from __future__ import annotations
 from . import outcome as O
 from . import phrases as P
 from .playtables import FUMBLE_NUMBER, INTERCEPTION_FLOOR, INTERCEPTION_NUMBER, PASSES, RUNS, SACK, SACK_PHRASES
-from .rules import GO_ON
+from .rules import FOUL_BEFORE_SNAP, GO_ON
 from .setup import RUN_DIRECTIONS, SNAP_WORDS
 from .vbnum import single
 
@@ -19,10 +19,14 @@ class ScrimmageSteps:
     def snap(self):
         """L_43fd12: after the choice of both plays."""
         s = self.s
-        if self.rules.before_snap(s, s.offense_play, s.defense_play) != GO_ON:   # H2 step 2 (Classic: always on)
-            return self.play_menu
         if self.clock.before_snap():                     # H1: a pending runoff ran the period out (N. F. L. rules only;
             return self.period_checks                    # Classic returns None): the period ends before the snap
+        verdict = self.rules.before_snap(s, s.offense_play, s.defense_play)   # H2 step 2 (Classic: always on)
+        if verdict == FOUL_BEFORE_SNAP:                  # N. F. L. rules (SX.3): a dead-ball foul, the play is not run:
+            self.snap_count(until_first_hut=True)        # the snap count up to " hut 1 ", then the flag
+            return self.continuation(self.rules.foul_before_snap(s)) or self.play_menu
+        if verdict != GO_ON:
+            return self.play_menu
         self.mark_spot()
         if s.offense_play == 6:
             return self.field_goal
@@ -33,8 +37,9 @@ class ScrimmageSteps:
         self.snap_draws()
         return self.snap_phrase
 
-    def snap_count(self) -> None:
-        """0x43fda9 to 0x440e12: the huddle, the quarterback at the line and his calls, " Hike! ", the hike sound."""
+    def snap_count(self, until_first_hut: bool = False) -> None:
+        """0x43fda9 to 0x440e12: the huddle, the quarterback at the line and his calls, " Hike! ", the hike sound.
+        until_first_hut (N. F. L. rules, SX.3; never in Classic): a dead-ball foul stops it right after " hut 1 "."""
         g, s, rnd, snd = self.g, self.s, self.rnd, self.snd
         line = self.qb(s.wisoff) + P.QB_LINE[rnd(4) - 1]                      # drawn first (0x43fe61)
         huddle = P.THE_TEAM + s.teams[s.wisoff]
@@ -45,6 +50,8 @@ class ScrimmageSteps:
         snd.c2uf()
         self.dy(0.2, 0x44027e)
         self.say3(P.HUT_1)
+        if until_first_hut:
+            return
         self.rady(0x440344)
         if rnd(7) == 3:
             self.say3(P.HUT_2)
@@ -177,6 +184,9 @@ class ScrimmageSteps:
         stats.interception_count += 3
         stats.pass_attempts += 1
         if single(rnd.random() * 100) <= entry.sack:          # L4d0: a Single (FSTP float, 0x44a399)
+            away = self.rules.instead_of_sack(s)               # N. F. L. rules (SX.3): intentional grounding; Classic: None
+            if away is not None:
+                return self.thrown_away(away)
             return self.sack()
         complete_roll = single(rnd.random() * 100)            # L138, drawn before the throw sentence (0x44b367)
         g.say4(s.text)
@@ -209,6 +219,18 @@ class ScrimmageSteps:
         s.result_kind = O.SACK
         return self.fumble_or_yards(SACK.low, SACK.high)
 
+    def thrown_away(self, sentence: str):
+        """N. F. L. rules (SX.3; never in Classic): in place of the sack the passer throws the ball away (intentional
+        grounding, design 9.2 P15): the drop-back sentence as for a pass, then the play ends as an incomplete pass with
+        `sentence` as its tackle sentence and the whistle; the extras announce the foul at the narration end point."""
+        g, s = self.g, self.s
+        g.say4(s.text)
+        s.tackle_sentence = sentence
+        s.tackle_sound = 8
+        s.yards = 0
+        s.result_kind = O.PASS_INCOMPLETE
+        return self.end_of_play
+
     def interception(self):
         g, s, snd = self.g, self.s, self.snd
         s.text = P.AND + self.defender(s.defense, s.defender1)
@@ -222,8 +244,7 @@ class ScrimmageSteps:
         s.text = P.THE_BALL_IS_NOW
         s.stats[s.wisoff].interception_count = 0
         s.interception_flag = True
-        self.outcome(O.INTERCEPTION, turnover=True)
-        return self.turnover_spot
+        return self.end_point(O.INTERCEPTION, turnover=True) or self.turnover_spot
 
     def incomplete(self):
         s = self.s
@@ -278,5 +299,4 @@ class ScrimmageSteps:
         snd.play_tackle(3)
         snd.c2df()
         s.text = P.THE_BALL_IS_NOW
-        self.outcome(O.FUMBLE, turnover=True)
-        return self.turnover_spot
+        return self.end_point(O.FUMBLE, turnover=True) or self.turnover_spot

@@ -128,12 +128,15 @@ def player_policy(rig, seed):
 def test_a_whole_game_through_the_menus_with_the_players_timeouts(tmp_path, seed):
     rig = make_rig(tmp_path, rng=random.Random(500 + seed), fast=True, vtrnt=1 + seed % 2)
     rig.keys.policy = player_policy(rig, 900 + seed)
-    rules = RecordingRules(auto_sides=(2,))
-    result = play(rig, rules=rules)
+    program_rules = RecordingRules(auto_sides=(2,))
+    result = play(rig, rules=program_rules)
+    rules = program_rules.used                    # the game's own object (SX.3: before, the checks read an unused one)
+    assert rules is not None and rules.state is not None
     assert result.scores is not None and result.scores[0] != result.scores[1]
     assert rig.rnd.fallbacks == 0
     said = [t for t, _, _ in rig.said]
     assert " 8. Time Out " in said or " 7. Time Out " in said
+    assert sum(rules.state.extras.used) == len(rules.timeouts)
     per_unit = {}
     for quarter, side, left, remaining, unit in rules.timeouts:
         per_unit[(unit, side)] = per_unit.get((unit, side), 0) + 1
@@ -144,12 +147,13 @@ def test_a_whole_game_through_the_menus_with_the_players_timeouts(tmp_path, seed
 def test_a_game_with_timeouts_off_never_offers_or_calls_one(tmp_path):
     rig = make_rig(tmp_path, rng=random.Random(77), fast=True, vtrnt=2)
     rig.keys.policy = player_policy(rig, 78)
-    rules = RecordingRules(timeouts_on=False, auto_sides=(2,))
-    result = play(rig, rules=rules)
+    program_rules = RecordingRules(timeouts_on=False, auto_sides=(2,))
+    result = play(rig, rules=program_rules)
+    rules = program_rules.used
     assert result.scores is not None
     said = [t for t, _, _ in rig.said]
     assert not any("Time Out" in t or "time out" in t for t in said)
-    assert rules.timeouts == []
+    assert rules.timeouts == [] and rules.state.extras.used == [0, 0]
 
 
 def test_the_program_rules_object_is_not_used_for_a_game_itself(tmp_path):

@@ -35,7 +35,8 @@ from .pag_breaks import BreakSteps
 from .pag_kicks import KickSteps
 from .pag_results import ResultSteps
 from .pag_scrimmage import ScrimmageSteps
-from .rules import CLASSIC
+from .rules import (CLASSIC, KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, SAFETY_BY_PENALTY, TRY_AGAIN,
+                    TRY_FAILS)
 from .setup import Roster
 
 log = logging.getLogger("nfl4.game")
@@ -168,6 +169,39 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
         self.outcomes.append(record)
         self.last_outcome = record
         return record
+
+    def end_point(self, kind: str, **fields):
+        """`outcome` at a narration end point, for the steps that go on after it: the step the extras chose when they took
+        over the end of the play (an accepted penalty, N. F. L. rules mode, SX.3), else None and the step goes on as the
+        original (Classic: always None)."""
+        return self.continuation(self.outcome(kind, **fields).then)
+
+    def continuation(self, then):
+        """The step for an answer of the extras (game/rules.py NEXT_DOWN and the others); None for None. The extras have
+        set the ball, the down and the distance; the log flag a step had switched on is off again."""
+        if then is None:
+            return None
+        s = self.s
+        self.g.ptf = 0
+        if then == NEXT_DOWN:
+            s.text = P.ITS
+            return self.position
+        if then == ON_DOWNS:
+            s.text = P.TURNED_OVER_ON_DOWNS
+            s.downs_flag = True
+            return self.possession
+        if then == SAFETY_BY_PENALTY:
+            return self.penalty_safety
+        if then == TRY_AGAIN:
+            return self.offense_menu
+        if then == TRY_FAILS:
+            s.try_good = False
+            return self.try_result
+        if then == KICK_AGAIN:
+            return self.kick_off
+        if then == PERIOD_END:
+            return self.period_checks
+        raise ValueError("unknown continuation %r" % (then,))
 
     _spot_before: tuple[int, int] = (0, 0)
 

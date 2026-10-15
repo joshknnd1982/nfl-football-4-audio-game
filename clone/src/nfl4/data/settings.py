@@ -31,6 +31,7 @@ class GameSettings:
     # nfl4 only (rule 0.13, NFL_EXTRAS_DESIGN 12.1, PX SX.2): the Rules setting and the switches of the extra features
     rules: str = "classic"       # "classic" (the original, the default until SX.9: NQ2) or "nfl" (the N. F. L. rules)
     nx_timeouts: bool = True     # the real clock's timeouts in N. F. L. rules mode
+    nx_penalties: bool = True    # the penalties with accept or decline in N. F. L. rules mode (SX.3)
 
 
 @dataclass

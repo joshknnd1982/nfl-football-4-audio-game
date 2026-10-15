@@ -59,6 +59,29 @@ RULE4_LAST = 120                      # rule 4: overtime, like rule 2 in the las
 RULE6_CHANCE = 140                    # rule 6: quarters 1 and 3, a side with three timeouts calls one with chance 1 in 140
 #                                       (start value 80; SX.2: 0.32 per team in quarters 1 and 3, target 0.2)
 
+# ----- penalties, design 9 (SX.3) -----
+PENALTY_RATE_SCALE = 1.2              # every rate of extras/fouls_2026.py is multiplied by this (the calibration of SX.3;
+#                                       start value 1.0: 11.15 accepted fouls per game in 40 games; 1.24: 13.28 in 1,000;
+#                                       band 12.0 to 13.6, target 12.8)
+GROUNDING_PER_10000_SACKS = 170       # intentional grounding in place of a sack (design 9.2 P15). Start value 833 (1 in 12)
+#                                       gave 1.03 groundings per game: the original's engine sacks about 12 times a game
+#                                       (the NFL about 4.8); 170 aims at the NFL's 0.21 per game (Part 8)
+DPI_LONG_FACTOR = 3                   # pass interference is three times as likely on a Long Pass as on a Short Pass,
+DPI_SCREEN_FACTOR = 0                 #   never on a Screen Pass (design 9.2 P12)
+ICT_SCREEN_FACTOR = 0                 # illegal contact never on a Screen Pass (P11)
+RPS_BLITZ_FACTOR = 2                  # roughing the passer twice as likely against a Blitz (P14)
+IDP_SCREEN_FACTOR = 3                 # ineligible receiver down field three times as likely on a Screen (P16)
+SECOND_FOUL_CHANCE = 40               # after a foul, a foul by the other team too with chance 1 in 40 (design 9.1)
+PENALTY_REMARK_CHANCE = 3             # a remark of pool PN with chance 1 in 3 after an accepted penalty (comments on)
+# the spots that are drawn (design 9.1: "then, for a spot foul, its spot"), in yards from the line of scrimmage
+DPI_DEPTH_SHORT = (5, 15)             # pass interference on a Short Pass: the depth of the throw
+DPI_DEPTH_LONG = (15, 40)             #   on a Long Pass
+RUN_FOUL_BEHIND = 2                   # a foul by the offense on a run: from 2 yards behind the line to the end of the run
+GROUNDING_DROP = (5, 9)               # intentional grounding: the passer is 5 to 9 yards behind the line
+RETURN_FOUL_REACH = 25                # a foul by the receivers on a kick-off return: within 25 yards behind its end
+# the computer's choice (design 9.3): field positions within this many yards count as equal, then the down decides
+FIELD_POSITION_TOLERANCE = 3
+
 # ----- a Classic save loaded in N. F. L. rules mode, design 12.3 -----
 SAVE_SECONDS_PER_COUNTED_PLAY = 28    # the clock at 15:00 minus 28 seconds per counted play,
 SAVE_LEAST_LEFT = 60                  # at least 1:00
@@ -70,3 +93,7 @@ TARGET_SECONDS_PER_PLAY = (26, 30)           # seconds per counted play
 TARGET_TIMEOUTS_PER_TEAM_GAME = 3.85         # charged timeouts per team per game (Part 1.6)
 TARGET_TIMEOUTS_Q1_Q3 = 0.2                  # per team in quarter 1 and in quarter 3
 TARGET_TIMEOUTS_Q2_Q4 = 1.7                  # per team in quarter 2 and in quarter 4
+TARGET_ACCEPTED_FOULS_PER_GAME = (12.0, 13.6)   # both teams (design 4, N7.7: 12.8 plus or minus 0.8, 2024 and 2025)
+TARGET_DECLINED_SHARE = (0.10, 0.15)            # of the fouls that offer a choice (Part 8 section 6: 12 to 13 percent;
+#                                                 a plausibility check of the computer's rule, not a target it is tuned to)
+TARGET_PRE_SNAP_SHARE = (0.30, 0.45)            # of the accepted fouls (Part 8: 37 to 39 percent)

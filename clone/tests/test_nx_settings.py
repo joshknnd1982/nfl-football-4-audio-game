@@ -21,7 +21,7 @@ from programrig import DOWN, ENTER, ESC, F1, said
 from test_functions import TOP, rig_for
 
 SPACE, LEFT = 32, 37
-OPEN = "Rules. 3 items. Press F1 for help. "
+OPEN = "Rules. 4 items. Press F1 for help. "                       # SX.3: Rules, Time outs, Penalties, Reset
 NEXT_GAME = X.text("NXM-23")
 
 
@@ -96,15 +96,18 @@ def test_a_switch_says_used_with_the_nfl_rules_while_rules_is_classic(rig):
 
 
 def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
-    spoken = rules_menu(rig, [ENTER, "2", ENTER, "3", ENTER, ENTER, "1"])
+    spoken = rules_menu(rig, [ENTER, "2", ENTER, "3", ENTER, "4", ENTER, ENTER, "1"])
     assert spoken[2] == "Time outs on "
     assert spoken[3] == "Time outs off " + NEXT_GAME
-    assert spoken[4] == X.text("NXM-19")
-    assert spoken[5] == "Rules: Classic. Time outs on  used with the N. F. L. rules " + NEXT_GAME
-    assert spoken[6] == "Rules: Classic. Time outs on  used with the N. F. L. rules "        # nothing changed now
-    assert spoken[7] == "Rules: Classic"
+    assert spoken[4] == "Penalties on "
+    assert spoken[5] == "Penalties off " + NEXT_GAME
+    assert spoken[6] == X.text("NXM-19")
+    defaults = "Rules: Classic. Time outs on  used with the N. F. L. rules. Penalties on  used with the N. F. L. rules "
+    assert spoken[7] == defaults + NEXT_GAME
+    assert spoken[8] == defaults                                        # nothing changed now
+    assert spoken[9] == "Rules: Classic"
     game = rig.game.options.settings.game
-    assert (game.rules, game.nx_timeouts) == ("classic", True) and rig.game.rules is CLASSIC
+    assert (game.rules, game.nx_timeouts, game.nx_penalties) == ("classic", True, True) and rig.game.rules is CLASSIC
 
 
 def test_f1_says_the_help_of_the_rules_menu(rig):
@@ -146,7 +149,8 @@ def test_a_customization_made_with_the_nfl_rules_reads_remarks_txt_at_once(tmp_p
     folder = str(tmp_path / "customize")
     custom = Customization(folder, extras=True)
     assert os.path.isfile(os.path.join(folder, "remarks.txt"))
-    assert [spec.file_name for spec in custom.specs][-1] == "remarks.txt"
+    assert [spec.file_name for spec in custom.specs][-2:] == ["remarks.txt", "penalties.txt"]       # SX.3
+    assert os.path.isfile(os.path.join(folder, "penalties.txt"))
     assert custom.take_notices() == []
     assert "remarks.txt: no problems." in custom.check()
     assert "remarks.txt" not in Customization(str(tmp_path / "classic")).check()

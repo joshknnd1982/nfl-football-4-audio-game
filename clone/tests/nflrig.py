@@ -4,7 +4,8 @@
   player's side calls the toss, receives, returns kick-offs 1 time in 2, kicks the extra point, chooses its offense with the
   computer's draw of 5.7 and a mirrored fourth-down and last-play rule, and its defense with Int(Rnd * 6) + 1; its timeouts
   are the computer's rules (NflRules with auto_sides (1, 2)).
-* `RecordingRules`: NflRules that records every timeout, warning and period end with the clock, for the property tests.
+* `RecordingRules`: NflRules that records every timeout, warning and period end with the clock, for the property tests;
+  penalties off unless asked (SX.3: `penalties_on=True`; the flow's `events` list every flag).
 * `sim_game(tmp_path, seed)`: one whole seeded game on the fast virtual clock; returns the rig, the engine and the rules.
 """
 import random
@@ -52,13 +53,18 @@ def nfl_engine_rig(tmp_path, answers=(), comments=False, rules=None, extras=None
 
 
 class RecordingRules(NflRules):
-    def __init__(self, timeouts_on=True, auto_sides=(1, 2)):
-        super().__init__(timeouts_on, auto_sides)
+    def __init__(self, timeouts_on=True, auto_sides=(1, 2), penalties_on=False):
+        super().__init__(timeouts_on, auto_sides, penalties_on)
         self.timeouts = []          # (quarter, side, seconds left after it, timeouts left of that side)
         self.periods = []           # (quarter, counted plays, seconds left) at each period end
         self.warnings = []          # (quarter, seconds left) when the warning was said
         self.lefts = []             # every time left seen at H10
         self.dead_balls = []        # (side, quarter, the play count) of every timeout: never twice in one dead-ball period
+        self.used = None            # the game's own object (Game.play_game calls for_game): what a test must read
+
+    def for_game(self):
+        self.used = super().for_game()
+        return self.used
 
     def grant(self, state, side):
         super().grant(state, side)
@@ -79,7 +85,8 @@ class SimEngine(PlayEngine):
         self.steps = []             # (quarter, counter) at every counted play
 
     def next_play(self):
-        self.steps.append((self.s.quarter, self.s.counter))
+        if not getattr(self.s.extras, "no_snap", False):     # a foul before the snap is not a counted play (SX.3)
+            self.steps.append((self.s.quarter, self.s.counter))
         return super().next_play()
 
     def period_checks(self):

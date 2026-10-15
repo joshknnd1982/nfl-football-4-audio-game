@@ -60,6 +60,7 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # rules               classic = the game exactly as the original (original), nfl = the N. F. L. rules with a real clock
 #                     and the added features; the Rules item of the F9 menu changes it, from the next game on
 # nx_timeouts         on or off: the time outs of the N. F. L. rules (default on)
+# nx_penalties        on or off: the penalties of the N. F. L. rules, with accept or decline (default on)
 #
 """
 
@@ -92,6 +93,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"comments = {'on' if game.comments else 'off'}",
         f"rules = {game.rules}",
         f"nx_timeouts = {'on' if game.nx_timeouts else 'off'}",
+        f"nx_penalties = {'on' if game.nx_penalties else 'off'}",
     ]
     return "\n".join(lines) + "\n"
 
@@ -190,6 +192,11 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if word is None:
             raise ValueError(f"'{value[:20]}' is not on or off")
         game.nx_timeouts = word
+    elif name == "nx_penalties":
+        word = _ON_WORDS.get(value.lower())
+        if word is None:
+            raise ValueError(f"'{value[:20]}' is not on or off")
+        game.nx_penalties = word
     else:
         raise KeyError(name)
 

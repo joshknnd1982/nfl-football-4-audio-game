@@ -71,4 +71,5 @@ def rules_for_saved_game(game, saved):
         return CLASSIC
     if not usable:
         game.say5(X.text("NXM-25"))
-    return NflRules(timeouts_on=game.options.settings.game.nx_timeouts)
+    settings = game.options.settings.game
+    return NflRules(timeouts_on=settings.nx_timeouts, penalties_on=getattr(settings, "nx_penalties", True))

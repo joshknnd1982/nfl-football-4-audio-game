@@ -61,6 +61,7 @@ class Game(Speakers):
         self.banter_pool: BanterPool = DEFAULT_POOL   # the 142 lines plus the player's (S7.7, banter.txt)
         self.banter_sounds_dir: str | None = None     # customize\sounds: the player's files for [sound file] in a line
         self.remark_pools = None                      # the extras' remarks.txt (nfl4 only, SX.2); None = the defaults
+        self.foul_table = None                        # the extras' penalties.txt (nfl4 only, SX.3); None = the defaults
         self.customization = None                     # data.customize.Customization: the player's files (S7.7)
         self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
         self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
@@ -128,6 +129,7 @@ class Game(Speakers):
             self.banter_pool = snapshot.banter
             self.banter_sounds_dir = custom.sounds_dir
             self.remark_pools = snapshot.remarks              # None while the Rules are Classic (the file is not read)
+            self.foul_table = snapshot.fouls                  # the same for penalties.txt (SX.3)
         except Exception:
             log.exception("the player's customization could not be applied")
 

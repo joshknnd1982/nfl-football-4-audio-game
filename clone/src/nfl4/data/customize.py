@@ -21,8 +21,9 @@ Nothing here raises. The names are what the voice speaks (the original has no wr
 semicolon, no control character; the count of teams (32), divisions (8) and surnames (1,708) is fixed (CUSTOMIZABLE_CONTENT 5).
 
 nfl4 only (rule 0.13, CUSTOMIZABLE_CONTENT 13, PX SX.2): remarks.txt holds the remark pools of the extra features
-(extras/remarks.py). It is one more list in the same format with the same healing, but it is in use only while the Rules
-setting is the N. F. L. rules (`extras` / `use_extras`): with Classic it is never read, made, checked or reset.
+(extras/remarks.py), and since SX.3 penalties.txt the names, switches and weights of the fouls (extras/penalty_list.py).
+They are lists in the same format with the same healing, but in use only while the Rules setting is the N. F. L. rules
+(`extras` / `use_extras`): with Classic they are never read, made, checked or reset.
 """
 from __future__ import annotations
 
@@ -51,6 +52,7 @@ NAME_MIN, NAME_MAX = 1, 30
 
 TEAMS, DIVISIONS, SURNAMES, BANTER = "teams", "divisions", "surnames", "banter"
 REMARKS = "remarks"         # nfl4 only (rule 0.13): the extras' remark pools, read only with the N. F. L. rules (SX.2)
+PENALTIES = "penalties"     # nfl4 only (rule 0.13): the fouls' names, switches and weights (SX.3)
 
 
 @dataclass(frozen=True)
@@ -71,6 +73,7 @@ SPECS: tuple[ListSpec, ...] = (
 # the N. F. L. rules (`Customization.use_extras`); with Classic none of them is ever opened
 EXTRA_SPECS: tuple[ListSpec, ...] = (
     ListSpec(REMARKS, "remarks.txt", "remarks", "the original remarks"),
+    ListSpec(PENALTIES, "penalties.txt", "penalty names", "the original penalty names"),
 )
 SPEC_BY_KEY = {spec.key: spec for spec in SPECS + EXTRA_SPECS}
 
@@ -209,6 +212,7 @@ class Snapshot:
     sound_files: list[str] = field(default_factory=list)            # the sound files the player's banter lines name
     kept: set[str] = field(default_factory=set)                     # lists whose file could not be read: the earlier values stay
     remarks: object = None              # extras.remarks.RemarkPools with the N. F. L. rules; None while they are not used
+    fouls: object = None                # extras.penalty_list.FoulTable with the N. F. L. rules; None while not used (SX.3)
 
     def problem_count(self, key: str) -> int:
         problems = self.problems.get(key)
@@ -232,6 +236,7 @@ class Customization:
         self.sound_probe = sound_probe or probe_sound_file
         self.extras = bool(extras)        # nfl4 only: the N. F. L. rules are in use, so remarks.txt is read too (SX.2)
         self._parked_remarks = None       # the remarks loaded before the extras were switched off
+        self._parked_fouls = None         # and the foul table (SX.3)
         self.files: dict[str, cl.ListFile] = {
             spec.key: cl.ListFile(folder, spec.file_name, GAME, spec.key, lambda key=spec.key: self.default_text(key))
             for spec in SPECS + EXTRA_SPECS}
@@ -254,15 +259,19 @@ class Customization:
         self.extras = on
         if not on:
             self._parked_remarks = self.snapshot.remarks      # what was loaded: used again if the file cannot be read then
+            self._parked_fouls = self.snapshot.fouls
             self.snapshot.remarks = None
+            self.snapshot.fouls = None
             for spec in EXTRA_SPECS:
                 self.snapshot.statuses.pop(spec.key, None)
                 self.snapshot.problems.pop(spec.key, None)
                 self.snapshot.kept.discard(spec.key)
             return
+        from ..extras.penalty_list import DEFAULT_TABLE
         from ..extras.remarks import DEFAULT_POOLS
-        previous = dataclasses.replace(self.snapshot, remarks=self._parked_remarks)
+        previous = dataclasses.replace(self.snapshot, remarks=self._parked_remarks, fouls=self._parked_fouls)
         self.snapshot.remarks = DEFAULT_POOLS
+        self.snapshot.fouls = DEFAULT_TABLE
         for spec in EXTRA_SPECS:
             self.snapshot.kept.discard(spec.key)
         before = len(self.snapshot.notices)
@@ -299,6 +308,9 @@ class Customization:
         if key == REMARKS:
             from ..extras import remarks
             return cl.render_list(GAME, REMARKS, remarks.NOTES, remarks.default_entries())
+        if key == PENALTIES:
+            from ..extras import penalty_list
+            return cl.render_list(GAME, PENALTIES, penalty_list.NOTES, penalty_list.default_entries())
         raise KeyError(key)
 
     # ----- loading -----
@@ -310,8 +322,10 @@ class Customization:
         snapshot = Snapshot(league_module.DEFAULT_TEAM_NAMES, league_module.DEFAULT_DIVISION_NAMES,
                             None, BanterPool(DEFAULT_LINES))
         if self.extras:
+            from ..extras.penalty_list import DEFAULT_TABLE
             from ..extras.remarks import DEFAULT_POOLS
             snapshot.remarks = DEFAULT_POOLS
+            snapshot.fouls = DEFAULT_TABLE
         self._load_into(snapshot, self.specs, previous)
         self._notices_of(snapshot, self.specs)
         return snapshot
@@ -352,6 +366,10 @@ class Customization:
             if previous.remarks is None:            # the extras were just switched on: nothing loaded before, originals
                 return
             snapshot.remarks = previous.remarks
+        elif key == PENALTIES:
+            if previous.fouls is None:
+                return
+            snapshot.fouls = previous.fouls
         snapshot.kept.add(key)
 
     def _apply_list(self, key: str, entries, snapshot: Snapshot, problems: cl.Problems) -> None:
@@ -392,6 +410,9 @@ class Customization:
         elif key == REMARKS:
             from ..extras import remarks
             snapshot.remarks = remarks.build_pools(remarks.overrides_of(entries, problems), problems)
+        elif key == PENALTIES:
+            from ..extras import penalty_list
+            snapshot.fouls = penalty_list.table_of(entries, problems)
 
     def _notices_of(self, snapshot: Snapshot, specs) -> None:
         unwritable = [spec for spec in specs if snapshot.statuses[spec.key] == cl.UNWRITABLE]
