@@ -441,3 +441,14 @@ def test_a_sound_name_in_a_line_is_found_in_the_pieces(tmp_path):
     custom.reload()
     line = {l.number: l for l in custom.snapshot.banter.lines}[143]
     assert [p.file for p in line.pieces if isinstance(p, Sound)] == ["a.wav", "b.wav"]
+
+
+def test_every_problem_is_written_to_the_log_with_the_file_the_entry_and_the_reason(tmp_path, caplog):
+    make(tmp_path)
+    edit(tmp_path, "teams.txt", "T05 = Bills", "T05 = a,b")
+    append(tmp_path, "teams.txt", "nonsense line")
+    with caplog.at_level("WARNING", logger="nfl4.data"):
+        make(tmp_path)
+    messages = [m for m in caplog.messages if m.startswith("teams.txt")]
+    assert len(messages) == 2
+    assert any("T05" in m and "comma" in m for m in messages) and any("line " in m and "equals sign" in m for m in messages)

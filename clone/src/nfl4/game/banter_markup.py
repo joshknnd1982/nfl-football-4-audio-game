@@ -31,8 +31,11 @@ MAX_LINE_CHARS = 500
 MAX_PIECES = 20
 MAX_OPTIONS = 20
 MIN_PAUSE, MAX_PAUSE = 0.1, 10.0
+MAX_TOTAL_PAUSE = 30.0              # the pauses of one line together (keys never cut a pause short)
 MAX_FILE_NAME = 100
 BAD_FILE_CHARACTERS = '\\/:*?"<>|'
+DEVICE_NAMES = frozenset(["con", "prn", "aux", "nul", "conin$", "conout$"]
+                         + ["com%d" % n for n in range(10)] + ["lpt%d" % n for n in range(10)])
 
 
 @dataclass(frozen=True)
@@ -223,6 +226,8 @@ def _valid_file_name(name: str) -> str | None:
         return "the sound file name has more than %d characters" % MAX_FILE_NAME
     if any(c in BAD_FILE_CHARACTERS or ord(c) < 32 for c in name) or name.startswith(".") or name.endswith((" ", ".")):
         return "the sound file name '%s' has a folder or a character a file name cannot have; put the file in the sounds folder" % name
+    if name.split(".")[0].rstrip().lower() in DEVICE_NAMES:         # CON, NUL, COM1 and the others are devices, not files
+        return "the sound file name '%s' is the name of a Windows device, not of a file" % name
     return None
 
 
@@ -345,6 +350,8 @@ def parse_markup(value: str) -> ParsedMarkup:
         return ParsedMarkup(None, problems + ["the line says and plays nothing"])
     if len(pieces) > MAX_PIECES:
         return ParsedMarkup(None, problems + ["the line has more than %d pieces" % MAX_PIECES])
+    if sum(p.seconds for p in pieces if isinstance(p, Pause) and p.seconds is not None) > MAX_TOTAL_PAUSE:
+        return ParsedMarkup(None, problems + ["the line has more than %d seconds of pauses" % MAX_TOTAL_PAUSE])
     return ParsedMarkup(pieces, problems)
 
 

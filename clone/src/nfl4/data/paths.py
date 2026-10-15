@@ -29,8 +29,9 @@ def log_dir() -> str:
 
 
 def customize_dir() -> str:
-    """The player's customization files (teams.txt, divisions.txt, surnames.txt, footplay.txt, banter.txt and the
-    sounds subfolder; D-032 item 11, D-035). Written in S7.7."""
+    """The player's customization files (teams.txt, divisions.txt, surnames.txt, banter.txt, footplay.txt and the
+    sounds subfolder for the banter's own sounds; D-032 item 11, D-035). Made, read and healed by data/customize.py
+    (S7.7), except footplay.txt, which data/files/store.py keeps (S7.5)."""
     return os.path.join(user_data_dir(), "customize")
 
 
