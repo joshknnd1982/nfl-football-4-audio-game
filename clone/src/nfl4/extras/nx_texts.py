@@ -196,7 +196,7 @@ TEXTS: dict[str, str] = {
     'ON03': ' the hands team is on the field. ',
     'QB01': ' <quarterback> keeps the ball ',
     'QB02': ' <quarterback> fakes the hand off and keeps it ',
-    'QB03': ' <quarterback> takes the snap and runs ',
+    'QB03': ' <quarterback> pulls the ball down and runs ',
     'QB04': ' <quarterback> rolls out and takes off ',
     'QB05': ' <quarterback> drops back, then takes off ',
     'PN01': ' another flag, Ghip. ',
@@ -240,6 +240,11 @@ TEXTS: dict[str, str] = {
     'NXH-15': ' With the N. F. L. rules you may try an onside kick instead of the normal kick off. You are asked when your team is behind in the second half or ahead by one score late in the game. ',
     'NXH-16': ' The onside kick is short and the other team may fall on the ball, so the chance to recover it is small. ',
     'NXH-17': ' Onside kick: A short kick off that the kicking team tries to recover for itself. ',
+    'NXH-18': ' In the offense menu, 8 is the quarterback sneak, 9 the keeper and 0 the draw. ',
+    'NXH-19': ' With the N. F. L. rules your quarterback may run the ball. The sneak gains a yard or two when you need only a little, the keeper goes outside, and the draw looks like a pass first. ',
+    'NXH-20': ' A pass play may end with the quarterback running when nobody is open. A quarterback who gains eight yards or more may slide and end the play feet first. ',
+    'NXH-21': ' Quarterback sneak: A short run by the quarterback straight ahead behind the center. Scramble: A pass play that turns into a run. Slide: The quarterback goes down feet first to end the play. ',
+    'NXH-22': ' A late hit on a quarterback who slides is a foul. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -475,6 +480,11 @@ SPEAKERS: dict[str, str] = {
     'NXH-15': 'say5',
     'NXH-16': 'say5',
     'NXH-17': 'say5',
+    'NXH-18': 'say5',
+    'NXH-19': 'say5',
+    'NXH-20': 'say5',
+    'NXH-21': 'say5',
+    'NXH-22': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -710,6 +720,11 @@ KINDS: dict[str, str] = {
     'NXH-15': 'help',
     'NXH-16': 'help',
     'NXH-17': 'help',
+    'NXH-18': 'help',
+    'NXH-19': 'help',
+    'NXH-20': 'help',
+    'NXH-21': 'help',
+    'NXH-22': 'help',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

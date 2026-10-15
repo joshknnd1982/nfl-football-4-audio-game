@@ -64,7 +64,7 @@ class ResultSteps:
     def touchdown(self):
         """L_44ea5c: a pass caught in the end zone, or the run countdown, then " TOUCH DOWN"."""
         g, s, snd = self.g, self.s, self.snd
-        if s.offense_play >= 3:
+        if not self.ran():                                # a pass caught in the end zone (a scramble or keeper runs)
             text = " " + self.receiver(s.wisoff, s.carrier)
             catch = self.rnd(3)
             text += P.TD_CATCHES[catch - 1]
@@ -117,7 +117,7 @@ class ResultSteps:
             s.return_flag = False
         else:
             self.dy(abs(s.yards) / 25, 0x4507b8)
-        if s.offense_play <= 2:                           # runs and kick-off returns
+        if self.ran():                                    # runs, kick-off returns, quarterback runs (SX.5)
             snd.play_tackle(s.tackle_sound)
             g.say4(s.tackle_sentence)
         else:                                             # passes, sacks, incompletions

@@ -74,4 +74,5 @@ def rules_for_saved_game(game, saved):
     settings = game.options.settings.game
     return NflRules(timeouts_on=settings.nx_timeouts, penalties_on=getattr(settings, "nx_penalties", True),
                     onside_on=getattr(settings, "nx_onside", True),
-                    onside_always=getattr(settings, "nx_onside_question", "sensible") == "always")
+                    onside_always=getattr(settings, "nx_onside_question", "sensible") == "always",
+                    qb_on=getattr(settings, "nx_qb_runs", True))

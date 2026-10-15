@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from . import outcome as O
 from . import phrases as P
-from .playtables import FUMBLE_NUMBER, INTERCEPTION_FLOOR, INTERCEPTION_NUMBER, PASSES, RUNS, SACK, SACK_PHRASES
-from .rules import FOUL_BEFORE_SNAP, GO_ON
+from .playtables import (FUMBLE_NUMBER, INTERCEPTION_FLOOR, INTERCEPTION_NUMBER, PASSES, QB_SNEAK, RUNS, SACK,
+                         SACK_PHRASES)
+from .rules import FOUL_BEFORE_SNAP, GO_ON, SCRAMBLE
 from .setup import RUN_DIRECTIONS, SNAP_WORDS
 from .vbnum import single
 
@@ -28,6 +29,7 @@ class ScrimmageSteps:
         if verdict != GO_ON:
             return self.play_menu
         self.mark_spot()
+        s.qb_run, s.slid = "", False                    # no quarterback run yet (N. F. L. rules mode, SX.5)
         if s.offense_play == 6:
             return self.field_goal
         if s.offense_play == 7:
@@ -102,6 +104,8 @@ class ScrimmageSteps:
         pair = (s.offense_play, s.defense_play)
         if s.offense_play <= 2:
             return self.run_play(self.rules.modifiers.run(*pair, RUNS[pair]))
+        if s.offense_play >= QB_SNEAK:                     # a quarterback run (N. F. L. rules mode only, SX.5)
+            return self.qb_run_play()
         return self.pass_play(self.rules.modifiers.pass_(*pair, PASSES[pair]))
 
     # ----- runs (5.9) -----
@@ -184,11 +188,15 @@ class ScrimmageSteps:
         stats.interception_count += 3
         stats.pass_attempts += 1
         if single(rnd.random() * 100) <= entry.sack:          # L4d0: a Single (FSTP float, 0x44a399)
-            away = self.rules.instead_of_sack(s)               # N. F. L. rules (SX.3): intentional grounding; Classic: None
+            away = self.rules.instead_of_sack(s)               # N. F. L. rules (SX.5 scramble, SX.3 grounding); Classic: None
+            if away == SCRAMBLE:
+                return self.scramble()
             if away is not None:
                 return self.thrown_away(away)
             return self.sack()
         complete_roll = single(rnd.random() * 100)            # L138, drawn before the throw sentence (0x44b367)
+        if complete_roll >= entry.complete and self.rules.instead_of_incompletion(s):   # N. F. L. rules (SX.5); Classic: no
+            return self.scramble()                                                     # draw, False
         g.say4(s.text)
         s.text = " " + self.qb(s.wisoff)
         number = s.throw_history.draw(rnd, len(P.THROW_PHRASES), "throw phrase")

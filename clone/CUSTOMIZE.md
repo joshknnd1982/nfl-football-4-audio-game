@@ -80,11 +80,11 @@ A line has at most 500 characters and 20 parts. A sound file goes in the sounds 
 
 ## The remarks of the N. F. L. rules
 
-When the Rules item of the F9 menu is set to N. F. L. rules, the game also has remarks.txt in the same folder (with the Classic rules the game never makes or reads it). It holds the announcer's remarks of the added features. Today these are the remarks after a time out, TO01 to TO05, one said after a time out one time in three, the remarks when an onside kick is declared, ON01 to ON03, one said one time in three, and the remarks after a penalty is accepted, PN01 to PN04, also one time in three. It works like banter.txt: change a line, switch it off with `TO03 = off`, delete it to get the original back, or add your own with a new number, TO06, ON04 or PN05 and higher. The words in square brackets of the banter work here too, and these are filled in by the game:
+When the Rules item of the F9 menu is set to N. F. L. rules, the game also has remarks.txt in the same folder (with the Classic rules the game never makes or reads it). It holds the announcer's remarks of the added features. Today these are the remarks after a time out, TO01 to TO05, one said after a time out one time in three, the remarks when an onside kick is declared, ON01 to ON03, one said one time in three, the sentences that start a quarterback keeper or draw, QB01 to QB05, one of them said at every keeper and draw, and the remarks after a penalty is accepted, PN01 to PN04, also one time in three. It works like banter.txt: change a line, switch it off with `TO03 = off`, delete it to get the original back, or add your own with a new number, TO06, ON04, QB06 or PN05 and higher. The words in square brackets of the banter work here too, and these are filled in by the game:
 
 - `<team>` is the team that called the time out, the team that kicks the onside kick, or the team the flag is on.
 - `<coach>` is your name.
-- `<quarterback>` is that team's quarterback.
+- `<quarterback>` is that team's quarterback (in a QB line, the quarterback who runs).
 - `<surname>` (PN lines only) is the player the flag is on.
 
 For example:
@@ -93,7 +93,7 @@ For example:
     ON04 = here comes the surprise that nobody is surprised by.
     PN05 = <surname> will hear about that one from the coach.
 
-A remark is never one of the last three said. F8 switches the remarks off with the banter.
+A remark is never one of the last three said. F8 switches the remarks off with the banter, except the QB lines: they are the play by play of a run, so they stay on, and if you switch every QB line off the original five are used.
 
 ## The penalties of the N. F. L. rules
 
@@ -107,6 +107,10 @@ Change the name to have it said your way. After the name you can add a semicolon
 - `P08 = holding; weight 50` and holding is called half as often. The weight goes from 0 to 200 percent; 100 is the usual.
 
 The yards and the rules of each penalty are the N. F. L.'s and cannot be changed in the file. To switch every foul off, set Penalties to off in the Rules item of the F9 menu. Delete a line to get the original back.
+
+## The quarterback runs of the N. F. L. rules
+
+With the N. F. L. rules the offense menu has three more plays after Punt: 8 Quarterback Sneak, 9 Quarterback Keeper and 0 Quarterback Draw (the key 0 is item 10; Time Out and Save Game come after them, T and S take you to them). The sneak gains a yard or two behind the center, the keeper is a run around the end, and the draw looks like a pass first. A pass play can also end with the quarterback running when nobody is open, a scramble. A quarterback who gains eight yards or more may slide, and, with Penalties on, a late hit on a quarterback who slides is a foul. The computer's quarterback sneaks on third or fourth and one or two yards, and now and then keeps the ball or runs a draw. In the Rules item of the F9 menu, Quarterback runs switches the whole feature on or off. The sentence that starts a keeper or a draw is one of the QB lines of remarks.txt. The quarter statistics add Quarterback Runs and Quarterback Running Yardage; a run is also counted in the team's ordinary running plays and yards.
 
 ## The onside kicks of the N. F. L. rules
 

@@ -74,8 +74,10 @@ def speak_banter(game, state: GameState) -> None:
     play_line(game, line.pieces, name, state.quarterbacks.get(2, ""), choices)
 
 
-def play_line(game, pieces: tuple, name: str, opponent_qb: str, choices: list[int]) -> None:
-    """Step 6: clk, then each group (its part said and waited, its sounds played and waited), clk after each."""
+def play_line(game, pieces: tuple, name: str, opponent_qb: str, choices: list[int], say=None) -> None:
+    """Step 6: clk, then each group (its part said and waited, its sounds played and waited), clk after each. `say` is the
+    speaker of the parts (the announcer's `say`, which waits and is not replayed, unless a pool of the extras gives another:
+    pool QB says its lines with say4, as a play-by-play sentence, SX.5)."""
     keys = game.keys
     keys.clk()
     groups = groups_of(pieces)
@@ -86,7 +88,10 @@ def play_line(game, pieces: tuple, name: str, opponent_qb: str, choices: list[in
             if isinstance(piece, Speak):
                 text = speak_text(piece, name, opponent_qb, remaining)
                 if text.strip() != "":
-                    game.say(text, rate_step=1 if piece.faster else 0)
+                    if say is None:
+                        game.say(text, rate_step=1 if piece.faster else 0)
+                    else:
+                        say(text)
             elif isinstance(piece, Bleep):
                 game.sounds.play(BLEEP_SOUND, 0)
             elif isinstance(piece, Sound):

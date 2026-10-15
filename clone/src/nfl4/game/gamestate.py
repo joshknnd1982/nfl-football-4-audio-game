@@ -104,6 +104,8 @@ class GameState:
     text: str = ""                     # L4f4: the sentence being built
     play_kind: int = 0                 # L6e4: 1 run, 2 pass
     result_kind: str = ""              # the kind of the play's result (outcome.py), for the H2 record
+    qb_run: str = ""                   # nfl4 only (SX.5): "sneak", "keeper", "draw" or "scramble" while such a play is run
+    slid: bool = False                 # nfl4 only (SX.5): the quarterback slid at the end of the run
     returner: int = 1                  # L898 of the kick-off: which special teams player catches it
     points: int = 0                    # L79c
     # flags of the original's paths

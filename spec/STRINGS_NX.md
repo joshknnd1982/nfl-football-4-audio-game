@@ -6,11 +6,11 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 232.
+- Texts: 237.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 38.
-- Quarterback runs (design section 7): 10.
+- Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 77.
 - Playbooks (design section 10): 9.
@@ -107,9 +107,14 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXQ-05 (sentence, say2): " <quarterback> runs straight up the middle ". the draw's run sentence
 - QB01 (remark, say4): " <quarterback> keeps the ball ". pool QB default: start of a keeper (never one of the last three)
 - QB02 (remark, say4): " <quarterback> fakes the hand off and keeps it ". pool QB default
-- QB03 (remark, say4): " <quarterback> takes the snap and runs ". pool QB default
+- QB03 (remark, say4): " <quarterback> pulls the ball down and runs ". pool QB default
 - QB04 (remark, say4): " <quarterback> rolls out and takes off ". pool QB default
 - QB05 (remark, say4): " <quarterback> drops back, then takes off ". pool QB default (draws)
+- NXH-18 (help, say5): " In the offense menu, 8 is the quarterback sneak, 9 the keeper and 0 the draw. ". F5 addition (H12, C6), when quarterback runs are on
+- NXH-19 (help, say5): " With the N. F. L. rules your quarterback may run the ball. The sneak gains a yard or two when you need only a little, the keeper goes outside, and the draw looks like a pass first. ". F6 addition (H12, C6), when quarterback runs are on
+- NXH-20 (help, say5): " A pass play may end with the quarterback running when nobody is open. A quarterback who gains eight yards or more may slide and end the play feet first. ". F6 addition (H12, C6), when quarterback runs are on, after NXH-19
+- NXH-21 (help, say5): " Quarterback sneak: A short run by the quarterback straight ahead behind the center. Scramble: A pass play that turns into a run. Slide: The quarterback goes down feet first to end the play. ". F7 addition (H12, C6), when quarterback runs are on
+- NXH-22 (help, say5): " A late hit on a quarterback who slides is a foul. ". F6 addition (H12, C6), when quarterback runs and penalties are on, after NXH-20
 
 ## Onside kicks (design section 8)
 

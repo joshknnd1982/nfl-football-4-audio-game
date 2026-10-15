@@ -36,6 +36,16 @@ SX.4, the onside kicks (NX4, design 8; extras/onside.py), when the game's Onside
                           the penalty flow include P24 and P33 for the kind
     H11, H12              " Onside Kicks Tried" and " Onside Kicks Recovered"; the added help on onside kicks
 
+SX.5, the quarterback runs (NX3, design 7; extras/qb_runs.py), when the game's Quarterback runs switch is on:
+    H3  offense_menu      8 Quarterback Sneak, 9 Quarterback Keeper, 0 (item 10) Quarterback Draw before Time Out and Save Game
+    H8  qb_entry, qb_narrate, qb_slide   the rows (design 7.1), the sentences (pool QB, design 7.2) and the slide (7.3)
+    H2  instead_of_sack   the original's sack becomes a scramble with 22 percent (before the grounding draw);
+        instead_of_incompletion   the original's incompletion becomes a scramble with 6 percent
+        computer_offense  the computer's sneaks, keepers and draws (design 7.4)
+        after_tackle      the quarterback's own out-of-bounds chances (sneak never, a slider never)
+        after_outcome     the statistics, the scramble's live time (clock.py)
+    H11, H12              " Quarterback Runs" and " Quarterback Running Yardage"; the added help on the quarterback's runs
+
 The order of the new draws inside a play (design 15, as built): out of bounds (after the tackle sentence), L (at the
 narration end point), then between plays R, the ready-signal cut, and for each side in turn (the side with the ball first)
 rule 6's draw and a timeout's u, its remark chance, its remark line, a name and the line's choices.
@@ -49,7 +59,8 @@ import logging
 from ..game import menus
 from ..game import outcome as O
 from ..game.gamestate import other
-from ..game.rules import FOUL_BEFORE_SNAP, GO_ON, NORMAL_KICKOFF, PERIOD_OVER, ClassicRules
+from ..game.playtables import QB_DRAW, QB_KEEPER, QB_SNEAK
+from ..game.rules import FOUL_BEFORE_SNAP, GO_ON, NORMAL_KICKOFF, PERIOD_OVER, SCRAMBLE, ClassicRules
 from ..game.setup import DEFENSE_ITEMS, OFFENSE_ITEMS
 from . import nx_texts as X
 from . import remarks
@@ -59,6 +70,7 @@ from . import tuning as T
 from .clock import RUNNING_KINDS, NflPeriodClock, late_window
 from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
+from .qb_runs import QbFlow
 from .state import ExtrasRecord
 
 log = logging.getLogger("nfl4.extras")
@@ -78,7 +90,7 @@ class NflRules(ClassicRules):
     name = NAME
 
     def __init__(self, timeouts_on: bool = True, auto_sides: tuple[int, ...] = (2,), penalties_on: bool = False,
-                 onside_on: bool = False, onside_always: bool = False):
+                 onside_on: bool = False, onside_always: bool = False, qb_on: bool = False):
         # the switches for a new game; a game reads its own from state.extras (a loaded game keeps the switches it was saved
         # with, C1). penalties_on and onside_on are off unless given: the program's rules come from the settings
         # (rules_from_settings, nx_penalties and nx_onside on by default), and a rules object made by hand (the clock's
@@ -87,16 +99,19 @@ class NflRules(ClassicRules):
         self.penalties_on = bool(penalties_on)
         self.onside_on = bool(onside_on)
         self.onside_always = bool(onside_always)  # the player is asked about an onside kick at every kick-off (design 8.2)
+        self.qb_on = bool(qb_on)                  # the quarterback's sneak, keeper, draw and scramble (SX.5, off unless given)
         self.auto_sides = tuple(auto_sides)       # the sides whose timeouts, penalty choices and onside kicks the computer decides
         self.game = None
         self.state = None
         self.clock: NflPeriodClock | None = None
         self.penalty = PenaltyFlow(self)
         self.onside = OnsideFlow(self)
+        self.qb = QbFlow(self)
 
     def for_game(self) -> "NflRules":
         """A fresh object for one game, with the same switches (Game.play_game)."""
-        return type(self)(self.timeouts_on, self.auto_sides, self.penalties_on, self.onside_on, self.onside_always)
+        return type(self)(self.timeouts_on, self.auto_sides, self.penalties_on, self.onside_on, self.onside_always,
+                          self.qb_on)
 
     # ----- H1 -----
 
@@ -104,7 +119,7 @@ class NflRules(ClassicRules):
         self.game, self.state = game, state
         state.extras = ExtrasRecord(timeouts_on=self.timeouts_on, postseason=game.season.gtp >= 17,
                                     penalties_on=self.penalties_on, onside_on=self.onside_on,
-                                    onside_always=self.onside_always)
+                                    onside_always=self.onside_always, qb_on=self.qb_on)
         self.clock = NflPeriodClock(game, state)
         return self.clock
 
@@ -127,10 +142,29 @@ class NflRules(ClassicRules):
         return self.penalty.before_snap_foul(state)
 
     def instead_of_sack(self, state) -> str | None:
-        """Intentional grounding in place of the sack the original drew (design 9.2 P15): the sentence of the throw."""
+        """In place of the sack the original drew: a scramble (design 7.1, SX.5), else intentional grounding (design 9.2 P15,
+        the sentence of the throw), else None and the sack stands."""
+        if self.qb.scramble_from_sack(state):
+            return SCRAMBLE
         if not state.extras.penalties_on or not self.penalty.grounding(state):
             return None
         return X.text("NXP-21", quarterback=state.quarterbacks.get(state.wisoff, ""))
+
+    def instead_of_incompletion(self, state) -> bool:
+        """The original's draw gave an incompletion, before the throw sentence: a scramble with 6 percent (design 7.1)."""
+        return self.qb.scramble_from_incomplete(state)
+
+    def computer_offense(self, state) -> None:
+        self.qb.computer_offense(state)
+
+    def qb_entry(self, state, scramble: bool = False):
+        return self.qb.entry(state, scramble)
+
+    def qb_narrate(self, state, entry, defender1: str, defender2: str):
+        return self.qb.narrate(state, entry, defender1, defender2)
+
+    def qb_slide(self, state) -> None:
+        self.qb.slide(state)
 
     def after_tackle(self, state) -> None:
         """Design 5.2: a run or a completion that ended in the field of play goes out of bounds with the chance of its
@@ -140,6 +174,10 @@ class NflRules(ClassicRules):
         if state.two_point or state.result_kind not in (O.RUN, O.PASS_COMPLETE):
             return
         rate = T.OUT_OF_BOUNDS_RUN if state.result_kind == O.RUN else T.OUT_OF_BOUNDS_PASS_COMPLETE
+        if state.qb_run:                           # the quarterback's own chances (design 7.1); a slider is down in bounds
+            rate = 0 if state.slid else T.QB_OUT_OF_BOUNDS[state.qb_run]
+            if rate == 0:
+                return
         if self.rnd.below(100) < rate:
             x.out_of_bounds = True
             self.game.say2(X.text("NXC-04"))
@@ -152,6 +190,7 @@ class NflRules(ClassicRules):
         x.last_kind = outcome.kind
         x.last_offense = outcome.offense
         x.last_two_point = bool(outcome.two_point_try)
+        self.qb.count(state, outcome)              # before the penalty flow can take the play away (it restores the count)
         facts = self.penalty.at_end(state, outcome) if x.penalties_on else None    # the foul draws come before L (15)
         self.clock.play_time(outcome, self.rnd)
         if x.penalties_on:
@@ -172,6 +211,11 @@ class NflRules(ClassicRules):
                 state.yard_line = 1
             return menus.offense_menu(True)                    # the try is untimed: the original's items 1 to 5
         items = [menu_item(n, text.strip()[3:], (menus.PLAY, n)) for n, text in enumerate(OFFENSE_ITEMS[:7], start=1)]
+        if state.extras.qb_on:                     # design 10.4: 8 sneak, 9 keeper, 0 draw (item 10, digit 0)
+            for play, text_id in ((QB_SNEAK, "NXM-01"), (QB_KEEPER, "NXM-02"), (QB_DRAW, "NXM-03")):
+                position = len(items) + 1
+                item = menu_item(position, X.text(text_id), (menus.PLAY, play))
+                items.append(item._replace(digit=position % 10))
         return self._tail(state, items)
 
     def defense_menu(self, state) -> list[menus.MenuItem]:
@@ -297,6 +341,8 @@ class NflRules(ClassicRules):
         if x.timeouts_on:
             lines += [X.text("NXS-03"), "%s %d" % (state.teams.get(1, ""), x.used_of(1)),
                       "%s %d" % (state.teams.get(2, ""), x.used_of(2))]
+        if x.qb_on:
+            lines += self.qb.stats_lines(state)
         if x.onside_on:
             lines += [X.text("NXS-06"), "%s %d" % (state.teams.get(1, ""), x.onside_tried[0]),
                       "%s %d" % (state.teams.get(2, ""), x.onside_tried[1]),
@@ -313,18 +359,22 @@ class NflRules(ClassicRules):
         return lines
 
     def extra_help(self, key: str) -> list[str]:
-        ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-09", "NXH-14"),
-               KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06", "NXH-10", "NXH-11", "NXH-15", "NXH-16"),
-               KEY_F7: ("NXH-07", "NXH-08", "NXH-12", "NXH-13", "NXH-17")}.get(key, ())
+        ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-09", "NXH-14", "NXH-18"),
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06", "NXH-10", "NXH-11", "NXH-15", "NXH-16", "NXH-19",
+                        "NXH-20", "NXH-22"),
+               KEY_F7: ("NXH-07", "NXH-08", "NXH-12", "NXH-13", "NXH-17", "NXH-21")}.get(key, ())
         timeout_lines = ("NXH-01", "NXH-05", "NXH-07")
-        penalty_lines = ("NXH-09", "NXH-10", "NXH-11", "NXH-12", "NXH-13")
+        penalty_lines = ("NXH-09", "NXH-10", "NXH-11", "NXH-12", "NXH-13", "NXH-22")
         onside_lines = ("NXH-14", "NXH-15", "NXH-16", "NXH-17")
+        qb_lines = ("NXH-18", "NXH-19", "NXH-20", "NXH-21", "NXH-22")
         x = self.state.extras if self.state is not None else None        # a loaded game's own switches
         timeouts_on = x.timeouts_on if x is not None else self.timeouts_on
         penalties_on = x.penalties_on if x is not None else self.penalties_on
         onside_on = x.onside_on if x is not None else self.onside_on
+        qb_on = x.qb_on if x is not None else self.qb_on
         return [X.text(i) for i in ids if (timeouts_on or i not in timeout_lines)
-                and (penalties_on or i not in penalty_lines) and (onside_on or i not in onside_lines)]
+                and (penalties_on or i not in penalty_lines) and (onside_on or i not in onside_lines)
+                and (qb_on or i not in qb_lines)]
 
 
 def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
@@ -335,7 +385,8 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
     return NflRules(timeouts_on=getattr(game_settings, "nx_timeouts", True), auto_sides=auto_sides,
                     penalties_on=getattr(game_settings, "nx_penalties", True),
                     onside_on=getattr(game_settings, "nx_onside", True),
-                    onside_always=getattr(game_settings, "nx_onside_question", "sensible") == "always")
+                    onside_always=getattr(game_settings, "nx_onside_question", "sensible") == "always",
+                    qb_on=getattr(game_settings, "nx_qb_runs", True))
 
 
 def is_nfl(rules) -> bool:

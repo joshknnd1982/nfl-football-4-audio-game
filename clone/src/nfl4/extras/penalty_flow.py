@@ -30,6 +30,7 @@ from dataclasses import dataclass, replace
 
 from ..game import outcome as O
 from ..game.gamestate import own_half
+from ..game.playtables import QB_SNEAK
 from ..game.rules import (KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, SAFETY_BY_PENALTY, TRY_AGAIN, TRY_FAILS)
 from . import fouls_2026 as F
 from . import nx_texts as X
@@ -97,6 +98,8 @@ class PenaltyFlow:
         self.rules = rules
         self.down: PEN.Down | None = None     # the down at the snap (or the kick-off)
         self.stats = None                     # the statistics at the snap (a play the penalty erases did not happen)
+        self.qb_stats = None                  # and the quarterback's runs (SX.5)
+        self.late: Flag | None = None         # a late hit on a slider waiting for the end of the play (SX.5)
         self.waiting: Flag | None = None      # an at-snap foul, announced at the end of the play
         self.dead: Flag | None = None         # a dead-ball foul before the snap
         self.forced: Flag | None = None       # intentional grounding drawn in place of a sack
@@ -180,20 +183,27 @@ class PenaltyFlow:
         offense = state.wisoff
         self.down = PEN.Down(offense, position(state, offense), state.down, state.to_go, bool(state.two_point))
         self.stats = copy.deepcopy(state.stats)
-        self.waiting = self.dead = self.forced = None
+        self.qb_stats = self._qb_stats(state)
+        self.waiting = self.dead = self.forced = self.late = None
         self.flags = []
+
+    @staticmethod
+    def _qb_stats(state) -> tuple[list, list]:
+        x = state.extras
+        return list(x.qb_runs), list(x.qb_yards)
 
     def take_kickoff(self, state) -> None:
         """A kick-off: the receivers (wisoff) are the offense, the return starts at their goal line (5.10)."""
         self.down = PEN.Down(state.wisoff, 0)
         self.stats = copy.deepcopy(state.stats)
-        self.waiting = self.dead = self.forced = None
+        self.qb_stats = self._qb_stats(state)
+        self.waiting = self.dead = self.forced = self.late = None
         self.flags = []
         self.try_from_the_one = False
 
     def at_snap(self, state, offense_play: int, defense_play: int) -> bool:
         """The draw before the snap. True: a dead-ball foul, the play is not run."""
-        if not 1 <= offense_play <= 5:
+        if not (1 <= offense_play <= 5 or offense_play >= QB_SNEAK):     # no snap count before a kick (SX.5: plays 8 to 10 snap)
             return False
         rows = [f for f in F.FOULS if F.DEAD in f.phases or F.SNAP in f.phases]
         foul = self.draw(rows, offense_play, defense_play)
@@ -205,6 +215,23 @@ class PenaltyFlow:
             return True
         self.waiting = flag
         return False
+
+    def slider_hit(self, state, one_in: int) -> bool:
+        """SX.5 (design 7.3): after a slide, a late hit on the slider with chance 1 in `one_in`: unnecessary roughness by the
+        defense (P18, 12-2-8 (d)), called after the play like the fouls of the table. One `below(one_in)` per slide; for a hit
+        the defender's slot `rnd(17)`. It waits for the end of the play (`late`) and `at_end` folds it in: the only flag, or
+        the second flag of the other team (the double foul rules decide), never a second flag of the same team (14-1-3).
+        Like every foul after the play it is not drawn on a try (14-2-3 would carry it to the kick-off) nor when the offense
+        does not keep the ball (a gain short of the line to gain on fourth down turns it over on downs)."""
+        if self.down is None or self.down.two_point:
+            return False
+        if state.down >= 4 and state.yards < state.to_go:
+            return False
+        if self.rnd.below(one_in) != 0:
+            return False
+        foul = next(f for f in F.BY_ID["P18"] if f.offender == F.DEFENSE)
+        self.late = Flag(foul, 2 if state.wisoff == 1 else 1, self.rnd(17))
+        return True
 
     def grounding(self, state) -> bool:
         """In place of a sack: intentional grounding with chance 1 in 12 (times the scale and the player's weight)."""
@@ -289,10 +316,16 @@ class PenaltyFlow:
             return None
         facts = self.facts(state, outcome)
         if facts is None:
-            self.waiting = self.forced = None
+            self.waiting = self.forced = self.late = None
             return None
         first = self.forced or self.waiting
         also = self.waiting if self.forced is not None else None   # an at-snap foul and grounding on one play
+        late, self.late = self.late, None
+        if late is not None:                                       # SX.5: a late hit on the slider
+            if first is None:
+                first = late
+            elif also is None and first.side != late.side:
+                also = late                                         # fouls by both teams: the double foul rules decide
         self.forced = self.waiting = None
         if also is not None and also.side != first.side:
             self.draw_spot(first, facts)
@@ -426,6 +459,8 @@ class PenaltyFlow:
             x.flag_yards[flag.side - 1] += result.yards
         if not result.keeps_play and self.stats is not None:
             state.stats = copy.deepcopy(self.stats)             # the play the penalty erased did not happen
+            if self.qb_stats is not None:
+                x.qb_runs, x.qb_yards = list(self.qb_stats[0]), list(self.qb_stats[1])
         if result.kind == PEN.NEW_DOWN and result.keeps_play and result.play_first_down:
             state.stats[result.ball].first_downs += 1            # as the original counts the play's first down
         if result.kind == PEN.NEW_DOWN and result.penalty_first_down:

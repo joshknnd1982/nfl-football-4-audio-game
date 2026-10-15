@@ -46,6 +46,15 @@ Added in PX SX.4 (onside kicks, D-051), each never taken in Classic:
     H4 onside_kick(state)                  the kick's sentences, sounds and draws up to its    never called
                                            result: ONSIDE_KEPT, ONSIDE_LOST or ONSIDE_RUN
     H4 safety_kick / kick again            kept by the extras' own record (no hook)
+
+Added in PX SX.5 (quarterback runs, D-052), each never taken in Classic:
+    H3 offense_menu                        items 8, 9 and 0: Quarterback Sneak, Keeper and Draw (offense play 8, 9, 10)
+    H8 qb_entry(state)                     the outcome row of a quarterback run (QBRunEntry) against the defense call
+    H8 qb_narrate(state, entry, d1, d2)    the start sentence of the pool QB, the direction, the run and tackle sentences
+    H8 qb_slide(state)                     the slide after a gain of 8 or more yards (yards, tackle sentence, whistle)
+    H2 instead_of_sack -> SCRAMBLE         the original's draw gave a sack: the quarterback takes off running
+    H2 instead_of_incompletion(state)      the original's draw gave an incompletion (before the throw sentence): a scramble
+    H2 computer_offense(state)             the computer's offense may replace its drawn play by a sneak, keeper or draw
 """
 from __future__ import annotations
 
@@ -61,6 +70,7 @@ PERIOD_OVER = "period over"     # H4: no kick-off, the period ends first (N. F. 
 # What the extras' onside kick leaves for the engine (SX.4): the kicking team recovered it, the receivers fell on it, or the
 # receivers picked it up and the engine runs the return (the state is set like a kick-off return)
 ONSIDE_KEPT, ONSIDE_LOST, ONSIDE_RUN = "kept", "lost", "run"
+SCRAMBLE = "scramble"           # H2 instead_of_sack: the sack becomes a scramble (N. F. L. rules mode only, SX.5)
 FOUL_BEFORE_SNAP = "foul before the snap"   # H2 step 2 (SX.3): a dead-ball foul, the play is not run
 
 # What the engine does after the extras took over a play (H2 step 4, `PlayOutcome.then`, or foul_before_snap's answer;
@@ -92,6 +102,21 @@ class ClassicRules:
 
     def instead_of_sack(self, state) -> str | None:
         return None
+
+    def instead_of_incompletion(self, state) -> bool:
+        return False
+
+    def computer_offense(self, state) -> None:
+        return None
+
+    def qb_entry(self, state, scramble: bool = False):
+        raise RuntimeError("Classic has no quarterback runs: the menu never offers plays 8 to 10")
+
+    def qb_narrate(self, state, entry, defender1: str, defender2: str):
+        raise RuntimeError("Classic has no quarterback runs")
+
+    def qb_slide(self, state) -> None:
+        raise RuntimeError("Classic has no quarterback runs")
 
     def after_tackle(self, state) -> None:
         return None

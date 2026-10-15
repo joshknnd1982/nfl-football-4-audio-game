@@ -118,6 +118,8 @@ def live_time(outcome, state, rnd) -> int:
     if kind == O.TWO_POINT_TRY:
         return 0
     span = LIVE_TIMES.get(kind)
+    if outcome.qb_run == "scramble" and kind == O.RUN:
+        span = T.LIVE_SCRAMBLE                                           # SX.5: a pass play that became a run (design 5.1)
     if span is None:
         return 0
     seconds = draw_between(rnd, span)

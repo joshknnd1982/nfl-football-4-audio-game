@@ -29,13 +29,14 @@ def test_the_timeout_pool_is_the_five_lines_of_strings_nx_with_their_exact_space
     for remark in lines:
         assert remark.builtin and remark.pieces == (Speak((Text(X.TEXTS[remark.id]),)),)
         assert remark.markup == X.TEXTS[remark.id].strip()
-    assert RM.POOLS_BUILT == ("TO", "ON", "PN")                 # SX.3 added the penalty remarks, SX.4 the onside remarks
+    assert RM.POOLS_BUILT == ("TO", "ON", "QB", "PN")           # SX.3 added the penalty remarks, SX.4 the onside remarks, SX.5 the
+    #                                                             quarterback's lines (play-by-play: F8 never silences them)
     assert [r.id for r in RM.DEFAULT_POOLS.lines("PN")] == list(X.REMARK_POOLS["PN"]) == ["PN01", "PN02", "PN03", "PN04"]
 
 
 def test_the_file_of_the_defaults_lists_every_default_line(tmp_path):
     entries = RM.default_entries()
-    assert entries == [(r.id, r.markup) for pool in ("TO", "ON", "PN") for r in RM.DEFAULT_POOLS.lines(pool)]
+    assert entries == [(r.id, r.markup) for pool in ("TO", "ON", "QB", "PN") for r in RM.DEFAULT_POOLS.lines(pool)]
     text = Customization(str(tmp_path / "customize")).default_text("remarks")
     assert text.startswith("# NFL Football 4 remarks, format 1.\n")
     parsed = cl.parse_list(text, GAME, "remarks")

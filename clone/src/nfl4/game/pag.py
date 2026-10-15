@@ -32,9 +32,11 @@ from .gamestate import GameState, SavedGame, other, own_half
 from .menus import PLAY, SAVE
 from .outcome import PlayOutcome
 from .pag_breaks import BreakSteps
+from .pag_keepers import KeeperSteps
 from .pag_kicks import KickSteps
 from .pag_results import ResultSteps
 from .pag_scrimmage import ScrimmageSteps
+from .playtables import DEFENSE_MATCH
 from .rules import (CLASSIC, KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, SAFETY_BY_PENALTY, TRY_AGAIN,
                     TRY_FAILS)
 from .setup import Roster
@@ -54,7 +56,7 @@ class GameResult:
     conceded: bool = False
 
 
-class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
+class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps):
     def __init__(self, game, rules=CLASSIC, own_names: Roster | None = None, saved: SavedGame | None = None,
                  quarterback_names: Callable[[GameState], tuple[str, str]] | None = None,
                  save_sink: Callable[[SavedGame], None] | None = None,
@@ -136,6 +138,10 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
         char = self.g_char
         return int(char) if len(char) == 1 and char in "0123456789" else 0
 
+    def menu_zero(self) -> bool:
+        """The key 0 (main row or keypad): item 10 of the N. F. L. rules offense menu."""
+        return self.g_code == "96" or self.g_char == "0"
+
     # ----- names: Me.m328 running backs, Me.m34c receivers, Me.m370 defense, Me.m394 special teams, Me.m3b8 kickers -----
 
     def back(self, side: int, n: int) -> str:
@@ -162,9 +168,10 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
         """The narration end point of a play: the record goes through Rules.after_outcome (Classic: unchanged)."""
         s = self.s
         values = dict(yards=s.yards, carrier=s.carrier, defender1=s.defender1, defender2=s.defender2,
-                      spot_before=self._spot_before, two_point_try=s.two_point)
+                      spot_before=self._spot_before, two_point_try=s.two_point, qb_run=s.qb_run, slid=s.slid)
         values.update(fields)
         record = PlayOutcome(kind, s.wisoff, s.offense_play, s.defense_play, **values)
+        s.qb_run, s.slid = "", False                 # the quarterback's play is over (SX.5; Classic never sets them)
         record = self.rules.after_outcome(s, record)
         self.outcomes.append(record)
         self.last_outcome = record
@@ -202,6 +209,12 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
         if then == PERIOD_END:
             return self.period_checks
         raise ValueError("unknown continuation %r" % (then,))
+
+    def ran(self) -> bool:
+        """The play is a run for the ending of the play: the original's runs (plays 1 and 2) and kick-off returns (play 0),
+        and the quarterback's runs of the N. F. L. rules mode (a sneak, keeper or draw, or a pass play that became a
+        scramble); never in Classic."""
+        return self.s.offense_play <= 2 or bool(self.s.qb_run)
 
     _spot_before: tuple[int, int] = (0, 0)
 
@@ -398,7 +411,9 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
                 self.clock.speak()
                 continue
             digit = self.menu_digit()
-            chosen = next((n for n, item in enumerate(items, start=1) if item.digit == digit), 0) if digit else 0
+            # the key 0 is item 10 of the N. F. L. rules offense menu (digit 0); no Classic item has the digit 0
+            chosen = (next((n for n, item in enumerate(items, start=1) if item.digit == digit), 0)
+                      if digit or self.menu_zero() else 0)
             if not chosen:                                 # the extras' letters (T, S); Classic's items have none
                 char = self.g_char.lower()
                 chosen = next((n for n, item in enumerate(items, start=1) if item.letter and item.letter == char), 0)
@@ -449,14 +464,21 @@ class PlayEngine(ScrimmageSteps, KickSteps, ResultSteps, BreakSteps):
             return self.snap
         if s.repeats <= 1 and self.rnd(2) == 1:            # L588, 0x43e7c0
             return self.snap
-        match = {1: 1, 2: 3, 3: 5, 4: 5, 5: 6}.get(s.offense_play)
+        match = DEFENSE_MATCH.get(s.offense_play)      # the original's five plays; with the N. F. L. rules also 8 to 10
         if match is not None:
             s.defense_play = match
         return self.snap
 
     def defense_chosen(self):
-        """L_43f04c: the computer's offense (5.7): 2/9 each for plays 1 to 4, 1/9 the long pass, then the last-play and
-        fourth-down rules."""
+        """L_43f04c: the computer's offense (5.7), then the hook that lets the N. F. L. rules mode replace the drawn play by a
+        quarterback run (design 7.4; Classic: nothing, no draw). Every step below returns `snap`, which has not run yet."""
+        step = self._offense_choice()
+        self.rules.computer_offense(self.s)
+        return step
+
+    def _offense_choice(self):
+        """The computer's offense (5.7): 2/9 each for plays 1 to 4, 1/9 the long pass, then the last-play and fourth-down
+        rules."""
         s = self.s
         s.previous_play = 0
         x = self.rnd.below(9) + 2                          # L64 = Int(Rnd * 9) + 2

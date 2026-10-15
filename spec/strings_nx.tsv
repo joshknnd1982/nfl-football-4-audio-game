@@ -187,7 +187,7 @@ ON02	onside	remark	say	 this could be the ball game right here, Ghip. 	pool ON d
 ON03	onside	remark	say	 the hands team is on the field. 	pool ON default
 QB01	qbruns	remark	say4	 <quarterback> keeps the ball 	pool QB default: start of a keeper (never one of the last three)
 QB02	qbruns	remark	say4	 <quarterback> fakes the hand off and keeps it 	pool QB default
-QB03	qbruns	remark	say4	 <quarterback> takes the snap and runs 	pool QB default
+QB03	qbruns	remark	say4	 <quarterback> pulls the ball down and runs 	pool QB default
 QB04	qbruns	remark	say4	 <quarterback> rolls out and takes off 	pool QB default
 QB05	qbruns	remark	say4	 <quarterback> drops back, then takes off 	pool QB default (draws)
 PN01	penalties	remark	say	 another flag, Ghip. 	pool PN default
@@ -231,3 +231,8 @@ NXH-14	onside	help	say5	 When you are asked about an onside kick, Y. says yes an
 NXH-15	onside	help	say5	 With the N. F. L. rules you may try an onside kick instead of the normal kick off. You are asked when your team is behind in the second half or ahead by one score late in the game. 	F6 addition (H12, C6), when onside kicks are on
 NXH-16	onside	help	say5	 The onside kick is short and the other team may fall on the ball, so the chance to recover it is small. 	F6 addition (H12, C6), when onside kicks are on, after NXH-15
 NXH-17	onside	help	say5	 Onside kick: A short kick off that the kicking team tries to recover for itself. 	F7 addition (H12, C6), when onside kicks are on
+NXH-18	qbruns	help	say5	 In the offense menu, 8 is the quarterback sneak, 9 the keeper and 0 the draw. 	F5 addition (H12, C6), when quarterback runs are on
+NXH-19	qbruns	help	say5	 With the N. F. L. rules your quarterback may run the ball. The sneak gains a yard or two when you need only a little, the keeper goes outside, and the draw looks like a pass first. 	F6 addition (H12, C6), when quarterback runs are on
+NXH-20	qbruns	help	say5	 A pass play may end with the quarterback running when nobody is open. A quarterback who gains eight yards or more may slide and end the play feet first. 	F6 addition (H12, C6), when quarterback runs are on, after NXH-19
+NXH-21	qbruns	help	say5	 Quarterback sneak: A short run by the quarterback straight ahead behind the center. Scramble: A pass play that turns into a run. Slide: The quarterback goes down feet first to end the play. 	F7 addition (H12, C6), when quarterback runs are on
+NXH-22	qbruns	help	say5	 A late hit on a quarterback who slides is a foul. 	F6 addition (H12, C6), when quarterback runs and penalties are on, after NXH-20

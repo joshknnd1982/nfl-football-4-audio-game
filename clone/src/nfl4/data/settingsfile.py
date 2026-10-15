@@ -61,6 +61,7 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     and the added features; the Rules item of the F9 menu changes it, from the next game on
 # nx_timeouts         on or off: the time outs of the N. F. L. rules (default on)
 # nx_penalties        on or off: the penalties of the N. F. L. rules, with accept or decline (default on)
+# nx_qb_runs          on or off: the quarterback sneak, keeper, draw and scramble of the N. F. L. rules (default on)
 # nx_onside           on or off: the onside kicks of the N. F. L. rules (default on)
 # nx_onside_question  sensible = you are asked about an onside kick only when it makes sense (default), always = at every
 #                     kick off
@@ -97,6 +98,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"rules = {game.rules}",
         f"nx_timeouts = {'on' if game.nx_timeouts else 'off'}",
         f"nx_penalties = {'on' if game.nx_penalties else 'off'}",
+        f"nx_qb_runs = {'on' if game.nx_qb_runs else 'off'}",
         f"nx_onside = {'on' if game.nx_onside else 'off'}",
         f"nx_onside_question = {game.nx_onside_question}",
     ]
@@ -202,6 +204,11 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if word is None:
             raise ValueError(f"'{value[:20]}' is not on or off")
         game.nx_penalties = word
+    elif name == "nx_qb_runs":
+        word = _ON_WORDS.get(value.lower())
+        if word is None:
+            raise ValueError(f"'{value[:20]}' is not on or off")
+        game.nx_qb_runs = word
     elif name == "nx_onside":
         word = _ON_WORDS.get(value.lower())
         if word is None:

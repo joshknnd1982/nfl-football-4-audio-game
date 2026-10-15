@@ -29,6 +29,18 @@ class RunEntry(NamedTuple):
     high: int           # L548: yards = Int(Rnd * (high - low)) + low
 
 
+class QBRunEntry(NamedTuple):
+    """One quarterback run of the N. F. L. rules mode (SX.5, nfl4 only; design 7.1): a sneak, keeper, draw or scramble against
+    one defense call. Classic never reads one. Yards = Int(Rnd * (high - low)) + low, so `high` is one more than the most
+    yards; the fumble chance is 1 in `fumble`."""
+    key: str            # "sneak", "keeper", "draw" or "scramble"
+    direction: int | None    # 4: Int(Rnd * 4) + 4 as the original's End Run (the keeper's run sentence), else None
+    sound: int          # the PlayTackle number of the tackle
+    low: int
+    high: int
+    fumble: int
+
+
 class PassEntry(NamedTuple):
     low: int            # L44
     high: int           # L548
@@ -59,6 +71,11 @@ PASSES: dict[tuple[int, int], PassEntry] = {
     (5, 1): PassEntry(15, 50, 10, 40), (5, 2): PassEntry(15, 50, 15, 40), (5, 3): PassEntry(15, 50, 10, 40),
     (5, 4): PassEntry(15, 100, 60, 40), (5, 5): PassEntry(15, 30, 20, 40), (5, 6): PassEntry(15, 50, 25, 30),    # 0x449d98..
 }
+
+# The computer's defense when it matches a repeated play (5.7): the original's five plays (1 to 5), and the quarterback runs
+# of the N. F. L. rules mode (8 sneak, 9 keeper, 10 draw; design 7.4): Goal Line, Long Run, Short Run
+DEFENSE_MATCH = {1: 1, 2: 3, 3: 5, 4: 5, 5: 6, 8: 1, 9: 3, 10: 2}
+QB_SNEAK, QB_KEEPER, QB_DRAW = 8, 9, 10      # the offense play numbers of the quarterback runs (menu items 8, 9 and 0)
 
 SACK = PassEntry(-12, 0, 0, 0)          # a sack's yards: Int(Rnd * 12) - 12 = -12 to -1 (0x44b294); sound 3, "smother" 2
 SACK_PHRASES, THROW_COUNT, CATCH_COUNT, INCOMPLETE_COUNT = 6, 9, 9, 9

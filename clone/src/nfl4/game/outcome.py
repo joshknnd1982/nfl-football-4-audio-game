@@ -47,6 +47,10 @@ class PlayOutcome:
     two_point_try: bool = False
     # the ruling fields that only the extras fill (NFL_EXTRAS_DESIGN 6.1); empty in Classic
     ruling: object = None
+    # the quarterback runs of the N. F. L. rules mode (SX.5): "sneak", "keeper", "draw" or "scramble" for a play of the
+    # quarterback, and whether he slid; empty in Classic
+    qb_run: str = ""
+    slid: bool = False
     # what the engine does next when the extras took over the end of the play (game/rules.py NEXT_DOWN and the others;
     # SX.3, an accepted penalty); None in Classic: the engine goes on as the original
     then: str | None = None

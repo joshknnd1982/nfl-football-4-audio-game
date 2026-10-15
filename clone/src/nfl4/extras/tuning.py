@@ -114,6 +114,30 @@ ONSIDE_COMPUTER_RULES = ((1, 999, 0, 120, 9, 10),      # any deficit with 2:00 o
 # to 10:00 left (NFL 54, 29, 14 and 3 percent with more), the team behind by 1 to 8 only 28 percent of the kicks (NFL 42:
 # the engine's games are more often decided by more than a score), 8.2 percent kept (design 8, NFL 6.0 and 9.6).
 
+# ----- quarterback runs, design 7 (SX.5) -----
+# The rows of the three plays and the scramble, one entry per defense call (Goal Line, Short Run, Long Run, Blitz, Short Pass,
+# Long Pass; design 7.1, start values): the fewest and the most yards (both ends included, uniform whole numbers), then the
+# chances. Yards are drawn like the original's runs: Int(Rnd * (most - fewest + 1)) + fewest.
+QB_ROWS = {
+    "sneak": ((0, 2), (0, 3), (1, 4), (-1, 3), (1, 4), (1, 5)),
+    "keeper": ((-2, 6), (-3, 5), (-4, 3), (-3, 15), (3, 12), (4, 14)),
+    "draw": ((-1, 3), (-2, 3), (1, 6), (4, 16), (2, 9), (3, 12)),
+}
+QB_SCRAMBLE_YARDS = (1, 14)           # the scramble has one row for every defense call: mean 7.5 (NFL 7.67)
+QB_FUMBLE_ODDS = {"sneak": 100, "keeper": 90, "draw": 90, "scramble": 200}     # a fumble lost: 1 in this many
+QB_OUT_OF_BOUNDS = {"sneak": 0, "keeper": 12, "draw": 5, "scramble": 34}       # percent of the runs that go out of bounds
+QB_SOUND = {"sneak": 1, "keeper": 3, "draw": 3, "scramble": 2}                 # the original's PlayTackle numbers (foot4 to foot6)
+QB_SCRAMBLE_FROM_SACK = 22            # percent: the original's sack becomes a scramble (design 7.1; one draw below(100) < this)
+QB_SCRAMBLE_FROM_INCOMPLETE = 6       # percent: the original's incompletion (before the throw sentence) becomes a scramble
+LIVE_SCRAMBLE = (5, 9)                # the live time of a scramble (design 5.1); a sneak, keeper or draw takes a run's LIVE_RUN
+QB_SLIDE_MIN_YARDS = 8                # a keeper, draw or scramble that gained this many yards and did not score may slide ...
+QB_SLIDE_ONE_IN = 2                   # ... with this chance (1 in 2, one draw rnd(2) = 1)
+QB_SLIDE_CUT = (0, 2)                 # a slide cuts the gain by 0 to 2 yards (design 7.3)
+QB_LATE_HIT_ONE_IN = 40               # a late hit on the slider (P18) with chance 1 in 40 of the slides, penalties on
+QB_COMPUTER_SNEAK = (1, 2)            # the computer: third or fourth and 1 or 2: a sneak with chance 1 in 2 (design 7.4)
+QB_COMPUTER_SHORT = 2                 # "short" yardage: this many yards to go or fewer
+QB_COMPUTER_OTHER_ONE_IN = 150        # downs 1 to 3 otherwise: one draw rnd(this): 1 a keeper, 2 a draw (design 7.4)
+
 # ----- a Classic save loaded in N. F. L. rules mode, design 12.3 -----
 SAVE_SECONDS_PER_COUNTED_PLAY = 28    # the clock at 15:00 minus 28 seconds per counted play,
 SAVE_LEAST_LEFT = 60                  # at least 1:00
@@ -132,3 +156,9 @@ TARGET_PRE_SNAP_SHARE = (0.30, 0.45)            # of the accepted fouls (Part 8:
 TARGET_ONSIDE_PER_GAME = (0.12, 0.27)           # onside kicks tried per game, both teams (NFL 0.19 in 2024 and 2025, 0.14 in
 #                                                 2026 to week 5, Part 9 section 4); all in the fourth quarter by the team behind
 TARGET_ONSIDE_RECOVERED = (0.06, 0.10)          # the share the kicking team keeps (6.0 percent 2024, 9.6 percent 2025)
+TARGET_QB_DESIGNED_PER_TEAM_GAME = (1.0, 1.6)   # designed quarterback runs per team per game (NFL 1.29, Part 1.6)
+TARGET_QB_DESIGNED_YARDS = (3.2, 4.2)           # their mean yards (NFL 3.66)
+TARGET_QB_SCRAMBLE_SHARE = (0.045, 0.065)       # scrambles as a share of the drop-backs (design 7.1: about 5.4 percent)
+TARGET_QB_SCRAMBLE_YARDS = (7.0, 8.2)           # their mean yards (NFL 7.67; a slide cuts a little)
+TARGET_QB_SHORT_CONVERSION = (0.78, 0.88)       # third or fourth and 1, a designed quarterback run: first down or touchdown
+#                                                 (NFL 83.4 percent)

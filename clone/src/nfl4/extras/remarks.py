@@ -12,7 +12,10 @@ last three spoken in this game when the pool has more than three lines on (`Int(
 of them; bounded, G-D1); a line with [name] draws a name of the banter's list after it, a line with [one of:] its choices
 after that. F8 (comments off) silences the pools of commentary before any draw. A pool with no line on says nothing.
 
-Built so far: TO (SX.2), PN (SX.3, after an accepted penalty, design 9), ON (SX.4, when an onside kick is declared, design 8).
+A pool of the play-by-play (QB) is never silent: with every line switched off its default lines speak.
+Built so far: TO (SX.2), PN (SX.3, after an accepted penalty, design 9), ON (SX.4, when an onside kick is declared, design 8),
+QB (SX.5, the start of a keeper or a draw, design 7.2: play-by-play in the quarterback's sentence, said with say4 so that F2
+replays it, and never silenced by F8).
 Each later session adds its pool to POOLS_BUILT
 and its placeholders to PLACEHOLDERS.
 """
@@ -30,11 +33,13 @@ from .state import RECENT_REMARKS
 
 log = logging.getLogger("nfl4.extras")
 
-POOLS_BUILT = ("TO", "ON", "PN")                        # the pools whose feature exists (SX.2 timeouts, SX.4 onside kicks,
-#                                                         SX.3 penalties), in the order of remarks.txt
+POOLS_BUILT = ("TO", "ON", "QB", "PN")                  # the pools whose feature exists (SX.2 timeouts, SX.4 onside kicks,
+#                                                         SX.5 quarterback runs, SX.3 penalties), in the order of remarks.txt
 COMMENTARY_POOLS = frozenset(("TO", "CHS", "CHC", "RVR", "RVC", "ON", "PN"))   # F8 silences these; QB is play-by-play
+PLAY_BY_PLAY_POOLS = frozenset(("QB",))      # never silenced: with every line switched off the default lines speak (design 13, L13)
 PLACEHOLDERS = {"TO": ("<team>", "<coach>", "<quarterback>"),
                 "ON": ("<team>", "<coach>", "<quarterback>"),
+                "QB": ("<team>", "<coach>", "<quarterback>"),
                 "PN": ("<team>", "<coach>", "<quarterback>", "<surname>")}
 ID_PATTERN = re.compile(r"([A-Z]{2,3})(\d{1,4})", re.IGNORECASE)
 MAX_NUMBER = 9999
@@ -193,13 +198,17 @@ def pick(pool_lines: tuple[Remark, ...], recent: list[str], rnd) -> Remark | Non
     return pool_lines[index - 1]
 
 
-def say_remark(game, state, record, pool: str, values: Mapping[str, str]) -> Remark | None:
-    """Draw and say one remark of `pool` (F8 silences the commentary pools before any draw). Returns the line said."""
+def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=None) -> Remark | None:
+    """Draw and say one remark of `pool` (F8 silences the commentary pools before any draw). Returns the line said. `say` is
+    the speaker of its parts (None: the announcer's `say`; pool QB passes say4)."""
     if pool in COMMENTARY_POOLS and game.comtog == 1:
         return None
     pools = getattr(game, "remark_pools", None) or DEFAULT_POOLS
     recent = list(record.recent.get(pool, []))
-    remark = pick(pools.lines(pool), recent, game.rnd)
+    lines = pools.lines(pool)
+    if not lines and pool in PLAY_BY_PLAY_POOLS:       # the play-by-play always has a sentence (CUSTOMIZABLE_CONTENT 13 L13)
+        lines = DEFAULT_REMARKS[pool]
+    remark = pick(lines, recent, game.rnd)
     if remark is None:
         return None
     record.recent[pool] = (recent + [remark.id])[-RECENT_REMARKS:]
@@ -210,7 +219,7 @@ def say_remark(game, state, record, pool: str, values: Mapping[str, str]) -> Rem
         name = names[index - 1] if index <= len(names) else ""
     pieces = _filled(remark.pieces, values)
     choices = [game.rnd(size) for size in choice_sizes(pieces)]
-    play_line(game, pieces, name, state.quarterbacks.get(2, ""), choices)
+    play_line(game, pieces, name, state.quarterbacks.get(2, ""), choices, say)
     return remark
 
 
@@ -220,13 +229,17 @@ NOTES = (
     "These are the announcer's remarks of the N. F. L. rules. The game reads this file only when the Rules setting of the F9 "
     "menu is N. F. L. rules.",
     "Each line is an ID, an equals sign and the remark. The letters of the ID say the pool: TO are the remarks after a time out,",
-    "ON the remarks when an onside kick is declared, PN the remarks after a penalty is accepted.",
+    "ON the remarks when an onside kick is declared, QB the sentences that start a quarterback keeper or draw (they are",
+    "the play-by-play and stay on when you switch the comments off with F8), PN the remarks after a penalty is accepted.",
     "Change a line to say something else. Write TO03 = off to switch a line off. Delete a line to get the original back.",
     "Add your own lines with a new number in a pool, TO06 or PN05 and up. A remark is chosen by chance, never one of the last three.",
-    "In a line, <team> is the team that called the time out, kicked the onside kick or was flagged, <coach> is your name and",
-    "<quarterback> that team's quarterback; in a PN line <surname> is the player the flag was on.",
+    "In a line, <team> is the team that called the time out, kicked the onside kick, has the ball (QB) or was flagged,",
+    "<coach> is your name and",
+    "<quarterback> that team's quarterback (in a QB line the quarterback who runs); in a PN line <surname> is the player the",
+    "flag was on.",
     "The words in square brackets of banter.txt work here too: [sound my laugh.wav], [pause], [bleep], [one of: a | b].",
-    "A line has at most 500 characters and 20 parts. The F8 key switches all comments off, these too.",
+    "A line has at most 500 characters and 20 parts. The F8 key switches all comments off, these too, except the QB lines:",
+    "they are the play by play of a run and stay on; if you switch every QB line off, the original five are used.",
 )
 
 

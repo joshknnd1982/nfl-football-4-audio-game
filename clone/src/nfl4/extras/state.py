@@ -75,6 +75,10 @@ class ExtrasRecord:
     kick_back: int = 0                # yards an accepted foul moved the next kick back (6-3-1)
     kick_from: int = R.KICKOFF_SPOT   # the kicking team's own yard line the next kick is made from
     safety_kick: bool = False         # the next kick-off follows a safety: it is made from the 20 (11-5-2)
+    # quarterback runs (design 7, SX.5); a record saved before SX.5 has none of them (quarterback runs off)
+    qb_on: bool = False               # the Quarterback runs switch of the game (design 12.1)
+    qb_runs: list = field(default_factory=lambda: [0, 0])      # runs by each side's quarterback: sneaks, keepers, draws and
+    qb_yards: list = field(default_factory=lambda: [0, 0])     # scrambles, and their yards (the statistics, C7, design 7.4)
 
     # ----- per side -----
 
@@ -166,7 +170,7 @@ class ExtrasRecord:
         whole(self.last_offense, 0, 2, "the last offense")
         for name in ("timeouts_on", "postseason", "running", "warning_due", "warning_given", "last_two_point",
                      "out_of_bounds", "penalties_on", "foul_by_offense", "was_running", "extension", "extension_snap",
-                     "no_snap", "onside_on", "onside_always", "kick_again", "rekick", "safety_kick"):
+                     "no_snap", "onside_on", "onside_always", "kick_again", "rekick", "safety_kick", "qb_on"):
             flag(getattr(self, name), name)
         whole(self.kick_back, 0, 50, "the yards the kick moved back")
         whole(self.kick_from, 1, R.KICKOFF_SPOT, "the yard line of the kick")
@@ -180,6 +184,8 @@ class ExtrasRecord:
         pair(self.called, flag, "the timeouts called")
         pair(self.onside_tried, lambda v, w: whole(v, 0, 9999, w), "the onside kicks tried")
         pair(self.onside_recovered, lambda v, w: whole(v, 0, 9999, w), "the onside kicks recovered")
+        pair(self.qb_runs, lambda v, w: whole(v, 0, 9999, w), "the quarterback runs")
+        pair(self.qb_yards, lambda v, w: whole(v, -99999, 999999, w), "the quarterback running yards")
         pair(self.flags, lambda v, w: whole(v, 0, 9999, w), "the penalties")
         pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
         if self.foul_clock not in FOUL_CLOCKS:
