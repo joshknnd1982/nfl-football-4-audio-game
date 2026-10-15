@@ -208,11 +208,16 @@ class GameSounds:
         self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT))
         self.audio.stop(SLOT_ONESHOT)
 
+    def celebration_run(self) -> None:
+        """8 to 15 celebration sounds (Int(Rnd * 8) + 8 of them, each waited): the run of playcel, of the Super Bowl
+        presentation (superbowl, twice) and of finplay17's Super Bowl (S7.3c, 0x484bab, 0x48541f, 0x483fbb)."""
+        for _ in range(int(self._rnd() * 8) + 8):
+            self.celebration_sound()
+
     def playcel(self) -> None:
         """The touchdown celebration: c2uf, 8 to 15 celebration sounds (Int(Rnd * 8) + 8), 0.4 s, play(12, -500), c2df."""
         self.c2uf()
-        for _ in range(int(self._rnd() * 8) + 8):
-            self.celebration_sound()
+        self.celebration_run()
         self.keys.dy(CELEBRATION_PAUSE)
         self.play(12, -500)
         self.c2df()

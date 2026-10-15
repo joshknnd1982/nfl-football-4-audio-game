@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .playoffs import PlayoffState, TeamRef
 from .rnd import GameRandom
 from .schedule import WEEKS, ScheduleEntry, make_schedule
 from .standings import Records
@@ -33,9 +34,18 @@ class SeasonState:
     gtp: int = 1                      # the week counter
     schedule: list[ScheduleEntry] = field(default_factory=list)
     records: Records = field(default_factory=Records)
+    playoffs: PlayoffState = field(default_factory=PlayoffState)    # footbal4.dat and footbal5.dat (S7.3c)
 
     def choose_team(self, division: int, place: int) -> None:
         self.tn1, self.tn2 = division, place
+
+    @property
+    def own_team(self) -> TeamRef:
+        return TeamRef(self.tn1, self.tn2)
+
+    @property
+    def opponent_team(self) -> TeamRef:
+        return TeamRef(self.tn3, self.tn4)
 
     def make_schedule(self, rnd: GameRandom) -> list[ScheduleEntry]:
         """`makes`: a new schedule for the chosen team (a new season, and when the player rejects the schedule in week 1)."""
@@ -50,3 +60,15 @@ class SeasonState:
         entry = self.schedule[self.gtp - 1]
         self.tn3, self.tn4, self.vtrnt = entry.division, entry.team, entry.flag
         return entry
+
+    def set_playoff_opponent(self) -> bool:
+        """The week loop's step 7c for gtp 17 to 20 (GAME_SPEC 3): this week's opponent is the other team of the player's
+        game in footbal4.dat (tn3, tn4) with vtrnt = 2 when the player is the visitor, 1 when the player is the home team.
+        When no record has the player's team the three values stay as they were (cannot happen in normal play: a team
+        that is out gets the remaining rounds at once). Returns whether the player's game was found."""
+        found = self.playoffs.opponent_of(self.own_team)
+        if found is None:
+            return False
+        opponent, self.vtrnt = found
+        self.tn3, self.tn4 = opponent.division, opponent.place
+        return True

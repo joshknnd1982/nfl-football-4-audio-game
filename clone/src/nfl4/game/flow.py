@@ -53,6 +53,8 @@ class Game(Speakers):
         self.coach_source = lambda: self.season.coach
         self.comtog_source: Callable[[], int] = lambda: 0      # F8: 1 = the comments (banter) are off (S7.4 wires it)
         self.m414: tuple[int, int] | None = None      # the last game's result for the season engine (S7.3c)
+        self.season_store = None                      # S7.5: writes football.gtp, footbal3.dat, footbal4.dat, footbal5.dat
+        self._season_engine = None
 
     @property
     def pool(self) -> NamePool:
@@ -116,13 +118,29 @@ class Game(Speakers):
         """halftime (p_485b80): foot0, 15 celebration sounds, foot0 (game/sounds.py)."""
         self.sounds.halftime()
 
+    # ----- the season engine and the play-offs: pog, finplay17, superbowl (S7.3c) -----
+
+    @property
+    def season_engine(self):
+        """pog, finplay17 and the Super Bowl presentation (game/season_engine.py); its state is `season`."""
+        if self._season_engine is None:
+            from .season_engine import SeasonEngine
+            self._season_engine = SeasonEngine(self)
+        return self._season_engine
+
+    def pog(self):
+        """pog (GAME_SPEC 5.14 to 5.16): after a game that was not saved, when gtp is not 0; uses `m414`. The speech log
+        flag ptf stays 1, as in the original: the week loop sets it to 0 afterwards (Form_Load)."""
+        return self.season_engine.pog()
+
+    def finplay17(self) -> None:
+        """finplay17 (GAME_SPEC 5.17): the rounds without the player's team, to the Super Bowl and the celebration."""
+        self.season_engine.finplay17()
+
     def superbowl(self, scores: tuple[int, int]) -> None:
-        """superbowl (p_484860): S7.3c builds the presentation (the winner sentence, 8 to 15 celebration sounds, foot25
-        when the player won, the F1 and F2 repeat). Until then only what pag depends on: the replay list emptied, the
-        log flag on and gtp = 42 at its end."""
-        self.empty_replay()
-        self.ptf = 1
-        self.season.gtp = 42
+        """superbowl (p_484860, GAME_SPEC 5.6 item 7): the Super Bowl presentation after the player's Super Bowl game, in
+        place of the final score; gtp is 42 at its end and pag sets 0."""
+        self.season_engine.super_bowl_presentation(scores)
 
     def say_score(self, own_score: int, opponent_score: int) -> None:
         """SayScore (F3): " The score is ", the sentence (waited), then two lines to the log whatever ptf is, DoEvents."""

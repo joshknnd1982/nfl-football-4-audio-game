@@ -139,8 +139,12 @@ def test_the_super_bowl_game_runs_its_presentation_once_and_ends_the_season_q27(
     rig.engine.s.stats[2].score = 3
     rig.game.season.gtp = 20
     calls = []
-    original = rig.game.superbowl
-    rig.game.superbowl = lambda scores: (calls.append(scores), original(scores))
+
+    def presentation(scores):                      # the real presentation has its own tests (test_superbowl.py)
+        calls.append(scores)
+        rig.game.season.gtp = 42                   # what superbowl's last statement does
+
+    rig.game.superbowl = presentation
     run_steps(rig, rig.engine.next_play, Draws(), until=("never",))
     assert calls == [(0, 3)] and rig.game.season.gtp == 0
     assert " The Final score is" not in texts(rig)
