@@ -44,6 +44,7 @@ from ..game.rules import FOUL_BEFORE_SNAP, GO_ON, NORMAL_KICKOFF, PERIOD_OVER, C
 from ..game.setup import DEFENSE_ITEMS, OFFENSE_ITEMS
 from . import nx_texts as X
 from . import remarks
+from . import rules_2026 as R
 from . import timeouts
 from . import tuning as T
 from .clock import RUNNING_KINDS, NflPeriodClock, late_window
@@ -199,11 +200,13 @@ class NflRules(ClassicRules):
                 keeps = False                     # stopped until the snap
             else:
                 ready = True                      # stopped, restarted on the ready signal: a shorter runoff
+        cap = None
         if x.foul_clock:                          # SX.3: after a foul, as if it had not happened, except 4-3-2 (e), (g)
             keeps, ready = clock_after_foul(x, state.quarter, keeps)
+            cap = R.RUNOFF_PLAY_CLOCK if x.foul_clock == "runoff" else R.PLAY_CLOCK_AFTER_PENALTY
             x.foul_clock = ""
         lead = state.score(state.wisoff) - state.score(other(state.wisoff))
-        self.clock.runoff(self.rnd, keeps, ready, lead)
+        self.clock.runoff(self.rnd, keeps, ready, lead, cap)
         if x.timeouts_on and x.left > 0:          # at 0:00 the period is over: no timeout can be granted
             for side in (state.wisoff, other(state.wisoff)):
                 if side not in self.auto_sides or timeouts.refusal(x, side) is not None:

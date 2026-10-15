@@ -268,6 +268,24 @@ def test_grounding_replaces_the_sack_and_the_computer_takes_the_loss_of_down(tmp
     assert step == rig.engine.position and (s.yard_line, s.down, s.to_go) == (20, 3, 20)
 
 
+def test_an_offside_waiting_from_the_snap_and_grounding_offset(tmp_path):
+    rig = game(tmp_path, down=2, to_go=10)
+    snap(rig)
+    rig.rules.penalty.waiting = PF.Flag(F.BY_ID["P03"][0], 2, 3)
+    script(rig, Draws().below(10000, 0))
+    rig.engine.thrown_away(rig.rules.instead_of_sack(rig.engine.s))
+    rig.engine.end_of_play()
+    draws = Draws().below(5, 2).below(5, 0)                         # the passer's spot, then L: no third draw
+    script(rig, draws)
+    step = rig.engine.field_play_end()
+    check(rig, draws)
+    said = texts(rig)
+    assert " off sides, on the Jets, ODef3. " in said and " intentional grounding, on the Bengals, Starr. " in said
+    assert X.text("NXP-08") in said
+    s = rig.engine.s
+    assert step == rig.engine.position and (s.yard_line, s.down, s.to_go) == (30, 2, 10)
+
+
 def test_grounding_is_rare_and_never_happens_with_penalties_off(tmp_path):
     rig = game(tmp_path)
     script(rig, Draws().below(10000, 9999))
@@ -305,7 +323,7 @@ def test_a_false_start_after_the_warning_with_the_clock_running_offers_the_run_o
     step = rig.engine.snap()
     check(rig, draws)
     said = texts(rig)
-    i = said.index(X.text("NXP-17", n=70))
+    i = said.index(X.text("NXP-17", n=60))                            # 70 left: 60 after the run off (review, D-050)
     assert said[i - 1].startswith(" Kim if you accept the penalty, it will be first and 15 on my 35 yard line")
     assert said[i + 1] == " if you decline it, it will be first and 10 on my 40 yard line. "
     assert said[i + 2:i + 4] == [X.text("NXP-A03"), X.text("NXP-12")]     # the player's side is tied: the run off

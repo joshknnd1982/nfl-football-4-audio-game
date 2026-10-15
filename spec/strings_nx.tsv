@@ -222,7 +222,7 @@ NXP-S15	penalties	piece	piece	the try fails	situation (a two-point try)
 NXP-S16	penalties	piece	piece	the try will be played again from the <yard> yard line	situation (a two-point try)
 NXH-09	penalties	help	say5	 When you are asked about a penalty, A. accepts it and D. declines it. Up and Down change the answer and Enter takes it. 	F5 addition (H12, C6), when penalties are on
 NXH-10	penalties	help	say5	 With the N. F. L. rules the officials throw flags for fouls. When the other team fouls, you may accept the penalty or decline it and keep the result of the play. 	F6 addition (H12, C6), when penalties are on
-NXH-11	penalties	help	say5	 A penalty never moves the ball more than half the distance to the goal. Most fouls by the defense also give an automatic first down. 	F6 addition (H12, C6), when penalties are on
+NXH-11	penalties	help	say5	 A penalty moves the ball at most half the distance to the goal, except pass interference. Most fouls by the defense also give an automatic first down.	F6 addition (H12, C6), when penalties are on
 NXH-12	penalties	help	say5	 Penalty: The yards a team loses for a foul. Automatic first down: A first down given by a penalty, whatever the distance. Loss of down: A penalty that also costs the down. 	F7 addition (H12, C6), when penalties are on
 NXH-13	penalties	help	say5	 Offsetting penalties: Fouls by both teams on one play. They cancel each other and the down is played again. 	F7 addition (H12, C6), when penalties are on
 NXP-21	penalties	sentence	say2	 <quarterback> throws the ball away to avoid the sack. 	intentional grounding in place of a sack (design 9.2 P15): the tackle sentence of the pass

@@ -70,20 +70,21 @@ def parse_value(value: str) -> tuple[str, int | None, list[str]]:
     parts = [part.strip() for part in value.split(";")]
     name, options = parts[0], parts[1:]
     percent: int | None = None
+    off = False
     problems: list[str] = []
     for option in options:
         words = option.casefold().split()
         if not words:
             continue
         if words == ["off"]:
-            percent = 0
+            off = True                             # off wins over a weight, wherever it stands
         elif words == ["on"]:
-            percent = 100 if percent is None else percent
+            continue
         elif words[0] == "weight" and len(words) == 2 and words[1].isdigit() and int(words[1]) <= WEIGHT_MAX:
             percent = int(words[1])
         else:
             problems.append("'%s' is not off or a weight from 0 to %d, it is ignored" % (option[:30], WEIGHT_MAX))
-    return name, percent, problems
+    return name, 0 if off else percent, problems
 
 
 def table_of(entries, problems) -> FoulTable:

@@ -79,7 +79,10 @@ DPI_DEPTH_LONG = (15, 40)             #   on a Long Pass
 RUN_FOUL_BEHIND = 2                   # a foul by the offense on a run: from 2 yards behind the line to the end of the run
 GROUNDING_DROP = (5, 9)               # intentional grounding: the passer is 5 to 9 yards behind the line
 RETURN_FOUL_REACH = 25                # a foul by the receivers on a kick-off return: within 25 yards behind its end
-# the computer's choice (design 9.3): field positions within this many yards count as equal, then the down decides
+# the computer's choice (design 9.3): field positions within this many yards count as equal, then the down decides.
+# SX.3: 3 gives 8.0 percent of the choices declined over 10,000 games (Part 8: 12 to 13, a plausibility check). 5 was
+# tried (9.9 percent in 1,000 games) and not kept: it accepts an offside after a 9-yard gain (first and 5 over second and
+# 1), which coaches decline; the clone's shortfall comes from the play mix (D-050)
 FIELD_POSITION_TOLERANCE = 3
 
 # ----- a Classic save loaded in N. F. L. rules mode, design 12.3 -----

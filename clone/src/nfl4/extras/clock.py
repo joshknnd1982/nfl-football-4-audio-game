@@ -238,7 +238,7 @@ class NflPeriodClock:
         return (is_warning_period(x.period, x.postseason) and not x.warning_given and not x.warning_due
                 and before > R.WARNING_SECONDS >= after)
 
-    def runoff(self, rnd, keeps_running: bool, ready_signal: bool, lead: int) -> int:
+    def runoff(self, rnd, keeps_running: bool, ready_signal: bool, lead: int, cap: int | None = None) -> int:
         """H10, once per play: R for the side that snaps next, kept pending (design 5.3). Returns R (0: the clock is
         stopped)."""
         x, s = self.x, self.state
@@ -249,6 +249,8 @@ class NflPeriodClock:
         seconds = draw_between(rnd, RUNOFF[pace])
         if ready_signal:
             seconds = max(0, seconds - draw_between(rnd, T.READY_SIGNAL_CUT))
+        if cap is not None:
+            seconds = min(seconds, cap)            # after a penalty the play clock is 25 (4-6-2 (e)): SX.3
         if pace == HURRY and seconds >= x.left >= T.HURRY_SNAP_MIN:
             seconds = x.left - 1                  # the hurry-up offense gets the snap off before time runs out
         x.pending, x.running = seconds, seconds > 0

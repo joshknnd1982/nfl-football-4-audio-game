@@ -235,7 +235,9 @@ def _accept_grounding(foul: F.Foul, down: Down, pass_spot: int | None) -> Result
     """8-2-1: loss of down and 10 yards from the previous spot (half the distance applies there), or loss of down at the
     spot of the pass when that is worse for the offense; a safety when the passer was in his own end zone."""
     spot_of_pass = down.los if pass_spot is None else pass_spot
-    if spot_of_pass <= 0 and not down.two_point:
+    if spot_of_pass == 0:
+        spot_of_pass = 1                          # on the goal line, not wholly in the end zone: no safety, the 1
+    if spot_of_pass < 0 and not down.two_point:
         defense = other(down.offense)
         return Result(SAFETY, defense, points=_points(defense, 2), notes=(X.text("NXP-10"),))
     from_previous, moved, halved = move(down.los, foul.yards, True)
@@ -316,6 +318,11 @@ def answers(foul: F.Foul, down: Down, play: PlayFacts | None, foul_spot: int | N
         return AUTO_ACCEPT, accept(foul, down, None), same
     declined = play_result(down, play)
     accepted = accept(foul, down, play, foul_spot)
+    if down.two_point and ((declined.kind == TRY_GOOD and not foul.offense_side)
+                           or (declined.kind == TRY_FAILS and foul.offense_side and accepted.kind != TRY_FAILS)):
+        return AUTO_DECLINE, accepted, declined   # 11-3-3 Items 3 and 4: no try again for the team that fouled
+    if play.turnover and foul.offense_side and foul.personal:
+        return AUTO_DECLINE, accepted, declined   # 14-4-3 (b): the defense keeps the ball (its yards: not carried, D-050)
     if declined.kind == TOUCHDOWN and not foul.offense_side:
         if foul.personal:
             return ON_THE_TRY, accepted, declined

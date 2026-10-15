@@ -231,7 +231,7 @@ TEXTS: dict[str, str] = {
     'NXP-S16': 'the try will be played again from the <yard> yard line',
     'NXH-09': ' When you are asked about a penalty, A. accepts it and D. declines it. Up and Down change the answer and Enter takes it. ',
     'NXH-10': ' With the N. F. L. rules the officials throw flags for fouls. When the other team fouls, you may accept the penalty or decline it and keep the result of the play. ',
-    'NXH-11': ' A penalty never moves the ball more than half the distance to the goal. Most fouls by the defense also give an automatic first down. ',
+    'NXH-11': ' A penalty moves the ball at most half the distance to the goal, except pass interference. Most fouls by the defense also give an automatic first down.',
     'NXH-12': ' Penalty: The yards a team loses for a foul. Automatic first down: A first down given by a penalty, whatever the distance. Loss of down: A penalty that also costs the down. ',
     'NXH-13': ' Offsetting penalties: Fouls by both teams on one play. They cancel each other and the down is played again. ',
     'NXP-21': ' <quarterback> throws the ball away to avoid the sack. ',

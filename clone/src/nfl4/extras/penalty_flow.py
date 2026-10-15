@@ -9,7 +9,8 @@ When fouls happen and the draws (design 9.1 and 15, as built):
   hit draws the offender's slot (`rnd(12)` for the offense's backs and receivers, `rnd(17)` for the defense; none for a
   team foul). A dead-ball foul stops the snap after " hut 1 " (FOUL_BEFORE_SNAP, `before_snap_foul`); an at-snap foul
   waits for the end of the play.
-* In place of a sack (`grounding`, the hook instead_of_sack): one `below(10000)` against 833 per 10,000 (1 in 12).
+* In place of a sack (`grounding`, the hook instead_of_sack): one `below(10000)` against tuning.GROUNDING_PER_10000_SACKS
+  times the scale and the player's weight.
 * H2 step 4 (`at_end`, the narration end point, before the play's live time L): when no foul is waiting, one
   `below(10000)` against the rows that fit the play (and the after-the-play rows when the offense keeps the ball), the
   slot, the foul's spot when it has one (pass interference: the depth of the throw; a foul by the offense on a run: 2
@@ -291,8 +292,13 @@ class PenaltyFlow:
             self.waiting = self.forced = None
             return None
         first = self.forced or self.waiting
+        also = self.waiting if self.forced is not None else None   # an at-snap foul and grounding on one play
         self.forced = self.waiting = None
-        rows = None
+        if also is not None and also.side != first.side:
+            self.draw_spot(first, facts)
+            self.flags = [first, also]                                # fouls by both teams: no third draw (14-5-1)
+            return facts
+        rows = None                                                   # (by one team: one penalty, grounding, 14-1-3)
         if first is None:
             rows = self.rows_for(facts, self.after_allowed(facts))
             foul = self.draw(rows, facts.offense_play, facts.defense_play)
@@ -367,7 +373,7 @@ class PenaltyFlow:
             keys.clk()
             g.say5(X.text("NXP-04", coach=g.season.coach, situation=PEN.situation(accepted, offense)))
             if runoff is not None:
-                left = state.extras.left
+                left = state.extras.left - R.RUNOFF_SECONDS          # what accepting with the run off leaves
                 g.say5(X.text("NXP-19") if left <= 0 else X.text("NXP-18") if left == 1 else X.text("NXP-17", n=left))
             g.say5(X.text("NXP-05", situation=PEN.situation(declined, offense)))
             while True:
@@ -493,8 +499,9 @@ class PenaltyFlow:
             return self.apply(state, flag, result)
         flag = flags[0]
         how, accepted, declined = PEN.answers(flag.foul, self.down, facts, flag.spot)
-        if how == PEN.AUTO_DECLINE:
+        if how == PEN.AUTO_DECLINE:                    # no real choice: said as the officials say it
             self.note(state, "not offered", flag)
+            g.say4(X.text("NXP-07", team=state.teams.get(2 if flag.side == 1 else 1, "")))
             return None
         if how == PEN.ON_THE_TRY:
             self.note(state, "on the try", flag)
@@ -505,8 +512,11 @@ class PenaltyFlow:
             return None
         if self.extends(state, flag) and accepted.kind == PEN.NEW_DOWN:
             accepted = replace(accepted, untimed=True, notes=accepted.notes + (X.text("NXP-14"),))
-        if state.quarter in (2, 4) and x.left <= 0 and declined.kind == PEN.NEW_DOWN:
-            declined = replace(declined, pieces=declined.pieces + (X.text("NXP-S08"),))
+        if state.quarter in (2, 4) and x.left <= 0:   # the play used the last second: the half ends after it
+            if declined.kind == PEN.NEW_DOWN:
+                declined = replace(declined, pieces=declined.pieces + (X.text("NXP-S08"),))
+            if accepted.kind == PEN.NEW_DOWN and not accepted.untimed:
+                accepted = replace(accepted, pieces=accepted.pieces + (X.text("NXP-S08"),))
         answer = self.decide(state, flag, accepted, declined)
         if answer == DECLINE:
             self.note(state, "declined", flag)
@@ -536,7 +546,8 @@ class PenaltyFlow:
         g.sounds.c2df()
         self.announce(state, [flag], True)
         how, accepted, declined = PEN.answers(flag.foul, self.down, None)
-        runoff_due = (flag.foul.offense_side and x.was_running and x.left > 0 and not self.down.two_point
+        runoff_due = (flag.foul.offense_side and flag.foul.code not in R.NO_RUNOFF_FOULS and x.was_running
+                      and x.left > 0 and not self.down.two_point
                       and is_warning_period(x.period, x.postseason) and x.warning_given)
         if runoff_due:
             answer = self.decide(state, flag, accepted, declined, runoff=accepted)
@@ -558,6 +569,9 @@ class PenaltyFlow:
             self.note(state, "accepted", flag, accepted.yards, pre=True)
         then = self.apply(state, flag, accepted)
         self.remark(state, flag)
+        if then != NEXT_DOWN:                          # the try again: the untimed try passes no next-play step or H10,
+            x.no_snap = False                          # so nothing may wait for them
+            x.foul_clock = ""
         return then
 
     # ----- the statistics -----
