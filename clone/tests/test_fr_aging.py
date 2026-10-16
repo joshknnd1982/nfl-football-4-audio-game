@@ -278,8 +278,9 @@ def test_history_keeps_the_players_team_and_the_stars_and_drops_the_rest():
 # ----- the calibrated values have a test of their own -----
 
 CALIBRATED = dict(FR_RETIRE_PER_YEAR=110, FR_RETIRE_PER_POINT=6, FR_GROWTH=(4, 2, 1), FR_IN_WINDOW=(1, 0, 0),
-                  FR_DECLINE=(2, 3, 4, 5, 6, 6), FR_PROGRESS_NOISE=(5, -2),                  FR_PEAK={"RB": (24, 28), "WR": (25, 29), "QB": (24, 32), "DL": (25, 29), "LB": (25, 29), "CB": (25, 28),
-                           "S": (25, 29), "RET": (24, 28), "K": (24, 34), "P": (24, 34)})        # K and P: D-061 (SX.8f)
+                  FR_DECLINE=(2, 3, 4, 5, 6, 6), FR_PROGRESS_NOISE=(5, -2),
+                  FR_PEAK={"RB": (24, 28), "WR": (25, 29), "QB": (24, 30), "DL": (25, 29), "LB": (25, 29), "CB": (25, 28),
+                           "S": (25, 29), "RET": (24, 28), "K": (24, 34), "P": (24, 34)})        # the quarterback's end, K and P: D-061 (SX.8f)
 
 
 def test_the_tuning_file_holds_the_values_the_calibration_settled_on():
@@ -288,10 +289,10 @@ def test_the_tuning_file_holds_the_values_the_calibration_settled_on():
 
 
 def test_the_shipped_windows_keep_the_researchs_shape_where_it_matters():
-    # the calibration moved some windows (D-058); a quarterback and a kicker still hold into their thirties, a receiver still
+    # the calibration moved some windows (D-058, D-061); a quarterback holds to thirty, a kicker into his mid thirties, a receiver still
     # declines later than a running back, and nothing grows after its window
-    assert aging.base_change("QB", 31, "average") == 0 and aging.base_change("QB", 32, "high") == 1
-    assert aging.base_change("QB", 33, "average") == -2
+    assert aging.base_change("QB", 30, "average") == 0 and aging.base_change("QB", 30, "high") == 1
+    assert aging.base_change("QB", 31, "average") == -2 and aging.base_change("QB", 33, "high") == -4
     assert aging.base_change("K", 34, "average") == 0 and aging.base_change("P", 35, "average") == -2
     assert aging.base_change("RB", 29, "average") < 0 <= aging.base_change("WR", 29, "average")
     for position in D.POSITIONS:
