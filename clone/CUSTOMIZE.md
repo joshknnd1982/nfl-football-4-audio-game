@@ -18,6 +18,7 @@ It holds these plain text files. Any text editor will do, and a screen reader re
 - the folder sounds, for your own sound files used in the banter.
 - remarks.txt, the remarks of the N. F. L. rules, only when that rule set is chosen in F9 (see below).
 - penalties.txt, the fouls of the N. F. L. rules: their names, and which are called and how often (see below).
+- the folder playbooks, with plays.txt, styles.txt and team_styles.txt: the plays of the N. F. L. rules' playbooks (see below).
 
 After you save a file, choose Reload in the Customize menu, or start the game again. A game in progress keeps the players it already has.
 
@@ -119,6 +120,18 @@ With the N. F. L. rules some rulings on the field are wrong, and nobody is told.
 ## The onside kicks of the N. F. L. rules
 
 With the N. F. L. rules your team may try an onside kick instead of the normal kick off. The game asks you only when it makes sense: your team is behind in the third or fourth quarter, or ahead by one score (1 to 8 points) with five minutes or less left in the fourth. The answer starts at no. In the Rules item of the F9 menu, Onside kicks switches the whole feature on or off, and Onside question can be set to always, so that you are asked at every kick off and every kick after a safety. The computer tries an onside kick only in the fourth quarter, when it is behind and the game is nearly over. The remarks it says are the ON lines of remarks.txt; the fouls on the kick, offside and illegal touching, are P24 and P33 of penalties.txt.
+
+## The playbooks of the N. F. L. rules
+
+With the N. F. L. rules you choose an offense playbook and a defense playbook in the Rules item of the F9 menu: Classic (the original's plays, and the usual), Team playbook (the style of your own team), or one of seven styles: Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option and Pressure. With a playbook, the play menu has groups, such as Inside Runs, Outside Runs, Screens, Short Passes, Deep Passes and Play Action. Enter opens a group and shows its plays; Backspace, Left or the letter B goes back. Field Goal and Punt stay in the first menu. Every play is one of the original's plays with a small change, strong against some defense calls and weak against others; the announcer and the sentences of the play are the original's. The computer's teams call the plays of their own style.
+
+The folder playbooks has three files:
+
+- plays.txt has every play with an ID, O001 to O052 for the offense and D001 to D030 for the defense. Change the name after the ID to have it said your way (at most 30 characters and six words), or add `; off` to take a play out of every style: `O004 = Draw Play; off`.
+- styles.txt has the seven styles, S1 Pro Style, S2 West Coast, S3 Air Raid, S4 Power Run, S5 Zone Run, S6 Option and S7 Pressure. A line like `S2O017 = weight 7` puts play O017 in the style with the weight the computer calls it with; `off` takes it out, and a line for a play that is not in the style puts it in. A line like `S2OB1 = families 3 4; vs 1 2 3; sack -2; comp 3` is a small change the whole style makes: its plays of those families change against those calls of the other team. Every number has a bound, two yards for ylo and yhi, five points for sack and comp, five for fum, and a number past its bound is a problem and the original is used. The notes at the top of the file list the families and the calls. `S6QB = 300` is how often the computer runs its quarterback, in percent of the usual.
+- team_styles.txt gives each of the 32 teams a style, for example `T01 = Air Raid; defense Pro Style`. Classic is the original's plays: put a team on Classic and the computer plays it with the original's plays.
+
+With Rules on Classic, none of these files is read.
 
 ## If something is wrong
 

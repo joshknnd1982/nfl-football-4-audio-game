@@ -64,6 +64,9 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # nx_penalties        on or off: the penalties of the N. F. L. rules, with accept or decline (default on)
 # nx_qb_runs          on or off: the quarterback sneak, keeper, draw and scramble of the N. F. L. rules (default on)
 # nx_onside           on or off: the onside kicks of the N. F. L. rules (default on)
+# nx_offense_playbook classic = the original's plays (default), team = the style of your team, or pro, west, air, power, zone,
+#                     option, pressure: the plays your offense calls with the N. F. L. rules
+# nx_defense_playbook the same for your defense
 # nx_onside_question  sensible = you are asked about an onside kick only when it makes sense (default), always = at every
 #                     kick off
 #
@@ -103,6 +106,8 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_qb_runs = {'on' if game.nx_qb_runs else 'off'}",
         f"nx_onside = {'on' if game.nx_onside else 'off'}",
         f"nx_onside_question = {game.nx_onside_question}",
+        f"nx_offense_playbook = {game.nx_offense_playbook}",
+        f"nx_defense_playbook = {game.nx_defense_playbook}",
     ]
     return "\n".join(lines) + "\n"
 
@@ -225,6 +230,12 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if value.lower() not in ("sensible", "always"):
             raise ValueError(f"'{value[:20]}' is not sensible or always")
         game.nx_onside_question = value.lower()
+    elif name in ("nx_offense_playbook", "nx_defense_playbook"):
+        from ..extras.playbook_data import PLAYBOOK_CHOICES
+        choice = value.lower().strip()
+        if choice not in PLAYBOOK_CHOICES:
+            raise ValueError(f"'{value[:20]}' is not one of {', '.join(PLAYBOOK_CHOICES)}")
+        setattr(game, name, choice)
     else:
         raise KeyError(name)
 

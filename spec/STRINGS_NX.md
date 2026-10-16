@@ -6,14 +6,14 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 245.
+- Texts: 335.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 77.
-- Playbooks (design section 10): 9.
+- Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 3.
@@ -236,6 +236,96 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXB-07 (menu, say5): "Quarterback Runs". group
 - NXB-08 (menu, say5): "Field Goal". group (the original's item text without its number)
 - NXB-09 (menu, say5): "Punt". group (the original's item text without its number)
+- NXY-01 (menu, say5): "Inside Zone". offense play O001 of the catalog (plays.txt)
+- NXY-02 (menu, say5): "Power Left". offense play O002 of the catalog (plays.txt)
+- NXY-03 (menu, say5): "Counter". offense play O003 of the catalog (plays.txt)
+- NXY-04 (menu, say5): "Draw Play". offense play O004 of the catalog (plays.txt)
+- NXY-05 (menu, say5): "Dive". offense play O005 of the catalog (plays.txt)
+- NXY-06 (menu, say5): "Iso". offense play O006 of the catalog (plays.txt)
+- NXY-07 (menu, say5): "Trap". offense play O007 of the catalog (plays.txt)
+- NXY-08 (menu, say5): "Lead Run". offense play O008 of the catalog (plays.txt)
+- NXY-09 (menu, say5): "Stretch Outside". offense play O009 of the catalog (plays.txt)
+- NXY-10 (menu, say5): "Outside Zone". offense play O010 of the catalog (plays.txt)
+- NXY-11 (menu, say5): "Toss Sweep". offense play O011 of the catalog (plays.txt)
+- NXY-12 (menu, say5): "Jet Sweep". offense play O012 of the catalog (plays.txt)
+- NXY-13 (menu, say5): "Pitch". offense play O013 of the catalog (plays.txt)
+- NXY-14 (menu, say5): "End Around". offense play O014 of the catalog (plays.txt)
+- NXY-15 (menu, say5): "Speed Option". offense play O015 of the catalog (plays.txt)
+- NXY-16 (menu, say5): "Reverse". offense play O016 of the catalog (plays.txt)
+- NXY-17 (menu, say5): "Running Back Screen". offense play O017 of the catalog (plays.txt)
+- NXY-18 (menu, say5): "Receiver Screen". offense play O018 of the catalog (plays.txt)
+- NXY-19 (menu, say5): "Tight End Screen". offense play O019 of the catalog (plays.txt)
+- NXY-20 (menu, say5): "Tunnel Screen". offense play O020 of the catalog (plays.txt)
+- NXY-21 (menu, say5): "Bubble Screen". offense play O021 of the catalog (plays.txt)
+- NXY-22 (menu, say5): "Hitch Routes". offense play O022 of the catalog (plays.txt)
+- NXY-23 (menu, say5): "Quick Out". offense play O023 of the catalog (plays.txt)
+- NXY-24 (menu, say5): "Curl and Flat". offense play O024 of the catalog (plays.txt)
+- NXY-25 (menu, say5): "Stick". offense play O025 of the catalog (plays.txt)
+- NXY-26 (menu, say5): "Drag". offense play O026 of the catalog (plays.txt)
+- NXY-27 (menu, say5): "Mesh Crossers". offense play O027 of the catalog (plays.txt)
+- NXY-28 (menu, say5): "Shallow Cross". offense play O028 of the catalog (plays.txt)
+- NXY-29 (menu, say5): "Spacing". offense play O029 of the catalog (plays.txt)
+- NXY-30 (menu, say5): "Run Pass Option". offense play O030 of the catalog (plays.txt)
+- NXY-31 (menu, say5): "Slants". offense play O031 of the catalog (plays.txt)
+- NXY-32 (menu, say5): "Four Verticals". offense play O032 of the catalog (plays.txt)
+- NXY-33 (menu, say5): "Deep Post". offense play O033 of the catalog (plays.txt)
+- NXY-34 (menu, say5): "Corner Route". offense play O034 of the catalog (plays.txt)
+- NXY-35 (menu, say5): "Go Route". offense play O035 of the catalog (plays.txt)
+- NXY-36 (menu, say5): "Deep Cross". offense play O036 of the catalog (plays.txt)
+- NXY-37 (menu, say5): "Flood". offense play O037 of the catalog (plays.txt)
+- NXY-38 (menu, say5): "Hail Mary". offense play O038 of the catalog (plays.txt)
+- NXY-39 (menu, say5): "Wheel Route". offense play O039 of the catalog (plays.txt)
+- NXY-40 (menu, say5): "Play Action Short". offense play O040 of the catalog (plays.txt)
+- NXY-41 (menu, say5): "Play Action Deep". offense play O041 of the catalog (plays.txt)
+- NXY-42 (menu, say5): "Bootleg Short". offense play O042 of the catalog (plays.txt)
+- NXY-43 (menu, say5): "Rollout". offense play O043 of the catalog (plays.txt)
+- NXY-44 (menu, say5): "Play Action Shot". offense play O044 of the catalog (plays.txt)
+- NXY-45 (menu, say5): "Play Action Cross". offense play O045 of the catalog (plays.txt)
+- NXY-46 (menu, say5): "Quarterback Sneak". offense play O046 of the catalog (plays.txt)
+- NXY-47 (menu, say5): "Quarterback Keeper". offense play O047 of the catalog (plays.txt)
+- NXY-48 (menu, say5): "Quarterback Draw". offense play O048 of the catalog (plays.txt)
+- NXY-49 (menu, say5): "Read Option Keep". offense play O049 of the catalog (plays.txt)
+- NXY-50 (menu, say5): "Quarterback Power". offense play O050 of the catalog (plays.txt)
+- NXY-51 (menu, say5): "Sneak Push". offense play O051 of the catalog (plays.txt)
+- NXY-52 (menu, say5): "Bootleg Run". offense play O052 of the catalog (plays.txt)
+- NXZ-01 (menu, say5): "Goal Line Eight Up". defense play D001 of the catalog (plays.txt)
+- NXZ-02 (menu, say5): "Goal Line Stack". defense play D002 of the catalog (plays.txt)
+- NXZ-03 (menu, say5): "Bear Front". defense play D003 of the catalog (plays.txt)
+- NXZ-04 (menu, say5): "Base Run Fit". defense play D004 of the catalog (plays.txt)
+- NXZ-05 (menu, say5): "Run Blitz". defense play D005 of the catalog (plays.txt)
+- NXZ-06 (menu, say5): "Inside Run Force". defense play D006 of the catalog (plays.txt)
+- NXZ-07 (menu, say5): "Contain Outside Force". defense play D007 of the catalog (plays.txt)
+- NXZ-08 (menu, say5): "Edge Setting". defense play D008 of the catalog (plays.txt)
+- NXZ-09 (menu, say5): "Spy". defense play D009 of the catalog (plays.txt)
+- NXZ-10 (menu, say5): "Zone Blitz". defense play D010 of the catalog (plays.txt)
+- NXZ-11 (menu, say5): "Cover Zero Blitz". defense play D011 of the catalog (plays.txt)
+- NXZ-12 (menu, say5): "Safety Blitz". defense play D012 of the catalog (plays.txt)
+- NXZ-13 (menu, say5): "Corner Blitz". defense play D013 of the catalog (plays.txt)
+- NXZ-14 (menu, say5): "Linebacker Blitz". defense play D014 of the catalog (plays.txt)
+- NXZ-15 (menu, say5): "A Gap Blitz". defense play D015 of the catalog (plays.txt)
+- NXZ-16 (menu, say5): "Cover Two Zone". defense play D016 of the catalog (plays.txt)
+- NXZ-17 (menu, say5): "Cover Three Zone". defense play D017 of the catalog (plays.txt)
+- NXZ-18 (menu, say5): "Man Free". defense play D018 of the catalog (plays.txt)
+- NXZ-19 (menu, say5): "Underneath Zone". defense play D019 of the catalog (plays.txt)
+- NXZ-20 (menu, say5): "Nickel Quick Coverage". defense play D020 of the catalog (plays.txt)
+- NXZ-21 (menu, say5): "Tampa Two". defense play D021 of the catalog (plays.txt)
+- NXZ-22 (menu, say5): "Cover Four Quarters". defense play D022 of the catalog (plays.txt)
+- NXZ-23 (menu, say5): "Deep Thirds". defense play D023 of the catalog (plays.txt)
+- NXZ-24 (menu, say5): "Prevent Deep". defense play D024 of the catalog (plays.txt)
+- NXZ-25 (menu, say5): "Cover Six". defense play D025 of the catalog (plays.txt)
+- NXZ-26 (menu, say5): "Double Coverage". defense play D026 of the catalog (plays.txt)
+- NXZ-27 (menu, say5): "Palms". defense play D027 of the catalog (plays.txt)
+- NXZ-28 (menu, say5): "Dime Short Coverage". defense play D028 of the catalog (plays.txt)
+- NXZ-29 (menu, say5): "Dime Deep Coverage". defense play D029 of the catalog (plays.txt)
+- NXZ-30 (menu, say5): "Man Press". defense play D030 of the catalog (plays.txt)
+- NXB-10 (menu, say5): "Back". the last play item of a group: back to the groups (letter B)
+- NXH-27 (help, say5): " With a playbook, a group in the play menu opens a short list of plays. Enter opens it, and Backspace, Left or B. go back to the groups. ". F5 addition (H12, C6), when a playbook is in use
+- NXH-28 (help, say5): " With the N. F. L. rules you may choose an offense playbook and a defense playbook in the F9 menu, under Rules. Classic is the original's plays. ". F6 addition (H12, C6), when a playbook is in use
+- NXH-29 (help, say5): " The others are styles: Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option and Pressure. A play changes an original play a little: strong against some calls, weak against others. ". F6 addition (H12, C6), when a playbook is in use, after NXH-28
+- NXH-30 (help, say5): " The computer's teams call the plays of their own style, which the file team styles in the customize folder sets. ". F6 addition (H12, C6), when a playbook is in use, after NXH-29
+- NXH-31 (help, say5): " Playbook: The plays a team may call. Style: The kind of football a playbook is built for, such as West Coast or Air Raid. Group: A kind of play, such as inside runs, that opens a short list. ". F7 addition (H12, C6), when a playbook is in use
+- NXH-32 (help, say5): " Inside zone: A run into the middle of the line. Stretch: A run that goes wide before it turns up field. Screen: A short pass behind the line with blockers in front. ". F7 addition (H12, C6), when a playbook is in use
+- NXH-33 (help, say5): " Play action: A pass that starts with a fake hand off. Bootleg: The quarterback leaves the pocket. Cover two: Two safeties play deep. Cover three: Three share the deep zones. ". F7 addition (H12, C6), when a playbook is in use
 
 ## Menus and settings (design 10.4, 12)
 

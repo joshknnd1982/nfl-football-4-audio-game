@@ -14,6 +14,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field, fields
 
+from . import playbook_data as D
 from . import rules_2026 as R
 from . import tuning as T
 
@@ -84,6 +85,10 @@ class ExtrasRecord:
     challenges_on: bool = False       # the Replay challenges switch of the game (design 12.1)
     chal_used: list = field(default_factory=lambda: [0, 0])    # challenges thrown by each side in the game (15-1-1 (f))
     chal_won: list = field(default_factory=lambda: [0, 0])     # and the ones that changed the ruling (the statistics, C7)
+    # playbooks (design 10, SX.7); a record saved before SX.7 has none of them (every side plays Classic). A style key or "classic"
+    # per side (side 1 first): the style each side's offense and defense play (a loaded game keeps the books it was saved with)
+    offense_book: list = field(default_factory=lambda: ["classic", "classic"])
+    defense_book: list = field(default_factory=lambda: ["classic", "classic"])
 
     # ----- per side -----
 
@@ -199,6 +204,11 @@ class ExtrasRecord:
         if any(used > R.CHALLENGES_PER_GAME and won < R.CHALLENGE_THIRD_AFTER_WINS
                for won, used in zip(self.chal_won, self.chal_used)):
             raise ValueError("a third challenge without a win: %r of %r" % (self.chal_won, self.chal_used))
+        for name in ("offense_book", "defense_book"):
+            books = getattr(self, name)
+            if (not isinstance(books, list) or len(books) != 2
+                    or any(not isinstance(b, str) or b not in D.BOOK_KEYS for b in books)):
+                raise ValueError("%s is %r" % (name, books))
         pair(self.flags, lambda v, w: whole(v, 0, 9999, w), "the penalties")
         pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
         if self.foul_clock not in FOUL_CLOCKS:

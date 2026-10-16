@@ -138,7 +138,9 @@ class QbFlow:
 
     # ----- the computer's offense (design 7.4) -----
 
-    def computer_offense(self, state) -> None:
+    def computer_offense(self, state, percent: int = 100) -> None:
+        """`percent`: the rate of the keepers and draws as a percent of design 7.4's (a style that runs its quarterback more;
+        100 is Classic's, with its draw `rnd(150)` unchanged)."""
         x = state.extras
         if not x.qb_on or state.two_point or state.offense_play not in (1, 2, 3, 4, 5):
             return
@@ -148,7 +150,8 @@ class QbFlow:
                 state.offense_play = QB_SNEAK
             return
         if state.down <= 3:
-            draw = self.rnd(T.QB_COMPUTER_OTHER_ONE_IN)
+            one_in = T.QB_COMPUTER_OTHER_ONE_IN if percent == 100 else max(3, T.QB_COMPUTER_OTHER_ONE_IN * 100 // percent)
+            draw = self.rnd(one_in)
             if draw == 1:
                 state.offense_play = QB_KEEPER
             elif draw == 2:

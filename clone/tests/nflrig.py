@@ -54,8 +54,9 @@ def nfl_engine_rig(tmp_path, answers=(), comments=False, rules=None, extras=None
 
 class RecordingRules(NflRules):
     def __init__(self, timeouts_on=True, auto_sides=(1, 2), penalties_on=False, onside_on=False, onside_always=False,
-                 qb_on=False, challenges_on=False):
-        super().__init__(timeouts_on, auto_sides, penalties_on, onside_on, onside_always, qb_on, challenges_on)
+                 qb_on=False, challenges_on=False, offense_book="classic", defense_book="classic", playbooks_on=False):
+        super().__init__(timeouts_on, auto_sides, penalties_on, onside_on, onside_always, qb_on, challenges_on,
+                         offense_book, defense_book, playbooks_on)
         self.onsides = []           # (quarter, kicking side, seconds left, kicking team's lead, result) of every onside kick
         self.timeouts = []          # (quarter, side, seconds left after it, timeouts left of that side)
         self.periods = []           # (quarter, counted plays, seconds left) at each period end
@@ -63,10 +64,20 @@ class RecordingRules(NflRules):
         self.lefts = []             # every time left seen at H10
         self.dead_balls = []        # (side, quarter, the play count) of every timeout: never twice in one dead-ball period
         self.used = None            # the game's own object (Game.play_game calls for_game): what a test must read
+        self.forced = None          # SX.7: ((offense, defense) of side 1, (offense, defense) of side 2) style keys, whatever the
+        #                             settings and the teams say (the balance test puts one style against Classic)
 
     def for_game(self):
         self.used = super().for_game()
+        self.used.forced = self.forced
         return self.used
+
+    def period_clock(self, game, state):
+        clock = super().period_clock(game, state)
+        if self.forced is not None:
+            (o1, d1), (o2, d2) = self.forced
+            state.extras.offense_book, state.extras.defense_book = [o1, o2], [d1, d2]
+        return clock
 
     def grant(self, state, side):
         super().grant(state, side)
@@ -141,6 +152,7 @@ class SimEngine(PlayEngine):
 
     def defense_menu(self):
         self.s.defense_play = self.rnd(6)
+        self.rules.computer_defense(self.s)         # SX.7: the style's play of that family (no draw for Classic)
         return self.defense_chosen
 
 

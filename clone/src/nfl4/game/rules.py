@@ -63,6 +63,13 @@ Added in PX SX.6 (replay challenges, booth reviews and the ruling model, D-053),
     H3 menu_action -> a continuation       the player's challenge reversed a ruling: the menu is left for the step it names
     H3 menu_key(state, letter)             a letter that no item of the menu has (C when no challenge is allowed): it says why
     H10 between_plays -> a continuation    the computer's challenge reversed a ruling: the engine goes on at the step it names
+
+Added in PX SX.7 (playbooks, D-054), each never taken in Classic:
+    H3 menu_action -> (PLAY, n)            a play of a playbook was chosen: the menu returns it as a chosen play (a group item opens
+                                           its plays and a Back item closes them: True, the menu starts again)
+    H3 menu_back(state)                    Backspace or Left: out of a group of plays (Classic: False, the key is the original's)
+    H2 computer_defense(state)             the computer's defense family is chosen: the style's play of it
+    H8 modifiers                           PlaybookModifiers: the rows move by the two plays called (never in Classic: NEUTRAL)
 """
 from __future__ import annotations
 
@@ -121,6 +128,12 @@ class ClassicRules:
 
     def computer_offense(self, state) -> None:
         return None
+
+    def computer_defense(self, state) -> None:
+        return None
+
+    def menu_back(self, state) -> bool:
+        return False
 
     def qb_entry(self, state, scramble: bool = False):
         raise RuntimeError("Classic has no quarterback runs: the menu never offers plays 8 to 10")

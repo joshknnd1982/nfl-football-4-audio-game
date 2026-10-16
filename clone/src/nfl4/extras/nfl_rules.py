@@ -83,6 +83,7 @@ from . import tuning as T
 from .clock import RUNNING_KINDS, NflPeriodClock, late_window
 from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
+from .playbook_flow import PlaybookFlow
 from .qb_runs import QbFlow
 from .review import CHALLENGE, CHALLENGE_ACTION, ReviewFlow, capture
 from .state import ExtrasRecord
@@ -104,7 +105,8 @@ class NflRules(ClassicRules):
     name = NAME
 
     def __init__(self, timeouts_on: bool = True, auto_sides: tuple[int, ...] = (2,), penalties_on: bool = False,
-                 onside_on: bool = False, onside_always: bool = False, qb_on: bool = False, challenges_on: bool = False):
+                 onside_on: bool = False, onside_always: bool = False, qb_on: bool = False, challenges_on: bool = False,
+                 offense_book: str = "classic", defense_book: str = "classic", playbooks_on: bool = False):
         # the switches for a new game; a game reads its own from state.extras (a loaded game keeps the switches it was saved
         # with, C1). penalties_on and onside_on are off unless given: the program's rules come from the settings
         # (rules_from_settings, nx_penalties and nx_onside on by default), and a rules object made by hand (the clock's
@@ -116,6 +118,11 @@ class NflRules(ClassicRules):
         self.qb_on = bool(qb_on)                  # the quarterback's sneak, keeper, draw and scramble (SX.5, off unless given)
         self.challenges_on = bool(challenges_on)  # the ruling model, booth reviews and challenges (SX.6, off unless given)
         self.auto_sides = tuple(auto_sides)       # the sides whose timeouts, penalty choices and onside kicks the computer decides
+        # SX.7, the playbooks: the player's choice for a new game (classic, team or a style key, design 12.1: the F9 items 8 and
+        # 9) and whether the computer's side plays the style of its team; a hand-made object has neither (Classic plays)
+        self.offense_book = offense_book
+        self.defense_book = defense_book
+        self.playbooks_on = bool(playbooks_on)
         self.game = None
         self.state = None
         self.clock: NflPeriodClock | None = None
@@ -123,11 +130,13 @@ class NflRules(ClassicRules):
         self.onside = OnsideFlow(self)
         self.qb = QbFlow(self)
         self.review = ReviewFlow(self)
+        self.books = PlaybookFlow(self)
+        self.modifiers = self.books.modifiers      # H8: the playbooks' rows (unchanged while no play of a playbook is called)
 
     def for_game(self) -> "NflRules":
         """A fresh object for one game, with the same switches (Game.play_game)."""
         return type(self)(self.timeouts_on, self.auto_sides, self.penalties_on, self.onside_on, self.onside_always,
-                          self.qb_on, self.challenges_on)
+                          self.qb_on, self.challenges_on, self.offense_book, self.defense_book, self.playbooks_on)
 
     # ----- H1 -----
 
@@ -138,6 +147,7 @@ class NflRules(ClassicRules):
                                     onside_always=self.onside_always, qb_on=self.qb_on,
                                     challenges_on=self.challenges_on)
         self.clock = NflPeriodClock(game, state)
+        self.books.resolve(game, state)            # SX.7: the playbook of each side's offense and defense
         return self.clock
 
     @property
@@ -149,11 +159,12 @@ class NflRules(ClassicRules):
     def before_snap(self, state, offense_play: int, defense_play: int) -> str:
         """Step 2: a foul before or at the snap (design 9.1)."""
         self.review.replaying = self.review.clock_held = False    # SX.6: a new play: no corrected end point is still waited for
-        if not state.extras.penalties_on:
-            return GO_ON
-        self.penalty.take_snap(state)
-        if self.penalty.at_snap(state, offense_play, defense_play):
-            return FOUL_BEFORE_SNAP
+        if state.extras.penalties_on:
+            self.penalty.take_snap(state)
+            if self.penalty.at_snap(state, offense_play, defense_play):
+                self.books.clear()                  # SX.7: the play is not run, the plays are called again
+                return FOUL_BEFORE_SNAP
+        self.books.arm(state, offense_play, defense_play)      # SX.7: the plays that were called move the rows (H8)
         return GO_ON
 
     def foul_before_snap(self, state) -> str:
@@ -173,10 +184,18 @@ class NflRules(ClassicRules):
         return self.qb.scramble_from_incomplete(state)
 
     def computer_offense(self, state) -> None:
-        self.qb.computer_offense(state)
+        playbooks = self.books.in_use(state.extras)
+        self.qb.computer_offense(state, self.books.qb_percent(state) if playbooks else 100)
+        if playbooks:                              # SX.7: the style's play of the family that was drawn
+            self.books.computer_offense(state)
+
+    def computer_defense(self, state) -> None:
+        if self.books.in_use(state.extras):
+            self.books.computer_defense(state)
 
     def qb_entry(self, state, scramble: bool = False):
-        return self.qb.entry(state, scramble)
+        entry = self.qb.entry(state, scramble)
+        return entry if scramble else self.modifiers.qb_run(entry)      # SX.7: a quarterback play's tilt
 
     def qb_narrate(self, state, entry, defender1: str, defender2: str):
         return self.qb.narrate(state, entry, defender1, defender2)
@@ -203,6 +222,9 @@ class NflRules(ClassicRules):
     def after_outcome(self, state, outcome):
         x = state.extras
         replaying, redo = self.review.take_replay() if x.challenges_on else (False, [])   # a play a review corrected (SX.6)
+        if not replaying:                          # SX.7: what was called and what came of it (a corrected play is the same call)
+            self.books.record(state, outcome)
+        self.books.clear()                         # then nothing is called and the menu starts at its top
         board = None
         if x.challenges_on and not replaying:
             self.review.forget()                   # the ruling of an earlier play is gone
@@ -250,6 +272,10 @@ class NflRules(ClassicRules):
                 self.penalty.try_from_the_one = False          # (14-2-3): half the distance from the 2
                 state.yard_line = 1
             return menus.offense_menu(True)                    # the try is untimed: the original's items 1 to 5
+        self.books.offense_id = ""                 # SX.7: a play that was called and not run (the period ended at the snap)
+        items = self.books.offense_items(state)    # SX.7: the player's playbook (groups, then plays), None for Classic
+        if items is not None:
+            return self._tail(state, items)
         items = [menu_item(n, text.strip()[3:], (menus.PLAY, n)) for n, text in enumerate(OFFENSE_ITEMS[:7], start=1)]
         if state.extras.qb_on:                     # design 10.4: 8 sneak, 9 keeper, 0 draw (item 10, digit 0)
             for play, text_id in ((QB_SNEAK, "NXM-01"), (QB_KEEPER, "NXM-02"), (QB_DRAW, "NXM-03")):
@@ -259,7 +285,10 @@ class NflRules(ClassicRules):
         return self._tail(state, items)
 
     def defense_menu(self, state) -> list[menus.MenuItem]:
-        items = [menu_item(n, text.strip()[3:], (menus.PLAY, n)) for n, text in enumerate(DEFENSE_ITEMS[:6], start=1)]
+        self.books.defense_id = ""
+        items = self.books.defense_items(state)
+        if items is None:
+            items = [menu_item(n, text.strip()[3:], (menus.PLAY, n)) for n, text in enumerate(DEFENSE_ITEMS[:6], start=1)]
         return self._tail(state, items)
 
     def _tail(self, state, items: list[menus.MenuItem]) -> list[menus.MenuItem]:
@@ -274,12 +303,18 @@ class NflRules(ClassicRules):
     def menu_action(self, state, action: tuple[str, int]):
         """An added item was taken with Enter. True: done, the menu starts again; False: refused, the menu stays; a
         continuation (a challenge that changed a ruling, SX.6): the menu is left for the step it names."""
+        if self.books.owns(action):                # SX.7: a group of the playbook, Back, or a play of it
+            return self.books.action(state, action)
         if action[0] == CHALLENGE:
             return self.review.player_challenge(state)
         if action[0] != TIMEOUT:
             log.warning("unknown menu action %r", action)
             return False
         return self.player_timeout(state)
+
+    def menu_back(self, state) -> bool:
+        """Backspace or Left: from a group of the playbook back to the groups (SX.7)."""
+        return self.books.back(state)
 
     def menu_key(self, state, letter: str) -> bool:
         """The letter C when the menu has no Challenge the Ruling item: the reason why (NXR-10 to NXR-15), the menu goes on."""
@@ -292,6 +327,7 @@ class NflRules(ClassicRules):
     def before_kickoff(self, state, kicking_side: int) -> str:
         x = state.extras
         x.out_of_bounds = False
+        self.books.clear()                         # SX.7: a kick-off is a new play: nothing is called
         self.review.clock_held = False             # SX.6: a kick-off is a new dead-ball period
         if x.left <= 0 and state.quarter in (2, 4):
             # no kick-off is made: nothing of the kick that was to come is left over (a safety kick on the last play of a half,
@@ -324,6 +360,7 @@ class NflRules(ClassicRules):
 
     def between_plays(self, state) -> str | None:
         x = state.extras
+        self.books.group = None                   # SX.7: the next menu starts at its top
         if x.handled == x.plays:                  # nothing new since the last call (the statistics speak the down again)
             return None
         x.handled = x.plays
@@ -420,22 +457,28 @@ class NflRules(ClassicRules):
         return lines
 
     def extra_help(self, key: str) -> list[str]:
-        ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-14", "NXH-18"),
+        ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-14", "NXH-18", "NXH-27"),
                KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15", "NXH-16",
-                        "NXH-19", "NXH-20", "NXH-22"),
-               KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21")}.get(key, ())
+                        "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30"),
+               KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
+                        "NXH-33")}.get(key, ())
         timeout_lines = ("NXH-01", "NXH-05", "NXH-07")
         challenge_lines = ("NXH-23", "NXH-24", "NXH-25", "NXH-26")
         penalty_lines = ("NXH-09", "NXH-10", "NXH-11", "NXH-12", "NXH-13", "NXH-22")
         onside_lines = ("NXH-14", "NXH-15", "NXH-16", "NXH-17")
         qb_lines = ("NXH-18", "NXH-19", "NXH-20", "NXH-21", "NXH-22")
+        playbook_lines = ("NXH-27", "NXH-28", "NXH-29", "NXH-30", "NXH-31", "NXH-32", "NXH-33")
         x = self.state.extras if self.state is not None else None        # a loaded game's own switches
         timeouts_on = x.timeouts_on if x is not None else self.timeouts_on
         challenges_on = x.challenges_on if x is not None else self.challenges_on
         penalties_on = x.penalties_on if x is not None else self.penalties_on
         onside_on = x.onside_on if x is not None else self.onside_on
         qb_on = x.qb_on if x is not None else self.qb_on
-        return [X.text(i) for i in ids if (timeouts_on or i not in timeout_lines)
+        if x is not None:                          # a game's own books; before a game the settings' choice
+            playbooks = PlaybookFlow.in_use(x)
+        else:
+            playbooks = self.playbooks_on or "classic" not in (self.offense_book, self.defense_book)
+        return [X.text(i) for i in ids if (timeouts_on or i not in timeout_lines) and (playbooks or i not in playbook_lines)
                 and (challenges_on or i not in challenge_lines)
                 and (penalties_on or i not in penalty_lines) and (onside_on or i not in onside_lines)
                 and (qb_on or i not in qb_lines)]
@@ -451,7 +494,10 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
                     onside_on=getattr(game_settings, "nx_onside", True),
                     onside_always=getattr(game_settings, "nx_onside_question", "sensible") == "always",
                     qb_on=getattr(game_settings, "nx_qb_runs", True),
-                    challenges_on=getattr(game_settings, "nx_challenges", True))
+                    challenges_on=getattr(game_settings, "nx_challenges", True),
+                    offense_book=getattr(game_settings, "nx_offense_playbook", "classic"),
+                    defense_book=getattr(game_settings, "nx_defense_playbook", "classic"),
+                    playbooks_on=True)
 
 
 def is_nfl(rules) -> bool:

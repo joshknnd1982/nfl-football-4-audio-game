@@ -45,6 +45,7 @@ log = logging.getLogger("nfl4.game")
 
 KEY_F1, KEY_F2, KEY_F3, KEY_F4 = "112", "113", "114", "115"
 KEY_ENTER, KEY_ESCAPE, KEY_UP, KEY_DOWN, KEY_TAB = "13", "27", "38", "40", "9"
+KEY_BACKSPACE, KEY_LEFT = "8", "37"
 
 
 @dataclass
@@ -398,6 +399,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                 done = self.rules.menu_action(s, action)
                 if isinstance(done, str):                  # a continuation of the extras (SX.6): the menu is left
                     return "step", self.continuation(done)
+                if isinstance(done, tuple):                # a play of a playbook was chosen (SX.7): (PLAY, the original's family)
+                    return "chosen", done
                 if done:
                     current, speak_prompt = 1, True
                     if rebuild is not None:
@@ -410,6 +413,11 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                 continue
             if code == KEY_DOWN:
                 current = current + 1 if current < len(items) else 1
+                continue
+            if code in (KEY_BACKSPACE, KEY_LEFT) and self.rules.menu_back(s):    # SX.7: out of a group of plays (Classic: no)
+                current, speak_prompt = 1, True
+                if rebuild is not None:
+                    items = rebuild()
                 continue
             speak_prompt = True
             if code == KEY_F1:
@@ -473,7 +481,14 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
     # ----- the computer's play choice (5.7) -----
 
     def offense_chosen(self):
-        """L_43e5be: the computer defends: Int(Rnd * 6) + 1, but a play repeated a second time is matched with chance
+        """L_43e5be (then the hook that lets the N. F. L. rules mode replace the family by a play of its playbook, design 10.4;
+        Classic: nothing, no draw). Every step below returns `snap`, which has not run yet."""
+        step = self._defense_choice()
+        self.rules.computer_defense(self.s)
+        return step
+
+    def _defense_choice(self):
+        """The computer defends: Int(Rnd * 6) + 1, but a play repeated a second time is matched with chance
         1/2 and from the third time on always."""
         s = self.s
         s.defense_play = self.rnd(6)

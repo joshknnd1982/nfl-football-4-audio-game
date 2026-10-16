@@ -36,6 +36,8 @@ class GameSettings:
     nx_onside_question: str = "sensible"   # "sensible": the player is asked when it makes sense; "always": at every kick-off
     nx_qb_runs: bool = True      # the quarterback sneak, keeper, draw and scramble of the N. F. L. rules mode (SX.5)
     nx_challenges: bool = True   # the ruling model, booth reviews and replay challenges of the N. F. L. rules mode (SX.6)
+    nx_offense_playbook: str = "classic"   # the player's offense playbook (SX.7): classic, team (the team's style) or a style key
+    nx_defense_playbook: str = "classic"   # and the defense playbook
 
 
 @dataclass

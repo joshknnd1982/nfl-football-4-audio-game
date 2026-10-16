@@ -21,8 +21,8 @@ Nothing here raises. The names are what the voice speaks (the original has no wr
 semicolon, no control character; the count of teams (32), divisions (8) and surnames (1,708) is fixed (CUSTOMIZABLE_CONTENT 5).
 
 nfl4 only (rule 0.13, CUSTOMIZABLE_CONTENT 13, PX SX.2): remarks.txt holds the remark pools of the extra features
-(extras/remarks.py), and since SX.3 penalties.txt the names, switches and weights of the fouls (extras/penalty_list.py).
-They are lists in the same format with the same healing, but in use only while the Rules setting is the N. F. L. rules
+(extras/remarks.py), since SX.3 penalties.txt the names, switches and weights of the fouls (extras/penalty_list.py), and since
+SX.7 the folder `playbooks` with plays.txt, styles.txt and team_styles.txt (extras/playbook_list.py). They are lists in the same format with the same healing, but in use only while the Rules setting is the N. F. L. rules
 (`extras` / `use_extras`): with Classic they are never read, made, checked or reset.
 """
 from __future__ import annotations
@@ -53,6 +53,8 @@ NAME_MIN, NAME_MAX = 1, 30
 TEAMS, DIVISIONS, SURNAMES, BANTER = "teams", "divisions", "surnames", "banter"
 REMARKS = "remarks"         # nfl4 only (rule 0.13): the extras' remark pools, read only with the N. F. L. rules (SX.2)
 PENALTIES = "penalties"     # nfl4 only (rule 0.13): the fouls' names, switches and weights (SX.3)
+PLAYS, STYLES, TEAMSTYLES = "plays", "styles", "teamstyles"     # nfl4 only: the playbooks' files in `playbooks` (SX.7)
+PLAYBOOKS_FOLDER = "playbooks"
 
 
 @dataclass(frozen=True)
@@ -61,6 +63,7 @@ class ListSpec:
     file_name: str
     nouns: str            # what the file holds, in the notices ("team names")
     original_nouns: str   # "the original team names"
+    folder: str = ""      # a folder of the customize folder that holds the file (the playbooks' three)
 
 
 SPECS: tuple[ListSpec, ...] = (
@@ -74,6 +77,9 @@ SPECS: tuple[ListSpec, ...] = (
 EXTRA_SPECS: tuple[ListSpec, ...] = (
     ListSpec(REMARKS, "remarks.txt", "remarks", "the original remarks"),
     ListSpec(PENALTIES, "penalties.txt", "penalty names", "the original penalty names"),
+    ListSpec(PLAYS, "plays.txt", "play names", "the original play names", PLAYBOOKS_FOLDER),
+    ListSpec(STYLES, "styles.txt", "styles", "the original styles", PLAYBOOKS_FOLDER),
+    ListSpec(TEAMSTYLES, "team_styles.txt", "team styles", "the original team styles", PLAYBOOKS_FOLDER),
 )
 SPEC_BY_KEY = {spec.key: spec for spec in SPECS + EXTRA_SPECS}
 
@@ -213,6 +219,7 @@ class Snapshot:
     kept: set[str] = field(default_factory=set)                     # lists whose file could not be read: the earlier values stay
     remarks: object = None              # extras.remarks.RemarkPools with the N. F. L. rules; None while they are not used
     fouls: object = None                # extras.penalty_list.FoulTable with the N. F. L. rules; None while not used (SX.3)
+    playbooks: object = None            # extras.playbooks.Table with the N. F. L. rules; None while not used (SX.7)
 
     def problem_count(self, key: str) -> int:
         problems = self.problems.get(key)
@@ -237,8 +244,10 @@ class Customization:
         self.extras = bool(extras)        # nfl4 only: the N. F. L. rules are in use, so remarks.txt is read too (SX.2)
         self._parked_remarks = None       # the remarks loaded before the extras were switched off
         self._parked_fouls = None         # and the foul table (SX.3)
+        self._parked_playbooks = None     # and the playbooks (SX.7)
         self.files: dict[str, cl.ListFile] = {
-            spec.key: cl.ListFile(folder, spec.file_name, GAME, spec.key, lambda key=spec.key: self.default_text(key))
+            spec.key: cl.ListFile(os.path.join(folder, spec.folder) if spec.folder else folder, spec.file_name, GAME, spec.key,
+                                  lambda key=spec.key: self.default_text(key))
             for spec in SPECS + EXTRA_SPECS}
         self._notices: list[str] = []
         self._unwritable_told: set[str] = set()
@@ -260,8 +269,10 @@ class Customization:
         if not on:
             self._parked_remarks = self.snapshot.remarks      # what was loaded: used again if the file cannot be read then
             self._parked_fouls = self.snapshot.fouls
+            self._parked_playbooks = self.snapshot.playbooks
             self.snapshot.remarks = None
             self.snapshot.fouls = None
+            self.snapshot.playbooks = None
             for spec in EXTRA_SPECS:
                 self.snapshot.statuses.pop(spec.key, None)
                 self.snapshot.problems.pop(spec.key, None)
@@ -269,9 +280,12 @@ class Customization:
             return
         from ..extras.penalty_list import DEFAULT_TABLE
         from ..extras.remarks import DEFAULT_POOLS
-        previous = dataclasses.replace(self.snapshot, remarks=self._parked_remarks, fouls=self._parked_fouls)
+        from ..extras.playbooks import DEFAULT_TABLE as DEFAULT_PLAYBOOKS
+        previous = dataclasses.replace(self.snapshot, remarks=self._parked_remarks, fouls=self._parked_fouls,
+                                       playbooks=self._parked_playbooks)
         self.snapshot.remarks = DEFAULT_POOLS
         self.snapshot.fouls = DEFAULT_TABLE
+        self.snapshot.playbooks = DEFAULT_PLAYBOOKS
         for spec in EXTRA_SPECS:
             self.snapshot.kept.discard(spec.key)
         before = len(self.snapshot.notices)
@@ -311,6 +325,11 @@ class Customization:
         if key == PENALTIES:
             from ..extras import penalty_list
             return cl.render_list(GAME, PENALTIES, penalty_list.NOTES, penalty_list.default_entries())
+        if key in (PLAYS, STYLES, TEAMSTYLES):
+            from ..extras import playbook_list as pl
+            notes, entries = {PLAYS: (pl.PLAYS_NOTES, pl.default_plays), STYLES: (pl.STYLES_NOTES, pl.default_styles),
+                              TEAMSTYLES: (pl.TEAMS_NOTES, pl.default_teams)}[key]
+            return cl.render_list(GAME, key, notes, entries())
         raise KeyError(key)
 
     # ----- loading -----
@@ -323,9 +342,11 @@ class Customization:
                             None, BanterPool(DEFAULT_LINES))
         if self.extras:
             from ..extras.penalty_list import DEFAULT_TABLE
+            from ..extras.playbooks import DEFAULT_TABLE as DEFAULT_PLAYBOOKS
             from ..extras.remarks import DEFAULT_POOLS
             snapshot.remarks = DEFAULT_POOLS
             snapshot.fouls = DEFAULT_TABLE
+            snapshot.playbooks = DEFAULT_PLAYBOOKS
         self._load_into(snapshot, self.specs, previous)
         self._notices_of(snapshot, self.specs)
         return snapshot
@@ -370,6 +391,14 @@ class Customization:
             if previous.fouls is None:
                 return
             snapshot.fouls = previous.fouls
+        elif key in (PLAYS, STYLES, TEAMSTYLES):
+            if previous.playbooks is None:
+                return
+            # the three files make one table: the part the held file makes is the earlier one's, the others stay as read
+            snapshot.playbooks = dataclasses.replace(snapshot.playbooks, **{
+                PLAYS: dict(names=previous.playbooks.names, disabled=previous.playbooks.disabled),
+                STYLES: dict(styles=previous.playbooks.styles),
+                TEAMSTYLES: dict(teams=previous.playbooks.teams)}[key])
         snapshot.kept.add(key)
 
     def _apply_list(self, key: str, entries, snapshot: Snapshot, problems: cl.Problems) -> None:
@@ -413,6 +442,10 @@ class Customization:
         elif key == PENALTIES:
             from ..extras import penalty_list
             snapshot.fouls = penalty_list.table_of(entries, problems)
+        elif key in (PLAYS, STYLES, TEAMSTYLES):
+            from ..extras import playbook_list as pl
+            apply = {PLAYS: pl.apply_plays, STYLES: pl.apply_styles, TEAMSTYLES: pl.apply_teams}[key]
+            snapshot.playbooks = apply(snapshot.playbooks, entries, problems)
 
     def _notices_of(self, snapshot: Snapshot, specs) -> None:
         unwritable = [spec for spec in specs if snapshot.statuses[spec.key] == cl.UNWRITABLE]
@@ -460,7 +493,7 @@ class Customization:
             if file.exists():
                 continue
             try:
-                os.makedirs(self.folder, exist_ok=True)
+                os.makedirs(os.path.dirname(file.path), exist_ok=True)
             except OSError:
                 pass
             if file.write_defaults():

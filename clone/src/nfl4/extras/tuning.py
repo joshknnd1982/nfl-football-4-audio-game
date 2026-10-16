@@ -177,6 +177,22 @@ COMPUTER_CHALLENGE_CLOSE_PERCENT = 30     # ... after a close-call hint
 REVIEW_PAUSE = 2.0                        # seconds: the referee under the hood (design 6.4), then two rady pauses
 REVIEW_REMARK_ONE_IN = 2                  # a remark of RVR or RVC after a review with chance 1 in 2 (comments on)
 
+# ----- the playbooks, design 10 (SX.7) -----
+# The computer's weighted draw over a style's plays (design 10.4, N5.6): a play's weight (playbook_data.py, styles.txt) times
+# the percent of its family in the situation, each in whole percents (100 = no change). One draw, `below(total)`.
+PB_SHORT_YARDS = 2                    # "short": this many yards to go or fewer
+PB_LONG_YARDS = 8                     # "long": this many yards to go or more
+PB_RED_ZONE = 10                      # "red zone": the ball is this many yards from the goal line or closer
+PB_LATE_SECONDS = 300                 # "late": the fourth quarter or overtime with this many seconds left or fewer
+PB_LATE_MARGIN = 8                    # "trailing" or "leading" late: by at least this many points (a trailing offense needs the
+#                                       pass, a leading one the run)
+PB_SITUATION_STRENGTH = 100           # percent of the factors below that count (0: the weights alone, the balance test's knob)
+PB_DISTANCE_PERCENT = {"short": {1: 150, 2: 100, 3: 60, 4: 80, 5: 50},
+                       "long": {1: 60, 2: 60, 3: 140, 4: 120, 5: 140}}
+PB_RED_ZONE_PERCENT = {1: 130, 2: 90, 3: 100, 4: 100, 5: 70}
+PB_LATE_TRAILING_PERCENT = {1: 50, 2: 50, 3: 100, 4: 140, 5: 160}
+PB_LATE_LEADING_PERCENT = {1: 140, 2: 140, 3: 60, 4: 70, 5: 40}
+
 # ----- a Classic save loaded in N. F. L. rules mode, design 12.3 -----
 SAVE_SECONDS_PER_COUNTED_PLAY = 28    # the clock at 15:00 minus 28 seconds per counted play,
 SAVE_LEAST_LEFT = 60                  # at least 1:00
@@ -201,7 +217,8 @@ TARGET_QB_SCRAMBLE_SHARE = (0.045, 0.065)       # scrambles as a share of the dr
 TARGET_QB_SCRAMBLE_YARDS = (7.0, 8.2)           # their mean yards (NFL 7.67; a slide cuts a little)
 TARGET_QB_SHORT_CONVERSION = (0.78, 0.88)       # third or fourth and 1, a designed quarterback run: first down or touchdown
 #                                                 (NFL 83.4 percent)
-TARGET_COACH_CHALLENGES_PER_TEAM_GAME = (0.20, 0.32)    # coach challenges per team per game (NFL 0.24 to 0.28, Part 3 section 7)
+TARGET_PLAYBOOK_WIN = (0.45, 0.55)                      # every style against Classic wins this share of the games (design 10.3)
+TARGET_COACH_CHALLENGES_PER_TEAM_GAME =(0.20, 0.32)    # coach challenges per team per game (NFL 0.24 to 0.28, Part 3 section 7)
 TARGET_CHALLENGE_REVERSED = (0.38, 0.52)                # the share that changed the ruling (NFL 38 to 52 percent)
 TARGET_BOOTH_PER_GAME = (0.50, 0.80)                    # replay official reviews per game, both teams (NFL about 0.65)
 TARGET_BOOTH_REVERSED = (0.70, 0.82)                    # the share that changed the ruling (NFL 74 to 78 percent)

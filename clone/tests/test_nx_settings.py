@@ -21,8 +21,8 @@ from programrig import DOWN, ENTER, ESC, F1, said
 from test_functions import TOP, rig_for
 
 SPACE, LEFT = 32, 37
-OPEN = "Rules. 8 items. Press F1 for help. "     # SX.6: Rules, Time outs, Replay challenges, Quarterback runs, Onside kicks,
-#                                                  Onside question, Penalties, Reset
+OPEN = "Rules. 10 items. Press F1 for help. "    # SX.7: Rules, Time outs, Replay challenges, Quarterback runs, Onside kicks,
+#                                                  Onside question, Penalties, Offense playbook, Defense playbook, Reset
 NEXT_GAME = X.text("NXM-23")
 
 
@@ -98,7 +98,7 @@ def test_a_switch_says_used_with_the_nfl_rules_while_rules_is_classic(rig):
 
 def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     spoken = rules_menu(rig, [ENTER, "2", ENTER, "3", ENTER, "4", ENTER, "5", ENTER, "6", ENTER, "7", ENTER, "8", ENTER,
-                              ENTER, "1"])
+                              "9", ENTER, "0", ENTER, ENTER, "1"])
     assert spoken[2] == "Time outs on "
     assert spoken[3] == "Time outs off " + NEXT_GAME
     assert spoken[4] == "Replay challenges on "
@@ -111,18 +111,24 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert spoken[11] == "Onside question: always" + NEXT_GAME
     assert spoken[12] == "Penalties on "
     assert spoken[13] == "Penalties off " + NEXT_GAME
-    assert spoken[14] == X.text("NXM-19")
+    assert spoken[14] == "Offense playbook: Classic"                    # Rules is on N. F. L. rules now: nothing "used with"
+    assert spoken[15] == "Offense playbook: Team playbook" + NEXT_GAME
+    assert spoken[16] == "Defense playbook: Classic"
+    assert spoken[17] == "Defense playbook: Team playbook" + NEXT_GAME
+    assert spoken[18] == X.text("NXM-19")
     defaults = ("Rules: Classic. Time outs on  used with the N. F. L. rules. Replay challenges on  used with the N. F. L."
                 " rules. Quarterback runs on  used with the N. F. L."
                 " rules. Onside kicks on  used with the N. F. L. rules."
                 " Onside question: when it makes sense used with the N. F. L. rules. Penalties on  used with the N. F. L."
-                " rules ")
-    assert spoken[15] == defaults + NEXT_GAME
-    assert spoken[16] == defaults                                       # nothing changed now
-    assert spoken[17] == "Rules: Classic"
+                " rules. Offense playbook: Classic used with the N. F. L. rules."
+                " Defense playbook: Classic used with the N. F. L. rules ")
+    assert spoken[19] == defaults + NEXT_GAME
+    assert spoken[20] == defaults                                       # nothing changed now
+    assert spoken[21] == "Rules: Classic"
     game = rig.game.options.settings.game
     assert (game.rules, game.nx_timeouts, game.nx_penalties) == ("classic", True, True) and rig.game.rules is CLASSIC
     assert (game.nx_onside, game.nx_onside_question, game.nx_qb_runs) == (True, "sensible", True)
+    assert (game.nx_offense_playbook, game.nx_defense_playbook) == ("classic", "classic")      # Classic is the default playbook
     assert game.nx_challenges is True
 
 
@@ -165,8 +171,10 @@ def test_a_customization_made_with_the_nfl_rules_reads_remarks_txt_at_once(tmp_p
     folder = str(tmp_path / "customize")
     custom = Customization(folder, extras=True)
     assert os.path.isfile(os.path.join(folder, "remarks.txt"))
-    assert [spec.file_name for spec in custom.specs][-2:] == ["remarks.txt", "penalties.txt"]       # SX.3
+    assert [spec.file_name for spec in custom.specs][-5:-3] == ["remarks.txt", "penalties.txt"]     # SX.3
     assert os.path.isfile(os.path.join(folder, "penalties.txt"))
+    assert [spec.file_name for spec in custom.specs][-3:] == ["plays.txt", "styles.txt", "team_styles.txt"]    # SX.7
+    assert os.path.isfile(os.path.join(folder, "playbooks", "plays.txt"))
     assert custom.take_notices() == []
     assert "remarks.txt: no problems." in custom.check()
     assert "remarks.txt" not in Customization(str(tmp_path / "classic")).check()
