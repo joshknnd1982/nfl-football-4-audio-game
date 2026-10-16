@@ -13,6 +13,7 @@ every wait of the original. So this class is built on `getkey` and the speakers,
   NXB-10 "Back"); each page starts with NXF-42 " page n of m. ";
 * any other key is echoed (saykey) and the situation and the current item are said again from the top, the item kept;
 * `escape_goes_on`: a wait with one item (a stage's end): Escape acts as Enter.
+* `escape_value`: a list the player may leave without taking an item (the draft's long list of prospects): Escape answers it.
 """
 from __future__ import annotations
 
@@ -25,13 +26,14 @@ PAGE_SIZE = 9
 
 class FranchiseQuestion:
     def __init__(self, game, situation, items: list, start: int = 0, escape_goes_on: bool = False,
-                 page_size: int = PAGE_SIZE):
+                 page_size: int = PAGE_SIZE, escape_value: int | None = None):
         if not items:
             raise ValueError("a franchise question needs at least one item")
         self.g = game
         self.situation = situation
         self.items = list(items)
         self.escape_goes_on = escape_goes_on
+        self.escape_value = escape_value               # a list the player may leave: Escape answers this (-1) without taking an item
         self.page_size = page_size
         self.pages = (len(self.items) + page_size - 1) // page_size
         self.page = min(max(0, start), len(self.items) - 1) // page_size
@@ -113,6 +115,8 @@ class FranchiseQuestion:
             keys.getkey(g.speech)
             code = keys.code_text
             entries = self._entries()
+            if code == KEY_ESCAPE and self.escape_value is not None:
+                return self.escape_value
             if code == KEY_ENTER or (code == KEY_ESCAPE and self.escape_goes_on):
                 entry = entries[self.cursor]
                 if isinstance(entry, int):

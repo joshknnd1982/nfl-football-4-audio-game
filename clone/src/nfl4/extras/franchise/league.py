@@ -118,6 +118,20 @@ class LeagueRecord:
             total += D.WEIGHT[D.POSITION_OF_PLACE[index]] * (player.rating if player is not None else D.RATING_MIN)
         return total
 
+    def waiting_rookies(self, team: int) -> list:
+        """The team's rookies waiting for the cut (stages 4 and 5): drafted, active, without a place, in pick order."""
+        if not self.draft:
+            return []
+        return [self.players[pid] for t, _, pid in self.draft["picks"] if t == team and pid in self.players]
+
+    def rookie_range(self, player: Player) -> tuple:
+        """(low end, high end) of the spoken range of a rookie waiting for the cut."""
+        for _, index, pid in self.draft["picks"]:
+            if pid == player.id:
+                low = self.draft["class"][index][5]
+                return low, low + D.RANGE_SPAN
+        raise LeagueError("player %d is no rookie of this draft" % player.id)
+
     def has_empty_place(self) -> bool:
         return any(pid == 0 for roster in self.rosters for pid in roster)
 
@@ -249,7 +263,9 @@ class LeagueRecord:
             raise LeagueError("the coach is %r" % (self.coach,))
         whole(self.team, 1, D.TEAMS, "the player's team")
         self._check_players(whole)
-        self._check_rosters(whole)
+        from . import draft
+        waiting = draft.check_draft(self, whole)               # the rookies waiting for the cut (stages 4 and 5 only)
+        self._check_rosters(whole, waiting)
         self._check_history(whole)
         if not isinstance(self.todo, list) or len(self.todo) > 200 or not isinstance(self.news, list) or len(self.news) > 400:
             raise LeagueError("the to-do list or the news is not a short list")
@@ -288,7 +304,7 @@ class LeagueRecord:
                 whole(p.drafted[1], 1, 7, "the draft round")
                 whole(p.drafted[2], 1, 400, "the draft pick")
 
-    def _check_rosters(self, whole) -> None:
+    def _check_rosters(self, whole, waiting=frozenset()) -> None:
         if not isinstance(self.rosters, list) or len(self.rosters) != D.TEAMS:
             raise LeagueError("the league has %r rosters" % (len(self.rosters) if isinstance(self.rosters, list) else None))
         placed: set = set()
@@ -310,7 +326,7 @@ class LeagueRecord:
                     raise LeagueError("player %d plays %s in a %s place" % (pid, player.pos, D.POSITION_OF_PLACE[index]))
                 placed.add(pid)
         for pid, player in self.players.items():
-            if (player.status == "active") != (pid in placed):
+            if (player.status == "active") != (pid in placed or pid in waiting):
                 raise LeagueError("player %d is %s but %s" % (pid, player.status, "placed" if pid in placed else "not placed"))
 
     def _check_history(self, whole) -> None:

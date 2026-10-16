@@ -8,7 +8,7 @@ idempotent until its save, and the league the player may open in F9 at the wait 
     plan_retirements / apply_aging     stage 2: everybody a year older, then the retirements (6.1, 6.3)
     plan_development / apply_development   stage 3: progression and regression, the development points go back to 0 (6.2, 8.2)
     retire_chance, base_change         the two rules as plain functions of numbers (the property tests read them)
-    place_by_rating, fill_places       the places of a group in rating order; the stand-in fill of the empty places (SX.8d replaces it)
+    place_by_rating, fill_places       the places of a group in rating order; the fill of the empty places with undrafted rookies (stage 5)
     drop_the_unkept                    the retired and released players history does not need are dropped (design 4.3)
 
 League order is team 1 to 32, then the order of the team's 34 places (design 6.2): the order of the draws. All numbers are data in
@@ -162,9 +162,9 @@ def place_by_rating(league: LeagueRecord, team: int | None = None) -> None:
 
 
 def fill_places(league: LeagueRecord, rnd, surnames: list) -> int:
-    """STAND-IN until SX.8d builds the draft, the roster cut and the real fill (design 7.6): every empty place gets an undrafted
-    rookie, in team order and place order, the name, the rating, the potential as design 12 item 6 draws them for the fill.
-    Returns how many. The places are then put in rating order."""
+    """The fill of the roster cut (design 7.6, stage 5): every empty place gets an undrafted rookie, in team order and place order,
+    the name, the rating, the potential as design 12 item 6 draws them for the fill. Returns how many. The places are then put in
+    rating order. (SX.8c used it as a stand-in at the end of stage 3, before the draft existed.)"""
     used = {player.name for player in league.players.values() if player.status == "active"}
     high, average = T.FR_ROOKIE_POTENTIAL_SHARES
     count = 0

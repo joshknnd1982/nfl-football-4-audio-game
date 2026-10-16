@@ -402,7 +402,7 @@ def test_stage_two_names_the_players_of_your_team_who_retire_and_the_league_coun
     veterans = Veterans()
     rig = stage_rig(tmp_path, veterans)
     text = spoken(rig)
-    after = text[text.index(" stage 2 of 4. retirements. "):]
+    after = text[text.index(" stage 2 of 6. retirements. "):]
     assert after[1] == X.text("NXE-30")
     for name, position, rating, seasons in veterans.own:
         assert X.text("NXE-31", player=name, position=position, a=40, r=rating, n=seasons) in after
@@ -466,7 +466,7 @@ def test_the_short_offseason_says_one_sentence_for_each_of_the_two_stages(tmp_pa
     retired = [p for p in rig.kept[3].players.values() if p.status == "retired"]
     own = [p for p in retired if p.team == 5]
     assert X.text("NXE-71", n=len(retired), m=len(own)) in text
-    before, after = rig.kept[3], rig.kept[6]
+    before, after = rig.kept[3], rig.kept[4]
     mine = [p for p in before.players.values() if p.status == "active" and p.team == 5]
     deltas = [after.players[p.id].rating - p.rating for p in mine]
     assert X.text("NXE-72", n=sum(1 for d in deltas if d > 0), m=sum(1 for d in deltas if d < 0)) in text
@@ -477,7 +477,7 @@ def test_the_short_offseason_says_one_sentence_for_each_of_the_two_stages(tmp_pa
 def test_stage_three_counts_the_players_team_and_names_its_best_and_its_biggest_drop(tmp_path):
     rig = stage_rig(tmp_path, lambda league: None)
     text = spoken(rig)
-    before, after = rig.kept[3], rig.kept[6]
+    before, after = rig.kept[3], rig.kept[4]
     own = [p for p in before.players.values() if p.status == "active" and p.team == 5]
     deltas = {p.id: after.players[p.id].rating - p.rating for p in own}
     improved = sum(1 for d in deltas.values() if d > 0)
@@ -495,20 +495,17 @@ def test_stage_three_counts_the_players_team_and_names_its_best_and_its_biggest_
 
 def test_the_draws_of_stage_three_come_in_leagues_order_and_the_points_count_exactly_once(tmp_path, design):
     """A strict script of the whole of stages 2 and 3: nothing draws in stage 2 (everybody is young or retires at 40), stage 3 draws
-    below(5) = 2 (a spread of 0) for every active player, then the fill draws a name, below(11) and below(100) for the one empty
-    place."""
+    below(5) = 2 (a spread of 0) for every active player and nothing else (the empty place waits for the roster cut; the draft that
+    follows draws from the source's real generator once the script is used up)."""
     def mutate(league):
         with_all_aged(league, 21)                                              # 22 at stage 3: before every window
         for place in range(34):
             league.player_at(5, place).points = 3
         league.player_at(5, 0).age = 39                                        # the running back retires at 40, with no draw
-    league0 = made(seed=3, team=5)
-    active = {p.name for p in league0.players.values()} - {league0.player_at(5, 0).name}
-    free = [i for i, name in enumerate(SURNAMES) if name not in active][5]       # the 6th free name, as below(1708)
-    values = [below_value(5, 2)] * 1087 + [below_value(len(SURNAMES), free), below_value(11, 6), below_value(100, 30)]
+    values = [below_value(5, 2)] * 1087
     source = ScriptedRandom(values, strict=False)
     rig = stage_rig(tmp_path, mutate, source=source)
-    before, after = rig.kept[3], rig.kept[6]
+    before, after = rig.kept[3], rig.kept[4]
     assert source.drawn >= len(values)
     survivors = [p for p in before.players.values() if p.status == "active"]
     assert len(survivors) == 1087
@@ -516,9 +513,8 @@ def test_the_draws_of_stage_three_come_in_leagues_order_and_the_points_count_exa
         points = 3 if p.team == 5 else 0
         expected = aging.clamp_rating(p.rating + aging.base_change(p.pos, p.age, p.potential) + points)
         assert after.players[p.id].rating == expected and after.players[p.id].points == 0, p.id
-    rookie = next(p for p in after.players.values() if p.id >= 1089 and p.team == 5 and p.status == "active")
-    assert rookie.name == SURNAMES[free] and rookie.pos == "RB" and rookie.rating == 45 + 6 and rookie.potential == "average"
-    assert rookie.age == 22 and rookie.seasons == 0 and rookie.peak == 51
+    assert sum(1 for pid in after.rosters[4] if pid == 0) == 1 and after.rosters[4][0] == 0        # the retired back place waits for the cut
+    assert after.stage_no == 4 and after.draft is None                                           # and the draft class is not made yet
 
 
 def test_the_roster_and_the_ratings_at_a_stages_wait_are_what_the_stage_just_said(tmp_path):
@@ -527,7 +523,7 @@ def test_the_roster_and_the_ratings_at_a_stages_wait_are_what_the_stage_just_sai
     stage_two = next(w for w in waits if any("retirements" in line for line in w[0]))
     stage_three = next(w for w in waits if any("player development" in line for line in w[0]))
     assert {pid: (p.age, p.rating, p.status) for pid, p in rig.kept[3].players.items()} == stage_two[1]
-    assert {pid: (p.age, p.rating, p.status) for pid, p in rig.kept[6].players.items()} == stage_three[1]
+    assert {pid: (p.age, p.rating, p.status) for pid, p in rig.kept[4].players.items()} == stage_three[1]
     assert not any("retires. seasons" in line for line in stage_three[0])
 
 
@@ -558,7 +554,8 @@ def test_the_development_points_are_not_counted_in_a_retired_players_file(tmp_pa
 def test_the_file_after_stage_two_has_empty_places_and_the_file_after_stage_three_none(tmp_path):
     rig = stage_rig(tmp_path, Veterans())
     assert any(pid == 0 for roster in rig.kept[3].rosters for pid in roster)         # stage 3's file: written when stage 2 ended
-    assert rig.kept[6].stage_no == 6 and all(pid for roster in rig.kept[6].rosters for pid in roster)
+    assert any(pid == 0 for roster in rig.kept[4].rosters for pid in roster)         # stage 4's: written when stage 3 ended
+    assert rig.kept[6].stage_no == 6 and all(pid for roster in rig.kept[6].rosters for pid in roster)     # stage 6's: after the cut and the fill
     final = rig.fstore.league
     assert final.stage == "season" and final.season == 2 and all(pid for roster in final.rosters for pid in roster)
     assert len(final.sums) == 32 and final.sums == [final.strength_sum(t) for t in range(1, 33)]
@@ -575,14 +572,14 @@ def test_a_window_closed_at_the_wait_of_stage_two_resumes_at_stage_three_with_th
                                               and second.fstore.league.stage == "season" and second.fstore.league.season == 2))
     run_until(second)
     text = spoken(second)
-    assert " stage 2 of 4. retirements. " not in text and any(" stage 3 of 4. player development. " in t for t in text)
-    assert all(p.age == 26 for p in second.fstore.league.players.values() if p.status == "active")      # once
+    assert " stage 2 of 6. retirements. " not in text and any(" stage 3 of 6. player development. " in t for t in text)
+    assert all(p.age == 26 for p in second.fstore.league.players.values() if p.status == "active" and p.drafted is None and p.id <= 1088)      # once
 
 
-def test_a_window_closed_at_the_wait_of_stage_three_resumes_at_stage_six_with_the_development_done_once(tmp_path):
+def test_a_window_closed_at_the_wait_of_stage_three_resumes_at_the_draft_with_the_development_done_once(tmp_path):
     first = stage_rig(tmp_path / "one", Veterans(), until=lambda r: X.text("NXE-43") in spoken(r))
     saved = LeagueRecord.from_json(first.files.data["league.sav"].decode("utf-8"))
-    assert saved.stage == "offseason" and saved.stage_no == 6 and all(pid for roster in saved.rosters for pid in roster)
+    assert saved.stage == "offseason" and saved.stage_no == 4 and saved.draft is None and saved.has_empty_place()
     second = franchise_rig(tmp_path / "two", [], files=first.files, kind="franchise",
                            policy=enter_until(lambda: second.fstore is not None and second.fstore.league is not None
                                               and second.fstore.league.stage == "season" and second.fstore.league.season == 2))
@@ -609,22 +606,16 @@ def test_play_classic_seasons_asked_at_a_stages_wait_leaves_the_stage_done_once(
                           policy=enter_until(lambda: again.fstore is not None and again.fstore.league is not None
                                              and again.fstore.league.stage == "season" and again.fstore.league.season == 2))
     run_until(again)
-    assert all(p.age == 26 for p in again.fstore.league.players.values() if p.status == "active")
+    assert all(p.age == 26 for p in again.fstore.league.players.values() if p.status == "active" and p.drafted is None and p.id <= 1088)
 
 
-def test_the_stand_in_fill_gives_way_when_the_draft_stage_exists(tmp_path, monkeypatch):
-    monkeypatch.setattr(D, "STAGES", ((1, "NXE-11"), (2, "NXE-12"), (3, "NXE-13"), (4, "NXE-14"), (6, "NXE-16")))
-    seen = {}
-
-    def draft(p, n, m, short):
-        seen["empty"] = sum(1 for roster in p.store.league.rosters for pid in roster if pid == 0)
-        seen["retired"] = sum(1 for player in p.store.league.players.values() if player.status == "retired")
-        aging.fill_places(p.store.league, p.g.rnd, list(p.g.pool.original))
-        p.store.league.stage_no = 6
-        p.store.save()
-    monkeypatch.setitem(offseason.RUNNERS, 4, draft)
-    stage_rig(tmp_path, Veterans())
-    assert seen["empty"] == seen["retired"] >= 4                                       # the stand-in left them to the draft stage
+def test_stage_three_leaves_the_empty_places_to_the_roster_cut_which_fills_them(tmp_path):
+    """SX.8c filled the places at the end of stage 3 with a stand-in until the draft existed (B-X54); with the draft stage in the list
+    the places stay empty through stage 3 and the draft, and stage 5 fills them."""
+    rig = stage_rig(tmp_path, Veterans())
+    empty = lambda league: sum(1 for roster in league.rosters for pid in roster if pid == 0)
+    retired = sum(1 for player in rig.kept[3].players.values() if player.status == "retired")
+    assert empty(rig.kept[4]) == retired >= 4 and empty(rig.kept[5]) == retired and empty(rig.kept[6]) == 0
 
 
 def test_the_offseason_news_lines_are_sx8es_and_nothing_is_said_for_them_yet(tmp_path):

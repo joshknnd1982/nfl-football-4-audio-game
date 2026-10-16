@@ -47,6 +47,7 @@ PLACE_COUNT = len(PLACES)                    # 34
 POSITION_OF_PLACE = tuple(position for _, _, position in PLACES)
 PLACES_OF = {position: tuple(i for i, p in enumerate(POSITION_OF_PLACE) if p == position) for position in POSITIONS}
 GROUP_SIZE = {position: len(places) for position, places in PLACES_OF.items()}
+ROSTER_ORDER = ("QB", "RB", "WR", "DL", "LB", "CB", "S", "RET", "K", "P")      # the order the groups are listed and spoken in
 
 # the weights of a team's strength (design 4.4): they follow how often the engine reads each place; the sum is 78
 WEIGHT = {"QB": 12, "RB": 2, "WR": 2, "DL": 2, "LB": 2, "CB": 2, "S": 2, "K": 4, "P": 2, "RET": 1}
@@ -54,9 +55,17 @@ WEIGHT_SUM = sum(WEIGHT[position] for position in POSITION_OF_PLACE)
 WEIGHT_OF_KEY = {(heading, number): WEIGHT[position] for heading, number, position in PLACES}   # the key of Roster.ratings
 
 # the stages of an offseason (design 3.3): (the stage's number, the id of its name). A later session inserts its stage here, so
-# the spoken "stage n of m" follows the list. SX.8a built stages 1 and 6, SX.8c adds 2 (aging and retirement) and 3 (progression
+# the spoken "stage n of m" follows the list. SX.8a built stages 1 and 6, SX.8c added 2 (aging and retirement) and 3 (progression
 # and regression); SX.8d adds 4 (the draft) and 5 (the roster cut and the fill).
-STAGES: tuple[tuple[int, str], ...] = ((1, "NXE-11"), (2, "NXE-12"), (3, "NXE-13"), (6, "NXE-16"))
+STAGES: tuple[tuple[int, str], ...] = ((1, "NXE-11"), (2, "NXE-12"), (3, "NXE-13"), (4, "NXE-14"), (5, "NXE-15"), (6, "NXE-16"))
+
+# the draft (design 7): seven rounds of one pick for each team, in the same order in every round
+DRAFT_ROUNDS = 7
+DRAFT_PICKS = DRAFT_ROUNDS * TEAMS           # 224
+RANGE_SPAN = 6                               # the spoken range of a prospect: the low end to the low end + 6 (about 62 to 68)
+RANGE_MIDDLE = 3                             # the middle of that range: the low end + 3
+MAX_ROOKIES = DRAFT_ROUNDS                   # the rookies a team can have waiting for the cut (one a round)
+CUT_FLOOR_GROUP_MAX = 2                      # the cut's rating floor (tuning FR_CUT_FLOOR) is for groups of this many places or fewer
 STAGE_REVIEW, STAGE_AGING, STAGE_DEVELOPMENT, STAGE_DRAFT, STAGE_CUT, STAGE_NEW_SEASON = 1, 2, 3, 4, 5, 6
 
 # the rounds a team can last in, for the history (the finish)

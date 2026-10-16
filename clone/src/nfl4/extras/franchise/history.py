@@ -189,6 +189,17 @@ class Words:
         return X.text("NXL-31", player=player.name, position=self.position(player.pos), r=player.rating, a=player.age,
                       potential=self.potential(player.potential))
 
+    def prospect_line(self, name: str, position: str, low: int, high: int, age: int, potential: str) -> str:
+        """NXK-06: a prospect, or a rookie before the cut, by the range the scouts give (SX.8d)."""
+        return X.text("NXK-06", player=name, position=self.position(position), lo=low, hi=high, a=age,
+                      potential=self.potential(potential))
+
+    def open_places(self, places: list) -> str:
+        """The open places of a team for NXK-04: NXK-13 "none", or NXL-21 for each position with places open, as [(position, count)]."""
+        if not places:
+            return X.text("NXK-13")
+        return ", ".join(X.text("NXL-21", position=self.position(position), n=count) for position, count in places)
+
 
 def team_rating_text(league: LeagueRecord) -> str:
     """NXF-09: the player's team's rating (the weighted mean of its 34 players) and its number among the 32 (design 4.4)."""

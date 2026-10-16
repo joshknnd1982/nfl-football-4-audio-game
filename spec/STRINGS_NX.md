@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 444.
+- Texts: 466.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 112.
+- Franchise (design section 11): 134.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4.
 
 ## The clock (design section 5)
@@ -492,4 +492,26 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXE-43 (sentence, say2): " your whole roster is in the franchise menu on F9. ". stage 3
 - NXE-71 (sentence, say2): " retiring: <n> in the league, <m> from your team. ". stage 2 in the short offseason
 - NXE-72 (sentence, say2): " your players: improved <n>, declined <m>. ". stage 3 in the short offseason
+- NXK-01 (sentence, say2): " the draft has 7 rounds. you have pick number <n> in every round. ". stage 4, after the stage's name
+- NXK-02 (sentence, say2): " round <n>. ". stage 4, before the first spoken line of a round
+- NXK-03 (sentence, say2): " pick <n>: the <team> take <player>, <position>. ". stage 4, a told pick of a computer team (n: the pick in the round)
+- NXK-04 (prompt, say2): " <coach> it is your pick, round <round>, pick <pick>. your open places: <list>. ". stage 4, the player's pick
+- NXK-05 (sentence, say2): " the staff's list. ". stage 4, before the staff's five
+- NXK-06 (sentence, say2): " <player>, <position>, about <lo> to <hi>, age <a>, <potential> potential ". a prospect or a rookie before the cut in a list
+- NXK-07 (menu, say2): "hear more prospects". stage 4, item 6 of the player's pick
+- NXK-08 (menu, say2): "let the staff pick". stage 4, item 7
+- NXK-09 (menu, say2): "staff makes your other picks". stage 4, item 8
+- NXK-10 (sentence, say2): " you take <player>, <position>. ". stage 4, after the player chose a prospect
+- NXK-11 (sentence, say2): " the draft is over. your rookies: ". stage 4, before the player's rookies
+- NXK-12 (sentence, say2): " the staff took <player>, <position>. ". stage 4, the staff made the player's pick
+- NXK-13 (piece, piece): "none". the open places when there are none
+- NXE-50 (sentence, say2): " the roster cut. the staff would release: ". stage 5, before the staff's releases of the player's team
+- NXE-51 (sentence, say2): " <player>, <position>, age <a>, rating <r>. ". stage 5, a player the staff would release
+- NXE-52 (menu, say2): "release them". stage 5, the staff's cuts
+- NXE-53 (menu, say2): "choose yourself". stage 5, the player chooses
+- NXE-54 (prompt, say2): " <position>: players <n>, places <m>. choose who is released. ". stage 5, a group with too many players
+- NXE-55 (sentence, say2): " <player> is released. ". stage 5, the player released him
+- NXE-56 (sentence, say2): " players released by the staff: <n>. ". stage 5, with the setting that the staff handles the roster cut
+- NXE-57 (sentence, say2): " empty places filled with undrafted rookies: <n>. ". stage 5, the fill of the player's team
+- NXE-58 (sentence, say2): " nobody on your team has to be released. ". stage 5, the player's team has no surplus (added by SX.8d)
 

@@ -289,8 +289,8 @@ FR_GROWTH = (4, 2, 1)             # before the window, by potential (high, avera
 FR_IN_WINDOW = (1, 0, 0)          # in the window, by potential
 FR_DECLINE = (2, 3, 4, 5, 6, 6)   # after the window: the k-th year after it takes this many points, whatever the potential
 FR_PROGRESS_NOISE = (5, -2)       # below(5) - 2: the yearly spread, -2 to +2
-# The fill of an empty place with an undrafted rookie (design 7.6; SX.8c uses it as a stand-in until SX.8d builds the draft, the
-# cut and the real fill): rating base + below(span) in a group of three places or more, the second pair in a group of one or two.
+# The fill of an empty place with an undrafted rookie (design 7.6; stage 5 since SX.8d, a stand-in at the end of stage 3 in SX.8c):
+# rating base + below(span) in a group of three places or more, the second pair in a group of one or two.
 FR_FILL_RATING = (45, 11)
 FR_FILL_RATING_SMALL = (50, 11)
 FR_ROOKIE_POTENTIAL_SHARES = (25, 75)       # below(100): under 25 high, under 75 average, else low
@@ -311,7 +311,45 @@ FR_ROOKIE_POTENTIAL_SHARES = (25, 75)       # below(100): under 25 high, under 7
 # the league-seasons have one group mean outside 64 to 76 (the kickers 5.4 percent, the punters 4.4, the quarterbacks 2.0, the
 # returners 0.2): the single-place groups follow a cohort and the stand-in cut's ratchet; the retirement values were tried
 # (work/calibrate_aging_sx8c_sweeps/) and left at the design's (110, 6) because a rule that is right is not moved to meet an aggregate
-# (B-P56): SX.8d's real cut and SX.8f's per-run invariant are where the tails are settled. THE BUILD ALONE DOES NOT KEEP THESE BANDS:
-# until SX.8d builds the draft, stage 3 fills every empty place with an undrafted rookie rated 45 to 60 and nobody is drafted, so a
-# franchise played now loses rating season by season (the mean falls from 69 to 55 in ten seasons); the calibration measures the loop
-# with the stand-in draft and cut that SX.8d replaces.
+# (B-P56): SX.8d's real cut and SX.8f's per-run invariant are where the tails are settled. (SX.8c: its build alone did not keep these
+# bands, because until the draft existed stage 3 filled every empty place with an undrafted rookie rated 45 to 60 and the mean fell from
+# 69 to 55 in ten seasons; the calibration ran a stand-in draft and cut. SX.8d replaced the stand-ins: see the draft group below.)
+
+# ----- the draft, the roster cut and the fill, design 7 (SX.8d; the history of every move is below) -----
+# The draft class (made at the start of stage 4): FR_CLASS_SIZE prospects; each one's position by below(sum of the weights), the true rating
+# base + below(span) + below(span), the potential from FR_ROOKIE_POTENTIAL_SHARES (above), the age base + below(span), and the scouting
+# offset below(FR_SCOUT_SPAN), which places the true rating inside the spoken range (low end = true - offset, high end = low end + 6).
+FR_CLASS_SIZE = 260
+FR_CLASS_WEIGHTS = (("RB", 6), ("WR", 6), ("QB", 2), ("DL", 6), ("LB", 5), ("CB", 4), ("S", 2), ("RET", 2), ("K", 1), ("P", 1))
+FR_ROOKIE_RATING = (46, 15)                  # 46 + below(15) + below(15): 46 to 74, mean 60
+FR_ROOKIE_AGE = (21, 3)                      # 21 + below(3)
+FR_SCOUT_SPAN = 7                            # the offset below(7): the true rating lies 0 to 6 above the low end of the spoken range
+# What a team's pick values (design 7.3): the middle of the range + the potential bonus + the need bonus, its parts added.
+FR_DRAFT_POTENTIAL = {"high": 5, "average": 0, "low": -4}
+FR_DRAFT_VALUE = {"need": 8, "need_quarterback": 12, "better": 3, "surplus": -10}   # an open place; the same for a quarterback; the
+#                                            prospect's middle beats the group's lowest rating; a K, P or RET for a group with no open place
+FR_DRAFT_WEAK = 60                           # a group of one place counts as open also when its best player is under this rating
+# The roster cut (design 7.6): a player's keep value = rating + this bonus when he is FR_KEEP_YOUTH_AGE or younger.
+FR_KEEP_YOUTH = {"high": 4, "average": 2, "low": 0}
+FR_KEEP_YOUTH_AGE = 24
+# In a group of one or two places (quarterback, kicker, punter, safeties, returners) one weak player is the whole group, so a player under this
+# rating is released at the cut even with no surplus, and the fill (rated 50 or more there) takes his place: invariant I5 (D-059).
+FR_CUT_FLOOR = 50
+# SX.8d calibration (D-059; the reports are work/calibrate_draft_sx8d_fast_500x20.txt and ..._build_alone.txt, the scripts
+# work/sim_league_sx8d.py and work/calibrate_draft_sx8d.py, the whole-program run work/build_alone_sx8d.py). The design's start values were
+# kept: not one of the draft values above moved. Two additions, each from a measurement of the first run (20 leagues x 20 seasons): (1) in
+# 6.5 percent of the league-seasons some team had a position group with a mean under 50 (invariant I5): kickers and punters whose only
+# candidate was a late-round prospect rated 46 to 49, and returners left at 42 to 47 by the decline; the fill (rated 50 to 60 in a group of
+# one or two places) is better than they are but only fills EMPTY places, so a player under FR_CUT_FLOOR in a group of one or two places is
+# released at the cut and the fill takes his place; (2) the "beats the group's lowest rating" bonus counts the weakest player who would
+# hold a place (the place-count'th best of the group's players and drafted rookies), so a team that drafted a quarterback does not draft a
+# fourth. Result over 10,000 league-seasons of the fast run with the real draft, cut and fill (the only stand-in left, SX.8e's four weeks of
+# extra work, on): the MEAN over the leagues is inside its band in every one of the 20 seasons (rating 69.2 to 70.8, age 25.8 to 26.7, every
+# group 67.2 to 73.9, win spread 2.81 to 2.87); no single league-season has a mean rating or age outside its band; no team group is under 50
+# (lowest 50.0); one group's mean leaves 64 to 76 in 10.3 percent of the single league-seasons (kickers 4.3, punters 5.0, quarterbacks 1.7:
+# the single-place groups move as a cohort, B-P74; left to SX.8f's per-run I8b); a player who left had played 4.91 seasons (C-F5: 3 to 7); the
+# picks of round 1 are rated 76.3 at 25 (at least 72) and the picks of round 7 65.0 (at most 66), counted over the picks still active at 25,
+# of whom 0.8 percent (round 1) to 95.4 percent (round 7) had left before 25 (C-F6). THE BUILD ALONE (nothing gives a development point
+# until SX.8e) is inside the same bands as a mean over the leagues: rating 68.5 to 70.0, age 25.8 to 26.7, every group 66.5 to 72.8, win
+# spread 2.79 to 2.88; 15 of the 10,000 single league-seasons have a mean rating just under 68 and 1.6 percent a group outside 64 to 76
+# (work/calibrate_draft_sx8d_fast_500x20_build_alone.txt); the picks of round 1 are rated 74.3 at 25 and those of round 7 64.6.

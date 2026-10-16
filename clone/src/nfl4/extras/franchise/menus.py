@@ -19,7 +19,9 @@ from . import data as D
 from . import history, mode
 from .league import team_ref
 
-ROSTER_ORDER = ("QB", "RB", "WR", "DL", "LB", "CB", "S", "RET", "K", "P")
+ROSTER_ORDER = D.ROSTER_ORDER
+PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
+PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
 
 
 class _Closed(Exception):
@@ -55,11 +57,22 @@ def franchise_menu(g, speech, keys) -> None:
 
     # ----- the roster -----
 
+    def rookies_of(position: str) -> list:
+        """The player's rookies of one group who wait for the cut (stages 4 and 5)."""
+        league = store.league
+        return [r for r in league.waiting_rookies(league.team) if r.pos == position]
+
     def group_picker(position: str) -> None:
         word = _words(g)
         league = store.league
         players = [p for p in league.group_of(league.team, position) if p is not None]
         lines = [word.player(p) for p in players]              # SX.8b: the rating and the potential are spoken
+        for rookie in rookies_of(position):                    # a rookie is told by his range until the cut (design 7.6, 11)
+            if league.draft is not None:                       # the draft record lives until the cut is applied (stage 5)
+                low, high = league.rookie_range(rookie)
+                lines.append(word.prospect_line(rookie.name, rookie.pos, low, high, rookie.age, rookie.potential))
+            else:
+                lines.append(word.player(rookie))
         _lines_picker(speech, keys, word.group(position), lines)
 
     def roster_menu() -> None:
@@ -67,7 +80,8 @@ def franchise_menu(g, speech, keys) -> None:
         league = store.league
 
         def count(position: str) -> int:               # the players in the group now: fewer than its places while places are empty
-            return sum(1 for player in league.group_of(league.team, position) if player is not None)
+            return (sum(1 for player in league.group_of(league.team, position) if player is not None)
+                    + len(rookies_of(position)))
         items = [Item(lambda position=position: X.text("NXL-30", group=word.group(position), n=count(position)),
                       enter=lambda position=position: group_picker(position)) for position in ROSTER_ORDER]
         SpokenMenu(speech, keys, X.text("NXF-13"), items, space_enters=True, digits_jump=True).run()
@@ -104,7 +118,16 @@ def franchise_menu(g, speech, keys) -> None:
             settings.nx_fr_offseason = "short" if settings.nx_fr_offseason == "full" else "full"
             g.options.save()
 
-        items = [Item(offseason_label, enter=lambda: (toggle(), offseason_label())[1], change=toggle)]
+        def picks_label() -> str:
+            return X.text(PICKS_TOLD_TEXT[settings.nx_fr_picks_told])
+
+        def cycle(step: int = 1) -> None:
+            at = PICKS_TOLD.index(settings.nx_fr_picks_told) if settings.nx_fr_picks_told in PICKS_TOLD else 0
+            settings.nx_fr_picks_told = PICKS_TOLD[(at + step) % len(PICKS_TOLD)]
+            g.options.save()
+
+        items = [Item(offseason_label, enter=lambda: (toggle(), offseason_label())[1], change=toggle),
+                 Item(picks_label, enter=lambda: (cycle(), picks_label())[1], change=cycle)]
         SpokenMenu(speech, keys, X.text("NXF-16"), items, space_enters=True, digits_jump=True).run()
 
     # ----- between the kinds of season (design 3.5) -----

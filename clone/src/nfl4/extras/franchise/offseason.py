@@ -1,7 +1,8 @@
 """The offseason of a Franchise: stage 1 the season in review (SX.8a), 2 the retirements and 3 the player development (SX.8c),
-6 the new season (nfl4 only, rule 0.13). This is inspired by Jim Kitchen.
+4 the draft and 5 the roster cut with the fill (SX.8d, `draft_flow.py`), 6 the new season (nfl4 only, rule 0.13). This is inspired by
+Jim Kitchen.
 
-NFL_FRANCHISE_DESIGN 3.3. The stages are the data list `data.STAGES` (SX.8d inserts the draft and the roster cut). Stage 1 speaks
+NFL_FRANCHISE_DESIGN 3.3. The stages are the data list `data.STAGES` (a later session inserts its stage). Stage 1 speaks
 and waits first and makes its changes after the wait (the season's results stay in the file until then). Stages 2 and 3 make
 their draws (`extras\\franchise\\aging.py` plans without changing anything), work the spoken lines out from the plan, change the
 league and write league.sav, and only then speak and wait: the roster and the ratings the player may open in F9 at the wait are what
@@ -15,6 +16,7 @@ from __future__ import annotations
 from .. import nx_texts as X
 from . import aging
 from . import data as D
+from . import draft_flow
 from . import history
 from .league import OFFSEASON, SEASON, team_ref
 from .question import wait_for_enter
@@ -126,9 +128,9 @@ def stage_retirements(p, n: int, m: int, short: bool) -> None:
 
 def stage_development(p, n: int, m: int, short: bool) -> None:
     """Stage 3: progression and regression of every player (design 6.2): the player's team's counts, its most improved and its
-    biggest drop. The development points go back to 0. Until SX.8d builds the draft, the roster cut and the fill, the empty
-    places of the retirements are filled here by the stand-in fill, so the next stage finds whole rosters. The news lines NWP are
-    SX.8e's. As in stage 2 the league is changed and saved before the stage speaks and waits."""
+    biggest drop. The development points go back to 0. The empty places of the retirements stay empty until the roster cut
+    fills them (stage 5, SX.8d). The news lines NWP are SX.8e's. As in stage 2 the league is changed and saved before the stage speaks
+    and waits."""
     g, store = p.g, p.store
     league = store.league
     words = store.words
@@ -142,8 +144,6 @@ def stage_development(p, n: int, m: int, short: bool) -> None:
     lines += [X.text("NXE-43"), X.text("NXE-03")]
     short_line = X.text("NXE-72", n=summary.improved, m=summary.declined)
     aging.apply_development(plan)
-    if D.STAGE_DRAFT not in {number for number, _ in D.STAGES}:         # SX.8d's draft, cut and fill take this over
-        aging.fill_places(league, g.rnd, list(g.pool.original))
     league.stage_no = _next_stage(D.STAGE_DEVELOPMENT)
     store.save()
     if short:
@@ -181,4 +181,4 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
 
 
 RUNNERS = {D.STAGE_REVIEW: stage_review, D.STAGE_AGING: stage_retirements, D.STAGE_DEVELOPMENT: stage_development,
-           D.STAGE_NEW_SEASON: stage_new_season}
+           D.STAGE_DRAFT: draft_flow.stage_draft, D.STAGE_CUT: draft_flow.stage_cut, D.STAGE_NEW_SEASON: stage_new_season}
