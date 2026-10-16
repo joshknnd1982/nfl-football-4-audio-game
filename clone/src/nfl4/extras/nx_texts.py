@@ -336,7 +336,7 @@ TEXTS: dict[str, str] = {
     'NXZ-29': 'Dime Deep Coverage',
     'NXZ-30': 'Man Press',
     'NXB-10': 'Back',
-    'NXH-27': ' With a playbook, a group in the play menu opens a short list of plays. Enter opens it, and Backspace, Left or B. go back to the groups. ',
+    'NXH-27': ' With a playbook, a group in the play menu opens a short list of plays. Enter opens it. Backspace or Left goes back to the groups, and so does the last item, Back, which the letter B. selects. ',
     'NXH-28': " With the N. F. L. rules you may choose an offense playbook and a defense playbook in the F9 menu, under Rules. Classic is the original's plays. ",
     'NXH-29': ' The others are styles: Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option and Pressure. A play changes an original play a little: strong against some calls, weak against others. ',
     'NXH-30': " The computer's teams call the plays of their own style, which the file team styles in the customize folder sets. ",

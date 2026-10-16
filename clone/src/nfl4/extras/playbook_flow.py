@@ -147,7 +147,7 @@ class PlaybookFlow:
         return items
 
     def defense_items(self, state) -> list[menus.MenuItem] | None:
-        if self.style(state, 1, "D") == P.CLASSIC:
+        if self.style(state, 1, "D") == P.CLASSIC or state.two_point:      # the try is the original's, on both sides of the ball
             self.group = None
             return None
         groups = self._plays(state, "D")
@@ -248,8 +248,9 @@ class PlaybookFlow:
         usable = self.table.usable(style, "O")
         if family in D.QB_FAMILIES:
             candidates = [(p, w) for p, w in usable if p.family == family]
-        else:
-            candidates = [(p, w * self.situation_percent(state, p.family)) for p, w in usable if p.family <= 5]
+        else:                                      # on fourth down the original's go-for-it call is a family 1 to 4 (5.7)
+            reach = 4 if state.down == 4 else 5
+            candidates = [(p, w * self.situation_percent(state, p.family)) for p, w in usable if p.family <= reach]
         if not candidates:
             return
         play = self.draw(candidates)
@@ -261,6 +262,8 @@ class PlaybookFlow:
         style = self.style(state, state.defense, "D")
         if style == P.CLASSIC:
             return
+        if state.two_point or state.offense_play in (6, 7):      # a try and a kick are the original's, no draw
+            return
         candidates = [(p, w) for p, w in self.table.usable(style, "D") if p.family == state.defense_play]
         if candidates:
             self.defense_id = self.draw(candidates).id
@@ -270,7 +273,7 @@ class PlaybookFlow:
     def arm(self, state, offense_play: int, defense_play: int) -> None:
         """H8: the rows move by the two plays that were called; nothing called, nothing moves."""
         offense, defense = D.PLAYS.get(self.offense_id), D.PLAYS.get(self.defense_id)
-        if offense is None and defense is None:
+        if (offense is None and defense is None) or state.two_point:
             self.modifiers.arm(None)
             return
         x = state.extras
@@ -289,7 +292,16 @@ class PlaybookFlow:
         self.events.append((outcome.offense, self.offense_id, self.defense_id, outcome.offense_play, outcome.defense_play,
                             outcome.kind, outcome.yards))
 
-    def clear(self) -> None:
+    def forget_calls(self) -> None:
+        """The play is over: nothing is called and the menu starts at its top. The modifiers stay armed until the ruling of the
+        play was made (the review reads the row the play used)."""
         self.offense_id = self.defense_id = ""
         self.group = None
+
+    def clear(self) -> None:
+        self.forget_calls()
         self.modifiers.arm(None)
+
+    @staticmethod
+    def player_uses_a_book(x) -> bool:
+        return x.offense_book[0] != P.CLASSIC or x.defense_book[0] != P.CLASSIC

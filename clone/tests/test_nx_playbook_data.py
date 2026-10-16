@@ -177,3 +177,47 @@ def test_the_family_masses_of_a_style_are_its_designed_mix_and_classic_is_the_or
         for family, percent in D.MASS[style.code].items():
             assert abs(100 * mix[family] / total - percent) < 3, (style.key, family)
     assert D.MASS["PRO"] == {1: 22, 2: 22, 3: 22, 4: 22, 5: 11}        # GAME_SPEC 5.7: 2/9, 2/9, 2/9, 2/9, 1/9
+
+
+# ----- what the review of SX.7 found -----
+
+def test_no_play_is_at_least_as_good_as_another_of_its_family_against_every_call_even_in_pairs():
+    """Design 10.3 says no play beats the best of its family everywhere; the stronger rule kept here: no pair of plays of a
+    family where one is as good as the other on every call (a play nobody would ever choose, or a twin)."""
+    from playbook_ev import defense_vector
+    for side, vector, families in (("O", lambda p: offense_vector(None, p), (1, 2, 3, 4, 5, 8, 9, 10)),
+                                   ("D", lambda p: defense_vector(None, p), (1, 2, 3, 4, 5, 6))):
+        for family in families:
+            plays = [p for p in D.CATALOG if p.side == side and p.family == family]
+            vectors = {p.id: vector(p) for p in plays}
+            for a in plays:
+                for b in plays:
+                    if a.id != b.id:
+                        assert not all(x >= y - 1e-9 for x, y in zip(vectors[a.id], vectors[b.id])), (a.id, "is as good as", b.id)
+
+
+def test_a_rule_never_changes_a_number_its_row_does_not_have():
+    """A run's row has yards and a fumble chance, no sack and no catch percent; the quarterback's runs too."""
+    from playbook_ev import RUN_FAMILIES
+    for play in D.CATALOG:
+        for rule in play.rules:
+            on_runs = [call for call in rule.vs if (call if play.side == "D" else play.family) in RUN_FAMILIES]
+            if play.side == "O" and play.family in RUN_FAMILIES:
+                assert not (rule.mod.sack or rule.mod.comp), (play.id, rule)
+            if play.side == "D":
+                # a defense rule that names only run families cannot carry a sack or a catch change
+                assert not (on_runs == list(rule.vs) and (rule.mod.sack or rule.mod.comp)), (play.id, rule)
+
+
+def test_every_play_is_centered_its_own_tilt_moves_expected_yards_by_a_quarter_yard_at_most():
+    from playbook_ev import mean_effect
+    for play in D.CATALOG:
+        assert abs(mean_effect(play)) <= 0.26, (play.id, mean_effect(play))
+
+
+@pytest.mark.parametrize("style", D.STYLES, ids=lambda s: s.key)
+def test_a_group_of_a_style_has_two_to_six_plays_as_the_research_sizes_it(style):
+    groups = {}
+    for play_id, _w in style.offense:
+        groups[D.PLAYS[play_id].group] = groups.get(D.PLAYS[play_id].group, 0) + 1
+    assert all(2 <= n <= 6 for n in groups.values()) and set(groups) == set(D.OFFENSE_GROUPS), groups

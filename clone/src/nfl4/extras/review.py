@@ -374,9 +374,9 @@ class ReviewFlow:
         pair = (outcome.offense_play, outcome.defense_play)
         if outcome.qb_run == SCRAMBLE_KEY:
             return make_entry(SCRAMBLE_KEY, outcome.defense_play)
-        if outcome.offense_play >= 8:
-            return make_entry(KINDS[outcome.offense_play], outcome.defense_play)
         modifiers = self.rules.modifiers
+        if outcome.offense_play >= 8:
+            return modifiers.qb_run(make_entry(KINDS[outcome.offense_play], outcome.defense_play))
         if outcome.offense_play <= 2:
             return modifiers.run(*pair, RUNS[pair])
         return modifiers.pass_(*pair, PASSES[pair])

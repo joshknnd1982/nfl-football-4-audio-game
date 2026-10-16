@@ -179,8 +179,9 @@ def test_the_quarterback_group_calls_a_keeper_as_play_9(tmp_path):
 def test_a_digit_goes_to_an_item_and_the_letter_b_is_back(tmp_path):
     rig = rig_for(tmp_path, answers=["4", ENTER, "b", ENTER, ESCAPE])
     assert the_menu(rig) == "concede"
-    assert texts(rig) == [SELECT, " 1. Inside Runs ", " 4. Short Passes ", SELECT, " 1. Hitch Routes ", " 8. Back ", SELECT,
-                          " 1. Inside Runs "]
+    plays = sum(1 for i, _w in D.STYLE_BY_KEY["west"].offense if D.PLAYS[i].group == 4)         # Back comes after the plays
+    assert texts(rig) == [SELECT, " 1. Inside Runs ", " 4. Short Passes ", SELECT, " 1. Hitch Routes ",
+                          " %d. Back " % (plays + 1), SELECT, " 1. Inside Runs "]
 
 
 def without_items(spoken):
@@ -419,3 +420,77 @@ def test_a_call_that_was_not_run_does_not_leak_into_the_next_menu_or_the_next_ki
     books.modifiers.arm(D.Mod(1, 1))
     rig.rules.before_kickoff(s, 1)
     assert (books.offense_id, books.defense_id, books.modifiers.mod) == ("", "", None)
+
+
+# ----- what the review of SX.7 found -----
+
+def test_a_quarterback_percent_of_zero_draws_no_keeper_or_draw_and_the_others_scale_the_chance(tmp_path):
+    rig = computer_state(tmp_path, offense="option", qb_on=True, down=2, to_go=7)
+    s = rig.engine.s
+    for percent, one_in in ((0, None), (100, 150), (300, 50), (1000, 15), (5000, 3)):
+        s.offense_play = 3
+        draws = [] if one_in is None else [Draws().rnd(one_in, 1).values[0]]       # 1 is a keeper
+        rig.rnd.source = ScriptedRandom(draws, strict=True)
+        rig.rnd.trace = []
+        rig.rules.qb.computer_offense(s, percent)
+        assert rig.rnd.trace == ([] if one_in is None else [one_in]), percent
+        assert s.offense_play == (3 if one_in is None else 9), percent
+    s.down, s.to_go, s.offense_play = 3, 1, 3                           # the sneak on third and one does not depend on the percent
+    rig.rnd.source = ScriptedRandom([Draws().rnd(2, 1).values[0]], strict=True)
+    rig.rules.qb.computer_offense(s, 0)
+    assert s.offense_play == 8
+
+
+def test_the_try_is_the_originals_on_both_sides_of_the_ball(tmp_path):
+    rig = nfl_engine_rig(tmp_path, rules=NflRules(timeouts_on=False, defense_book="pressure", playbooks_on=True), wisoff=2,
+                         defense=1, half=2, yard_line=2, down=1, to_go=2, quarter=1, two_point=True)
+    s, books = rig.engine.s, rig.rules.books
+    assert items_of(rig, defense=True)[:2] == [" 1. Goal Line ", " 2. Short Run "]
+    assert all(i.action[0] in (menus.PLAY, menus.SAVE) for i in rig.rules.defense_menu(s))        # no group, no play of a book
+    books.defense_id = "D011"                                                 # a call that was somehow armed: the try ignores it
+    books.arm(s, 1, 4)
+    assert books.modifiers.mod is None
+    s.wisoff, s.defense = 1, 2
+    s.extras.defense_book = ["classic", "pressure"]
+    s.defense_play = 4
+    rig.rnd.source = ScriptedRandom([], strict=True)
+    rig.rnd.trace = []
+    rig.rules.computer_defense(s)                                             # the computer's defense draws nothing on a try
+    assert rig.rnd.trace == [] and books.defense_id == ""
+
+
+def test_a_kick_makes_the_computers_defense_draw_nothing(tmp_path):
+    rig = nfl_engine_rig(tmp_path, rules=NflRules(timeouts_on=False, playbooks_on=True), wisoff=1, defense=2, half=2,
+                         yard_line=30, down=4, to_go=3, quarter=1, offense_play=7, defense_play=2)
+    rig.engine.s.extras.defense_book = ["classic", "pressure"]
+    rig.rnd.source = ScriptedRandom([], strict=True)
+    rig.rnd.trace = []
+    rig.rules.computer_defense(rig.engine.s)
+    assert rig.rnd.trace == [] and rig.rules.books.defense_id == ""
+
+
+def test_on_fourth_down_the_style_only_draws_among_the_families_the_originals_go_for_it_has(tmp_path):
+    rig = computer_state(tmp_path, offense="air", down=4, to_go=6)
+    s = rig.engine.s
+    plays = [(p, w * 100) for p, w in TABLE.usable("air", "O") if p.family <= 4]
+    assert any(p.family == 5 for p, _w in TABLE.usable("air", "O"))             # Air Raid has long passes: not called here
+    total = sum(w for _p, w in plays)
+    for pick in range(0, total, 37):
+        s.offense_play = 2
+        pick_of(rig, plays, pick)
+        rig.rules.computer_offense(s)
+        assert 1 <= s.offense_play <= 4 and rig.rnd.trace == [total]
+    s.down = 3                                                                  # the third down may call a long pass
+    plays = [(p, w * 100) for p, w in TABLE.usable("air", "O") if p.family <= 5]
+    pick_of(rig, plays, sum(w for _p, w in plays) - 1)
+    rig.rules.computer_offense(s)
+    assert s.offense_play == plays[-1][0].family
+
+
+def test_the_key_0_is_the_tenth_item_and_an_item_past_the_tenth_has_no_digit(tmp_path):
+    rig = rig_for(tmp_path, offense="power", qb_on=True, timeouts_on=True, answers=["0", ESCAPE])
+    items = rig.rules.offense_menu(rig.engine.s, False)
+    assert [i.text for i in items][9:] == [" 10. Time Out ", " 11. Save Game "]
+    assert [i.digit for i in items][9:] == [0, -1] and items[9].letter == "t"
+    assert the_menu(rig) == "concede"
+    assert texts(rig) == [SELECT, " 1. Inside Runs ", " 10. Time Out "]

@@ -153,6 +153,9 @@ def test_f5_f6_and_f7_add_the_playbook_lines_only_when_a_playbook_is_in_use(tmp_
         assert not any(t in plain.rules.extra_help(key) for t in wanted)
         for rig in (used, computer):
             help_ = rig.rules.extra_help(key)
-            assert all(t in help_ for t in wanted), key
-    assert X.text("NXH-27") == (" With a playbook, a group in the play menu opens a short list of plays. Enter opens it, and "
-                                "Backspace, Left or B. go back to the groups. ")
+            for i in ids:
+                # the line about the menus is for a player whose own books are playbooks, not for one who only meets a style
+                assert (X.text(i) in help_) == (i != "NXH-27" or rig is used), (key, i)
+    assert X.text("NXH-27") == (" With a playbook, a group in the play menu opens a short list of plays. Enter opens it. "
+                                "Backspace or Left goes back to the groups, and so does the last item, Back, which the letter B. "
+                                "selects. ")

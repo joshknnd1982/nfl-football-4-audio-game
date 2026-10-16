@@ -152,8 +152,12 @@ class SimEngine(PlayEngine):
 
     def defense_menu(self):
         self.s.defense_play = self.rnd(6)
-        self.rules.computer_defense(self.s)         # SX.7: the style's play of that family (no draw for Classic)
         return self.defense_chosen
+
+    def defense_chosen(self):
+        step = super().defense_chosen()             # the computer's offense is chosen: now what the defense called is known
+        self.rules.computer_defense(self.s)         # SX.7: the player's side too picks the style's play of its family
+        return step
 
 
 def sim_game(tmp_path, seed, rules=None, gtp=1):

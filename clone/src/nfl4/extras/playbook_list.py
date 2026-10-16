@@ -27,6 +27,8 @@ from . import nx_texts as X
 from . import playbook_data as D
 from . import playbooks as P
 
+WHOLE = re.compile(r"[+-]?[0-9]+")                # a whole number as the files write it (str.isdigit also takes superscripts)
+UNSIGNED = re.compile(r"[0-9]+")
 PLAY_ID = re.compile(r"([OD])(\d{1,3})", re.IGNORECASE)
 MEMBER_ID = re.compile(r"S([1-7])([OD])(\d{3})", re.IGNORECASE)
 TILT_ID = re.compile(r"S([1-7])([OD])([BP])([1-3])", re.IGNORECASE)
@@ -167,7 +169,7 @@ def apply_plays(table: P.Table, entries, problems) -> P.Table:
 def _numbers(words: list[str], allowed, what: str) -> tuple[tuple[int, ...] | None, str]:
     values = []
     for word in words:
-        if not word.lstrip("-").isdigit() or int(word) not in allowed:
+        if not WHOLE.fullmatch(word) or int(word) not in allowed:
             return None, "%s %s is not one of %s" % (what, word[:12], " ".join(str(a) for a in allowed))
         if int(word) not in values:
             values.append(int(word))
@@ -192,8 +194,7 @@ def parse_tilt(role: str, value: str) -> tuple[D.Tilt | None, str]:
         elif words[0] == "vs":
             vs, reason = _numbers(words[1:], vs_allowed, "the call")
         elif words[0] in mod and len(words) == 2:
-            number = words[1].lstrip("+-")
-            if not number.isdigit():
+            if not WHOLE.fullmatch(words[1]):
                 return None, "%s %s is not a whole number" % (words[0], words[1][:12])
             amount = int(words[1])
             limit = D.BOUNDS[D.MOD_NAMES.index(words[0])]
@@ -210,6 +211,56 @@ def parse_tilt(role: str, value: str) -> tuple[D.Tilt | None, str]:
     return D.Tilt(families, vs, D.Mod(*(mod[name] for name in D.MOD_NAMES))), ""
 
 
+def _style_line(entry, by_number, styles, seen, problems) -> None:
+    """One line of styles.txt over `styles` (the built-in styles, changed in place)."""
+    key = entry.id.upper()
+    if key in seen:
+        problems.add(key, "this ID is there twice, the first line is used")
+        return
+    seen.add(key)
+    member, tilt, qb = MEMBER_ID.fullmatch(key), TILT_ID.fullmatch(key), QB_ID.fullmatch(key)
+    if member:
+        style = by_number[int(member.group(1))]
+        play_id = member.group(2) + member.group(3)
+        if play_id not in D.PLAYS:
+            problems.add(key, "there is no play %s in this game, the line is ignored" % play_id)
+            return
+        members = styles[style.key].offense if member.group(2) == "O" else styles[style.key].defense
+        name, options = _options(entry.value)
+        words = [w for part in [name] + options for w in part.casefold().split()]
+        if words == ["off"]:
+            members.pop(play_id, None)
+        elif len(words) == 2 and words[0] == "weight" and UNSIGNED.fullmatch(words[1]) and int(words[1]) <= WEIGHT_MAX:
+            if int(words[1]) == 0:
+                members.pop(play_id, None)
+            else:
+                members[play_id] = int(words[1])
+        elif words == ["on"]:
+            members.setdefault(play_id, 1)
+        else:
+            problems.add(key, "the line is not off, on or weight 0 to %d, the original is used" % WEIGHT_MAX)
+    elif tilt:
+        style = by_number[int(tilt.group(1))]
+        tilt_id = tilt.group(2) + tilt.group(3) + tilt.group(4)
+        if entry.value.strip().casefold() == "off":
+            styles[style.key].tilts.pop(tilt_id, None)
+            return
+        parsed, reason = parse_tilt(tilt.group(2), entry.value)
+        if parsed is None:
+            problems.add(key, "%s, the original is used" % reason)
+        else:
+            styles[style.key].tilts[tilt_id] = parsed
+    elif qb:
+        style = by_number[int(qb.group(1))]
+        if UNSIGNED.fullmatch(entry.value) and int(entry.value) <= QB_PERCENT_MAX:
+            styles[style.key] = replace(styles[style.key], qb_percent=int(entry.value))
+        else:
+            problems.add(key, "the line is not a percent from 0 to %d, the original is used" % QB_PERCENT_MAX)
+    else:
+        problems.add("line %d" % entry.line, "the ID %s is not a style line (S1O001, S1OB1, S1QB), the line is ignored"
+                     % entry.id)
+
+
 def apply_styles(table: P.Table, entries, problems) -> P.Table:
     """styles.txt over the table's styles. A line that is not understood or is out of its bounds is a problem and the default
     of its ID stays; `off` takes a play or a tilt out."""
@@ -218,52 +269,10 @@ def apply_styles(table: P.Table, entries, problems) -> P.Table:
     styles = {style.key: P.style_book(style) for style in D.STYLES}
     seen: set[str] = set()
     for entry in entries:
-        key = entry.id.upper()
-        if key in seen:
-            problems.add(key, "this ID is there twice, the first line is used")
-            continue
-        seen.add(key)
-        member, tilt, qb = MEMBER_ID.fullmatch(key), TILT_ID.fullmatch(key), QB_ID.fullmatch(key)
-        if member:
-            style = by_number[int(member.group(1))]
-            play_id = member.group(2) + member.group(3)
-            if play_id not in D.PLAYS:
-                problems.add(key, "there is no play %s in this game, the line is ignored" % play_id)
-                continue
-            members = styles[style.key].offense if member.group(2) == "O" else styles[style.key].defense
-            name, options = _options(entry.value)
-            words = [w for part in [name] + options for w in part.casefold().split()]
-            if words == ["off"]:
-                members.pop(play_id, None)
-            elif len(words) == 2 and words[0] == "weight" and words[1].isdigit() and int(words[1]) <= WEIGHT_MAX:
-                if int(words[1]) == 0:
-                    members.pop(play_id, None)
-                else:
-                    members[play_id] = int(words[1])
-            elif words == ["on"]:
-                members.setdefault(play_id, 1)
-            else:
-                problems.add(key, "the line is not off, on or weight 0 to %d, the original is used" % WEIGHT_MAX)
-        elif tilt:
-            style = by_number[int(tilt.group(1))]
-            tilt_id = tilt.group(2) + tilt.group(3) + tilt.group(4)
-            if entry.value.strip().casefold() == "off":
-                styles[style.key].tilts.pop(tilt_id, None)
-                continue
-            parsed, reason = parse_tilt(tilt.group(2), entry.value)
-            if parsed is None:
-                problems.add(key, "%s, the original is used" % reason)
-            else:
-                styles[style.key].tilts[tilt_id] = parsed
-        elif qb:
-            style = by_number[int(qb.group(1))]
-            if entry.value.isdigit() and 0 <= int(entry.value) <= QB_PERCENT_MAX:
-                styles[style.key] = replace(styles[style.key], qb_percent=int(entry.value))
-            else:
-                problems.add(key, "the line is not a percent from 0 to %d, the original is used" % QB_PERCENT_MAX)
-        else:
-            problems.add("line %d" % entry.line, "the ID %s is not a style line (S1O001, S1OB1, S1QB), the line is ignored"
-                         % entry.id)
+        try:
+            _style_line(entry, by_number, styles, seen, problems)
+        except (ValueError, KeyError, IndexError, TypeError, AttributeError) as exc:     # one line never costs the file
+            problems.add(entry.id.upper(), "the line could not be used (%s), the original is used" % type(exc).__name__)
     return replace(table, styles=styles)
 
 

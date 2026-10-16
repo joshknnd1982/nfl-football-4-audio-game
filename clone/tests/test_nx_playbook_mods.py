@@ -161,3 +161,20 @@ def test_the_fumble_chance_of_a_called_play_is_its_own_denominator(tmp_path, mon
     d.below(6, 0).below(40, 0)                                        # L of a turnover (5 to 10 seconds), the turnover spot
     run_steps(rig, rig.engine.snap, d)
     assert rig.engine.s.stats[1].fumbles_lost == 1
+
+
+def test_the_ruling_reads_the_row_the_play_used_not_the_originals(tmp_path):
+    from nfl4.extras.qb_runs import make_entry
+    from nfl4.game import outcome as O
+    rig = book_rig(tmp_path, "classic", "classic")
+    review, modifiers = rig.rules.review, rig.rules.modifiers
+    run = O.PlayOutcome(O.RUN, 1, 1, 3)
+    assert review.row(rig.engine.s, run) == RUNS[(1, 3)]                      # nothing armed: the original's row
+    modifiers.arm(D.Mod(1, 2, 0, 0, 0))
+    assert review.row(rig.engine.s, run) == RUNS[(1, 3)]._replace(low=1, high=9)
+    keeper = O.PlayOutcome(O.RUN, 1, 9, 5)
+    entry = make_entry("keeper", 5)
+    assert review.row(rig.engine.s, keeper) == entry._replace(low=entry.low + 1, high=entry.high + 2)
+    passing = O.PlayOutcome(O.PASS_COMPLETE, 1, 4, 4)
+    assert review.row(rig.engine.s, passing) == PASSES[(4, 4)]._replace(low=6, high=52)
+    modifiers.arm(None)

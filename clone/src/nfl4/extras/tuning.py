@@ -192,6 +192,13 @@ PB_DISTANCE_PERCENT = {"short": {1: 150, 2: 100, 3: 60, 4: 80, 5: 50},
 PB_RED_ZONE_PERCENT = {1: 130, 2: 90, 3: 100, 4: 100, 5: 70}
 PB_LATE_TRAILING_PERCENT = {1: 50, 2: 50, 3: 100, 4: 140, 5: 160}
 PB_LATE_LEADING_PERCENT = {1: 140, 2: 140, 3: 60, 4: 70, 5: 40}
+# SX.7 calibration (D-054, work/calibrate_playbooks_sx7.py): the design's start values (the situation's distance counted from the first
+# down, uncentered plays) gave Pro Style, the control group, 53 to 55 percent against Classic and Power Run 60; three moves, each from a
+# measurement: the plays' own tilts were centered with the expected-yards yardstick of tests/playbook_ev.py, the distance counts from the
+# second down, and the family masses and tilts of the styles (playbook_data.py MASS and the tilts) were reset. Result in 10,000 games per
+# style against Classic, the side alternating (work/calibrate_playbooks_sx7_10000.txt): Pro Style 51.3, West Coast 50.0, Air Raid 49.9,
+# Power Run 52.3, Zone Run 50.8, Option 51.1 and Pressure 52.4 percent, Classic against Classic 50.0 (the error is 0.5; design 10.3's band
+# is 45 to 55). PB_SITUATION_STRENGTH stays 100.
 
 # ----- a Classic save loaded in N. F. L. rules mode, design 12.3 -----
 SAVE_SECONDS_PER_COUNTED_PLAY = 28    # the clock at 15:00 minus 28 seconds per counted play,
@@ -218,7 +225,7 @@ TARGET_QB_SCRAMBLE_YARDS = (7.0, 8.2)           # their mean yards (NFL 7.67; a 
 TARGET_QB_SHORT_CONVERSION = (0.78, 0.88)       # third or fourth and 1, a designed quarterback run: first down or touchdown
 #                                                 (NFL 83.4 percent)
 TARGET_PLAYBOOK_WIN = (0.45, 0.55)                      # every style against Classic wins this share of the games (design 10.3)
-TARGET_COACH_CHALLENGES_PER_TEAM_GAME =(0.20, 0.32)    # coach challenges per team per game (NFL 0.24 to 0.28, Part 3 section 7)
+TARGET_COACH_CHALLENGES_PER_TEAM_GAME = (0.20, 0.32)    # coach challenges per team per game (NFL 0.24 to 0.28, Part 3 section 7)
 TARGET_CHALLENGE_REVERSED = (0.38, 0.52)                # the share that changed the ruling (NFL 38 to 52 percent)
 TARGET_BOOTH_PER_GAME = (0.50, 0.80)                    # replay official reviews per game, both teams (NFL about 0.65)
 TARGET_BOOTH_REVERSED = (0.70, 0.82)                    # the share that changed the ruling (NFL 74 to 78 percent)

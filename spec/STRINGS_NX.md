@@ -319,7 +319,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXZ-29 (menu, say5): "Dime Deep Coverage". defense play D029 of the catalog (plays.txt)
 - NXZ-30 (menu, say5): "Man Press". defense play D030 of the catalog (plays.txt)
 - NXB-10 (menu, say5): "Back". the last play item of a group: back to the groups (letter B)
-- NXH-27 (help, say5): " With a playbook, a group in the play menu opens a short list of plays. Enter opens it, and Backspace, Left or B. go back to the groups. ". F5 addition (H12, C6), when a playbook is in use
+- NXH-27 (help, say5): " With a playbook, a group in the play menu opens a short list of plays. Enter opens it. Backspace or Left goes back to the groups, and so does the last item, Back, which the letter B. selects. ". F5 addition (H12, C6), when a playbook is in use
 - NXH-28 (help, say5): " With the N. F. L. rules you may choose an offense playbook and a defense playbook in the F9 menu, under Rules. Classic is the original's plays. ". F6 addition (H12, C6), when a playbook is in use
 - NXH-29 (help, say5): " The others are styles: Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option and Pressure. A play changes an original play a little: strong against some calls, weak against others. ". F6 addition (H12, C6), when a playbook is in use, after NXH-28
 - NXH-30 (help, say5): " The computer's teams call the plays of their own style, which the file team styles in the customize folder sets. ". F6 addition (H12, C6), when a playbook is in use, after NXH-29

@@ -149,7 +149,7 @@ class QbFlow:
             if self.rnd(b) <= a:
                 state.offense_play = QB_SNEAK
             return
-        if state.down <= 3:
+        if state.down <= 3 and percent > 0:        # a style that never runs its quarterback (0 percent) draws nothing here
             one_in = T.QB_COMPUTER_OTHER_ONE_IN if percent == 100 else max(3, T.QB_COMPUTER_OTHER_ONE_IN * 100 // percent)
             draw = self.rnd(one_in)
             if draw == 1:

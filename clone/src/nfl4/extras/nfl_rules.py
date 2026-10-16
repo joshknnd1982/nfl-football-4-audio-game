@@ -98,7 +98,7 @@ KEY_F5, KEY_F6, KEY_F7 = "116", "117", "118"
 
 def menu_item(position: int, text: str, action: tuple[str, int], letter: str = "") -> menus.MenuItem:
     """An item in the original's spoken form (" 8. Time Out "); its digit is its place."""
-    return menus.MenuItem(" %d. %s " % (position, text), position, action, letter)
+    return menus.MenuItem(" %d. %s " % (position, text), position % 10 if position <= 10 else -1, action, letter)
 
 
 class NflRules(ClassicRules):
@@ -224,7 +224,8 @@ class NflRules(ClassicRules):
         replaying, redo = self.review.take_replay() if x.challenges_on else (False, [])   # a play a review corrected (SX.6)
         if not replaying:                          # SX.7: what was called and what came of it (a corrected play is the same call)
             self.books.record(state, outcome)
-        self.books.clear()                         # then nothing is called and the menu starts at its top
+        self.books.forget_calls()                  # then nothing is called and the menu starts at its top (the rows stay armed
+        #                                            until the ruling below has read the row the play used)
         board = None
         if x.challenges_on and not replaying:
             self.review.forget()                   # the ruling of an earlier play is gone
@@ -257,6 +258,7 @@ class NflRules(ClassicRules):
                 # SX.6: the ruling of the play, its hint and the replay official's review. A reversal names the step that
                 # applies the corrected result and offers the declined flags again
                 outcome.then = self.review.rule(state, outcome, board, left_before, flags)
+        self.modifiers.arm(None)                   # SX.7: the play's rows are done
         return outcome
 
     def unchanged_by_fouls(self, decisions: int) -> bool:
@@ -476,9 +478,13 @@ class NflRules(ClassicRules):
         qb_on = x.qb_on if x is not None else self.qb_on
         if x is not None:                          # a game's own books; before a game the settings' choice
             playbooks = PlaybookFlow.in_use(x)
+            menus_used = PlaybookFlow.player_uses_a_book(x)
         else:
             playbooks = self.playbooks_on or "classic" not in (self.offense_book, self.defense_book)
-        return [X.text(i) for i in ids if (timeouts_on or i not in timeout_lines) and (playbooks or i not in playbook_lines)
+            menus_used = "classic" != self.offense_book or "classic" != self.defense_book
+        # the lines about the menus are for a player whose own books are playbooks; the others for anyone who meets a style
+        return [X.text(i) for i in ids if (timeouts_on or i not in timeout_lines)
+                and (playbooks or i not in playbook_lines) and (menus_used or i != "NXH-27")
                 and (challenges_on or i not in challenge_lines)
                 and (penalties_on or i not in penalty_lines) and (onside_on or i not in onside_lines)
                 and (qb_on or i not in qb_lines)]

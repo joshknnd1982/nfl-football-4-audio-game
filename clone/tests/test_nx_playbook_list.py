@@ -305,3 +305,40 @@ def test_a_fuzz_of_damaged_files_never_raises_and_always_leaves_a_usable_table(t
             assert all(0 < w <= 100 for w in list(book.offense.values()) + list(book.defense.values()))
             assert all(all(abs(v) <= b for v, b in zip(t.mod, D.BOUNDS)) for t in book.tilts.values())
         assert all(a in D.BOOK_KEYS and b in D.BOOK_KEYS for a, b in table.teams)
+
+
+# ----- what the review of SX.7 found -----
+
+@pytest.mark.parametrize("value", ["families 3; vs 1; sack +-3", "families 3 --4; vs 1", "families 3; vs 1; comp ²",
+                                   "families 3; vs 1; comp ٣", "families 3; vs 1; ylo 1e0", "families 3; vs 1; yhi ++1"])
+def test_a_number_str_isdigit_accepts_and_int_refuses_is_a_problem_not_a_lost_file(value):
+    table, problems = table_of("styles", "S2OB1 = %s\n" % value)
+    assert table.styles["west"].tilts["OB1"] == PB.DEFAULT_TABLE.styles["west"].tilts["OB1"] and problems.count == 1
+
+
+def test_one_bad_number_never_costs_the_rest_of_the_file():
+    table, problems = table_of("styles", "S1QB = 500\nS2OB1 = families 3; vs 1; sack +-3\nS2O017 = weight ²\nS3QB = ³\n"
+                                         "S4QB = 77\nS5QB = %s\nS6O001 = weight %s\n" % ("9" * 5000, "9" * 5000))
+    assert table.styles["pro"].qb_percent == 500 and table.styles["power"].qb_percent == 77
+    assert table.styles["zone"].qb_percent == PB.DEFAULT_TABLE.styles["zone"].qb_percent
+    assert table.styles["air"].qb_percent == PB.DEFAULT_TABLE.styles["air"].qb_percent
+    assert problems.count == 5                                          # the five bad lines, one problem each
+    assert table.styles["west"].offense == PB.DEFAULT_TABLE.styles["west"].offense
+
+
+def test_a_style_with_no_quarterback_runs_for_the_computer_plays_a_whole_game(tmp_path):
+    from dataclasses import replace
+    from nflrig import QUARTERBACKS, RecordingRules, SimEngine
+    from pagrig import make_rig
+    book = replace(PB.DEFAULT_TABLE.styles["option"], qb_percent=0)
+    rules = RecordingRules(penalties_on=True, qb_on=True, playbooks_on=True)
+    rules.forced = (("option", "option"), ("classic", "classic"))
+    rig = make_rig(tmp_path, rng=random.Random(11), fast=True, vtrnt=2)
+    rig.game.playbook_table = PB.Table(PB.DEFAULT_TABLE.names, PB.DEFAULT_TABLE.disabled,
+                                       dict(PB.DEFAULT_TABLE.styles, option=book), PB.DEFAULT_TABLE.teams)
+    engine = SimEngine(rig.game, rules, quarterback_names=lambda state: QUARTERBACKS)
+    rig.game.play_engine = engine
+    result = engine.run()
+    assert result.scores[0] != result.scores[1]
+    designed = [e for e in rules.qb.events if e[2] in ("keeper", "draw") and e[1] == 1]
+    assert designed == []                                               # side 1 played Option with 0 percent: no keeper or draw

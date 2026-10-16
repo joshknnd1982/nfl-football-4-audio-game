@@ -88,3 +88,23 @@ def dominating_play(vectors: dict[str, list[float]]) -> str | None:
             if better_somewhere:
                 return play_id
     return None
+
+
+OFFENSE_COLUMNS = (1, 2, 3, 4, 5, 8, 9, 10)       # the offense families a defense play answers (the quarterback runs too)
+RUN_FAMILIES = (1, 2, 8, 9, 10)                   # their rows have yards and a fumble, no sack percent and no catch percent
+
+
+def defense_vector(book: PB.StyleBook | None, play: D.Play) -> list[float]:
+    """What the defense play is worth against each offense family (negated: bigger is better for the defense)."""
+    return [-row_value(family, play.family, PB.side_mod(book, play, family)) for family in OFFENSE_COLUMNS]
+
+
+def mean_effect(play: D.Play) -> float:
+    """The play's own tilt as a mean change of expected yards: over the six calls (offense), or over the original's mix of
+    offense families (defense; negative is good for the defense)."""
+    if play.side == "O":
+        base = base_vector(play.family)
+        return sum(a - b for a, b in zip(offense_vector(None, play), base)) / 6
+    total = sum(CLASSIC_MIX.values())
+    return sum(w * (row_value(f, play.family, PB.side_mod(None, play, f)) - row_value(f, play.family))
+               for f, w in CLASSIC_MIX.items()) / total
