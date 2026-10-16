@@ -120,6 +120,13 @@ def first_pick_event(team: int, player: Player) -> Event:
     return Event("NWD", team=team, player=player)
 
 
+def cap_event(league: LeagueRecord) -> Event:
+    """The team with the most cap space after the roster cut and the fill (equal space to the lower team number), NWK; n is its space."""
+    from . import contracts
+    team = contracts.cap_ranking(league)[0]
+    return Event("NWK", team=team, n=contracts.cap_space(league, team))
+
+
 def improver_events(changes: list, team: int) -> list:
     """The player's team's players who improved by 5 or more, at most two, the biggest first (equal changes in league order)."""
     own = [c for c in changes if c.player.team == team and c.delta >= 5]
@@ -148,6 +155,8 @@ def placeholders(event: Event, league: LeagueRecord, words) -> dict:
         values["<player>"] = _plain(event.player.name)
         values["<position>"] = words.position(event.player.pos)
         values["<r>"] = str(event.rating or event.player.rating)
+    if event.pool == "NWK":
+        values["<cap>"] = words.amount(event.n)
     known = PLACEHOLDERS[event.pool]
     return {placeholder: value for placeholder, value in values.items() if placeholder in known}
 

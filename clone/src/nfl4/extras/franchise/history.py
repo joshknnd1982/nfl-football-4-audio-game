@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .. import nx_texts as X
+from .. import tuning as T
+from . import contracts
 from . import data as D
 from .league import LeagueError, LeagueRecord
 
@@ -189,6 +191,26 @@ class Words:
         return X.text("NXL-31", player=player.name, position=self.position(player.pos), r=player.rating, a=player.age,
                       potential=self.potential(player.potential))
 
+    def amount(self, units: int) -> str:
+        """NXA-20: an amount of money from tenths of a million: "12.4 million"; below zero NXA-21: "minus 6.7 million"."""
+        if units < 0:
+            return X.text("NXA-21", money=contracts.millions(-units))
+        return X.text("NXA-20", money=contracts.millions(units))
+
+    def contract(self, player) -> str:
+        """NXA-10 and NXA-11: "12.4 million for 3 years", "0.9 million for one year"."""
+        return X.text("NXA-11" if player.years == 1 else "NXA-10", salary=self.amount(player.salary), y=player.years)
+
+    def player_with_contract(self, player) -> str:
+        """NXL-33: a player in the roster with his contract (SX.8g)."""
+        return X.text("NXL-33", player=player.name, position=self.position(player.pos), r=player.rating, a=player.age,
+                      potential=self.potential(player.potential), contract=self.contract(player))
+
+    def released_for_the_cap(self, player) -> str:
+        """NXA-12: a player the team would release to get under the cap, with what he costs."""
+        return X.text("NXA-12", player=player.name, position=self.position(player.pos), a=player.age, r=player.rating,
+                      contract=self.contract(player))
+
     def prospect_line(self, name: str, position: str, low: int, high: int, age: int, potential: str) -> str:
         """NXK-06: a prospect, or a rookie before the cut, by the range the scouts give (SX.8d)."""
         return X.text("NXK-06", player=name, position=self.position(position), lo=low, hi=high, a=age,
@@ -210,6 +232,22 @@ def team_rating_lines(league: LeagueRecord, words: Words) -> list:
     """NXL-40 for the 32 teams by rank, the best first (the team ratings item of F9)."""
     return [X.text("NXL-40", k=rank, team=words.team_name(team), r=league.strength(team))
             for rank, team in enumerate(league.ranking(), start=1)]
+
+
+def cap_text(league: LeagueRecord, words: Words) -> str:
+    """NXA-01: the cap, the player's payroll, dead money and cap space (SX.8g)."""
+    team = league.team
+    return X.text("NXA-01", cap=words.amount(T.FR_CAP), payroll=words.amount(contracts.payroll(league, team)),
+                  dead=words.amount(league.dead[team - 1]), space=words.amount(contracts.cap_space(league, team)))
+
+
+def cap_lines(league: LeagueRecord, words: Words) -> list:
+    """The salary cap item of F9: the first line, the rank of the team's cap space, then the 32 teams by cap space (most first)."""
+    ranking = contracts.cap_ranking(league)
+    lines = [cap_text(league, words), X.text("NXA-02", k=ranking.index(league.team) + 1)]
+    lines += [X.text("NXA-03", k=rank, team=words.team_name(team), space=words.amount(contracts.cap_space(league, team)))
+              for rank, team in enumerate(ranking, start=1)]
+    return lines
 
 
 def _top_to_bottom(entries: list) -> list:

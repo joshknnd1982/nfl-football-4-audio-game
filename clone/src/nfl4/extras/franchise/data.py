@@ -6,7 +6,8 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 1                                   # league.sav's format; a higher one is "a newer version" (design 10.1)
+FORMAT = 2                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts
+OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
 FOLDER = "franchise"                         # the folder of the data folder that holds every franchise file
 LEAGUE_FILE, PREVIOUS_FILE, HISTORY_FILE, SAVED_FILE = "league.sav", "league.previous.sav", "history.txt", "football.sav"
@@ -93,8 +94,11 @@ NEWS_LAST_WEEK = 15                          # the news of a week is made after 
 NEWS_OFFSEASON = 16                          # the `week` of an offseason's news line
 MAX_NEWS = 400                               # lines kept in league.sav (a season's 15 weeks of 4 and the offseason's, with room)
 MAX_TODO = 200
-# the twelve kinds of news line of news.txt (design 8.3, 15); the letter says the kind
-NEWS_POOLS = ("NWB", "NWU", "NWC", "NWS", "NWL", "NWY", "NWZ", "NWM", "NWT", "NWR", "NWD", "NWP")
+# the thirteen kinds of news line of news.txt (design 8.3, 15); the letter says the kind
+NEWS_POOLS = ("NWB", "NWU", "NWC", "NWS", "NWL", "NWY", "NWZ", "NWM", "NWT", "NWR", "NWD", "NWP", "NWK")
 
-MAX_RESULTS = 400                            # games of one season (16 weeks of 16 games and 13 play-off games), with room
+SALARY_PER_MILLION = 10                      # a salary is a whole number of tenths of a million dollars (SX.8g, D-066): 124 is 12.4 million
+MAX_DEAD = 100_000                           # the most dead money a team's record may hold (a bound for the whole-file check)
+
+MAX_RESULTS = 400                           # games of one season (16 weeks of 16 games and 13 play-off games), with room
 MAX_HISTORY = 500                            # seasons kept

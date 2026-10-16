@@ -172,8 +172,8 @@ def test_a_team_with_nobody_to_release_is_told_so_and_is_not_asked(tmp_path):
     rig = run(tmp_path, league)
     text = spoken(rig)
     at = text.index(" stage 5 of 6. the roster cut. ")
-    assert text[at + 1] == X.text("NXE-58") and text[at + 2] == X.text("NXE-03")
-    assert not [t for t in text if "release them" in t]
+    assert text[at + 1] == X.text("NXE-58") and text[at + 2].startswith(" your cap space is ")          # SX.8g: the cap space follows
+    assert X.text("NXE-03") in text[at + 3:at + 5] and not [t for t in text if "release them" in t]
 
 
 def test_with_the_staff_handling_the_cut_one_sentence_counts_the_releases_and_nothing_is_asked(tmp_path):
@@ -220,7 +220,8 @@ def test_the_short_offseason_says_the_fill_in_one_sentence_without_the_players(t
     rig = run(tmp_path, league, short=True)
     text = spoken(rig)
     at = text.index(X.text("NXE-58"))
-    assert text[at + 1] == X.text("NXE-57", n=2) and text[at + 2] == X.text("NXE-60", n=2)       # a sentence, no list, no wait
+    assert text[at + 1] == X.text("NXE-57", n=2) and text[at + 2].startswith(" your cap space is ")   # a sentence, no list, no wait
+    assert text[at + 3] == X.text("NXE-60", n=2)
 
 
 # ----- the file and a window closed at the question -----

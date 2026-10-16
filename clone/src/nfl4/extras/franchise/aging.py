@@ -19,6 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .. import tuning as T
+from . import contracts
 from . import data as D
 from .league import LeagueRecord, Player, draw_name
 
@@ -84,13 +85,16 @@ def plan_retirements(league: LeagueRecord, rnd) -> list:
 
 def apply_aging(league: LeagueRecord, retiring: list) -> None:
     """Everybody active is a year older with a season more (at most the scale's ends), then the retiring players leave their
-    places: retired, the season he retired after, the team he last played for kept (history names it)."""
+    places: retired, the season he retired after, the team he last played for kept (history names it). Then the cap year turns
+    (SX.8g, `contracts.turn_the_year`): a year off every contract, the dead money gone, the contracts that ran out signed again."""
     for player in list(league_order(league)):
         player.age = aged(player)
         player.seasons = min(99, player.seasons + 1)
     for player in retiring:
         league.rosters[player.team - 1][player.place] = 0
         player.status, player.left, player.place, player.points = "retired", league.season, -1, 0     # points are of no use now
+        contracts.leave(player)
+    contracts.turn_the_year(league)
 
 
 # ----- stage 3: progression and regression -----
@@ -181,7 +185,7 @@ def fill_places(league: LeagueRecord, rnd, surnames: list) -> int:
             roll = rnd.below(100)
             potential = "high" if roll < high else "average" if roll < average else "low"
             player = Player(league.next_id, name, position, rating, potential, D.AGE_MIN + 1, 0, rating, None, 0, "active", 0,
-                            team, index)
+                            team, index, T.FR_MIN_SALARY, T.FR_FILL_YEARS)       # SX.8g: an undrafted rookie signs for the minimum
             league.players[player.id] = player
             roster[index] = player.id
             league.next_id += 1

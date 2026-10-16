@@ -540,3 +540,22 @@ NWP02	franchise	remark	say2	 a big step for <player>: rating <r>. 	your big impr
 NWP03	franchise	remark	say2	 <player> is better than ever, rating <r>. 	your big improver (offseason)
 NWP04	franchise	remark	say2	 the extra work paid off for <player>: rating <r>. 	your big improver (offseason)
 NXN-05	franchise	sentence	say5	 week <n>. 	F9 news, before the lines of an earlier week (added by SX.8e; the offseason's lines use NXN-03)
+NXF-28	franchise	menu	say5	salary cap	F9 Franchise item (SX.8g)
+NXL-33	franchise	sentence	say5	 <player>, <position>, rating <r>, age <a>, <potential> potential, <contract> 	a player in F9's roster with his contract (SX.8g)
+NXA-01	franchise	sentence	say5	 the salary cap is <cap>. your payroll is <payroll>, dead money <dead>, cap space <space>. 	F9 salary cap, the first line (SX.8g)
+NXA-02	franchise	sentence	say5	 your cap space is number <k> of 32. 	F9 salary cap, the second line
+NXA-03	franchise	sentence	say5	 <k>. the <team>, <space>. 	F9 salary cap, a team by cap space
+NXA-10	franchise	piece	piece	<salary> for <y> years	a contract
+NXA-11	franchise	piece	piece	<salary> for one year	a contract with one year left
+NXA-12	franchise	sentence	say2	 <player>, <position>, age <a>, rating <r>, <contract>. 	stage 5, a player released for the cap
+NXA-13	franchise	prompt	say2	 you would be over the salary cap by <over>. choose who is released. 	stage 5, choose yourself
+NXA-14	franchise	sentence	say2	 your cap space is <space>. 	stage 5, after the fill
+NXA-20	franchise	piece	piece	<money> million	an amount of money
+NXE-59	franchise	sentence	say2	 your team would be over the salary cap by <over>. the staff would also release: 	stage 5, before the players released for the cap, after the cut's own list
+NWK01	franchise	remark	say2	 the <team> have the most cap space in the league, <cap>. 	the team with the most cap space (offseason)
+NWK02	franchise	remark	say2	 <cap> of cap space: the <team> have the most room under the cap. 	the team with the most cap space (offseason)
+NWK03	franchise	remark	say2	 the <team> go into the season with <cap> in cap space, more than anybody. 	the team with the most cap space (offseason)
+NWK04	franchise	remark	say2	 no team has more room under the cap than the <team>: <cap>. 	the team with the most cap space (offseason)
+NXA-15	franchise	sentence	say2	 your team would be over the salary cap by <over>. the staff would release: 	stage 5, the cap list when the cut has no list of its own (review of SX.8g)
+NXA-16	franchise	sentence	say2	 your team is over the salary cap by <over>. nobody can be released to fix it. 	stage 5, the player's team could not get under the cap (review of SX.8g)
+NXA-21	franchise	piece	piece	minus <money> million	an amount of money below zero (cap space of a team over the cap)

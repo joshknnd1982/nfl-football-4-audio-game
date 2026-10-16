@@ -54,14 +54,17 @@ class Player:
     left: int = 0                        # the season he retired or was released
     team: int = 0                        # 1 to 32 while active
     place: int = -1                      # his index in the team's roster while active
+    salary: int = 0                      # the contract (SX.8g, format 2): tenths of a million dollars, 0 for a retired or released player
+    years: int = 0                       # the seasons left on it, the coming one included
 
     def to_list(self) -> list:
         return [self.id, self.name, self.pos, self.rating, self.potential, self.age, self.seasons, self.peak, self.drafted,
-                self.points, self.status, self.left, self.team, self.place]
+                self.points, self.status, self.left, self.team, self.place, self.salary, self.years]
 
     @classmethod
-    def from_list(cls, row) -> "Player":
-        if not isinstance(row, list) or len(row) != 14:
+    def from_list(cls, row, contracts: bool = True) -> "Player":
+        """A player from a row of the file: 16 values in format 2, 14 (no contract) in format 1."""
+        if not isinstance(row, list) or len(row) != (16 if contracts else 14):
             raise LeagueError("a player is %r" % (row,))
         return cls(*row)
 
@@ -93,6 +96,7 @@ class LeagueRecord:
     news: list = field(default_factory=list)           # the season's news (SX.8e)
     news_recent: dict = field(default_factory=dict)    # per news pool, the IDs spoken last (SX.8e)
     draft: dict | None = None                          # the draft in progress (SX.8d)
+    dead: list = field(default_factory=lambda: [0] * D.TEAMS)   # per team, the dead money of the cap year (SX.8g, format 2)
 
     # ----- the teams -----
 
@@ -187,7 +191,8 @@ class LeagueRecord:
                 "players": [self.players[pid].to_list() for pid in sorted(self.players)], "next_id": self.next_id,
                 "gtp": self.gtp, "schedule": self.schedule, "records": self.records, "pairings": self.pairings,
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
-                "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft}
+                "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
+                "dead": self.dead}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -202,7 +207,7 @@ class LeagueRecord:
         version = data.get("format")
         if isinstance(version, int) and not isinstance(version, bool) and version > D.FORMAT:
             raise NewerFormat("format %d" % version)
-        if version != D.FORMAT or data.get("game") != D.GAME_MARKER:
+        if isinstance(version, bool) or version not in range(D.OLDEST_FORMAT, D.FORMAT + 1) or data.get("game") != D.GAME_MARKER:
             raise LeagueError("the franchise file has format %r and game %r" % (version, data.get("game")))
         record = cls()
         try:
@@ -216,7 +221,7 @@ class LeagueRecord:
                 raise LeagueError("the players are %r" % (type(rows).__name__,))
             record.players = {}
             for row in rows:
-                player = Player.from_list(row)
+                player = Player.from_list(row, contracts=version == D.FORMAT)
                 record.players[player.id] = player
             record.next_id = data["next_id"]
             record.gtp, record.schedule, record.records = data["gtp"], data["schedule"], data["records"]
@@ -225,10 +230,16 @@ class LeagueRecord:
             record.todo, record.news, record.news_recent = data["todo"], data["news"], data["news_recent"]
             record.prepared = data.get("prepared", [0, 0])         # a league.sav of SX.8a to SX.8d has none: its week is not prepared
             record.draft = data["draft"]
+            if version == D.FORMAT:
+                record.dead = data["dead"]
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
             raise LeagueError("a player of the franchise file is not a record: %s" % exc) from exc
+        if version < D.FORMAT:
+            record.check(contracts=False)                      # a format-1 file is whole as it was; then it gets its contracts (a migration, no draw)
+            from . import contracts
+            contracts.migrate(record)
         record.check()
         return record
 
@@ -240,8 +251,9 @@ class LeagueRecord:
             return True
         return self.stage == OFFSEASON and self.stage_no in (D.STAGE_REVIEW, D.STAGE_NEW_SEASON)
 
-    def check(self) -> None:
-        """LeagueError (with what is wrong) unless the record is usable at the stage it says it is in."""
+    def check(self, contracts: bool = True) -> None:
+        """LeagueError (with what is wrong) unless the record is usable at the stage it says it is in. `contracts` is False only for a
+        format-1 file that has not been migrated yet."""
         def whole(value, low, high, what):
             if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
                 raise LeagueError("%s is %r" % (what, value))
@@ -268,6 +280,9 @@ class LeagueRecord:
         from . import draft
         waiting = draft.check_draft(self, whole)               # the rookies waiting for the cut (stages 4 and 5 only)
         self._check_rosters(whole, waiting)
+        if contracts:
+            from . import contracts as contract_rules
+            contract_rules.check_contracts(self, whole)         # SX.8g: every contract is in range (the rules are the simulation's CP1 to CP5)
         self._check_history(whole)
         from . import news, todo
         todo.check_items(self, whole)                       # the to-do list (SX.8e: each item's kind, week, state and values)
@@ -450,5 +465,7 @@ def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_n
             league.players[player.id] = player
             league.rosters[t - 1][index] = player.id
             league.next_id += 1
+    from . import contracts
+    contracts.give_initial_contracts(league)                    # SX.8g: the market price of each player; no draw
     league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]
     return league

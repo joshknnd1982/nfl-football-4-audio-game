@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 541.
+- Texts: 560.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,8 +16,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 209.
-- Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4.
+- Franchise (design section 11): 228.
+- Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4.
 
 ## The clock (design section 5)
 
@@ -589,4 +589,23 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NWP03 (remark, say2): " <player> is better than ever, rating <r>. ". your big improver (offseason)
 - NWP04 (remark, say2): " the extra work paid off for <player>: rating <r>. ". your big improver (offseason)
 - NXN-05 (sentence, say5): " week <n>. ". F9 news, before the lines of an earlier week (added by SX.8e; the offseason's lines use NXN-03)
+- NXF-28 (menu, say5): "salary cap". F9 Franchise item (SX.8g)
+- NXL-33 (sentence, say5): " <player>, <position>, rating <r>, age <a>, <potential> potential, <contract> ". a player in F9's roster with his contract (SX.8g)
+- NXA-01 (sentence, say5): " the salary cap is <cap>. your payroll is <payroll>, dead money <dead>, cap space <space>. ". F9 salary cap, the first line (SX.8g)
+- NXA-02 (sentence, say5): " your cap space is number <k> of 32. ". F9 salary cap, the second line
+- NXA-03 (sentence, say5): " <k>. the <team>, <space>. ". F9 salary cap, a team by cap space
+- NXA-10 (piece, piece): "<salary> for <y> years". a contract
+- NXA-11 (piece, piece): "<salary> for one year". a contract with one year left
+- NXA-12 (sentence, say2): " <player>, <position>, age <a>, rating <r>, <contract>. ". stage 5, a player released for the cap
+- NXA-13 (prompt, say2): " you would be over the salary cap by <over>. choose who is released. ". stage 5, choose yourself
+- NXA-14 (sentence, say2): " your cap space is <space>. ". stage 5, after the fill
+- NXA-20 (piece, piece): "<money> million". an amount of money
+- NXE-59 (sentence, say2): " your team would be over the salary cap by <over>. the staff would also release: ". stage 5, before the players released for the cap, after the cut's own list
+- NWK01 (remark, say2): " the <team> have the most cap space in the league, <cap>. ". the team with the most cap space (offseason)
+- NWK02 (remark, say2): " <cap> of cap space: the <team> have the most room under the cap. ". the team with the most cap space (offseason)
+- NWK03 (remark, say2): " the <team> go into the season with <cap> in cap space, more than anybody. ". the team with the most cap space (offseason)
+- NWK04 (remark, say2): " no team has more room under the cap than the <team>: <cap>. ". the team with the most cap space (offseason)
+- NXA-15 (sentence, say2): " your team would be over the salary cap by <over>. the staff would release: ". stage 5, the cap list when the cut has no list of its own (review of SX.8g)
+- NXA-16 (sentence, say2): " your team is over the salary cap by <over>. nobody can be released to fix it. ". stage 5, the player's team could not get under the cap (review of SX.8g)
+- NXA-21 (piece, piece): "minus <money> million". an amount of money below zero (cap space of a team over the cap)
 

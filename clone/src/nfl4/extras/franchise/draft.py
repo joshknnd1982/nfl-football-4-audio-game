@@ -19,6 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .. import tuning as T
+from . import contracts
 from . import data as D
 from .league import LeagueError, LeagueRecord, Player, draw_name
 
@@ -255,7 +256,8 @@ class Draft:
         if prospect.index in {row[1] for row in self.picks}:
             raise LeagueError("%s was taken already" % prospect.name)
         player = Player(league.next_id, prospect.name, prospect.pos, prospect.true, prospect.potential, prospect.age, 0,
-                        prospect.true, [league.season, round_no, in_round], 0, "active", 0, team, -1)
+                        prospect.true, [league.season, round_no, in_round], 0, "active", 0, team, -1,
+                        contracts.rookie_salary(overall), T.FR_ROOKIE_YEARS)      # SX.8g: the scale of his pick, four years
         league.next_id += 1
         league.players[player.id] = player
         self.picks.append([team, prospect.index, player.id])
@@ -352,10 +354,18 @@ def plan_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
     return released
 
 
+def staff_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
+    """All the staff releases from a team: the cut (`plan_cut`) and, when the team would be over the cap after it and the fill, the
+    players who save the most for what they give (`contracts.cap_releases`, SX.8g). The computer's teams and the fast run use this."""
+    released = plan_cut(league, team, waiting)
+    return released + contracts.cap_releases(league, team, waiting, released)
+
+
 def apply_cut(league: LeagueRecord, releases: dict, waiting: dict) -> int:
-    """Every team's cut: `releases` is team -> the players it releases. The released leave (status released, the season they left); the
-    rest of each group take its places best first, the rookies among them (their true rating is known now); a group with fewer players
-    than places keeps its empty places last. Returns the number released."""
+    """Every team's cut: `releases` is team -> the players it releases. The released leave (status released, the season they left, the
+    dead money of their contracts charged to the team: SX.8g); the rest of each group take its places best first, the rookies among
+    them (their true rating is known now); a group with fewer players than places keeps its empty places last. Returns the number
+    released."""
     count = 0
     for team in range(1, D.TEAMS + 1):
         gone = {player.id for player in releases.get(team, ())}
@@ -368,6 +378,7 @@ def apply_cut(league: LeagueRecord, releases: dict, waiting: dict) -> int:
                 raise ValueError("the %s group of team %d keeps %d players for %d places" % (position, team, len(kept), len(places)))
             for player in players:
                 if player.id in gone:
+                    contracts.release(league, player)               # before the status: the dead money is charged to his team
                     player.status, player.left, player.place, player.points = "released", league.season, -1, 0
                     count += 1
             for index, player in zip(places, kept):

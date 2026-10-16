@@ -173,8 +173,8 @@ def test_a_group_of_the_roster_speaks_the_rating_the_age_and_the_potential_of_ea
     text, record = spoken(rig), league(rig)
     words = history.Words(lambda t: "")
     for player in record.group_of(1, "WR")[:2]:                                                  # the second group of the menu
-        line = X.text("NXL-31", player=player.name, position="receiver", r=player.rating, a=player.age,
-                      potential=words.potential(player.potential))
+        line = X.text("NXL-33", player=player.name, position="receiver", r=player.rating, a=player.age,
+                      potential=words.potential(player.potential), contract=words.contract(player))     # SX.8g: and the contract
         assert any(line in t for t in text), line
 
 

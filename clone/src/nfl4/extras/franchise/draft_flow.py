@@ -7,14 +7,15 @@ league.sav, in the way `offseason.py` does for the other stages:
   resumes the same class. Every pick is made, written, then told (the file at a pick is what was just said, B-X53), so a draft closed
   in the middle resumes at its next pick. The player's own pick is a `FranchiseQuestion` (the staff's five, more prospects, the staff's
   pick, the staff's picks for the rest of the draft); every computer pick, and the staff's, is `Draft.best_for` (one code path, I7).
-* Stage 5 plans the cut of every team without changing anything, asks the player about his own team, then applies all the cuts, fills
-  the empty places, ends the draft and writes league.sav in one block, and only then speaks the fill (the stage is idempotent until its
-  save, B-X51).
+* Stage 5 plans the cut of every team without changing anything (SX.8g: with the players the staff lets go to get a team under the salary
+  cap), asks the player about his own team, then applies all the cuts, fills the empty places, ends the draft and writes league.sav in
+  one block, and only then speaks the fill (the stage is idempotent until its save, B-X51).
 """
 from __future__ import annotations
 
 from .. import nx_texts as X
 from . import aging
+from . import contracts as CT
 from . import data as D
 from . import draft as DR
 from . import news
@@ -138,7 +139,7 @@ def stage_cut(p, n: int, m: int, short: bool) -> None:
     settings = g.options.settings.game
     team = league.team
     waiting = DR.waiting_by_team(league)
-    plans = {t: DR.plan_cut(league, t, waiting) for t in range(1, D.TEAMS + 1)}
+    plans = {t: DR.staff_cut(league, t, waiting) for t in range(1, D.TEAMS + 1)}
     header = off._stage_line(n, m, "NXE-15")
     spoken: list = []                            # the stage's lines that follow the questions
     asked = False
@@ -149,27 +150,57 @@ def stage_cut(p, n: int, m: int, short: bool) -> None:
         spoken.append(X.text("NXE-56", n=len(mine)))
     else:
         asked = True
-        situation = [header, X.text("NXE-50")] + [
-            X.text("NXE-51", player=pl.name, position=words.position(pl.pos), a=pl.age, r=pl.rating) for pl in mine]
+        cut = DR.plan_cut(league, team, waiting)             # the cut's own list, then the players let go for the cap
+        situation = [header]
+        if cut:
+            situation += [X.text("NXE-50")] + [
+                X.text("NXE-51", player=pl.name, position=words.position(pl.pos), a=pl.age, r=pl.rating) for pl in cut]
+        if len(mine) > len(cut):
+            situation += [X.text("NXE-59" if cut else "NXA-15", over=words.amount(CT.cap_over(league, team, waiting, cut)))] + [
+                words.released_for_the_cap(pl) for pl in mine[len(cut):]]
         if FranchiseQuestion(g, situation, [X.text("NXE-52"), X.text("NXE-53")]).ask() == 1:
             plans[team] = _own_choice(g, words, league, waiting)
+            plans[team] += _own_cap_choice(g, words, league, waiting, plans[team])
     first_new = league.next_id
     DR.apply_cut(league, plans, waiting)
     filled = aging.fill_places(league, g.rnd, list(g.pool.original))
     own_filled = [pl for pl in league.players.values() if pl.id >= first_new and pl.team == team]
     league.draft = None
     league.pick_no = 0
+    told, recent = news.render(league, [news.cap_event(league)], g.news_pools or DEFAULT_POOLS, words, g.rnd)      # NWK, after the fill
+    news.keep(league, told, recent, D.NEWS_OFFSEASON)
     league.stage_no = off._next_stage(D.STAGE_CUT)
     store.save()
     if own_filled:
         spoken.append(X.text("NXE-57", n=len(own_filled)))
         if not short:
             spoken += [words.player(pl) for pl in sorted(own_filled, key=lambda pl: pl.place)]
+    space = CT.cap_space(league, team)
+    spoken.append(X.text("NXA-14", space=words.amount(space)) if space >= 0 else X.text("NXA-16", over=words.amount(-space)))
+    if not short:
+        spoken += off._news_texts(told)
     if short:
         for line in spoken:
             g.say2(line)
     else:
         off.wait_for_enter(g, ([] if asked else [header]) + spoken + [X.text("NXE-03")])
+
+
+def _own_cap_choice(g, words, league, waiting: dict, released: list) -> list:
+    """The player's team is over the salary cap after his own choice (SX.8g, design 7.6 and contracts.cap_over): he releases players
+    himself, the dearest for what they give first as the staff would, until the cap after the cut and the fill is met. Returns the
+    players released besides `released`; nothing when the team is under the cap."""
+    team = league.team
+    extra: list = []
+    while CT.cap_over(league, team, waiting, released + extra) > 0:
+        candidates = CT.cap_candidates(league, team, waiting, released + extra)
+        if not candidates:
+            break                                              # nobody saves anything: the simulation's invariant reports it
+        situation = X.text("NXA-13", over=words.amount(CT.cap_over(league, team, waiting, released + extra)))
+        choice = candidates[FranchiseQuestion(g, situation, [words.released_for_the_cap(pl) for pl in candidates]).ask()]
+        extra.append(choice)
+        g.say2(X.text("NXE-55", player=choice.name))
+    return extra
 
 
 def _own_choice(g, words, league, waiting: dict) -> list:

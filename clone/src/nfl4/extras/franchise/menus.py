@@ -143,7 +143,7 @@ def franchise_menu(g, speech, keys) -> None:
         word = _words(g)
         league = store.league
         players = [p for p in league.group_of(league.team, position) if p is not None]
-        lines = [word.player(p) for p in players]              # SX.8b: the rating and the potential are spoken
+        lines = [word.player_with_contract(p) for p in players]      # SX.8b: the rating and the potential are spoken; SX.8g: and the contract
         for rookie in rookies_of(position):                    # a rookie is told by his range until the cut (design 7.6, 11)
             if league.draft is not None:                       # the draft record lives until the cut is applied (stage 5)
                 low, high = league.rookie_range(rookie)
@@ -184,6 +184,12 @@ def franchise_menu(g, speech, keys) -> None:
         league = store.league
         title = X.text("NXL-41", k=league.rank_of(league.team)).strip().rstrip(".")
         _lines_picker(speech, keys, title, history.team_rating_lines(league, _words(g)))
+
+    # ----- the salary cap (design 17 SX.8g, NXF-28) -----
+
+    def cap_menu() -> None:
+        league = store.league
+        _lines_picker(speech, keys, X.text("NXF-28"), history.cap_lines(league, _words(g)))
 
     # ----- the settings -----
 
@@ -238,6 +244,7 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(lambda: X.text("NXF-13"), enter=roster_menu),
                  Item(lambda: X.text("NXF-14"), enter=history_menu),
                  Item(lambda: X.text("NXF-15"), enter=ratings_menu),
+                 Item(lambda: X.text("NXF-28"), enter=cap_menu),
                  Item(lambda: X.text("NXF-16"), enter=settings_menu),
                  Item(lambda: X.text("NXF-17"), enter=ask_switch("classic", "NXF-23"))]
     elif store.exists:

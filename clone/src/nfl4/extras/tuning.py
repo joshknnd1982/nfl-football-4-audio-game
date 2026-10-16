@@ -414,3 +414,41 @@ FR_UPSET_GAP = 3                  # design 8.3 gives 4 as a fixed number (no sta
 # mean 1.00 to 1.49, 0.6 percent of the single run-seasons are under 0.8 (the lowest 0.67), no run stays outside for more than a quarter of its seasons.
 # Result over 500 leagues x 20 seasons: I1, I3, I4, I5, I9, I10, I12 hold in every run-season; mean rating 68.3 to 71.3 and mean age 25.6 to 27.0 in every
 # run-season; C-F1 2.83 (2.80 to 2.87 in each season, 2.64 to 3.02 in each league); every strength 60 to 80.
+
+# ----- contracts and the salary cap, design 17 SX.8g (D-066; the history of every move is below) -----
+# A salary is a whole number of tenths of a million dollars (124 is 12.4 million), the same unit for the cap, a payroll and dead money.
+# THE CAP (research F2's choice, D-066): the NFL's 2026 cap of 301.2 million dollars a club is for 53 players; this league has 34 places, so the cap
+# is SCALED by 34/53 (193.2 million), which keeps the cap per place at the NFL's 5.7 million (the league uses about 78 percent of it once it has turned
+# over, so a player is paid 4.4 million on the average). The other choice, the real cap with a fixed charge for the
+# 19 unnamed players, was not taken: it would make a number the player cannot see in the roster the biggest part of every cap sum. The cap is a
+# constant for the whole franchise: the NFL's growth is not copied (research G: "cap value inflating by a compounding multiplier"), the
+# salary scale below is a constant too, and the 20-season check holds the league's payroll in a band (no drift).
+FR_CAP = 1932                     # 301.2 million x 34 / 53 = 193.2 million
+FR_MIN_SALARY = 9                 # 0.9 million: the NFL's 2026 minimum for a rookie, 0.885, up to the next tenth (research B4)
+FR_MAX_SALARY = 280               # 28 million: about 14.5 percent of the cap, the size of the NFL's top franchise tag (research F2)
+# The market price of a player: the minimum + (rating - 40) squared x the position's pay in percent / FR_PAY_DIVISOR, at most the maximum.
+# The pay of a position follows, roughly, how much it matters (design 4.4's weights): the quarterback most (two and a half times a lineman, three
+# times a receiver), the kicker, the punter and the returners least (the NFL pays a kicker far less than a back, so the kicker is paid less than his
+# weight of 4 suggests).
+FR_PAY = {"QB": 300, "RB": 90, "WR": 100, "DL": 120, "LB": 100, "CB": 100, "S": 80, "RET": 40, "K": 50, "P": 40}
+FR_PAY_DIVISOR = 2400
+# A drafted rookie's salary is fixed by his pick (research B3: the NFL's wage scale is unknown, so the league invents one that keeps its
+# shape: the first pick earns about three times the 32nd, who earns about three times the last): straight lines between these (pick, salary)
+# points. Four years for a drafted rookie, three for an undrafted one (the fill of the roster cut); a rookie contract has no fifth-year
+# option (research B3).
+FR_ROOKIE_SCALE = ((1, 77), (32, 26), (64, 17), (96, 13), (128, 11), (224, 9))
+FR_ROOKIE_YEARS = 4
+FR_FILL_YEARS = 3
+# The length of a new contract by the player's age (the first row whose age is not under his): research G, "a maximum contract length by age".
+FR_CONTRACT_YEARS = ((27, 4), (29, 3), (31, 2), (99, 1))
+# Releasing a player costs dead money against the cap of the season that follows: this percent of his salary for every year he had left
+# (research B3: one simple rule, no restructures, no proration).
+FR_DEAD_SHARE = 25
+# SX.8g calibration (D-066; the reports are work/simulate_franchise_sx8f_fast_500x20_sx8g.txt, _full_5x20_sx8g.txt and _fast_500x20_sx8g_cap_off.txt,
+# the divisor was swept with work/probe_cap_sx8g.py). Only FR_PAY_DIVISOR and the shape of the rookie scale moved while it was found: with the divisor
+# 2200 and a quadratic rookie scale from 7.7 million the league used 0.89 to 0.95 of the cap and the cap rule of the cut released players in 17 percent of
+# the team-offseasons; the final scale (straight lines, the 32nd pick 2.6 million) and 2400 give the league's mean cap use 0.834 in season 1, 0.700 in season 7
+# and 0.77 to 0.79 from season 11 (a new league is all market prices, a league that has turned over is a third rookie contracts and 2.7 percent dead money),
+# the fullest team 1.000, and the cap rule releases 441 players in 341 of 320,000 team-offseasons (0.1 percent): the cap almost never binds, so the free
+# agency of SX.8i is where it will (SX.8p measures it again). Contracts alone change nothing else: with FR_CAP so large that it never binds the 500-league season
+# table is identical to SX.8f's.

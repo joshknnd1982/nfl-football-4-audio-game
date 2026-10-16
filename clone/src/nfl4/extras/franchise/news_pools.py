@@ -36,7 +36,8 @@ PLACEHOLDERS = {"NWB": _FOR_GAME, "NWU": _FOR_GAME, "NWC": _FOR_GAME,
                 "NWT": ("<team>", "<n>", "<coach>"),
                 "NWR": ("<player>", "<position>", "<team>", "<coach>"),
                 "NWD": ("<team>", "<player>", "<position>", "<coach>"),
-                "NWP": ("<player>", "<position>", "<r>", "<coach>", "<team>")}
+                "NWP": ("<player>", "<position>", "<r>", "<coach>", "<team>"),
+                "NWK": ("<team>", "<cap>", "<coach>")}
 MAX_NUMBER = 9999
 Remark = R.Remark
 
@@ -182,13 +183,14 @@ NOTES = (
     "rules. Each line is an ID, an equals sign and the line. The letters of the ID say the kind of news: NWB the biggest win of the",
     "week, NWU an upset, NWC the closest game, NWS another team's winning streak and NWL its losing streak, NWY your winning streak",
     "and NWZ your losing streak, NWM your milestone of wins as a head coach, NWT the champion, NWR a star who retires, NWD the first",
-    "pick of the draft, NWP a player of yours who improved a lot.",
+    "pick of the draft, NWP a player of yours who improved a lot, NWK the team with the most room under the salary cap.",
     "Change a line to say something else. Write NWB02 = off to switch a line off. Delete a line to get the original back.",
     "Add your own lines with a new number in a kind, NWB05 and up. A line is chosen by chance, never one of the last three of its kind.",
     "If every line of a kind is off, that kind of news is never told. The F8 key does not switch the news off.",
     "In a line, <team> is the team the news is about, <other> the other team of the game (NWB, NWU and NWC), <n> a number (the points,",
     "the games in a row, your wins or the season), <score> the score as said (24 to 17), <coach> your name; <player> and <position> in",
-    "the kinds NWR, NWD and NWP, and <r> (the rating he has now) in NWP only; in NWM, NWY, NWZ and NWP <team> is your team. Each kind",
+    "the kinds NWR, NWD and NWP, and <r> (the rating he has now) in NWP only; <cap> (the cap space, said in millions) in NWK only; in NWM,",
+    "NWY, NWZ and NWP <team> is your team. Each kind",
     "knows only the words that belong to it; any other word in angle brackets is said as written. Spell a name the way the voice says it.",
     "The words in square brackets of banter.txt work here too: [sound my laugh.wav], [pause], [bleep], [one of: a | b]. [name] and",
     "[opponent quarterback] do not: the news is told between games. [faster] is not used in the news. A line has at most 500 characters",
