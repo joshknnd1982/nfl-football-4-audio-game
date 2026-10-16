@@ -1,0 +1,631 @@
+# NFL_FRANCHISE_DESIGN (nfl4 only): the design of the Franchise (NX6)
+
+Status: DESIGN, version 1.0 (2026-10-15, session PX SX.8, D-055). nfl4 only (CLAUDE.md rule 0.13): nothing in this file goes into the starter kit, `shared\`, `tools\`, a playbook or another game. It turns NX6 of `spec\NFL_EXTRA_FEATURES.md` (N6.1 to N6.11), section 11 of `spec\NFL_EXTRAS_DESIGN.md` and the research `spec\MADDEN_FRANCHISE_RESEARCH.md` (sections D, F, G, H, K) into one design that the build sessions SX.8a to SX.8f follow, in the way SX.1 designed the other six features. Design only: no code was written in SX.8. Every new spoken text is listed in section 14 as rows for `spec\strings_nx.tsv`; the build sessions add them to the table and generate `STRINGS_NX.md` and `extras\nx_texts.py` from it (D-017), nothing is typed into code.
+
+Who reads this: Claude at SX.8a to SX.8f and at the later Franchise updates (SX.8g on), and the owner. Plain headings and lists, no tables. "Design n" means a section of `NFL_EXTRAS_DESIGN.md`; "research X" a section of `MADDEN_FRANCHISE_RESEARCH.md`; "spec n" a section of `GAME_SPEC.md`.
+
+Numbers marked "start value" are design values that a build session calibrates against the target named next to them, with the result recorded in DECISIONS.md and the history in `extras\tuning.py` (design P4). Numbers without that mark are fixed design rules (the scale, the counts, the bounds).
+
+Plain football words only (research E): rating, potential, rookie, draft, round, pick, prospect, roster, released, retire, offseason, to-do list, news, history, champion. No EA name of a feature is used anywhere (NX-R6): not in the menus, not in the texts, not in the code's names.
+
+## 1. Scope
+
+### 1.1 The core, before the Windows release (D-041, N6.11)
+
+- F0 the league that lasts and the season loop (N6.1, N6.2): sections 3, 4 and 10.
+- F4 history and records (N6.9): section 9.
+- F1 ratings with a bounded effect, in played games and in the computer's games (N6.3): sections 4 and 5.
+- F2 progression, regression and retirement (N6.4): section 6.
+- F3 the draft, the roster cut and the fill (N6.5): section 7.
+- F5 the to-do list and the news (design 11.1): section 8.
+- N6.10 everything spoken, short and numbered, F1 to F4 and F9 as elsewhere, long lists paged by nine: sections 3.7 and 11.
+
+### 1.2 After the release, as updates (D-041; section 17 says where each plugs in)
+
+F6 contracts, the salary cap, re-signing and free agency (N6.6); F7 trades (N6.7); F8 injuries (N6.8); F9 coordinators, the job rating and the owner's goal (N6.8); then the research's LATER items (personality words, holdouts and trade demands, morale, undrafted free agents as a market, compensatory picks, awards and a hall of fame, a camp focus, the non-exclusive tag, a weighted ball-carrier draw, the returners' rating in the kick-off return, renaming a player).
+
+### 1.3 What stays as it is (binding)
+
+- P1 of the design: with Rules = Classic the program is exactly the original. The Franchise is never offered, its folder is never opened or created, no extra random number is drawn, no extra word is spoken. The golden Classic transcript (`clone\tests\data\golden_classic_s73b.txt`) is unchanged by every SX.8 session.
+- Classic is the default of the Rules setting (NQ2 until SX.9) and "classic season" is the first and default answer of the new question (section 3.2). A Franchise exists only when the player chooses it.
+- The season inside a franchise year is the original's: 16 weeks, the schedule maker for the player's team (spec 5.1), the random pairings of the other 30 teams every week (Q42 kept, research B12: the schedule is not changed), the standings, the division winners, wild cards, seeds and the fixed bracket with their quirks (Q43, Q44, Q47 kept), the play-off and Super Bowl sentences, the waits and the celebration (spec 5.14 to 5.17, D-029). The Franchise changes only which team wins a computer game and by what score, through a bounded shift (section 5.2), and adds its own speech before the main menu and after the season.
+- A Franchise always plays with the N. F. L. rules (design 11.2); the feature switches of the F9 Rules menu still apply to its games.
+- Every number is data: the fixed rules of this file in `extras\franchise\data.py`, the calibrated values in `extras\tuning.py` (names `FR_...`) with their target and history.
+- Ratings change the outcome tables only through the H8 door with bounds (section 5.1); neutral ratings (all 70) give exactly the original's numbers (C3).
+
+## 2. What the design stands on (read in SX.8; file and line references for the build sessions)
+
+- The season engine is one class over one record: `game\season_engine.py` `SeasonEngine` (pog, finplay17, the Super Bowl presentation) over `game\season.py` `SeasonState` (coach, tn1 to tn4, vtrnt, gtp, schedule, records, `PlayoffState`), writing through the `SeasonStore` protocol (`write_records`, `write_gtp`, `write_pairings`, `write_byes`) at the original's moments. No extras hook falls in it today (S7.3c, D-044).
+- A computer game of a regular week (`SeasonEngine._regular_week`, spec 5.14 item 5): team A drawn, its score index `a = rnd(32)`, team B drawn, `b = rnd(32)` again while the score `T(b)` equals `T(a)`, the higher index wins, the sentence speaks `T(a)` and `T(b)`. A computer game of the play-offs (`playoffs.computer_game`, spec 5.17 item 2): the coin `rnd(2)` (1: the visitor wins, Q45), then the winner's and the loser's score indices. Team strength has no effect anywhere (research C).
+- The program frame is `game\program.py` `Program`: `startup` (`store.has_saved_game`), `season_setup` (`store.load_season` else `new_season`: GetCoach, ChooseTeam, makes, gtp 1), `week_loop` (`week_announcement`, `main_menu`, `play_and_after` or the schedule or the standings), `play_and_after` (`store.player_names()` = footplay.txt, `Game.play_game(rules, own_names, saved, save_sink, roster_sink)`, then pog, the standings, `season_over` when gtp is 0), `season_over` (deletes the season files, " the season is over ", `reset_for_new_season`, `new_season`), `exit_program`. The stores are attributes: `Program.store` (ProgramStore), `Game.season_store` (SeasonStore), `Game.setup_store` (SetupStore); `data\files\store.py` `FileProgramStore` is all three over the data folder, with the healing at start (D-047).
+- A game's rosters: `game\setup.py` `new_game_setup(rnd, pool, own_names)`: side 1 from footplay.txt (`adopt_roster`, which blanks the pool entries) or drawn, side 2 always drawn (33 pool draws, Q39); `Roster` has the five sections, `quarterback` and `ratings` (H7: a dict keyed (section heading, number), empty and never read in Classic). `adopt_roster` builds a NEW Roster from the names and drops `ratings` (section 13 changes that). `PlayEngine.getqbs` (`game\pag.py`) takes the two quarterbacks from a `quarterback_names` callable when one is given (a test seam today), else asks Getqbs (spec 4.12).
+- The H8 door: `game\playtables.py` `Modifiers` (`run`, `pass_`, `fumble_odds(side)`, `field_goal_odds(side)`, `punt(side)`); the engine reads `rules.modifiers` at every table read (`pag_scrimmage.py` lines 106, 109, 290; `pag_kicks.py` lines 71, 120). The ball carrier `s.carrier = rnd(6)` and the two defenders `rnd(17)` are drawn in `snap_draws` BEFORE the rows are read (`pag_scrimmage.py` lines 85 to 88), so a modifier can read who carries and who tackles. With the N. F. L. rules `rules.modifiers` is `extras\playbooks.py` `PlaybookModifiers`, whose `Mod(ylo, yhi, sack, comp, fum)` is clamped to `BOUNDS = Mod(2, 2, 5, 5, 5)` (design 10.3); `qb_run(entry)` moves the quarterback runs' rows.
+- The one generator: `game\rnd.py` `GameRandom` (`rnd(n)`, `below(n)`, `below_single(n)`, `random()`, the bounded `redraw`, and `trace`, which records the size of every draw so a test compares whole games).
+- The names: `game\names.py` `NamePool` (1,708 surnames from `customize\surnames.txt`, drawn without replacement inside a run, refilled when used up); `game\league.py` `League` (the 32 team names and the 8 division names from `customize\teams.txt` and `divisions.txt`; `team_id(division, place)` is T01 to T32).
+- The extras: `extras\state.py` `ExtrasRecord` (one JSON record saved in football.sav after the marker NX-EXTRAS), `extras\saved.py`, `extras\rules_menu.py` (the F9 Rules items, `settings.txt` keys `rules`, `nx_...`), `extras\nfl_rules.py` (`rules_from_settings`), `extras\tuning.py`, `extras\remarks.py` and `data\customlists.py` with `data\customize.py` (EXTRA_SPECS: a list file read only while the Rules are the N. F. L. rules, with the healing of CUSTOMIZABLE_CONTENT 10 and 14).
+- The test rigs: `tests\seasonrig.py` (the season engine with a recording store and strict scripted draws), `tests\programrig.py` (the whole program with a stand-in pag and a `RigStore`), `tests\test_season_games.py` (whole seeded seasons), `tests\nflrig.py` (whole games with both sides played by the computer).
+
+## 3. The mode and its flow
+
+### 3.1 Which season is played
+
+- A setting `nx_season_kind` (settings.txt, `classic` or `franchise`, default `classic`) says which kind of season the player is in. The FRANCHISE IS IN USE only when the Rules are the N. F. L. rules AND `nx_season_kind` is `franchise` AND the franchise file loads (section 10.1). Otherwise the classic season is in use, exactly as today.
+- Each kind keeps its own files. The classic season keeps the original's season files in the data folder (footbal1.dat to footbal5.dat, football.gtp, football.sav). The franchise keeps everything in the folder `franchise` of the data folder: `league.sav` (the league and the current season, section 10.1), `league.previous.sav`, its own `football.sav` (a franchise game saved with Save Game), `history.txt`. The classic season files are never written while the franchise is in use, and the franchise folder is never written while the classic season is in use (it is only read, for the waiting franchise's team name and history in F9). So a classic season and a franchise can both be in progress, and the player moves between them without losing either.
+- When the kind in use changes (the player chose it in the new-season question, started, left or resumed a franchise in the F9 Franchise menu, or changed the Rules in F9), the change applies at the next return to the week loop, never inside a game. F9 opened at the main menu's wait: when the menu closes, the main menu goes back to the week loop at once (it does not wait for a choice), so the switch is heard right away; F9 opened inside a game: the game ends as it began (its own kind, its own rules), its results go to its own season, and the switch comes when the week loop starts again. F9 opened during the offseason (a stage, the draft, the roster cut): the stage in progress goes on to its end and is written, then the offseason stops there (it resumes at the next stage when the franchise is in use again) and the switch is made. At the switch: the program's three stores (`Program.store`, `Game.season_store`, `Game.setup_store`) and the `SeasonState` are swapped for the other kind's, `Program.saved_game` is asked again of the new store (`has_saved_game`: a saved game of that kind is loaded at its next "play game", as at a start), and one sentence says so (NXF-05 " back to your franchise with the <team>. ", NXF-06 " your franchise waits. the classic season goes on. "). A change of the Rules to Classic while the franchise is in use says NXF-04 " your franchise waits until the rules are the N. F. L. rules again. " in the F9 Rules menu (after NXM-23 " the new rules apply from the next game. ").
+- At the start of the program the kind in use is decided before `has_saved_game` is asked, so the saved game that is loaded is the one of the kind in use.
+
+### 3.2 The question at a new season (N6.1, design 11.2)
+
+- Asked at every new season of the CLASSIC kind when the Rules are the N. F. L. rules: at the first start and after a classic season has ended (`Program.new_season`). Never with Rules = Classic (P1). Never at the end of a franchise season: a franchise goes on into its offseason and its next season by itself.
+- The question is a `FranchiseQuestion` (3.7), in the manner of the original's yes/no questions of `game\prompts.py` (GetCoach, Getqbs): NXF-01 " <coach> which kind of season do you wish to play " then the current answer, with the keys of 3.7. The answers, first NXF-A01 " classic season " (the default), then, when a franchise exists, NXF-A03 " your franchise with the <team> " and NXF-A04 " a new franchise ", and when none exists, NXF-A02 " franchise ". <coach> is the coach of the season that just ended, or the original's default " coach " at a first start.
+- Classic season: GetCoach, ChooseTeam, makes, week 1, as today.
+- A new franchise: when one exists, NXF-02 " your franchise with the <team> will be kept as a copy. do you wish to start a new franchise? " (a yes/no question whose answer starts at " no ", as the original's concede question of spec 4.18 does for a choice that ends something); no goes back to the question. Then GetCoach and ChooseTeam (the original's prompts, unchanged; ChooseTeam's write goes to the franchise store), the league is made (section 4.5), NXF-07 " your new league is ready. 32 teams and their players. ", NXF-09 " your team's rating is <r>, number <k> of 32. ", makes, week 1. `nx_season_kind` becomes `franchise`. A franchise that existed is moved to `franchise\old\league-1.sav` with its history as `history-1.txt` (an older copy 1 becomes 2, 2 becomes 3, and 3 is deleted: the three newest are kept). The game offers no way back to an old copy in the core; the README (SX.9) says how to restore one by hand (copy it over league.sav while the game is closed).
+- Your franchise: `nx_season_kind` becomes `franchise` and the franchise goes on where it stood (a week of its season, or a stage of its offseason).
+
+### 3.3 A franchise year
+
+1. The season: weeks 1 to 16 and the play-offs, the original's flow (section 1.3), with the franchise's speech of section 3.4 before the main menu of each week and the results recorded (H14, section 13).
+2. The offseason (when gtp becomes 0, in place of the classic `season_over`): NXE-01 " the season is over. the offseason begins. ", then the stages in this fixed order, each announced NXE-02 " stage <n> of <m>. <name>. " and ended with NXE-03 " press enter to go on. F1 says it again. ":
+   - stage 1, NXE-11 " the season in review ": the champion, your record and finish, the best and worst records, your record as head coach (section 9); history.txt is written.
+   - stage 2, NXE-12 " retirements ": everybody ages one year, then the retirements of the league (section 6.3): yours by name, the league's stars by name, the count of the others.
+   - stage 3, NXE-13 " player development ": progression and regression (section 6.2): your counts, your most improved and your biggest drop.
+   - stage 4, NXE-14 " the draft ": the order, the seven rounds, your picks (section 7).
+   - stage 5, NXE-15 " the roster cut ": the staff's cuts and your choice, the fill of empty places (section 7.6).
+   - stage 6, NXE-16 " the new season ": the season number, your team's rating and rank, makes, week 1 (NXE-60, NXE-61).
+   The stages are a data list (`data.STAGES`), so the later updates insert theirs (section 17). m is the number of stages in that list (6 in the core).
+3. With the setting "offseason: short" (`nx_fr_offseason = short`) every stage that needs no decision says one summary sentence and goes on without a key: stage 1 NXE-20 and NXE-21, stage 2 NXE-71 " retiring: <n> in the league, <m> from your team. ", stage 3 NXE-72 " your players: <n> improved, <m> declined. ", stage 6 NXE-60; the draft and the roster cut still ask.
+4. The offseason is written to league.sav at the end of every stage, and the draft after every pick, so closing the window at any wait loses at most the undecided part of the stage in progress; the next start resumes at that stage (its speech again from its start; a draft at its next pick).
+
+### 3.4 A week of the season with the franchise in use
+
+The original's week loop speaks the week line (spec 3 step 7) and its main menu speaks today's game (`program.main_menu`, spec 4). Inside the main menu, after today's game and before " <coach> select ", on the week's FIRST pass only (H15 `before_menu`, section 13):
+1. Week 1 only: NXF-08 " this is season <n> of your franchise. ".
+2. The news of the week that was just played (section 8.3): NXN-01 " this week's news. " and up to four lines; nothing when there is none.
+3. The to-do list (section 8.1): its items asked one at a time, or with the setting "the staff handles the to-do list" one sentence NXD-03 " the staff took care of <n> items. ".
+4. The original's " <coach> select " and the choices.
+"First pass" is a flag kept in league.sav (the week and the season for which the news and the list were told), so neither the schedule or standings choice, nor F1 in the main menu, nor a restart of the program in the same week tells them again (F9 Franchise has them). A loaded saved game goes straight to its game (the original's main menu returns at once, spec 3 step 8) and `before_menu` is not called. In the play-off weeks there is no news (the original speaks every play-off result) and no item (section 8.1).
+
+### 3.5 Leaving and returning
+
+- The F9 Franchise menu (section 11) has, while the franchise is in use, NXF-17 " play classic seasons " (with the confirming question NXF-23): `nx_season_kind` becomes `classic`; the classic season goes on where it stood, or a classic new season starts with the original's prompts when there is none (the question of 3.2 is NOT asked: the player just chose).
+- While a classic season is in use and a franchise exists, the same menu has NXF-18 " back to your franchise " (only with the N. F. L. rules).
+- While a classic season is in use and NO franchise exists, the same menu has NXF-19 " start a franchise now " (with the confirming question NXF-27): at the switch (3.1) the new-franchise flow of 3.2 runs (GetCoach, ChooseTeam, the league, makes, week 1) and the classic season waits at its week. So a player who switches the Rules to the N. F. L. rules in the middle of a classic season need not finish it first.
+- Leaving keeps everything: the franchise waits at its week or stage, with its saved game if any.
+
+### 3.6 What classic seasons keep
+
+Everything. A classic season with the N. F. L. rules is what SX.2 to SX.7 built (the extras in the games, the original's season frame); with Rules = Classic it is the original. The only addition is the question of 3.2 at a new season with the N. F. L. rules. footplay.txt belongs to the classic season: the franchise reads it once, when a new franchise is made, to give the player's team the player's own names (section 4.5), and never writes it.
+
+### 3.7 Keys in every franchise menu and question
+
+Two kinds, because the F9 menus and the program's own prompts read keys differently (`game\spoken_menu.py` reads them with `KeyInput.read_key`, which runs no hot key and speaks with `say_async` outside the replay list; the original's prompts read them with `getkey`, which runs the global keys):
+- In the flow of the program (the new-season question, the stage waits, the to-do list, the draft, the roster cut): a new extras class `FranchiseQuestion` (`extras\franchise\question.py`), built on the pattern of `program.main_menu` and `game\prompts.py`: the question or the situation is spoken with say2 (the replay list and the speech log, as the season engine's lines), then the current item with say2 (" 1. classic season ", as the main menu speaks its choices); `getkey` reads the key, so F5 to F8, F11, F12, Ctrl and F9 work as at every wait of the original and hand F1 back (D-018); Up and Down move (they wrap) and speak the new item; the digits 1 to 9 take that item as the current one and speak it (the main menu's rule; Enter then takes it); Enter takes the current item; F1 says the question and the current item again; F2 is the original's instant replay of the replay list; Page Down and Page Up turn a page of a paged list; a letter goes to an item only where a question says so; any other key is echoed (saykey) and the question is said again from the top, the current item kept. A stage's wait (NXE-03) is a FranchiseQuestion with one item: Enter (or Escape) goes on, F1 says the stage again. A list of more than nine items is paged: nine items, then NXF-40 " more " (the digit 0 goes to it) and on later pages the existing NXB-10 " Back " to the page before; each page starts with NXF-42 " page <n> of <m>. ". The class reads no hot key itself and changes nothing of the original's prompts.
+- In F9 (section 11): the existing SpokenMenu for short menus and ListPicker for long lists (the roster's players, history's lists, the team ratings), with their keys as they are today (SpokenMenu: Up, Down, Home, End, the digits where the menu turns them on, Left and Right change, Enter acts, F1 its help, Escape back; ListPicker: also Page Up and Page Down by ten and the first letter). Neither class is changed, so Classic's F9 is untouched.
+
+## 4. The data
+
+### 4.1 The league
+
+One record, `extras\franchise\league.py` `League` (plain data, no reference to the game, the speech or the files, so it can be copied and written whole), with:
+- the format (1) and a league ID (the date and time the league was made, `YYYYMMDD-HHMMSS`, no random draw), the season number (1 and up), the stage (`season`, or `offseason` with the stage number, or `draft` with the pick number);
+- the coach's name and the player's team (T01 to T32, `League.team_id`);
+- the 32 teams, each with its roster (section 4.2) of player IDs;
+- the players (section 4.3), active and kept retired players, and the next free player ID;
+- the current season: the `SeasonState` values (gtp, the schedule, the records, the play-off pairings and byes, tn3, tn4, vtrnt) and this season's results (section 9.1);
+- the history (section 9.1);
+- the to-do list and the news of the season (section 8), and per news pool the IDs spoken last;
+- the draft in progress (the class, the order, the picks made; only during stage 4).
+
+### 4.2 The roster: 34 places per team, positions of every place (N6.3, 11.3)
+
+The original's slots, unchanged in number and order (spec 5.5, H7), each with a position:
+- running backs 1 to 6: position RB (" running back ");
+- receivers 1 to 6: WR (" receiver ");
+- defensive players 1 to 6: DL (" defensive lineman "); 7 to 11: LB (" linebacker "); 12 to 15: CB (" cornerback "); 16 and 17: S (" safety ") (design 11.3; the original names none of them, research C);
+- special teams players 1 and 2: RET (" returner ", the two kick-off returners of spec 5.10);
+- kicker 1: K (" kicker ": field goals, extra points, kick-offs); kicker 2: P (" punter ": holds and punts);
+- the quarterback: QB (" quarterback ").
+That is 6 + 6 + 17 + 2 + 2 + 1 = 34 places, 1,088 players in the league. A place is always filled after every offseason (invariant I3). The order of the places is the original's footplay.txt order, then the quarterback; the key of a place in `Roster.ratings` is the original's section heading and the number (`("Running Backs:", 3)`, `("Defensive Players:", 14)`, `("Kickers:", 2)`, `("Quarterback:", 1)`).
+
+A position group is the set of places with one position (RB, WR, QB, DL, LB, CB, S, RET, K, P: ten groups). A player belongs to one position for life (no position change in the core).
+
+### 4.3 A player
+
+- ID: a number, permanent within the league, never reused (P1 to P99999 spoken nowhere).
+- Name: a surname (section 7.4 for rookies, section 4.5 at the start).
+- Position: one of the ten.
+- Rating: a whole number 40 to 99; 70 is average and neutral (design 11.3). Spoken " rating 74 ".
+- Potential: high, average or low (three levels, design 11.3), fixed at birth. Spoken " high potential ", " average potential ", " low potential " for the player's own players and for prospects; it is the growth speed of section 6.2.
+- Age: 21 to 40 (11.3). Rookies are 21 to 23.
+- Seasons: the seasons played in the league (0 for a rookie).
+- Peak: the highest rating the player ever had (for history).
+- Drafted: season, round and pick, or none (a player of the first league, or an undrafted rookie of the fill).
+- Development points of this season (section 8.2), 0 to 3.
+- Status: active (on a roster), retired or released, with the season it happened.
+- The team (T01 to T32) and the place, while active.
+Retired and released players are kept only when they matter to history: the player's own team's players, and every player whose peak was at least `data.STAR_PEAK` = 85. Others are dropped at the end of the offseason (league.sav stays small: about 1,088 active players and a few hundred kept, under 400 KB after 20 seasons).
+
+### 4.4 Team strength
+
+- strength(team) = the weighted mean of its 34 ratings, a whole number: weights (data) QB 12, every RB 2, every WR 2, every DL, LB, CB and S 2, K 4, P 2, every RET 1, the sum of the weights 78; strength = (sum of weight x rating + 39) // 78 (rounded half up, integers only). All ratings 70 give 70.
+- Why these weights: they follow how often the engine reads each place (spec 5.9 and 5.10): the quarterback in every pass, one of six backs or receivers per play, two of 17 defenders per play, the kicker in field goals and extra points, the punter in punts; the returners have no effect in the core (section 5.1) and count a little for the computer's games only.
+- The exact strength is the weighted SUM itself (a whole number, 78 x 40 to 78 x 99), so nothing is lost to rounding: the rank, the draft order's tie (7.2), the shift and the play-off lean (5.2) all use the sum; only the spoken rating is the rounded mean. While places are empty (stages 2 to 5 of the offseason) the strength is not used: every use of it falls in the season or at stage 1, where all 34 places are filled.
+- The team's rank: 1 to 32 by the exact sum, highest first, ties by team order (T01 first). Spoken " your team's rating is <r>, number <k> of 32 ".
+
+### 4.5 A new league (section 12 has the draws)
+
+- The player's team is made FIRST, so no other team can draw the player's own names: its 33 names from footplay.txt when the classic store reads it as complete, else from footplay.previous.txt when that is complete (the classic store keeps the file under that name when a classic season ends, which is when the question of 3.2 is asked), and its quarterback from the file's last item when there is one; otherwise drawn like every other team's. Its level and ratings are drawn like every other team's.
+- Then every other team in order T01 to T32 (the player's team skipped). For each team: one team level `below(9) - 4` (-4 to +4, start value `FR_TEAM_LEVEL`), then for every place in roster order: the name (unless from footplay.txt), the rating `58 + below(13) + below(13) + level` clamped to 40 to 99 (start value: 58 to 82 before the level, mean 70), the potential (`below(100)`: under 20 high, under 70 average, else low; start values `FR_POTENTIAL_SHARES`), the age `21 + below(5) + below(5) + below(4)` (21 to 32, mean about 26.5; start value `FR_START_AGE`; kickers and punters `+ below(5)` more), seasons = age - 22 (at least 0), peak = rating.
+- Why a team level: 34 ratings average out, so without it every team would start within about two points of 70 and team strength would barely matter; the level gives a spread of strengths like a real league from season 1 (calibrated in SX.8b against the win spread of section 5.4).
+- Names: a name is drawn from the surname pool (`customize\surnames.txt`, the player's own surname file) with `rnd(1708)`, again while an active player of the league already has it (bounded, G-D1; then the first free name in pool order, then any name: a duplicate is allowed only when the pool is used up). The league's names are drawn with the franchise's own draws, never with the game's `NamePool`, so the classic pool is not touched.
+
+## 5. Ratings and their bounded effect (F1, N6.3, C3)
+
+### 5.1 In a game the player plays (H8)
+
+- The franchise gives `play_game` both rosters with their ratings (`Roster.ratings`, H7) and the two quarterbacks' names (section 13), so Getqbs asks nothing in a franchise game and no pool name is drawn.
+- `FranchiseModifiers` (extras\franchise\ratings.py) is a `PlaybookModifiers` (so the playbooks still work) that adds a ratings Mod at the moment the engine reads a row. It keeps a reference to the game's state (given in `before_snap`, like the playbook arming) and reads the side with the ball (`wisoff`), the ball carrier or target (`carrier`, the slot drawn at the snap) and the two defenders (`defender1`, `defender2`):
+  - a run (`run`): the offense rating is the carrier's (running back `carrier`);
+  - a pass (`pass_`): the offense rating is (2 x quarterback + receiver `carrier` + 1) // 3;
+  - a designed quarterback run (`qb_run`: the sneak, keeper and draw): the quarterback's rating; a scramble gets no ratings Mod (its row does not pass `qb_run`: `extras\nfl_rules.py` `qb_entry` hands a scramble's entry over unchanged, and that stays as SX.7 built it), but the quarterback's rating already moves the pass row's sack percent that leads to most scrambles;
+  - the defense rating is (defender1 + defender2 + 1) // 2 of the other side's defensive players;
+  - d = offense rating - defense rating;
+  - the ratings Mod: ylo = yhi = step(d, `FR_YARD_STEP` 12, 1); sack = -step(d, `FR_SACK_STEP` 6, 3); comp = step(d, `FR_COMP_STEP` 6, 3); fum = step(d, `FR_FUM_STEP` 8, 3) (all start values), where step(x, per, cap) = sign(x) x min(cap, |x| // per): zero while |d| is under `per`, whole numbers only, the same size up and down.
+  - The ratings Mod and the playbook Mod of the two plays called are ADDED and the sum is clamped to `BOUNDS` (2, 2, 5, 5, 5) of design 10.3, then applied as `PlaybookModifiers` applies its Mod (yards low and high together, a row never under one yard of range, the sack and catch percents in 0 to 100 with a catch at least 1, the fumble denominator at least 2). The ratings alone never move a row more than 1 yard and 3 points (design P6: small effects; the playbooks keep room).
+  - `fumble_odds(side)` uses the same armed Mod's fum.
+  - `field_goal_odds(side)`: `FIELD_GOAL_ODDS` + step(K - 70, `FR_KICK_STEP` 5, 5) where K is the kicking side's kicker 1 (start value; 65 to 75 against the original's 70).
+  - `punt(side)`: (`PUNT_ODDS`, `PUNT_SHORTEST` + step(P - 70, `FR_PUNT_STEP` 8, 3)) with P the kicking side's punter (start value; the shortest punt 22 to 28 against the original's 25).
+  - Not in the core: the returners (the kick-off return has no H8 call; LATER, section 17), a weighted choice of the ball carrier (LATER: research B2 says ratings may weight the draw; it would need a hook in `snap_draws`).
+- Why per play and not per team: the tackle sentence names the two defenders and the run sentence the back; a better back or a worse pair of tacklers should be what the player hears changing the play. The league's ratings are spread symmetrically around 70 on both sides of the ball, and the Mod is the same size up and down, so its mean effect over a league is near zero (B-P62: measured by test C-F3, not assumed).
+
+### 5.2 In the computer's games (H14, the 5.14 score table, N6.3)
+
+- The team's place in its league: z(team) = (sum(team) - mean of the 32 sums) / max(the standard deviation of the 32 sums, `FR_SPREAD_FLOOR`), with the sums of 4.4 taken at the start of the season (week 1, after stage 6) and kept for the whole season (start value of the floor: 78 x 1.0, one rating point of strength). Why the league and not 70: the rosters even out over the seasons (the draft's order, the cut and aging pull every team towards the middle: the review's simulation found the standard deviation of the strengths falling from 2.7 to about 1.5 within five seasons), so a shift taken from the distance to 70 would fade back to the original's coin and a league that drifted above 70 would inflate every score; the place in the league keeps the effect of being the best or the worst team, while the ratings still decide who that is. A league whose 32 sums are all equal (every rating 70 included) has z = 0 for every team.
+- A regular week (spec 5.14 item 5): the shift of a team is shift(team) = sign(z) x min(`FR_SHIFT_MAX`, round_half_up(|z| x `FR_SHIFT_PER_SD`)) (start values 6 and 3: a team one standard deviation above its league moves three places up the table), computed with whole numbers from the sums (no float in a rule the tests compare: SX.8b writes it as integer arithmetic, sign-symmetric, so a team below the mean gets exactly the negative of the same distance above it). After the original's draw of team A's index `a = rnd(32)`, the index used is a' = clamp(a + shift(A), 1, 32); team B's index is b' = clamp(b + shift(B), 1, 32), and the original's redraw "again while T(b) = T(a)" tests T(b') against T(a') (its bounded scan too). The higher index wins and the sentence speaks T(a') and T(b'), as the original does with a and b. So the draws are the original's draws, the score table is the original's table, and only the place in it moves with strength.
+- A play-off game without the player (spec 5.17 item 2, also the bye week's games and finplay17): the original's coin `rnd(2) = 1` (the visitor wins) becomes one draw "the visitor wins with chance p per mille", p = clamp(500 + round_half_up(`FR_PLAYOFF_PER_SD` x (z(visitor) - z(home))), 250, 750), sign-symmetric (start value 60 per mille per standard deviation; SX.8b sets it so that the lean equals the regular week's win share at the same distance, C-F2). The draw is the new `GameRandom.chance_first(p)` (section 13): ONE number from the generator, traced as a draw of size 2, and true exactly when `rnd(2)` would have given 1 when p is 500. The winner's and the loser's scores are the original's draws.
+- The player's own games are played, never shifted.
+- Why a shift of the index and not a new table: the original's table, its 1-in-32 entries and its sentences stay; a stronger team draws its score some places higher in the 32-place table, which is a bounded change of the same shape (N6.3 "in the same bounded way"). Because the shift is centred on the league, the league's mean shift is near zero and the computer's scores keep the original's average (the review measured 39.3 points a game at shift 0 against 45.5 when both teams had +2).
+
+### 5.3 Neutral ratings equal Classic (C3): what the tests prove
+
+- N1 With every rating 70 (and with the ratings dict empty) the ratings Mod is zero for every pair of slots, so every row of spec 5.9 and 5.10 read through `FranchiseModifiers` with no playbook play armed equals the original's (a table test over the 30 entries, the quarterback rows, the fumble, field goal and punt numbers).
+- N2 A seeded whole game with the N. F. L. rules, the franchise's rosters all at 70 and the same names, gives the same spoken and sound transcript and the same trace of draw sizes as the same game played with those rosters handed in without the franchise (both through the `opponent_names` and `quarterback_names` seams).
+- N3 A seeded whole season of the season engine with every strength 70 (and, the same, with all 32 sums equal at any value) gives the same draws, sentences, records, pairings and celebration as the classic SeasonEngine with the same seed (every shift 0; `chance_first(500)` against `rnd(2)` over 100,000 numbers of the source and on a strict script at the edges 0.4999 and 0.5).
+- N4 The golden Classic transcript is unchanged, and with Rules = Classic no file of the franchise folder is opened (a test deletes the folder and the settings key and checks the golden transcript and that the folder is not made).
+
+### 5.4 Calibration (SX.8b; the targets)
+
+- C-F1 the win spread: over seasons 1 to 20 of the fast run (the player's games decided like the computer's; SX.8b runs it with the aging, draft and cut of SX.8c and SX.8d as stand-ins until they exist, SX.8f again with the real ones), the standard deviation of the 32 teams' wins lies in 2.6 to 3.4 in EVERY season, not only in the first (Classic gives 2.0, the coin of 16 games). Target: the NFL's spread of wins scaled to 16 games, about 3 (UNVERIFIED: SX.8b reads it from a league or statistics source and records the source; if it differs the band moves with it). Moves `FR_SHIFT_PER_SD`, `FR_SHIFT_MAX`, `FR_SPREAD_FLOOR`.
+- C-F2 the same game in both kinds, ONE target: the regular week's mapping. In played games (`nflrig`, both sides by the computer, 2,000 games per point) between two rosters drawn as in 4.5 (with their levels; never uniform rosters, which leave every row unmoved until the gap passes a step, as the review's probe showed: a gap of 4 gave 0.492 with uniform rosters and 0.567 with drawn ones), the stronger team's win share at a distance of 1 and 2 standard deviations of the league lies within 5 points of the regular week's share at the same distance, measured at the league's spread of seasons 1, 5 and 10 of a fast run. The play-off lean `FR_PLAYOFF_PER_SD` is then set to the regular week's share. If the played games' effect is too small at a small spread, SX.8b raises the ratings' steps (inside the bounds of 5.1) or lowers `FR_SHIFT_PER_SD`, and records the trade-off. Why: the player's games must feel like the same league as the results he hears.
+- C-F3 centering (B-P62): 2,000 played games between two rosters drawn as in 4.5 with level 0 give mean points per game and mean yards per play within 2 percent of the same games with every rating 70, once with Classic playbooks and once with the computer's styles in use on both sides (the ratings Mod is added to a playbook Mod that may already sit at a bound, so the clamp could tilt the sum: review note 1).
+- Each run is a script in `work\` with a 10,000-game or 10,000-season report; the moved values go into `extras\tuning.py` with their history and into the session's decision.
+
+## 6. Progression, regression and retirement (F2, N6.4)
+
+### 6.1 Aging
+
+At the start of stage 2 every active player's age goes up by one and his seasons by one. A player who would be 41 retires at 40 (the age cap of 11.3).
+
+### 6.2 Progression and regression (stage 3)
+
+For every active player, in league order (T01 to T32, roster order), change = base(position, age, potential) + `below(5) - 2` (the spread, -2 to +2) + the player's development points of the season (0 to 3, section 8.2); the new rating is clamped to 40 to 99; peak is updated; the development points go back to 0.
+- base by age against the group's peak window (data, start values `FR_PEAK`): RB 24 to 27, WR 25 to 29, QB 26 to 32, DL 25 to 29, LB 25 to 29, CB 25 to 28, S 25 to 29, RET 24 to 27, K 26 to 34, P 26 to 34 (research B6: a receiver declines later than a running back; the 2026-09-16 update: quarterbacks in their early thirties hold);
+  - before the window: high +5, average +3, low +1 (start values `FR_GROWTH`);
+  - in the window: high +1, average 0, low 0;
+  - after the window, at k = age - the window's last age (k is 1 the first year after it): -min(6, 1 + k), so -2, -3, -4, -5, -6, -6 (start value `FR_DECLINE`), whatever the potential.
+- The calibration of these values (C-F4, SX.8c) counts the development points as they are given (section 8.1: four extra-work weeks a season for every team, the computer's teams always using them), because the points are rating added to the league every year: the review's simulation with a point every week for every computer team lifted the league's mean rating to 74.6 by season 20. C-F4 is measured with the whole offseason loop (aging, retirement, draft, cut, fill, points) and is part of the done-when of SX.8c (with stand-ins for the draft), SX.8d and SX.8e, so a later session that adds rating to the league sees the drift at once. Besides the league's mean, the single-place groups drift by selection (the cut keeps the better of the incumbent and the rookie: the review found the quarterbacks' mean at 77 to 81, kickers and punters 74 to 78): C-F4 also bounds every group's league mean (I8b, section 16).
+- Spoken (stage 3, the player's team only): NXE-40 " your players: improved <n>, declined <m>, the same <k>. ", NXE-41 " most improved: <player>, <position>, up <d> to <r>. ", NXE-42 " the biggest drop: <player>, <position>, down <d> to <r>. " (none when nobody went down), NXE-43 " your whole roster is in the franchise menu on F9. ". The news of the offseason gets NWP lines for the player's players who improved by 5 or more (at most two).
+
+### 6.3 Retirement (stage 2)
+
+- For every active player aged 30 or more, in league order: one draw `below(1000)` against r = clamp((age - 29) x `FR_RETIRE_PER_YEAR` - (rating - 70) x `FR_RETIRE_PER_POINT`, 0, 1000) (start values 110 and 6): retire when the draw is under r. At 40, r is 1000 without a draw. A player under 30 never retires and never draws (research G: no retirement at illogical points; invariant I1). The chance rises with age and falls with rating by construction (I2, a property test of the function).
+- Spoken: NXE-30 " from your team: " then NXE-31 " <player>, <position>, age <a>, rating <r>, retires. seasons played: <n>. " for each, or NXE-32 " nobody from your team retires. "; NXE-33 " players retiring in the whole league: <n>. "; the league's stars who retire (peak 85 or more, at most three, the highest peak first): NXE-35 " <player> of the <team>, <position>, retires. seasons played: <n>. ". The NWR news lines tell the stars again in the season's news.
+- A released player (section 7.6) is not a retired player: he leaves the league at any age and is never counted as a retirement.
+
+## 7. The draft, the roster cut and the fill (F3, N6.5)
+
+### 7.1 The draft class (made at the start of stage 4)
+
+- `FR_CLASS_SIZE` = 260 prospects (start value; 224 picks plus a choice at the last picks). For each prospect in order: the position by `below(35)` over the weights RB 6, WR 6, QB 2, DL 6, LB 5, CB 4, S 2, RET 2, K 1, P 1 (data: the roster's shares with one more quarterback, because a team has only one); the name (section 7.4); the true rating `46 + below(15) + below(15)` (46 to 74, mean 60; start value `FR_ROOKIE_RATING`); the potential (`below(100)` against `FR_ROOKIE_POTENTIAL_SHARES`, start: under 25 high, under 75 average, else low); the age `21 + below(3)`; the scouting offset `below(7)`, which places the true rating inside the spoken range: low end = true - offset, high end = low end + 6 (" about 62 to 68 "; research B12's range, without a scouting level in the core).
+- The class is kept in league.sav for the stage; prospects not drafted are dropped after the fill (no undrafted market in the core).
+
+### 7.2 The order (N6.5, research F2)
+
+- Teams that missed the play-offs pick 1 to 20, then the play-off teams by the round they lost: wild card losers 21 to 24, division round losers 25 to 28, conference championship losers 29 and 30, the Super Bowl loser 31, the champion 32 (NFL draft rules, SRC-OFFICIAL in research F2). Inside a group: fewer wins first; equal wins: the lower exact strength first (the sum of 4.4 as it was at stage 1, before the retirements, kept in the season's history; a weaker roster picks earlier; the NFL uses the strength of schedule, which the original's random pairings do not give); then the team order T01 first. No draw.
+- The same order in all seven rounds (no trades in the core, no compensatory picks).
+- Spoken at the start of the stage: NXK-01 " the draft has 7 rounds. you have pick number <n> in every round. ".
+
+### 7.3 The picks
+
+- One code path for every pick (research G: computer picks never depend on how the player watched; invariant I7). `best_for(team, available)` gives each available prospect a value for that team: the middle of his spoken range (low end + 3) + the potential bonus (high +5, average 0, low -4) + the need bonus, its parts ADDED: +8 when the team's group of his position has an open place (its count minus the players left after the retirements minus the rookies already drafted into it; +12 instead of +8 for QB), and for a group of one place (QB, K, P) the place counts as open also when its player's rating is under `FR_DRAFT_WEAK` = 60; +3 more when his middle beats the lowest rating of that group (the incumbents' true ratings and, for the rookies already drafted, the middle of their ranges: a team knows its rookies only by their ranges until the cut); -10 for a K, P or RET when that group has no open place (start values `FR_DRAFT_VALUE`); the highest value wins, ties to the lower prospect number. No draw. The computer's pick is `best_for`'s first; the staff's list for the player is `best_for`'s first five.
+- Computer picks are made silently. Spoken (setting `nx_fr_picks_told`, NXF-22, NXF-25, NXF-26; the plain words "picks told" and "draft results", never the EA feature name for it, research E): `first` (default) the first three picks of round 1 and the pick right before each of the player's picks; `mine` only the player's; `all` every pick. A told pick is NXK-03 " pick <n>: the <team> take <player>, <position>. "; each round starts with NXK-02 " round <n>. " when a line of it is spoken.
+- The player's pick: NXK-04 " <coach> it is your pick, round <r>, pick <n>. your open places: <list>. " (the list NXK-13 " none " or the positions with counts, NXL-21 " <position> <n> "), then NXK-05 " the staff's list. " and a FranchiseQuestion (3.7): items 1 to 5 the staff's five, each NXK-06 " <player>, <position>, about <lo> to <hi>, age <a>, <potential> potential "; item 6 NXK-07 " hear more prospects " (the available class by value for the team, paged by nine, each an item that takes him); item 7 NXK-08 " let the staff pick " (the first of the list); item 8 NXK-09 " staff makes your other picks " (this and every later pick of this draft are the staff's, with NXK-12 " the staff took <player>, <position>. " for each). Enter on a prospect: NXK-10 " you take <player>, <position>. ". F1: the situation sentence and the current item again.
+- League.sav is written after every pick. At the end: NXK-11 " the draft is over. your rookies: " and NXK-06 for each (the range, since the true rating is not known yet).
+- A rookie's true rating becomes known (spoken exactly) from the roster cut on.
+
+### 7.4 Rookie names (N6.5)
+
+From the surname pool as `customize\surnames.txt` gives it (the player's own surname file; no other file): `rnd(1708)` again while an ACTIVE player of the league or a prospect of this class has the name (bounded; then the first free name in pool order; then any, a duplicate). So duplicates with active players never happen while free names exist (1,708 names, at most about 1,350 in use at the draft), and a retired player's name may come back (history says " season 3 " with each name, so they stay apart). Decided here (N6.5 left it to SX.8): duplicates are allowed only when the pool is used up.
+
+### 7.5 What a pick does
+
+The rookie joins the team's roster list for his position group (over the group's count for now); the roster cut decides who keeps a place.
+
+### 7.6 The roster cut and the fill (stage 5; research B1's camp report)
+
+- Every team, in team order, one code path `cut(team)`: in each group, the players are ranked by keep value = rating + the youth bonus (age 24 or less: high potential +4, average +2) (start value `FR_KEEP_YOUTH`), ties to the younger, then to the lower player ID; the group keeps its count, the rest are released (status released). No draw.
+- The player's team: NXE-50 " the roster cut. the staff would release: " then NXE-51 " <player>, <position>, age <a>, rating <r>. " for each, then a FranchiseQuestion (3.7): NXE-52 " release them " (first) and NXE-53 " choose yourself ". Choose yourself: for each group with too many players, NXE-54 " <position>: players <n>, places <m>. choose who is released. " and a FranchiseQuestion of the group's players (NXL-31, ranked as above, the staff's choices first); Enter releases the current one (NXE-55 " <player> is released. ") until the group fits. With the to-do setting "the staff handles it" the staff's cuts are taken with one sentence (NXE-56 " players released by the staff: <n>. ").
+- The fill (invariant I3): every place still empty (a group with fewer players than places) gets an undrafted rookie: name (7.4), rating `45 + below(11)` (45 to 55) in a group of three places or more, `50 + below(11)` (50 to 60) in a group of one or two places (QB, K, P, S, RET), where one weak player is the whole group and would break I5 (start values `FR_FILL_RATING`, `FR_FILL_RATING_SMALL`), potential `below(100)` as 7.1, age 22. Spoken for the player's team: NXE-57 " empty places filled with undrafted rookies: <n>. " and NXL-31 for each.
+- Then each team's players are placed in the group's places by rating, the best in place 1 (the order does not change play: the engine draws a place at random; it makes the roster speech start with the best).
+- Invariants after the cut and fill (checked every offseason in the tests): every place filled, no group over its count, every rating 40 to 99, every age 21 to 40, every active player in exactly one place.
+
+## 8. The to-do list and the news (F5)
+
+### 8.1 The to-do list (research B10, B11; design 11.1)
+
+- Before each game of the regular season (section 3.4), 0 to 3 items, each a FranchiseQuestion (3.7) with the staff's recommendation as answer 1, then the other answers, then NXD-A01 " later ". The play-off weeks have no items. Every item has its deadline: the kick-off of this week's game. An item answered " later " stays on the list; the F9 Franchise menu's item NXF-11 " to do list " asks the waiting items again; choosing " 1. play game " in the main menu with items waiting says NXD-06 " items still on your to do list: <n>. " once and asks them before the game starts (H15 `before_game`, section 13).
+- Setting NXF-20 " the staff handles the to do list " (`nx_fr_auto`, off by default): on, every item takes the staff's recommendation at once and NXD-03 " the staff took care of <n> items. " (NXD-04 for one) is the only sentence; the roster cut of 7.6 too.
+- When the setting is OFF, nothing is ever decided for the player (research G: delegation must not decide when the setting says no): an item still open when its game starts is closed with its "do nothing" answer and NXD-30 " the items you left for later were not done. ".
+- The items of the core (the list is data, `data.TODO_KINDS`, so the later updates add theirs: contracts, injuries, coordinators, section 17):
+  - T1 extra work (in weeks 2, 6, 10 and 14 of the regular season only, `FR_EXTRA_WORK_WEEKS`, start value; when the team has at least two players aged 24 or less with high or average potential and fewer than 3 development points): NXD-10 " extra work this week for one young player. ", answers: 1 the staff's first candidate, 2 its second, each NXD-A02 " <player>, <position>, rating <r>, <potential> potential ", NXD-A03 " nobody this week " (the "do nothing" answer), " later ". The candidates: the two with the highest (potential level, then lowest age, then highest rating), no draw. Chosen: NXD-11 " <player> gets extra work this week. " and one development point (section 6.2). Every computer team gives its first candidate the point in the same weeks, in the same code path, so the player's advantage is only the choice, and a player who answers " nobody this week " or leaves the item undone falls a point behind every computer team that week (said in the F6 help, NXH-37). Only regular-season weeks count, so the league's development never depends on how far the player's team goes in the play-offs.
+  - T2 the game plan (regular weeks only, when the player's offense or defense playbook setting is not Classic): NXD-20 " the game plan against the <team>. they play <their_offense> on offense and <their_defense> on defense. the staff recommends <our_offense> and <our_defense>. " (the styles' names; the offense first), answers NXD-21 " use the staff's game plan ", NXD-22 " keep your playbooks " (the "do nothing" answer), " later ". The recommendation is data, `tuning.FR_GAME_PLAN`: for each opponent defense style (and Classic) the player's offense style, and for each opponent offense style the defense style, worked out ONCE by SX.8e with the expected-yards yardstick of `tests\playbook_ev.py` over the tilts of the styles and frozen as data with the script and its report (no draw, no computation in play). Used: the playbooks of this one game are the plan's (the settings do not change); NXD-23 " the game plan is set for this game. ".
+- Spoken frame: NXD-01 " <coach> your to do list has <n> items. " (NXD-02 for one), then each item with NXD-05 " item <n>. " before its question.
+
+### 8.2 Development points
+
+A point is +1 on the player's change at the next progression (section 6.2), at most 3 per player per season. They are the core's only lasting effect of the weekly list.
+
+### 8.3 The news (research B11)
+
+- After weeks 1 to 15 of the regular season (when the week's results are recorded, H14; not after week 16, whose next words are the original's division winners and wild cards and whose next menu is a play-off week or the offseason), the news of the week is made from the results, the strengths and the streaks, by rules without draws, at most `FR_NEWS_MAX` = 4 lines, in this order: the player's own team's streak of 3 or more (wins NWY, losses NWZ), the coach's milestone (every 10th win as head coach, NWM), the biggest win of the week (the largest margin; ties to the first game in the week's order; NWB), an upset (the winner's strength at least `FR_UPSET_GAP` = 4 under the loser's; the largest gap; NWU), the league's longest streak of 4 or more of another team (wins NWS, losses NWL), the closest game when it is not already told (NWC). A line is one line of its pool in `customize\news.txt` (section 15), drawn as the remark pools are drawn (`rnd(size)`, again while one of the last three spoken of that pool, the history in league.sav), filled with its placeholders.
+- Spoken before the next week's menu (section 3.4); kept in league.sav as text for the whole season and the offseason (the F9 news item says the last week's lines first, then " earlier " pages week by week).
+- The offseason's news: the champion (NWT, stage 1), the stars who retired (NWR, stage 2), the first pick of the draft (NWD, stage 4), the player's big improvers (NWP, stage 3); they are told in their stages and kept as the offseason's news.
+- F8 (comments) does not silence the news: it is information the player can read again, not commentary. A kind whose lines are all switched off is never told (that is how a player switches a kind of news off).
+
+## 9. History and records (F4, N6.9)
+
+### 9.1 What is kept
+
+- Results of the current season, for each game: the week or round, the two teams, the two scores (from H14 `game_played`, section 13). Kept until the season's history is written, then dropped.
+- Per season (written at stage 1): the season number, the champion and the runner-up, the 64 wins and losses, each play-off team's last round, the player's team's record and finish, the best and the worst record (ties: the original's team order), the player's coach's name, and the season's records of section 9.2.
+- The coach's career (computed from the seasons): seasons, wins and losses (regular season and play-offs counted apart), play-off seasons, Super Bowls won.
+- League records: most wins in a season (team, season); most points in a game (team, opponent, score, season); the biggest win (margin, the game, season); the longest winning streak (team, length, season).
+- Retired stars: name, position, the team he last played for, seasons played, peak, the season he retired (from the kept players, section 4.3).
+
+### 9.2 The history menu (F9 Franchise, item NXF-14)
+
+A SpokenMenu with five items, each opening a ListPicker (3.7), newest first: NXG-01 " champions by season " (NXG-10 " season <n>: the <champion> over the <runner_up>. "); NXG-02 " your record " (NXG-11 " seasons: <n>. wins: <w>. losses: <l>. play off seasons: <p>. Super Bowls won: <s>. ", one line); NXG-03 " season by season " (NXG-12 " season <n>: you were <w> and <l>, <finish>. champion: the <champion>. the best record: the <best>. the worst: the <worst>. "); NXG-04 " league records " (NXG-13 to NXG-16); NXG-05 " retired stars " (NXG-17). An empty list says NXG-18 " nothing yet. ".
+
+### 9.3 history.txt
+
+Plain UTF-8 text in the franchise folder for reading in Notepad or with a screen reader, written whole (temporary file and rename) when a franchise starts and at every stage 1; never read back by the game (so a damaged or deleted history.txt is only written again). Layout, one fact per line, a blank line between parts:
+```
+Franchise history: coach <coach>, the <team>.
+Written by NFL Football 4 after season <n>.
+
+Your record
+<n> seasons, <w> wins and <l> losses. Play-offs <p> times. Super Bowls won: <s>.
+
+Season <n>
+Champion: <team>. Runner-up: <team>.
+Your team: <w> and <l>, <finish>.
+Best record: <team>, <w> and <l>. Worst record: <team>, <w> and <l>.
+
+League records
+Most wins in a season: <team>, <w>, season <n>.
+...
+
+Retired stars
+<name>, <position>, <team>, <n> seasons, best rating <r>, retired after season <s>.
+```
+The words are the spoken texts of section 9.2 without the speech spellings that only help the voice.
+
+## 10. The files, the extras record and the settings
+
+### 10.1 franchise\league.sav
+
+- Content: UTF-8 JSON, one object, keys in a fixed order with `"format": 1` and `"game": "NFL Football 4 franchise"` first, then the league record of section 4.1. It is a save, not a file the player edits (CUSTOMIZABLE_CONTENT 10's "no JSON" rule is for the player's lists).
+- Written whole, at these moments: every write the season engine makes through its store (records, gtp, pairings, byes), the coach and team and the schedule (the setup store), the end of the to-do list, every news of a week, the end of every offseason stage and every draft pick, every franchise setting change. A write: the new text to `league.sav.tmp`, flushed; the present `league.sav` copied to `league.previous.sav`; the temporary file renamed to `league.sav`. So at any moment one of the two files is whole (invariant I10 tests a crash at every step).
+- Read once at the start (and when the franchise comes into use), checked WHOLE before use, with the checks that fit the stage the file says it is in:
+  - always: the format, the game marker, every rating 40 to 99, every age 21 to 40, every potential, every ID unique, every placed ID an active player of that team and no active player in two places, the history's values, the to-do list and the news;
+  - in the season (stage `season`), at stage 1 and from stage 6 on: 32 teams with every one of the 34 places filled and no group over its count, and the season state (gtp 1 to 20, or 0 only at stage 1, the schedule of 16 weeks of real teams, the records 0 to 20 with wins and losses adding up to the weeks played, the pairings and byes of the week);
+  - at stages 2 to 5 and during the draft: places may be empty, and a group may hold its count plus the rookies drafted into it (never more than its count plus 7); the class (260 prospects, each with a position, a range of 7 points around his true rating, an age 21 to 23) and the order (32 teams, each once) are checked only at stage 4.
+  Anything out of range for its stage is damage (never clamped silently).
+- Healing (playbook 7.10; C10; the saved-game rule: a save is never silently overwritten):
+  - league.sav damaged and league.previous.sav whole: the damaged file is copied to `league.sav.damaged<n>` (three kept), the previous one is used and written as league.sav, and NXF-30 " the franchise file was damaged. the copy from before the last save is used, and a copy of the damaged file was kept. " is said with the start-up notices. The player loses at most the last step.
+  - league.sav missing and league.previous.sav whole: the copy is used and written as league.sav, NXF-36 " the franchise file was missing. the copy from before the last save is used. ".
+  - both damaged, or one damaged and the other missing, while `nx_season_kind` is franchise: the damaged ones copied aside, `nx_season_kind` becomes classic, NXF-31 " your franchise could not be read and was set aside. a classic season begins. ".
+  - both missing while `nx_season_kind` is franchise: `nx_season_kind` becomes classic, NXF-37 " your franchise could not be found. a classic season begins. ".
+  - The franchise is never made again silently.
+  - a file over `FR_SAVE_MAX_BYTES` = 8,000,000 bytes is damaged without being read (a league of 20 seasons is under 1,000,000);
+  - a `league.sav.tmp` found at the start is the rest of a write that did not finish: it is deleted unread (the rename is the moment a write counts).
+  - a format higher than this program knows: left alone (not damage), `nx_season_kind` becomes classic for this run, NXF-34 " this franchise was saved by a newer version of the game and cannot be played here. a classic season begins. ".
+  - held by another program: the classic season this run, NXF-35 " the franchise file is in use by another program. a classic season is played this time. "; nothing is written.
+  - the folder cannot be written: the franchise plays on from memory with NXF-32 " the franchise could not be saved, so this season's changes will not be kept. " once.
+- The classic store is made at every start as today and gives its own notices (a damaged classic season file, footplay.txt) even while the franchise is in use: they are about the classic season, they are true, and they are said as today (review note 9).
+- A later format (2 for the contracts of SX.8g) reads a format-1 file by a migration that fills the new values with their defaults (a test per migration).
+
+### 10.2 franchise\football.sav
+
+A franchise game saved with Save Game is written to the franchise folder by the franchise store, in the classic layout with the extras section (design 12.3). The extras record gets one more value, `franchise` = {"league": the league ID, "season": n, "week": gtp} (absent in every other game; a record without it loads as before). Loading in the franchise: the values must match the league's ID, season and week, else the file is set aside as in G-F5 with NXF-33 " the saved game belongs to another week of your franchise and was set aside. ". The rosters of a loaded franchise game come from the league again (the same names and ratings: nothing changes inside a week), so a loaded game keeps the opponent's names (the original's Q39 does not apply in a franchise).
+
+### 10.3 history.txt
+
+Section 9.3.
+
+### 10.4 customize\news.txt
+
+The news line templates (CUSTOMIZABLE_CONTENT 13 L16), section 15.
+
+### 10.5 settings.txt (C1)
+
+New keys with their defaults: `nx_season_kind = classic` (classic or franchise, section 3.1); `nx_fr_auto = off` (the staff handles the to-do list and the roster cut); `nx_fr_offseason = full` (full or short, section 3.3); `nx_fr_picks_told = first` (first, mine or all, section 7.3). A missing or bad value is its default (the settings file's own healing). The Rules menu's "Reset the rules to the defaults" does not change them (they are the franchise's, in its own menu).
+
+## 11. The F9 items (N6.10, design 12.2)
+
+- F9 gets the item NXF-10 " Franchise " after " Rules " and before " About ", shown only while the Rules are the N. F. L. rules.
+- While the franchise is in use, a SpokenMenu: 1 NXF-11 " to do list " (the waiting items asked as in 8.1, or NXD-07 " nothing is waiting. "), 2 NXF-12 " news " (a ListPicker of the season's lines, the last week first), 3 NXF-13 " your roster " (a SpokenMenu of the ten groups, NXL-30 " <group>: <n> " (" quarterback: 1 ", " running backs: 6 "); Enter opens a ListPicker of the group's players, NXL-31 " <player>, <position>, rating <r>, age <a>, <potential> potential ", and a rookie of this offseason before the cut as NXK-06 with his range), 4 NXF-14 " league history " (section 9.2), 5 NXF-15 " team ratings " (NXL-41 " your team is number <k> of 32. ", then a ListPicker of the 32 teams by rank, NXL-40 " <k>. the <team>, <r>. "), 6 NXF-16 " franchise settings " (a SpokenMenu with Left and Right and Enter changing an item and speaking the new value, saved at once: NXF-20 " staff handles the to do list " followed by NXM-20 " on " or NXM-21 " off "; NXF-21 " offseason: every stage " or NXF-24 " offseason: short "; NXF-22 " draft picks told: first and yours ", NXF-25 " draft picks told: only yours " or NXF-26 " draft picks told: every pick "), 7 NXF-17 " play classic seasons " (then one confirming Enter, as F9 Customize's "reset all" asks: NXF-23 " your franchise will wait. press enter to play classic seasons now, or escape to stay. ", section 3.5).
+- While a classic season is in use: when a franchise exists, 1 NXF-18 " back to your franchise " (said with NXF-05's team when chosen) and 2 NXF-14 " league history " (of the waiting franchise); when none exists, 1 NXF-19 " start a franchise now " (then one confirming Enter: NXF-27 " your classic season will wait. press enter to start a franchise now, or escape to stay. ", section 3.5).
+- Inside a game the items say only what is true then: the to-do list is closed (its deadline was the kick-off), the roster, news, history and ratings work.
+- The F9 Rules item 1 says NXM-26 " the franchise uses the N. F. L. rules. " (a row since SX.1) after its value while the franchise is in use (design 11.2); a change to Classic speaks NXF-04 (section 3.1).
+
+## 12. Every new random draw (C4, design 15)
+
+All draws use the one `GameRandom` and its bounded redraw (G-D1). In Classic none of them happens; with the N. F. L. rules and a classic season none of them happens either. In the order they come:
+1. A new franchise (section 4.5), once: for the player's team first, then for each other team in order T01 to T32: the level `below(9)`; then for each place in roster order: the name `rnd(1708)` (again while in use; none for the player's team's names from footplay.txt), the rating `below(13)` twice, the potential `below(100)`, the age `below(5)`, `below(5)`, `below(4)` (and `below(5)` for K and P). Then the original's `makes` draws for the player's schedule.
+2. A regular week (pog, H14): the original's draws in their order and number of tries; the shift changes the values compared in the redraw of team B's index, so the number of redraws may differ from Classic when strengths differ, never when they are 70.
+3. A play-off game without the player: `chance_first(p)` in place of `rnd(2)`, then the original's score draws.
+4. The news of a week (after pog): for each line chosen by the rules of 8.3, in their order: its pool line `rnd(size)` (again while one of the last three of that pool); a line with a `[one of:]` choice then draws it as the remarks do (CUSTOMIZABLE_CONTENT 14); news lines have no `[name]` (section 15).
+5. The to-do list: no draw (the candidates and the game plan are rules and data).
+6. The offseason, in stage order: stage 1 the NWT line; stage 2 for each active player aged 30 to 39 in league order `below(1000)`, then the NWR lines; stage 3 for each active player in league order `below(5)`, then the NWP lines; stage 4 the class: for each prospect `below(35)`, the name `rnd(1708)` (again while in use), `below(15)` twice, `below(100)`, `below(3)`, `below(7)`; the picks draw nothing; the NWD line; stage 5 the fill: for each empty place in team order and roster order: the name, `below(11)`, `below(100)`; stage 6 the original's `makes` draws.
+Each build session writes its draws again in its tests with the strict scripted source, and SX.8f checks that a whole 20-season run repeats exactly from its seed.
+
+## 13. Hooks and seams in the classic code (each a no-op or an identity in Classic; why each is needed)
+
+The franchise lives in the package `clone\src\nfl4\extras\franchise\` (`data.py`, `league.py`, `ratings.py`, `aging.py`, `draft.py`, `todo.py`, `news.py`, `history.py`, `store.py`, `mode.py`, `question.py`, `menus.py`). It reaches the classic code only through these seams; SX.8a (H15 and H14's `game_played`) and SX.8b (H14's `computer_index` and `playoff_first_wins`, the H7 extension with `opponent_names`, the GameRandom method) build them, each tested to leave Classic unchanged (the golden transcript, the trace of draw sizes and every existing season, program and app test).
+
+- H14 (new) Season hooks, `Game.season_hooks` (Classic: `CLASSIC_SEASON_HOOKS`), read by `SeasonEngine` and handed to `playoffs.computer_game`:
+  - `computer_index(team, index) -> index` in `_regular_week` after each team's score index is drawn (Classic: the index unchanged), with the redraw's test and scan on the returned values;
+  - `playoff_first_wins(rnd, visitor, home) -> bool` in place of `rnd(2) == 1` (Classic: exactly `rnd(2) == 1`);
+  - `game_played(stage, week, winner, loser, winner_score, loser_score)` once after every result the engine speaks or decides: the player's game of a regular week and the 15 computer games (`_regular_week`), the play-off games with and without the player (`_round_with_the_player`, `_computer_round`, which also serves the bye week and finplay17's rounds), finplay17's Super Bowl (`_fin_super_bowl`), the conceded Super Bowl (`_conceded_super_bowl`, a path of its own), and the player's Super Bowl game (`super_bowl_presentation`, called ONCE before its loop, whose F1 and F2 repeat the presentation and must not record the game again) (Classic: nothing).
+  Why: the franchise must shape the computer's results by strength (N6.3) and record every result for history, news and the draft order (N6.2, N6.5, N6.9); the engine draws and speaks them inside one method, so a wrapper cannot reach them without copying the engine.
+- H15 (new) The season frame, `Program.mode` (Classic: `ClassicSeason`, the code of today moved, not changed): `choose_at_start()` (which kind is in use and its stores, before `has_saved_game`), `season_setup()`, `new_season()` (the question of 3.2 is the franchise's; Classic with the N. F. L. rules asks it too, Classic with Rules = Classic never), `before_menu()` (called inside `main_menu` after today's game sentence and before " <coach> select ", on the menu's first pass of the loop only and never for a saved game, section 3.4: Classic nothing), `before_game()` (when choice 1 is taken, before `play_game`: the to-do deadline of 8.1, which may speak; Classic nothing), `game_arguments()` (the rules, own and opponent names, quarterback names and the sinks for `play_game`, values only: Classic the store's footplay.txt and the save sinks as today), `after_week()` (after pog and the standings: Classic nothing), `season_over()` (Classic: delete the season files, " the season is over ", the reset and the new season, as today; the franchise: the offseason of 3.3), the store's `delete_season_files` at `exit_program` (Classic: as today; the franchise store's does nothing, a franchise's gtp is 0 only inside its offseason, which is written stage by stage), `switch_if_needed()` at the top of the week loop (Classic with Rules = Classic: never switches), and `switch_pending()`, which the main menu asks after each key it receives (a hot-key menu may have asked for a switch): true ends the menu's wait and goes back to the week loop (Classic: always false, so the menu is the original's). Why: the offseason must sit between two seasons, the news and the to-do list between the week's announcement and the menu, and the franchise has its own files; these are the original's program flow, which no existing hook reaches (H1 to H13 are inside a game).
+- H7 extended (SX.8b): `adopt_roster` keeps the `ratings` and the `quarterback` of the Roster it adopts (Classic's rosters have none, and only getqbs reads `own_names.quarterback`: no change); `new_game_setup`, `Game.new_game_setup`, `Game.play_game` and `PlayEngine` (its constructor and `start`, `game\pag.py`) take `opponent_names` (None: the original's 33 draws for side 2, as today). The franchise also uses the existing `quarterback_names` seam of `play_game`, so Getqbs is not asked. Why: a franchise opponent is a team of the league with its own players and ratings; today side 2 is always drawn.
+- GameRandom gets `chance_first(per_mille)`: one number of the source, traced as a draw of size 2, true when the number x 1000 is under per_mille; at 500 it equals `rnd(2) == 1` for every number (test N3). Never called in Classic. Why: the play-off coin must lean by strength while a league of 70s keeps the original's draws, trace and results.
+- No hook in the play itself (pag's snap, resolve and apply): the ratings use H8 (`rules.modifiers`) and the state the engine already has (the carrier and the defenders are drawn before the rows are read). `pag.py`'s start changes only to pass `opponent_names` on (H7 above).
+- F9: the Franchise item in `game\functions.py` is F9's first item that is shown only sometimes (only with the N. F. L. rules): the item list is built each time F9 opens, so SX.8a changes how `functions.py` builds it and tests that with Rules = Classic the list is exactly today's (the Rules item itself is always shown). The Rules item's label in `extras\rules_menu.py` gets NXM-26.
+- Not a hook: the `FranchiseQuestion` class (3.7) uses `getkey`, the speakers and `saykey` as the original's prompts do and changes none of them.
+
+## 14. The new texts (rows for strings_nx.tsv; the build sessions add them and generate STRINGS_NX.md and nx_texts.py, D-017)
+
+Columns as the table has them: id, feature (franchise), kind, speaker, text (with its spaces), note. The rows follow the rules of `work\make_strings_nx.py`: the kinds it knows (sentence, prompt, answer, menu, remark, piece, help; a notice is a sentence), a menu item of at most six words (a line built from data, such as a player or a team in a list, is a sentence), at most 200 characters, a piece without outer spaces, IDs `NX<letter>-<nn>` or `NX<letter>-<letter><nn>`, remark IDs of a known pool. Every placeholder of a row is filled by its own value, so no placeholder appears twice in one row. SX.8a extends the checker: the new placeholders below go into its PLACEHOLDERS, the news pools into REMARK_POOLS (feature franchise) as SX.8e adds them, and it also checks the IDs this file names (as it does for NFL_EXTRAS_DESIGN.md). Each build session adds the rows of its sections. Rows already in the table: NXF-01, NXF-A01, NXF-A02 (SX.1); NXM-20, NXM-21 (on, off), NXM-23 (" the new rules apply from the next game. "), NXM-26 (" the franchise uses the N. F. L. rules. "), NXL-type words that exist are reused: NXB-10 "Back".
+
+New placeholders: <other>, <player>, <position>, <group>, <potential>, <their_offense>, <their_defense>, <our_offense>, <our_defense>, <k>, <r>, <d>, <a>, <w>, <l>, <p>, <s>, <lo>, <hi>, <score>, <finish>, <list>, <stage>, <round>, <pick>, <champion>, <runner_up>, <best>, <worst>, <best_w>, <best_l>, <worst_w>, <worst_l>. (<team>, <coach>, <n>, <m> exist.) A <score> is spoken " 24 to 17 ".
+
+The mode, the question and the menu (NXF)
+- NXF-A03 answer say2 " your franchise with the <team> " (the question, when a franchise exists)
+- NXF-A04 answer say2 " a new franchise "
+- NXF-02 prompt say2 " your franchise with the <team> will be kept as a copy. do you wish to start a new franchise? " (answer starting at " no ")
+- NXF-04 sentence say5 " your franchise waits until the rules are the N. F. L. rules again. "
+- NXF-05 sentence say2 " back to your franchise with the <team>. "
+- NXF-06 sentence say2 " your franchise waits. the classic season goes on. "
+- NXF-07 sentence say2 " your new league is ready. 32 teams and their players. "
+- NXF-08 sentence say2 " this is season <n> of your franchise. "
+- NXF-09 sentence say2 " your team's rating is <r>, number <k> of 32. "
+- NXF-10 menu say5 "Franchise" (F9 item)
+- NXF-11 menu say5 "to do list"; NXF-12 menu "news"; NXF-13 menu "your roster"; NXF-14 menu "league history"; NXF-15 menu "team ratings"; NXF-16 menu "franchise settings"; NXF-17 menu "play classic seasons"; NXF-18 menu "back to your franchise"; NXF-19 menu "start a franchise now"
+- NXF-20 menu say5 "staff handles the to do list" (followed by NXM-20 or NXM-21)
+- NXF-21 menu say5 "offseason: every stage"; NXF-24 menu "offseason: short"
+- NXF-22 menu say5 "draft picks told: first and yours"; NXF-25 menu "draft picks told: only yours"; NXF-26 menu "draft picks told: every pick"
+- NXF-23 sentence say5 " your franchise will wait. press enter to play classic seasons now, or escape to stay. "
+- NXF-27 sentence say5 " your classic season will wait. press enter to start a franchise now, or escape to stay. "
+- NXF-30 sentence say " the franchise file was damaged. the copy from before the last save is used, and a copy of the damaged file was kept. " (start-up notice)
+- NXF-31 sentence say " your franchise could not be read and was set aside. a classic season begins. "
+- NXF-32 sentence say " the franchise could not be saved, so this season's changes will not be kept. "
+- NXF-33 sentence say " the saved game belongs to another week of your franchise and was set aside. "
+- NXF-34 sentence say " this franchise was saved by a newer version of the game and cannot be played here. a classic season begins. "
+- NXF-35 sentence say " the franchise file is in use by another program. a classic season is played this time. "
+- NXF-36 sentence say " the franchise file was missing. the copy from before the last save is used. "
+- NXF-37 sentence say " your franchise could not be found. a classic season begins. "
+- NXF-40 menu say2 "more" (paging; the back item is the existing NXB-10 "Back")
+- NXF-42 sentence say2 " page <n> of <m>. "
+
+The to-do list (NXD)
+- NXD-01 sentence say2 " <coach> your to do list has <n> items. "; NXD-02 sentence say2 " <coach> your to do list has 1 item. "
+- NXD-03 sentence say2 " the staff took care of <n> items. "; NXD-04 sentence say2 " the staff took care of 1 item. "
+- NXD-05 sentence say2 " item <n>. "
+- NXD-06 sentence say2 " items still on your to do list: <n>. "
+- NXD-07 sentence say5 " nothing is waiting. "
+- NXD-10 prompt say2 " extra work this week for one young player. "
+- NXD-11 sentence say2 " <player> gets extra work this week. "
+- NXD-20 prompt say2 " the game plan against the <team>. they play <their_offense> on offense and <their_defense> on defense. the staff recommends <our_offense> and <our_defense>. "
+- NXD-21 answer say2 "use the staff's game plan"; NXD-22 answer say2 "keep your playbooks"
+- NXD-23 sentence say2 " the game plan is set for this game. "
+- NXD-30 sentence say2 " the items you left for later were not done. "
+- NXD-A01 answer say2 "later"; NXD-A02 answer say2 "<player>, <position>, rating <r>, <potential> potential"; NXD-A03 answer say2 "nobody this week"
+
+The news frame (NXN)
+- NXN-01 sentence say2 " this week's news. "; NXN-02 sentence say5 " no news this week. " (F9 news only); NXN-03 sentence say2 " the news of the offseason. "; NXN-04 menu say5 "earlier"
+
+The offseason (NXE)
+- NXE-01 sentence say2 " the season is over. the offseason begins. "
+- NXE-02 sentence say2 " stage <n> of <m>. <stage>. "
+- NXE-03 sentence say2 " press enter to go on. F1 says it again. "
+- NXE-11 piece piece "the season in review"; NXE-12 "retirements"; NXE-13 "player development"; NXE-14 "the draft"; NXE-15 "the roster cut"; NXE-16 "the new season"
+- NXE-20 sentence say2 " the <champion> won the Super Bowl of season <n>. "
+- NXE-21 sentence say2 " your team finished <w> and <l>, <finish>. "
+- NXE-22 piece piece "and missed the play offs"; NXE-23 "and lost in the wild card round"; NXE-24 "and lost in the division round"; NXE-25 "and lost in the conference championship"; NXE-26 "and lost the Super Bowl"; NXE-27 "and won the Super Bowl"
+- NXE-28 sentence say2 " the best record: the <best>, <best_w> and <best_l>. the worst: the <worst>, <worst_w> and <worst_l>. "
+- NXE-29 sentence say2 " as a head coach: seasons <n>, wins <w>, losses <l>. "
+- NXE-30 sentence say2 " from your team: "
+- NXE-31 sentence say2 " <player>, <position>, age <a>, rating <r>, retires. seasons played: <n>. "
+- NXE-32 sentence say2 " nobody from your team retires. "
+- NXE-33 sentence say2 " players retiring in the whole league: <n>. "
+- NXE-35 sentence say2 " <player> of the <team>, <position>, retires. seasons played: <n>. "
+- NXE-40 sentence say2 " your players: improved <n>, declined <m>, the same <k>. "
+- NXE-41 sentence say2 " most improved: <player>, <position>, up <d> to <r>. "
+- NXE-42 sentence say2 " the biggest drop: <player>, <position>, down <d> to <r>. "
+- NXE-43 sentence say2 " your whole roster is in the franchise menu on F9. "
+- NXE-50 sentence say2 " the roster cut. the staff would release: "
+- NXE-51 sentence say2 " <player>, <position>, age <a>, rating <r>. "
+- NXE-52 menu say2 "release them"; NXE-53 menu say2 "choose yourself"
+- NXE-54 prompt say2 " <position>: players <n>, places <m>. choose who is released. "
+- NXE-55 sentence say2 " <player> is released. "
+- NXE-56 sentence say2 " players released by the staff: <n>. "
+- NXE-57 sentence say2 " empty places filled with undrafted rookies: <n>. "
+- NXE-60 sentence say2 " season <n> begins. " (followed by NXF-09)
+- NXE-61 sentence say2 " the new schedule is made. "
+- NXE-71 sentence say2 " retiring: <n> in the league, <m> from your team. " (short mode)
+- NXE-72 sentence say2 " your players: improved <n>, declined <m>. " (short mode)
+
+The draft (NXK)
+- NXK-01 sentence say2 " the draft has 7 rounds. you have pick number <n> in every round. "
+- NXK-02 sentence say2 " round <n>. "
+- NXK-03 sentence say2 " pick <n>: the <team> take <player>, <position>. "
+- NXK-04 prompt say2 " <coach> it is your pick, round <round>, pick <pick>. your open places: <list>. "
+- NXK-05 sentence say2 " the staff's list. "
+- NXK-06 sentence say2 " <player>, <position>, about <lo> to <hi>, age <a>, <potential> potential " (a list line)
+- NXK-07 menu say2 "hear more prospects"; NXK-08 menu say2 "let the staff pick"; NXK-09 menu say2 "staff makes your other picks"
+- NXK-10 sentence say2 " you take <player>, <position>. "
+- NXK-11 sentence say2 " the draft is over. your rookies: "
+- NXK-12 sentence say2 " the staff took <player>, <position>. "
+- NXK-13 piece piece "none"
+- NXK-20 piece piece "high"; NXK-21 "average"; NXK-22 "low" (the potential words)
+
+Players and positions (NXL)
+- NXL-01 piece piece "running back"; NXL-02 "receiver"; NXL-03 "quarterback"; NXL-04 "defensive lineman"; NXL-05 "linebacker"; NXL-06 "cornerback"; NXL-07 "safety"; NXL-08 "returner"; NXL-09 "kicker"; NXL-10 "punter"
+- NXL-11 piece piece "running backs"; NXL-12 "receivers"; NXL-14 "defensive linemen"; NXL-15 "linebackers"; NXL-16 "cornerbacks"; NXL-17 "safeties"; NXL-18 "returners" (the groups of more than one place; the groups of one place use NXL-03, NXL-09 and NXL-10)
+- NXL-21 piece piece "<position> <n>" (an open place count in NXK-04's list)
+- NXL-30 sentence say5 " <group>: <n> " (a roster group in F9)
+- NXL-31 sentence say5 " <player>, <position>, rating <r>, age <a>, <potential> potential " (a player in a list)
+- NXL-40 sentence say5 " <k>. the <team>, <r>. " (a team in the ratings list)
+- NXL-41 sentence say5 " your team is number <k> of 32. "
+
+History (NXG)
+- NXG-01 menu say5 "champions by season"; NXG-02 menu "your record"; NXG-03 menu "season by season"; NXG-04 menu "league records"; NXG-05 menu "retired stars"
+- NXG-10 sentence say5 " season <n>: the <champion> over the <runner_up>. "
+- NXG-11 sentence say5 " seasons: <n>. wins: <w>. losses: <l>. play off seasons: <p>. Super Bowls won: <s>. "
+- NXG-12 sentence say5 " season <n>: you were <w> and <l>, <finish>. champion: the <champion>. the best record: the <best>. the worst: the <worst>. "
+- NXG-13 sentence say5 " most wins in a season: the <team>, <w>, season <n>. "
+- NXG-14 sentence say5 " most points in a game: the <team>, <p> against the <other>, season <n>. "
+- NXG-15 sentence say5 " the biggest win: the <team> over the <other>, <score>, season <n>. "
+- NXG-16 sentence say5 " the longest winning streak: the <team>, <k> games, season <n>. "
+- NXG-17 sentence say5 " <player>, <position>, the <team>. seasons played: <n>. best rating <r>. retired after season <s>. "
+- NXG-18 sentence say5 " nothing yet. "
+
+Help (H12, C6), added after the N. F. L. rules help, only while the franchise is in use (each under 200 characters)
+- NXH-34 help say5 " With a franchise. F9. the franchise menu: the to do list, the news, your roster, the league history and the team ratings. " (F5)
+- NXH-35 help say5 " A franchise is a league that lasts from season to season. Your players have ratings, grow older, improve and decline, and retire. " (F6)
+- NXH-37 help say5 " After the play offs comes the offseason with the draft and the roster cut. Before a game you hear the news and your to do list. Extra work you leave undone puts you behind the other teams. " (F6, after NXH-35)
+- NXH-36 help say5 " Rating: a player's skill from 40 to 99, where 70 is average. Potential: how fast a young player may still improve. " (F7)
+- NXH-38 help say5 " Draft: the yearly choice of new players; the weakest teams pick first. Rookie: a player in his first season. Released: let go from the team. " (F7, after NXH-36)
+
+The news pools (kind remark, speaker say2, feature franchise: the defaults of `customize\news.txt`, section 15; four lines each, so the "never one of the last three" rule always has a line to give)
+- NWB (the biggest win): NWB01 " the <team> beat the <other> by <n> points. "; NWB02 " a big win for the <team>, <score> over the <other>. "; NWB03 " the <team> ran over the <other>, <score>. "; NWB04 " the <other> had no answer for the <team>, <score>. "
+- NWU (an upset): NWU01 " an upset: the <team> beat the <other>, <score>. "; NWU02 " nobody expected it: the <team> over the <other>, <score>. "; NWU03 " the <other> stumbled against the <team>, <score>. "; NWU04 " a surprise result: the <team> got past the <other>, <score>. "
+- NWC (the closest game): NWC01 " the closest game of the week: the <team> over the <other>, <score>. "; NWC02 " the <team> just held off the <other>, <score>. "; NWC03 " a nail biter: the <team> beat the <other>, <score>. "; NWC04 " the <other> came up just short against the <team>, <score>. "
+- NWS (a winning streak): NWS01 " the <team> have won <n> in a row. "; NWS02 " nobody can stop the <team>: <n> wins in a row. "; NWS03 " the <team> keep rolling, <n> straight wins. "; NWS04 " <n> wins in a row for the <team>. "
+- NWL (a losing streak): NWL01 " the <team> have lost <n> in a row. "; NWL02 " a hard time for the <team>: <n> losses in a row. "; NWL03 " the <team> are looking for a win after <n> straight losses. "; NWL04 " <n> losses in a row for the <team>. "
+- NWY (your winning streak): NWY01 " <coach>, your team has won <n> in a row. "; NWY02 " <n> straight wins for coach <coach>. "; NWY03 " the fans are happy, coach <coach>: <n> wins in a row. "; NWY04 " your team is on a roll, <n> wins in a row. "
+- NWZ (your losing streak): NWZ01 " <coach>, your team has lost <n> in a row. "; NWZ02 " <n> straight losses for coach <coach>. "; NWZ03 " the fans want a win, coach <coach>: <n> losses in a row. "; NWZ04 " a hard stretch for your team, <n> losses in a row. "
+- NWM (the coach's milestone): NWM01 " <coach> won game number <n> as a head coach. "; NWM02 " win number <n> for coach <coach>. "; NWM03 " coach <coach> has <n> wins now. "; NWM04 " another milestone: <n> wins for coach <coach>. "
+- NWT (the champion, offseason): NWT01 " the <team> are the champions of season <n>. "; NWT02 " season <n> belongs to the <team>. "; NWT03 " the <team> won it all in season <n>. "; NWT04 " the title of season <n> goes to the <team>. "
+- NWR (a star retires, offseason): NWR01 " <player>, <position> of the <team>, retires. "; NWR02 " a great career ends: <player> of the <team> retires. "; NWR03 " the <team> lose <player>, who retires. "; NWR04 " <player> of the <team> says goodbye to football. "
+- NWD (the first pick, offseason): NWD01 " with the first pick the <team> took <player>, <position>. "; NWD02 " the first pick of the draft: <player>, <position>, to the <team>. "; NWD03 " the <team> opened the draft with <player>, <position>. "; NWD04 " <player>, <position>, went first, to the <team>. "
+- NWP (your big improver, offseason): NWP01 " <player> has worked hard and improved to <r>. "; NWP02 " a big step for <player>: rating <r>. "; NWP03 " <player> is better than ever, rating <r>. "; NWP04 " the extra work paid off for <player>: rating <r>. "
+(The pool letters: B biggest win, U upset, C closest, S win streak, L losing streak, Y your win streak, Z your losing streak, M milestone, T champion, R retired star, D first pick, P your improver.)
+
+## 15. Customization (CUSTOMIZABLE_CONTENT 13 L16, rule 0.12)
+
+- `customize\news.txt`, header `# NFL Football 4 news, format 1.`, the format and the healing of CUSTOMIZABLE_CONTENT 10 and 14 through `data\customlists.py` (one more entry of `data\customize.py` EXTRA_SPECS), read, made, checked and reset only while the Rules are the N. F. L. rules (with Classic it is never opened).
+- IDs: the pool letters and a number (NWB01, nwb1 and NWB1 are one ID, up to 9999); the defaults are the rows of section 14; `NWB02 = off` switches a line off; a new number adds a line; a line is banter markup (`[sound ...]`, `[pause]`, `[pause 2]`, `[then]`, `[faster]`, `[bleep]`, `[one of: a | b]` of CUSTOMIZABLE_CONTENT 14) plus the placeholders of section 14 (an unknown placeholder is spoken as written and counted as a problem, as in remarks.txt). `[name]` and `[opponent quarterback]` are NOT allowed in news lines: the news is told between games, where there is no game's list of banter names and no opponent quarterback (the remarks draw them from the game in progress); a news line with either is a bad line (its default is used, one problem counted).
+- The draw: one line of the pool that is on, never one of the last three spoken of that pool when more than three are on (the history in league.sav). A pool with every line off: that kind of news is never told. F8 does not silence the news (section 8.3).
+- Not customizable in the core: the rating rules, the draft values, the positions and the stage list (data; NX-R6 and P4: balance is not a player's file). Team names, division names and surnames come from the existing files, so a renamed team is renamed in the franchise's speech and history.txt too (the league stores T-IDs, never names; a player's name is stored as the text drawn).
+- The player's guide `clone\CUSTOMIZE.md` gets a news section (SX.8e); README (SX.9) one example.
+
+## 16. The sessions SX.8a to SX.8f, their done-whens and their tests
+
+All build sessions: Sonnet 5.5 at high (design 13). Each reads this file whole, NFL_EXTRAS_DESIGN 3 (the hooks), the files it builds on, and keeps the golden Classic transcript and every existing test passing in 64-bit and 32-bit with numpy blocked. Each ends with a fresh review as SX.2 to SX.7 did.
+
+### SX.8a: the league that lasts, the season loop and history (F0, F4)
+
+- Build: H15 (the program's season frame as a mode, Classic moved without change) and the kind in use with the store swap (3.1); the new-season question (3.2); the league record (4.1 to 4.3) and a new league (4.5); the franchise store (league.sav with its backup, the healing of 10.1, the franchise's football.sav of 10.2, the setup and season store protocols over league.sav); H14's `game_played` (the results) with Classic nothing; history (9.1, 9.2, 9.3: the menu and history.txt); the `FranchiseQuestion` class (3.7); `switch_pending` and `before_menu` inside `main_menu`, `before_game` (13); the F9 item list built per opening; the checker's new placeholders (14); a MINIMAL offseason (stage 1 the season in review, aging by one year, stage 6 the new season) that SX.8c and SX.8d extend; the F9 Franchise item with history, roster (names, positions and ages; the ratings are drawn but not spoken until SX.8b) and settings; the settings keys; the texts of this session's sections.
+- Done when: with Rules = Classic nothing changes (the golden transcript, every program, season and app test unchanged, F9's item list exactly today's, and a test that the franchise folder is never made); with the N. F. L. rules a classic season is today's season plus the question; a franchise started from F9 at the main menu is heard at once (B-X48); a franchise can be made, played through `programrig` (stand-in pag) for three whole seasons with history right after each, left and resumed (the classic season it left goes on), saved with Save Game and loaded; league.sav survives the 7.10 matrix (delete, empty, cut in half, random bytes, another encoding, huge, read-only, held by another program, newer format, a value out of range for its stage, a stale .tmp, a write cut at every step: the previous file is used) with the right notices, and a file written at every stage of the offseason loads (the stage-dependent checks of 10.1); history.txt is rewritten after it is deleted; the week's news and list are told once, also across a restart.
+- Tests: `tests\test_fr_league.py` (creation invariants: 32 x 34 places, IDs unique, names unique among the active, ratings 40 to 99, ages 21 to 32 and 36 for kickers and punters, the player's team made first with the names of footplay.txt or footplay.previous.txt), `test_fr_store.py` (round trip, the damage matrix, the crash points), `test_fr_mode.py` (the question with every answer and key, the switches of 3.1, Rules = Classic never asks, the store swap), `test_fr_history.py` (a hand-worked season's history, the menu's sentences, history.txt's text), a `frrig.py` rig. Glob before every new test file (B-T44).
+
+### SX.8b: ratings with a bounded effect (F1)
+
+- Build: `FranchiseModifiers` (5.1) on top of `PlaybookModifiers`; the strength and the exact sums (4.4); the league place z, H14's `computer_index` and `playoff_first_wins` and `GameRandom.chance_first` (5.2, 13); the H7 extension and `opponent_names` through `PlayEngine` (13); the ratings in the roster speech, the team ratings item, NXF-09 and NXE-60; the calibration C-F1 to C-F3 (5.4) with its scripts and reports (C-F1 over seasons 1 to 20 with simple stand-ins for aging, the draft and the cut until SX.8c and SX.8d exist; SX.8f runs it again with the real ones).
+- Done when: N1 to N4 pass; every row moved by ratings and playbooks together stays inside the bounds (a property test over every pair of slots, every row and every style); the calibration bands are met over 10,000 games or seasons with the reports in `work\`; a franchise game shows the players' names and ratings of both teams from the league and asks no quarterback name.
+- Tests: `test_fr_ratings.py` (the Mod by d, step's symmetry, the clamping with every playbook, the kickers, no Mod for a scramble), `test_fr_neutral.py` (N1 to N3, also with all 32 sums equal at a value other than 70), `test_fr_strength.py` (z with the floor, the shift's sign symmetry, the play-off chance at the edges 250 and 750, the redraw's scan on shifted values), the seeded whole games of `nflrig` with franchise rosters.
+
+### SX.8c: progression, regression and retirement (F2)
+
+- Build: stages 2 and 3 (6.1 to 6.3) with their speech and news lines; the development points' application (the weekly item that grants them comes in SX.8e; until then the points are only set by tests and by the calibration's stand-in, which gives every team its four points a season as 8.1 will).
+- Done when: the property tests of the rules pass (no retirement under 30, the chance rises with age and falls with rating, the window and the potential give the curve's shape, every rating stays 40 to 99) and a 20-season run of the whole loop with stand-ins for the draft, the cut and the fill (until SX.8d) and the four points a season keeps C-F4: the league's mean rating 68 to 72, its mean age 25 to 28 and every group's league mean 64 to 76 (I8b) every season (start values moved and recorded).
+- Tests: `test_fr_aging.py` (each rule on a strict script, the spoken stage on the rig), `work\calibrate_aging_sx8c.py` with its report.
+
+### SX.8d: the draft, the roster cut and the fill (F3; may take two sessions: 1 the class, the order, the computer's picks and the cut; 2 the player's picks, the told picks and the menus)
+
+- Build: section 7 whole: the class, the order, `best_for`, the player's pick flow with paging and the staff's choices, the setting of the picks told, the roster cut with the player's choice, the fill, the names; stages 4 and 5; league.sav after every pick and resuming a draft at its next pick.
+- Done when: the order is right on hand-worked standings (every group, the ties by the stored exact strength); the same seed gives the same draft whether the player takes the staff's first item through the menu, lets the staff pick, or lets the staff make the rest (I7), and whatever the picks-told setting; after the cut every place is filled and no group is over (I3), and no group's mean is under 50 (I5); a draft closed in the middle resumes at the next pick; the rookies' names never repeat an active name while free names exist; C-F4 again with the real draft, cut and fill; C-F6 (the draft matters: in the 20-season fast run the round-1 picks average at least 72 at age 25 and the round-7 picks at most 66, both counted over the picks still active at 25, with the share that was released reported beside them) and C-F5 (a career is the seasons played by every player who left, retired or released; their mean lies in 3 to 7, a plausibility check; the review's simulation gave 4.9).
+- Tests: `test_fr_draft.py`, `test_fr_cut.py`, the draft menu on the rig with every key.
+
+### SX.8e: the to-do list and the news (F5)
+
+- Build: section 8 whole (the frame, T1, T2 with `FR_GAME_PLAN` worked out by a script with the yardstick and frozen, the auto setting, the deadline rule, the news rules, the weekly speech of 3.4, the F9 items to-do list and news); `customize\news.txt` (section 15) with the healing; the help additions NXH-34 to NXH-38; `clone\CUSTOMIZE.md`'s news section.
+- Done when: C-F4 holds with the real extra-work item in the loop (every computer team using its four weeks); with the auto setting off nothing is ever decided for the player (an item left for later ends with its "do nothing" answer, a test for each kind); with it on every item takes the recommendation; the news of hand-worked weeks are the lines the rules give; news.txt passes the tests of CUSTOMIZABLE_CONTENT 13 (the defaults equal the rows, change, off, add, bad lines, the 7.10 matrix, never opened with Classic, a 60-case fuzz); a week of a franchise speaks in the order of 3.4, once per week.
+- Tests: `test_fr_todo.py`, `test_fr_news.py`, `test_fr_news_list.py`, `work\make_game_plan_sx8e.py` and its report.
+
+### SX.8f: the core's 20-season simulation (the NX6 done-when for the core)
+
+- Build: `work\simulate_franchise_sx8f.py`: (a) fast: 100 seeds x 20 seasons, the player's games decided like the computer's; (b) full: 5 seeds x 20 seasons, the player's games played by the real engine with both sides by the computer (`nflrig`), every offseason decision the staff's; a report per run.
+- The invariants (research G for the core, design 11.4), every one checked after every offseason of every run:
+  - I1 no player under 30 retires;
+  - I2 the retirement rate by age band rises with age and, in a band, falls with rating;
+  - I3 every place of every team is filled, no group over its count;
+  - I4 no rating outside 40 to 99, no age outside 21 to 40;
+  - I5 no position group's mean rating under `FR_GROUP_FLOOR` = 50 (research G: no team without depth);
+  - I6 neutral ratings reproduce Classic (N1 to N4 rerun);
+  - I7 computer picks in one code path (the same seed, the draft made through the menu and through the staff gives the same league);
+  - I8 no drift: the league's mean rating 68 to 72 and mean age 25 to 28 every season; the standard deviation of the 32 strengths 1.0 to 6.0 every season (the rosters even out, section 5.2; the computer's results keep their spread through the league place z, which C-F1 checks every season);
+  - I8b every position group's league mean 64 to 76 every season (the single-place groups drift up by the cut's selection: the review measured quarterbacks at 77 to 81 at the start values);
+  - I9 the loop: 20 seasons each with one champion, the history has 20 seasons, the coach's wins and losses equal the games played;
+  - I10 league.sav after every stage loads equal to the league in memory, and a write cut at any step leaves a usable file;
+  - I11 no team starved: every strength 60 to 80 every season, and no team in the bottom three of the exact strengths more than 5 seasons in a row (the review measured 8 to 11 at the start values, so SX.8f must move the knobs);
+  - I12 a run repeats exactly from its seed;
+  - C-F1 (5.4) in every season of every run.
+- The knobs SX.8f may move, each with a recorded run (B-P56: a rule that gets a concrete case right is not moved to meet an aggregate): for I8 and I8b `FR_GROWTH`, `FR_DECLINE`, `FR_ROOKIE_RATING`, `FR_EXTRA_WORK_WEEKS`, `FR_DRAFT_WEAK`, `FR_KEEP_YOUTH`; for I11 the rookie ratings' spread (`FR_ROOKIE_RATING`: a wider top makes an early pick count more), `FR_DRAFT_VALUE` and `FR_TEAM_LEVEL`; for C-F1 `FR_SHIFT_PER_SD`, `FR_SHIFT_MAX` and `FR_SPREAD_FLOOR`. If a band cannot be reached with them, SX.8f records why and what the owner's playtest should listen for, and the band is changed only by a decision.
+  (The cap, contract length, best offer, firing and cap-drift invariants of research G belong to SX.8g to SX.8l, section 17.)
+- Done when: every invariant holds in every run; the start values that moved are recorded with their history; the golden Classic transcript passes; the NX6 core done-when of NFL_EXTRA_FEATURES section 11 ("rosters full, ratings in range, no team starved, neutral ratings reproduce Classic, the Classic golden test passes"; the cap belongs to F6) is met for the core.
+
+### The release gate (unchanged, NX-R3, D-041)
+
+P9 starts when SX.2 to SX.7, SX.8 to SX.8f and SX.9 pass. SX.9 adds the franchise to the integration: the switch combinations with a franchise in use, the stress tests of 8.3 on league.sav, the owner's playtest list (the length of an offseason, the draft's speech, the news's tone, the to-do list's usefulness: what only ears can judge), README and About.
+
+## 17. After the release (SX.8g on): where each update plugs in
+
+- F6 contracts, the cap, re-signing and free agency (SX.8g to SX.8i): a player gets a salary and the years left (league.sav format 2 with a migration: every player of a format-1 league gets a contract by rating and age from the rookie scale); stages inserted after stage 2: " expiring contracts " (the re-sign list, the short negotiation of research B3) and after it " free agency " (research B4's rounds); the cap number as data scaled to 34 places (research F2: SX.8g decides between the real 301.2 million with a fixed charge for the unnamed rest and a scaled cap); to-do kinds for contract talks; the research G tests for the cap (every team under the cap after every offseason, no cap drift, the best offer wins, contract length by age, the dead-money sum by year).
+- F7 trades (SX.8j): a to-do kind for offers waiting and an F9 Franchise item " trades "; the value rule of research B5; the trade deadline in week 10 of 16 (scaled from the NFL's date, decided then).
+- F8 injuries (SX.8k): a weekly injury report in the news; injured players are skipped in the place draws (this needs a hook in `snap_draws`, which is why it waits: the core has none); to-do kinds for the injured.
+- F9 coordinators, the job rating and the owner's goal (SX.8l): a stage " the staff " after stage 1; a coordinator's style chooses the computer team's playbook and the player's game plan (T2 then reads it); the approval number and the goal's verdict at stage 1; never fired after a winning season, offers only from other teams (research G); the full 20-season test of research G.
+- The LATER items of 1.2 each name their seam: the weighted carrier and the returners' rating need a hook in `snap_draws` and an H8 call for the kick-off return; renaming a player uses the original's typed prompt from the roster item; awards need per-player statistics of the computer's games, which the original's score table does not give.
+
+## 18. Accepted defaults the owner may change (none asked: rule 0.8)
+
+- The franchise is offered only at a new season with the N. F. L. rules; the classic season is the first answer.
+- A franchise keeps the original's 34 places and 16-week season with random pairings for the other teams (no 53-man roster, no 17-game schedule: research B12).
+- The draft has seven rounds and every team keeps 34 players, so about seven players a team leave each year (retired or released) and careers average about five seasons.
+- The player's team starts from footplay.txt's names when that file is complete, with ratings drawn like everyone's (no guaranteed average start).
+- F8 does not silence the news; the to-do list is asked by default (the staff's setting is off); the offseason speaks every stage by default.
+- The game plan item appears only when the player uses playbooks.
+SX.9's playtest list names each; each is a data or setting change.
+
+## 19. Spoken time budget (research H, checked against this design)
+
+- A week in the season: the news, two to four lines (about 15 seconds), the to-do list, one or two short questions (about 20 seconds): under one minute, as research H asks.
+- An offseason of the core with every stage: the review 1 minute, retirements half a minute, development half a minute, the draft 3 to 4 minutes (seven picks of about 25 seconds with the staff's list, plus the picks told), the cut half a minute to a minute: about 6 to 7 minutes. Short mode: about 3 minutes. With the staff making the picks and the cut: under 2 minutes. (Research H's 10 to 14 minutes includes contracts and free agency, which come after the release.)
+
+## 20. History
+
+- 1.0 (2026-10-15, PX SX.8): written from NFL_EXTRA_FEATURES 0.2 (NX6), NFL_EXTRAS_DESIGN 1.0 section 11 and the research of SX.0, after reading the season engine, the program, the set-up, the play-off code, the files and the extras that it stands on; decisions D-055; reviewed by a fresh Opus 5.5 reviewer against the requirements, the research's invariants and the code's seams, with its own league simulation and a probe of the ratings in played games (`work\review_sx8_findings.md`: 5 MAJOR, 24 MINOR, 9 NOTE, all taken in before the commit; the main changes: the league file's checks depend on the stage, a new question class on the original's key waits for the flow (the F9 menu classes run no hot key), the extra-work item in four weeks a season with the drift measured by every later session, the computer's results shaped by the team's place in its league instead of its distance to 70, a higher fill for the small groups, the texts made to pass the table's checker).
