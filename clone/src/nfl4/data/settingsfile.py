@@ -69,6 +69,11 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # nx_defense_playbook the same for your defense
 # nx_onside_question  sensible = you are asked about an onside kick only when it makes sense (default), always = at every
 #                     kick off
+# nx_season_kind      classic = a classic season (default), franchise = your franchise, a league that lasts from season to
+#                     season (F9, Franchise; used only with the N. F. L. rules)
+# nx_fr_auto          on or off: the staff handles your to do list and the roster cut of the franchise (default off)
+# nx_fr_offseason     full = every stage of the offseason is told (default), short = a sentence for each stage
+# nx_fr_picks_told    first = the first picks and yours (default), mine = only yours, all = every pick of the draft
 #
 """
 
@@ -108,6 +113,10 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_onside_question = {game.nx_onside_question}",
         f"nx_offense_playbook = {game.nx_offense_playbook}",
         f"nx_defense_playbook = {game.nx_defense_playbook}",
+        f"nx_season_kind = {game.nx_season_kind}",
+        f"nx_fr_auto = {'on' if game.nx_fr_auto else 'off'}",
+        f"nx_fr_offseason = {game.nx_fr_offseason}",
+        f"nx_fr_picks_told = {game.nx_fr_picks_told}",
     ]
     return "\n".join(lines) + "\n"
 
@@ -236,6 +245,23 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if choice not in PLAYBOOK_CHOICES:
             raise ValueError(f"'{value[:20]}' is not one of {', '.join(PLAYBOOK_CHOICES)}")
         setattr(game, name, choice)
+    elif name == "nx_season_kind":
+        if value.lower() not in ("classic", "franchise"):
+            raise ValueError(f"'{value[:20]}' is not classic or franchise")
+        game.nx_season_kind = value.lower()
+    elif name == "nx_fr_auto":
+        word = _ON_WORDS.get(value.lower())
+        if word is None:
+            raise ValueError(f"'{value[:20]}' is not on or off")
+        game.nx_fr_auto = word
+    elif name == "nx_fr_offseason":
+        if value.lower() not in ("full", "short"):
+            raise ValueError(f"'{value[:20]}' is not full or short")
+        game.nx_fr_offseason = value.lower()
+    elif name == "nx_fr_picks_told":
+        if value.lower() not in ("first", "mine", "all"):
+            raise ValueError(f"'{value[:20]}' is not first, mine or all")
+        game.nx_fr_picks_told = value.lower()
     else:
         raise KeyError(name)
 

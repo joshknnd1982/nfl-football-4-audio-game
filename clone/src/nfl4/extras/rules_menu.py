@@ -104,10 +104,16 @@ def rules_menu(game, speech, keys) -> None:
         apply()
 
     def changed(label) -> str:
-        return label() + X.text("NXM-23")
+        text = label() + X.text("NXM-23")
+        if getattr(game, "franchise_in_use", False) and settings.rules != NFL:     # design 3.1: the franchise waits for the N. F. L. rules
+            text += X.text("NXF-04")
+        return text
 
     def rules_item() -> str:
-        return rules_label(settings)
+        text = rules_label(settings)
+        if getattr(game, "franchise_in_use", False) and settings.rules == NFL:    # design 11: said after the value
+            text += "." + X.text("NXM-26")
+        return text
 
     def timeouts_item() -> str:
         return switch_label(settings, "NXM-10", settings.nx_timeouts)

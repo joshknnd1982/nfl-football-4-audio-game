@@ -89,6 +89,9 @@ class ExtrasRecord:
     # per side (side 1 first): the style each side's offense and defense play (a loaded game keeps the books it was saved with)
     offense_book: list = field(default_factory=lambda: ["classic", "classic"])
     defense_book: list = field(default_factory=lambda: ["classic", "classic"])
+    # the Franchise (SX.8a, design 10.2): the league, season and week a franchise game was saved in; None (and left out of the
+    # saved text) in every other game, so a record without it loads as before
+    franchise: dict | None = None
 
     # ----- per side -----
 
@@ -136,7 +139,10 @@ class ExtrasRecord:
         return False
 
     def to_json(self) -> str:
-        return json.dumps(asdict(self), sort_keys=True, separators=(",", ":"))
+        data = asdict(self)
+        if data["franchise"] is None:
+            del data["franchise"]
+        return json.dumps(data, sort_keys=True, separators=(",", ":"))
 
     @classmethod
     def from_json(cls, text: str) -> "ExtrasRecord":
@@ -209,6 +215,12 @@ class ExtrasRecord:
             if (not isinstance(books, list) or len(books) != 2
                     or any(not isinstance(b, str) or b not in D.BOOK_KEYS for b in books)):
                 raise ValueError("%s is %r" % (name, books))
+        if self.franchise is not None:
+            if (not isinstance(self.franchise, dict) or set(self.franchise) != {"league", "season", "week"}
+                    or not isinstance(self.franchise["league"], str) or len(self.franchise["league"]) > 40):
+                raise ValueError("the franchise mark is %r" % (self.franchise,))
+            whole(self.franchise["season"], 1, 9999, "the franchise season")
+            whole(self.franchise["week"], 0, 20, "the franchise week")
         pair(self.flags, lambda v, w: whole(v, 0, 9999, w), "the penalties")
         pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
         if self.foul_clock not in FOUL_CLOCKS:

@@ -1,0 +1,102 @@
+"""The program's season frame as one mode object: H15 (nfl4 only, rule 0.13; NFL_FRANCHISE_DESIGN 13). This is inspired by Jim Kitchen.
+
+`Program.mode` answers the moments of the program's flow where a Franchise must differ from the original: the start (which
+kind of season is in use), the season set-up and a new season, the moment before the main menu and before a game, what
+follows a week, the end of a season, and the switch between a classic season and a franchise. `ClassicSeason` is the code
+the Program had before, moved here and not changed: with Rules = Classic nothing in this module reaches the Franchise, no
+folder is opened and no word is added (P1). With the N. F. L. rules a classic season is the same season plus the question of
+design 3.2 at a new season. The franchise's mode (`extras\\franchise\\mode.py` `FranchiseSeason`) takes the Program's place
+through `switch`, and gives the same methods.
+
+* `choose_at_start()`: which kind is in use, before the saved game is asked about;
+* `season_setup()`, `new_season(coach, ask)`: a loaded season, else a new one (the question first, with the N. F. L. rules);
+* `before_menu()`: inside the main menu, after today's game and before " <coach> select " (Classic: nothing);
+* `before_game()`: when "play game" is chosen (Classic: nothing); `after_week()`: after pog and the standings (nothing);
+* `season_over()`: gtp is 0; `switch_pending()`: a menu asked for a switch (the main menu goes back to the week loop at
+  once, B-X48), `switch_if_needed()`: at the top of the week loop.
+"""
+from __future__ import annotations
+
+from . import program_texts as P
+from .season_engine import NULL_STORE
+
+
+class SeasonMode:
+    kind = ""
+
+    def __init__(self, program):
+        self.p = program
+
+    def switch_pending(self) -> bool:
+        """True when a menu asked for another kind of season: the main menu then ends its wait (B-X48). Always false while
+        nothing can ask (Rules = Classic), so the menu is the original's."""
+        return self.p.switch_requested
+
+    def switch_if_needed(self) -> None:
+        if not self.p.switch_requested:
+            return
+        from ..extras.franchise import mode as franchise_mode
+        franchise_mode.switch(self.p)
+
+    def before_menu(self) -> None:
+        return None
+
+    def before_game(self) -> None:
+        return None
+
+    def after_week(self) -> None:
+        return None
+
+
+class ClassicSeason(SeasonMode):
+    kind = "classic"
+
+    # ----- the start -----
+
+    def choose_at_start(self) -> None:
+        """With the N. F. L. rules and a franchise as the kind of season, the franchise comes into use (design 3.1). With
+        Rules = Classic nothing happens and nothing is opened (P1)."""
+        if not self._nfl():
+            return
+        from ..extras.franchise import mode as franchise_mode
+        franchise_mode.choose_at_start(self.p)
+
+    def _nfl(self) -> bool:
+        from ..extras.nfl_rules import is_nfl
+        return is_nfl(self.p.g.rules)
+
+    # ----- the season set-up (0x487e25 to 0x4882de) -----
+
+    def season_setup(self) -> None:
+        p = self.p
+        if not p.store.load_season(p.season):                   # 0x488018 to 0x4882f1: footbal1.dat, else a new season
+            p.new_season()
+
+    def new_season(self, coach: str | None = None, ask: bool = True) -> None:
+        """A new season: the coach, the team, the schedule, week 1 (GetCoach 0x488234, ChooseTeam 0x48825d, makes 0x488278,
+        gtp = 1 and football.gtp 0x4882b2 to 0x4882de). With the N. F. L. rules the question of design 3.2 comes first."""
+        p = self.p
+        g = p.g
+        if ask and self._nfl():
+            from ..extras.franchise import mode as franchise_mode
+            if franchise_mode.ask_kind(p, coach):               # the player chose a franchise: its set-up is done
+                return
+        g.get_coach()
+        g.choose_team()
+        g.make_schedule()
+        p.season.gtp = 1
+        (g.season_store or NULL_STORE).write_gtp(1)
+
+    # ----- the end of a season -----
+
+    def season_over(self) -> None:
+        """gtp is 0: the season files go (the original's exit deletes them, 0x48a09d to 0x48a511; footplay.txt is first kept
+        as footplay.previous.txt by the store, G-F4), the clone says so and runs the set-up of a new season (G-F3)."""
+        p = self.p
+        g = p.g
+        coach = p.season.coach
+        p.store.delete_season_files()
+        g.say(P.SEASON_OVER)
+        p.season.reset_for_new_season()
+        g.season_engine.player_won = False
+        p.new_season(coach)

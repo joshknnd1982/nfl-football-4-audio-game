@@ -325,6 +325,30 @@ class FileProgramStore:
         self._notice(NAMES_REPAIRED)
         return parsed.roster
 
+    def current_player_names(self) -> Roster | None:
+        """footplay.txt as a roster when it is whole, else None; it only reads (no notice, no copy, nothing written): the
+        Franchise (nfl4 only, SX.8a) names a new league's first team with it and never writes the file (design 3.6)."""
+        path = self.names_path
+        if not os.path.exists(path):
+            return None
+        try:
+            parsed = playernames.parse(read_player_text(path))
+        except (OSError, ValueError):
+            return None
+        return parsed.roster if parsed.sound else None
+
+    def previous_player_names(self) -> Roster | None:
+        """footplay.previous.txt (kept when a classic season ends) as a roster when it is whole, else None. It reads only: no
+        notice, no copy, nothing written. The Franchise (nfl4 only, SX.8a) uses it to name a new league's first team."""
+        path = self.previous_names_path
+        if not os.path.exists(path):
+            return None
+        try:
+            parsed = playernames.parse(read_player_text(path))
+        except (OSError, ValueError):
+            return None
+        return parsed.roster if parsed.sound else None
+
     def write_player_names(self, roster: Roster) -> bool:
         """The original's write of footplay.txt after pag drew the names (0x455908 to 0x456f0b)."""
         return self._write_text(self.names_path, lambda: playernames.format_roster(roster))

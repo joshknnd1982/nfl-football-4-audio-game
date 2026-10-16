@@ -35,6 +35,7 @@ from .prompts import Prompts
 from .rnd import GameRandom
 from .rules import CLASSIC
 from .season import SeasonState
+from .season_engine import CLASSIC_SEASON_HOOKS
 from .setup import GameSetup, Roster, new_game_setup
 from .speakers import Speakers
 from .standings import standings_speech
@@ -81,6 +82,13 @@ class Game(Speakers):
         self.m414: tuple[int, int] | None = None      # the last game's result for the season engine (S7.3c)
         self.season_store = None                      # S7.5: writes football.gtp, footbal3.dat, footbal4.dat, footbal5.dat
         self.setup_store = None                       # S7.5: writes footbal1.dat, footbal2.dat and the quarterback line
+        # nfl4 only (rule 0.13, SX.8a): H14's hooks (Classic: nothing), the franchise's store (made when first needed, only with
+        # the N. F. L. rules; `franchise_factory(classic_store)` makes it, None = in memory for the tests) and the classic
+        # season parked while the franchise is in use
+        self.season_hooks = CLASSIC_SEASON_HOOKS
+        self.franchise_factory: Callable | None = None
+        self._franchise_store = None
+        self.parked_classic: SeasonState | None = None
         self._season_engine = None
         self.play_engine = None                       # the running pag, so F12's GetSexOf reaches its He and She words
         self.prompts = Prompts(self)                  # getter, GetCoach, ChooseTeam, Getqbs, SayScedual (S7.4a)
@@ -146,6 +154,27 @@ class Game(Speakers):
             except Exception:
                 log.exception("the extras' customization files could not be loaded")
             self.apply_customization()
+        if self.program is not None:                  # SX.8a: the kind of season follows the Rules (design 3.1)
+            self.program.rules_changed()
+
+    def franchise(self):
+        """The franchise's store (nfl4 only, SX.8a): made when first needed, never with Rules = Classic. It opens the folder
+        itself (`open`), so asking for it touches no file."""
+        if self._franchise_store is None:
+            from ..extras.franchise.files import MemoryFiles
+            from ..extras.franchise.store import FranchiseStore
+            if self.franchise_factory is not None:
+                store = self.franchise_factory(self.program_store)
+            else:
+                store = FranchiseStore(MemoryFiles(), self.program_store)
+            self._franchise_store = store
+            self.notice_sources = self.notice_sources + (store,)
+        return self._franchise_store
+
+    @property
+    def franchise_in_use(self) -> bool:
+        """True while the franchise is the kind of season being played (nfl4 only, SX.8a)."""
+        return self.program is not None and self.program.mode.kind == "franchise"
 
     # ----- the season frame: the original's procedures -----
 

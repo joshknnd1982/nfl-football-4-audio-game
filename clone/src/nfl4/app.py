@@ -108,6 +108,12 @@ def main() -> int:
         log.exception("the customization files could not be loaded")
         custom = None
 
+    def franchise_factory(classic_store):
+        from .extras.franchise import data as franchise_data
+        from .extras.franchise.files import DiskFiles
+        from .extras.franchise.store import FranchiseStore
+        return FranchiseStore(DiskFiles(os.path.join(paths.user_data_dir(), franchise_data.FOLDER)), classic_store)
+
     def game_thread():
         try:
             sources = tuple(source for source in (store, audio, files, custom) if source is not None)
@@ -116,6 +122,7 @@ def main() -> int:
                         customization=custom, rules=rules)
             game.season_store = game.setup_store = files        # the files the season engine and the prompts write
             game.log_sink = files.log_line                      # footballlog.txt (Print #3, G-S10)
+            game.franchise_factory = franchise_factory          # the Franchise's folder (nfl4 only, SX.8a): opened only with the N. F. L. rules
             game.run()
         except GameQuit:
             pass

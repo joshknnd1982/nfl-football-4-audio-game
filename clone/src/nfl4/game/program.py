@@ -24,7 +24,7 @@ from . import program_texts as P
 from . import prompt_texts as T
 from . import texts
 from .keys import GameQuit
-from .season_engine import NULL_STORE
+from .season_mode import ClassicSeason
 from .vbnum import str_, trim
 
 log = logging.getLogger("nfl4.game")
@@ -47,6 +47,10 @@ class Program:
         self.week_text = ""             # L118: the play-off week's text the menu speaks again (regular weeks: nothing)
         self.today_text = ""            # L11c: "Today's game is ..."
         self.ending = ""                # why the program ends: "exit" (menu choice 4) or "saved" (Save Game)
+        # H15 (nfl4 only, rule 0.13): the season frame as one mode object; ClassicSeason is the original's code moved
+        self.mode = ClassicSeason(self)
+        self.switch_requested = False   # a menu asked for another kind of season (F9, a change of the Rules): the week loop acts
+        self.switch_target = None       # the kind it asked for when the settings do not say yet (a franchise to be made)
 
     # ----- helpers -----
 
@@ -91,6 +95,7 @@ class Program:
 
     def startup(self) -> None:
         g, keys, sounds = self.g, self.keys, self.sounds
+        self.mode.choose_at_start()                             # H15: which kind of season is in use (Classic: nothing)
         self.saved_game = self.store.has_saved_game()           # 0x4874e2 to 0x48756e: football.sav, SavedGame = 1
         g.ptf = 0                                               # 0x4872bc
         g.qorp = 1                                              # 0x4873dd
@@ -123,26 +128,35 @@ class Program:
     # ----- the season set-up (0x487e25 to 0x4882de) -----
 
     def season_setup(self) -> None:
-        if not self.store.load_season(self.season):             # 0x488018 to 0x4882f1: footbal1.dat, else a new season
-            self.new_season()
+        self.mode.season_setup()                                # 0x488018 to 0x4882f1: footbal1.dat, else a new season
 
-    def new_season(self) -> None:
+    def new_season(self, coach: str | None = None, ask: bool = True) -> None:
         """A new season: the coach, the team, the schedule, week 1 (GetCoach 0x488234, ChooseTeam 0x48825d, makes 0x488278,
-        gtp = 1 and football.gtp 0x4882b2 to 0x4882de)."""
-        g = self.g
-        g.get_coach()
-        g.choose_team()
-        g.make_schedule()
-        self.season.gtp = 1
-        (g.season_store or NULL_STORE).write_gtp(1)
+        gtp = 1 and football.gtp 0x4882b2 to 0x4882de); the code is `ClassicSeason.new_season` (H15). `coach` and `ask` are
+        the N. F. L. rules' question of NFL_FRANCHISE_DESIGN 3.2 (ignored with Rules = Classic)."""
+        self.mode.new_season(coach, ask)
+
+    def request_switch(self, target: str | None = None) -> None:
+        """A menu (F9, the Rules) asked for another kind of season: the main menu ends its wait and the week loop switches."""
+        self.switch_requested = True
+        self.switch_target = target
+
+    def rules_changed(self) -> None:
+        """The Rules setting changed: if it makes the other kind of season the one in use, ask for the switch."""
+        from ..extras.franchise import mode as franchise_mode
+        if franchise_mode.desired_kind(self) != self.mode.kind and not franchise_mode.franchise_unusable(self.g):
+            self.switch_requested = True
 
     # ----- the week loop (label L_4882f7) -----
 
     def week_loop(self) -> None:
         """Runs until the program ends (menu choice 4, or Save Game: `ending` says which)."""
         while True:
+            self.mode.switch_if_needed()                        # H15: a kind of season asked for in a menu (Classic: never)
             self.week_announcement()
             choice = self.main_menu()
+            if choice == 0:                                     # H15: the menu ended its wait for a switch (B-X48)
+                continue
             if choice == 4:                                     # 0x489d96 If L34 = 4 Then GoTo L_48a054
                 self.ending = "exit"
                 return
@@ -240,10 +254,13 @@ class Program:
                 g.say2(self.today_text)                         # 0x4898b8
                 if self.saved_game:                             # 0x4898fb
                     return 1
+                self.mode.before_menu()                         # H15: the franchise's news and to-do list (Classic: nothing)
                 g.say2(" " + season.coach + P.SELECT)           # 0x489935, 0x489951
                 while True:                                     # L_489969
                     g.say2(P.CHOICES[choice])                   # 0x4899c0, 0x489a1b, 0x489a76, 0x489aca
                     keys.getkey(g.speech)                       # 0x489af1
+                    if self.mode.switch_pending():              # H15, B-X48: a menu asked for another kind of season
+                        return 0
                     code = keys.code_text
                     if code == KEY_ENTER:                       # 0x489b1a
                         return choice
@@ -269,6 +286,7 @@ class Program:
         """pag, then the season engine and the standings; returns True when the program ends (Save Game). The original
         leaves for its exit after any game; the clone goes back to the week loop (D-024 item 1)."""
         g, season, store = self.g, self.season, self.store
+        self.mode.before_game()                                 # H15: the to-do list's deadline (Classic: nothing)
         saved = store.take_saved_game() if self.saved_game else None   # pag reads football.sav and deletes it (0x43afa4)
         self.saved_game = False                                 # SavedGame = 0 when the game is loaded (0x43bb41)
         own_names = store.player_names()                        # footplay.txt read (pag 0x4544e1), repaired when it has a problem
@@ -294,6 +312,7 @@ class Program:
             g.pog()                                             # 0x489e88
             g.ptf = 0                                           # 0x489ec0
             self.after_game_standings()
+            self.mode.after_week()                              # H15: the franchise's news (Classic: nothing)
         if season.gtp == 0:
             self.season_over()
         return False
@@ -315,14 +334,9 @@ class Program:
                 return
 
     def season_over(self) -> None:
-        """gtp is 0: the season files go (the original's exit deletes them, 0x48a09d to 0x48a511; footplay.txt is first kept
-        as footplay.previous.txt by the store, G-F4), the clone says so and runs the set-up of a new season (G-F3)."""
-        g = self.g
-        self.store.delete_season_files()
-        g.say(P.SEASON_OVER)
-        self.season.reset_for_new_season()
-        g.season_engine.player_won = False
-        self.new_season()
+        """gtp is 0: the season files go, the clone says so and runs the set-up of a new season (G-F3); the code is
+        `ClassicSeason.season_over` (H15); a franchise runs its offseason instead."""
+        self.mode.season_over()
 
     # ----- the exit (0x48a054 to 0x48aad2) -----
 

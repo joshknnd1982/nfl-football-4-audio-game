@@ -38,6 +38,11 @@ class GameSettings:
     nx_challenges: bool = True   # the ruling model, booth reviews and replay challenges of the N. F. L. rules mode (SX.6)
     nx_offense_playbook: str = "classic"   # the player's offense playbook (SX.7): classic, team (the team's style) or a style key
     nx_defense_playbook: str = "classic"   # and the defense playbook
+    # the Franchise (SX.8a, NFL_FRANCHISE_DESIGN 10.5): nfl4 only; the Rules menu's reset leaves them alone
+    nx_season_kind: str = "classic"        # "classic" or "franchise": which kind of season the player is in
+    nx_fr_auto: bool = False               # the staff handles the to-do list and the roster cut (SX.8e)
+    nx_fr_offseason: str = "full"          # "full" or "short": every stage of the offseason, or a sentence per stage
+    nx_fr_picks_told: str = "first"        # "first", "mine" or "all": which picks of the draft are told (SX.8d)
 
 
 @dataclass

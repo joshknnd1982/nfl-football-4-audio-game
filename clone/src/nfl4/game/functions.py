@@ -84,8 +84,10 @@ class Functions:
             items = [Item(lambda: words.SPEECH_ITEM, enter=self._enter(self.speech_menu)),
                      Item(lambda: words.SOUNDS_ITEM, enter=self._enter(self.sounds_menu)),
                      Item(lambda: words.CUSTOMIZE_ITEM, enter=self._enter(self.customize_menu)),
-                     Item(self.rules_item, enter=self._enter(self.rules_menu)),
-                     Item(lambda: words.ABOUT_ITEM, enter=self._enter(self.about))]
+                     Item(self.rules_item, enter=self._enter(self.rules_menu))]
+            if self.franchise_shown():                         # nfl4 only (SX.8a): built per opening, only with the N. F. L. rules
+                items.append(Item(self.franchise_label, enter=self._enter(self.franchise_menu)))
+            items.append(Item(lambda: words.ABOUT_ITEM, enter=self._enter(self.about)))
             SpokenMenu(self.speech, self.keys, words.F9_TITLE, items, help_text=words.F9_HELP).run()
         except GameQuit:
             raise
@@ -120,6 +122,22 @@ class Functions:
         """Classic or the N. F. L. rules and their switches (nfl4 only, rule 0.13; NFL_EXTRAS_DESIGN 12.2, SX.2)."""
         from ..extras.rules_menu import rules_menu
         rules_menu(self.g, self.speech, self.keys)
+
+    def franchise_shown(self) -> bool:
+        """The Franchise item is F9's first item that is shown only sometimes: with the N. F. L. rules (SX.8a, design 13)."""
+        from ..extras.franchise.menus import franchise_item_shown
+        from ..extras.nfl_rules import is_nfl
+        return is_nfl(self.g.rules) and franchise_item_shown(self.g)
+
+    @staticmethod
+    def franchise_label() -> str:
+        from ..extras import nx_texts
+        return nx_texts.text("NXF-10")
+
+    def franchise_menu(self) -> None:
+        """Your roster, the league history, the franchise settings and the way between the kinds of season (nfl4 only)."""
+        from ..extras.franchise.menus import franchise_menu
+        franchise_menu(self.g, self.speech, self.keys)
 
     # ----- speech settings -----
 

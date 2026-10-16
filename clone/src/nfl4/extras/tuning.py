@@ -229,3 +229,10 @@ TARGET_COACH_CHALLENGES_PER_TEAM_GAME = (0.20, 0.32)    # coach challenges per t
 TARGET_CHALLENGE_REVERSED = (0.38, 0.52)                # the share that changed the ruling (NFL 38 to 52 percent)
 TARGET_BOOTH_PER_GAME = (0.50, 0.80)                    # replay official reviews per game, both teams (NFL about 0.65)
 TARGET_BOOTH_REVERSED = (0.70, 0.82)                    # the share that changed the ruling (NFL 74 to 78 percent)
+
+# ----- the Franchise (NFL_FRANCHISE_DESIGN, SX.8): start values of a new league, design 4.5; later sessions add theirs here -----
+FR_TEAM_LEVEL_LOW, FR_TEAM_LEVEL_SPAN = -4, 9        # a team's level: below(9) - 4, so -4 to +4 (calibrated in SX.8b, C-F1)
+FR_RATING_BASE, FR_RATING_DRAW = 58, 13              # a rating: 58 + below(13) + below(13) + the level (58 to 82 before the level)
+FR_POTENTIAL_SHARES = (20, 70)                       # below(100): under 20 high, under 70 average, else low
+FR_START_AGE = (21, 5, 5, 4)                         # an age: 21 + below(5) + below(5) + below(4); a kicker or punter below(5) more
+FR_START_AGE_KICKER = 5

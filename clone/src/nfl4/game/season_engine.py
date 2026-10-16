@@ -79,6 +79,21 @@ class NullSeasonStore:
 NULL_STORE = NullSeasonStore()
 
 
+class ClassicSeasonHooks:
+    """H14 (nfl4 only, rule 0.13; NFL_FRANCHISE_DESIGN 13): what the Franchise reads of the season engine. Classic does nothing:
+    `game_played` is called once after every result the engine speaks or decides, with the round ("regular", "wild_card",
+    "division", "championship", "super_bowl"), the week counter and the two teams as TeamRefs with their scores."""
+
+    def game_played(self, stage: str, week: int, winner: TeamRef, loser: TeamRef, winner_score: int, loser_score: int) -> None:
+        pass
+
+
+CLASSIC_SEASON_HOOKS = ClassicSeasonHooks()
+
+REGULAR, WILD_CARD, DIVISION, CHAMPIONSHIP, SUPER_BOWL = "regular", "wild_card", "division", "championship", "super_bowl"
+PLAYOFF_WEEK = {WILD_CARD: 17, DIVISION: 18, CHAMPIONSHIP: 19, SUPER_BOWL: 20}     # the week counter of each round
+
+
 # ----- the sentences -----
 
 def week_result(winner: str, loser: str, winner_score: int, loser_score: int) -> str:
@@ -138,6 +153,10 @@ class SeasonEngine:
     @property
     def league(self) -> League:
         return self.g.league
+
+    @property
+    def hooks(self) -> ClassicSeasonHooks:
+        return getattr(self.g, "season_hooks", CLASSIC_SEASON_HOOKS)
 
     def name(self, team: TeamRef) -> str:
         return self.g.league.team(team.division, team.place)
@@ -240,6 +259,7 @@ class SeasonEngine:
             winner, loser, winner_score, loser_score = own, opponent, own_score, opponent_score
         self._win(winner)
         self._loss(loser)
+        self.hooks.game_played(REGULAR, season.gtp, winner, loser, winner_score, loser_score)
         lines.append(week_result(self.name(winner), self.name(loser), winner_score, loser_score))
         g.say2(lines[1])
         for _ in range(WEEK_COMPUTER_GAMES):                      # For Lb0 = 1 To 15
@@ -258,6 +278,7 @@ class SeasonEngine:
             line = week_result(self.name(winner), self.name(loser), winner_score, loser_score)
             self._win(winner)
             self._loss(loser)
+            self.hooks.game_played(REGULAR, season.gtp, winner, loser, winner_score, loser_score)
             lines.append(line)
             g.say2(line)
         g.log_print("")                                           # Print #3,
@@ -325,7 +346,7 @@ class SeasonEngine:
         g, season = self.g, self.g.season
         pairings, byes = self._pairings(4), self._byes()
         g.empty_replay()
-        winners = self._computer_round(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD)
+        winners = self._computer_round(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD, WILD_CARD)
         self._write_next_round(list(zip(winners, byes)))
         self._round_wait()
         season.gtp += 1
@@ -333,14 +354,16 @@ class SeasonEngine:
 
     # ----- play-off weeks with the player's team (5.16) -----
 
-    def _computer_game(self, pairing: Pairing) -> tuple[TeamRef, str]:
-        """A computer game (5.17 item 2): the winner and the sentence."""
+    def _computer_game(self, pairing: Pairing, stage: str = WILD_CARD) -> tuple[TeamRef, str]:
+        """A computer game (5.17 item 2): the winner and the sentence. `stage` is the round, for H14."""
         visitor, home = pairing
         game: ComputerGame = computer_game(self.g.rnd)
         winner, loser = (visitor, home) if game.first_wins else (home, visitor)
+        self.hooks.game_played(stage, PLAYOFF_WEEK[stage], winner, loser, game.winner_score, game.loser_score)
         return winner, playoff_result(self.name(winner), self.name(loser), game.winner_score, game.loser_score)
 
-    def _computer_round(self, pairings: list[Pairing], first_heading: str, second_heading: str) -> list[TeamRef]:
+    def _computer_round(self, pairings: list[Pairing], first_heading: str, second_heading: str,
+                        stage: str = WILD_CARD) -> list[TeamRef]:
         """finplay17's and the bye week's round: the first heading, the A. F. C. games, the second heading, the N. F. C.
         games, each result its own say4 right after its draws. Returns the winners in order."""
         g = self.g
@@ -350,12 +373,12 @@ class SeasonEngine:
         for index, pairing in enumerate(pairings):
             if index == half:
                 g.say4(second_heading)
-            winner, sentence = self._computer_game(pairing)
+            winner, sentence = self._computer_game(pairing, stage)
             g.say4(sentence)
             winners.append(winner)
         return winners
 
-    def _player_game(self) -> tuple[TeamRef, str]:
+    def _player_game(self, stage: str = WILD_CARD) -> tuple[TeamRef, str]:
         """GoSub 0x477000: the player's game of a play-off round, with the final score of the game just played. The
         player's team wins when its score is higher (a tie would go to the opponent, Q41)."""
         season = self.g.season
@@ -363,10 +386,13 @@ class SeasonEngine:
         own_score, opponent_score = self.scores
         if own_score > opponent_score:
             self.player_won = True                                # L3d0 = 1
+            self.hooks.game_played(stage, PLAYOFF_WEEK[stage], own, opponent, own_score, opponent_score)
             return own, playoff_result(self.name(own), self.name(opponent), own_score, opponent_score)
+        self.hooks.game_played(stage, PLAYOFF_WEEK[stage], opponent, own, opponent_score, own_score)
         return opponent, playoff_result(self.name(opponent), self.name(own), opponent_score, own_score)
 
-    def _round_with_the_player(self, pairings: list[Pairing], first_heading: str, second_heading: str) -> list[TeamRef]:
+    def _round_with_the_player(self, pairings: list[Pairing], first_heading: str, second_heading: str,
+                               stage: str = WILD_CARD) -> list[TeamRef]:
         """A round of pog's play-off weeks: the games in the record order, the player's game from the final score, the
         others as computer games. Q46 not reproduced: every result is its own sentence with " The "."""
         g, own = self.g, self.g.season.own_team
@@ -376,7 +402,7 @@ class SeasonEngine:
         for index, pairing in enumerate(pairings):
             if index == half:
                 g.say4(second_heading)
-            winner, sentence = self._player_game() if own in pairing else self._computer_game(pairing)
+            winner, sentence = self._player_game(stage) if own in pairing else self._computer_game(pairing, stage)
             g.say4(sentence)
             winners.append(winner)
         return winners
@@ -386,7 +412,7 @@ class SeasonEngine:
         pairings, byes = self._pairings(4), self._byes()
         season.gtp += 1                                           # 18
         g.empty_replay()
-        winners = self._round_with_the_player(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD)
+        winners = self._round_with_the_player(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD, WILD_CARD)
         self._write_next_round(list(zip(winners, byes)))          # the four winners at the four bye teams
         self._round_wait()
         if not self.player_won:
@@ -400,7 +426,7 @@ class SeasonEngine:
         season.gtp += 1                                           # 19
         g.empty_replay()
         self.player_won = False                                   # L3d0 = 0 (0x477a78)
-        winners = self._round_with_the_player(pairings, T.POG_AFC_DIVISION, T.POG_NFC_DIVISION)
+        winners = self._round_with_the_player(pairings, T.POG_AFC_DIVISION, T.POG_NFC_DIVISION, DIVISION)
         self._write_next_round([(winners[0], winners[1]), (winners[2], winners[3])])
         self._round_wait()
         if not self.player_won:
@@ -414,7 +440,7 @@ class SeasonEngine:
         season.gtp += 1                                           # 20
         self.player_won = False                                   # 0x47b40c
         g.empty_replay()
-        winners = self._round_with_the_player(pairings, T.POG_AFC_CHAMPIONSHIP, T.POG_NFC_CHAMPIONSHIP)
+        winners = self._round_with_the_player(pairings, T.POG_AFC_CHAMPIONSHIP, T.POG_NFC_CHAMPIONSHIP, CHAMPIONSHIP)
         self._write_next_round([(winners[0], winners[1])])        # the A. F. C. champion at the N. F. C. champion
         self._round_wait()
         if not self.player_won:
@@ -430,6 +456,7 @@ class SeasonEngine:
         own_score, opponent_score = self.scores
         g.empty_replay()
         g.say4(T.IN_THE_SUPER_BOWL)
+        self.hooks.game_played(SUPER_BOWL, PLAYOFF_WEEK[SUPER_BOWL], opponent, own, opponent_score, own_score)
         g.say4(playoff_result(self.name(opponent), self.name(own), opponent_score, own_score))
         self._super_bowl_ending()
         self.store.write_gtp(season.gtp)                          # 0
@@ -456,19 +483,19 @@ class SeasonEngine:
 
     def _fin_wild_card_round(self) -> None:
         pairings, byes = self._pairings(4), self._byes()
-        winners = self._computer_round(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD)
+        winners = self._computer_round(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD, WILD_CARD)
         self._write_next_round(list(zip(winners, byes)))
         self._round_wait()
 
     def _fin_division_round(self) -> None:
         self.g.empty_replay()                                     # 0x480331
-        winners = self._computer_round(self._pairings(4), T.FIN_AFC_DIVISION, T.POG_NFC_DIVISION)
+        winners = self._computer_round(self._pairings(4), T.FIN_AFC_DIVISION, T.POG_NFC_DIVISION, DIVISION)
         self._write_next_round([(winners[0], winners[1]), (winners[2], winners[3])])
         self._round_wait()
 
     def _fin_championship_round(self) -> None:
         self.g.empty_replay()                                     # 0x4824e2
-        winners = self._computer_round(self._pairings(2), T.FIN_AFC_CHAMPIONSHIP, T.FIN_NFC_CHAMPIONSHIP)
+        winners = self._computer_round(self._pairings(2), T.FIN_AFC_CHAMPIONSHIP, T.FIN_NFC_CHAMPIONSHIP, CHAMPIONSHIP)
         self._write_next_round([(winners[0], winners[1])])
         self._round_wait()
 
@@ -477,7 +504,7 @@ class SeasonEngine:
         pairing = self._pairings(1)[0]
         g.empty_replay()                                          # 0x4836b6
         g.say4(T.IN_THE_SUPER_BOWL)
-        winner, sentence = self._computer_game(pairing)
+        winner, sentence = self._computer_game(pairing, SUPER_BOWL)
         g.say4(sentence)
         self._super_bowl_ending()
 
@@ -510,6 +537,12 @@ class SeasonEngine:
         play it all again with new draws, any other key ends it. gtp is 42 at the end (pag sets 0)."""
         g, season = self.g, self.g.season
         own_score, opponent_score = scores
+        if own_score <= opponent_score:                           # H14: once, whatever F1 and F2 repeat afterwards
+            self.hooks.game_played(SUPER_BOWL, PLAYOFF_WEEK[SUPER_BOWL], season.opponent_team, season.own_team,
+                                   opponent_score, own_score)
+        else:
+            self.hooks.game_played(SUPER_BOWL, PLAYOFF_WEEK[SUPER_BOWL], season.own_team, season.opponent_team,
+                                   own_score, opponent_score)
         while True:
             g.empty_replay()                                      # Me.ilc = 0 (0x484947)
             g.ptf = 1
