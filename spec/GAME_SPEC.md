@@ -774,7 +774,7 @@ None of them changes what the player hears in the clone:
 - Procedures: 64 of 64 done (`spec/PROCEDURE_INDEX.md` section 2).
 - Strings: 3,155 in `spec/strings_all.tsv`; 615 have no referencing procedure: BUILD-PATH 1, ERROR-MESSAGE 1, IMPORT-NAME 177, JUNK 1, JUNK-ASCII 370, PE-HEADER 3, TYPELIB-NAME 3, VB-IDENTIFIER 41, VB-PROJECT-NAME 3, VERSION-INFO 15; all are compiler, linker, type library, version, header or junk items except ERROR-MESSAGE 1, the dead text (B-P35, SOUND_DESIGN 2).
 - Gap register (its generated count line, `work/check_gap_register_s43.py`): Count: 37 entries. SETTLED 9, DEFAULT 23, NOTED 5. Entries naming each closing session: S8.1 15, S8.2 16, S8.3 5, S9.2 1 (an entry can name several; SETTLED entries that also name a session close their test there).
-- Decisions: D-001 to D-057, 57 entries, none missing or doubled (`spec/DECISIONS.md`).
+- Decisions: D-001 to D-058, 58 entries, none missing or doubled (`spec/DECISIONS.md`).
 - Quirks: 62 (Q1 to Q62), each classified in 17.5.
 <!-- CHECKS-END -->
 

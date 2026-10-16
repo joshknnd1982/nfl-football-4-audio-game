@@ -432,3 +432,14 @@ NXG-18	franchise	sentence	say5	 nothing yet. 	an empty history list
 NXK-20	franchise	piece	piece	high	the potential words (the roster in SX.8b, the draft in SX.8d)
 NXK-21	franchise	piece	piece	average	the potential words
 NXK-22	franchise	piece	piece	low	the potential words
+NXE-30	franchise	sentence	say2	 from your team: 	stage 2, before the player's team's retiring players
+NXE-31	franchise	sentence	say2	 <player>, <position>, age <a>, rating <r>, retires. seasons played: <n>. 	stage 2, a retiring player of the player's team
+NXE-32	franchise	sentence	say2	 nobody from your team retires. 	stage 2
+NXE-33	franchise	sentence	say2	 players retiring in the whole league: <n>. 	stage 2
+NXE-35	franchise	sentence	say2	 <player> of the <team>, <position>, retires. seasons played: <n>. 	stage 2, a star of another team
+NXE-40	franchise	sentence	say2	 your players: improved <n>, declined <m>, the same <k>. 	stage 3
+NXE-41	franchise	sentence	say2	 most improved: <player>, <position>, up <d> to <r>. 	stage 3
+NXE-42	franchise	sentence	say2	 the biggest drop: <player>, <position>, down <d> to <r>. 	stage 3, none when nobody went down
+NXE-43	franchise	sentence	say2	 your whole roster is in the franchise menu on F9. 	stage 3
+NXE-71	franchise	sentence	say2	 retiring: <n> in the league, <m> from your team. 	stage 2 in the short offseason
+NXE-72	franchise	sentence	say2	 your players: improved <n>, declined <m>. 	stage 3 in the short offseason

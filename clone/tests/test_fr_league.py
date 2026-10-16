@@ -167,6 +167,20 @@ def test_the_rank_is_by_the_exact_sum_with_ties_to_the_lower_team_number():
     assert league.rank_of(1) == 3 and league.rank_of(2) == 32
 
 
+def test_while_places_are_empty_the_rating_and_the_rank_are_those_kept_at_the_start_of_the_season():
+    league, _ = make()
+    set_all(league, 70)
+    league.sums = [league.strength_sum(t) for t in range(1, 33)]
+    league.sums[8] += 500                                                # team 9 was the best at the start of the season
+    assert league.ranking()[0] == 1 and not league.has_empty_place()      # whole rosters: the exact sums rule (all equal: team order)
+    pid = league.rosters[2][0]                                            # a running back of team 3 retires
+    league.players[pid].status, league.players[pid].place = "retired", -1
+    league.rosters[2][0] = 0
+    assert league.has_empty_place()
+    assert league.ranking()[0] == 9 and league.strength(3) == 70 and league.rank_of(3) == 4    # the kept sums: after 9, 1 and 2
+    assert league.strength_sum(3) == 5460 - 2 * 30                       # the exact sum counts the empty place as 40
+
+
 # ----- the roster for a game (H7) -----
 
 def test_the_roster_for_a_game_has_the_names_by_section_the_ratings_and_the_quarterback():
@@ -255,9 +269,9 @@ def test_a_record_in_an_offseason_stage_with_empty_places_is_not_damage(monkeypa
 
 def test_an_unknown_stage_number_is_damage_and_a_newer_format_is_not():
     league = season_league()
-    league.stage, league.stage_no, league.gtp, league.records = OFFSEASON, 3, 0, [8, 8] * 32
+    league.stage, league.stage_no, league.gtp, league.records = OFFSEASON, 4, 0, [8, 8] * 32
     with pytest.raises(LeagueError):
-        LeagueRecord.from_json(league.to_json())                      # this version has no stage 3
+        LeagueRecord.from_json(league.to_json())                      # this version has no stage 4 (the draft is SX.8d's)
     text = season_league().to_json().replace('"format":1', '"format":2', 1)
     with pytest.raises(NewerFormat):
         LeagueRecord.from_json(text)

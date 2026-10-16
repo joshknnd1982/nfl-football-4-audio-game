@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 433.
+- Texts: 444.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 101.
+- Franchise (design section 11): 112.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4.
 
 ## The clock (design section 5)
@@ -481,4 +481,15 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXK-20 (piece, piece): "high". the potential words (the roster in SX.8b, the draft in SX.8d)
 - NXK-21 (piece, piece): "average". the potential words
 - NXK-22 (piece, piece): "low". the potential words
+- NXE-30 (sentence, say2): " from your team: ". stage 2, before the player's team's retiring players
+- NXE-31 (sentence, say2): " <player>, <position>, age <a>, rating <r>, retires. seasons played: <n>. ". stage 2, a retiring player of the player's team
+- NXE-32 (sentence, say2): " nobody from your team retires. ". stage 2
+- NXE-33 (sentence, say2): " players retiring in the whole league: <n>. ". stage 2
+- NXE-35 (sentence, say2): " <player> of the <team>, <position>, retires. seasons played: <n>. ". stage 2, a star of another team
+- NXE-40 (sentence, say2): " your players: improved <n>, declined <m>, the same <k>. ". stage 3
+- NXE-41 (sentence, say2): " most improved: <player>, <position>, up <d> to <r>. ". stage 3
+- NXE-42 (sentence, say2): " the biggest drop: <player>, <position>, down <d> to <r>. ". stage 3, none when nobody went down
+- NXE-43 (sentence, say2): " your whole roster is in the franchise menu on F9. ". stage 3
+- NXE-71 (sentence, say2): " retiring: <n> in the league, <m> from your team. ". stage 2 in the short offseason
+- NXE-72 (sentence, say2): " your players: improved <n>, declined <m>. ". stage 3 in the short offseason
 

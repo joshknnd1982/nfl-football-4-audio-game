@@ -118,14 +118,25 @@ class LeagueRecord:
             total += D.WEIGHT[D.POSITION_OF_PLACE[index]] * (player.rating if player is not None else D.RATING_MIN)
         return total
 
+    def has_empty_place(self) -> bool:
+        return any(pid == 0 for roster in self.rosters for pid in roster)
+
+    def shown_sums(self) -> list:
+        """The 32 sums the player is told of (the rating, the rank): the exact sums of the rosters, except while places are empty
+        (stages 2 to 5 of an offseason), when the strength is not used (design 4.4, review finding 4 of SX.8c) and the sums kept at
+        the start of the season stand in."""
+        if self.sums and self.has_empty_place():
+            return list(self.sums)
+        return [self.strength_sum(team) for team in range(1, D.TEAMS + 1)]
+
     def strength(self, team: int) -> int:
         """The spoken rating: the weighted mean rounded half up, integers only."""
-        return (self.strength_sum(team) + D.WEIGHT_SUM // 2) // D.WEIGHT_SUM
+        return (self.shown_sums()[team - 1] + D.WEIGHT_SUM // 2) // D.WEIGHT_SUM
 
     def ranking(self) -> list:
         """The teams 1 to 32 best first by the exact sum, ties by team order (design 4.4)."""
-        sums = {team: self.strength_sum(team) for team in range(1, D.TEAMS + 1)}
-        return sorted(sums, key=lambda team: (-sums[team], team))
+        sums = self.shown_sums()
+        return sorted(range(1, D.TEAMS + 1), key=lambda team: (-sums[team - 1], team))
 
     def rank_of(self, team: int) -> int:
         return self.ranking().index(team) + 1
@@ -369,9 +380,9 @@ class LeagueRecord:
 
 # ----- a new league (design 4.5, 12.1) -----
 
-def _draw_name(rnd, surnames: list, used: set) -> str:
+def draw_name(rnd, surnames: list, used: set) -> str:
     """rnd(1708) again while an active player of the league has the name (bounded, G-D1: then the first free name in the
-    pool's order, then any name)."""
+    pool's order, then any name). The new league, the fill and (SX.8d) the draft class name their players with it."""
     def scan() -> int:
         for number, name in enumerate(surnames, start=1):
             if name not in used:
@@ -407,7 +418,7 @@ def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_n
             if own and given[index] is not None:
                 name = given[index]
             else:
-                name = _draw_name(rnd, surnames, used)
+                name = draw_name(rnd, surnames, used)
             used.add(name)
             rating = _clamp(T.FR_RATING_BASE + rnd.below(T.FR_RATING_DRAW) + rnd.below(T.FR_RATING_DRAW) + level)
             potential = draw_potential(rnd)

@@ -64,7 +64,11 @@ def franchise_menu(g, speech, keys) -> None:
 
     def roster_menu() -> None:
         word = _words(g)
-        items = [Item(lambda position=position: X.text("NXL-30", group=word.group(position), n=D.GROUP_SIZE[position]),
+        league = store.league
+
+        def count(position: str) -> int:               # the players in the group now: fewer than its places while places are empty
+            return sum(1 for player in league.group_of(league.team, position) if player is not None)
+        items = [Item(lambda position=position: X.text("NXL-30", group=word.group(position), n=count(position)),
                       enter=lambda position=position: group_picker(position)) for position in ROSTER_ORDER]
         SpokenMenu(speech, keys, X.text("NXF-13"), items, space_enters=True, digits_jump=True).run()
 

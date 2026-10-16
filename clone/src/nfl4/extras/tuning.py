@@ -274,3 +274,44 @@ FR_PLAYOFF_PER_SD = 150           # per mille of lean of the play-off coin per s
 # Centering (C-F3), 10,000 games a line: points a game +0.87 percent with the Classic playbooks and +0.94 percent with the styles,
 # yards a play -0.01 and +0.19 percent (work/calibrate_ratings_sx8b_centering_10000.txt). The play-off lean is set to the regular
 # week's share (0.67 at 1 standard deviation, 0.77 at 2; the lean is capped at 0.75).
+
+# ----- aging, retirement, progression and regression, design 6 and 8.2 (SX.8c; the history of every move is below) -----
+# Retirement (stage 2, after everybody is a year older): a player of 30 or more draws below(1000) against
+# r = clamp((age - 29) * FR_RETIRE_PER_YEAR - (rating - 70) * FR_RETIRE_PER_POINT, 0, 1000); at 40 he retires without a draw.
+FR_RETIRE_PER_YEAR = 110          # per mille of retirement chance for each year of age over 29
+FR_RETIRE_PER_POINT = 6           # per mille taken off for each rating point over 70 (and put on for each under it)
+# Progression and regression (stage 3): change = base(position, age, potential) + below(5) - 2 + the development points.
+FR_PEAK = {"RB": (24, 28), "WR": (25, 29), "QB": (24, 32), "DL": (25, 29), "LB": (25, 29), "CB": (25, 28), "S": (25, 29),
+           "RET": (24, 28), "K": (26, 34), "P": (26, 34)}     # the first and the last age of a group's peak window
+#                                 (design start values: RB 24-27, QB 26-32, RET 24-27; see the history below)
+FR_GROWTH = (4, 2, 1)             # before the window, by potential (high, average, low) (design start value (5, 3, 1))
+# FR_IN_WINDOW and FR_PROGRESS_NOISE are design RULES (6.2 gives them no start-value mark), not calibration knobs; FR_DECLINE is a start value
+FR_IN_WINDOW = (1, 0, 0)          # in the window, by potential
+FR_DECLINE = (2, 3, 4, 5, 6, 6)   # after the window: the k-th year after it takes this many points, whatever the potential
+FR_PROGRESS_NOISE = (5, -2)       # below(5) - 2: the yearly spread, -2 to +2
+# The fill of an empty place with an undrafted rookie (design 7.6; SX.8c uses it as a stand-in until SX.8d builds the draft, the
+# cut and the real fill): rating base + below(span) in a group of three places or more, the second pair in a group of one or two.
+FR_FILL_RATING = (45, 11)
+FR_FILL_RATING_SMALL = (50, 11)
+FR_ROOKIE_POTENTIAL_SHARES = (25, 75)       # below(100): under 25 high, under 75 average, else low
+# SX.8c calibration (D-058; the reports are work/calibrate_aging_sx8c_fast_*.txt, the scripts work/sim_league_sx8c.py and
+# work/calibrate_aging_sx8c.py, the sweeps work/calibrate_aging_sx8c_sweeps/). The fast run (500 leagues x 20 seasons, the real stages 2
+# and 3, stand-ins for the draft, the cut and the four weeks of extra work) at the design's start values drifted: the league's mean
+# rating rose to 72.0 by season 12 (band 68 to 72) and the quarterbacks' mean to 76 to 78.7 (band 64 to 76; 58 percent of the league-
+# seasons outside it, single leagues up to 84) (work/calibrate_aging_sx8c_fast_500x20_design_values.txt). Two causes, each moved by its
+# own knob: (1) the growth before the window was too fast for the rookies the draft brings (a class of 46 to 74, mean 60): (4, 2, 1) in
+# place of (5, 3, 1) holds the mean rating at 69.1 to 70.8; (2) a position whose window starts late grows for more years before it
+# peaks (nobody develops before 22: rookies join after the development stage), so the quarterbacks (window 26 to 32, four years of
+# growth) peaked about five points above a running back (two years): the quarterbacks' window now starts at 24 (two years of growth)
+# and still ends at 32, so a quarterback in his early thirties holds as research B6 says, and the running backs' and returners' windows
+# end at 28 (their mean was 67 to 68 and single leagues went down to 62). FR_PEAK is not in the knob list design 16 gives SX.8f; it is
+# moved here by decision D-058, which changes design 6.2's windows. The result over 10,000 league-seasons: the mean over the leagues
+# is inside its band in every one of the 20 seasons (mean rating 69.1 to 70.8, mean age 25.8 to 26.8, every group 67.0 to 73.8), the
+# win spread 2.81 to 2.88 (C-F1 holds), no single league-season has a mean rating or a mean age outside its band, and 11.2 percent of
+# the league-seasons have one group mean outside 64 to 76 (the kickers 5.4 percent, the punters 4.4, the quarterbacks 2.0, the
+# returners 0.2): the single-place groups follow a cohort and the stand-in cut's ratchet; the retirement values were tried
+# (work/calibrate_aging_sx8c_sweeps/) and left at the design's (110, 6) because a rule that is right is not moved to meet an aggregate
+# (B-P56): SX.8d's real cut and SX.8f's per-run invariant are where the tails are settled. THE BUILD ALONE DOES NOT KEEP THESE BANDS:
+# until SX.8d builds the draft, stage 3 fills every empty place with an undrafted rookie rated 45 to 60 and nobody is drafted, so a
+# franchise played now loses rating season by season (the mean falls from 69 to 55 in ten seasons); the calibration measures the loop
+# with the stand-in draft and cut that SX.8d replaces.

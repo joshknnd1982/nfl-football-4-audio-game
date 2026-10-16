@@ -165,10 +165,21 @@ def test_three_whole_seasons_with_their_history_right_after_each(tmp_path):
         seen.append(len(record.results))
         return real(record)
     fr_history.build_entry = spy
+    from nfl4.extras.franchise.store import FranchiseStore
+    start = {}
+    real_create = FranchiseStore.create
+
+    def create(self, new_league):
+        for pid in (1, 2, 3):
+            new_league.players[pid].points = 3                                  # points given before the first offseason
+        start.update({pid: (p.age, p.seasons) for pid, p in new_league.players.items()})
+        return real_create(self, new_league)
+    FranchiseStore.create = create
     try:
         run_until(rig)
     finally:
         fr_history.build_entry = real
+        FranchiseStore.create = real_create
     made = league(rig)
     assert made.season == 4 and made.gtp == 1 and made.stage == "season" and len(made.history) == 3
     assert seen == [256 + 11] * 3                                              # every game of the season came through H14
@@ -182,11 +193,18 @@ def test_three_whole_seasons_with_their_history_right_after_each(tmp_path):
     text = spoken(rig)
     assert text.count(X.text("NXE-01")) == 3 and text.count(QUESTION) == 1      # the question only at the first new season
     assert [text.count(X.text("NXF-08", n=n)) for n in (1, 2, 3, 4)] == [1, 1, 1, 0]       # season 4's week 1 is not reached yet
-    assert text.count(X.text("NXE-03")) == 6                                  # every stage of the offseason ends with the wait (design 3.3)
-    assert text.count(" stage 1 of 2. the season in review. ") == 3 and text.count(" stage 2 of 2. the new season. ") == 3
+    assert text.count(X.text("NXE-03")) == 12                                 # every stage of the offseason ends with the wait (design 3.3)
+    for number, name in ((1, "the season in review"), (2, "retirements"), (3, "player development"), (4, "the new season")):
+        assert text.count(" stage %d of 4. %s. " % (number, name)) == 3
     history_txt = rig.files.data["history.txt"].decode("utf-8")
     assert "after season 3." in history_txt and history_txt.count("\nSeason ") == 3
-    assert all(player.age >= 22 for player in made.players.values())          # everybody is three years older (until SX.8c)
+    for pid, (age, seasons) in start.items():                                 # whoever played all three years is exactly three years older
+        player = made.players.get(pid)
+        if player is not None and player.status == "active" and player.drafted is None and pid <= 1088:
+            assert (player.age, player.seasons) == (age + 3, seasons + 3), pid
+    assert all(player.points == 0 for player in made.players.values())      # the points of the first three players are gone
+    assert sum(1 for player in made.players.values() if player.status == "retired") >= 1
+    assert sum(1 for pid in start if made.players.get(pid) is not None and made.players[pid].status == "active") > 800
     assert made.results == [] and made.sums and made.records == [0] * 64
 
 
@@ -221,7 +239,7 @@ def test_a_window_closed_at_the_wait_of_a_stage_resumes_at_that_stage_and_keeps_
                            policy=enter_until(at_week_lambda(lambda: second, 2, 1)))
     run_until(second)
     text = spoken(second)
-    assert text.count(X.text("NXE-01")) == 1 and text.index(" stage 1 of 2. the season in review. ") < text.index(" stage 2 of 2. the new season. ")
+    assert text.count(X.text("NXE-01")) == 1 and text.index(" stage 1 of 4. the season in review. ") < text.index(" stage 4 of 4. the new season. ")
     assert len(league(second).history) == 1 and league(second).season == 2
 
 
@@ -481,7 +499,7 @@ def test_a_file_written_at_each_stage_of_the_offseason_loads_and_the_offseason_g
     monkeypatch.setattr(FranchiseStore, "save", save)
     first = franchise_rig(tmp_path / "one", WANT_FRANCHISE + COACH_AND_TEAM, policy=enter_until(at_week_lambda(lambda: first, 2, 1)))
     run_until(first)
-    assert sorted(kept) == [1, 6]                                       # the stages this version has: written when each begins
+    assert sorted(kept) == [1, 2, 3, 6]                                 # the stages this version has: written when each begins
     monkeypatch.undo()
     for number, raw in sorted(kept.items()):
         files = MemoryFiles()

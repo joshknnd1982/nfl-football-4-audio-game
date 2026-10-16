@@ -441,6 +441,17 @@ TEXTS: dict[str, str] = {
     'NXK-20': 'high',
     'NXK-21': 'average',
     'NXK-22': 'low',
+    'NXE-30': ' from your team: ',
+    'NXE-31': ' <player>, <position>, age <a>, rating <r>, retires. seasons played: <n>. ',
+    'NXE-32': ' nobody from your team retires. ',
+    'NXE-33': ' players retiring in the whole league: <n>. ',
+    'NXE-35': ' <player> of the <team>, <position>, retires. seasons played: <n>. ',
+    'NXE-40': ' your players: improved <n>, declined <m>, the same <k>. ',
+    'NXE-41': ' most improved: <player>, <position>, up <d> to <r>. ',
+    'NXE-42': ' the biggest drop: <player>, <position>, down <d> to <r>. ',
+    'NXE-43': ' your whole roster is in the franchise menu on F9. ',
+    'NXE-71': ' retiring: <n> in the league, <m> from your team. ',
+    'NXE-72': ' your players: improved <n>, declined <m>. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -877,6 +888,17 @@ SPEAKERS: dict[str, str] = {
     'NXK-20': 'piece',
     'NXK-21': 'piece',
     'NXK-22': 'piece',
+    'NXE-30': 'say2',
+    'NXE-31': 'say2',
+    'NXE-32': 'say2',
+    'NXE-33': 'say2',
+    'NXE-35': 'say2',
+    'NXE-40': 'say2',
+    'NXE-41': 'say2',
+    'NXE-42': 'say2',
+    'NXE-43': 'say2',
+    'NXE-71': 'say2',
+    'NXE-72': 'say2',
 }
 
 KINDS: dict[str, str] = {
@@ -1313,6 +1335,17 @@ KINDS: dict[str, str] = {
     'NXK-20': 'piece',
     'NXK-21': 'piece',
     'NXK-22': 'piece',
+    'NXE-30': 'sentence',
+    'NXE-31': 'sentence',
+    'NXE-32': 'sentence',
+    'NXE-33': 'sentence',
+    'NXE-35': 'sentence',
+    'NXE-40': 'sentence',
+    'NXE-41': 'sentence',
+    'NXE-42': 'sentence',
+    'NXE-43': 'sentence',
+    'NXE-71': 'sentence',
+    'NXE-72': 'sentence',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

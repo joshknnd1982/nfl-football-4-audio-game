@@ -18,6 +18,9 @@ SAVE_MAX_BYTES = 8_000_000                   # FR_SAVE_MAX_BYTES: a larger file 
 RATING_MIN, RATING_MAX, RATING_NEUTRAL = 40, 99, 70
 AGE_MIN, AGE_MAX = 21, 40
 STAR_PEAK = 85                               # a retired or released player with a peak of at least this is kept for history
+RETIRE_FROM_AGE = 30                         # design 6.3: a player under 30 never retires and never draws (invariant I1)
+RETIRE_DRAW = 1000                           # the retirement chance is per mille: one draw below(1000) against it
+STARS_NAMED = 3                              # the other teams' retiring stars named in stage 2 (design 6.3)
 MAX_SEASONS = 9999
 TEAMS = 32
 POTENTIALS = ("high", "average", "low")
@@ -51,8 +54,9 @@ WEIGHT_SUM = sum(WEIGHT[position] for position in POSITION_OF_PLACE)
 WEIGHT_OF_KEY = {(heading, number): WEIGHT[position] for heading, number, position in PLACES}   # the key of Roster.ratings
 
 # the stages of an offseason (design 3.3): (the stage's number, the id of its name). A later session inserts its stage here, so
-# the spoken "stage n of m" follows the list. SX.8a builds stages 1 and 6 (the year's aging is part of 6 until SX.8c).
-STAGES: tuple[tuple[int, str], ...] = ((1, "NXE-11"), (6, "NXE-16"))
+# the spoken "stage n of m" follows the list. SX.8a built stages 1 and 6, SX.8c adds 2 (aging and retirement) and 3 (progression
+# and regression); SX.8d adds 4 (the draft) and 5 (the roster cut and the fill).
+STAGES: tuple[tuple[int, str], ...] = ((1, "NXE-11"), (2, "NXE-12"), (3, "NXE-13"), (6, "NXE-16"))
 STAGE_REVIEW, STAGE_AGING, STAGE_DEVELOPMENT, STAGE_DRAFT, STAGE_CUT, STAGE_NEW_SEASON = 1, 2, 3, 4, 5, 6
 
 # the rounds a team can last in, for the history (the finish)
