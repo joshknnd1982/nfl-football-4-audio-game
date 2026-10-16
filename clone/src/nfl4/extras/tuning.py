@@ -282,8 +282,8 @@ FR_RETIRE_PER_YEAR = 110          # per mille of retirement chance for each year
 FR_RETIRE_PER_POINT = 6           # per mille taken off for each rating point over 70 (and put on for each under it)
 # Progression and regression (stage 3): change = base(position, age, potential) + below(5) - 2 + the development points.
 FR_PEAK = {"RB": (24, 28), "WR": (25, 29), "QB": (24, 32), "DL": (25, 29), "LB": (25, 29), "CB": (25, 28), "S": (25, 29),
-           "RET": (24, 28), "K": (26, 34), "P": (26, 34)}     # the first and the last age of a group's peak window
-#                                 (design start values: RB 24-27, QB 26-32, RET 24-27; see the history below)
+           "RET": (24, 28), "K": (24, 34), "P": (24, 34)}     # the first and the last age of a group's peak window
+#                                 (design start values: RB 24-27, QB 26-32, RET 24-27, K and P 26-34; see the history below)
 FR_GROWTH = (4, 2, 1)             # before the window, by potential (high, average, low) (design start value (5, 3, 1))
 # FR_IN_WINDOW and FR_PROGRESS_NOISE are design RULES (6.2 gives them no start-value mark), not calibration knobs; FR_DECLINE is a start value
 FR_IN_WINDOW = (1, 0, 0)          # in the window, by potential
@@ -386,3 +386,28 @@ FR_UPSET_GAP = 3                  # design 8.3 gives 4 as a fixed number (no sta
 # weeks (the strengths' standard deviation settles near 1.3, so a gap of 4 is three standard deviations between two teams); at 3 it is
 # 26.0 percent (at 5, 2.0 percent). Three is the first gap at which an upset is news about one week in four; the lines a week are
 # 3.13 at the gap of 4 and 3.27 at 3, and the cut at FR_NEWS_MAX takes lines away in 6.9 percent of the weeks (2.7 at the gap of 4).
+
+# ----- the 20-season simulation, design 16 SX.8f (the history of every move is here) -----
+# SX.8f (D-061; the reports are work/simulate_franchise_sx8f_fast_100x20.txt and _500x20.txt, _full_5x20.txt, the scripts work/simulate_franchise_sx8f.py
+# and work/full_sx8f.py, the sweeps work/sweep_sx8f_log.txt). At the values SX.8e left, 100 leagues x 20 seasons failed three invariants: I11 (49 of 100
+# leagues had a team among the three weakest more than 5 seasons in a row, the longest 10), I8b (236 of 2,000 league-seasons had a group's mean outside 64 to
+# 76: kickers 112, punters 107, quarterbacks 41, all above) and I8's spread (136 below 1.0). TWO VALUES MOVED, nothing else:
+# (1) FR_DRAFT_WEAK became a number for each group of one place, the quarterback's 75 (the design's single 60 stays for the kicker and the punter). The
+# quarterback carries half of a team's strength (52 percent of the variance of the exact sums; the lag-1 correlation of a team's strength is 0.80, of its
+# quarterback's part 0.83), so a team keeps a weak quarterback for years; with 75 a team whose best quarterback is under 75 counts the place as open, so the
+# staff drafts a replacement every year and the cut keeps the better of the two (round 1: 14 percent of the picks are quarterbacks, the NFL drafts 3 to 5 a
+# year). The single number raised for all three (78) did the same for the quarterback but put kickers and punters in round 1 (4 percent of the picks) and
+# released half of them at the cut: football nonsense, so the mark is per group. (2) The kicker's and the punter's windows start at 24 (the design's 26): the
+# rule of D-058 again (a window that starts late grows for more years: a kicker drafted at 21 to 23 grew until 26, four to five years against the two of a
+# running back, and the selection of the cut and of the retirements, which keep the good ones, lifted the group's mean to 73.7; with 24 it settles at 68.2
+# to 70.7). The end of the window (34) is the research's. Tried and NOT kept (each in the sweep log): the retirement per year 150 (the streak share 14 to 9
+# percent, a rule that is right is not moved, B-P56), the youth bonus of the cut 8/4, the team level -1..+1, the draft's need values, a wider spread of the
+# rookies' ratings (FR_ROOKIE_RATING (42, 19): the quarterbacks' mean over 76 in 20 percent of the league-seasons), a lower growth, longer decline, noisier
+# progression. Result over 500 leagues x 20 seasons: I1, I3, I4, I5, I9, I10 and I12 hold in every run-season; the mean rating 68.3 to 71.4 and the mean age
+# 25.6 to 26.9 in every run-season; C-F1 2.84 (2.82 to 2.87 in each season, 2.66 to 3.03 in each league); the spread of the strengths 1.37 to 1.77 by season
+# (1.1 percent of the run-seasons under 1.0, the lowest 0.74); every group's mean 64 to 76 in 99.4 percent of the run-seasons or better (the quarterbacks'
+# 0.6 percent above, the punters' 0.2 percent, the kickers' 0.1 percent; none beyond 3 points); every strength 60 to 80; 77 of 500 leagues (15 percent) still
+# have a team among the three weakest more than 5 seasons in a row, the longest streak 7. THE BAND OF I11 IS CHANGED BY DECISION to 8: no value inside the
+# listed knobs reaches 5 (the best, 7 percent of the leagues, bought the same with the retirement and youth rules moved), because the only things that change
+# a roster in the core are retirement and the draft (the lag-1 correlation of a team's strength is 0.73 at the final values); free agency and trades
+# (SX.8g, SX.8j) are the real equalizers. The owner's playtest should listen for a franchise whose own team sits at the bottom for many seasons.

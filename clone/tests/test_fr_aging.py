@@ -278,9 +278,8 @@ def test_history_keeps_the_players_team_and_the_stars_and_drops_the_rest():
 # ----- the calibrated values have a test of their own -----
 
 CALIBRATED = dict(FR_RETIRE_PER_YEAR=110, FR_RETIRE_PER_POINT=6, FR_GROWTH=(4, 2, 1), FR_IN_WINDOW=(1, 0, 0),
-                  FR_DECLINE=(2, 3, 4, 5, 6, 6), FR_PROGRESS_NOISE=(5, -2),
-                  FR_PEAK={"RB": (24, 28), "WR": (25, 29), "QB": (24, 32), "DL": (25, 29), "LB": (25, 29), "CB": (25, 28),
-                           "S": (25, 29), "RET": (24, 28), "K": (26, 34), "P": (26, 34)})
+                  FR_DECLINE=(2, 3, 4, 5, 6, 6), FR_PROGRESS_NOISE=(5, -2),                  FR_PEAK={"RB": (24, 28), "WR": (25, 29), "QB": (24, 32), "DL": (25, 29), "LB": (25, 29), "CB": (25, 28),
+                           "S": (25, 29), "RET": (24, 28), "K": (24, 34), "P": (24, 34)})        # K and P: D-061 (SX.8f)
 
 
 def test_the_tuning_file_holds_the_values_the_calibration_settled_on():
@@ -442,7 +441,9 @@ def test_at_most_three_stars_of_other_teams_are_named_the_highest_peak_first_and
                    key=lambda p: (-p.peak, p.id))
     assert len(stars) >= 5 and len(named) == 3
     assert [t.split(" of the ")[0].strip() for t in named] == [p.name for p in stars[:3]]
-    assert sum(1 for t in text if rig.start.player_at(5, 12).name + "," in t) == 1
+    stage_two = text[text.index(" stage 2 of 6. retirements. "):]
+    stage_two = stage_two[:stage_two.index(X.text("NXE-03"))]          # the later stages may name a rookie with the retired star's surname
+    assert sum(1 for t in stage_two if rig.start.player_at(5, 12).name + "," in t) == 1
 
 
 def test_stars_of_equal_peak_are_named_in_league_order_not_by_their_ids(tmp_path):
