@@ -465,3 +465,78 @@ NXE-55	franchise	sentence	say2	 <player> is released. 	stage 5, the player relea
 NXE-56	franchise	sentence	say2	 players released by the staff: <n>. 	stage 5, with the setting that the staff handles the roster cut
 NXE-57	franchise	sentence	say2	 empty places filled with undrafted rookies: <n>. 	stage 5, the fill of the player's team
 NXE-58	franchise	sentence	say2	 nobody on your team has to be released. 	stage 5, the player's team has no surplus (added by SX.8d)
+NXD-01	franchise	sentence	say2	 <coach> your to do list has <n> items. 	the to-do list, before its items (design 8.1)
+NXD-02	franchise	sentence	say2	 <coach> your to do list has 1 item. 	the to-do list, one item
+NXD-03	franchise	sentence	say2	 the staff took care of <n> items. 	with the setting that the staff handles the to do list
+NXD-04	franchise	sentence	say2	 the staff took care of 1 item. 	the same, one item
+NXD-05	franchise	sentence	say2	 item <n>. 	before each item
+NXD-06	franchise	sentence	say2	 items still on your to do list: <n>. 	choosing play game with items waiting
+NXD-07	franchise	sentence	say5	 nothing is waiting. 	F9 to do list with no waiting item
+NXD-10	franchise	prompt	say2	 extra work this week for one young player. 	T1, the question
+NXD-11	franchise	sentence	say2	 <player> gets extra work this week. 	T1, the point is given
+NXD-20	franchise	prompt	say2	 the game plan against the <team>. they play <their_offense> on offense and <their_defense> on defense. the staff recommends <our_offense> and <our_defense>. 	T2, the question
+NXD-21	franchise	answer	say2	use the staff's game plan	T2, the staff's answer
+NXD-22	franchise	answer	say2	keep your playbooks	T2, the do-nothing answer
+NXD-23	franchise	sentence	say2	 the game plan is set for this game. 	T2, the plan is taken
+NXD-30	franchise	sentence	say2	 the items you left for later were not done. 	the kick-off came with items still waiting
+NXD-A01	franchise	answer	say2	later	every item
+NXD-A02	franchise	answer	say2	<player>, <position>, rating <r>, <potential> potential	T1, a candidate
+NXD-A03	franchise	answer	say2	nobody this week	T1, the do-nothing answer
+NXN-01	franchise	sentence	say2	 this week's news. 	before the news of a week
+NXN-02	franchise	sentence	say5	 no news this week. 	F9 news with no news
+NXN-03	franchise	sentence	say2	 the news of the offseason. 	F9 news, the offseason's lines
+NXN-04	franchise	menu	say5	earlier	F9 news, the earlier lines
+NXH-34	franchise	help	say5	 With a franchise. F9. the franchise menu: the to do list, the news, your roster, the league history and the team ratings. 	F5 addition (H12, C6), while the franchise is in use
+NXH-35	franchise	help	say5	 A franchise is a league that lasts from season to season. Your players have ratings, grow older, improve and decline, and retire. 	F6 addition (H12, C6), while the franchise is in use
+NXH-37	franchise	help	say5	 After the play offs comes the offseason with the draft and the roster cut. Before a game you hear the news and your to do list. Extra work you leave undone puts you behind the other teams. 	F6 addition (H12, C6), after NXH-35
+NXH-36	franchise	help	say5	 Rating: a player's skill from 40 to 99, where 70 is average. Potential: how fast a young player may still improve. 	F7 addition (H12, C6), while the franchise is in use
+NXH-38	franchise	help	say5	 Draft: the yearly choice of new players; the weakest teams pick first. Rookie: a player in his first season. Released: let go from the team. 	F7 addition (H12, C6), after NXH-36
+NWB01	franchise	remark	say2	 the <team> beat the <other> by <n> points. 	the biggest win of the week
+NWB02	franchise	remark	say2	 a big win for the <team>, <score> over the <other>. 	the biggest win of the week
+NWB03	franchise	remark	say2	 the <team> ran over the <other>, <score>. 	the biggest win of the week
+NWB04	franchise	remark	say2	 the <other> had no answer for the <team>, <score>. 	the biggest win of the week
+NWU01	franchise	remark	say2	 an upset: the <team> beat the <other>, <score>. 	an upset
+NWU02	franchise	remark	say2	 nobody expected it: the <team> over the <other>, <score>. 	an upset
+NWU03	franchise	remark	say2	 the <other> stumbled against the <team>, <score>. 	an upset
+NWU04	franchise	remark	say2	 a surprise result: the <team> got past the <other>, <score>. 	an upset
+NWC01	franchise	remark	say2	 the closest game of the week: the <team> over the <other>, <score>. 	the closest game
+NWC02	franchise	remark	say2	 the <team> just held off the <other>, <score>. 	the closest game
+NWC03	franchise	remark	say2	 a nail biter: the <team> beat the <other>, <score>. 	the closest game
+NWC04	franchise	remark	say2	 the <other> came up just short against the <team>, <score>. 	the closest game
+NWS01	franchise	remark	say2	 the <team> have won <n> in a row. 	another team's winning streak
+NWS02	franchise	remark	say2	 nobody can stop the <team>: <n> wins in a row. 	another team's winning streak
+NWS03	franchise	remark	say2	 the <team> keep rolling, <n> straight wins. 	another team's winning streak
+NWS04	franchise	remark	say2	 <n> wins in a row for the <team>. 	another team's winning streak
+NWL01	franchise	remark	say2	 the <team> have lost <n> in a row. 	another team's losing streak
+NWL02	franchise	remark	say2	 a hard time for the <team>: <n> losses in a row. 	another team's losing streak
+NWL03	franchise	remark	say2	 the <team> are looking for a win after <n> straight losses. 	another team's losing streak
+NWL04	franchise	remark	say2	 <n> losses in a row for the <team>. 	another team's losing streak
+NWY01	franchise	remark	say2	 <coach>, your team has won <n> in a row. 	your winning streak
+NWY02	franchise	remark	say2	 <n> straight wins for coach <coach>. 	your winning streak
+NWY03	franchise	remark	say2	 the fans are happy, coach <coach>: <n> wins in a row. 	your winning streak
+NWY04	franchise	remark	say2	 your team is on a roll, <n> wins in a row. 	your winning streak
+NWZ01	franchise	remark	say2	 <coach>, your team has lost <n> in a row. 	your losing streak
+NWZ02	franchise	remark	say2	 <n> straight losses for coach <coach>. 	your losing streak
+NWZ03	franchise	remark	say2	 the fans want a win, coach <coach>: <n> losses in a row. 	your losing streak
+NWZ04	franchise	remark	say2	 a hard stretch for your team, <n> losses in a row. 	your losing streak
+NWM01	franchise	remark	say2	 <coach> won game number <n> as a head coach. 	the coach's milestone
+NWM02	franchise	remark	say2	 win number <n> for coach <coach>. 	the coach's milestone
+NWM03	franchise	remark	say2	 coach <coach> has <n> wins now. 	the coach's milestone
+NWM04	franchise	remark	say2	 another milestone: <n> wins for coach <coach>. 	the coach's milestone
+NWT01	franchise	remark	say2	 the <team> are the champions of season <n>. 	the champion (offseason)
+NWT02	franchise	remark	say2	 season <n> belongs to the <team>. 	the champion (offseason)
+NWT03	franchise	remark	say2	 the <team> won it all in season <n>. 	the champion (offseason)
+NWT04	franchise	remark	say2	 the title of season <n> goes to the <team>. 	the champion (offseason)
+NWR01	franchise	remark	say2	 <player>, <position> of the <team>, retires. 	a star retires (offseason)
+NWR02	franchise	remark	say2	 a great career ends: <player> of the <team> retires. 	a star retires (offseason)
+NWR03	franchise	remark	say2	 the <team> lose <player>, who retires. 	a star retires (offseason)
+NWR04	franchise	remark	say2	 <player> of the <team> says goodbye to football. 	a star retires (offseason)
+NWD01	franchise	remark	say2	 with the first pick the <team> took <player>, <position>. 	the first pick of the draft (offseason)
+NWD02	franchise	remark	say2	 the first pick of the draft: <player>, <position>, to the <team>. 	the first pick of the draft (offseason)
+NWD03	franchise	remark	say2	 the <team> opened the draft with <player>, <position>. 	the first pick of the draft (offseason)
+NWD04	franchise	remark	say2	 <player>, <position>, went first, to the <team>. 	the first pick of the draft (offseason)
+NWP01	franchise	remark	say2	 <player> has worked hard and improved to <r>. 	your big improver (offseason)
+NWP02	franchise	remark	say2	 a big step for <player>: rating <r>. 	your big improver (offseason)
+NWP03	franchise	remark	say2	 <player> is better than ever, rating <r>. 	your big improver (offseason)
+NWP04	franchise	remark	say2	 the extra work paid off for <player>: rating <r>. 	your big improver (offseason)
+NXN-05	franchise	sentence	say5	 week <n>. 	F9 news, before the lines of an earlier week (added by SX.8e; the offseason's lines use NXN-03)

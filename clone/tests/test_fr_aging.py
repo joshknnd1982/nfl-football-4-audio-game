@@ -537,7 +537,7 @@ def test_the_roster_of_f9_counts_the_players_it_has_while_places_are_empty(tmp_p
         real(self, speech, keys, title, items, *args, **kwargs)
     monkeypatch.setattr(spoken_menu.SpokenMenu, "__init__", spy)
     from frrig import DOWN, ENTER, ESC, F9
-    stage_rig(tmp_path, Veterans(), keys=[F9, DOWN, DOWN, DOWN, DOWN, ENTER, ENTER, ESC, ESC, ESC])
+    stage_rig(tmp_path, Veterans(), keys=[F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, ESC, ESC, ESC])
     roster = [labels for title, labels in seen if title == "your roster"][0]
     assert roster[:3] == [" quarterback: 0 ", " running backs: 5 ", " receivers: 5 "] and roster[3] == " defensive linemen: 6 "
 
@@ -597,7 +597,7 @@ def test_play_classic_seasons_asked_at_a_stages_wait_leaves_the_stage_done_once(
     with_all_aged(league, 25)
     files = MemoryFiles()
     files.data["league.sav"] = league.to_json().encode("utf-8")
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, DOWN, DOWN, ENTER, ENTER, ESC, ENTER]    # F9, Franchise, classic, confirm
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 6 + [ENTER, ENTER, ESC, ENTER]    # F9, Franchise, classic, confirm
     rig = franchise_rig(tmp_path / "one", keys, files=files, kind="franchise", preset=preset_season(gtp=3), policy=quit_policy)
     run_until(rig)
     saved = LeagueRecord.from_json(files.data["league.sav"].decode("utf-8"))

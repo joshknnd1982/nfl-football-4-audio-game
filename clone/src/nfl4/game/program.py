@@ -299,9 +299,13 @@ class Program:
             except GameQuit:                                    # the window closed at the question: football.sav was
                 store.save_game(saved)                          # already read and deleted, so it is written back
                 raise
+        arguments = self.mode.game_arguments()                  # H15 (nfl4 only): the Franchise's opponent and quarterbacks
+        plan_rules = arguments.pop("rules", None)               # and, when the player took it, the staff's game plan (SX.8e)
+        if rules is None:
+            rules = plan_rules
         result = g.play_game(rules=rules, own_names=own_names, saved=saved, save_sink=store.save_game,
                              roster_sink=store.write_player_names,   # 0x489ddb
-                             **self.mode.game_arguments())           # H15 (nfl4 only): the Franchise's opponent and quarterbacks
+                             **arguments)
         if result.saved:                                        # 0x489e2c: SavedGame = 1 skips pog and the standings
             self.saved_game = True
             self.ending = "saved"

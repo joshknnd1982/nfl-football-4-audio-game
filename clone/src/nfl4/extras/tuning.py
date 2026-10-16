@@ -353,3 +353,36 @@ FR_CUT_FLOOR = 50
 # until SX.8e) is inside the same bands as a mean over the leagues: rating 68.5 to 70.0, age 25.8 to 26.7, every group 66.5 to 72.8, win
 # spread 2.79 to 2.88; 15 of the 10,000 single league-seasons have a mean rating just under 68 and 1.6 percent a group outside 64 to 76
 # (work/calibrate_draft_sx8d_fast_500x20_build_alone.txt); the picks of round 1 are rated 74.3 at 25 and those of round 7 64.6.
+
+# ----- the to-do list and the news, design 8 (SX.8e; the history of every move is below) -----
+# T1 extra work (design 8.1): in these weeks of the regular season a team with at least FR_EXTRA_WORK_CANDIDATES players aged
+# FR_EXTRA_WORK_AGE or less, of high or average potential and with fewer than FR_EXTRA_WORK_POINTS development points, gives one of
+# them a point. The player is asked; every computer team gives its first candidate the point (the same code, `franchise/todo.py`).
+FR_EXTRA_WORK_WEEKS = (2, 6, 10, 14)
+FR_EXTRA_WORK_AGE = 24
+FR_EXTRA_WORK_CANDIDATES = 2
+FR_EXTRA_WORK_POINTS = 3
+# T2 the game plan (design 8.1): the style the staff recommends for each opponent style (and Classic), worked out once by
+# work/make_game_plan_sx8e.py with the expected-yards yardstick of tests/playbook_ev.py and frozen here (report:
+# work/make_game_plan_sx8e.txt). "offense" is keyed by the opponent's DEFENSE style, "defense" by the opponent's OFFENSE style.
+FR_GAME_PLAN = {
+    "offense": {"classic": "west", "pro": "west", "west": "west", "air": "west", "power": "west", "zone": "west", "option": "west", "pressure": "west"},
+    "defense": {"classic": "power", "pro": "option", "west": "pressure", "air": "option", "power": "power", "zone": "option", "option": "option", "pressure": "pressure"},
+}
+# The news (design 8.3): at most FR_NEWS_MAX lines a week, in the order of the rules; the player's streak from FR_STREAK_OWN, another
+# team's from FR_STREAK_LEAGUE, every FR_MILESTONE-th win as head coach; an upset is a win by a team whose rating (the weighted mean,
+# design 4.4) is FR_UPSET_GAP or more points under the loser's.
+FR_NEWS_MAX = 4
+FR_STREAK_OWN = 3
+FR_STREAK_LEAGUE = 4
+FR_MILESTONE = 10
+FR_UPSET_GAP = 3                  # design 8.3 gives 4 as a fixed number (no start-value mark); moved by decision D-060, see below
+# SX.8e calibration (D-060; the report is work/calibrate_todo_sx8e_fast_500x20.txt, the scripts work/sim_league_sx8e.py and
+# work/calibrate_todo_sx8e.py). THE REAL EXTRA-WORK ITEM (todo.computer_extra_work, in its week for every team) in the fast run's loop
+# leaves C-F4 as the SX.8d report had it with the stand-in, season by season (the item is the same rule): the MEAN over the 500 leagues is
+# inside its band in every one of the 20 seasons (rating 69.2 to 70.8, age 25.8 to 26.7, every group 67.2 to 73.9, win spread 2.81 to 2.87),
+# 127.5 of the 128 points a season are given (a team with fewer than two candidates gives none), and no value of the aging, the draft or the
+# extra work moved. ONE value of the news moved: at the design's FR_UPSET_GAP of 4 rating points an upset is told in 8.0 percent of the
+# weeks (the strengths' standard deviation settles near 1.3, so a gap of 4 is three standard deviations between two teams); at 3 it is
+# 26.0 percent (at 5, 2.0 percent). Three is the first gap at which an upset is news about one week in four; the lines a week are
+# 3.13 at the gap of 4 and 3.27 at 3, and the cut at FR_NEWS_MAX takes lines away in 6.9 percent of the weeks (2.7 at the gap of 4).

@@ -168,7 +168,7 @@ def test_the_new_seasons_sums_and_rating_follow_the_ratings_at_the_end_of_the_of
 # ----- the roster and the team ratings in F9 -----
 
 def test_a_group_of_the_roster_speaks_the_rating_the_age_and_the_potential_of_each_player(tmp_path):
-    rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + [ENTER, DOWN, DOWN, ENTER, DOWN],
+    rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + [DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, DOWN],
                                   policy=quit_policy))
     text, record = spoken(rig), league(rig)
     words = history.Words(lambda t: "")
@@ -185,7 +185,7 @@ def test_the_potential_words_are_high_average_and_low():
 
 
 def test_the_team_ratings_item_lists_the_32_teams_best_first_and_names_the_players_rank(tmp_path):
-    rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + [DOWN, DOWN, ENTER, DOWN],
+    rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + [DOWN] * 4 + [ENTER, DOWN],
                                   policy=quit_policy))
     text, record = spoken(rig), league(rig)
     first = history.team_rating_lines(record, history.Words(lambda t: "team%d" % t))

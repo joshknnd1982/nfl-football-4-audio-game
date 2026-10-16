@@ -258,7 +258,7 @@ def test_f9_at_the_cut_question_tells_the_waiting_rookies_by_their_ranges_as_the
     rookie = DR.waiting_by_team(start)[TEAM][0]
     low, high = start.rookie_range(rookie)
     steps = D.ROSTER_ORDER.index(rookie.pos)
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER, ENTER] + [DOWN] * steps + [ENTER, ESC, ESC, ESC, ESC]
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER] + [DOWN] * steps + [ENTER, ESC, ESC, ESC, ESC]
     rig = run(tmp_path, league, keys=keys, until=lambda r: bool(lists))
     words = rig.fstore.words
     expected = words.prospect_line(rookie.name, rookie.pos, low, high, rookie.age, rookie.potential)

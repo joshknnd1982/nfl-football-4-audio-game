@@ -86,6 +86,8 @@ class HotKeys:
         rules = engine.rules if engine is not None else self.g.rules
         for line in rules.extra_help(key):
             self.g.say5(line)
+        for line in self.g.franchise_help(key):               # nfl4 only (SX.8e): the Franchise's lines, while it is in use
+            self.g.say5(line)
 
     def _wait_speech(self) -> None:
         self.keys.wait_speech(self.g.speech)

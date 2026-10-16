@@ -16,16 +16,26 @@ from ...game.spoken_menu import Item, ListPicker, SpokenMenu
 from ..nfl_rules import is_nfl
 from .. import nx_texts as X
 from . import data as D
-from . import history, mode
+from . import history, mode, news, todo, weekly
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
 
 
 class _Closed(Exception):
     """An action that ends the menu (a switch was asked for): F9's root goes on, the menu below it is closed."""
+
+
+class _Answered(Exception):
+    """An answer of the to-do list was taken: the menu of the item ends."""
+
+
+def help_lines(key: str) -> list:
+    """The Franchise's lines added to the help of F5, F6 and F7 (design 14: NXH-34 to NXH-38)."""
+    return [X.text(text_id) for text_id in HELP_LINES.get(key, ())]
 
 
 def franchise_item_shown(g) -> bool:
@@ -54,6 +64,73 @@ def franchise_menu(g, speech, keys) -> None:
     store = g.franchise()
     in_use = g.franchise_in_use
     settings = g.options.settings.game
+
+    # ----- the to-do list (design 8.1, 11) -----
+
+    def ask_in_menu(item: dict) -> bool:
+        """One item as an F9 menu (the F9 classes read keys without the global keys, design 3.7): False when Escape left it."""
+        league = store.league
+        if item["kind"] == D.TODO_EXTRA_WORK and not todo.valid_players(league, item):
+            league.todo.remove(item)
+            store.save()
+            return True
+        situation, answers = weekly.item_view(g, league, item)
+        own = todo.answer_count(league, item)
+        taken: list = []
+
+        def take(index: int):
+            taken.append(index)
+            raise _Answered()
+
+        items = [Item(lambda text=text: text.strip(), enter=lambda index=index: take(index)) for index, text in enumerate(answers)]
+        try:
+            SpokenMenu(speech, keys, " ".join(part.strip() for part in situation), items, space_enters=True,
+                       digits_jump=True).run()
+        except _Answered:
+            pass
+        if not taken:
+            return False
+        done, text = weekly.finish_item(store, league, item, taken[0], own)
+        if text:
+            speech.stop()
+            speech.say_async(text)
+        return True
+
+    def todo_menu():
+        league = store.league
+        if g.play_engine is not None or not weekly.in_regular_season(league) or not todo.waiting(league):
+            return X.text("NXD-07")            # inside a game the deadline has passed: the list is closed
+        for item in list(todo.waiting(league)):
+            if item in league.todo and not ask_in_menu(item):
+                return None
+        return X.text("NXD-07") if not todo.waiting(league) else None
+
+    # ----- the news (design 8.3, 11) -----
+
+    def news_menu():
+        league = store.league
+        shown = [(entry, weekly.plain_text(entry["markup"])) for entry in news.newest_first(league)]
+        shown = [(entry, text) for entry, text in shown if text]
+        if not shown:
+            return X.text("NXN-02")
+        first = (shown[0][0]["season"], shown[0][0]["week"])
+        latest = [text for entry, text in shown if (entry["season"], entry["week"]) == first]
+        earlier = []                                 # the earlier weeks, newest first, each with its heading (design 8.3)
+        heading = first
+        for entry, text in shown:
+            key = (entry["season"], entry["week"])
+            if key == first:
+                continue
+            if key != heading:
+                heading = key
+                earlier.append(X.text("NXN-03") if key[1] == D.NEWS_OFFSEASON else X.text("NXN-05", n=key[1]))
+            earlier.append(text)
+        title = X.text("NXN-03" if first[1] == D.NEWS_OFFSEASON else "NXN-01").strip().rstrip(".")
+        items = [Item(lambda: title, enter=lambda: _lines_picker(speech, keys, title, latest))]
+        if earlier:
+            items.append(Item(lambda: X.text("NXN-04"), enter=lambda: _lines_picker(speech, keys, X.text("NXN-04"), earlier)))
+        SpokenMenu(speech, keys, X.text("NXF-12"), items, space_enters=True, digits_jump=True).run()
+        return None
 
     # ----- the roster -----
 
@@ -126,7 +203,15 @@ def franchise_menu(g, speech, keys) -> None:
             settings.nx_fr_picks_told = PICKS_TOLD[(at + step) % len(PICKS_TOLD)]
             g.options.save()
 
-        items = [Item(offseason_label, enter=lambda: (toggle(), offseason_label())[1], change=toggle),
+        def auto_label() -> str:
+            return X.text("NXF-20") + "," + X.text("NXM-20" if settings.nx_fr_auto else "NXM-21")
+
+        def flip(step: int = 1) -> None:
+            settings.nx_fr_auto = not settings.nx_fr_auto
+            g.options.save()
+
+        items = [Item(auto_label, enter=lambda: (flip(), auto_label())[1], change=flip),
+                 Item(offseason_label, enter=lambda: (toggle(), offseason_label())[1], change=toggle),
                  Item(picks_label, enter=lambda: (cycle(), picks_label())[1], change=cycle)]
         SpokenMenu(speech, keys, X.text("NXF-16"), items, space_enters=True, digits_jump=True).run()
 
@@ -148,7 +233,9 @@ def franchise_menu(g, speech, keys) -> None:
         return act
 
     if in_use:
-        items = [Item(lambda: X.text("NXF-13"), enter=roster_menu),
+        items = [Item(lambda: X.text("NXF-11"), enter=todo_menu),
+                 Item(lambda: X.text("NXF-12"), enter=news_menu),
+                 Item(lambda: X.text("NXF-13"), enter=roster_menu),
                  Item(lambda: X.text("NXF-14"), enter=history_menu),
                  Item(lambda: X.text("NXF-15"), enter=ratings_menu),
                  Item(lambda: X.text("NXF-16"), enter=settings_menu),

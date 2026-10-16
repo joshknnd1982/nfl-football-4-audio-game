@@ -60,7 +60,7 @@ def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=No
 
     def play_game(rules=None, own_names=None, saved=None, quarterback_names=None, save_sink=None, roster_sink=None,
                   opponent_names=None, **ignored):
-        rig.plays.append({"own_names": own_names, "saved": saved, "save_sink": save_sink, "roster_sink": roster_sink,
+        rig.plays.append({"rules": rules, "own_names": own_names, "saved": saved, "save_sink": save_sink, "roster_sink": roster_sink,
                           "gtp": game.season.gtp, "opponent": (game.season.tn3, game.season.tn4),
                           "opponent_names": opponent_names, "quarterback_names": quarterback_names})
         outcome = rig.outcomes.pop(0) if rig.outcomes else None

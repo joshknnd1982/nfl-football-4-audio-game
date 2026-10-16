@@ -87,7 +87,8 @@ class LeagueRecord:
     results: list = field(default_factory=list)        # [stage code, week, winner team, loser team, winner score, loser score]
     sums: list = field(default_factory=list)           # the 32 exact strengths at the start of the season (SX.8b)
     history: list = field(default_factory=list)        # one dict per finished season (history.py)
-    told: list = field(default_factory=lambda: [0, 0])  # [season, week] of the news and list already told (SX.8e)
+    told: list = field(default_factory=lambda: [0, 0])  # [season, week] whose season line (NXF-08) was told
+    prepared: list = field(default_factory=lambda: [0, 0])  # [season, week] whose preparation (SX.8e: points, news, items) was made
     todo: list = field(default_factory=list)           # the waiting items (SX.8e)
     news: list = field(default_factory=list)           # the season's news (SX.8e)
     news_recent: dict = field(default_factory=dict)    # per news pool, the IDs spoken last (SX.8e)
@@ -186,7 +187,7 @@ class LeagueRecord:
                 "players": [self.players[pid].to_list() for pid in sorted(self.players)], "next_id": self.next_id,
                 "gtp": self.gtp, "schedule": self.schedule, "records": self.records, "pairings": self.pairings,
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
-                "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft}
+                "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -222,6 +223,7 @@ class LeagueRecord:
             record.pairings, record.byes, record.results = data["pairings"], data["byes"], data["results"]
             record.sums, record.history, record.told = data["sums"], data["history"], data["told"]
             record.todo, record.news, record.news_recent = data["todo"], data["news"], data["news_recent"]
+            record.prepared = data.get("prepared", [0, 0])         # a league.sav of SX.8a to SX.8d has none: its week is not prepared
             record.draft = data["draft"]
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
@@ -267,11 +269,11 @@ class LeagueRecord:
         waiting = draft.check_draft(self, whole)               # the rookies waiting for the cut (stages 4 and 5 only)
         self._check_rosters(whole, waiting)
         self._check_history(whole)
-        if not isinstance(self.todo, list) or len(self.todo) > 200 or not isinstance(self.news, list) or len(self.news) > 400:
-            raise LeagueError("the to-do list or the news is not a short list")
-        if not isinstance(self.news_recent, dict) or len(self.news_recent) > 40:
-            raise LeagueError("the news history is %r" % (type(self.news_recent).__name__,))
+        from . import news, todo
+        todo.check_items(self, whole)                       # the to-do list (SX.8e: each item's kind, week, state and values)
+        news.check_entries(self, whole)                     # and the news with its history of lines told last
         ints(self.told, 2, 0, D.MAX_SEASONS, "the told mark")
+        ints(self.prepared, 2, 0, D.MAX_SEASONS, "the prepared mark")
         if self.sums:
             ints(self.sums, D.TEAMS, 0, 78 * 99, "the strengths")
         if self.draft is not None and not isinstance(self.draft, dict):

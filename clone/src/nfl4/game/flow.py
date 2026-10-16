@@ -64,6 +64,7 @@ class Game(Speakers):
         self.remark_pools = None                      # the extras' remarks.txt (nfl4 only, SX.2); None = the defaults
         self.foul_table = None                        # the extras' penalties.txt (nfl4 only, SX.3); None = the defaults
         self.playbook_table = None                    # the extras' playbooks files (nfl4 only, SX.7); None = the defaults
+        self.news_pools = None                        # the Franchise's news.txt (nfl4 only, SX.8e); None = the defaults
         self.customization = None                     # data.customize.Customization: the player's files (S7.7)
         self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
         self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
@@ -140,6 +141,7 @@ class Game(Speakers):
             self.remark_pools = snapshot.remarks              # None while the Rules are Classic (the file is not read)
             self.foul_table = snapshot.fouls                  # the same for penalties.txt (SX.3)
             self.playbook_table = snapshot.playbooks          # and the playbooks' three files (SX.7)
+            self.news_pools = snapshot.news                   # and the Franchise's news.txt (SX.8e)
         except Exception:
             log.exception("the player's customization could not be applied")
 
@@ -170,6 +172,13 @@ class Game(Speakers):
             self._franchise_store = store
             self.notice_sources = self.notice_sources + (store,)
         return self._franchise_store
+
+    def franchise_help(self, key: str) -> list:
+        """The added help lines of F5, F6 and F7 while the franchise is in use (nfl4 only, SX.8e, H12); none in a classic season."""
+        if not self.franchise_in_use:
+            return []
+        from ..extras.franchise.menus import help_lines
+        return help_lines(key)
 
     @property
     def franchise_in_use(self) -> bool:

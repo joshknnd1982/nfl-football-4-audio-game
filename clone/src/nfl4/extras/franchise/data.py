@@ -84,5 +84,17 @@ PLAYOFF_CHANCE_MIN, PLAYOFF_CHANCE_MAX = 250, 750
 # the original's score table has 32 entries (game\playoffs.py SCORE_TABLE): a shifted index stays in 1 to 32
 SCORE_TABLE_SIZE = 32
 
+# the to-do list (design 8.1): the kinds are data, so a later update adds its own (contracts, injuries, coordinators: design 17)
+TODO_EXTRA_WORK, TODO_GAME_PLAN = "extra_work", "game_plan"
+TODO_KINDS = (TODO_EXTRA_WORK, TODO_GAME_PLAN)
+ITEM_NEW, ITEM_LATER, ITEM_SET = 0, 1, 2     # not asked yet; answered "later"; the game plan, taken for this week's game
+REGULAR_WEEKS = 16
+NEWS_LAST_WEEK = 15                          # the news of a week is made after weeks 1 to 15 (design 8.3)
+NEWS_OFFSEASON = 16                          # the `week` of an offseason's news line
+MAX_NEWS = 400                               # lines kept in league.sav (a season's 15 weeks of 4 and the offseason's, with room)
+MAX_TODO = 200
+# the twelve kinds of news line of news.txt (design 8.3, 15); the letter says the kind
+NEWS_POOLS = ("NWB", "NWU", "NWC", "NWS", "NWL", "NWY", "NWZ", "NWM", "NWT", "NWR", "NWD", "NWP")
+
 MAX_RESULTS = 400                            # games of one season (16 weeks of 16 games and 13 play-off games), with room
 MAX_HISTORY = 500                            # seasons kept

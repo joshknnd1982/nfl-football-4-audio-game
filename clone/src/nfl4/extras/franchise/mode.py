@@ -19,7 +19,7 @@ from ...game.season_mode import ClassicSeason, SeasonMode
 from .. import nx_texts as X
 from ..nfl_rules import is_nfl
 from . import data as D
-from . import history
+from . import history, weekly
 from .league import SEASON, new_league, team_index, team_ref
 from .question import FranchiseQuestion, ask_yes_no
 from .strength import LeaguePlace
@@ -80,18 +80,13 @@ class FranchiseSeason(SeasonMode):
         to_classic(self.p, announce=False)
 
     def before_menu(self) -> None:
-        """Week 1 of a season: NXF-08, once (the told mark of the record, so a restart or F1 does not say it again). SX.8e adds
-        the news and the to-do list here."""
-        p = self.p
-        league = p.store.league
-        if league is None or league.stage != SEASON or not 1 <= league.gtp <= 16:
-            return
-        if league.told == [league.season, league.gtp]:
-            return
-        if league.gtp == 1:
-            p.g.say2(X.text("NXF-08", n=league.season))
-        league.told = [league.season, league.gtp]
-        p.store.save()
+        """Design 3.4: week 1 NXF-08, the news of the week that was played, the to-do list, once a week (the told mark of the
+        record, so a restart or F1 does not say them again)."""
+        weekly.before_menu(self.p)
+
+    def before_game(self) -> None:
+        """The to-do list's deadline, the kick-off (design 8.1)."""
+        weekly.before_game(self.p)
 
     def game_arguments(self) -> dict:
         """The opponent is a team of the league with its own players and ratings, and both quarterbacks are players of the league,
@@ -103,7 +98,11 @@ class FranchiseSeason(SeasonMode):
         opponent = league.roster_for_game(team_index(p.season.tn3, p.season.tn4))
         own_quarterback = league.roster_for_game(league.team).quarterback
         names = (own_quarterback, opponent.quarterback)
-        return {"opponent_names": opponent, "quarterback_names": lambda state: names}
+        arguments = {"opponent_names": opponent, "quarterback_names": lambda state: names}
+        rules = weekly.game_rules(p)                      # the staff's game plan, when the player took it (design 8.1 T2)
+        if rules is not None:
+            arguments["rules"] = rules
+        return arguments
 
     def season_over(self) -> None:
         from . import offseason

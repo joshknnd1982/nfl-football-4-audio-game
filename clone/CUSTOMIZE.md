@@ -19,6 +19,7 @@ It holds these plain text files. Any text editor will do, and a screen reader re
 - remarks.txt, the remarks of the N. F. L. rules, only when that rule set is chosen in F9 (see below).
 - penalties.txt, the fouls of the N. F. L. rules: their names, and which are called and how often (see below).
 - the folder playbooks, with plays.txt, styles.txt and team_styles.txt: the plays of the N. F. L. rules' playbooks (see below).
+- news.txt, the news lines of a franchise, only when the N. F. L. rules are chosen in F9 (see below).
 
 After you save a file, choose Reload in the Customize menu, or start the game again. A game in progress keeps the players it already has.
 
@@ -132,6 +133,25 @@ The folder playbooks has three files:
 - team_styles.txt gives each of the 32 teams a style, for example `T01 = Air Raid; defense Pro Style`. Classic is the original's plays: put a team on Classic and the computer plays it with the original's plays.
 
 With Rules on Classic, none of these files is read.
+
+## The news of a franchise
+
+With the N. F. L. rules the game also has news.txt, the lines of the news you hear in a franchise before each game: the biggest win of the week, an upset, the closest game, another team's winning or losing streak, your own streak and your wins as a head coach, and, in the offseason, the champion, a star who retires, your player who improved a lot and the first pick of the draft. It works like remarks.txt: each line is an ID and the line. The letters of the ID say the kind of news: NWB the biggest win, NWU an upset, NWC the closest game, NWS another team's winning streak, NWL its losing streak, NWY your winning streak, NWZ your losing streak, NWM your wins as a head coach, NWT the champion, NWR a star who retires, NWD the first pick of the draft and NWP a player of yours who improved. Change a line, switch it off with `NWB02 = off`, delete it to get the original back, or add your own with a new number, NWB05 and higher. If every line of a kind is off, that kind of news is never told. The game takes one line of the kind by chance, never one of the last three of that kind. The words in square brackets of the banter work here too, except [name] and [opponent quarterback], because the news is told between games. These are filled in by the game:
+
+- `<team>` is the team the news is about (in NWM, NWY and NWZ and in NWP, your team) and `<other>` the other team of the game.
+- `<n>` is a number: the points of the win, the games in a row, your wins, or the season.
+- `<score>` is the score as it is said, for example 24 to 17.
+- `<coach>` is your name.
+- `<player>`, `<position>` and, for NWP, `<r>`, the rating he has now, are in the kinds NWR, NWD and NWP.
+
+For example:
+
+    NWB05 = what a thrashing! the <team> win by <n>. [bleep]
+    NWY05 = coach <coach>, <n> in a row, and still counting.
+
+The F8 key does not switch the news off. The lines of the offseason's stages are said as words only; a sound in such a line is played in the weekly news only. The F9 menu, Franchise, News, lets you hear the lines again.
+
+The F9 menu, Franchise, To do list, asks again the items you left for later. The setting "staff handles the to do list" in Franchise settings makes the staff take its own recommendation for every item.
 
 ## If something is wrong
 

@@ -17,6 +17,8 @@ from .. import nx_texts as X
 from . import aging
 from . import data as D
 from . import draft as DR
+from . import news
+from .news_pools import DEFAULT_POOLS
 from .question import FranchiseQuestion
 
 STAFF_LIST = 5                                   # the staff's list holds this many prospects (design 7.3)
@@ -78,15 +80,18 @@ def stage_draft(p, n: int, m: int, short: bool) -> None:
                               position=words.position(player.pos)))
     # the draft is over: the stage is written (the draft record stays until the cut: F9 tells the rookies by their ranges)
     own = league.waiting_rookies(league.team)
-    lines = [X.text("NXK-11")] + [words.prospect_line(player.name, player.pos, *draft.range_of(player), player.age, player.potential)
-                                  for player in own]
+    first = league.players[draft.picks[0][2]]                               # the first pick of the draft: the NWD line (design 8.3)
+    told, recent = news.render(league, [news.first_pick_event(draft.picks[0][0], first)], g.news_pools or DEFAULT_POOLS, words, g.rnd)
+    lines = [X.text("NXK-11")] + [
+        words.prospect_line(player.name, player.pos, *draft.range_of(player), player.age, player.potential) for player in own]
+    news.keep(league, told, recent, D.NEWS_OFFSEASON)
     league.stage_no = off._next_stage(D.STAGE_DRAFT)
     store.save()
     if short:
         for line in lines:
             g.say2(line)
     else:
-        off.wait_for_enter(g, lines + [X.text("NXE-03")])
+        off.wait_for_enter(g, off._news_texts(told) + lines + [X.text("NXE-03")])
 
 
 def _announce(g, round_no: int, announced: int) -> int:

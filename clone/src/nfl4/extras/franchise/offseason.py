@@ -17,8 +17,9 @@ from .. import nx_texts as X
 from . import aging
 from . import data as D
 from . import draft_flow
-from . import history
+from . import history, news, weekly
 from .league import OFFSEASON, SEASON, team_ref
+from .news_pools import DEFAULT_POOLS
 from .question import wait_for_enter
 
 
@@ -58,6 +59,8 @@ def stage_review(p, n: int, m: int, short: bool) -> None:
     words = store.words
     entry = history.build_entry(league)
     team = entry["team"] - 1
+    pools = g.news_pools or DEFAULT_POOLS
+    told, recent = news.render(league, [news.champion_event(entry["season"], entry["champion"])], pools, words, g.rnd)
     lines = [] if short else [_stage_line(n, m, "NXE-11")]
     lines.append(X.text("NXE-20", champion=words.team_name(entry["champion"]), n=entry["season"]))
     lines.append(X.text("NXE-21", w=entry["wins"][team], l=entry["losses"][team], finish=words.finish(entry["finish"][team])))
@@ -70,13 +73,21 @@ def stage_review(p, n: int, m: int, short: bool) -> None:
                             worst=words.team_name(worst), worst_w=entry["wins"][worst - 1], worst_l=entry["losses"][worst - 1]))
         career = history.career(history_with(league, entry))
         lines.append(X.text("NXE-29", n=career.seasons, w=career.wins, l=career.losses))
+        lines += _news_texts(told)
         lines.append(X.text("NXE-03"))
         wait_for_enter(g, lines)
     league.history.append(entry)
     league.results = []
+    news.keep(league, told, recent, D.NEWS_OFFSEASON)     # the champion's line: kept after the wait with the rest of the stage
     league.stage_no = _next_stage(D.STAGE_REVIEW)
     store.write_history()                                # history.txt first: a crash between leaves it ahead, never behind
     store.save()
+
+
+def _news_texts(rendered: list) -> list:
+    """The words of the offseason's news lines for a stage's list of lines (the stage's lines are plain sentences; a sound or a
+    pause of a player's own line is for the weekly news and the lists of F9)."""
+    return [text for text in (weekly.plain_text(markup) for _pool, markup in rendered) if text]
 
 
 def history_with(league, entry):
@@ -115,9 +126,12 @@ def stage_retirements(p, n: int, m: int, short: bool) -> None:
     lines.append(X.text("NXE-33", n=len(retiring)))
     lines += [X.text("NXE-35", player=player.name, team=words.team_name(player.team), position=words.position(player.pos),
                       n=player.seasons + 1) for player in stars]
+    told, recent = news.render(league, news.star_events(stars), g.news_pools or DEFAULT_POOLS, words, g.rnd)    # NWR, after the draws
+    lines += _news_texts(told)
     lines.append(X.text("NXE-03"))
     short_line = X.text("NXE-71", n=len(retiring), m=len(own))
     aging.apply_aging(league, retiring)
+    news.keep(league, told, recent, D.NEWS_OFFSEASON)
     league.stage_no = _next_stage(D.STAGE_AGING)
     store.save()
     if short:
@@ -141,9 +155,12 @@ def stage_development(p, n: int, m: int, short: bool) -> None:
         if change is not None:
             lines.append(X.text(text_id, player=change.player.name, position=words.position(change.player.pos),
                                 d=abs(change.delta), r=change.new))
+    told, recent = news.render(league, news.improver_events(plan, league.team), g.news_pools or DEFAULT_POOLS, words, g.rnd)   # NWP
+    lines += _news_texts(told)
     lines += [X.text("NXE-43"), X.text("NXE-03")]
     short_line = X.text("NXE-72", n=summary.improved, m=summary.declined)
     aging.apply_development(plan)
+    news.keep(league, told, recent, D.NEWS_OFFSEASON)
     league.stage_no = _next_stage(D.STAGE_DEVELOPMENT)
     store.save()
     if short:
@@ -159,11 +176,13 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
     league = store.league
     season = g.season
     aging.drop_the_unkept(league)
+    news.drop_for_new_season(league)                     # the finished season's weekly news goes; its offseason's stays
     league.season += 1
     league.results = []
     league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]
     league.stage, league.stage_no = SEASON, 0
     league.told = [0, 0]
+    league.prepared = [0, 0]
     season.reset_for_new_season()                        # the coach and the team stay
     season.coach = league.coach
     season.tn1, season.tn2 = team_ref(league.team)

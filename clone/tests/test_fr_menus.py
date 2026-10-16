@@ -15,6 +15,7 @@ from programrig import preset_season
 
 GAME = [ENTER, ENTER, ENTER]
 INTO_FRANCHISE = [F9, DOWN, DOWN, DOWN, DOWN, ENTER]
+TWO = [DOWN, DOWN]                     # past the to do list and the news (SX.8e) to the roster
 
 
 def league(rig):
@@ -45,23 +46,24 @@ def menus_seen(monkeypatch):
     return seen
 
 
-def test_while_the_franchise_is_in_use_its_menu_has_the_roster_the_history_the_team_ratings_the_settings_and_the_way_to_classic(tmp_path, monkeypatch):
+def test_while_the_franchise_is_in_use_its_menu_has_the_to_do_list_the_news_the_roster_the_history_the_ratings_the_settings_and_the_way_to_classic(tmp_path, monkeypatch):
     seen = menus_seen(monkeypatch)
     in_a_franchise(tmp_path, INTO_FRANCHISE)
-    assert ("Franchise", ["your roster", "league history", "team ratings", "franchise settings", "play classic seasons"]) in seen
+    assert ("Franchise", ["to do list", "news", "your roster", "league history", "team ratings", "franchise settings",
+                          "play classic seasons"]) in seen
     assert [labels for title, labels in seen if title == "Added functions"][0][3:] == ["Rules.", "Franchise", "About NFL Football 4."]
 
 
 def test_the_roster_has_the_ten_groups_with_their_counts(tmp_path, monkeypatch):
     seen = menus_seen(monkeypatch)
-    in_a_franchise(tmp_path, INTO_FRANCHISE + [ENTER])
+    in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [ENTER])
     roster = [labels for title, labels in seen if title == "your roster"][0]
     assert roster == [" quarterback: 1 ", " running backs: 6 ", " receivers: 6 ", " defensive linemen: 6 ", " linebackers: 5 ",
                       " cornerbacks: 4 ", " safeties: 2 ", " returners: 2 ", " kicker: 1 ", " punter: 1 "]
 
 
 def test_a_group_lists_its_players_by_name_position_rating_age_and_potential(tmp_path):
-    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + [ENTER, DOWN, DOWN, ENTER, DOWN])      # roster, receivers, the second player
+    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [ENTER, DOWN, DOWN, ENTER, DOWN])      # roster, receivers, the second player
     text = spoken(rig)
     receivers = league(rig).group_of(1, "WR")
     for player in receivers[:2]:
@@ -70,14 +72,14 @@ def test_a_group_lists_its_players_by_name_position_rating_age_and_potential(tmp
 
 
 def test_the_history_menu_says_nothing_yet_before_the_first_season_ends(tmp_path):
-    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + [DOWN, ENTER, ENTER, DOWN, ENTER])            # history, champions, then your record
+    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [DOWN, ENTER, ENTER, DOWN, ENTER])            # history, champions, then your record
     text = spoken(rig)
     assert text.count(" nothing yet. ") == 2
 
 
 def test_the_history_menu_after_a_season_lists_the_champion_the_record_and_the_seasons(tmp_path):
     first = a_season_played(tmp_path / "one")
-    keys = INTO_FRANCHISE + [DOWN, ENTER, ENTER, ESC, DOWN, ENTER, ENTER, ESC, DOWN, ENTER, ENTER, ESC, DOWN, ENTER, ENTER, ESC]
+    keys = INTO_FRANCHISE + TWO + [DOWN, ENTER, ENTER, ESC, DOWN, ENTER, ENTER, ESC, DOWN, ENTER, ENTER, ESC, DOWN, ENTER, ENTER, ESC]
     second = run_until(franchise_rig(tmp_path / "two", keys, files=first.files, kind="franchise", policy=quit_policy))
     text = spoken(second)
     entry = league(second).history[0]
@@ -89,11 +91,11 @@ def test_the_history_menu_after_a_season_lists_the_champion_the_record_and_the_s
 
 
 def test_the_franchise_settings_change_the_offseason_with_left_right_and_enter_and_are_kept(tmp_path):
-    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + [DOWN, DOWN, DOWN, ENTER, ENTER])          # settings, Enter: short
+    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [DOWN, DOWN, DOWN, ENTER, DOWN, ENTER])          # settings, the offseason: short
     assert rig.game.options.settings.game.nx_fr_offseason == "short"
     text = spoken(rig)
     assert any(X.text("NXF-24") in t for t in text)
-    rig = in_a_franchise(tmp_path / "b", INTO_FRANCHISE + [DOWN, DOWN, DOWN, ENTER, RIGHT, LEFT, ENTER])
+    rig = in_a_franchise(tmp_path / "b", INTO_FRANCHISE + TWO + [DOWN, DOWN, DOWN, ENTER, DOWN, RIGHT, LEFT, ENTER])
     assert rig.game.options.settings.game.nx_fr_offseason == "short"                           # Right, Left and Enter: short, full, short
     assert "nx_fr_offseason = short" in settingsfile.render(rig.game.options.settings)
 
