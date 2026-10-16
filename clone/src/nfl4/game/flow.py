@@ -216,10 +216,10 @@ class Game(Speakers):
         if self.play_engine is not None:
             self.play_engine.get_sex_of()
 
-    def new_game_setup(self, own_names: Roster | None = None) -> GameSetup:
+    def new_game_setup(self, own_names: Roster | None = None, opponent_names: Roster | None = None) -> GameSetup:
         """pag's set-up GoSub (GAME_SPEC 5.5): the rosters, the banter names, the periods' lengths and the warnings; the
-        three warning lengths also go to the clock."""
-        setup = new_game_setup(self.rnd, self.pool, own_names)
+        three warning lengths also go to the clock. `opponent_names` is the Franchise's opponent (nfl4 only, SX.8b)."""
+        setup = new_game_setup(self.rnd, self.pool, own_names, opponent_names)
         self.quarter_clock.set_warnings(*setup.warnings)
         self.quarter_clock.start_quarter()
         return setup
@@ -241,14 +241,15 @@ class Game(Speakers):
     # ----- the game itself: pag (S7.3b) -----
 
     def play_game(self, rules=None, own_names: Roster | None = None, saved=None, quarterback_names=None,
-                  save_sink=None, roster_sink=None):
+                  save_sink=None, roster_sink=None, opponent_names: Roster | None = None):
         """pag (GAME_SPEC 4.14 to 5.13): one game against this week's opponent. Returns a GameResult (Me.m414, saved,
         conceded); m414 is kept for the season engine. rules: game.rules.ClassicRules (the original) unless the
-        N. F. L. rules mode hands its own (nfl4 only, phase PX)."""
+        N. F. L. rules mode hands its own (nfl4 only, phase PX). opponent_names: the Franchise's opponent (H7, SX.8b)."""
         from .pag import PlayEngine
         rules = (rules or self.rules).for_game()       # the N. F. L. rules get a fresh object per game; Classic is itself
         engine = PlayEngine(self, rules, own_names=own_names, saved=saved,
-                            quarterback_names=quarterback_names, save_sink=save_sink, roster_sink=roster_sink)
+                            quarterback_names=quarterback_names, save_sink=save_sink, roster_sink=roster_sink,
+                            opponent_names=opponent_names)
         self.play_engine = engine
         try:
             result = engine.run()

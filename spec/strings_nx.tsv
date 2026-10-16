@@ -429,3 +429,6 @@ NXG-15	franchise	sentence	say5	 the biggest win: the <team> over the <other>, <s
 NXG-16	franchise	sentence	say5	 the longest winning streak: the <team>, <k> games, season <n>. 	history line
 NXG-17	franchise	sentence	say5	 <player>, <position>, the <team>. seasons played: <n>. best rating <r>. retired after season <s>. 	history line
 NXG-18	franchise	sentence	say5	 nothing yet. 	an empty history list
+NXK-20	franchise	piece	piece	high	the potential words (the roster in SX.8b, the draft in SX.8d)
+NXK-21	franchise	piece	piece	average	the potential words
+NXK-22	franchise	piece	piece	low	the potential words

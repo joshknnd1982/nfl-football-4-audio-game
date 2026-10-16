@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 430.
+- Texts: 433.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 98.
+- Franchise (design section 11): 101.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4.
 
 ## The clock (design section 5)
@@ -478,4 +478,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXG-16 (sentence, say5): " the longest winning streak: the <team>, <k> games, season <n>. ". history line
 - NXG-17 (sentence, say5): " <player>, <position>, the <team>. seasons played: <n>. best rating <r>. retired after season <s>. ". history line
 - NXG-18 (sentence, say5): " nothing yet. ". an empty history list
+- NXK-20 (piece, piece): "high". the potential words (the roster in SX.8b, the draft in SX.8d)
+- NXK-21 (piece, piece): "average". the potential words
+- NXK-22 (piece, piece): "low". the potential words
 

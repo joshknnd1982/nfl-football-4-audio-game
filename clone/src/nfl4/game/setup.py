@@ -105,15 +105,32 @@ def draw_roster(pool: NamePool, banter: list[str] | None) -> Roster:
 
 
 def adopt_roster(pool: NamePool, names: Roster, banter: list[str] | None) -> Roster:
-    """The player's names read from footplay.txt: each blanks the first equal pool entry, in file order."""
+    """The player's names read from footplay.txt: each blanks the first equal pool entry, in file order. A roster with ratings (a
+    Franchise team, nfl4 only, SX.8b) is the league's: its names are not the pool's to take, so it blanks nothing."""
     if not names.is_complete():
         raise ValueError("a roster of the file has to hold 6, 6, 17, 2 and 2 names")
-    for name in names.names():
-        pool.blank_exact(name)
+    if not names.ratings:
+        for name in names.names():
+            pool.blank_exact(name)
+    if banter is not None:
+        banter.extend(names.running_backs + names.receivers + names.defense)
+    # H7 (nfl4 only, SX.8b): the ratings of a roster that has them (a Franchise team) come along, and its quarterback; the file's
+    # rosters have no ratings, and their quarterback (footplay.txt's last item) is carried but only Getqbs reads it, from
+    # `own_names`: Classic does not change
+    return Roster(list(names.running_backs), list(names.receivers), list(names.defense), list(names.special_teams),
+                  list(names.kickers), quarterback=names.quarterback, ratings=dict(names.ratings))
+
+
+def adopt_opponent(names: Roster, banter: list[str] | None) -> Roster:
+    """H7 (nfl4 only, SX.8b; never in Classic): the opponent of a Franchise game is a team of the league with its own players and
+    ratings, handed in as a Roster. No name is drawn and the pool is not touched; the names go to the banter list as a drawn
+    roster's do."""
+    if not names.is_complete():
+        raise ValueError("a roster of the league has to hold 6, 6, 17, 2 and 2 names")
     if banter is not None:
         banter.extend(names.running_backs + names.receivers + names.defense)
     return Roster(list(names.running_backs), list(names.receivers), list(names.defense), list(names.special_teams),
-                  list(names.kickers))
+                  list(names.kickers), quarterback=names.quarterback, ratings=dict(names.ratings))
 
 
 def adopt_partial_roster(pool: NamePool, names: Roster, banter: list[str] | None) -> Roster:
@@ -134,9 +151,11 @@ def adopt_partial_roster(pool: NamePool, names: Roster, banter: list[str] | None
     return roster
 
 
-def new_game_setup(rnd: GameRandom, pool: NamePool, own_names: Roster | None = None) -> GameSetup:
+def new_game_setup(rnd: GameRandom, pool: NamePool, own_names: Roster | None = None,
+                   opponent_names: Roster | None = None) -> GameSetup:
     """pag's set-up GoSub: the own roster (from the file when `own_names` is given, else drawn), the opponent's, the
-    periods' lengths and the three warning lengths, each in the original's order."""
+    periods' lengths and the three warning lengths, each in the original's order. `opponent_names` (nfl4 only, SX.8b: the
+    Franchise's league team) is the opponent's roster instead of the 33 draws; None is the original."""
     banter: list[str] = []
     if own_names is not None and own_names.is_complete():
         own = adopt_roster(pool, own_names, banter)
@@ -144,7 +163,7 @@ def new_game_setup(rnd: GameRandom, pool: NamePool, own_names: Roster | None = N
         own = adopt_partial_roster(pool, own_names, banter)
     else:
         own = draw_roster(pool, banter)
-    opponent = draw_roster(pool, banter)
+    opponent = draw_roster(pool, banter) if opponent_names is None else adopt_opponent(opponent_names, banter)
     plays = [rnd.below(8) + 30 for _ in range(PERIODS)]
     warnings = (rnd.below(3) + 5, rnd.below(3) + 5, rnd.below(3) + 5)
     return GameSetup({1: own, 2: opponent}, banter, plays, warnings, own_names is None or not own_names.is_complete())

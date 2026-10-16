@@ -335,7 +335,7 @@ def test_a_franchise_started_from_f9_at_the_main_menu_is_heard_at_once_and_the_c
 
 
 def test_playing_classic_seasons_from_the_franchise_goes_back_to_the_classic_week_it_left(tmp_path):
-    back = GAME + FRANCHISE_MENU + [DOWN, DOWN, DOWN, ENTER, ENTER, ESC, ESC]       # F9, Franchise, play classic seasons, confirm
+    back = GAME + FRANCHISE_MENU + [DOWN, DOWN, DOWN, DOWN, ENTER, ENTER, ESC, ESC]       # F9, Franchise, play classic seasons, confirm
     script = classic_to_franchise_script() + COACH_AND_TEAM + GAME + back
     rig = franchise_rig(tmp_path, script, preset=preset_season(gtp=3), policy=enter_until(lambda: len(rig.plays) == 4))
     run_until(rig)
@@ -351,7 +351,7 @@ def test_playing_classic_seasons_from_the_franchise_goes_back_to_the_classic_wee
 
 
 def test_back_to_the_franchise_continues_it_where_it_stood(tmp_path):
-    to_classic = GAME + FRANCHISE_MENU + [DOWN, DOWN, DOWN, ENTER, ENTER, ESC, ESC]
+    to_classic = GAME + FRANCHISE_MENU + [DOWN, DOWN, DOWN, DOWN, ENTER, ENTER, ESC, ESC]
     to_franchise_again = GAME + [F9, DOWN, DOWN, DOWN, DOWN, ENTER, ENTER, ESC]       # classic week 4; F9, Franchise, back to the franchise
     script = classic_to_franchise_script() + COACH_AND_TEAM + GAME + to_classic + to_franchise_again
     rig = franchise_rig(tmp_path, script, preset=preset_season(gtp=3), policy=enter_until(lambda: len(rig.plays) == 6))
@@ -398,14 +398,20 @@ def test_a_game_saved_in_the_franchise_is_loaded_at_the_next_start_of_that_week(
     run_until(second)
     assert second.plays[0]["saved"] is not None and second.plays[0]["saved"].quarter == 3
     assert "football.sav" not in second.files.data
+    # SX.8b (design 10.2): the loaded game has the same teams as the saved one, with the league's ratings and quarterbacks
+    before, after = first.plays[0], second.plays[0]
+    assert after["opponent"] == before["opponent"] and after["own_names"].ratings == before["own_names"].ratings
+    assert after["opponent_names"].names() == before["opponent_names"].names()
+    assert after["opponent_names"].ratings == before["opponent_names"].ratings and len(after["opponent_names"].ratings) == 34
+    assert after["quarterback_names"](None) == before["quarterback_names"](None)
 
 
 # ----- H14 in the engine, a season that ended and was not begun, history.txt -----
 
 def test_every_result_of_a_regular_week_goes_through_h14_once_with_both_teams_and_the_scores(tmp_path):
-    from nfl4.game.season_engine import CLASSIC_SEASON_HOOKS
+    from nfl4.game.season_engine import CLASSIC_SEASON_HOOKS, ClassicSeasonHooks
 
-    class Recorder:
+    class Recorder(ClassicSeasonHooks):                 # the hooks object has three calls since SX.8b; this one records the first
         def __init__(self):
             self.calls = []
 

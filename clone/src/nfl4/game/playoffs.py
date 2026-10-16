@@ -70,11 +70,12 @@ class ComputerGame:
         return score_of(self.loser_index)
 
 
-def computer_game(rnd: GameRandom) -> ComputerGame:
+def computer_game(rnd: GameRandom, first_wins: Callable[[GameRandom], bool] | None = None) -> ComputerGame:
     """The draws of one computer game in the lifted order: the coin Int(Rnd * 2) + 1, the winner's index Int(Rnd * 32) + 1
     drawn again while its score is 0, the loser's index drawn again while its score is not lower (every Rnd of the
-    original multiplies a constant: nothing needs a Single, B-P45; the redraws are bounded, G-D1)."""
-    coin = rnd(2)
+    original multiplies a constant: nothing needs a Single, B-P45; the redraws are bounded, G-D1). `first_wins` (H14's
+    `playoff_first_wins`, nfl4 only) decides the coin instead of `rnd(2) == 1`: the Franchise leans it by strength."""
+    coin = rnd(2) if first_wins is None else (1 if first_wins(rnd) else 2)
     winner = rnd.redraw(lambda: rnd(32), lambda i: score_of(i) != 0,
                         lambda: next(i for i in range(1, 33) if score_of(i) != 0), "a play-off game's winning score")
     loser = rnd.redraw(lambda: rnd(32), lambda i: score_of(i) < score_of(winner),

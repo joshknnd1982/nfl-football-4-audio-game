@@ -61,10 +61,12 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
     def __init__(self, game, rules=CLASSIC, own_names: Roster | None = None, saved: SavedGame | None = None,
                  quarterback_names: Callable[[GameState], tuple[str, str]] | None = None,
                  save_sink: Callable[[SavedGame], None] | None = None,
-                 roster_sink: Callable[[Roster], object] | None = None):
+                 roster_sink: Callable[[Roster], object] | None = None,
+                 opponent_names: Roster | None = None):
         self.g = game
         self.rules = rules
         self.own_names = own_names
+        self.opponent_names = opponent_names           # H7 (nfl4 only, SX.8b): the Franchise's opponent; None: drawn as the original
         self.saved = saved
         self.quarterback_names = quarterback_names
         self.save_sink = save_sink
@@ -241,7 +243,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         g, s = self.g, self.s
         self.get_sex_of()                                   # 0x43aa89
         self.snd.load_ambient()                             # foot9 into the ambient buffer, silent (Q33)
-        setup = g.new_game_setup(self.own_names)            # GoSub 0x453eac: the rosters, the periods, M2W to M5W
+        setup = (g.new_game_setup(self.own_names) if self.opponent_names is None       # GoSub 0x453eac: the rosters, the
+                 else g.new_game_setup(self.own_names, self.opponent_names))           # periods, M2W to M5W
         s.gpn = 0 if self.own_names is None else 1
         s.teams = {1: g.own_team(), 2: g.opponent_team()}
         s.rosters = setup.rosters

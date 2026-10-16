@@ -438,6 +438,9 @@ TEXTS: dict[str, str] = {
     'NXG-16': ' the longest winning streak: the <team>, <k> games, season <n>. ',
     'NXG-17': ' <player>, <position>, the <team>. seasons played: <n>. best rating <r>. retired after season <s>. ',
     'NXG-18': ' nothing yet. ',
+    'NXK-20': 'high',
+    'NXK-21': 'average',
+    'NXK-22': 'low',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -871,6 +874,9 @@ SPEAKERS: dict[str, str] = {
     'NXG-16': 'say5',
     'NXG-17': 'say5',
     'NXG-18': 'say5',
+    'NXK-20': 'piece',
+    'NXK-21': 'piece',
+    'NXK-22': 'piece',
 }
 
 KINDS: dict[str, str] = {
@@ -1304,6 +1310,9 @@ KINDS: dict[str, str] = {
     'NXG-16': 'sentence',
     'NXG-17': 'sentence',
     'NXG-18': 'sentence',
+    'NXK-20': 'piece',
+    'NXK-21': 'piece',
+    'NXK-22': 'piece',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

@@ -28,7 +28,7 @@ POSITION_TEXT = {"RB": "NXL-01", "WR": "NXL-02", "QB": "NXL-03", "DL": "NXL-04",
                  "RET": "NXL-08", "K": "NXL-09", "P": "NXL-10"}
 GROUP_TEXT = {"RB": "NXL-11", "WR": "NXL-12", "DL": "NXL-14", "LB": "NXL-15", "CB": "NXL-16", "S": "NXL-17", "RET": "NXL-18",
               "QB": "NXL-03", "K": "NXL-09", "P": "NXL-10"}           # the groups of one place use the position's own word
-POTENTIAL_TEXT = {"high": "NXK-20", "average": "NXK-21", "low": "NXK-22"}   # added by SX.8d; SX.8a speaks no potential
+POTENTIAL_TEXT = {"high": "NXK-20", "average": "NXK-21", "low": "NXK-22"}   # the potential words (rows added by SX.8b for the roster)
 
 # the original's slots (spec 5.5, H7): (section heading of footplay.txt, number in it, position). The order is footplay.txt's,
 # then the quarterback; a place is its index 0 to 33 in a team's roster list.
@@ -48,6 +48,7 @@ GROUP_SIZE = {position: len(places) for position, places in PLACES_OF.items()}
 # the weights of a team's strength (design 4.4): they follow how often the engine reads each place; the sum is 78
 WEIGHT = {"QB": 12, "RB": 2, "WR": 2, "DL": 2, "LB": 2, "CB": 2, "S": 2, "K": 4, "P": 2, "RET": 1}
 WEIGHT_SUM = sum(WEIGHT[position] for position in POSITION_OF_PLACE)
+WEIGHT_OF_KEY = {(heading, number): WEIGHT[position] for heading, number, position in PLACES}   # the key of Roster.ratings
 
 # the stages of an offseason (design 3.3): (the stage's number, the id of its name). A later session inserts its stage here, so
 # the spoken "stage n of m" follows the list. SX.8a builds stages 1 and 6 (the year's aging is part of 6 until SX.8c).
@@ -64,6 +65,11 @@ STAGE_CODE = {REGULAR: 0, WILD_CARD: 1, DIVISION: 2, CHAMPIONSHIP: 3, SUPER_BOWL
 CODE_STAGE = {code: stage for stage, code in STAGE_CODE.items()}
 # the finish of the team that LOSES in a round
 LOST_IN = {WILD_CARD: FINISH_WILD_CARD, DIVISION: FINISH_DIVISION, CHAMPIONSHIP: FINISH_CHAMPIONSHIP, SUPER_BOWL: FINISH_SUPER_BOWL}
+
+# the play-off coin of a computer game leans by strength within these per mille (design 5.2; 500 is the original's coin)
+PLAYOFF_CHANCE_MIN, PLAYOFF_CHANCE_MAX = 250, 750
+# the original's score table has 32 entries (game\playoffs.py SCORE_TABLE): a shifted index stays in 1 to 32
+SCORE_TABLE_SIZE = 32
 
 MAX_RESULTS = 400                            # games of one season (16 weeks of 16 games and 13 play-off games), with room
 MAX_HISTORY = 500                            # seasons kept

@@ -14,7 +14,7 @@ import logging
 import time
 
 from ...game.season import DEFAULT_COACH, SeasonState
-from ...game.season_engine import CLASSIC_SEASON_HOOKS
+from ...game.season_engine import CLASSIC_SEASON_HOOKS, ClassicSeasonHooks
 from ...game.season_mode import ClassicSeason, SeasonMode
 from .. import nx_texts as X
 from ..nfl_rules import is_nfl
@@ -22,15 +22,19 @@ from . import data as D
 from . import history
 from .league import SEASON, new_league, team_index, team_ref
 from .question import FranchiseQuestion, ask_yes_no
+from .strength import LeaguePlace
 
 log = logging.getLogger("nfl4.game")
 
 
-class FranchiseHooks:
-    """H14 for the franchise: every result of the engine goes into the league record (design 9.1)."""
+class FranchiseHooks(ClassicSeasonHooks):
+    """H14 for the franchise: every result of the engine goes into the league record (design 9.1), and the computer's games lean
+    by the team's place in its league (design 5.2: the score index of a regular week, the play-off coin)."""
 
     def __init__(self, store):
         self.store = store
+        self._sums = None
+        self._place = None
 
     def game_played(self, stage, week, winner, loser, winner_score, loser_score) -> None:
         league = self.store.league
@@ -38,6 +42,27 @@ class FranchiseHooks:
             return
         league.results.append([D.STAGE_CODE[stage], week, team_index(winner.division, winner.place),
                                team_index(loser.division, loser.place), winner_score, loser_score])
+
+    def place(self) -> LeaguePlace | None:
+        """The league's 32 sums of this season (kept at the start of the season), or None when there are none: no shift."""
+        league = self.store.league
+        if league is None or league.stage != SEASON or len(league.sums) != D.TEAMS:
+            return None
+        if self._place is None or self._sums != league.sums:
+            self._sums = list(league.sums)
+            self._place = LeaguePlace(self._sums)
+        return self._place
+
+    def computer_index(self, team, index: int) -> int:
+        place = self.place()
+        return index if place is None else place.index(team_index(team.division, team.place), index)
+
+    def playoff_first_wins(self, rnd, visitor, home) -> bool:
+        place = self.place()
+        if place is None:
+            return rnd(2) == 1
+        return rnd.chance_first(place.playoff_per_mille(team_index(visitor.division, visitor.place),
+                                                        team_index(home.division, home.place)))
 
 
 class FranchiseSeason(SeasonMode):
@@ -68,9 +93,26 @@ class FranchiseSeason(SeasonMode):
         league.told = [league.season, league.gtp]
         p.store.save()
 
+    def game_arguments(self) -> dict:
+        """The opponent is a team of the league with its own players and ratings, and both quarterbacks are players of the league,
+        so Getqbs asks nothing and no name is drawn (design 5.1, 13: H7 extended)."""
+        p = self.p
+        league = p.store.league
+        if league is None or league.stage != SEASON:
+            return {}
+        opponent = league.roster_for_game(team_index(p.season.tn3, p.season.tn4))
+        own_quarterback = league.roster_for_game(league.team).quarterback
+        names = (own_quarterback, opponent.quarterback)
+        return {"opponent_names": opponent, "quarterback_names": lambda state: names}
+
     def season_over(self) -> None:
         from . import offseason
         offseason.run(self.p)
+
+
+def say_team_rating(g, league) -> None:
+    """NXF-09: the player's team's rating and its number among the 32 (a new league and the start of every season)."""
+    g.say2(history.team_rating_text(league))
 
 
 # ----- which kind of season, and the store swap -----
@@ -317,6 +359,7 @@ def start_new(p) -> None:
     store.create(league)
     set_kind(g, "franchise")                             # only now: a window closed before this leaves no franchise to look for
     g.say2(X.text("NXF-07"))
+    say_team_rating(g, store.league)
     g.make_schedule()
     season.gtp = 1
     store.write_gtp(1)

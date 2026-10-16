@@ -11,7 +11,8 @@ through `switch`, and gives the same methods.
 * `choose_at_start()`: which kind is in use, before the saved game is asked about;
 * `season_setup()`, `new_season(coach, ask)`: a loaded season, else a new one (the question first, with the N. F. L. rules);
 * `before_menu()`: inside the main menu, after today's game and before " <coach> select " (Classic: nothing);
-* `before_game()`: when "play game" is chosen (Classic: nothing); `after_week()`: after pog and the standings (nothing);
+* `before_game()`: when "play game" is chosen (Classic: nothing); `game_arguments()`: more arguments of `play_game` (Classic:
+  none); `after_week()`: after pog and the standings (nothing);
 * `season_over()`: gtp is 0; `switch_pending()`: a menu asked for a switch (the main menu goes back to the week loop at
   once, B-X48), `switch_if_needed()`: at the top of the week loop.
 """
@@ -43,6 +44,11 @@ class SeasonMode:
 
     def before_game(self) -> None:
         return None
+
+    def game_arguments(self) -> dict:
+        """More arguments for `Game.play_game` (values only): the Franchise gives the opponent's team of the league and the two
+        quarterbacks (H7, SX.8b). Classic: none, so the game is the original's (rosters drawn, Getqbs asked)."""
+        return {}
 
     def after_week(self) -> None:
         return None

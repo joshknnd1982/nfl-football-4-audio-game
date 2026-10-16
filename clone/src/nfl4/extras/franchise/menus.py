@@ -4,9 +4,9 @@ franchise (nfl4 only, rule 0.13). This is inspired by Jim Kitchen.
 NFL_FRANCHISE_DESIGN 11 and 3.7. These are settings menus, so they use the F9 classes (`SpokenMenu`, `ListPicker`) with their keys
 as they are; the questions inside the program's flow use `FranchiseQuestion`. The item is shown only with the N. F. L. rules and is
 built each time F9 opens (`franchise_item_shown`), so with Rules = Classic F9's list is exactly the original's and no franchise
-file is opened. SX.8a builds: the roster (names, positions and ages: the ratings are drawn but spoken from SX.8b), league history,
-franchise settings (offseason only: the other settings come with their features), play classic seasons, back to your franchise
-and start a franchise now. SX.8b adds the team ratings, SX.8e the to-do list and the news.
+file is opened. SX.8a builds: the roster, league history, franchise settings (offseason only: the other settings come with their
+features), play classic seasons, back to your franchise and start a franchise now. SX.8b speaks the ratings and the potential in
+the roster and adds the team ratings; SX.8e adds the to-do list and the news.
 """
 from __future__ import annotations
 
@@ -59,7 +59,7 @@ def franchise_menu(g, speech, keys) -> None:
         word = _words(g)
         league = store.league
         players = [p for p in league.group_of(league.team, position) if p is not None]
-        lines = [X.text("NXL-32", player=p.name, position=word.position(p.pos), a=p.age) for p in players]
+        lines = [word.player(p) for p in players]              # SX.8b: the rating and the potential are spoken
         _lines_picker(speech, keys, word.group(position), lines)
 
     def roster_menu() -> None:
@@ -82,6 +82,13 @@ def franchise_menu(g, speech, keys) -> None:
                       enter=lambda text_id=text_id, make=make: _lines_picker(speech, keys, X.text(text_id), make()))
                  for text_id, make in sections]
         SpokenMenu(speech, keys, X.text("NXF-14"), items, space_enters=True, digits_jump=True).run()
+
+    # ----- the team ratings (design 11, NXF-15) -----
+
+    def ratings_menu() -> None:
+        league = store.league
+        title = X.text("NXL-41", k=league.rank_of(league.team)).strip().rstrip(".")
+        _lines_picker(speech, keys, title, history.team_rating_lines(league, _words(g)))
 
     # ----- the settings -----
 
@@ -116,6 +123,7 @@ def franchise_menu(g, speech, keys) -> None:
     if in_use:
         items = [Item(lambda: X.text("NXF-13"), enter=roster_menu),
                  Item(lambda: X.text("NXF-14"), enter=history_menu),
+                 Item(lambda: X.text("NXF-15"), enter=ratings_menu),
                  Item(lambda: X.text("NXF-16"), enter=settings_menu),
                  Item(lambda: X.text("NXF-17"), enter=ask_switch("classic", "NXF-23"))]
     elif store.exists:

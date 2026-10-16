@@ -300,7 +300,8 @@ class Program:
                 store.save_game(saved)                          # already read and deleted, so it is written back
                 raise
         result = g.play_game(rules=rules, own_names=own_names, saved=saved, save_sink=store.save_game,
-                             roster_sink=store.write_player_names)   # 0x489ddb
+                             roster_sink=store.write_player_names,   # 0x489ddb
+                             **self.mode.game_arguments())           # H15 (nfl4 only): the Franchise's opponent and quarterbacks
         if result.saved:                                        # 0x489e2c: SavedGame = 1 skips pog and the standings
             self.saved_game = True
             self.ending = "saved"

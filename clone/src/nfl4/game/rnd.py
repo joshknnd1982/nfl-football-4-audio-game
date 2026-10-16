@@ -68,6 +68,14 @@ class GameRandom:
         """Int(Rnd * n) + 1: 1 to n."""
         return self.below(n) + 1
 
+    def chance_first(self, per_mille: int) -> bool:
+        """The Franchise's play-off coin (nfl4 only, NFL_FRANCHISE_DESIGN 5.2 and 13; never called in Classic): ONE number of the
+        source, traced as a draw of size 2, true when number * 1000 is below `per_mille`. At 500 it is exactly `rnd(2) == 1` for
+        every number (x < 0.5 is Int(x * 2) = 0), so a league of equal teams keeps the original's draws, trace and results (B-P65)."""
+        if self.trace is not None:
+            self.trace.append(2)
+        return self._next() * 1000 < per_mille
+
     def redraw(self, draw: Callable[[], T], accept: Callable[[T], bool], scan: Callable[[], T], what: str) -> T:
         """`draw` again until `accept` takes the value (the original's loop), at most `redraw_limit` times. Then `scan`
         gives the first valid candidate (it may raise when there is none)."""

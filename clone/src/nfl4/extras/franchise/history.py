@@ -181,6 +181,25 @@ class Words:
     def score(self, winner: int, loser: int) -> str:
         return " %d to %d " % (winner, loser)
 
+    def potential(self, potential: str) -> str:
+        return X.text(D.POTENTIAL_TEXT[potential])
+
+    def player(self, player) -> str:
+        """NXL-31: a player in a list (SX.8b: the rating and the potential are spoken)."""
+        return X.text("NXL-31", player=player.name, position=self.position(player.pos), r=player.rating, a=player.age,
+                      potential=self.potential(player.potential))
+
+
+def team_rating_text(league: LeagueRecord) -> str:
+    """NXF-09: the player's team's rating (the weighted mean of its 34 players) and its number among the 32 (design 4.4)."""
+    return X.text("NXF-09", r=league.strength(league.team), k=league.rank_of(league.team))
+
+
+def team_rating_lines(league: LeagueRecord, words: Words) -> list:
+    """NXL-40 for the 32 teams by rank, the best first (the team ratings item of F9)."""
+    return [X.text("NXL-40", k=rank, team=words.team_name(team), r=league.strength(team))
+            for rank, team in enumerate(league.ranking(), start=1)]
+
 
 def _top_to_bottom(entries: list) -> list:
     return list(reversed(entries))

@@ -160,10 +160,15 @@ class SimEngine(PlayEngine):
         return step
 
 
-def sim_game(tmp_path, seed, rules=None, gtp=1):
+def sim_game(tmp_path, seed, rules=None, gtp=1, own_names=None, opponent_names=None, quarterbacks=QUARTERBACKS, trace=False):
+    """One whole seeded game. `own_names` and `opponent_names` are the Franchise's rosters (H7, SX.8b: with ratings), the
+    quarterbacks' names are handed in as the Franchise does; `trace` records the size of every draw in rig.rnd.trace."""
     rig = make_rig(tmp_path, rng=random.Random(seed), fast=True, vtrnt=2, gtp=gtp)
+    if trace:
+        rig.rnd.trace = []
     rules = rules if rules is not None else RecordingRules()
-    engine = SimEngine(rig.game, rules, quarterback_names=lambda state: QUARTERBACKS)
+    engine = SimEngine(rig.game, rules, quarterback_names=lambda state: quarterbacks, own_names=own_names,
+                       opponent_names=opponent_names)
     rig.game.play_engine = engine
     try:
         result = engine.run()

@@ -136,15 +136,25 @@ class PlaybookModifiers(Modifiers):
     def arm(self, mod: D.Mod | None) -> None:
         self.mod = mod if mod is not None and any(mod) else None
 
+    def bind(self, state) -> None:
+        """The game's state, given once per game (`NflRules.period_clock`). The playbooks do not read it; the Franchise's
+        ratings do (extras/franchise/ratings.py)."""
+        return None
+
+    def mod_for(self, kind: str) -> D.Mod | None:
+        """The Mod in force for a read of the table of `kind` ("run", "pass", "qb" or "fumble"): the armed playbook Mod. The
+        Franchise adds its ratings Mod to it and clamps the sum to the same bounds (design 5.1)."""
+        return self.mod
+
     def run(self, offense: int, defense: int, entry: RunEntry) -> RunEntry:
-        m = self.mod
+        m = self.mod_for("run")
         if m is None:
             return entry
         low, high = entry.low + m.ylo, entry.high + m.yhi
         return entry._replace(low=low, high=max(high, low + 1))
 
     def pass_(self, offense: int, defense: int, entry: PassEntry) -> PassEntry:
-        m = self.mod
+        m = self.mod_for("pass")
         if m is None:
             return entry
         low, high = entry.low + m.ylo, entry.high + m.yhi
@@ -152,14 +162,15 @@ class PlaybookModifiers(Modifiers):
                               complete=max(1, min(100, entry.complete + m.comp)))
 
     def qb_run(self, entry: QBRunEntry) -> QBRunEntry:
-        m = self.mod
+        m = self.mod_for("qb")
         if m is None:
             return entry
         low, high = entry.low + m.ylo, entry.high + m.yhi
         return entry._replace(low=low, high=max(high, low + 1), fumble=max(2, entry.fumble + m.fum))
 
     def fumble_odds(self, side: int) -> int:
-        return FUMBLE_ODDS if self.mod is None else max(2, FUMBLE_ODDS + self.mod.fum)
+        m = self.mod_for("fumble")
+        return FUMBLE_ODDS if m is None else max(2, FUMBLE_ODDS + m.fum)
 
 
 @dataclass

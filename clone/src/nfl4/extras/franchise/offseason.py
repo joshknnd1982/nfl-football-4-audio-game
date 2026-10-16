@@ -110,10 +110,13 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
     g.make_schedule()                                    # the original's makes draws; the store writes league.sav
     season.gtp = 1
     store.write_gtp(1)
+    rating = history.team_rating_text(league)            # NXF-09: the team's rating and its number, after NXE-60 (design 14)
     if short:
         g.say2(X.text("NXE-60", n=league.season))
+        g.say2(rating)
     else:                                                # design 3.3: every stage ends with NXE-03 (the league is saved already)
-        wait_for_enter(g, [_stage_line(n, m, "NXE-16"), X.text("NXE-60", n=league.season), X.text("NXE-61"), X.text("NXE-03")])
+        wait_for_enter(g, [_stage_line(n, m, "NXE-16"), X.text("NXE-60", n=league.season), rating, X.text("NXE-61"),
+                           X.text("NXE-03")])
 
 
 RUNNERS = {D.STAGE_REVIEW: stage_review, D.STAGE_NEW_SEASON: stage_new_season}

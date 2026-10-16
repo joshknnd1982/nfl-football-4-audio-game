@@ -231,8 +231,46 @@ TARGET_BOOTH_PER_GAME = (0.50, 0.80)                    # replay official review
 TARGET_BOOTH_REVERSED = (0.70, 0.82)                    # the share that changed the ruling (NFL 74 to 78 percent)
 
 # ----- the Franchise (NFL_FRANCHISE_DESIGN, SX.8): start values of a new league, design 4.5; later sessions add theirs here -----
-FR_TEAM_LEVEL_LOW, FR_TEAM_LEVEL_SPAN = -4, 9        # a team's level: below(9) - 4, so -4 to +4 (calibrated in SX.8b, C-F1)
+FR_TEAM_LEVEL_LOW, FR_TEAM_LEVEL_SPAN = -2, 5        # a team's level: below(5) - 2, so -2 to +2 (SX.8b: the design's -4 to +4, below(9) - 4, gave a
+#                                                      first season whose strengths spread 2.8 points a standard deviation against about 1.4 once the
+#                                                      rosters had evened out, so the first season's effect was not the later seasons'; -2 to +2 starts at
+#                                                      1.8 and settles at 1.4 to 1.6, work/calibrate_ratings_sx8b_fast_*.txt)
 FR_RATING_BASE, FR_RATING_DRAW = 58, 13              # a rating: 58 + below(13) + below(13) + the level (58 to 82 before the level)
 FR_POTENTIAL_SHARES = (20, 70)                       # below(100): under 20 high, under 70 average, else low
 FR_START_AGE = (21, 5, 5, 4)                         # an age: 21 + below(5) + below(5) + below(4); a kicker or punter below(5) more
 FR_START_AGE_KICKER = 5
+
+# ----- the ratings' bounded effect, design 5.1 and 5.2 (SX.8b; the history of every move is below) -----
+# In a game the player plays: step(x, per, cap) = sign(x) * min(cap, |x| // per) of the gap d between the offense's rating (the
+# ball carrier's, or two thirds quarterback and one third receiver) and the defense's (the two tacklers' mean), added to the playbook's
+# Mod and clamped to the playbooks' bounds (playbook_data.BOUNDS). Each pair is (per, cap).
+FR_YARD_STEP = (4, 1)             # yards low and high together, up or down (design start value (12, 1))
+FR_SACK_STEP = (2, 3)             # the sack percent (the other way: a better offense is sacked less) (design (6, 3))
+FR_COMP_STEP = (2, 3)             # the catch percent (design (6, 3))
+FR_FUM_STEP = (3, 3)              # the fumble denominator (a better offense fumbles less) (design (8, 3))
+FR_TEAM_EDGE = (5, 2)             # numerator and denominator: 5 / 2 = 2.5 TIMES the two teams' strength gap, in rating points of the weighted
+#                                   mean (design 4.4), is added to every play's gap d (design start value: none; added in SX.8b, D-057)
+FR_KICK_STEP = (5, 5)             # the field goal's odds around 70, from the kicker's rating around 70
+FR_PUNT_STEP = (8, 3)             # the shortest punt around 25 yards, from the punter's rating around 70
+# In the computer's games: the team's place in its league (z, the exact strength against the league's mean and spread) moves the
+# index into the score table, and leans the play-off coin.
+FR_SHIFT_MAX = 10                 # most places a team's score index moves (design start value 6)
+FR_SHIFT_PER_SD = 5               # places per standard deviation of the league's strengths (design start value 3)
+FR_SPREAD_FLOOR = 78              # the least spread counted, in the weighted sum (78 is one rating point of strength)
+FR_PLAYOFF_PER_SD = 150           # per mille of lean of the play-off coin per standard deviation of the gap between the teams (design 60)
+# SX.8b calibration (D-057; the reports are work/calibrate_ratings_sx8b_*.txt, the scripts work/calibrate_ratings_sx8b.py,
+# work/sim_league_sx8b.py and work/regular_week_share_sx8b.py). The design's start values gave a win spread of 2.36 to 2.41 wins a
+# season in the fast run (500 leagues of 20 seasons; target 2.6 to 3.4, the NFL's 3.0 a season;
+# work/calibrate_ratings_sx8b_fast_500x20_design_values.txt), because the lean of the computer's games is the whole of the spread
+# (z has a spread of 1 by construction, so wins vary by sqrt(4 + 256 c^2) for a lean c of the win share per standard deviation):
+# 5 places a standard deviation (10 at most) gives a mean win spread over the 500 leagues of 2.82 to 2.88 in each of the 20 seasons
+# (a single league's season varies, 2.1 to 3.8: wins of 16 games are noisy; work/calibrate_ratings_sx8b_fast_500x20.txt).
+# The played games could not follow: with the design's steps the stronger team won 0.51 to 0.53 of the games at gaps of 1.3 to 3.6
+# rating points where the regular week gives 0.62 to 0.77 (work/calibrate_ratings_sx8b_played_2000_design_values.txt). Finer steps
+# (the caps, 1 yard and 3 points, are the design's) and a team edge (every play's gap counts 2.5 times the two TEAMS' strength
+# gap as well, so the signal is not lost in the noise of the individual players, which saturate the caps) bring them within 0.03
+# of it at the spreads of seasons 1, 5 and 10: the stronger team won 0.666, 0.672 and 0.701 at one standard deviation (the
+# regular week 0.672) and 0.760, 0.769 and 0.792 at two (0.769) in 10,000 games a gap (work/calibrate_ratings_sx8b_played_10000.txt).
+# Centering (C-F3), 10,000 games a line: points a game +0.87 percent with the Classic playbooks and +0.94 percent with the styles,
+# yards a play -0.01 and +0.19 percent (work/calibrate_ratings_sx8b_centering_10000.txt). The play-off lean is set to the regular
+# week's share (0.67 at 1 standard deviation, 0.77 at 2; the lean is capped at 0.75).

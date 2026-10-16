@@ -9,6 +9,7 @@ import random
 
 import pytest
 
+from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise.league import (OFFSEASON, SEASON, LeagueError, LeagueRecord, NewerFormat, Player, new_league,
                                           team_index, team_ref)
@@ -115,12 +116,14 @@ def test_the_draws_of_a_new_league_come_in_the_order_of_design_12():
     place = [13, 13, 100, 5, 5, 4]
     # the player's team: the level, then for each of the 33 named places the rating, the potential, the age (the 34th, the
     # quarterback, has a name from the file too); kickers and punters draw one more age number
-    expected = [9]
+    level = T.FR_TEAM_LEVEL_SPAN                                         # 9 at the design's start values, 5 since SX.8b (D-057); the
+    #                                                                      calibrated span itself is pinned by test_fr_ratings.py (CALIBRATED)
+    expected = [level]
     for index in range(34):
         expected += place + ([5] if D.POSITION_OF_PLACE[index] in ("K", "P") else [])
     assert sizes[:len(expected)] == expected
     # the next team starts with its level, then the name draw of the first place
-    assert sizes[len(expected)] == 9 and sizes[len(expected) + 1] == 1708
+    assert sizes[len(expected)] == level and sizes[len(expected) + 1] == 1708
 
 
 def test_a_names_redraw_is_bounded_when_the_pool_is_used_up():

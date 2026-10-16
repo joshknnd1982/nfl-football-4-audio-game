@@ -28,6 +28,7 @@ from . import nx_texts as X
 from . import playbook_data as D
 from . import playbooks as P
 from . import tuning as T
+from .franchise.ratings import FranchiseModifiers
 from .qb_runs import to_goal
 
 log = logging.getLogger("nfl4.extras")
@@ -57,7 +58,9 @@ def classic_text(items: tuple[str, ...], number: int) -> str:
 class PlaybookFlow:
     def __init__(self, rules):
         self.rules = rules
-        self.modifiers = P.PlaybookModifiers()
+        # H8: the playbooks' Mod, and (SX.8b, nfl4's Franchise) the ratings' Mod of rosters that carry ratings: the same object as
+        # PlaybookModifiers while no roster has any, which is every game that is not a Franchise game
+        self.modifiers = FranchiseModifiers()
         self.group: int | None = None           # the open group of the player's menu (never saved: a menu is at its top after a play)
         self.offense_id = ""                    # the catalog play called for the offense of this play ("O017") or none
         self.defense_id = ""

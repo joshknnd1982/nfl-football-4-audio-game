@@ -168,7 +168,7 @@ def test_a_switch_asked_in_an_offseason_that_a_switch_resumed_is_made_before_any
     first = franchise_rig(tmp_path / "one", WANT_FRANCHISE + COACH_AND_TEAM, policy=enter_until(lambda: X.text("NXE-03") in spoken(first)))
     run_until(first)
     back = FRANCHISE_MENU + [ENTER, ESC]                                    # F9, Franchise, back to your franchise, close F9
-    to_classic = FRANCHISE_MENU + [DOWN, DOWN, DOWN, ENTER, ENTER, ESC, ENTER]       # at the wait: play classic seasons, confirm, close, go on
+    to_classic = FRANCHISE_MENU + [DOWN, DOWN, DOWN, DOWN, ENTER, ENTER, ESC, ENTER]       # at the wait: play classic seasons, confirm, close, go on
     second = franchise_rig(tmp_path / "two", back + to_classic, files=first.files, kind="classic", preset=preset_season(gtp=3),
                            policy=quit_policy)
     run_until(second)

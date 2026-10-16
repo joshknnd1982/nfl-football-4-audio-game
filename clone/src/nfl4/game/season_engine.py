@@ -87,6 +87,16 @@ class ClassicSeasonHooks:
     def game_played(self, stage: str, week: int, winner: TeamRef, loser: TeamRef, winner_score: int, loser_score: int) -> None:
         pass
 
+    def computer_index(self, team: TeamRef, index: int) -> int:
+        """A regular week's computer game (spec 5.14 item 5): the index into the 32-entry score table that was drawn for `team`
+        (`Int(Rnd * 32) + 1`); the Franchise shifts it by the team's strength (design 5.2). Classic: the index unchanged."""
+        return index
+
+    def playoff_first_wins(self, rnd, visitor: TeamRef, home: TeamRef) -> bool:
+        """A play-off game without the player (spec 5.17 item 2, Q45): the original's coin, `Int(Rnd * 2) + 1 = 1` (the first team,
+        the visitor, wins). The Franchise leans it by strength with one draw (design 5.2). Classic: exactly the original's draw."""
+        return rnd(2) == 1
+
 
 CLASSIC_SEASON_HOOKS = ClassicSeasonHooks()
 
@@ -264,12 +274,16 @@ class SeasonEngine:
         g.say2(lines[1])
         for _ in range(WEEK_COMPUTER_GAMES):                      # For Lb0 = 1 To 15
             team_a = self._free_team(played)
-            index_a = rnd(32)                                     # La0
+            index_a = self.hooks.computer_index(team_a, rnd(32))  # La0 (H14: the Franchise shifts it by the team's strength)
             played[team_a] = score_of(index_a)
             team_b = self._free_team(played)
-            index_b = rnd.redraw(lambda: rnd(32), lambda i: score_of(i) != score_of(index_a),
-                                 lambda: next(i for i in range(1, 33) if score_of(i) != score_of(index_a)),
-                                 "a score that differs from the other team's")
+
+            def shifted(i, team=team_b):                          # the redraw's test and scan read the shifted index (B-P66)
+                return self.hooks.computer_index(team, i)
+
+            index_b = shifted(rnd.redraw(lambda: rnd(32), lambda i: score_of(shifted(i)) != score_of(index_a),
+                                         lambda: next(i for i in range(1, 33) if score_of(shifted(i)) != score_of(index_a)),
+                                         "a score that differs from the other team's"))
             played[team_b] = score_of(index_b)
             if index_a <= index_b:                                # the higher score wins (b > a: B)
                 winner, loser, winner_score, loser_score = team_b, team_a, score_of(index_b), score_of(index_a)
@@ -357,7 +371,7 @@ class SeasonEngine:
     def _computer_game(self, pairing: Pairing, stage: str = WILD_CARD) -> tuple[TeamRef, str]:
         """A computer game (5.17 item 2): the winner and the sentence. `stage` is the round, for H14."""
         visitor, home = pairing
-        game: ComputerGame = computer_game(self.g.rnd)
+        game: ComputerGame = computer_game(self.g.rnd, lambda rnd: self.hooks.playoff_first_wins(rnd, visitor, home))
         winner, loser = (visitor, home) if game.first_wins else (home, visitor)
         self.hooks.game_played(stage, PLAYOFF_WEEK[stage], winner, loser, game.winner_score, game.loser_score)
         return winner, playoff_result(self.name(winner), self.name(loser), game.winner_score, game.loser_score)

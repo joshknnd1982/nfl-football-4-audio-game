@@ -147,6 +147,7 @@ class NflRules(ClassicRules):
                                     onside_always=self.onside_always, qb_on=self.qb_on,
                                     challenges_on=self.challenges_on)
         self.clock = NflPeriodClock(game, state)
+        self.modifiers.bind(state)                 # SX.8b: the ratings of the players in the play (a Franchise game's rosters)
         self.books.resolve(game, state)            # SX.7: the playbook of each side's offense and defense
         return self.clock
 
