@@ -255,3 +255,7 @@ Secondary (SRC-SECONDARY):
 - Test invariants for the 20-season simulation come from EA's own bug lists (section G): no player under 30 retires; every team under the cap after every offseason; every slot filled; the best offer wins; contract length limited by age; never fired after a winning season; no drift in the cap scale across 20 seasons; computer picks and trades in one code path.
 - Spoken time budget (section H, an estimate): about 10 to 14 minutes for an offseason with everything built, under one minute per week in season; every part skippable with an "auto" setting.
 - No question for the owner is blocking. The owner may cut any LATER item or ask for more at SX.1.
+
+## Owner decision of 2026-10-16 (D-062): no version two
+
+The owner asked that the LATER items and everything planned as an update after the release go into the first release, and that injuries never occur in quick games. For this research file: every item with the verdict ADOPT or LATER is now built before the release (the sessions SX.8g to SX.8o of NFL_EXTRA_FEATURES section 14); the SKIP verdicts stay SKIP unless the owner reverses one; the injury report (ADOPT) and the workload rule (LATER) are built only inside a franchise (INJ-1 to INJ-6).

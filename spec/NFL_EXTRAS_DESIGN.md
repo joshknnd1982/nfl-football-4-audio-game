@@ -11,7 +11,7 @@ Numbers marked "start value" are design values that a build session calibrates a
 Asked once, one at a time, each with a recommended answer; the owner took all three recommendations.
 - Overtime in N. F. L. rules mode: the original's sudden death stays in both modes (NQ4 confirmed). The 2026 NFL overtime (both teams get a possession, a regular-season tie) is not built; it stays on the list of optional companions (section 14). What N. F. L. rules mode takes from Rule 16 is only the period length, the timeout counts and "no coach's challenge in overtime" (section 4.6).
 - The onside kick question: asked only when it makes sense (the player's team trails in the second half, or leads by one score late in the fourth quarter), with a setting "Onside question: always" that is off by default (section 8.2).
-- Franchise before the first Windows release: the core only (a league that lasts, history, ratings, aging and retirement, the draft, the to-do list and the news). Contracts with the salary cap and free agency, trades, injuries, coordinators and the job rating come after the release as updates (NQ6 answered; section 11; the release gate in section 13).
+- Franchise before the first Windows release: the core only (a league that lasts, history, ratings, aging and retirement, the draft, the to-do list and the news). Contracts with the salary cap and free agency, trades, injuries, coordinators and the job rating come after the release as updates (NQ6 answered; section 11; the release gate in section 13). CHANGED BY THE OWNER ON 2026-10-16 (D-062): this split is withdrawn. The WHOLE Franchise, contracts, cap, free agency, trades, injuries, coordinators, job rating, goals and the LATER items, is in the first release, built by SX.8g to SX.8p before SX.9 (`NFL_EXTRA_FEATURES.md` N6.11 and section 14). Every "after the release", "as an update" or "version two" below in this file reads "in the first release, in the session named". Injuries exist only inside a Franchise, never in a quick game (INJ-1 to INJ-6 in N6.8).
 
 ## 2. Principles
 
@@ -408,7 +408,7 @@ Classic (the original's plays and numbers, always first, the default) and seven 
 ### 11.1 Scope
 
 - Before the Windows release (the core, NQ6 answered): F0 the league that lasts and the season loop, F4 history, F1 ratings with bounded effect, F2 progression, regression and retirement, F3 the draft, F5 the to-do list and the news (MADDEN_FRANCHISE_RESEARCH.md section D, items 1 to 6; N6.1 to N6.5, N6.9, N6.10).
-- After the release, as updates in this order: F6 contracts, salary cap, re-signing and free agency (N6.6); F7 trades (N6.7); F8 injuries; F9 coordinators, the job rating and the owner goal (N6.8); then the LATER items of the research (personality, holdouts, morale, undrafted free agents, compensatory picks, awards).
+- (D-062, 2026-10-16: no longer "after the release"; the same blocks, in this order, SX.8g to SX.8o, then the whole-program simulation SX.8p, all before the release.) F6 contracts, salary cap, re-signing and free agency (N6.6); F7 trades (N6.7); F8 injuries; F9 coordinators, the job rating and the owner goal (N6.8); then the LATER items of the research (personality, holdouts, morale, undrafted free agents, compensatory picks, awards).
 
 ### 11.2 Mode and flow
 
@@ -424,7 +424,7 @@ Classic (the original's plays and numbers, always first, the default) and seven 
 
 ### 11.4 Sessions
 
-SX.8 (design), then SX.8a F0 and F4, SX.8b F1, SX.8c F2, SX.8d F3 (may take two), SX.8e F5, SX.8f the core's 20-season simulation (research section G invariants for the core: no player under 30 retires, every slot filled after every offseason, no rating outside 40 to 99, neutral ratings reproduce Classic, computer picks in one code path). After the release: SX.8g to SX.8i F6, SX.8j F7, SX.8k F8, SX.8l F9 (with the full 20-season test of research section G).
+SX.8 (design), then SX.8a F0 and F4, SX.8b F1, SX.8c F2, SX.8d F3 (may take two), SX.8e F5, SX.8f the core's 20-season simulation (research section G invariants for the core: no player under 30 retires, every slot filled after every offseason, no rating outside 40 to 99, neutral ratings reproduce Classic, computer picks in one code path). Then, before the release (D-062): SX.8g to SX.8i F6, SX.8j F7, SX.8k F8, SX.8l F9, SX.8m to SX.8o the LATER items, SX.8p the whole Franchise's 20-season test of research section G with every block on (the exact split is `NFL_EXTRA_FEATURES.md` section 14).
 
 ### 11.5 The detailed design (PX SX.8, 2026-10-15, D-055)
 
@@ -466,8 +466,8 @@ After the original's 36 values and the opponent quarterback's name, and after D-
 - SX.7 playbooks (section 10), may be split: format and three styles, then the rest and the balance test. Sonnet 5.5 at high.
 - SX.8 Franchise design, then SX.8a to SX.8f the core (section 11.4). Opus 5.5 at high for the design, Sonnet 5.5 at high for the building.
 - SX.9 integration: the switch combinations that matter, the long simulations, the 8.3 stress tests with the extras, the owner's playtest list (what only ears can judge), README and About (NX-R6 notice), NQ2's default flips to N. F. L. rules. Opus 5.5 or Sonnet 5.5 at high.
-- Release gate (NX-R3 as changed by D-041): P9 starts when SX.2 to SX.7, SX.8 to SX.8f and SX.9 pass. The later Franchise blocks (SX.8g on) come after the release as updates, each with its own tag and release.
-- Estimate: SX.2 to SX.9 with the Franchise core about 16 to 20 sessions; the later Franchise blocks about 8 to 10.
+- Release gate (NX-R3 as changed by D-041, changed again by D-062 on 2026-10-16): P9 starts when SX.2 to SX.7, SX.8 to SX.8p (the whole Franchise) and SX.9 pass. Nothing of the Franchise comes after the release; there are no later Franchise updates.
+- Estimate: SX.2 to SX.9 with the Franchise core about 16 to 20 sessions; the rest of the Franchise (SX.8g to SX.8p, now also before the release, D-062) about 10 to 14 more.
 
 ## 14. Optional companions (not requested; asked once when this design is accepted, NFL_EXTRA_FEATURES.md section 13)
 
@@ -475,7 +475,7 @@ After the original's 36 values and the opponent quarterback's name, and after D-
 - A manual tempo choice for the player's offense (hurry-up or slow down) in place of the automatic tempo of 5.3.
 - The 2026 NFL overtime (both teams get a possession; the regular-season tie).
 - The 2026 kickoff (setup zone, touch back to the 35) and a missable extra point from the 15.
-- Injuries outside Franchise; a "two-minute drill" help text.
+- A "two-minute drill" help text. (Injuries outside Franchise: REJECTED by the owner, 2026-10-16, D-062; injuries are Franchise-only.)
 
 ## 15. Every new random draw (C4)
 
@@ -513,3 +513,4 @@ Designed in PX SX.8 (2026-10-15, D-055), with a franchise in use only: the draws
 - 1.0, notes of SX.6 (2026-10-15, D-053): the replay challenges, the booth reviews, the ruling model, the declined flags offered again after a reversal (N2.7), the CHS, CHC, RVR and RVC remarks and the F9 Rules item Replay challenges are built; "as built" notes in 6.5, 12.2 and 15 (the ruling is drawn after the fouls of the play and the live time; the engine step `gain_and_end` was split off `field_play_end` and the steps `reviewed_fumble` and a continuation of `_menu` and `down_sentence` were added with Classic no-ops; the rates moved by the calibration: the replay official's plays have their wrong windows doubled, the close rates are 1.7 times the design's, the booth's chance on a close ruling is 14 percent, the computer's flag after a strong hint 80 percent). No requirement changed.
 - 1.0, notes of SX.7 (2026-10-15, D-054): the playbooks (a catalog of 82 plays, seven styles and their team assignment, the bounded modifiers, the two-level menus, the computer's weighted choice, the three files of the folder `playbooks`, the F9 items Offense playbook and Defense playbook) are built; "as built" notes in 10.5, 12.2 and 15 (the default playbook is Classic, as the requirement says, and the computer's teams play their own style; the seams `menu_back`, a tuple answer of `menu_action` and `computer_defense` were added with Classic no-ops; the situation factors count from the second down; the calibration). No requirement changed.
 - 1.0, note of SX.8 (2026-10-15, D-055): the Franchise's detailed design is `spec\NFL_FRANCHISE_DESIGN.md` 1.0 (section 11.5 here); the hooks H14 and H15, the extended H7 and `GameRandom.chance_first` are designed in section 3 (built in SX.8a and SX.8b); section 15 points to the franchise's draws; 12.4's `news.txt` is that file's section 15. No requirement changed.
+- 1.0, note of the owner decision D-062 (2026-10-16): the whole Franchise (contracts, cap, free agency, trades, injuries in a franchise only, coordinators, job rating, goals, the LATER items) is in the first release, built by SX.8g to SX.8p before SX.9; the release gate, 11.1, 11.4, 13 and 14 above say so; no design of the seven features changed.
