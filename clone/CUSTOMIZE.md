@@ -20,6 +20,7 @@ It holds these plain text files. Any text editor will do, and a screen reader re
 - penalties.txt, the fouls of the N. F. L. rules: their names, and which are called and how often (see below).
 - the folder playbooks, with plays.txt, styles.txt and team_styles.txt: the plays of the N. F. L. rules' playbooks (see below).
 - news.txt, the news lines of a franchise, only when the N. F. L. rules are chosen in F9 (see below).
+- injuries.txt, the words the game says about injuries in a franchise, only when the N. F. L. rules are chosen in F9 (see below).
 
 After you save a file, choose Reload in the Customize menu, or start the game again. A game in progress keeps the players it already has.
 
@@ -136,13 +137,13 @@ With Rules on Classic, none of these files is read.
 
 ## The news of a franchise
 
-With the N. F. L. rules the game also has news.txt, the lines of the news you hear in a franchise before each game: the biggest win of the week, an upset, the closest game, another team's winning or losing streak, your own streak and your wins as a head coach, and, in the offseason, the champion, a star who retires, your player who improved a lot, the first pick of the draft and the team with the most room under the salary cap, and, before the trade deadline, a trade between two other teams. It works like remarks.txt: each line is an ID and the line. The letters of the ID say the kind of news: NWB the biggest win, NWU an upset, NWC the closest game, NWS another team's winning streak, NWL its losing streak, NWY your winning streak, NWZ your losing streak, NWM your wins as a head coach, NWT the champion, NWR a star who retires, NWD the first pick of the draft, NWP a player of yours who improved, NWK the team with the most cap space and NWX a trade between two other teams. Change a line, switch it off with `NWB02 = off`, delete it to get the original back, or add your own with a new number, NWB05 and higher. If every line of a kind is off, that kind of news is never told. The game takes one line of the kind by chance, never one of the last three of that kind. The words in square brackets of the banter work here too, except [name] and [opponent quarterback], because the news is told between games. These are filled in by the game:
+With the N. F. L. rules the game also has news.txt, the lines of the news you hear in a franchise before each game: the biggest win of the week, an upset, the closest game, another team's winning or losing streak, your own streak and your wins as a head coach, and, in the offseason, the champion, a star who retires, your player who improved a lot, the first pick of the draft and the team with the most room under the salary cap, and, before the trade deadline, a trade between two other teams. It works like remarks.txt: each line is an ID and the line. The letters of the ID say the kind of news: NWB the biggest win, NWU an upset, NWC the closest game, NWS another team's winning streak, NWL its losing streak, NWY your winning streak, NWZ your losing streak, NWM your wins as a head coach, NWT the champion, NWR a star who retires, NWD the first pick of the draft, NWP a player of yours who improved, NWK the team with the most cap space, NWX a trade between two other teams and NWJ a player of another team who is hurt and out for weeks. Change a line, switch it off with `NWB02 = off`, delete it to get the original back, or add your own with a new number, NWB05 and higher. If every line of a kind is off, that kind of news is never told. The game takes one line of the kind by chance, never one of the last three of that kind. The words in square brackets of the banter work here too, except [name] and [opponent quarterback], because the news is told between games. These are filled in by the game:
 
 - `<team>` is the team the news is about (in NWM, NWY and NWZ and in NWP, your team) and `<other>` the other team of the game.
 - `<n>` is a number: the points of the win, the games in a row, your wins, or the season.
 - `<score>` is the score as it is said, for example 24 to 17.
 - `<coach>` is your name.
-- `<player>`, `<position>` and, for NWP, `<r>`, the rating he has now, are in the kinds NWR, NWD, NWP and NWX, and `<cap>`, the cap space said in millions, is in NWK only. In NWX `<team>` is the team that traded the player away and `<other>` the team he goes to.
+- `<player>`, `<position>` and, for NWP, `<r>`, the rating he has now, are in the kinds NWR, NWD, NWP, NWX and NWJ, and `<cap>`, the cap space said in millions, is in NWK only. In NWX `<team>` is the team that traded the player away and `<other>` the team he goes to. In NWJ `<n>` is the most weeks he may miss.
 
 For example:
 
@@ -152,6 +153,20 @@ For example:
 The F8 key does not switch the news off. The lines of the offseason's stages are said as words only; a sound in such a line is played in the weekly news only. The F9 menu, Franchise, News, lets you hear the lines again.
 
 The F9 menu, Franchise, To do list, asks again the items you left for later. The setting "staff handles the to do list" in Franchise settings makes the staff take its own recommendation for every item.
+
+## The injuries of a franchise
+
+Injuries happen only in a franchise, never in a quick game or a classic season. With the N. F. L. rules the game has injuries.txt, the words it says about them. It works like news.txt: each line is an ID and the words.
+
+- IJA to IJM are the names of the kinds of injury, said in the injury report after the word "with" ("out with a sprained ankle"): IJA an ankle sprain, IJB a hamstring, IJC a knee sprain, IJD a shoulder, IJE a concussion, IJF the ribs, IJG a groin, IJH a broken hand, IJK a high ankle sprain, IJL a torn knee ligament, IJM the back. Each kind has three lines; one of the lines that are on is chosen by chance. If every line of a kind is off, the report says the player is out without naming the injury.
+- IJX is what the announcer says when a player is hurt in a game you play. There `<player>` is the player, `<position>` his position and `<team>` his team.
+
+Change a line, switch it off with `IJA01 = off`, delete it to get the original back, or add your own with a new number, IJA04 and higher. The words in square brackets of the banter work here too, except [name] and [opponent quarterback]. How often an injury happens and how long it lasts never depend on this file. For example:
+
+    IJX05 = [sound my groan.wav] oh no, <player> is down and he is not getting up.
+    IJE04 = a bad blow to the head
+
+Before each game of the regular season you hear the injury report after the news: who is out, doubtful or questionable, and who is back. A doubtful or questionable player plays only when you say so: the to do list asks about the ones who matter, and the F9 menu, Franchise, Injury report, lists every hurt player of yours; Enter on a doubtful or questionable one changes whether he plays this week. If you leave the question for later, he rests. With the setting "staff handles the to do list" the staff plays a questionable player and rests a doubtful one.
 
 ## If something is wrong
 

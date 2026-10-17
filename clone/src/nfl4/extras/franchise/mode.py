@@ -19,7 +19,7 @@ from ...game.season_mode import ClassicSeason, SeasonMode
 from .. import nx_texts as X
 from ..nfl_rules import is_nfl
 from . import data as D
-from . import history, weekly
+from . import history, injuries, injury_flow, weekly
 from .league import SEASON, new_league, team_index, team_ref
 from .question import FranchiseQuestion, ask_yes_no
 from .strength import LeaguePlace
@@ -40,17 +40,24 @@ class FranchiseHooks(ClassicSeasonHooks):
         league = self.store.league
         if league is None or league.stage != SEASON:
             return
-        league.results.append([D.STAGE_CODE[stage], week, team_index(winner.division, winner.place),
-                               team_index(loser.division, loser.place), winner_score, loser_score])
+        winner_team, loser_team = team_index(winner.division, winner.place), team_index(loser.division, loser.place)
+        league.results.append([D.STAGE_CODE[stage], week, winner_team, loser_team, winner_score, loser_score])
+        game = getattr(self.store, "game_injuries", None)      # SX.8k: the injuries of the player's game join the league with its result
+        if game is not None and {winner_team, loser_team} == set(game.teams):
+            game.commit()
+            self.store.game_injuries = None
 
     def place(self) -> LeaguePlace | None:
-        """The league's 32 sums of this season (kept at the start of the season), or None when there are none: no shift."""
+        """The league's 32 sums of this season (kept at the start of the season), or None when there are none: no shift. SX.8k: the teams play the
+        week's games with the players who are fit (injuries.effective_sums), in the league's frame of the season's sums."""
         league = self.store.league
         if league is None or league.stage != SEASON or len(league.sums) != D.TEAMS:
             return None
-        if self._place is None or self._sums != league.sums:
-            self._sums = list(league.sums)
-            self._place = LeaguePlace(self._sums)
+        effective = injuries.effective_sums(league, league.gtp)
+        key = (tuple(league.sums), tuple(effective))
+        if self._place is None or self._sums != key:
+            self._sums = key
+            self._place = LeaguePlace(league.sums, effective)
         return self._place
 
     def computer_index(self, team, index: int) -> int:
@@ -95,10 +102,16 @@ class FranchiseSeason(SeasonMode):
         league = p.store.league
         if league is None or league.stage != SEASON:
             return {}
-        opponent = league.roster_for_game(team_index(p.season.tn3, p.season.tn4))
-        own_quarterback = league.roster_for_game(league.team).quarterback
-        names = (own_quarterback, opponent.quarterback)
-        arguments = {"opponent_names": opponent, "quarterback_names": lambda state: names}
+        g = p.g
+        other = team_index(p.season.tn3, p.season.tn4)
+        staff = bool(g.options.settings.game.nx_fr_auto)
+        # SX.8k: both teams play with the week's lineups (the hurt are not in them), and the game draws its own injuries (INJ-3); the component
+        # reaches the engine only through Game.game_injuries and joins the league with the result (H14 game_played)
+        game = injury_flow.GameInjuries(league, league.team, other, league.gtp, staff, g.rnd, weekly.surnames_of(g), p.store.words,
+                                        getattr(g, "injury_pools", None), say=lambda text, plain: g.say2(text) if plain else weekly.say_markup(g, text))
+        opponent = injury_flow.lineup_roster(league, other, league.gtp, True)
+        p.store.game_injuries = game
+        arguments = {"opponent_names": opponent, "quarterback_names": game.quarterbacks, "game_injuries": game}
         rules = weekly.game_rules(p)                      # the staff's game plan, when the player took it (design 8.1 T2)
         if rules is not None:
             arguments["rules"] = rules
@@ -153,6 +166,7 @@ def activate(p, store) -> None:
     p.classic_stores = (p.store, g.season_store, g.setup_store)
     store.bind(g.season)
     store.words = history.Words(lambda team: g.league.team(*team_ref(team)))
+    store.staff_setting = lambda: bool(g.options.settings.game.nx_fr_auto)    # SX.8k: the player's lineup follows the staff's rule when it is on
     p.store = g.season_store = g.setup_store = store
     g.season_hooks = FranchiseHooks(store)
     p.mode = FranchiseSeason(p)

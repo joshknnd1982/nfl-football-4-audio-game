@@ -31,15 +31,15 @@ WORDS = history.Words(lambda team: "Team%d" % team)
 
 # ----- the defaults -----
 
-def test_the_fourteen_pools_are_the_lines_of_strings_nx_with_their_exact_spaces():
-    assert NP.POOLS == D.NEWS_POOLS and len(NP.POOLS) == 14                 # NWK since SX.8g, NWX (a trade) since SX.8j
+def test_the_fifteen_pools_are_the_lines_of_strings_nx_with_their_exact_spaces():
+    assert NP.POOLS == D.NEWS_POOLS and len(NP.POOLS) == 15                 # NWK since SX.8g, NWX (a trade) since SX.8j, NWJ (an injury) since SX.8k
     for pool in NP.POOLS:
         lines = NP.DEFAULT_POOLS.lines(pool)
         assert [r.id for r in lines] == ["%s0%d" % (pool, n) for n in (1, 2, 3, 4)] == list(X.REMARK_POOLS[pool])
         for remark in lines:
             assert remark.builtin and remark.pieces == (Speak((Text(X.TEXTS[remark.id]),)),)
             assert remark.markup == X.TEXTS[remark.id].strip()
-    assert NP.DEFAULT_POOLS.size == 56
+    assert NP.DEFAULT_POOLS.size == 60
 
 
 def test_every_default_line_uses_only_the_placeholders_of_its_pool():
@@ -188,7 +188,7 @@ def test_with_classic_rules_news_txt_is_never_made_or_read_and_with_the_nfl_rule
     assert classic.snapshot.news is None and not os.path.exists(os.path.join(folder, "news.txt"))
     assert "news" not in [spec.key for spec in classic.specs]
     classic.use_extras(True)
-    assert os.path.exists(os.path.join(folder, "news.txt")) and classic.snapshot.news.size == 56
+    assert os.path.exists(os.path.join(folder, "news.txt")) and classic.snapshot.news.size == 60
     classic.use_extras(False)
     assert classic.snapshot.news is None
 

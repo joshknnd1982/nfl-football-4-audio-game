@@ -258,6 +258,7 @@ class KickSteps:
             tackle += P.AND
             second = rnd.redraw(lambda: rnd(17), lambda d: d != first, lambda: 2 if first == 1 else 1,
                                 "second tackler")
+            second = self.rules.second_tackler(s, first, second)        # H16 (nfl4 only, SX.8k): two men in a Franchise game; Classic: the same
             tackle += self.defender(s.defense, second) + " "
         s.tackle_sentence = tackle
         s.yard_line = 0

@@ -24,7 +24,11 @@ from . import data as D
 class LeaguePlace:
     """The 32 sums of a season, ready to answer the shift of a team and the lean of a game."""
 
-    def __init__(self, sums):
+    def __init__(self, sums, effective=None):
+        """`effective` (SX.8k): the sums the teams play this week's games with when injuries take players away (injuries.effective_sums). A team's
+        place is its distance from the week's own mean (every team has some players hurt, so the league's mean falls a little every week: measured
+        from the season's mean every team would move down the score table and pile up at its end), in the season's spread (`sums`): a team that
+        lost more than the others moves down. None, or equal to `sums` (nobody hurt): exactly the place of the season's sums."""
         sums = list(sums)
         if len(sums) != D.TEAMS:
             raise ValueError("a league has %d teams, not %d sums" % (D.TEAMS, len(sums)))
@@ -36,6 +40,18 @@ class LeaguePlace:
         floor_d = T.FR_SPREAD_FLOOR * n
         self.spread_sq = max(sum(x * x for x in self.d), n * floor_d * floor_d)
         self.n = n
+        if effective is not None:
+            effective = list(effective)
+            if len(effective) != D.TEAMS:
+                raise ValueError("a league has %d teams, not %d sums" % (D.TEAMS, len(effective)))
+            week_total = sum(effective)
+            # BOUNDED (INJ-2, C-F1): the injuries move a team at most FR_INJ_SD_MAX standard deviations of the league from its season's place, so a
+            # hurt quarterback costs a team a few places of the score table, never the whole of FR_SHIFT_MAX (whole numbers: the limit is an
+            # integer square root of the squared spread)
+            num, den = T.FR_INJ_SD_MAX
+            limit = isqrt(num * num * self.spread_sq // (n * den * den))
+            healthy = self.d
+            self.d = [max(h - limit, min(h + limit, n * s - week_total)) for h, s in zip(healthy, effective)]
 
     def rounded(self, delta: int, per_sd: int) -> int:
         """sign(delta) * round_half_up(|delta| / sd_d * per_sd), whole numbers only: with t = 2 * |delta| * per_sd, twice the value

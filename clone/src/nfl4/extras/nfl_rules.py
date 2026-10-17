@@ -260,7 +260,26 @@ class NflRules(ClassicRules):
                 # applies the corrected result and offers the declined flags again
                 outcome.then = self.review.rule(state, outcome, board, left_before, flags)
         self.modifiers.arm(None)                   # SX.7: the play's rows are done
+        injuries = self.game_injuries()
+        if injuries is not None:                   # SX.8k (a Franchise game only): the draws of a play that can hurt a player
+            injuries.after_play(state, outcome)
         return outcome
+
+    def game_injuries(self):
+        """The Franchise's injuries of the game in progress (extras/franchise/injury_flow.GameInjuries), or None: every game that is not a game of a
+        franchise season has none, so it draws, says and stores no injury (INJ-1)."""
+        return getattr(self.game, "game_injuries", None) if self.game is not None else None
+
+    def second_tackler(self, state, first: int, second: int) -> int:
+        """H16 (SX.8k): the kick-off return's tacklers; a Franchise game keeps them two men."""
+        injuries = self.game_injuries()
+        return second if injuries is None else injuries.other_man(state.defense, first, second)
+
+    def after_draws(self, state) -> None:
+        """H16 (SX.8k): the snap's draws are made; a Franchise game keeps its two tacklers two men."""
+        injuries = self.game_injuries()
+        if injuries is not None:
+            injuries.after_draws(state)
 
     def unchanged_by_fouls(self, decisions: int) -> bool:
         """The play is the narrated one after the flow: no foul was accepted, offset or enforced on the try (those take the play

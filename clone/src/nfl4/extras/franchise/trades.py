@@ -26,6 +26,7 @@ from .. import tuning as T
 from . import aging
 from . import contracts as CT
 from . import data as D
+from . import injuries
 
 CONTEND, MIDDLE, REBUILD = "contend", "middle", "rebuild"
 KEYS = ("picks", "log")
@@ -194,6 +195,8 @@ def problems(league, trade: Trade, week: int) -> str | None:
             return "a player who is not on his team"
     if pa.pos != pb.pos:
         return "players of different positions"
+    if not (injuries.healthy(league, pa.id, week) and injuries.healthy(league, pb.id, week)):
+        return "a player who is hurt"                          # SX.8k: a hurt player is not traded
     if {pa.id, pb.id} & traded_this_season(league):
         return "a player traded already this season"
     for team, picks in ((trade.a, trade.picks_a), (trade.b, trade.picks_b)):
@@ -306,7 +309,8 @@ def search(league, week: int, records: list) -> list:
         for other_place, r in enumerate(rebuilders):
             best, best_points = None, None
             for position in D.POSITIONS:
-                veterans = [p for p in group(league, r, position) if p.age >= T.FR_TRADE_VETERAN_AGE and p.id not in traded]
+                veterans = [p for p in group(league, r, position) if p.age >= T.FR_TRADE_VETERAN_AGE and p.id not in traded
+                            and injuries.healthy(league, p.id, week)]          # SX.8k: the best veteran who is fit
                 if not veterans:
                     continue
                 get = max(veterans, key=lambda p: (p.rating, -p.id))

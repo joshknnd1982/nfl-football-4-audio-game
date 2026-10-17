@@ -6,6 +6,7 @@ NFL_FRANCHISE_DESIGN 8.1 and 8.2 (F5). Rules over the league record, no speech a
     {"kind": "extra_work", "season": s, "week": w, "state": 0, "players": [id, id]}      T1 extra work (design 8.1, 8.2)
     {"kind": "game_plan",  "season": s, "week": w, "state": 0, "styles": [their offense, their defense, our offense, our defense]}   T2
     {"kind": "trade_offer", "season": s, "week": w, "state": 0, "trade": [a, b, player of a, player of b, picks of a, picks of b]}   SX.8j
+    {"kind": "injury", "season": s, "week": w, "state": 0, "player": id}     SX.8k: play or rest a doubtful or questionable player (INJ-4)
 
 An item has a deadline: the kick-off of its week's game. `state` is ITEM_NEW (not asked yet), ITEM_LATER (answered "later") or, for
 the game plan only, ITEM_SET (taken for this week's game; the game reads it). A new week's list replaces the old one. The kinds are
@@ -126,6 +127,16 @@ def is_do_nothing(league: LeagueRecord, item: dict, answer: int) -> bool:
 
 
 def apply_answer(league: LeagueRecord, item: dict, answer: int):
+    if item["kind"] == D.TODO_INJURY:                # SX.8k: the staff's recommendation first; "rest him" is also the do-nothing answer
+        from . import injuries, injury_flow
+        league.todo.remove(item)
+        play = injury_flow.answers_order(league, item)[answer] if answer < 2 else False
+        injuries.decide(league, item["player"], item["week"], play)
+        return play
+    return _apply_answer(league, item, answer)
+
+
+def _apply_answer(league: LeagueRecord, item: dict, answer: int):
     """Take an answer (0 is the staff's recommendation) and finish the item: it leaves the list, except a game plan that was set,
     which stays (state ITEM_SET) until the week is over. Returns the player who got the point, if any; for a trade offer the trade when
     answer 0 made it (None when it was declined or could no longer be made: `trades.problems`)."""
@@ -190,17 +201,25 @@ def check_items(league: LeagueRecord, whole) -> None:
     for item in items:
         if not isinstance(item, dict) or set(item) not in ({"kind", "season", "week", "state", "players"},
                                                             {"kind", "season", "week", "state", "styles"},
-                                                            {"kind", "season", "week", "state", "trade"}):
+                                                            {"kind", "season", "week", "state", "trade"},
+                                                            {"kind", "season", "week", "state", "player"}):
             raise LeagueError("a to-do item is %r" % (item,))
         if item["kind"] not in D.TODO_KINDS:
             raise LeagueError("a to-do item of the kind %r" % (item["kind"],))
         whole(item["season"], 1, D.MAX_SEASONS, "a to-do season")
         whole(item["week"], 1, D.REGULAR_WEEKS, "a to-do week")
         whole(item["state"], D.ITEM_NEW, D.ITEM_SET, "a to-do state")
-        if (item["kind"], item["season"], item["week"]) in seen:
+        key = (item["kind"], item["season"], item["week"], item.get("player"))      # SX.8k: one injury item per player
+        if key in seen:
             raise LeagueError("two to-do items of one kind in one week: %r" % (item,))
-        seen.add((item["kind"], item["season"], item["week"]))
-        if item["kind"] == D.TODO_TRADE:
+        seen.add(key)
+        if (item["kind"] == D.TODO_INJURY) != ("player" in item):
+            raise LeagueError("a to-do item of the kind %r is %r" % (item["kind"], item))
+        if item["kind"] == D.TODO_INJURY:
+            whole(item["player"], 1, 10 ** 9, "an injury item's player")
+            if item["state"] == D.ITEM_SET or item["player"] not in league.players:
+                raise LeagueError("an injury item is %r" % (item,))
+        elif item["kind"] == D.TODO_TRADE:
             _check_trade_item(league, item, whole)
         elif item["kind"] == D.TODO_EXTRA_WORK:
             players = item.get("players")

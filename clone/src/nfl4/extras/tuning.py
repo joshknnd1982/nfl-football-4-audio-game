@@ -586,3 +586,50 @@ FR_TRADE_PICK_VALUE = (48, 38, 29, 19, 10, 3, 1)       # round 1 to 7, measured 
 # from season 4 is 0.96 to 1.17 (the design's 1.0: under it in seasons 4 to 8, by 0.04 at most); the persistence of the bottom three is 0.370 against 0.362 without trades
 # (the rebuilders get young players and picks, the contenders players who will decline: the two nearly cancel), the longest streak 9; the position groups and the cap use do
 # not move (I8b and CP4 hold as before). SX.8p must still bring the spread to the design's band from the first seasons on.
+
+# ----- SX.8k: injuries (NX6 F8, N6.8 INJ-1 to INJ-6; extras/franchise/injuries.py; FRANCHISE ONLY: never drawn, spoken or stored outside a franchise game) -----
+# THE TARGET (design 17 SX.8k, INJ-3): the NFL's injury rate per team per regular season. Recorded source: Puga et al., "COVID-19 Return to Sport: NFL Injury
+# Prevalence Analysis", JMIRx Med 2022 (PMC9048138), counting the NFL's official team injury reports of the 17-week (16-game) regular season: 48.8 injuries a team
+# in 2018 and 59.3 in 2019 (2020: 77.6, the year without a preseason, left out); a second count of the same kind, Cureus 2022 (PMC9158490): 1,370 in 2018-2019, 42.8 a
+# team (SRC-SECONDARY: peer-reviewed counts of the league's own reports, read in the search's summaries of the two papers; the NFL's own pages give rates and changes,
+# not a total). Scaled to the clone's 34 places of a 53-man roster (34 / 53, a computation, not a source): 31.3 to 38.0 injuries a team a season, the band of the
+# calibration (FR_INJ_TARGET); the clone's 16 games have the same length as those seasons.
+FR_INJ_TARGET = (31.3, 38.0)       # new injuries of one team in one regular season (the 34 places), the band the 10,000-season run must fall in
+FR_INJ_LAST_WEEK = 15             # injuries come from the games of weeks 1 to 15 (the week-16 game has no preparation after it: the play-offs have no to-do list)
+# the exposure: per team and week, a practice part for every team (every place alike) and the game part, drawn for a game that was not played by the engine and,
+# for a game the player plays, per play (INJ-3: a rush, a catch and its tackle, a sack, a quarterback's run, a kick-off return)
+FR_INJ_PRACTICE = (4, 1303)       # (draws, chance of an injury per draw in ten thousandths) for every team every week: every place alike
+FR_INJ_GAME = (16, 1310)          # (draws, chance per draw) for a team whose game the engine did not play (the computer's games, the fast run)
+FR_INJ_PLAY = 441                 # chance in ten thousandths of an injury on an exposed play of a game the player plays
+# CALIBRATED (work/calibrate_rate_sx8k_32x6.txt, 32 leagues x 6 seasons): the start values (1150, 1156, 389: a fifth of the injuries practice, the game part
+# 1.85 a team-game = 47.6 exposed plays x 389 per ten thousand, so a played game and a computer's game hurt a team equally) gave 31.3 NEW injuries a team-season
+# (a player fit for his game; the hits on a man already hurt are the same injury, 2.5 more), on the band's edge; scaled by 1.05, 1.10 and 1.15: 32.6, 33.9,
+# 35.1, so the band's middle (34.65) is a factor of 1.133 on all three chances (the first measurement, 35.2, had counted every hit: B-P100)
+FR_INJ_TACKLER = 50               # percent of the injuries of a play that hurt the tackler (the first defender named), else the ball carrier; a return hurts the returner
+# the weights of a place in the game part of the weekly draw, from the plays of a game (work/measure_exposure_sx8k.py, 400 team-games: runs 23.4, quarterback runs 2.8,
+# catches 15.4, sacks 4.0, returns 2.1 per team-game; half of the carriers' plays hurt the carrier, a return its returner, half of every play but a return a defender)
+FR_INJ_GAME_WEIGHT = {"RB": 195, "WR": 128, "QB": 340, "RET": 103, "DL": 134, "LB": 134, "CB": 134, "S": 134, "K": 0, "P": 0}
+# the injury kinds (INJ-5: a permanent ID, the games missed when he rests as a range, the share of the kind in percent, the positions it cannot happen to). The spoken
+# names are the lines of the pools IJA to IJM of injuries.txt (the rows of spec/strings_nx.tsv); start values, UNVERIFIED (no league source gives the mix of kinds
+# with the games missed in a form this game can use: SX.8p and the owner's playtest judge them)
+FR_INJ_KINDS = (("IJA", 1, 3, 20, ()), ("IJB", 1, 4, 16, ()), ("IJC", 2, 5, 12, ()), ("IJD", 1, 4, 10, ()), ("IJE", 1, 3, 9, ()),
+                ("IJF", 1, 2, 9, ()), ("IJG", 1, 3, 8, ()), ("IJH", 3, 6, 4, ("K", "P")), ("IJK", 3, 7, 6, ()), ("IJL", 12, 18, 2, ()),
+                ("IJM", 1, 4, 4, ()))
+# the statuses before a game of the regular season by the games still to miss when he rests (left): 3 or more out, 2 doubtful, 1 questionable (in the play-offs every
+# hurt player is out: there is no to-do list there). A hurt player who plays plays below his best and may be hurt worse after the game (per mille), his injury
+# then starts again one week longer than a new one of its kind
+FR_INJ_DOUBTFUL, FR_INJ_QUESTIONABLE = 2, 1
+FR_INJ_HURT_PENALTY = {"doubtful": 6, "questionable": 3}       # rating points off while he plays hurt
+FR_INJ_WORSE = {"doubtful": 300, "questionable": 100}         # per mille: hurt worse after a game he played hurt
+FR_INJ_RANGE_MAX = 3               # the spoken time away is a range at most this wide when it is first told (out 2 to 5 weeks); it narrows by one a week
+FR_INJ_STAND_IN = {"QB": 55, "K": 60, "P": 60}                # the rating of a stand-in (a group with nobody to play: the backup quarterback, a kicker signed for the weeks)
+FR_INJ_STAND_IN_OTHER = 50
+FR_INJ_TEAM_MAX = 12               # no team has more than this many of its 34 players hurt at once (INJ-6: no team starved); a further injury is not drawn on it
+FR_INJ_SD_MAX = (1, 2)             # (numerator, denominator): the injuries move a team's place in the computer's games at most this many standard deviations
+#                                    of the league from its season's place (INJ-2: bounded like every rating effect, C-F1 holds). SWEPT (work/sweep_injuries_sx8k_64x20.txt, 64
+#                                    leagues x 20 seasons, the same seeds, a hurt player's place at replacement level): the win spread is 2.886 without injuries, 2.847 at
+#                                    1/4, 2.816 at 1/2, 2.756 at 1 and 2.632 unbounded (its weakest season's mean 2.56, under C-F1's 2.6): injuries are noise on the
+#                                    strength the computer's games read, and the bounded score table turns noise into a smaller spread; half a standard deviation keeps
+#                                    every season's mean at 2.73 or more (the first sweep, with the next man's own rating: _next_man_rating.txt)
+FR_INJ_ASK_GAP = 4                 # the to-do list asks about a doubtful or questionable player whose stand-in in the lineup is this many rating points lower or more ...
+FR_INJ_ASK_MAX = 2                 # ... at most this many a week, the biggest gap first (the others: F9, franchise, injury report)

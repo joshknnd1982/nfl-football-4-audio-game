@@ -86,6 +86,7 @@ class ScrimmageSteps:
         s.defender1 = rnd(17)
         s.defender2 = rnd.redraw(lambda: rnd(17), lambda d: d != s.defender1,
                                  lambda: 2 if s.defender1 == 1 else 1, "second defender")
+        self.rules.after_draws(s)                        # H16 (nfl4 only, SX.8k): a Franchise game's injuries; Classic: nothing
         s.text = ""
         s.tackle_sentence = " tackle string "
         s.tackle_sound = 0

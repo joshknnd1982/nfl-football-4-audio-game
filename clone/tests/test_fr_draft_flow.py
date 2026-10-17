@@ -350,7 +350,7 @@ def test_the_franchise_settings_menu_cycles_the_picks_told_with_left_right_and_e
     from test_fr_menus import INTO_FRANCHISE, in_a_franchise
     from nfl4.game.keys import KEY_LEFT as LEFT
     from nfl4.game.keys import KEY_RIGHT as RIGHT
-    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + [DOWN] * 8 + [ENTER, DOWN, DOWN, ENTER, RIGHT, LEFT, LEFT, RIGHT])
+    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + [DOWN] * 9 + [ENTER, DOWN, DOWN, ENTER, RIGHT, LEFT, LEFT, RIGHT])        # settings: the 10th item since SX.8k
     text = spoken(rig)
     at = text.index(X.text("NXF-22"))
     assert text[at:at + 5] == [X.text("NXF-22"), X.text("NXF-25"), X.text("NXF-26"), X.text("NXF-25"), X.text("NXF-22")]
@@ -360,7 +360,7 @@ def test_the_franchise_settings_menu_cycles_the_picks_told_with_left_right_and_e
 
 def test_a_picks_told_setting_changed_in_f9_during_the_draft_applies_from_the_next_pick(tmp_path):
     from nfl4.game.keys import KEY_RIGHT as RIGHT
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 8 + [ENTER, DOWN, DOWN, RIGHT, RIGHT, ESC, ESC, ESC]
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 9 + [ENTER, DOWN, DOWN, RIGHT, RIGHT, ESC, ESC, ESC]
     rig = ran(tmp_path, keys=keys, picks_told="first")
     assert rig.game.options.settings.game.nx_fr_picks_told == "all"
     final = saved_league(rig)

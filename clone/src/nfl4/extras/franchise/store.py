@@ -49,6 +49,8 @@ class FranchiseStore:
         self.pending: tuple[int, int, str] | None = None     # (tn1, tn2, coach) chosen before the league is made
         self.creating = False                   # a new franchise is being made: the set-up writes wait for the league
         self.words: history.Words | None = None
+        self.staff_setting = lambda: False      # SX.8k: whether the staff handles the to-do list (mode.activate gives the setting)
+        self.game_injuries = None               # SX.8k: the injuries of the player's game in progress (injury_flow.GameInjuries), until its result
         self.strict = False                     # tests: a record that fails its own check raises instead of being refused
         self.unwritable = False
         self.keep_old = False                   # the old franchise could not be archived: the new league is never written over it
@@ -367,7 +369,10 @@ class FranchiseStore:
 
     def player_names(self) -> Roster | None:
         league = self.league
-        return league.roster_for_game(league.team) if league is not None and league.stage == SEASON else None
+        if league is None or league.stage != SEASON:
+            return None
+        from .injury_flow import lineup_roster
+        return lineup_roster(league, league.team, league.gtp, self.staff_setting())      # SX.8k: the week's lineup (the hurt are not in it)
 
     def write_player_names(self, roster: Roster) -> None:
         return None                              # the franchise's players are the league's (footplay.txt is the classic season's)

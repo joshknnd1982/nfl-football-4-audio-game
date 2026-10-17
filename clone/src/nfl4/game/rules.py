@@ -70,6 +70,14 @@ Added in PX SX.7 (playbooks, D-054), each never taken in Classic:
     H3 menu_back(state)                    Backspace or Left: out of a group of plays (Classic: False, the key is the original's)
     H2 computer_defense(state)             the computer's defense family is chosen: the style's play of it
     H8 modifiers                           PlaybookModifiers: the rows move by the two plays called (never in Classic: NEUTRAL)
+
+Added in PX SX.8k (injuries, FRANCHISE ONLY, D-071), never taken in Classic and never outside a franchise game:
+    H16 after_draws(state)                 at the end of the snap's draws (carrier, two     nothing (no draw, no word)
+                                           defenders): a Franchise game whose next man up
+                                           plays two places keeps the two tacklers two men
+    H16 second_tackler(state, first, second)  the kick-off return's two tacklers, the same     the second unchanged
+    H2 after_outcome                       the draws of a play that can hurt a player and the announcer's line (NflRules, only when the
+                                           game has the Franchise's injuries: Game.game_injuries)
 """
 from __future__ import annotations
 
@@ -122,6 +130,12 @@ class ClassicRules:
 
     def instead_of_sack(self, state) -> str | None:
         return None
+
+    def after_draws(self, state) -> None:
+        return None
+
+    def second_tackler(self, state, first: int, second: int) -> int:
+        return second
 
     def instead_of_incompletion(self, state) -> bool:
         return False

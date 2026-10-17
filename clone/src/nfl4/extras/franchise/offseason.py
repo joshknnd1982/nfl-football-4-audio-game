@@ -18,7 +18,7 @@ from .. import nx_texts as X
 from . import aging
 from . import data as D
 from . import draft_flow, market_flow, resign_flow
-from . import history, news, trades, weekly
+from . import history, injuries, news, trades, weekly
 from .league import OFFSEASON, SEASON, team_ref
 from .news_pools import DEFAULT_POOLS
 from .question import wait_for_enter
@@ -34,6 +34,7 @@ def run(p) -> None:
     numbers = [number for number, _ in D.STAGES]
     if league.stage == SEASON:                           # the season is over: the finished season's values are kept
         store.sync()
+        injuries.end_of_season(league)                   # SX.8k: every player is fit for the next season (in the step that ends the season)
         league.stage, league.stage_no = OFFSEASON, numbers[0]
         store.save()
     if league.stage_no == numbers[0]:

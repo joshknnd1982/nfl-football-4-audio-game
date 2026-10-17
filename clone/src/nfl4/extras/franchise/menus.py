@@ -20,7 +20,7 @@ from . import history, market_flow, mode, news, todo, trade_flow, weekly
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
-HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
 
@@ -104,6 +104,37 @@ def franchise_menu(g, speech, keys) -> None:
             if item in league.todo and not ask_in_menu(item):
                 return None
         return X.text("NXD-07") if not todo.waiting(league) else None
+
+    # ----- the injury report (SX.8k, INJ-4): the player's hurt players; Enter on a doubtful or questionable one changes whether he plays -----
+
+    def injury_menu():
+        from . import injuries, injury_flow
+        league = store.league
+        week = league.gtp
+        staff = bool(settings.nx_fr_auto)
+        rows = injury_flow.list_lines(_words(g), league, week, staff)
+        if not rows:
+            return X.text("NXI-53")
+
+        def enter(index: int):
+            pid = rows[index][1]
+            if pid is None:
+                return None
+            if g.play_engine is not None or not weekly.in_regular_season(league):
+                return X.text("NXI-54")            # the kick-off has passed: the lineup is the game's
+            if staff:
+                return X.text("NXI-55")            # the staff handles it: its rule decides at the kick-off (the review of SX.8k)
+            player = league.players[pid]
+            play = not injuries.plays(league, player, week, False)
+            injuries.decide(league, pid, week, play)
+            for item in [i for i in league.todo if i["kind"] == D.TODO_INJURY and i["player"] == pid]:
+                league.todo.remove(item)           # the question about him is answered
+            store.save()
+            rows[:] = injury_flow.list_lines(_words(g), league, week, staff)     # with the staff setting on, the staff's rule stands at the kick-off
+            return injury_flow.result_text(league, pid, play)
+
+        ListPicker(speech, keys, X.text("NXF-44"), len(rows), lambda i: rows[i][0], on_enter=enter, close_on_enter=False).run()
+        return None
 
     # ----- the news (design 8.3, 11) -----
 
@@ -262,6 +293,7 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(lambda: X.text("NXF-28"), enter=cap_menu),
                  Item(lambda: X.text("NXF-29"), enter=market_menu),
                  Item(lambda: X.text("NXF-43"), enter=trades_menu),
+                 Item(lambda: X.text("NXF-44"), enter=injury_menu),
                  Item(lambda: X.text("NXF-16"), enter=settings_menu),
                  Item(lambda: X.text("NXF-17"), enter=ask_switch("classic", "NXF-23"))]
     elif store.exists:

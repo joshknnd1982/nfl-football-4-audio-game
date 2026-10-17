@@ -92,6 +92,9 @@ class ExtrasRecord:
     # the Franchise (SX.8a, design 10.2): the league, season and week a franchise game was saved in; None (and left out of the
     # saved text) in every other game, so a record without it loads as before
     franchise: dict | None = None
+    # SX.8k: the injuries of a franchise game in progress ({"hurt": [[player id, kind, games, offset]], "stand_ins": [[team, position, name,
+    # rating]]}), so Save Game keeps them; None (and left out of the saved text) in every other game
+    injuries: dict | None = None
 
     # ----- per side -----
 
@@ -142,6 +145,8 @@ class ExtrasRecord:
         data = asdict(self)
         if data["franchise"] is None:
             del data["franchise"]
+        if data["injuries"] is None:
+            del data["injuries"]
         return json.dumps(data, sort_keys=True, separators=(",", ":"))
 
     @classmethod
@@ -221,6 +226,8 @@ class ExtrasRecord:
                 raise ValueError("the franchise mark is %r" % (self.franchise,))
             whole(self.franchise["season"], 1, 9999, "the franchise season")
             whole(self.franchise["week"], 0, 20, "the franchise week")
+        if self.injuries is not None:
+            check_game_injuries(self.injuries, whole)
         pair(self.flags, lambda v, w: whole(v, 0, 9999, w), "the penalties")
         pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
         if self.foul_clock not in FOUL_CLOCKS:
@@ -232,3 +239,25 @@ class ExtrasRecord:
                 raise ValueError("the recent remarks of %r are %r" % (pool, ids))
             if any(not isinstance(i, str) or len(i) > 12 for i in ids):
                 raise ValueError("a recent remark ID of %r is not an ID" % (pool,))
+
+
+def check_game_injuries(record, whole) -> None:
+    """The injuries of a franchise game in progress (SX.8k): their shape and ranges (the franchise checks the players against its league when it loads
+    the game)."""
+    if not isinstance(record, dict) or set(record) != {"hurt", "stand_ins"}:
+        raise ValueError("the injuries of the game are %r" % (record,))
+    hurt, stand_ins = record["hurt"], record["stand_ins"]
+    if not isinstance(hurt, list) or len(hurt) > 68 or not isinstance(stand_ins, list) or len(stand_ins) > 20:
+        raise ValueError("the injuries of the game are %r" % (record,))
+    for row in hurt:
+        if not isinstance(row, list) or len(row) != 4 or not isinstance(row[1], str) or len(row[1]) > 8:
+            raise ValueError("an injury of the game is %r" % (row,))
+        whole(row[0], 1, 10 ** 9, "an injured player of the game")
+        whole(row[2], 1, 99, "the games of an injury of the game")
+        whole(row[3], 0, 9, "the offset of an injury of the game")
+    for row in stand_ins:
+        if (not isinstance(row, list) or len(row) != 4 or not isinstance(row[1], str) or not isinstance(row[2], str) or not 1 <= len(row[2]) <= 40
+                or any(ord(c) < 32 for c in row[2])):
+            raise ValueError("a stand-in of the game is %r" % (row,))
+        whole(row[0], 1, 32, "a stand-in's team")
+        whole(row[3], 40, 99, "a stand-in's rating")

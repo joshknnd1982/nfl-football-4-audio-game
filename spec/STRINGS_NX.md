@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 665.
+- Texts: 733.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,8 +16,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 333.
-- Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4.
+- Franchise (design section 11): 401.
+- Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
 
 ## The clock (design section 5)
 
@@ -713,4 +713,72 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXX-P06 (piece, piece): "and". the word between two picks of a trade (SX.8j review)
 - NXX-28 (sentence, say5): " trades. the trade deadline is the kick-off of week <n>. ". the title of F9's trades menu (SX.8j review: the deadline week is spoken)
 - NXX-29 (sentence, say5): " the draft has begun. your picks: <list>. ". F9 trades, your draft picks during the draft (SX.8j review)
+- NXI-10 (sentence, say2): " <player>, <position>, is out with <injury>, <lo> to <hi> weeks. ". a new injury, out, the range (SX.8k)
+- NXI-11 (sentence, say2): " <player>, <position>, is out with <injury>, <n> weeks. ". a new injury, out, the range is one number (SX.8k)
+- NXI-12 (sentence, say2): " <player>, <position>, is out with <injury> for the season. ". a new injury that lasts past week 16 (SX.8k)
+- NXI-13 (sentence, say2): " <player>, <position>, is doubtful with <injury>. ". a new injury, doubtful (SX.8k)
+- NXI-14 (sentence, say2): " <player>, <position>, is questionable with <injury>. ". a new injury, questionable (SX.8k)
+- NXI-15 (sentence, say2): " <player>, <position>, is out, <lo> to <hi> weeks. ". an older injury, or a kind whose names are off (SX.8k)
+- NXI-16 (sentence, say2): " <player>, <position>, is out, <n> weeks. ". as NXI-15, the range is one number (SX.8k)
+- NXI-17 (sentence, say2): " <player>, <position>, is out for the season. ". as NXI-15, past week 16 (SX.8k)
+- NXI-18 (sentence, say2): " <player>, <position>, is doubtful. ". as NXI-15, doubtful (SX.8k)
+- NXI-19 (sentence, say2): " <player>, <position>, is questionable. ". as NXI-15, questionable (SX.8k)
+- NXI-20 (sentence, say2): " back from injury: <list>. ". the player's players fit again this week (SX.8k)
+- NXI-21 (sentence, say2): " <player> fills in at <position>. ". a stand-in plays a group with nobody fit (SX.8k)
+- NXI-30 (sentence, say2): " <player> comes in at <position>. ". in a game: the stand-in quarterback after the starter was hurt (SX.8k)
+- NXI-40 (prompt, say2): " <player>, your <position>, is doubtful. if he plays he is not at his best and may be hurt worse. ". the to-do item of a doubtful player (SX.8k, INJ-4)
+- NXI-41 (prompt, say2): " <player>, your <position>, is questionable. if he plays he is not at his best and may be hurt worse. ". the to-do item of a questionable player (SX.8k, INJ-4)
+- NXI-42 (sentence, say2): " <player> plays this week. ". the injury item or F9 decided he plays (SX.8k)
+- NXI-43 (sentence, say2): " <player> rests this week. ". the injury item or F9 decided he rests (SX.8k)
+- NXF-44 (menu, say5): "injury report". F9 Franchise item (SX.8k)
+- NXI-51 (piece, say5): "he plays this week.". after a doubtful or questionable player in F9's injury report (SX.8k)
+- NXI-52 (piece, say5): "he rests this week.". after a doubtful or questionable player in F9's injury report (SX.8k)
+- NXI-53 (sentence, say5): " nobody on your team is hurt. ". F9's injury report when it is empty (SX.8k)
+- NXI-54 (sentence, say5): " the game has begun, so the lineup stays as it is. ". F9's injury report inside a game: Enter changes nothing (SX.8k)
+- NXH-42 (help, say5): " Injuries: in a franchise players get hurt and miss games. The report comes after the news; a doubtful or questionable player plays only when you say so. F9 has the injury report. ". F6, after NXH-41 (SX.8k)
+- IJA01 (remark, piece): "a sprained ankle". injury kind IJA (injuries.txt)
+- IJA02 (remark, piece): "an ankle sprain". injury kind IJA (injuries.txt)
+- IJA03 (remark, piece): "a twisted ankle". injury kind IJA (injuries.txt)
+- IJB01 (remark, piece): "a hamstring strain". injury kind IJB (injuries.txt)
+- IJB02 (remark, piece): "a pulled hamstring". injury kind IJB (injuries.txt)
+- IJB03 (remark, piece): "a sore hamstring". injury kind IJB (injuries.txt)
+- IJC01 (remark, piece): "a knee sprain". injury kind IJC (injuries.txt)
+- IJC02 (remark, piece): "a sprained knee". injury kind IJC (injuries.txt)
+- IJC03 (remark, piece): "a knee injury". injury kind IJC (injuries.txt)
+- IJD01 (remark, piece): "a shoulder injury". injury kind IJD (injuries.txt)
+- IJD02 (remark, piece): "a sore shoulder". injury kind IJD (injuries.txt)
+- IJD03 (remark, piece): "a bruised shoulder". injury kind IJD (injuries.txt)
+- IJE01 (remark, piece): "a concussion". injury kind IJE (injuries.txt)
+- IJE02 (remark, piece): "a head injury". injury kind IJE (injuries.txt)
+- IJE03 (remark, piece): "a concussion from a hard hit". injury kind IJE (injuries.txt)
+- IJF01 (remark, piece): "bruised ribs". injury kind IJF (injuries.txt)
+- IJF02 (remark, piece): "a rib injury". injury kind IJF (injuries.txt)
+- IJF03 (remark, piece): "sore ribs". injury kind IJF (injuries.txt)
+- IJG01 (remark, piece): "a groin strain". injury kind IJG (injuries.txt)
+- IJG02 (remark, piece): "a pulled groin". injury kind IJG (injuries.txt)
+- IJG03 (remark, piece): "a groin injury". injury kind IJG (injuries.txt)
+- IJH01 (remark, piece): "a broken hand". injury kind IJH (injuries.txt)
+- IJH02 (remark, piece): "a broken finger". injury kind IJH (injuries.txt)
+- IJH03 (remark, piece): "a hand injury". injury kind IJH (injuries.txt)
+- IJK01 (remark, piece): "a high ankle sprain". injury kind IJK (injuries.txt)
+- IJK02 (remark, piece): "a bad ankle sprain". injury kind IJK (injuries.txt)
+- IJK03 (remark, piece): "a high ankle injury". injury kind IJK (injuries.txt)
+- IJL01 (remark, piece): "a torn knee ligament". injury kind IJL (injuries.txt)
+- IJL02 (remark, piece): "a torn ligament in his knee". injury kind IJL (injuries.txt)
+- IJL03 (remark, piece): "a serious knee injury". injury kind IJL (injuries.txt)
+- IJM01 (remark, piece): "a back injury". injury kind IJM (injuries.txt)
+- IJM02 (remark, piece): "a sore back". injury kind IJM (injuries.txt)
+- IJM03 (remark, piece): "back spasms". injury kind IJM (injuries.txt)
+- IJX01 (remark, say2): " <player> is hurt on the play and leaves the game. ". the announcer: a player hurt in a game the player plays (injuries.txt)
+- IJX02 (remark, say2): " <player> is slow to get up. he is helped off the field. ". the announcer (injuries.txt)
+- IJX03 (remark, say2): " <player> is down after the play. he will not come back in this game. ". the announcer (injuries.txt)
+- IJX04 (remark, say2): " the trainers come out for <player>. the <team> lose their <position> for the rest of the game. ". the announcer (injuries.txt)
+- NWJ01 (remark, say2): " the <team> will be without <player>, their <position>, for up to <n> weeks. ". another team's injury (news)
+- NWJ02 (remark, say2): " bad news for the <team>: <player> is out for up to <n> weeks. ". another team's injury (news)
+- NWJ03 (remark, say2): " <player> of the <team> is hurt and will miss up to <n> weeks. ". another team's injury (news)
+- NWJ04 (remark, say2): " an injury report from the <team>: their <position> <player> is out for up to <n> weeks. ". another team's injury (news)
+- NXI-01 (sentence, say2): " the injury report. ". before the week's injury report of the player's team (SX.8k, INJ-4)
+- NXI-A01 (answer, say2): "play him". an answer of the injury item (the staff's recommendation for a questionable player)
+- NXI-A02 (answer, say2): "rest him". an answer of the injury item (the staff's for a doubtful player, and the do-nothing answer)
+- NXI-55 (sentence, say5): " the staff decides who plays while the staff handles the to do list. ". F9's injury report with the staff setting on (SX.8k)
 

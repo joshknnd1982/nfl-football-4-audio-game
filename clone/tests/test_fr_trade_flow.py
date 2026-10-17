@@ -140,6 +140,8 @@ def test_an_offer_that_can_no_longer_be_made_is_called_off(tmp_path, monkeypatch
 def test_the_weeks_trades_are_looked_for_with_the_records_of_the_weeks_played(tmp_path, monkeypatch):
     seen = []
     offer_in_week(monkeypatch, week=99, seen=seen)
+    from nfl4.extras.franchise import injuries
+    monkeypatch.setattr(injuries, "to_ask", lambda league, week: [])         # SX.8k: no injury question takes a key of the script
     run(tmp_path, GAME + GAME + GAME)
     assert [week for week, _r, _l in seen] == [1, 2, 3, 4]
     for week, given, held in seen:
@@ -304,6 +306,8 @@ def test_the_weekly_preparation_makes_the_real_searchs_trades_and_offers_the_pla
     from nfl4.extras.franchise.league import SEASON, new_league
     from nfl4.game.rnd import GameRandom
     monkeypatch.setattr(T, "FR_TRADE_WEEK_MAX", 2)
+    monkeypatch.setattr(T, "FR_INJ_PRACTICE", (T.FR_INJ_PRACTICE[0], 0))       # SX.8k: the week's injury draws are made but hurt nobody (a hurt player is not traded)
+    monkeypatch.setattr(T, "FR_INJ_GAME", (T.FR_INJ_GAME[0], 0))
     league = new_league(GameRandom(random.Random(3)), SURNAMES, "Kim", 9, "20260101-000000")
     for player in league.players.values():                                 # no veteran anywhere but the two below
         player.rating = player.peak = 60
@@ -336,7 +340,7 @@ def test_an_offer_left_for_later_is_taken_by_the_staff_at_the_kick_off_when_the_
     mine, theirs = started_quarterbacks(tmp_path)
     offer_in_week(monkeypatch)
     later = [DOWN, DOWN, ENTER]
-    turn_on = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 8 + [ENTER, ENTER, ESC, ESC, ESC]       # F9, Franchise, settings, the staff item: on
+    turn_on = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 9 + [ENTER, ENTER, ESC, ESC, ESC]       # F9, Franchise, settings (10th since SX.8k), the staff item: on
     rig = run(tmp_path / "run", GAME + later + turn_on + [ENTER])
     league = league_of(rig)
     assert rig.game.options.settings.game.nx_fr_auto is True and qb(league, PLAYER).id == theirs

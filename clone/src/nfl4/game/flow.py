@@ -68,6 +68,7 @@ class Game(Speakers):
         self.foul_table = None                        # the extras' penalties.txt (nfl4 only, SX.3); None = the defaults
         self.playbook_table = None                    # the extras' playbooks files (nfl4 only, SX.7); None = the defaults
         self.news_pools = None                        # the Franchise's news.txt (nfl4 only, SX.8e); None = the defaults
+        self.injury_pools = None                      # the Franchise's injuries.txt (nfl4 only, SX.8k); None = the defaults
         self.customization = None                     # data.customize.Customization: the player's files (S7.7)
         self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
         self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
@@ -95,6 +96,7 @@ class Game(Speakers):
         self.parked_classic: SeasonState | None = None
         self._season_engine = None
         self.play_engine = None                       # the running pag, so F12's GetSexOf reaches its He and She words
+        self.game_injuries = None                     # nfl4 only (SX.8k): a Franchise game's injuries while it is played; None in every other game
         self.prompts = Prompts(self)                  # getter, GetCoach, ChooseTeam, Getqbs, SayScedual (S7.4a)
         self.hotkeys = HotKeys(self)                  # F5 to F8, F11, F12, Ctrl inside every wait (S7.4a, D-018)
         self.hotkeys.install()
@@ -145,6 +147,7 @@ class Game(Speakers):
             self.foul_table = snapshot.fouls                  # the same for penalties.txt (SX.3)
             self.playbook_table = snapshot.playbooks          # and the playbooks' three files (SX.7)
             self.news_pools = snapshot.news                   # and the Franchise's news.txt (SX.8e)
+            self.injury_pools = snapshot.injuries             # and its injuries.txt (SX.8k)
         except Exception:
             log.exception("the player's customization could not be applied")
 
@@ -253,20 +256,23 @@ class Game(Speakers):
     # ----- the game itself: pag (S7.3b) -----
 
     def play_game(self, rules=None, own_names: Roster | None = None, saved=None, quarterback_names=None,
-                  save_sink=None, roster_sink=None, opponent_names: Roster | None = None):
+                  save_sink=None, roster_sink=None, opponent_names: Roster | None = None, game_injuries=None):
         """pag (GAME_SPEC 4.14 to 5.13): one game against this week's opponent. Returns a GameResult (Me.m414, saved,
         conceded); m414 is kept for the season engine. rules: game.rules.ClassicRules (the original) unless the
-        N. F. L. rules mode hands its own (nfl4 only, phase PX). opponent_names: the Franchise's opponent (H7, SX.8b)."""
+        N. F. L. rules mode hands its own (nfl4 only, phase PX). opponent_names: the Franchise's opponent (H7, SX.8b). game_injuries: a
+        Franchise game's injuries (SX.8k; the N. F. L. rules read it, H16 and H2), None in every other game."""
         from .pag import PlayEngine
         rules = (rules or self.rules).for_game()       # the N. F. L. rules get a fresh object per game; Classic is itself
         engine = PlayEngine(self, rules, own_names=own_names, saved=saved,
                             quarterback_names=quarterback_names, save_sink=save_sink, roster_sink=roster_sink,
                             opponent_names=opponent_names)
         self.play_engine = engine
+        self.game_injuries = game_injuries
         try:
             result = engine.run()
         finally:
             self.play_engine = None
+            self.game_injuries = None
         if result.scores is not None:
             self.m414 = result.scores
         return result

@@ -355,7 +355,7 @@ def test_a_franchise_started_from_f9_at_the_main_menu_is_heard_at_once_and_the_c
 
 
 def test_playing_classic_seasons_from_the_franchise_goes_back_to_the_classic_week_it_left(tmp_path):
-    back = GAME + FRANCHISE_MENU + [DOWN] * 9 + [ENTER, ENTER, ESC, ESC]       # F9, Franchise, play classic seasons, confirm
+    back = GAME + FRANCHISE_MENU + [DOWN] * 10 + [ENTER, ENTER, ESC, ESC]      # F9, Franchise, play classic seasons (11th since SX.8k), confirm
     script = classic_to_franchise_script() + COACH_AND_TEAM + GAME + back
     rig = franchise_rig(tmp_path, script, preset=preset_season(gtp=3), policy=enter_until(lambda: len(rig.plays) == 4))
     run_until(rig)
@@ -371,7 +371,7 @@ def test_playing_classic_seasons_from_the_franchise_goes_back_to_the_classic_wee
 
 
 def test_back_to_the_franchise_continues_it_where_it_stood(tmp_path):
-    to_classic = GAME + FRANCHISE_MENU + [DOWN] * 9 + [ENTER, ENTER, ESC, ESC]
+    to_classic = GAME + FRANCHISE_MENU + [DOWN] * 10 + [ENTER, ENTER, ESC, ESC]
     to_franchise_again = GAME + [F9, DOWN, DOWN, DOWN, DOWN, ENTER, ENTER, ESC]       # classic week 4; F9, Franchise, back to the franchise
     script = classic_to_franchise_script() + COACH_AND_TEAM + GAME + to_classic + to_franchise_again
     rig = franchise_rig(tmp_path, script, preset=preset_season(gtp=3), policy=enter_until(lambda: len(rig.plays) == 6))

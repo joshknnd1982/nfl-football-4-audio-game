@@ -38,7 +38,8 @@ PLACEHOLDERS = {"NWB": _FOR_GAME, "NWU": _FOR_GAME, "NWC": _FOR_GAME,
                 "NWD": ("<team>", "<player>", "<position>", "<coach>"),
                 "NWP": ("<player>", "<position>", "<r>", "<coach>", "<team>"),
                 "NWK": ("<team>", "<cap>", "<coach>"),
-                "NWX": ("<team>", "<other>", "<player>", "<position>", "<coach>")}      # SX.8j: a trade of two other teams
+                "NWX": ("<team>", "<other>", "<player>", "<position>", "<coach>"),      # SX.8j: a trade of two other teams
+                "NWJ": ("<team>", "<player>", "<position>", "<n>", "<coach>")}          # SX.8k: another team's player out for up to <n> weeks
 MAX_NUMBER = 9999
 Remark = R.Remark
 
@@ -185,13 +186,13 @@ NOTES = (
     "week, NWU an upset, NWC the closest game, NWS another team's winning streak and NWL its losing streak, NWY your winning streak",
     "and NWZ your losing streak, NWM your milestone of wins as a head coach, NWT the champion, NWR a star who retires, NWD the first",
     "pick of the draft, NWP a player of yours who improved a lot, NWK the team with the most room under the salary cap, NWX a trade",
-    "between two other teams.",
+    "between two other teams, NWJ a player of another team who is hurt and out for weeks (<n> is the most weeks he may miss).",
     "Change a line to say something else. Write NWB02 = off to switch a line off. Delete a line to get the original back.",
     "Add your own lines with a new number in a kind, NWB05 and up. A line is chosen by chance, never one of the last three of its kind.",
     "If every line of a kind is off, that kind of news is never told. The F8 key does not switch the news off.",
     "In a line, <team> is the team the news is about, <other> the other team of the game (NWB, NWU and NWC), <n> a number (the points,",
     "the games in a row, your wins or the season), <score> the score as said (24 to 17), <coach> your name; <player> and <position> in",
-    "the kinds NWR, NWD, NWP and NWX, and <r> (the rating he has now) in NWP only; <cap> (the cap space, said in millions) in NWK only; in",
+    "the kinds NWR, NWD, NWP, NWX and NWJ, and <r> (the rating he has now) in NWP only; <cap> (the cap space, said in millions) in NWK only; in",
     "NWX <team> is the team that traded the player away and <other> the team he goes to; in NWM,",
     "NWY, NWZ and NWP <team> is your team. Each kind",
     "knows only the words that belong to it; any other word in angle brackets is said as written. Spell a name the way the voice says it.",

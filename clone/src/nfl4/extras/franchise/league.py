@@ -100,6 +100,7 @@ class LeagueRecord:
     resign: dict | None = None                         # the stage of the expiring contracts in progress (SX.8h, format 3): see resign.py
     market: dict | None = None                         # the stage of free agency in progress (SX.8i, format 4): see market.py
     trades: dict = field(default_factory=lambda: {"picks": [], "log": []})   # the season's trades and the traded picks of the coming draft (SX.8j, format 5): see trades.py
+    injuries: dict = field(default_factory=lambda: {"hurt": [], "stand_ins": [], "report": None})   # the season's injuries (SX.8k, format 6): see injuries.py
 
     # ----- the teams -----
 
@@ -195,7 +196,8 @@ class LeagueRecord:
                 "gtp": self.gtp, "schedule": self.schedule, "records": self.records, "pairings": self.pairings,
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
-                "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades}
+                "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
+                "injuries": self.injuries}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -241,6 +243,8 @@ class LeagueRecord:
                 record.market = data["market"]
             if version >= 5:
                 record.trades = data["trades"]
+            if version >= 6:
+                record.injuries = data["injuries"]
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -316,6 +320,8 @@ class LeagueRecord:
         market_rules.check_market(self, whole)                 # SX.8i: the stage of free agency in progress
         from . import trades as trade_rules
         trade_rules.check_trades(self, whole)                  # SX.8j: the season's trades and the traded picks of the coming draft
+        from . import injuries as injury_rules
+        injury_rules.check_injuries(self, whole)               # SX.8k: the season's injuries, the stand-ins and the week's report
         self._check_results(whole)
         self._check_season(whole, ints)
 

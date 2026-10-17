@@ -183,7 +183,7 @@ def test_the_three_files_are_made_in_the_playbooks_folder_only_with_the_nfl_rule
     assert not os.path.exists(os.path.join(folder, "playbooks")) and classic.snapshot.playbooks is None
     assert [spec.file_name for spec in classic.specs] == ["teams.txt", "divisions.txt", "surnames.txt", "banter.txt"]
     custom = Customization(folder, extras=True)
-    assert [spec.file_name for spec in custom.specs][-4:-1] == ["plays.txt", "styles.txt", "team_styles.txt"]       # news.txt (SX.8e) is last
+    assert [spec.file_name for spec in custom.specs][-5:-2] == ["plays.txt", "styles.txt", "team_styles.txt"]       # news.txt (SX.8e) and injuries.txt (SX.8k) follow
     for name in FILES.values():
         assert os.path.isfile(os.path.join(folder, "playbooks", name)), name
     assert custom.snapshot.playbooks == PB.DEFAULT_TABLE and custom.take_notices() == []
