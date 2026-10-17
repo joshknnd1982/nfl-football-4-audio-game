@@ -57,6 +57,9 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     next name that starts with it (press it again for the one after)
 # sound_volume        0 to -50: how many decibels below full volume the sounds play (original 0); F11 changes it
 # comments            on or off: the announcer's comments (original on); F8 switches them
+# commercials         off = none (default), every = one of your own commercial files at every break of the game, second =
+#                     at every second break, third = at every third break; the Sounds menu changes it (the files are
+#                     yours: see the commercials folder next to this file)
 # rules               classic = the game exactly as the original (original), nfl = the N. F. L. rules with a real clock
 #                     and the added features; the Rules item of the F9 menu changes it, from the next game on
 # nx_timeouts         on or off: the time outs of the N. F. L. rules (default on)
@@ -103,6 +106,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"speech_pitch = {sp.pitch}",
         f"list_letters = {sp.list_letters}",
         f"sound_volume = {au.sound_level // 100}",
+        f"commercials = {au.commercials}",
         f"comments = {'on' if game.comments else 'off'}",
         f"rules = {game.rules}",
         f"nx_timeouts = {'on' if game.nx_timeouts else 'off'}",
@@ -200,6 +204,10 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         sp.list_letters = value.lower()
     elif name == "sound_volume":
         au.sound_level = _number(value, -50, 0) * 100
+    elif name == "commercials":
+        if value.lower() not in ("off", "every", "second", "third"):
+            raise ValueError(f"'{value[:20]}' is not off, every, second or third")
+        au.commercials = value.lower()
     elif name == "comments":
         word = _ON_WORDS.get(value.lower())
         if word is None:

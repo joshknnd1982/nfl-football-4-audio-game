@@ -20,7 +20,8 @@ import threading
 from dataclasses import dataclass
 
 from ..data import paths
-from .ids import SOUND_IDS, canonical_id, file_stems, foot_number
+from .ids import SOUND_IDS, canonical_id, file_stems, foot_id, foot_number
+from .pools import POOL_ORDER, POOLS, Member, next_free_number, scan_added
 from .soundsconfig import SoundEntry, SoundsConfig, load_or_heal
 from .tonegen import generated
 from .wavdata import DECODER_EXTENSIONS, Sampled, SoundLoadError, load_sound_file
@@ -65,6 +66,8 @@ class SoundLibrary:
         self._reported: dict[tuple, str] = {}
         self._notices: list[str] = []
         self._file_notice_given = False      # G-A6: one notice per start
+        self._added: dict[str, list[tuple[int, str]]] = {}   # pool -> the player's added files (number, real name)
+        self._members: dict[str, list[Member]] = {}
         self.refresh()
 
     # ----- state -----
@@ -83,6 +86,14 @@ class SoundLibrary:
             self._player = _listing(self.player_dir)
             self._picks.clear()
             self._file_picks.clear()
+            self._members.clear()
+            self._added = {}
+            for name in POOL_ORDER:
+                added, skipped = scan_added(POOLS[name], self._player)
+                self._added[name] = added
+                for extra in skipped:
+                    self._report(("twice", name, extra.lower()),
+                                 f"{extra}: another file has the same number in the {name} pool, so this one is not used")
 
     @property
     def problems(self) -> list[str]:
@@ -94,6 +105,8 @@ class SoundLibrary:
         """Resolve every sound once (start-up and the sounds menu's check command) and return the problems."""
         for sound_id in SOUND_IDS:
             self.pick(sound_id)
+        for name in POOL_ORDER:
+            self.pool_members(name)               # reads every added file once; the unusable ones are reported
         return self.problems
 
     def take_notices(self) -> list[str]:
@@ -112,6 +125,39 @@ class SoundLibrary:
                 cached = self._resolve(key)
                 self._picks[key] = cached
             return cached
+
+    # ----- numbered pools (owner rule 0.14, playbook 7.7.1, audio/pools.py) -----
+
+    def pool_members(self, pool_name: str) -> list[Member]:
+        """What a pool draws from now, in draw order: the original members (foot8 to foot10; foot15 to foot24) that are not
+        switched off in sounds.txt, then the player's added files by number whose file can be used. An original member with
+        no usable file stays in (it plays silence, as it always did, so the draws do not move); an added file that cannot
+        be read is left out, logged and counted in the one spoken notice. With nothing added and nothing off this is the
+        original's list."""
+        pool = POOLS[pool_name]
+        with self._lock:
+            cached = self._members.get(pool_name)
+            if cached is not None:
+                return list(cached)
+            members = [Member(foot_id(n), None, n) for n in pool.originals if self.pick(foot_id(n)).source != "off"]
+            for number, real in self._added.get(pool_name, []):
+                path = os.path.join(self.player_dir, real)
+                if self.pick_file(path).sound is not None:
+                    members.append(Member(None, path, number))
+            self._members[pool_name] = members
+            return list(members)
+
+    def pool_summary(self, pool_name: str) -> tuple[int, int, int]:
+        """(original members in the draw, added files in the draw, the next free number) for the Sounds menu."""
+        pool = POOLS[pool_name]
+        members = self.pool_members(pool_name)
+        added = sum(1 for m in members if m.added)
+        with self._lock:
+            return len(members) - added, added, next_free_number(pool, self._added.get(pool_name, []))
+
+    def pick_for(self, member: Member) -> Pick:
+        """The sound of a pool member: an original by its ID, an added file by its place."""
+        return self.pick(member.sound_id) if member.sound_id is not None else self.pick_file(member.path)
 
     def pick_file(self, path: str) -> Pick:
         """A sound file of the player's that is named by its place, not by an ID (the banter's `[sound file.wav]`, D-048).

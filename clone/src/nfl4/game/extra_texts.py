@@ -147,6 +147,39 @@ def volume_label(level: int, original: bool) -> str:
     return f"{text}{', original' if original else ''}."
 
 
+# numbered sound pools and commercials (owner rule 0.14, playbook 7.7.1)
+POOLS_ITEM = "Sound pools you can add your own sounds to."
+POOLS_TITLE = "Sound pools"
+POOLS_HELP = ("Up and Down move through the pools. Enter plays the next sound of the pool. To add a sound, put the file in "
+              "the sounds folder and name it with the pool's name and a new number, the name is spoken with the pool. "
+              "Then reload the sounds. Escape goes back.")
+COMMERCIAL_CUE = "Commercial. Any key skips it."
+COMMERCIALS_FOLDER_ITEM = "Open the commercials folder."
+COMMERCIALS_FOLDER_OPENING = "Opening the commercials folder."
+COMMERCIALS_FOLDER_FAILED = "The commercials folder could not be opened. Its place is in the readme."
+_COMMERCIAL_WORDS = {"off": "off", "every": "at every break", "second": "at every second break",
+                     "third": "at every third break"}
+
+
+def commercials_label(value: str, found: int) -> str:
+    """Spoken: "Commercials: off." or "Commercials: at every break, 3 files found." The files are the player's own."""
+    words_ = _COMMERCIAL_WORDS.get(value, "off")
+    if value == "off":
+        return "Commercials: off."
+    return f"Commercials: {words_}, {found} file{'' if found == 1 else 's'} found."
+
+
+def pool_name(label: str, base: str, original: int, added: int, next_number: int) -> str:
+    """Spoken: "Celebration sounds, 10 original, 2 added. A new file is named celebration3." """
+    added_text = f"{added} added" if added else "none added"
+    return f"{label.capitalize()}, {original} original, {added_text}. A new file is named {base}{next_number}."
+
+
+def pool_played(position: int, count: int, source: str) -> str:
+    kind = "your file" if source == "player" else "original"
+    return f"Sound {position} of {count}, {kind}."
+
+
 NO_SOUND_DEVICE_ITEM = "The sound system could not be started, so the game runs without sounds. Details are in the log."
 
 PREVIEW_ITEM = "Listen to the sounds one by one."

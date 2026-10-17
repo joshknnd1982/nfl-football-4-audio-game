@@ -51,6 +51,7 @@ class BreakSteps:
                 s.defense = other(s.wisoff)
                 s.half = own_half(s.wisoff)
                 g.halftime()
+                self.snd.commercial("halftime")                      # owner rule 0.14
                 return self.kick_off
             return self.play_menu
         if s.quarter <= 3:
@@ -80,6 +81,8 @@ class BreakSteps:
         self.snd.play_tackle(8)
         g.say4(P.END_OF_QUARTER[quarter])
         g.ptf = 0
+        if quarter != 2:                                             # the end of quarter 2 is the half time break below
+            self.snd.commercial("quarter")                           # owner rule 0.14: the player's own commercials, off by default
 
     def _two_minute_warning(self) -> None:
         """Quarter 2, 4 and overtime: the log flag is on from L2cc - W on (and off again at once), the warning when the
@@ -92,6 +95,7 @@ class BreakSteps:
             g.log_print("")
             g.say4(P.TWO_MINUTE_WARNING)
             self.snd.play_tackle(8)
+            self.snd.commercial("two-minute-warning")                # owner rule 0.14
             clock.warning_given()                                    # H1 (Classic: nothing; the N. F. L. clock: once)
         g.ptf = 0
 
@@ -191,6 +195,7 @@ class BreakSteps:
             g.superbowl(s.final_scores)                             # Q27: once, in place of the final score (S7.3c)
         else:
             self.final_score()
+        self.snd.commercial("final")                                # owner rule 0.14: after the final score, before the statistics
         s.quarter += 1
         s.finished = True                                           # L194 = 1
         self.quarter_stats()

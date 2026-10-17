@@ -35,6 +35,11 @@ def customize_dir() -> str:
     return os.path.join(user_data_dir(), "customize")
 
 
+def commercials_dir() -> str:
+    """The player's own commercial files (owner rule 0.14, playbook 7.7.1; game/commercials.py). The game ships none."""
+    return os.path.join(user_data_dir(), "commercials")
+
+
 def export_dir() -> str:
     """Where the Sounds menu saves generated sounds as wav files (playbook 7.7)."""
     return os.path.join(user_data_dir(), "exported sounds")

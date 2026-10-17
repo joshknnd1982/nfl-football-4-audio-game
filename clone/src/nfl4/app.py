@@ -33,6 +33,7 @@ from .game.flow import Game
 from .game.keys import GameQuit, KeyInput
 from .game.options import Options
 from .game.rnd import GameRandom
+from .game.commercials import Commercials
 from .game.sounds import GameSounds
 from .speech import create_speech
 from .speech.roles import ROLES
@@ -89,6 +90,7 @@ def main() -> int:
     audio = start_audio(settings)
     rnd = GameRandom()                      # ONE random function for the game and the sounds (G-D2)
     sounds = GameSounds(audio, keys, settings.audio, rng=rnd)
+    sounds.commercials = Commercials(paths.commercials_dir())   # the player's own commercials (rule 0.14): none shipped, off by default
     # what the hot keys change, saved to settings.txt where the original wrote footbal0.dat or football.vol (S7.4a);
     # the voice list for F12 is read the first time F12 is pressed
     options = Options(settings, speech, save=store.save, base_rate=lambda: speech.base_rate,

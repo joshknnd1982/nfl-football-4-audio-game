@@ -48,6 +48,8 @@ class GameSettings:
 @dataclass
 class AudioSettings:
     sound_level: int = 0         # wavol: 0 (full) down to -5000 hundredths of a decibel, added to every sound (GAME_SPEC 10)
+    commercials: str = "off"     # clone addition (rule 0.14): off, every, second or third = the player's commercial files play at every,
+                                 # every second or every third break of the game; off until the player turns it on
     # S7.2 removed the kit's Brain-only fields (effects volume, pitch spread, sounds start early): nfl4's only sound
     # level is wavol (D-038), and it has no "sounds start right away" setting (G-S11).
 

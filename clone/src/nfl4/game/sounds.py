@@ -18,9 +18,11 @@ from typing import Callable
 
 from ..audio.engine import Audio
 from ..audio.ids import foot_id
+from ..audio.pools import POOLS, Member
 from ..audio.output import (SLOT_AMBIENT, SLOT_CROWD1, SLOT_CROWD2, SLOT_HIKE, SLOT_NOISE, SLOT_ONESHOT,
                             SLOT_TACKLE)
 from ..data.settings import AudioSettings
+from . import extra_texts as words
 from .keys import KeyInput
 from .rnd import REDRAW_LIMIT
 
@@ -32,6 +34,10 @@ TACKLE_WAIT = 2.5        # PlayTackle's dy(2.5)
 CELEBRATION_PAUSE = 0.4  # playcel's dy(0.4) before its foot12
 MIN_CELEBRATION_FREQ = 8000
 AMBIENT_FIRST = 5.0      # getkey2: st4 = Timer + 5
+AMBIENT_LEVELS = {8: -250, 9: -1200}   # PlayRan's levels of foot8 and foot9; foot10 is panned (see play_ran)
+ADDED_AMBIENT_LEVEL = -1200            # a member the player added (rule 0.14): foot9's level, centered (D-068)
+COMMERCIAL_EVERY = {"off": 0, "every": 1, "second": 2, "third": 3}   # the Sounds menu setting (rule 0.14, D-068)
+COMMERCIAL_ATTEMPTS = 5                # files tried at one break before it goes without
 
 
 class GameSounds:
@@ -43,6 +49,9 @@ class GameSounds:
         self.rng = rng if rng is not None else random.Random()
         self.clock = clock
         self.sleep = sleep
+        self.commercials = None  # game.commercials.Commercials: the player's commercial files (rule 0.14), None in the tests
+        self.announce: Callable[[str], None] | None = None   # speaks a sentence and waits for it (set by the Game)
+        self._commercial_breaks = 0   # the breaks seen while the setting is on, for "every second / third break"
         self.crwd1 = -1200       # crowd 1's base level: -1200 in the menus (Form_Load), -100 during a game (pag)
         self.st4 = 0.0           # PlayRan: no ambient sound starts before this time
 
@@ -212,11 +221,25 @@ class GameSounds:
         self._wait_while(lambda: self.keys.code_text == "" and self.audio.busy(SLOT_ONESHOT))
         self.audio.stop(SLOT_ONESHOT)
 
+    def _members(self, pool_name: str) -> list[Member]:
+        """What the pool draws from (audio/pools.py): the original members plus the player's added files. Without a library
+        (a fake audio) the original's list."""
+        library = getattr(self.audio, "library", None)
+        if library is None or not hasattr(library, "pool_members"):
+            return [Member(foot_id(n), None, n) for n in POOLS[pool_name].originals]
+        return library.pool_members(pool_name)
+
     def celebration_sound(self) -> None:
-        """One celebration sound (playcel, halftime, superbowl, finplay17): foot15 to foot24 at -300 + wavol, frequency
-        = own rate + 100 x k with k = Int(Rnd * 40) - 20 drawn again while 0, at least 8000 Hz, waited, stop."""
-        sound_id = foot_id(int(self._rnd() * 10) + 15)
-        rate = self.audio.rate(sound_id) or 0
+        """One celebration sound (playcel, halftime, superbowl, finplay17): a member of the celebration pool (foot15 to
+        foot24 and the player's added celebration<N> files) at -300 + wavol, frequency = own rate + 100 x k with
+        k = Int(Rnd * 40) - 20 drawn again while 0, at least 8000 Hz, waited, stop. The draw is Int(Rnd * count) with the
+        pool's count, 10 while nothing is added, so the original's draws are unchanged (rule 0.14, D-068)."""
+        members = self._members("celebration")
+        index = int(self._rnd() * max(len(members), 1))
+        if not members:
+            return                                  # every member switched off: nothing to play (7.7.1)
+        member = members[min(index, len(members) - 1)]
+        rate = self.audio.member_rate(member) or 0
         for _ in range(REDRAW_LIMIT):           # G-D1: the original's loop has no bound; a stuck source must end
             k = int(self._rnd() * 40) - 20
             if k != 0:
@@ -225,7 +248,7 @@ class GameSounds:
             log.warning("celebration pitch: no draw other than 0 in %d tries, taking +100 Hz (G-D1)", REDRAW_LIMIT)
             k = 1
         freq = max(MIN_CELEBRATION_FREQ, rate + 100 * k)
-        self.audio.play(SLOT_ONESHOT, sound_id, -300 + self.wavol, freq=freq)
+        self.audio.play_member(SLOT_ONESHOT, member, -300 + self.wavol, freq=freq)
         self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT))
         self.audio.stop(SLOT_ONESHOT)
 
@@ -256,22 +279,58 @@ class GameSounds:
         self.st4 = self.clock() + AMBIENT_FIRST
 
     def play_ran(self) -> None:
-        """PlayRan, called on every pass of getkey2: nothing while the ambient slot plays or before st4; else one of
-        foot8 (-250), foot9 (-1200) or foot10 (pan (Int(Rnd * 30) - 15) * 100, level -2900 + |pan|), + wavol, once, not
-        waited; then st4 = now + Rnd * 7 + 3 (3 to 10 s)."""
+        """PlayRan, called on every pass of getkey2: nothing while the ambient slot plays or before st4; else one member of
+        the ambient pool: foot8 (-250), foot9 (-1200) or foot10 (pan (Int(Rnd * 30) - 15) * 100, level -2900 + |pan|), or a
+        file the player added (-1200, centered), + wavol, once, not waited; then st4 = now + Rnd * 7 + 3 (3 to 10 s). The
+        draw is Int(Rnd * count), 3 while nothing is added (rule 0.14)."""
         if self.audio.busy(SLOT_AMBIENT) or self.clock() < self.st4:
             return
-        choice = int(self._rnd() * 3) + 1
-        pan = 0
-        if choice == 1:
-            sound_id, base = foot_id(8), -250
-        elif choice == 2:
-            sound_id, base = foot_id(9), -1200
-        else:
-            pan = (int(self._rnd() * 30) - 15) * 100
-            sound_id, base = foot_id(10), -2900 + abs(pan)
-        self.audio.play(SLOT_AMBIENT, sound_id, base + self.wavol, pan=pan)
+        members = self._members("ambient")
+        index = int(self._rnd() * max(len(members), 1))
+        if members:
+            member = members[min(index, len(members) - 1)]
+            pan = 0
+            if member.added:
+                base = ADDED_AMBIENT_LEVEL
+            elif member.number == 10:
+                pan = (int(self._rnd() * 30) - 15) * 100
+                base = -2900 + abs(pan)
+            else:
+                base = AMBIENT_LEVELS[member.number]
+            self.audio.play_member(SLOT_AMBIENT, member, base + self.wavol, pan=pan)
         self.st4 = self.clock() + (self._rnd() * 7 + 3)
+
+    # ----- commercials (owner rule 0.14, playbook 7.7.1, game/commercials.py) -----
+
+    def commercial(self, break_name: str) -> None:
+        """A break of the game (the quarter, the two minute warning, half time, the end): when the player turned commercials
+        on and put sound files in the commercials folder, the sentence "Commercial", then one of them, until it ends or a key
+        comes (that key is not passed on). Draws come from the commercials' own random object, never the game's, and nothing
+        is kept in a save, so the game is the same with commercials on or off. With the setting off, a missing or empty
+        folder or no usable file: nothing happens and nothing waits."""
+        every = COMMERCIAL_EVERY.get(getattr(self.settings, "commercials", "off"), 0)
+        if every == 0 or self.commercials is None:
+            return
+        self._commercial_breaks += 1
+        if self._commercial_breaks % every:
+            return
+        path = None
+        for _ in range(COMMERCIAL_ATTEMPTS):
+            wanted = self.commercials.choose(break_name)
+            if wanted is None:
+                return
+            if self.audio.library.pick_file(wanted).sound is not None:
+                path = wanted
+                break
+        if path is None:
+            return
+        if self.announce is not None:
+            self.announce(words.COMMERCIAL_CUE)
+        self.keys.clk()
+        self.audio.play_file(SLOT_ONESHOT, path, self.wavol)
+        self._wait_while(lambda: self.keys.code_text == "" and self.audio.busy(SLOT_ONESHOT))
+        self.audio.stop(SLOT_ONESHOT)
+        self.keys.clk()                              # the key that skipped it goes no further
 
     # ----- the exit -----
 

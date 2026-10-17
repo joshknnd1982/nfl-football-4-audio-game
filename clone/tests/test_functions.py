@@ -244,12 +244,41 @@ def extra_plays(rig):
     return [(e.sound_id, e.volume) for e in rig.slot_log if e.slot == 7 and e.action == "play"]
 
 
-def test_the_sounds_menu_lists_its_eight_items(tmp_path):
+def test_the_sounds_menu_lists_its_nine_items(tmp_path):
     rig = rig_for(tmp_path, [])
-    spoken = sounds_menu(rig, [DOWN] * 7)
-    assert spoken[2:10] == ["Sounds. 8 items. Press F1 for help. Sound volume: full, original.",
+    spoken = sounds_menu(rig, [DOWN] * 8)
+    assert spoken[2:11] == ["Sounds. 9 items. Press F1 for help. Sound volume: full, original.",
                             words.PREVIEW_ITEM, words.RELOAD_ITEM, words.CHECK_ITEM, words.FOLDER_ITEM,
-                            words.RESTORE_SOUNDS, words.RESTORE_ONE_ITEM, words.RESTORE_ALL_ITEM]
+                            words.RESTORE_SOUNDS, words.RESTORE_ONE_ITEM, words.RESTORE_ALL_ITEM, words.POOLS_ITEM]
+
+
+def test_with_the_players_commercials_folder_the_menu_has_the_commercials_items_and_the_setting_cycles_and_is_saved(tmp_path):
+    from nfl4.game.commercials import Commercials
+    rig = rig_for(tmp_path, [])
+    rig.sounds.commercials = Commercials(str(tmp_path / "commercials"))
+    spoken = sounds_menu(rig, [DOWN] * 9 + [ENTER, RIGHT, LEFT, LEFT, DOWN])
+    assert spoken[2].startswith("Sounds. 11 items.")
+    assert spoken[10] == words.POOLS_ITEM
+    assert spoken[11:16] == ["Commercials: off.", "Commercials: at every break, 0 files found.",
+                             "Commercials: at every second break, 0 files found.",
+                             "Commercials: at every break, 0 files found.", "Commercials: off."]
+    assert spoken[16] == words.COMMERCIALS_FOLDER_ITEM
+    assert rig.game.options.settings.audio.commercials == "off" and rig.saves.count == 4
+
+
+def test_the_sound_pools_item_tells_each_pool_its_counts_and_the_next_name_and_plays_its_sounds_in_turn(tmp_path):
+    from wavmaker import write
+    folder = tmp_path / "sounds"
+    folder.mkdir(parents=True, exist_ok=True)
+    write(folder / "celebration2.wav", [0.2] * 400, rate=11025)
+    rig = rig_for(tmp_path, [])
+    spoken = sounds_menu(rig, [DOWN] * 8 + [ENTER, ENTER, ENTER, DOWN, ENTER, ESC])
+    ambient = "Ambient sounds while a key is awaited, 3 original, none added. A new file is named ambient1."
+    celebration = "Celebration sounds, 10 original, 1 added. A new file is named celebration3."
+    assert any(line.endswith(ambient) and line.startswith("Sound pools. 2 items.") for line in spoken)
+    assert "Sound 1 of 3, original." in spoken and "Sound 2 of 3, original." in spoken
+    assert celebration in spoken and "Sound 1 of 11, original." in spoken
+    assert [pid for pid, _ in extra_plays(rig)][-3:] == ["snd_foot8", "snd_foot9", "snd_foot15"]
 
 
 def test_left_lowers_the_sound_volume_by_five_decibels_saves_it_and_plays_a_sample(tmp_path):
@@ -349,7 +378,7 @@ def test_a_sound_system_that_did_not_start_is_the_first_item(tmp_path):
     rig = rig_for(tmp_path, [])
     rig.audio.error = "no device"
     spoken = sounds_menu(rig, [])
-    assert spoken[2] == ("Sounds. 9 items. Press F1 for help. " + words.NO_SOUND_DEVICE_ITEM)
+    assert spoken[2] == ("Sounds. 10 items. Press F1 for help. " + words.NO_SOUND_DEVICE_ITEM)
 
 
 def test_without_a_sound_layer_the_sounds_item_says_so(tmp_path):

@@ -124,6 +124,17 @@ class Audio:
         Returns the seconds one pass of the sound takes (0 when nothing plays)."""
         return self._start(slot, self.library.pick(sound_id), volume, pan, freq, loop)
 
+    def play_member(self, slot: int, member, volume: int = 0, pan: int = 0, freq: int | None = None) -> float:
+        """A numbered pool's member (audio/pools.py): an original by its ID, exactly the call the original's draw made, an
+        added file of the player's by its place, once. Returns the seconds one pass takes (0 when nothing plays)."""
+        if member.sound_id is not None:
+            return self.play(slot, member.sound_id, volume, pan, freq)
+        return self._start(slot, self.library.pick_file(member.path), volume, pan, freq, False)
+
+    def member_rate(self, member) -> int | None:
+        """The member's own sample rate (GetFrequency of its buffer); None when nothing is playable."""
+        return self.library.pick_for(member).rate
+
     def play_file(self, slot: int, path: str, volume: int = 0, pan: int = 0) -> float:
         """The same for a sound file of the player's named by its place (the banter's [sound file.wav], D-048): once, at the
         file's own rate. A file that cannot be used plays nothing (the library logs it and speaks its one notice)."""

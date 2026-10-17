@@ -25,6 +25,7 @@ from typing import Callable
 
 from ..audio.ids import SOUND_IDS, canonical_id, describe
 from ..audio.output import EXTRA_SLOT
+from ..audio.pools import POOL_ORDER, POOLS
 from ..audio.restore import restore_all_sounds, restore_sound
 from ..data import paths
 from ..data.settings import SOUND_LEVEL_MAX, SOUND_LEVEL_MIN
@@ -255,6 +256,20 @@ class Functions:
             reset_volume()
             return words.SOUNDS_RESTORED
 
+        commercials = self.g.sounds.commercials          # owner rule 0.14; None in a rig without the player's folder
+        audio_settings = options.settings.audio
+        levels = ("off", "every", "second", "third")
+
+        def cycle_commercials(step: int = 1) -> None:
+            audio_settings.commercials = levels[(levels.index(audio_settings.commercials) + step) % len(levels)]                 if audio_settings.commercials in levels else "every"
+            options.save()
+            if commercials is not None:
+                commercials.refresh()
+
+        def open_commercials_folder() -> str:
+            commercials.ensure()
+            return words.COMMERCIALS_FOLDER_OPENING if self.open_folder(commercials.folder)                 else words.COMMERCIALS_FOLDER_FAILED
+
         items = []
         if not audio.ok:
             items.append(Item(lambda: words.NO_SOUND_DEVICE_ITEM))
@@ -267,7 +282,14 @@ class Functions:
             Item(lambda: words.RESTORE_SOUNDS, enter=restore_volume),
             Item(lambda: words.RESTORE_ONE_ITEM, enter=self._enter(self.restore_one_sound)),
             Item(lambda: words.RESTORE_ALL_ITEM, enter=self.restore_all_sounds),
+            Item(lambda: words.POOLS_ITEM, enter=self._enter(self.sound_pools)),       # owner rule 0.14: after the older items
         ]
+        if commercials is not None:
+            items += [
+                Item(lambda: words.commercials_label(audio_settings.commercials, commercials.count()),
+                     enter=cycle_commercials, change=cycle_commercials),
+                Item(lambda: words.COMMERCIALS_FOLDER_ITEM, enter=open_commercials_folder),
+            ]
         SpokenMenu(self.speech, self.keys, words.SOUNDS_TITLE, items).run()
 
     # ----- customize (S7.7, G-K2, D-048) -----
@@ -374,6 +396,37 @@ class Functions:
         try:
             ListPicker(self.speech, self.keys, words.PREVIEW_TITLE, len(SOUND_IDS), self._sound_name, on_enter=play,
                        close_on_enter=False, help_text=words.PREVIEW_HELP, clock=self.clock).run()
+        finally:
+            audio.stop_preview()
+
+    def sound_pools(self) -> None:
+        """The pools of numbered sounds the player can add to (owner rule 0.14, playbook 7.7.1): each with its count and the
+        name a new file takes; Enter plays the pool's sounds one after the other."""
+        audio = self.audio
+        library = audio.library
+        library.refresh()
+        turn = {name: 0 for name in POOL_ORDER}
+
+        def name(index: int) -> str:
+            pool = POOLS[POOL_ORDER[index]]
+            original, added, next_number = library.pool_summary(pool.name)
+            return words.pool_name(pool.label, pool.name, original, added, next_number)
+
+        def play(index: int) -> str | None:
+            pool_name = POOL_ORDER[index]
+            members = library.pool_members(pool_name)
+            if not members:
+                return words.NOTHING_CHANGED
+            audio.stop_preview()
+            position = turn[pool_name] % len(members)
+            turn[pool_name] += 1
+            member = members[position]
+            audio.play_member(EXTRA_SLOT, member, self.options.wavol)
+            return words.pool_played(position + 1, len(members), "player" if member.added else "original")
+
+        try:
+            ListPicker(self.speech, self.keys, words.POOLS_TITLE, len(POOL_ORDER), name, on_enter=play,
+                       close_on_enter=False, help_text=words.POOLS_HELP, clock=self.clock).run()
         finally:
             audio.stop_preview()
 

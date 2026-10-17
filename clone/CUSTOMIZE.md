@@ -162,3 +162,33 @@ The F9 menu, Franchise, To do list, asks again the items you left for later. The
 - "Reset one list to the original" and "Reset all lists to the original" write the original files again. Your own file is kept with the ending before-reset, and the two copies before it with the endings before-reset2 and before-reset3. If the copy cannot be made, nothing is written. Your sound files and footplay.txt are never touched.
 - If the game cannot read a file while it is running (another program has it open, for example), the names and lines it already loaded stay in use and it tells you once.
 - A file may be up to one megabyte. A banter line's own sounds together are cut at 30 seconds, and its pauses together may be at most 30 seconds.
+
+
+## Add more sounds to the game
+
+The game draws one sound at random for two things: the quiet ambient sounds that come now and then while the game waits for a key, and the short celebration sounds after a touchdown, at half time and after the Super Bowl. You can add your own sound files to both, and the game will draw them too. Nothing needs editing: you only name the file the right way.
+
+The sounds folder is here, and the Sounds menu (F9, Sounds, "Open the sounds folder") opens it:
+
+    %APPDATA%\Kitchensinc Revival\NFL Football 4\sounds
+
+Name an added file with the name of the pool and a number:
+
+- `celebration1.wav`, `celebration2.wav`, `celebration3.wav` and so on, for the celebration sounds.
+- `ambient1.wav`, `ambient2.wav` and so on, for the ambient sounds.
+
+Wav, ogg, flac and mp3 files work. Capital letters do not matter, and the numbers can have gaps (celebration1 and celebration7 are fine). Any number of files is allowed. Then choose "Reload the sounds from the folder" in the Sounds menu, or start the game again. The menu item "Sound pools you can add your own sounds to" tells you, for each pool, how many sounds it has and what the next file should be called, and plays them one after the other.
+
+To take one of the original sounds out of the draw, put a line such as `foot15 = off` in sounds.txt in the same folder. A file that cannot be read is skipped, and the game tells you once. Your added sounds are drawn with the same chances as the original ones, so if you add ten files the original ten are heard half as often.
+
+Your announcer's comments are text, not numbered sound files: for your own comments and your own sounds in them, see banter.txt above.
+
+## Commercials
+
+The game has no commercials of its own and ships none. If you want some, put your own sound files in the commercials folder, which the game makes next to the sounds folder:
+
+    %APPDATA%\Kitchensinc Revival\NFL Football 4\commercials
+
+Any name, and wav, ogg, flac or mp3. A file in that folder can play at any break; a file in one of the folders inside it plays only at that break: `quarter` (the end of the first and the third quarter), `two-minute-warning`, `halftime` and `final` (after the final score). Then turn them on: F9, Sounds, Commercials. Left and Right (or Enter) change it between off, at every break, at every second break and at every third break. It is off until you turn it on, even when files are there.
+
+At a break the game says "Commercial. Any key skips it." and plays one of your files. The files play in a shuffled order, and none repeats until all have been played. A key stops the commercial at once and goes no further. A commercial changes nothing in the game, its random numbers or your saved games.

@@ -158,3 +158,21 @@ How the answers were used (2026-10-14): kind guess for all 26 files, so every na
 - System sound of the `MsgBox` at 0x486f15 ("Sorry but I couldn't find any voices to use"): played by Windows for a plain message box; the clone shows the same kind of box.
 - Unreferenced text: id 2568 "Sorry but one or more of the wave files seem to be corrupt" (see the header); reused by the clone as the notice for a sound file that cannot be used (G-A6).
 - Unreferenced wav files: none (all 26 are referenced).
+
+
+## 8. Numbered pools the player can extend (OWNER RULE 0.14, 2026-10-16, D-068; built in the same session)
+
+Playbook 7.7.1. Jim Kitchen's games name sounds as a base plus a number and the code draws one of them; the owner wants the player to be able to add more files to such a family without any code change. Which of the 26 names are such families was decided from the code (sections 4 and 5), never from the numbers alone. All 26 files share the base `foot`, so a family cannot be told from its neighbours by the name; the clone gives each pool a plain-word name and added files use that name as their base.
+
+| pool | original members | where the draw is | draw rule | where the limit comes from |
+|---|---|---|---|---|
+| `ambient` | foot8, foot9, foot10 | PlayRan (section 4), once per ambient sound while a key is awaited (getkey2) | `Int(Rnd * 3) + 1`, equal chances, no memory of the last (the same file can come twice); foot10 then draws a pan | the literal 3 in PlayRan [CODE] |
+| `celebration` | foot15 to foot24 | playcel, halftime, superbowl, finplay17 (section 2, foot15 row) | `foot(Int(Rnd * 10) + 15)`, equal chances, no memory; a pitch draw follows (`Int(Rnd * 40) - 20`, never 0, not below 8000 Hz) | the literal 10 at four call sites [CODE] |
+
+NOT pools (a different sound for a different event; the code picks by the situation, so they take no added files; the player replaces them one by one with the original's name, foot7.wav): foot0 (intro and jingle), foot1 and foot2 (the crowd layers), foot3 (the snap), foot4, foot5, foot6 and foot11 (PlayTackle(1), (2), (3) and (8): the kind of hit or the whistle is chosen by the play, `foot(n + 3)`), foot7 (the kick), foot12 (ball contact), foot13 (the bleep), foot14 (the play noise), foot25 (the Super Bowl win). The game has no numbered commentary wavs: its commentary is TEXT (the 142 banter lines, L12); the player adds commentary with own text and own sounds in `banter.txt` (CUSTOMIZABLE_CONTENT 12 and 14).
+
+How the clone treats a pool (`audio\pools.py`, `audio\library.py` pool_members, `game\sounds.py` celebration_sound and play_ran):
+- Added files are named `<pool><number>.<ext>` in the sounds folder: `celebration1.wav`, `ambient4.ogg` (any case, wav, ogg, flac or mp3, any count of digits, ordered by number, gaps allowed). No setting is edited; the Sounds menu's reload (or a restart) finds them. The Sounds menu item "Sound pools you can add your own sounds to" speaks each pool with its counts and the name the next file should take, and plays its sounds one after the other.
+- The draw is the original's with the range changed to the member count: `Int(Rnd * (10 + k))` and `Int(Rnd * (3 + k))`, so with nothing added the draws, the golden transcript and the conformance tests are exactly the original's (test: `tests\test_sound_pools.py`, `test_pag_golden.py`). With added files the sequence differs from the original's, as expected.
+- An original member switched off in `sounds.txt` (`foot15 = off`) leaves the draw (D-068: before rule 0.14 it stayed in and played silence; G-A3 still holds for every other sound and for the waits). An original member whose files cannot be used stays in and plays silence, as it always did (a damaged install must not move the draws). An added file that cannot be read is left out, logged, and counted in the one spoken notice (G-A6). A pool with no member left is silent and still costs its draw.
+- Levels of an added member: celebration -300 + wavol with the random pitch around the file's own rate (the originals' rule); ambient -1200 + wavol (foot9's level), centered (D-068; the player's trim for a single added file is not offered, the file's own loudness is the player's to set). A player's file with an original member's name (foot16.wav) replaces that member as before and adds none.

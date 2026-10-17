@@ -37,7 +37,7 @@ from .rules import CLASSIC
 from .season import SeasonState
 from .season_engine import CLASSIC_SEASON_HOOKS
 from .setup import GameSetup, Roster, new_game_setup
-from .speakers import Speakers
+from .speakers import ANNOUNCER, Speakers
 from .standings import standings_speech
 
 log = logging.getLogger("nfl4.game")
@@ -57,6 +57,9 @@ class Game(Speakers):
         self.sleep = sleep
         self.notice_sources = tuple(notice_sources)   # objects with take_notices() (the settings file, the audio layer)
         self.sounds = sounds                          # game.sounds.GameSounds: the original's sound procedures (S7.2)
+        if sounds is not None and getattr(sounds, "announce", None) is None:
+            # owner rule 0.14: the spoken "Commercial" before a commercial; not logged, not kept for the replay
+            sounds.announce = lambda text: self._speak(text, ANNOUNCER, True)
         self.league = league if league is not None else League()      # GetTeams (S7.7 fills it from teams.txt)
         self._pool = pool                             # SetPlayerNames: the 1,708 surnames, loaded when first needed
         self.banter_pool: BanterPool = DEFAULT_POOL   # the 142 lines plus the player's (S7.7, banter.txt)
