@@ -53,10 +53,11 @@ def worth_keeping(player) -> bool:
 def asking(player) -> tuple:
     """(salary, years) a player asks: the market price of his position and rating for the length of his age; a player with fewer than
     `FR_EXCLUSIVE_SEASONS` seasons in the league has only the exclusive rights of his team (research B3: the NFL's rule that replaces the
-    restricted free agent's tenders): the minimum salary for one year."""
+    restricted free agent's tenders): the minimum salary of his seasons (research B4's table) for one year."""
     if player.seasons < T.FR_EXCLUSIVE_SEASONS:
-        return T.FR_MIN_SALARY, 1
-    return CT.market_contract(player)
+        return CT.min_salary(player.seasons), 1
+    salary, years = CT.market_contract(player)
+    return max(CT.min_salary(player.seasons), salary), years          # (a veteran of 7 seasons rated 51 is worth 1.1 million and may not be paid under his minimum, 1.3)
 
 
 # ----- the cap -----
@@ -79,6 +80,12 @@ def room(league, team: int) -> int:
     return room_after(running_payroll(league, team), running_count(league, team), league.dead[team - 1])
 
 
+def target_payroll() -> int:
+    """The most the staff lets the contracts of the coming season (the ones that run, the new ones and the dead money) come to when it signs players again:
+    `FR_RESIGN_TARGET` of the cap. The rest of the cap is for the market, the draft and the cut. The player's own talks are held only to the cap (`room`)."""
+    return int(T.FR_RESIGN_TARGET * T.FR_CAP)
+
+
 # ----- the staff's and the computer teams' rule -----
 
 @dataclass
@@ -93,9 +100,10 @@ def plan_team(league, team: int) -> Plan:
     signed again at his price when he is worth it and the cap has room, else let go. No draw; nothing is changed."""
     plan = Plan(team)
     payroll, count, dead = running_payroll(league, team), running_count(league, team), league.dead[team - 1]
+    target = target_payroll()
     for player in expiring(league, team):
         salary, years = asking(player)
-        if worth_keeping(player) and salary <= room_after(payroll, count, dead):
+        if worth_keeping(player) and salary <= room_after(payroll, count, dead) and payroll + dead + salary <= target:
             plan.signed.append((player, salary, years))
             payroll += salary
             count += 1
@@ -167,15 +175,15 @@ def mood(league, team: int) -> str:
     return CONTENT
 
 
-def floor_salary(salary: int, how: str) -> int:
+def floor_salary(salary: int, how: str, least: int = T.FR_MIN_SALARY) -> int:
     """The least a player in this mood accepts for his price: T.FR_MOOD_SLACK[how] percent under it, rounded half up like `lower_offer` (so a
-    happy player, whose slack is the step of an offer for less, always accepts the first offer), never under the minimum."""
-    return max(T.FR_MIN_SALARY, (salary * (100 - T.FR_MOOD_SLACK[how]) + 50) // 100)
+    happy player, whose slack is the step of an offer for less, always accepts the first offer), never under `least` (his minimum salary)."""
+    return max(least, (salary * (100 - T.FR_MOOD_SLACK[how]) + 50) // 100)
 
 
-def lower_offer(salary: int) -> int:
-    """What "offer less" offers: `FR_OFFER_LESS` percent under his present price, rounded half up, never under the minimum."""
-    return max(T.FR_MIN_SALARY, (salary * (100 - T.FR_OFFER_LESS) + 50) // 100)
+def lower_offer(salary: int, least: int = T.FR_MIN_SALARY) -> int:
+    """What "offer less" offers: `FR_OFFER_LESS` percent under his present price, rounded half up, never under `least` (his minimum salary)."""
+    return max(least, (salary * (100 - T.FR_OFFER_LESS) + 50) // 100)
 
 
 ACCEPTED, COUNTER, ENDED = "accepted", "counter", "ended"
@@ -184,21 +192,24 @@ ACCEPTED, COUNTER, ENDED = "accepted", "counter", "ended"
 @dataclass
 class Talk:
     """One talk: `ask` the price now (it only comes down), `years` the length (the length of his age, never changed: a choice of the talk never
-    forces a longer contract, research G), `floor` what his mood lets him accept, `round` 1 to `FR_TALK_ROUNDS`."""
+    forces a longer contract, research G), `floor` what his mood lets him accept, `least` his minimum salary (nothing is offered under it),
+    `round` 1 to `FR_TALK_ROUNDS`."""
     ask: int
     years: int
     floor: int
     round: int = 1
+    least: int = T.FR_MIN_SALARY
 
     @classmethod
     def start(cls, player, how: str) -> "Talk":
         salary, years = asking(player)
-        return cls(salary, years, floor_salary(salary, how))
+        least = CT.min_salary(player.seasons)
+        return cls(salary, years, floor_salary(salary, how, least), 1, least)
 
     def offer_less(self) -> tuple:
         """(ACCEPTED, salary): the offer is at or over his floor and he signs at the offer; (COUNTER, salary): he comes down halfway to his floor
         (rounded up) and the next round begins; (ENDED, 0): it was the last round and he leaves."""
-        offer = lower_offer(self.ask)
+        offer = lower_offer(self.ask, self.least)
         if offer >= self.floor:
             return ACCEPTED, offer
         if self.round >= T.FR_TALK_ROUNDS:

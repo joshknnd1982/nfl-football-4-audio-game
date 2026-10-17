@@ -1,5 +1,6 @@
 """The offseason of a Franchise: stage 1 the season in review (SX.8a), 2 the retirements and 3 the player development (SX.8c),
-4 the draft and 5 the roster cut with the fill (SX.8d, `draft_flow.py`), 6 the new season (nfl4 only, rule 0.13). This is inspired by
+4 the draft and 5 the roster cut with the fill (SX.8d, `draft_flow.py`), 6 the new season, 7 the expiring contracts (SX.8h,
+`resign_flow.py`) and 8 free agency (SX.8i, `market_flow.py`; the two sit between 3 and 4) (nfl4 only, rule 0.13). This is inspired by
 Jim Kitchen.
 
 NFL_FRANCHISE_DESIGN 3.3. The stages are the data list `data.STAGES` (a later session inserts its stage). Stage 1 speaks
@@ -16,7 +17,7 @@ from __future__ import annotations
 from .. import nx_texts as X
 from . import aging
 from . import data as D
-from . import draft_flow, resign_flow
+from . import draft_flow, market_flow, resign_flow
 from . import history, news, weekly
 from .league import OFFSEASON, SEASON, team_ref
 from .news_pools import DEFAULT_POOLS
@@ -200,5 +201,5 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
 
 
 RUNNERS = {D.STAGE_REVIEW: stage_review, D.STAGE_AGING: stage_retirements, D.STAGE_DEVELOPMENT: stage_development,
-           D.STAGE_CONTRACTS: resign_flow.stage_contracts,
+           D.STAGE_CONTRACTS: resign_flow.stage_contracts, D.STAGE_FREE_AGENCY: market_flow.stage_free_agency,
            D.STAGE_DRAFT: draft_flow.stage_draft, D.STAGE_CUT: draft_flow.stage_cut, D.STAGE_NEW_SEASON: stage_new_season}

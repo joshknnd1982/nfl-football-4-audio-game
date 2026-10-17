@@ -98,6 +98,7 @@ class LeagueRecord:
     draft: dict | None = None                          # the draft in progress (SX.8d)
     dead: list = field(default_factory=lambda: [0] * D.TEAMS)   # per team, the dead money of the cap year (SX.8g, format 2)
     resign: dict | None = None                         # the stage of the expiring contracts in progress (SX.8h, format 3): see resign.py
+    market: dict | None = None                         # the stage of free agency in progress (SX.8i, format 4): see market.py
 
     # ----- the teams -----
 
@@ -193,7 +194,7 @@ class LeagueRecord:
                 "gtp": self.gtp, "schedule": self.schedule, "records": self.records, "pairings": self.pairings,
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
-                "dead": self.dead, "resign": self.resign}
+                "dead": self.dead, "resign": self.resign, "market": self.market}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -235,6 +236,8 @@ class LeagueRecord:
                 record.dead = data["dead"]
             if version >= 3:
                 record.resign = data["resign"]
+            if version >= 4:
+                record.market = data["market"]
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -243,7 +246,9 @@ class LeagueRecord:
             record.check(contracts=False)                      # a format-1 file is whole as it was; then it gets its contracts (a migration, no draw)
             from . import contracts
             contracts.migrate(record)
-        # a format-2 file has no stage of expiring contracts in progress (`resign` None, from the dataclass default): nothing to migrate
+        # a format-2 file has no stage of expiring contracts in progress and a format-3 file no market in progress (`resign` and `market` None, from the
+        # dataclass defaults): nothing to migrate. A league written before the stage of free agency existed and saved in the middle of the offseason is
+        # at a stage number of its own list, so it goes on at that stage (the market is simply not held for it)
         record.check()
         return record
 
@@ -299,6 +304,8 @@ class LeagueRecord:
             raise LeagueError("the draft is %r" % (type(self.draft).__name__,))
         from . import resign as resign_rules
         resign_rules.check_resign(self, whole)                 # SX.8h: the stage of the expiring contracts in progress
+        from . import market as market_rules
+        market_rules.check_market(self, whole)                 # SX.8i: the stage of free agency in progress
         self._check_results(whole)
         self._check_season(whole, ints)
 

@@ -98,7 +98,7 @@ def _talk(g, words, store, league, state: dict, player, preface: list) -> None:
         kinds = []
         if talk.ask <= space:
             kinds.append(SIGN)
-        if R.lower_offer(talk.ask) < talk.ask and R.lower_offer(talk.ask) <= space:      # (nothing is lower than the minimum)
+        if R.lower_offer(talk.ask, talk.least) < talk.ask and R.lower_offer(talk.ask, talk.least) <= space:      # (nothing is lower than his minimum)
             kinds.append(LESS)
         if not state["tag_used"] and tag_price <= space:
             kinds.append(TAG)

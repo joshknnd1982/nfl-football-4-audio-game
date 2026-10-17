@@ -32,9 +32,33 @@ def odd_week_wins(rig):
     return (24, 17) if gtp in (17, 18) else (10, 31)
 
 
+MARKET_ANSWER = (UP, UP, ENTER)                       # "end the round and hear the results" of free agency's question (the last item but one), and the wait that ends the stage
+
+
+def market_aware(policy, holder):
+    """The rig's policy with one exception (SX.8i): when free agency (stage 8 of an offseason) is waiting for a key and the policy would press Enter, the keys
+    Up, Up, Enter are pressed instead, which end a round without an offer (Enter alone would open the first free agent's menu and place an offer again and again).
+    A policy that raises (the window closes) or presses another key is left as it is."""
+    import itertools
+    from nfl4.extras.franchise import data as D
+    cycle = itertools.cycle(MARKET_ANSWER)
+
+    def wrapped(keys):
+        key = policy(keys)
+        if key == ENTER:
+            store = holder[0].fstore if holder and holder[0].fstore is not None else None
+            league = store.league if store is not None else None
+            if league is not None and league.stage == "offseason" and league.stage_no == D.STAGE_FREE_AGENCY:
+                return next(cycle)
+        return key
+    return wrapped
+
+
 def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=None, scores=odd_week_wins, seed=1, nfl=True,
                   preset=None, classic_names=None, **kwargs):
-    rig = program_rig(tmp_path, answers, policy, fast=True, seed=seed, preset=preset, pog=None, **kwargs)
+    holder = []
+    rig = program_rig(tmp_path, answers, market_aware(policy, holder), fast=True, seed=seed, preset=preset, pog=None, **kwargs)
+    holder.append(rig)
     game = rig.game
     settings = game.options.settings.game
     if nfl:

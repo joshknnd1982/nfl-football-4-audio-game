@@ -482,3 +482,52 @@ FR_TAG_RAISE = 120                # ... or this percent of the player's last sal
 # not the league's health. THE SUPPLY OF FREE AGENTS IS THIN (Q-031: 16 a league-offseason, none rated 80): SX.8i's market must make its own (FR_RESIGN_MIN_RATING and
 # FR_RESIGN_RESERVE are the knobs this stage offers it). The mood of a player is a rule of last season's record only (FR_MOOD_WINS), and FR_MOOD_SLACK equals FR_OFFER_LESS
 # for a happy player on purpose: his floor is exactly the offer for less.
+
+# ----- free agency, design 17 SX.8i (D-068; the history of every move is below) -----
+# The minimum salary by the seasons a player has played (research B4, the NFL's 2026 table: 0 seasons 0.885 million, 1 season 1.005, 2 1.075, 3 1.145, 4 to 6 1.215,
+# 7 or more 1.3), in tenths of a million rounded: (the most seasons the row is for, the minimum). The first row whose seasons are not under the player's applies.
+# It is the exclusive-rights price of stage 7 (a player with fewer than FR_EXCLUSIVE_SEASONS seasons) and the floor of a free agent's falling price.
+FR_MIN_SALARY_BY_SEASONS = ((0, 9), (1, 10), (2, 11), (3, 11), (6, 12), (99, 13))
+# The market: FR_FA_ROUNDS rounds (research B4: 3 to 5); in each round every team places its offers, then they are all judged together, the best player first
+# (the player with the best value over his replacement, `resign.value`). A free agent who is not signed in a round asks FR_FA_PRICE_DROP percent of his stage-7 price less for every round he stays
+# (the market cools: 90 and 80 percent), never under his minimum. A team bids only for a position with an open place (no stacking, no release to make room), for a player rated at least
+# FR_FA_MIN_RATING, at his price, and for at most FR_FA_CHASE players for each open place in the first round and one more in every later round (it chases a second when the first goes elsewhere,
+# and looks further down the list when its choices have gone: `market.chase`). The score of an offer is the salary
+# raised by the fit of the player to the group (FR_FA_FIT percent: 0 when he would not be better than the group's weakest, 1 when he would, 2 when he would be its best);
+# the highest score wins, equal scores are told apart by a rule that favors no team (`market.tie_key`: a multiplier from his ID, modulo 37, orders the teams). The player's
+# "offer more" is FR_FA_OFFER_MORE percent over the price. The player places at most FR_FA_OFFERS offers in a round; the staff's list holds FR_FA_LIST players.
+FR_RESIGN_TARGET = 0.62           # the share of the cap the staff keeps the coming season's contracts under when it signs players again (stage 7); the players that do not
+#                                   fit go to the market (Q-031: the supply of free agents). 1.0: the cap alone decides (SX.8h). Found by a sweep, see the history below.
+FR_FA_ROUNDS = 3
+FR_FA_PRICE_DROP = 10
+FR_FA_MIN_RATING = 60
+FR_FA_CHASE = 2
+FR_FA_FIT = (0, 2, 4)
+FR_FA_OFFER_MORE = 10
+FR_FA_OFFERS = 5
+FR_FA_LIST = 5
+FR_FA_RESERVE = 0                 # tenths of a million left under the cap for the draft's rookies when a team signs a free agent (0: the cap rule of the cut is the net)
+# SX.8i calibration (D-069; the reports are work/simulate_franchise_sx8f_fast_500x20_sx8i.txt, _fast_2000x20_sx8i_2000.txt, _fast_100x20_sx8i_cap1450.txt and _full_5x20_sx8i.txt, the
+# sweeps work/sweep_market_sx8i_a.txt, _b.txt and _c.txt, the probe work/probe_market_sx8i.py). THE SUPPLY (Q-031): at SX.8h's rule the market had 16 players a league-offseason, mean
+# rating 56.9, none rated 80. The one lever that makes a supply without a random draw is a payroll target of the staff when it signs players again (FR_RESIGN_TARGET): a sweep
+# over the share of the cap gave, per league-offseason (64 leagues x 10 seasons, the neutral tie rule): 1.00: 16 free agents, no star; 0.74: 39 (0.34 stars rated 80 or more); 0.70: 57
+# (0.9); 0.66: 84 (1.9); 0.62: 117 (4.0); 0.58: 150 (6.4); the persistence of the bottom three 0.52, 0.49, 0.48, 0.44, 0.39, 0.33. 0.62 is the first share at which the market is worth
+# hearing (about 4 free agents for each team and about 6 stars) and the league's health stays inside the bands of the core. The first sweep (work/sweep_market_sx8i_a.txt) broke
+# ties in favor of the team that was weaker last season and found a persistence of 0.03 to 0.11: a rule that favors a side is a parity machine, so equal scores are now told apart by
+# a fixed rule that favors no team (tie_key: a multiplier from the player's ID, modulo 37; the review found that "team plus ID" put each team ahead of its neighbour in 31 of 32 ties). The fit
+# changes nothing but the order of the fit levels (all the computer's offers are at one price), so its percentages are only data (0, 2, 4 and 0, 1, 2 give the same leagues,
+# work/sweep_market_sx8i_c.txt). The chase grows by one for every later round (2, 3, 4): with a flat chase 29 free agents rated 60 or more a league-offseason left the market although a team
+# had an open place and the room for them (the review), and 45 of 130 were left; with the growing chase 26.5 are left and 80 percent of the market is signed, at the price of more
+# churn (the cut releases 3.7 market signings of 133 and the dead money rises from 1,235 to 1,402 tenths). WHAT THE MARKET DOES TO THE LEAGUE, said plainly (2,000 leagues x 20 seasons
+# against SX.8h's report; the same runs with FR_RESIGN_TARGET 1.0, which is SX.8h's behaviour with a market that has nobody to sell, differ in the same way in 200 leagues): the
+# persistence of the bottom three falls from 0.478 to 0.363 (the design wants it lower); THE SPREAD OF THE 32 STRENGTHS FALLS: from season 4 it is 0.95 to 1.12 (the core had about 1.1 to 1.4),
+# below the design's lower edge of 1.0 in the seasons 4 to 8 and 4.9 percent of the run-seasons are under the core's relaxed 0.8; the win spread falls from 2.83 to 2.79 and 4 of 2,000 runs
+# have a mean under 2.6 (lowest 2.58) where none had (lowest 2.62): the payroll target takes players from the teams with high payrolls (a progressive tax: the strong teams) and the fit
+# sends free agents to the teams where they would be the best of the group (the weak ones), so the market is a little parity. C-F1 per run is therefore judged by a share of the runs
+# (simulate_franchise_sx8f.py WIN_TAIL_SHARE and WIN_HARD, decision D-069) and SX.8p must bring the design's spread and win-spread bands back (the levers are outside this stage: the
+# lean and the ratings' spread of SX.8b). The other numbers: every invariant holds in every run-season (I1 to I5, CP1 to CP5, RS1 to RS4, FA1 to FA8, I8 rating 68.30 to 71.45), 130
+# free agents a league-offseason (mean rating 67.4, 6.4 rated 80 or more) for 196 open places, 104 signed (mean rating 69.5, every star), 26.5 left; 52 percent of the 252 contracts
+# that run out are not signed again; the quarterbacks' league mean 70.04 to 72.83, careers 4.91, the mean cap use 0.689 to 0.833. THE CAP: at the league's use of 0.75 the room decided 4 of 45
+# million offers; need (an empty place), not money, limits a team, so "the cap now binding" is true of the rules and of a STRESS RUN with a cap of 1450 (25 percent lower,
+# work/simulate_franchise_sx8f_fast_100x20_sx8i_cap1450.txt: cap use 0.81 to 0.99, the room decided thousands of offers and the cap rule of the cut fired in 2,600 of 64,000 team-offseasons), in
+# which every research-G invariant (CP1, FA2, FA5 and the others) still holds and only CP4's band of the cap use and the mean rating move, as they should, not of the shipped game.

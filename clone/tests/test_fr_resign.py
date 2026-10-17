@@ -18,6 +18,12 @@ from nfl4.game.rnd import GameRandom
 TEAM = 5
 
 
+
+@pytest.fixture(autouse=True)
+def cap_alone_decides(monkeypatch):
+    """The staff's payroll target (FR_RESIGN_TARGET, SX.8i) is out of the way in these tests, which are about the cap and the talks; it has its own tests."""
+    monkeypatch.setattr(T, "FR_RESIGN_TARGET", 1.0)
+
 def fresh(seed=3, team=TEAM):
     return new_league(GameRandom(random.Random(seed)), SURNAMES, "Kim", team, "20260101-000000")
 
@@ -76,11 +82,23 @@ def test_a_player_with_fewer_than_three_seasons_has_only_the_exclusive_rights_of
     player = league.player_at(TEAM, 33)
     player.rating = 90
     assert T.FR_EXCLUSIVE_SEASONS == 3                                                  # research B3: fewer than 3 seasons
-    for seasons in (0, 1, 2):
+    for seasons, least in ((0, 9), (1, 10), (2, 11)):                                   # research B4's table, the minimum of his seasons
         player.seasons = seasons
-        assert resign.asking(player) == (T.FR_MIN_SALARY, 1)
+        assert resign.asking(player) == (least, 1) == (CT.min_salary(seasons), 1)
     player.seasons = 3
     assert resign.asking(player) == CT.market_contract(player) and resign.asking(player)[0] > T.FR_MIN_SALARY
+
+
+def test_a_veteran_never_asks_for_less_than_the_minimum_of_his_seasons_even_when_his_rating_is_worth_less():
+    league = fresh()
+    player = league.player_at(TEAM, 0)
+    player.rating, player.seasons = 41, 11                                              # the market price of a 41 is 9 + a little: under the 1.3 million of 7 seasons or more
+    assert CT.market_contract(player)[0] < CT.min_salary(11) == 13
+    assert resign.asking(player)[0] == 13
+    player.rating, player.seasons = 90, 11                                              # a good player asks his market price
+    assert resign.asking(player) == CT.market_contract(player) and resign.asking(player)[0] > 13
+    talk = resign.Talk.start(league.player_at(TEAM, 0), resign.HAPPY)
+    assert talk.ask >= talk.least == 13 and talk.floor >= 13
 
 
 def test_a_talk_with_a_player_who_has_exclusive_rights_never_goes_under_the_minimum_whatever_his_mood():
@@ -89,8 +107,10 @@ def test_a_talk_with_a_player_who_has_exclusive_rights_never_goes_under_the_mini
     player.seasons = 1
     for how in resign.MOODS:
         talk = resign.Talk.start(player, how)
-        assert (talk.ask, talk.years, talk.floor) == (T.FR_MIN_SALARY, 1, T.FR_MIN_SALARY)
-        assert talk.offer_less() == (resign.ACCEPTED, T.FR_MIN_SALARY)               # even an offer for less is the minimum
+        least = CT.min_salary(1)
+        assert least == 10 > T.FR_MIN_SALARY
+        assert (talk.ask, talk.years, talk.floor, talk.least) == (least, 1, least, least)
+        assert talk.offer_less() == (resign.ACCEPTED, least)                         # even an offer for less is the minimum of his seasons, not the flat 0.9 million
 
 
 @pytest.mark.parametrize("salary, how, floor", [(100, resign.HAPPY, 90), (100, resign.CONTENT, 96), (100, resign.UNHAPPY, 100),
@@ -285,10 +305,10 @@ def test_the_staff_signs_a_worthy_young_player_for_the_minimum_for_one_year_and_
     for player in players:
         player.seasons = 1
     plan = resign.plan_team(league, 3)
-    assert [(p.id, s, y) for p, s, y in plan.signed] == [(good.id, T.FR_MIN_SALARY, 1), (also.id, T.FR_MIN_SALARY, 1)]
+    assert [(p.id, s, y) for p, s, y in plan.signed] == [(good.id, CT.min_salary(1), 1), (also.id, CT.min_salary(1), 1)] and CT.min_salary(1) == 10
     assert [p.id for p in plan.gone] == [weak.id]
     resign.apply_plan(league, plan)
-    assert (good.salary, good.years) == (T.FR_MIN_SALARY, 1)
+    assert (good.salary, good.years) == (CT.min_salary(1), 1)
 
 
 def test_a_player_is_worth_keeping_from_the_draft_classes_mean_rating_in_every_group():
@@ -452,7 +472,59 @@ def test_twelve_offseasons_by_the_rules_keep_every_contract_in_its_bounds_and_ev
         league.season += 1
 
 
-# ----- the stage in progress in league.sav (format 3) -----
+# ----- the staff's payroll target (SX.8i: the players that do not fit go to the market) -----
+
+def target_for(payroll):
+    """The FR_RESIGN_TARGET whose payroll in tenths of a million is exactly `payroll`."""
+    return (payroll + 0.5) / T.FR_CAP
+
+
+def test_the_target_payroll_is_the_share_of_the_cap(monkeypatch):
+    monkeypatch.setattr(T, "FR_RESIGN_TARGET", 0.62)
+    assert resign.target_payroll() == int(0.62 * T.FR_CAP) == 1197
+    monkeypatch.setattr(T, "FR_RESIGN_TARGET", 1.0)
+    assert resign.target_payroll() == T.FR_CAP
+
+
+def test_the_staff_signs_again_only_while_the_payroll_stays_under_the_target_and_lets_the_rest_go_though_the_cap_has_room(monkeypatch):
+    league, players = team_with([85, 80, 75], positions=[33, 0, 7])
+    qb, back, receiver = players
+    payroll = resign.running_payroll(league, 3)
+    first, second = resign.asking(qb)[0], resign.asking(back)[0]
+    monkeypatch.setattr(T, "FR_RESIGN_TARGET", target_for(payroll + first))             # room for the quarterback and nothing more
+    assert resign.room(league, 3) > first + second + resign.asking(receiver)[0]            # the cap alone would sign all three
+    plan = resign.plan_team(league, 3)
+    assert [p.id for p, _, _ in plan.signed] == [qb.id] and [p.id for p in plan.gone] == [back.id, receiver.id]
+
+
+def test_a_signing_that_exactly_fills_the_target_is_made_and_one_tenth_more_is_not(monkeypatch):
+    for extra, signed in ((0, True), (1, False)):
+        league, (qb,) = team_with([85], positions=[33])
+        payroll = resign.running_payroll(league, 3)
+        monkeypatch.setattr(T, "FR_RESIGN_TARGET", target_for(payroll + resign.asking(qb)[0] - extra))
+        assert resign.target_payroll() == payroll + resign.asking(qb)[0] - extra
+        plan = resign.plan_team(league, 3)
+        assert bool(plan.signed) is signed and bool(plan.gone) is not signed
+
+
+def test_the_dead_money_counts_against_the_target(monkeypatch):
+    league, (qb,) = team_with([85], positions=[33])
+    payroll = resign.running_payroll(league, 3)
+    monkeypatch.setattr(T, "FR_RESIGN_TARGET", target_for(payroll + resign.asking(qb)[0]))
+    assert resign.plan_team(league, 3).signed
+    league.dead[2] = 1
+    assert not resign.plan_team(league, 3).signed
+
+
+def test_the_target_holds_the_staff_only_the_players_own_talks_and_room_are_held_to_the_cap(monkeypatch):
+    league, (qb,) = team_with([85], positions=[33])
+    before = resign.room(league, 3)
+    monkeypatch.setattr(T, "FR_RESIGN_TARGET", 0.3)
+    assert resign.room(league, 3) == before and resign.room(league, 3) >= resign.asking(qb)[0]
+    assert not resign.plan_team(league, 3).signed                                    # the staff, held to the target, signs nobody
+
+
+# ----- the stage in progress in league.sav (format 3, and the newest format) -----
 
 def test_the_stage_in_progress_round_trips_through_the_file():
     league = at_stage_seven(fresh(), None)
@@ -460,18 +532,18 @@ def test_the_stage_in_progress_round_trips_through_the_file():
     state = resign.begin(league, False)
     league.resign = state
     text = league.to_json()
-    assert json.loads(text)["format"] == 3 and json.loads(text)["resign"] == state
+    assert json.loads(text)["format"] == D.FORMAT and json.loads(text)["resign"] == state
     again = LeagueRecord.from_json(text)
     assert again.resign == state and again.to_json() == text
 
 
-def test_a_format_two_file_loads_with_no_stage_in_progress_and_the_next_save_is_format_three():
+def test_a_format_two_file_loads_with_no_stage_in_progress_and_the_next_save_is_the_newest_format():
     league = fresh()
     data = json.loads(league.to_json())
     data["format"] = 2
     del data["resign"]
     loaded = LeagueRecord.from_json(json.dumps(data))
-    assert loaded.resign is None and json.loads(loaded.to_json())["format"] == 3
+    assert loaded.resign is None and json.loads(loaded.to_json())["format"] == D.FORMAT
     assert [(p.salary, p.years) for p in loaded.players.values()] == [(p.salary, p.years) for p in league.players.values()]    # a migration changes nothing
 
 

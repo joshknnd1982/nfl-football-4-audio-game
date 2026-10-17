@@ -193,10 +193,10 @@ def test_three_whole_seasons_with_their_history_right_after_each(tmp_path):
     text = spoken(rig)
     assert text.count(X.text("NXE-01")) == 3 and text.count(QUESTION) == 1      # the question only at the first new season
     assert [text.count(X.text("NXF-08", n=n)) for n in (1, 2, 3, 4)] == [1, 1, 1, 0]       # season 4's week 1 is not reached yet
-    assert text.count(X.text("NXE-03")) == 21                                 # every stage of the offseason ends with the wait (design 3.3)
-    for number, name in ((1, "the season in review"), (2, "retirements"), (3, "player development"), (4, "expiring contracts"),
-                         (5, "the draft"), (6, "the roster cut"), (7, "the new season")):
-        assert text.count(" stage %d of 7. %s. " % (number, name)) == 3
+    assert text.count(X.text("NXE-03")) == 24                                 # every stage of the offseason ends with the wait (design 3.3)
+    for number, name in ((1, "the season in review"), (2, "retirements"), (3, "player development"), (4, "expiring contracts"), (5, "free agency"),
+                         (6, "the draft"), (7, "the roster cut"), (8, "the new season")):
+        assert text.count(" stage %d of 8. %s. " % (number, name)) == 3
     history_txt = rig.files.data["history.txt"].decode("utf-8")
     assert "after season 3." in history_txt and history_txt.count("\nSeason ") == 3
     for pid, (age, seasons) in start.items():                                 # whoever played all three years is exactly three years older
@@ -225,7 +225,7 @@ def test_the_short_offseason_says_a_sentence_per_stage_and_asks_for_no_key(tmp_p
     start = text.index(X.text("NXE-01"))
     after = text[start:text.index(X.text("NXF-08", n=2))]
     assert [t for t in after if t.startswith(" the ") and "won the Super Bowl" in t]
-    assert all("the draft" in t or "the roster cut" in t or "expiring contracts" in t for t in after if " stage " in t)     # the stages that ask still name themselves
+    assert all("the draft" in t or "the roster cut" in t or "expiring contracts" in t or "free agency" in t for t in after if " stage " in t)     # the stages that ask still name themselves
     assert not any("press enter" in t or "best record" in t or "head coach" in t for t in after)
     assert after[-1].startswith(" season 2 begins.") or " season 2 begins. " in after
     assert " the new schedule is made. " not in after
@@ -241,7 +241,7 @@ def test_a_window_closed_at_the_wait_of_a_stage_resumes_at_that_stage_and_keeps_
                            policy=enter_until(at_week_lambda(lambda: second, 2, 1)))
     run_until(second)
     text = spoken(second)
-    assert text.count(X.text("NXE-01")) == 1 and text.index(" stage 1 of 7. the season in review. ") < text.index(" stage 7 of 7. the new season. ")
+    assert text.count(X.text("NXE-01")) == 1 and text.index(" stage 1 of 8. the season in review. ") < text.index(" stage 8 of 8. the new season. ")
     assert len(league(second).history) == 1 and league(second).season == 2
 
 
@@ -355,7 +355,7 @@ def test_a_franchise_started_from_f9_at_the_main_menu_is_heard_at_once_and_the_c
 
 
 def test_playing_classic_seasons_from_the_franchise_goes_back_to_the_classic_week_it_left(tmp_path):
-    back = GAME + FRANCHISE_MENU + [DOWN] * 7 + [ENTER, ENTER, ESC, ESC]       # F9, Franchise, play classic seasons, confirm
+    back = GAME + FRANCHISE_MENU + [DOWN] * 8 + [ENTER, ENTER, ESC, ESC]       # F9, Franchise, play classic seasons, confirm
     script = classic_to_franchise_script() + COACH_AND_TEAM + GAME + back
     rig = franchise_rig(tmp_path, script, preset=preset_season(gtp=3), policy=enter_until(lambda: len(rig.plays) == 4))
     run_until(rig)
@@ -371,7 +371,7 @@ def test_playing_classic_seasons_from_the_franchise_goes_back_to_the_classic_wee
 
 
 def test_back_to_the_franchise_continues_it_where_it_stood(tmp_path):
-    to_classic = GAME + FRANCHISE_MENU + [DOWN] * 7 + [ENTER, ENTER, ESC, ESC]
+    to_classic = GAME + FRANCHISE_MENU + [DOWN] * 8 + [ENTER, ENTER, ESC, ESC]
     to_franchise_again = GAME + [F9, DOWN, DOWN, DOWN, DOWN, ENTER, ENTER, ESC]       # classic week 4; F9, Franchise, back to the franchise
     script = classic_to_franchise_script() + COACH_AND_TEAM + GAME + to_classic + to_franchise_again
     rig = franchise_rig(tmp_path, script, preset=preset_season(gtp=3), policy=enter_until(lambda: len(rig.plays) == 6))
@@ -501,7 +501,7 @@ def test_a_file_written_at_each_stage_of_the_offseason_loads_and_the_offseason_g
     monkeypatch.setattr(FranchiseStore, "save", save)
     first = franchise_rig(tmp_path / "one", WANT_FRANCHISE + COACH_AND_TEAM, policy=enter_until(at_week_lambda(lambda: first, 2, 1)))
     run_until(first)
-    assert sorted(kept) == [1, 2, 3, 4, 5, 6, 7]                           # the stages this version has: written when each begins
+    assert sorted(kept) == [1, 2, 3, 4, 5, 6, 7, 8]                           # the stages this version has: written when each begins
     monkeypatch.undo()
     for number, raw in sorted(kept.items()):
         files = MemoryFiles()

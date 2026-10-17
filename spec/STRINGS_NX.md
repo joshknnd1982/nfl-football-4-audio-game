@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 586.
+- Texts: 625.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 254.
+- Franchise (design section 11): 293.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4.
 
 ## The clock (design section 5)
@@ -634,4 +634,43 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXH-39 (help, say5): " Contracts: before the draft you are asked about each player whose contract ends: sign him, offer less, use the franchise tag once a year, or let him go. ". F6, after NXH-37 (SX.8h)
 - NXW-06 (sentence, say2): " <coach> one of your players has a contract that ends. you will be asked about him. ". stage 7, one player to ask (review of SX.8h)
 - NXW-07 (sentence, say2): " you cannot afford his price. your team is over the salary cap. ". stage 7, no room at all (review of SX.8h)
+- NXE-18 (piece, piece): "free agency". the name of stage 8 (SX.8i), between the expiring contracts and the draft
+- NXJ-01 (sentence, say2): " <n> free agents are on the market. ". stage 8, the market at its start
+- NXJ-02 (prompt, say2): " round <round> of <m>. your open places: <list>. you can pay a new player up to <room>. ". stage 8, the situation of a round's question
+- NXJ-04 (prompt, say2): " <player>, <position>, age <a>, rating <r>, <potential> potential. he asks <contract>. <interest>. ". stage 8, one free agent in the list of a round and in F9
+- NXJ-A01 (piece, piece): "no other team is interested". stage 8, the interest in a free agent
+- NXJ-A02 (piece, piece): "one other team is interested". stage 8, the interest in a free agent
+- NXJ-A03 (piece, piece): "<k> other teams are interested". stage 8, the interest in a free agent
+- NXJ-A04 (sentence, say2): " your offer is <contract>. ". stage 8, the player's own offer for this free agent
+- NXJ-B01 (answer, say2): "hear more free agents". stage 8, the round's answers
+- NXJ-B02 (answer, say2): "end the round and hear the results". stage 8, the round's answers
+- NXJ-B03 (answer, say2): "let the staff make my offers from now on". stage 8, the round's answers
+- NXJ-C01 (prompt, say2): " <player>. you can pay up to <room>. ". stage 8, the offer for one free agent
+- NXJ-C02 (answer, say2): "offer <contract>". stage 8, the offer's answers
+- NXJ-C03 (answer, say2): "offer <contract>, <n> percent more". stage 8, the offer's answers
+- NXJ-C04 (answer, say2): "withdraw your offer". stage 8, the offer's answers
+- NXJ-C05 (answer, say2): "never mind". stage 8, the offer's answers
+- NXJ-C07 (sentence, say2): " you offer <player> <contract>. ". stage 8, an offer was placed
+- NXJ-C08 (sentence, say2): " your offer for <player> is withdrawn. ". stage 8, an offer was withdrawn
+- NXJ-D01 (sentence, say2): " you have no open places. nobody can be signed. ". stage 8, the player's team is full
+- NXJ-D02 (sentence, say2): " you have as many offers for that position as you may place. ". stage 8, too many offers for one position
+- NXJ-D03 (sentence, say2): " you have placed as many offers as you may in a round. ". stage 8, too many offers in a round
+- NXJ-D05 (sentence, say2): " no free agent is left for your open places. ". stage 8, nobody to offer
+- NXJ-E01 (sentence, say2): " <player> signs with you, <contract>. ". stage 8, the player's team signed him
+- NXJ-E02 (sentence, say2): " <player> signs with the <team> instead. ". stage 8, the player's offer lost to another team
+- NXJ-E03 (sentence, say2): " you could not sign <player>. your place was filled or the money was spent. ". stage 8, the player's offer could not be honored
+- NXJ-E04 (sentence, say2): " <player> signs with the <team>, <position>, rating <r>. ". stage 8, one of the most valuable signings of the other teams
+- NXJ-E05 (sentence, say2): " <n> other free agents signed with other teams. ". stage 8, the count of the other signings
+- NXJ-E06 (sentence, say2): " no free agent signed with you in this round. ". stage 8, the staff made the offers and nobody signed
+- NXJ-F02 (sentence, say2): " free agency is over. signed: <n>. offers lost: <m>. free agents not signed, who leave: <k>. ". stage 8, the end of free agency
+- NXJ-G01 (sentence, say2): " the staff makes your offers. ". stage 8, the staff handles the player's team
+- NXJ-G02 (sentence, say2): " free agency: <n> players signed with your team. ". stage 8, the short offseason
+- NXJ-H01 (sentence, say5): " the market is closed. ". F9 free agents outside the stage of free agency
+- NXF-29 (menu, say5): "free agents". F9 Franchise item (SX.8i)
+- NXH-40 (help, say5): " Free agency: before the draft the players nobody signed are on the market for a few rounds. Offer the price or a little more. The best offer wins. ". F6, after NXH-39 (SX.8i)
+- NXJ-I01 (sentence, say2): " one free agent is on the market. ". stage 8, the market at its start, one player
+- NXJ-I02 (sentence, say2): " one other free agent signed with another team. ". stage 8, the count of the other signings, one
+- NXJ-I03 (sentence, say2): " free agency: one player signed with your team. ". stage 8, the short offseason, one
+- NXJ-I04 (sentence, say2): " free agency: nobody signed with your team. ". stage 8, the short offseason, none
+- NXJ-G03 (sentence, say2): " the staff takes over. your offers of this round are withdrawn. ". stage 8, the staff setting turned on in the middle of a round
 

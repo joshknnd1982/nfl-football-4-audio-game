@@ -209,6 +209,16 @@ class Words:
         """A contract that is not on a player yet (a price he asks, the franchise tag): the same pieces as `contract`."""
         return X.text("NXA-11" if years == 1 else "NXA-10", salary=self.amount(salary), y=years)
 
+    def free_agent(self, player, salary: int, years: int, others: int, offer: int | None = None) -> str:
+        """NXJ-04: a free agent in the market with what he asks and how many other teams are interested (NXJ-A01 to NXJ-A03); NXJ-A04 adds the player's
+        own offer when there is one (SX.8i)."""
+        interest = X.text("NXJ-A01") if others == 0 else X.text("NXJ-A02") if others == 1 else X.text("NXJ-A03", k=others)
+        line = X.text("NXJ-04", player=player.name, position=self.position(player.pos), a=player.age, r=player.rating,
+                      potential=self.potential(player.potential), contract=self.contract_of(salary, years), interest=interest)
+        if offer is not None:
+            line += X.text("NXJ-A04", contract=self.contract_of(offer, years))
+        return line
+
     def mood(self, how: str) -> str:
         """NXW-20 to NXW-22: how a player of the team feels (SX.8h)."""
         return X.text(MOOD_TEXT[how])

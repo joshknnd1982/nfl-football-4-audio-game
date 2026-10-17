@@ -16,11 +16,11 @@ from ...game.spoken_menu import Item, ListPicker, SpokenMenu
 from ..nfl_rules import is_nfl
 from .. import nx_texts as X
 from . import data as D
-from . import history, mode, news, todo, weekly
+from . import history, market_flow, mode, news, todo, weekly
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
-HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
 
@@ -191,6 +191,16 @@ def franchise_menu(g, speech, keys) -> None:
         league = store.league
         _lines_picker(speech, keys, X.text("NXF-28"), history.cap_lines(league, _words(g)))
 
+    # ----- the free agents (design 17 SX.8i, NXF-29) -----
+
+    def market_menu() -> None:
+        league = store.league
+        if league.market is None:
+            speech.stop()
+            speech.say_async(X.text("NXJ-H01"))
+            return
+        _lines_picker(speech, keys, X.text("NXF-29"), market_flow.market_lines(league, _words(g)))
+
     # ----- the settings -----
 
     def settings_menu() -> None:
@@ -245,6 +255,7 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(lambda: X.text("NXF-14"), enter=history_menu),
                  Item(lambda: X.text("NXF-15"), enter=ratings_menu),
                  Item(lambda: X.text("NXF-28"), enter=cap_menu),
+                 Item(lambda: X.text("NXF-29"), enter=market_menu),
                  Item(lambda: X.text("NXF-16"), enter=settings_menu),
                  Item(lambda: X.text("NXF-17"), enter=ask_switch("classic", "NXF-23"))]
     elif store.exists:

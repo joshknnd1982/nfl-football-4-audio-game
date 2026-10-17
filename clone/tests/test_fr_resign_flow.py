@@ -1,4 +1,4 @@
-"""The Franchise's expiring contracts as stage 4 of 7 on the program rig (nfl4 only, rule 0.13; NFL_FRANCHISE_DESIGN 17 SX.8h, D-067): the other
+"""The Franchise's expiring contracts as stage 4 of 8 on the program rig (nfl4 only, rule 0.13; NFL_FRANCHISE_DESIGN 17 SX.8h, D-067): the other
 teams settled by the staff's rule, the player's players asked one at a time (sign, offer less, franchise tag, let go), the staff setting, the
 short offseason, a window closed in the middle and the file the stage writes. The rules are test_fr_resign.py.
 """
@@ -17,11 +17,17 @@ from nfl4.extras.franchise.league import LeagueRecord
 
 TEAM = 5
 PLACES = (33, 0, 7)                         # the quarterback, a running back, a receiver
-HEADER = " stage 4 of 7. expiring contracts. "
+HEADER = " stage 4 of 8. expiring contracts. "
 
+
+
+@pytest.fixture(autouse=True)
+def cap_alone_decides(monkeypatch):
+    """The staff's payroll target (FR_RESIGN_TARGET, SX.8i) is out of the way in these tests, which are about the cap and the talks; it has its own tests."""
+    monkeypatch.setattr(T, "FR_RESIGN_TARGET", 1.0)
 
 def contract_league(seed=3, places=PLACES, wins=8, mutate=None, others=(12, 20)):
-    """A league at the start of stage 4 of 7 (the expiring contracts): these places of the player's team have no years left, and `others` of
+    """A league at the start of stage 4 of 8 (the expiring contracts): these places of the player's team have no years left, and `others` of
     every other team. `wins` is every team's record of the season just played (8: content, 12: happy, 3: unhappy). The player's quarterback is
     rated 78, so he is the most valuable of the three."""
     def change(league):
@@ -41,7 +47,7 @@ def contract_league(seed=3, places=PLACES, wins=8, mutate=None, others=(12, 20))
 
 
 def run(tmp_path, league, keys=(), until=None, **kwargs):
-    return offseason_rig(tmp_path, league, keys=keys, until=until or at_stage(D.STAGE_DRAFT), picks_told="mine", **kwargs)
+    return offseason_rig(tmp_path, league, keys=keys, until=until or at_stage(D.STAGE_FREE_AGENCY), picks_told="mine", **kwargs)
 
 
 def start_of(league):
@@ -135,7 +141,7 @@ def test_enter_at_every_question_signs_each_player_at_his_price_for_the_length_o
         assert now.status == "active" and (now.salary, now.years) == resign.asking(player)
         assert X.text("NXW-10", player=player.name, contract=words.contract_of(*resign.asking(player))) in text
     assert X.text("NXW-31", n=3, m=0) in text
-    assert final.resign is None and final.stage_no == D.STAGE_DRAFT
+    assert final.resign is None and final.stage_no == D.STAGE_FREE_AGENCY
 
 
 def test_the_signing_is_written_before_it_is_told(tmp_path):
@@ -232,8 +238,8 @@ def test_let_him_go_makes_him_a_free_agent_with_no_dead_money_and_leaves_his_pla
     assert final.dead == [0] * D.TEAMS
     assert X.text("NXW-13", player=gone.name) in spoken(rig)
     assert X.text("NXW-31", n=2, m=1) in spoken(rig)
-    after_stage = LeagueRecord.from_json(rig.kept[D.STAGE_DRAFT].decode("utf-8"))
-    assert after_stage.rosters[TEAM - 1][33] == 0 and after_stage.draft is None and after_stage.stage_no == D.STAGE_DRAFT      # the quarterback's place waits for the draft
+    after_stage = LeagueRecord.from_json(rig.kept[D.STAGE_FREE_AGENCY].decode("utf-8"))
+    assert after_stage.rosters[TEAM - 1][33] == 0 and after_stage.draft is None and after_stage.stage_no == D.STAGE_FREE_AGENCY      # the quarterback's place waits for the draft
 
 
 def test_the_franchise_tag_signs_one_year_at_the_tag_price_and_is_offered_once_a_year(tmp_path):
@@ -273,10 +279,10 @@ def test_a_young_players_question_says_he_asks_the_minimum_for_one_year_and_ente
     player = asked(league)[0]
     rig = run(tmp_path, league)
     words = rig.fstore.words
-    assert X.text("NXA-11", salary=words.amount(T.FR_MIN_SALARY)) == "0.9 million for one year"
-    assert any(t.startswith(" %s, " % player.name) and " he asks 0.9 million for one year. " in t for t in spoken(rig))
+    assert X.text("NXA-11", salary=words.amount(CT.min_salary(1))) == "1 million for one year"           # research B4's table: a player with one season
+    assert any(t.startswith(" %s, " % player.name) and " he asks 1 million for one year. " in t for t in spoken(rig))
     final = rig.fstore.league.players[player.id]
-    assert (final.salary, final.years, final.status) == (T.FR_MIN_SALARY, 1, "active")
+    assert (final.salary, final.years, final.status) == (CT.min_salary(1), 1, "active")
 
 
 # ----- the cap -----
@@ -297,7 +303,7 @@ def test_when_nobody_fits_the_stage_says_so_and_offers_only_letting_him_go(tmp_p
     at = text.index(X.text("NXW-05", room=words.amount(resign.room(start, TEAM))))
     assert text[at + 1] == " 1. let him go "                                                 # the only answer there is
     assert rig.fstore.league.players[first.id].status == "free"
-    after = LeagueRecord.from_json(rig.kept[D.STAGE_DRAFT].decode("utf-8"))
+    after = LeagueRecord.from_json(rig.kept[D.STAGE_FREE_AGENCY].decode("utf-8"))
     assert CT.cap_used(after, TEAM) <= T.FR_CAP
 
 
@@ -309,9 +315,9 @@ def test_the_room_shrinks_as_the_player_signs_so_the_team_ends_under_the_cap(tmp
     league = contract_league(mutate=thin)
     rig = run(tmp_path, league)                                                              # Enter signs whoever fits, else lets him go
     final = rig.fstore.league
-    after = LeagueRecord.from_json(rig.kept[D.STAGE_DRAFT].decode("utf-8"))
+    after = LeagueRecord.from_json(rig.kept[D.STAGE_FREE_AGENCY].decode("utf-8"))
     assert CT.cap_used(after, TEAM) <= T.FR_CAP
-    assert all(p.years > 0 for p in after.active_of(TEAM) if p is not None) and final.stage_no >= D.STAGE_DRAFT
+    assert all(p.years > 0 for p in after.active_of(TEAM) if p is not None) and final.stage_no >= D.STAGE_FREE_AGENCY
 
 
 # ----- the staff and the setting -----
@@ -363,22 +369,22 @@ def test_when_no_contract_ends_the_stage_says_so_asks_nothing_and_goes_on(tmp_pa
     text = spoken(rig)
     assert X.text("NXW-02") in text and HEADER in text and not any("he asks" in t for t in text)
     final = rig.fstore.league
-    assert final.resign is None and final.stage_no >= D.STAGE_DRAFT
+    assert final.resign is None and final.stage_no >= D.STAGE_FREE_AGENCY
 
 
 def test_the_short_offseason_still_asks_about_the_players_and_ends_the_stage_without_a_wait(tmp_path):
     league = contract_league()
     rig = run(tmp_path, league, short=True)
     text = spoken(rig)
-    assert HEADER in text and len([t for t in text if "he asks" in t]) == 3
-    stage = text[text.index(HEADER):text.index(" stage 5 of 7. the draft. ")]
+    stage = text[text.index(HEADER):text.index(" stage 5 of 8. free agency. ")]
+    assert len([t for t in stage if "he asks" in t]) == 3
     assert X.text("NXE-03") not in stage and X.text("NXW-31", n=3, m=0) in stage
 
 
 def test_the_short_offseason_with_nobody_to_ask_says_one_sentence_per_line_and_no_wait(tmp_path):
     league = contract_league(places=())
     text = spoken(run(tmp_path, league, short=True))
-    stage = text[text.index(HEADER):text.index(" stage 5 of 7. the draft. ")]
+    stage = text[text.index(HEADER):text.index(" stage 5 of 8. free agency. ")]
     assert X.text("NXW-02") in stage and X.text("NXE-03") not in stage
 
 
@@ -411,9 +417,9 @@ def test_a_window_closed_at_the_stages_wait_resumes_at_the_draft_with_nothing_as
     league = contract_league()
     first = run(tmp_path / "one", league, until=lambda r: X.text("NXE-03") in spoken(r)[-3:] and any(" signs, " in t for t in spoken(r)))
     saved = saved_league(first)
-    assert saved.stage_no == D.STAGE_DRAFT and saved.resign is None
-    second = run(tmp_path / "two", None, files=first.files)
-    assert HEADER not in spoken(second) and not any("he asks" in t for t in spoken(second))
+    assert saved.stage_no == D.STAGE_FREE_AGENCY and saved.resign is None
+    second = run(tmp_path / "two", None, files=first.files, until=at_stage(D.STAGE_DRAFT))             # the market (stage 5 of 8) runs, then the draft begins
+    assert HEADER not in spoken(second) and not any("he asks" in t and "with the team" in t for t in spoken(second))      # (the market's lines say "he asks" too)
 
 
 # ----- the file -----
@@ -426,7 +432,7 @@ def test_the_stage_starts_with_one_write_that_holds_the_other_teams_settled_and_
     assert first.resign is not None and len(first.resign["pending"]) == 3
     assert all(p.years > 0 for p in first.players.values() if p.status == "active" and p.team != TEAM)         # the others are settled
     assert [first.players[pid].years for pid in first.resign["pending"]] == [0, 0, 0]
-    last = LeagueRecord.from_json(rig.kept[D.STAGE_DRAFT].decode("utf-8"))
+    last = LeagueRecord.from_json(rig.kept[D.STAGE_FREE_AGENCY].decode("utf-8"))
     assert last.resign is None and all(p.years > 0 for p in last.players.values() if p.status == "active")
 
 
@@ -481,7 +487,7 @@ def test_the_staff_setting_turned_on_between_two_questions_hands_the_rest_to_the
         settings = rig.game.options.settings.game
         if any(" signs, " in t for t in spoken(rig)) and not settings.nx_fr_auto:
             settings.nx_fr_auto = True                      # the player turned it on after the first answer (the second question is open)
-        return at_stage(D.STAGE_DRAFT)(rig)
+        return at_stage(D.STAGE_FREE_AGENCY)(rig)
     rig = run(tmp_path, league, until=until)
     text = spoken(rig)
     final = rig.fstore.league
@@ -503,8 +509,24 @@ def test_a_player_the_staff_lets_go_after_the_setting_was_turned_on_is_counted_a
         settings = rig.game.options.settings.game
         if any(" signs, " in t for t in spoken(rig)) and not settings.nx_fr_auto:
             settings.nx_fr_auto = True
-        return at_stage(D.STAGE_DRAFT)(rig)
+        return at_stage(D.STAGE_FREE_AGENCY)(rig)
     rig = run(tmp_path, league, until=until)
     text = spoken(rig)
     assert X.text("NXW-30", n=0, m=1) in text and X.text("NXW-31", n=2, m=1) in text
     assert rig.fstore.league.players[order[-1].id].status == "free"
+
+
+def test_with_the_shipped_payroll_target_the_staffs_choice_for_the_players_team_is_the_computer_teams_rule_and_lets_players_go_for_the_market(tmp_path, monkeypatch):
+    monkeypatch.setattr(T, "FR_RESIGN_TARGET", 0.62)                                        # the value the game ships with (the other tests of this file leave the target out)
+    league = contract_league(places=(0, 7, 12, 20, 33))
+    rig = run(tmp_path, league, auto=True)
+    expected = start_of(league)
+    out = resign.run_teams(expected)
+    final = rig.fstore.league
+    mine = [p for p in expected.players.values() if p.team == TEAM and league.players[p.id].years == 0]
+    assert len(mine) == 5 and any(p.status == "free" for p in mine)                          # at the shipped target the payroll is over: some of his players go to the market
+    for player in mine:
+        now = final.players[player.id]
+        assert (now.salary, now.years, now.status) == (player.salary, player.years, player.status), player.id
+    assert X.text("NXW-30", n=len([p for p in mine if p.status == "active"]), m=len([p for p in mine if p.status == "free"])) in spoken(rig)
+    assert out.gone

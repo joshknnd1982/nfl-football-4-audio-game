@@ -55,6 +55,15 @@ def rookie_salary(overall: int) -> int:
     return points[-1][1]
 
 
+def min_salary(seasons: int) -> int:
+    """The least a player with this many seasons in the league is paid (research B4's table, `FR_MIN_SALARY_BY_SEASONS`): the exclusive-rights price of
+    stage 7 and the floor of a free agent's falling price. Never under `FR_MIN_SALARY`, the figure the cap's reserve for an empty place uses."""
+    for last_seasons, salary in T.FR_MIN_SALARY_BY_SEASONS:
+        if seasons <= last_seasons:
+            return salary
+    return T.FR_MIN_SALARY_BY_SEASONS[-1][1]
+
+
 def years_for_age(age: int) -> int:
     """The length of a new contract of a player of this age, and the most years any contract of him may have left."""
     for last_age, years in T.FR_CONTRACT_YEARS:
