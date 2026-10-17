@@ -99,6 +99,7 @@ class LeagueRecord:
     dead: list = field(default_factory=lambda: [0] * D.TEAMS)   # per team, the dead money of the cap year (SX.8g, format 2)
     resign: dict | None = None                         # the stage of the expiring contracts in progress (SX.8h, format 3): see resign.py
     market: dict | None = None                         # the stage of free agency in progress (SX.8i, format 4): see market.py
+    trades: dict = field(default_factory=lambda: {"picks": [], "log": []})   # the season's trades and the traded picks of the coming draft (SX.8j, format 5): see trades.py
 
     # ----- the teams -----
 
@@ -194,7 +195,7 @@ class LeagueRecord:
                 "gtp": self.gtp, "schedule": self.schedule, "records": self.records, "pairings": self.pairings,
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
-                "dead": self.dead, "resign": self.resign, "market": self.market}
+                "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -238,16 +239,23 @@ class LeagueRecord:
                 record.resign = data["resign"]
             if version >= 4:
                 record.market = data["market"]
+            if version >= 5:
+                record.trades = data["trades"]
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
             raise LeagueError("a player of the franchise file is not a record: %s" % exc) from exc
+        if version < 5 and isinstance(record.draft, dict) and isinstance(record.draft.get("order"), list) and "owners" not in record.draft:
+            # a draft saved before SX.8j has no owners: every pick is the team's of the draft order (no trade moved one), the migration of format 5
+            # (made first: the check of every older format reads the owners of a draft in progress)
+            order = record.draft["order"]
+            record.draft["owners"] = [order[i % len(order)] for i in range(D.DRAFT_PICKS)] if order else []
         if version < 2:
             record.check(contracts=False)                      # a format-1 file is whole as it was; then it gets its contracts (a migration, no draw)
             from . import contracts
             contracts.migrate(record)
-        # a format-2 file has no stage of expiring contracts in progress and a format-3 file no market in progress (`resign` and `market` None, from the
-        # dataclass defaults): nothing to migrate. A league written before the stage of free agency existed and saved in the middle of the offseason is
+        # a format-2 file has no stage of expiring contracts in progress, a format-3 file no market in progress and a format-4 file no trades (`resign` and
+        # `market` None, `trades` empty, from the dataclass defaults): nothing to migrate but a draft's owners (below). A league written before the stage of free agency existed and saved in the middle of the offseason is
         # at a stage number of its own list, so it goes on at that stage (the market is simply not held for it)
         record.check()
         return record
@@ -306,6 +314,8 @@ class LeagueRecord:
         resign_rules.check_resign(self, whole)                 # SX.8h: the stage of the expiring contracts in progress
         from . import market as market_rules
         market_rules.check_market(self, whole)                 # SX.8i: the stage of free agency in progress
+        from . import trades as trade_rules
+        trade_rules.check_trades(self, whole)                  # SX.8j: the season's trades and the traded picks of the coming draft
         self._check_results(whole)
         self._check_season(whole, ints)
 

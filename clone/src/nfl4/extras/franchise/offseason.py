@@ -18,7 +18,7 @@ from .. import nx_texts as X
 from . import aging
 from . import data as D
 from . import draft_flow, market_flow, resign_flow
-from . import history, news, weekly
+from . import history, news, trades, weekly
 from .league import OFFSEASON, SEASON, team_ref
 from .news_pools import DEFAULT_POOLS
 from .question import wait_for_enter
@@ -176,6 +176,7 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
     g, store = p.g, p.store
     league = store.league
     season = g.season
+    trades.new_season(league)                            # SX.8j: the season's trades are history (before the players they name may be dropped)
     aging.drop_the_unkept(league)
     news.drop_for_new_season(league)                     # the finished season's weekly news goes; its offseason's stays
     league.season += 1

@@ -60,8 +60,11 @@ def coach_wins(league: LeagueRecord, week: int) -> int:
     return history.career(league).wins + own
 
 
-def week_events(league: LeagueRecord, week: int) -> list:
-    """The events of the week in the order of the rules, at most FR_NEWS_MAX (design 8.3)."""
+OWN_POOLS = ("NWY", "NWZ", "NWM")                  # the player's own news comes first (design 8.3); SX.8j's trades follow it
+
+
+def week_events(league: LeagueRecord, week: int, cut: bool = True) -> list:
+    """The events of the week in the order of the rules, at most FR_NEWS_MAX (design 8.3; `cut` False: all of them, for `with_trades`)."""
     games = week_games(league, week)
     if not games or not 1 <= week <= D.NEWS_LAST_WEEK:
         return []
@@ -102,7 +105,15 @@ def week_events(league: LeagueRecord, week: int) -> list:
         close = min(rest, key=lambda i: (games[i][2] - games[i][3], i))
         winner, loser, ws, ls = games[close]
         events.append(Event("NWC", team=winner, other=loser, n=ws - ls, score=(ws, ls)))
-    return events[:T.FR_NEWS_MAX]
+    return events[:T.FR_NEWS_MAX] if cut else events
+
+
+def with_trades(events: list, trade_lines: list) -> list:
+    """SX.8j: the week's events with the trades of the week's preparation after the player's own news (his streak, his milestone) and before the games'
+    news, at most FR_NEWS_MAX in all (design 8.3's limit holds: a trade takes the place of the closest game, then of a streak, and so on)."""
+    own = [event for event in events if event.pool in OWN_POOLS]
+    rest = [event for event in events if event.pool not in OWN_POOLS]
+    return (own + list(trade_lines) + rest)[:T.FR_NEWS_MAX]
 
 
 # ----- the offseason's news (made by its stages) -----
@@ -125,6 +136,19 @@ def cap_event(league: LeagueRecord) -> Event:
     from . import contracts
     team = contracts.cap_ranking(league)[0]
     return Event("NWK", team=team, n=contracts.cap_space(league, team))
+
+
+def trade_events(league: LeagueRecord, made: list) -> list:
+    """NWX (SX.8j): the trades two other teams made in this week's preparation, at most FR_TRADE_NEWS, the one that moved the best player first (equal: the
+    order of the search). The line names the better of the two players, the team that traded him away (<team>) and the team he goes to (<other>)."""
+    events = []
+    for order, trade in enumerate(made):
+        first, second = league.players[trade.give_a], league.players[trade.give_b]
+        star = first if (first.rating, -first.id) > (second.rating, -second.id) else second
+        giver = trade.a if star.id == trade.give_a else trade.b
+        events.append(((-star.rating, order), Event("NWX", team=giver, other=trade.other(giver), player=star)))
+    events.sort(key=lambda pair: pair[0])
+    return [event for _key, event in events[:T.FR_TRADE_NEWS]]
 
 
 def improver_events(changes: list, team: int) -> list:

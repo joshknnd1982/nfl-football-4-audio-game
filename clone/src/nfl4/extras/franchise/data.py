@@ -6,9 +6,10 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 4                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 5                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
-#                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`)
+#                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
+#                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
 FOLDER = "franchise"                         # the folder of the data folder that holds every franchise file
@@ -71,7 +72,6 @@ DRAFT_ROUNDS = 7
 DRAFT_PICKS = DRAFT_ROUNDS * TEAMS           # 224
 RANGE_SPAN = 6                               # the spoken range of a prospect: the low end to the low end + 6 (about 62 to 68)
 RANGE_MIDDLE = 3                             # the middle of that range: the low end + 3
-MAX_ROOKIES = DRAFT_ROUNDS                   # the rookies a team can have waiting for the cut (one a round)
 CUT_FLOOR_GROUP_MAX = 2                      # the cut's rating floor (tuning FR_CUT_FLOOR) is for groups of this many places or fewer
 STAGE_REVIEW, STAGE_AGING, STAGE_DEVELOPMENT, STAGE_DRAFT, STAGE_CUT, STAGE_NEW_SEASON = 1, 2, 3, 4, 5, 6
 STAGE_CONTRACTS = 7                          # SX.8h: the expiring contracts, after the development and before the draft
@@ -97,18 +97,20 @@ SCORE_TABLE_SIZE = 32
 
 # the to-do list (design 8.1): the kinds are data, so a later update adds its own (contracts, injuries, coordinators: design 17)
 TODO_EXTRA_WORK, TODO_GAME_PLAN = "extra_work", "game_plan"
-TODO_KINDS = (TODO_EXTRA_WORK, TODO_GAME_PLAN)
+TODO_TRADE = "trade_offer"                    # SX.8j: a trade a computer team offers the player (design 17)
+TODO_KINDS = (TODO_EXTRA_WORK, TODO_GAME_PLAN, TODO_TRADE)
 ITEM_NEW, ITEM_LATER, ITEM_SET = 0, 1, 2     # not asked yet; answered "later"; the game plan, taken for this week's game
 REGULAR_WEEKS = 16
 NEWS_LAST_WEEK = 15                          # the news of a week is made after weeks 1 to 15 (design 8.3)
 NEWS_OFFSEASON = 16                          # the `week` of an offseason's news line
 MAX_NEWS = 400                               # lines kept in league.sav (a season's 15 weeks of 4 and the offseason's, with room)
 MAX_TODO = 200
-# the thirteen kinds of news line of news.txt (design 8.3, 15); the letter says the kind
-NEWS_POOLS = ("NWB", "NWU", "NWC", "NWS", "NWL", "NWY", "NWZ", "NWM", "NWT", "NWR", "NWD", "NWP", "NWK")
+# the fourteen kinds of news line of news.txt (design 8.3, 15); the letter says the kind
+NEWS_POOLS = ("NWB", "NWU", "NWC", "NWS", "NWL", "NWY", "NWZ", "NWM", "NWT", "NWR", "NWD", "NWP", "NWK", "NWX")      # NWX (SX.8j): a trade between two other teams
 
 SALARY_PER_MILLION = 10                      # a salary is a whole number of tenths of a million dollars (SX.8g, D-066): 124 is 12.4 million
 MAX_DEAD = 100_000                           # the most dead money a team's record may hold (a bound for the whole-file check)
 
+MAX_TRADES = 200                             # the trades of one season kept in league.sav (SX.8j)
 MAX_RESULTS = 400                           # games of one season (16 weeks of 16 games and 13 play-off games), with room
 MAX_HISTORY = 500                            # seasons kept

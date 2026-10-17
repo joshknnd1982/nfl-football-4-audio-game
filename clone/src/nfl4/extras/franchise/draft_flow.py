@@ -53,7 +53,11 @@ def stage_draft(p, n: int, m: int, short: bool) -> None:
         store.save()
     draft = DR.Draft(league)
     g.say2(off._stage_line(n, m, "NXE-14"))
-    g.say2(X.text("NXK-01", n=draft.place_in_round(league.team)))
+    if draft.own_picks_only(league.team):
+        g.say2(X.text("NXK-01", n=draft.place_in_round(league.team)))
+    else:                                        # SX.8j: a trade of the season moved one of his picks: the picks he makes, one by one
+        picks = [X.text("NXK-15", round=r, pick=k) for r, k in draft.picks_of(league.team)]
+        g.say2(X.text("NXK-14", list=", ".join(picks) if picks else X.text("NXK-13")))
     announced = 0                                # the round whose number was said last
     while not draft.done:
         overall = len(draft.picks) + 1

@@ -5,6 +5,7 @@ NFL_FRANCHISE_DESIGN 8.1 and 8.2 (F5). Rules over the league record, no speech a
 
     {"kind": "extra_work", "season": s, "week": w, "state": 0, "players": [id, id]}      T1 extra work (design 8.1, 8.2)
     {"kind": "game_plan",  "season": s, "week": w, "state": 0, "styles": [their offense, their defense, our offense, our defense]}   T2
+    {"kind": "trade_offer", "season": s, "week": w, "state": 0, "trade": [a, b, player of a, player of b, picks of a, picks of b]}   SX.8j
 
 An item has a deadline: the kick-off of its week's game. `state` is ITEM_NEW (not asked yet), ITEM_LATER (answered "later") or, for
 the game plan only, ITEM_SET (taken for this week's game; the game reads it). A new week's list replaces the old one. The kinds are
@@ -101,6 +102,14 @@ def plan_of(league: LeagueRecord, week: int) -> tuple | None:
     return None
 
 
+# ----- SX.8j: a trade a computer team offers the player -----
+
+def trade_item(league: LeagueRecord, week: int, trade) -> dict:
+    """The item of a trade the computer teams' search made with the player's team (design 17 SX.8j: "a to-do kind for offers waiting"). Its first answer is
+    the staff's recommendation, accept (the search makes only trades both teams gain from in their own situations), its second the "do nothing" answer, decline."""
+    return {"kind": D.TODO_TRADE, "season": league.season, "week": week, "state": D.ITEM_NEW, "trade": trade.to_list()}
+
+
 # ----- answering -----
 
 def answer_count(league: LeagueRecord, item: dict) -> int:
@@ -108,7 +117,7 @@ def answer_count(league: LeagueRecord, item: dict) -> int:
     plan, two."""
     if item["kind"] == D.TODO_EXTRA_WORK:
         return len(valid_players(league, item)) + 1
-    return 2
+    return 2                                         # the game plan: use it, keep yours; a trade offer: accept, decline
 
 
 def is_do_nothing(league: LeagueRecord, item: dict, answer: int) -> bool:
@@ -116,9 +125,20 @@ def is_do_nothing(league: LeagueRecord, item: dict, answer: int) -> bool:
     return answer == answer_count(league, item) - 1
 
 
-def apply_answer(league: LeagueRecord, item: dict, answer: int) -> Player | None:
+def apply_answer(league: LeagueRecord, item: dict, answer: int):
     """Take an answer (0 is the staff's recommendation) and finish the item: it leaves the list, except a game plan that was set,
-    which stays (state ITEM_SET) until the week is over. Returns the player who got the point, if any."""
+    which stays (state ITEM_SET) until the week is over. Returns the player who got the point, if any; for a trade offer the trade when
+    answer 0 made it (None when it was declined or could no longer be made: `trades.problems`)."""
+    if item["kind"] == D.TODO_TRADE:
+        from . import trades
+        league.todo.remove(item)
+        if answer != 0:
+            return None
+        trade = trades.Trade.from_list(item["trade"])
+        if trades.problems(league, trade, item["week"]) is not None:
+            return None
+        trades.execute(league, trade, item["week"], trades.KIND_OFFER)
+        return trade
     if item["kind"] == D.TODO_EXTRA_WORK:
         valid = valid_players(league, item)
         chosen = valid[answer] if answer < len(valid) else None
@@ -169,7 +189,8 @@ def check_items(league: LeagueRecord, whole) -> None:
     seen = set()
     for item in items:
         if not isinstance(item, dict) or set(item) not in ({"kind", "season", "week", "state", "players"},
-                                                            {"kind", "season", "week", "state", "styles"}):
+                                                            {"kind", "season", "week", "state", "styles"},
+                                                            {"kind", "season", "week", "state", "trade"}):
             raise LeagueError("a to-do item is %r" % (item,))
         if item["kind"] not in D.TODO_KINDS:
             raise LeagueError("a to-do item of the kind %r" % (item["kind"],))
@@ -179,7 +200,9 @@ def check_items(league: LeagueRecord, whole) -> None:
         if (item["kind"], item["season"], item["week"]) in seen:
             raise LeagueError("two to-do items of one kind in one week: %r" % (item,))
         seen.add((item["kind"], item["season"], item["week"]))
-        if item["kind"] == D.TODO_EXTRA_WORK:
+        if item["kind"] == D.TODO_TRADE:
+            _check_trade_item(league, item, whole)
+        elif item["kind"] == D.TODO_EXTRA_WORK:
             players = item.get("players")
             if "players" not in item or item["state"] == D.ITEM_SET or not isinstance(players, list) or not 1 <= len(players) <= 2:
                 raise LeagueError("an extra-work item is %r" % (item,))
@@ -192,3 +215,27 @@ def check_items(league: LeagueRecord, whole) -> None:
             if "styles" not in item or not isinstance(styles, list) or len(styles) != 4 or any(
                     not isinstance(s, str) or s not in BOOK_KEYS for s in styles):
                 raise LeagueError("a game-plan item is %r" % (item,))
+
+
+def _check_trade_item(league: LeagueRecord, item: dict, whole) -> None:
+    """A trade offer: the player's team and another, two players of the league, at most FR_TRADE_PICKS_MAX picks a side, never ITEM_SET."""
+    from .. import tuning as T
+    trade = item.get("trade")
+    if "trade" not in item or item["state"] == D.ITEM_SET or not isinstance(trade, list) or len(trade) != 6:
+        raise LeagueError("a trade offer is %r" % (item,))
+    whole(trade[0], 1, D.TEAMS, "a trade offer's team")
+    whole(trade[1], 1, D.TEAMS, "a trade offer's team")
+    whole(trade[2], 1, 10 ** 9, "a trade offer's player")
+    whole(trade[3], 1, 10 ** 9, "a trade offer's player")
+    if trade[0] == trade[1] or league.team not in (trade[0], trade[1]):
+        raise LeagueError("a trade offer of a team with itself, or not with the player's team: %r" % (item,))
+    if trade[2] not in league.players or trade[3] not in league.players:
+        raise LeagueError("a trade offer names a player who is not in the league: %r" % (item,))
+    for picks in (trade[4], trade[5]):
+        if not isinstance(picks, list) or len(picks) > T.FR_TRADE_PICKS_MAX:
+            raise LeagueError("the picks of a trade offer are %r" % (picks,))
+        for pick in picks:
+            if not isinstance(pick, list) or len(pick) != 2:
+                raise LeagueError("a pick of a trade offer is %r" % (pick,))
+            whole(pick[0], 1, D.DRAFT_ROUNDS, "a pick's round")
+            whole(pick[1], 1, D.TEAMS, "a pick's team")

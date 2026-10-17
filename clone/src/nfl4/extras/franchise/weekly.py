@@ -13,6 +13,8 @@ wait) and writes league.sav, as `offseason.py` does for the stages:
   that is loaded from a saved game is past its kick-off: its items are closed the same way.
 * `staff_takes` (the setting nx_fr_auto): every item still waiting takes the staff's recommendation at once, at the first pass of the
   week and at the kick-off, and one sentence says how many.
+* SX.8j: the preparation also makes the computer teams' trades of the week (`trades.week`, the one code path of the fast run too): a trade of two
+  computer teams is made at once and told in the news (NWX); a trade with the player's team is an offer in his to-do list (accept, decline, later).
 """
 from __future__ import annotations
 
@@ -23,7 +25,7 @@ from .. import playbook_data as PD
 from .. import playbooks as PB
 from ..nfl_rules import is_nfl
 from . import data as D
-from . import news, todo
+from . import news, todo, trade_flow, trades
 from .league import SEASON, team_index
 from .news_pools import DEFAULT_POOLS
 from .question import FranchiseQuestion
@@ -36,13 +38,18 @@ def in_regular_season(league) -> bool:
 # ----- the preparation of a week (the league changes and is saved before anything is said) -----
 
 def prepare(p, league, week: int) -> None:
-    """The first pass of `week`: the computer teams' points and the news of the week before, this week's items, the told mark; saved."""
+    """The first pass of `week`: the computer teams' points and the news of the week before, the computer teams' trades of this week (SX.8j) and their
+    news, this week's items (the trade offered to the player among them), the told mark; saved."""
     g, store = p.g, p.store
     pools = g.news_pools or DEFAULT_POOLS
     todo.drop_old(league, week)
-    if week > 1:                                             # what the week that was just played brings
+    events = []
+    if week > 1:                                             # what the week that was just played brings (judged before a trade changes a strength)
         todo.computer_extra_work(league, week - 1)
-        news.make_entries(league, news.week_events(league, week - 1), pools, store.words, g.rnd, week - 1)
+        events = news.week_events(league, week - 1, cut=False)
+    made, offers = trades.week(league, week, league.records)
+    if week > 1:                                             # (SX.8j: the trades of the computer teams share the week's lines)
+        news.make_entries(league, news.with_trades(events, news.trade_events(league, made)), pools, store.words, g.rnd, week - 1)
     items = []
     extra = todo.extra_work_item(league, week)
     if extra is not None:
@@ -50,6 +57,7 @@ def prepare(p, league, week: int) -> None:
     plan = _game_plan_item(p, league, week)
     if plan is not None:
         items.append(plan)
+    items += [todo.trade_item(league, week, offer) for offer in offers]
     league.todo.extend(items)
     league.told = [league.season, week]
     league.prepared = [league.season, week]
@@ -125,6 +133,9 @@ def item_view(g, league, item: dict, later: bool = True) -> tuple:
         answers = [X.text("NXD-A02", player=pl.name, position=words.position(pl.pos), r=pl.rating, potential=words.potential(pl.potential))
                    for pl in todo.valid_players(league, item)]
         answers.append(X.text("NXD-A03"))
+    elif item["kind"] == D.TODO_TRADE:                       # SX.8j: an offer of a computer team, accept (the staff's recommendation) or decline
+        situation = trade_flow.offer_lines(words, league, trades.Trade.from_list(item["trade"]))
+        answers = [X.text("NXX-A01"), X.text("NXX-A02")]
     else:
         table = _table(g)
         theirs_o, theirs_d, ours_o, ours_d = item["styles"]
@@ -146,7 +157,17 @@ def finish_item(store, league, item: dict, answer: int, answers: int) -> tuple:
         return False, ""
     text = ""
     chosen = todo.apply_answer(league, item, answer)
-    if item["kind"] == D.TODO_EXTRA_WORK:
+    if item["kind"] == D.TODO_TRADE:
+        trade = trades.Trade.from_list(item["trade"])
+        own = trade.other(league.team)
+        words = getattr(store, "words", None)
+        if chosen is not None:
+            text = trade_flow.made_line(words, league, chosen)
+        elif answer == 0:
+            text = X.text("NXX-03")
+        else:
+            text = X.text("NXX-04", team=words.team_name(own))
+    elif item["kind"] == D.TODO_EXTRA_WORK:
         if chosen is not None:
             text = X.text("NXD-11", player=chosen.name)
     elif item["state"] == D.ITEM_SET:
@@ -182,14 +203,19 @@ def ask_item(p, league, item: dict, later: bool = True) -> bool:
 
 
 def staff_takes(p, league) -> int:
-    """The setting "the staff handles the to do list" is on: every item still waiting takes the staff's recommendation (answer 1), the
+    """The setting "the staff handles the to do list" is on: every item still waiting takes the staff's recommendation (the first answer, 0), the
     league is saved, and the sentence says how many (design 8.1). Returns how many."""
     items = todo.waiting(league)
+    made = []
     for item in items:
-        todo.apply_answer(league, item, 0)
+        result = todo.apply_answer(league, item, 0)
+        if item["kind"] == D.TODO_TRADE and result is not None:
+            made.append(result)
     if items:
         p.store.save()
         p.g.say2(X.text("NXD-04" if len(items) == 1 else "NXD-03", n=len(items)))
+        for trade in made:                                    # SX.8j: his roster changed, so the trade the staff made is said
+            p.g.say2(trade_flow.made_line(p.store.words, league, trade, staff=True))
     return len(items)
 
 

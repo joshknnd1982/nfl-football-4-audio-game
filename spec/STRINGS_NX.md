@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 625.
+- Texts: 665.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,8 +16,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 293.
-- Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4.
+- Franchise (design section 11): 333.
+- Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4.
 
 ## The clock (design section 5)
 
@@ -673,4 +673,44 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXJ-I03 (sentence, say2): " free agency: one player signed with your team. ". stage 8, the short offseason, one
 - NXJ-I04 (sentence, say2): " free agency: nobody signed with your team. ". stage 8, the short offseason, none
 - NXJ-G03 (sentence, say2): " the staff takes over. your offers of this round are withdrawn. ". stage 8, the staff setting turned on in the middle of a round
+- NXX-01 (prompt, say2): " a trade offer from the <team>. you get <get>, <position>, rating <r>, age <a>, <contract>. you give <give>, rating <give_r>, age <give_a>. <picks> ". the to-do item of a trade offered to the player (SX.8j)
+- NXX-P01 (piece, piece): "the <team> add <list>.". the picks the other team adds to a trade
+- NXX-P02 (piece, piece): "you add <list>.". the picks the player's team adds to a trade
+- NXX-P03 (piece, piece): "the round <round> pick of the <team>". a pick of the coming draft that was another team's
+- NXX-P04 (piece, piece): "your round <round> pick". the player's team's own pick of the coming draft
+- NXX-P05 (piece, piece): "their round <round> pick". the giving team's own pick of the coming draft
+- NXX-A01 (answer, say2): "accept the trade". the answers of a trade offer (the staff's recommendation first)
+- NXX-A02 (answer, say2): "decline the trade". the answers of a trade offer
+- NXX-02 (sentence, say2): " the trade is made. <get> joins your team, <give> goes to the <team>. ". a trade of the player's team was made
+- NXX-03 (sentence, say2): " that trade cannot be made any more. ". a trade offer that is no longer possible (a player or a pick has moved, the cap, the deadline)
+- NXX-04 (sentence, say2): " you turn down the offer of the <team>. ". the player declined a trade
+- NXX-05 (sentence, say2): " the staff made a trade with the <team>: <get> joins your team, <give> leaves. <picks> ". the staff accepted a trade offer for the player
+- NXF-43 (menu, say5): "trades". F9 Franchise item (SX.8j)
+- NXX-10 (menu, say5): "offers waiting". F9 trades
+- NXX-11 (menu, say5): "offer one of your players". F9 trades: the trade block
+- NXX-12 (menu, say5): "ask for a player". F9 trades
+- NXX-13 (menu, say5): "your draft picks". F9 trades
+- NXX-14 (menu, say5): "trades this season". F9 trades
+- NXX-15 (sentence, say5): " trades are closed. they open again in the next regular season, until the kick-off of week <n>. ". F9 trades outside the window
+- NXX-16 (sentence, say5): " trades are closed during a game. ". F9 trades inside a game
+- NXX-17 (sentence, say5): " no team makes an offer for <give>. ". F9 trades: nobody wants the player on the block
+- NXX-18 (sentence, say5): " the <team> give <get>, rating <r>, age <a>. <picks> ". F9 trades: one offer for the player on the block
+- NXX-19 (sentence, say5): " which of your <group> do you offer for <get>? ". F9 trades: the player chooses whom he gives
+- NXX-20 (sentence, say5): " the other teams' <group>, the best first. ". F9 trades: the title of the players he may ask for
+- NXX-21 (sentence, say5): " <player> of the <team>, rating <r>, age <a>, <contract>. ". F9 trades: a player he may ask for
+- NXX-22 (sentence, say5): " the <team> would trade <get> for <give>. <picks> press enter to accept, or escape to say no. ". F9 trades: the answer of the other team, to confirm
+- NXX-23 (sentence, say5): " the <team> say no to that trade. ". F9 trades: the other team does not gain enough, even with the player's picks
+- NXX-24 (sentence, say5): " you have no picks of the coming draft to trade. ". F9 trades: no picks (or the draft has begun)
+- NXX-25 (sentence, say5): " week <n>: the <team> traded <give> to the <other> for <get>. <picks> ". F9 trades: a trade of the season
+- NXX-27 (sentence, say5): " a player traded this season cannot be traded again until the next season. ". F9 trades
+- NXK-14 (sentence, say2): " the draft has 7 rounds. your picks: <list>. ". stage 4 when a trade moved a pick of the player's team (SX.8j)
+- NXK-15 (piece, piece): "round <round> pick <pick>". stage 4: one of the player's picks
+- NXH-41 (help, say5): " Trades: until the trade deadline teams swap players of the same position, with draft picks to even the value. Offers come in your to do list; F9 has trades. ". F6, after NXH-40 (SX.8j)
+- NWX01 (remark, say2): " the <team> traded <player>, <position>, to the <other>. ". a trade between two other teams (news)
+- NWX02 (remark, say2): " a trade: <player> goes from the <team> to the <other>. ". a trade between two other teams (news)
+- NWX03 (remark, say2): " the <other> got <player>, <position>, from the <team> in a trade. ". a trade between two other teams (news)
+- NWX04 (remark, say2): " <player> is on the move: the <team> sent him to the <other>. ". a trade between two other teams (news)
+- NXX-P06 (piece, piece): "and". the word between two picks of a trade (SX.8j review)
+- NXX-28 (sentence, say5): " trades. the trade deadline is the kick-off of week <n>. ". the title of F9's trades menu (SX.8j review: the deadline week is spoken)
+- NXX-29 (sentence, say5): " the draft has begun. your picks: <list>. ". F9 trades, your draft picks during the draft (SX.8j review)
 

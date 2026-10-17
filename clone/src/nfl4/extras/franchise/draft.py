@@ -12,7 +12,9 @@ calibration's fast run use the very same code (the speech and the questions are 
 A drafted rookie is an ACTIVE player with `place` -1 (waiting) until the cut: the roster lists keep their 34 places, and the group's
 count plus the rookies waiting for it is what the need bonus and the cut look at. The draft record (`LeagueRecord.draft`) is a plain dict,
 {"class": [[pos, name, true rating, potential, age, low end of the range] ...], "order": [32 teams], "picks": [[team, prospect index,
-player ID] ...], "staff_all": 0 or 1}; it lives from the class (the start of stage 4) to the end of stage 5, when the cut applies.
+player ID] ...], "staff_all": 0 or 1, "owners": [the team that makes each of the 224 picks]}; it lives from the class (the start of stage 4) to the end of
+stage 5, when the cut applies. SX.8j: a pick may have changed hands in a trade of the season (`trades.py`); the draft makes the owners its own when it is
+created (`owners`, pick by pick) and the trades' table of picks starts empty again.
 """
 from __future__ import annotations
 
@@ -93,8 +95,9 @@ def draft_order(sums: list, wins: list, finish: list) -> list:
 
 
 def order_of(league: LeagueRecord) -> list:
-    """The order from the season that just ended: its history entry (wins and finish) and the exact strengths of that season, which
-    the record keeps until stage 6 (the rosters do not change during a season)."""
+    """The order from the season that just ended: its history entry (wins and finish) and the exact strengths the record keeps until stage 6:
+    the strengths the teams ENDED the season with (a trade of the season brings the two teams' sums up to date, SX.8j), so a team that traded for
+    veterans picks as the stronger team it became."""
     entry = league.history[-1] if league.history and league.history[-1]["season"] == league.season else None
     if entry is not None:
         wins, finish = entry["wins"], entry["finish"]
@@ -139,6 +142,7 @@ class Draft:
         self.prospects = [Prospect.from_row(i, row) for i, row in enumerate(self.data["class"])]
         self.order = self.data["order"]
         self.picks = self.data["picks"]
+        self.owners = self.data["owners"]
         self.board = Board(self.prospects, {row[1] for row in self.picks})
         self.rookies: dict = {}                                 # team -> its rookies waiting for the cut, in pick order
         self.middle_of: dict = {}                               # player ID -> the middle of his spoken range
@@ -149,7 +153,9 @@ class Draft:
     @classmethod
     def create(cls, league: LeagueRecord, rnd, surnames: list) -> "Draft":
         prospects = make_class(league, rnd, surnames)
-        league.draft = {"class": [p.to_row() for p in prospects], "order": order_of(league), "picks": [], "staff_all": 0}
+        order = order_of(league)
+        league.draft = {"class": [p.to_row() for p in prospects], "order": order, "picks": [], "staff_all": 0, "owners": owners_of(league, order)}
+        league.trades["picks"] = []                             # SX.8j: the traded picks are the draft's now
         league.pick_no = 1
         return cls(league)
 
@@ -169,14 +175,23 @@ class Draft:
     def slot(self, overall: int) -> tuple:
         """(round 1 to 7, the pick in the round 1 to 32, the team) of pick number `overall` (1 to 224)."""
         index = overall - 1
-        return index // D.TEAMS + 1, index % D.TEAMS + 1, self.order[index % D.TEAMS]
+        return index // D.TEAMS + 1, index % D.TEAMS + 1, self.owners[index]
 
     def next_slot(self) -> tuple:
         return self.slot(len(self.picks) + 1)
 
     def place_in_round(self, team: int) -> int:
-        """The pick of a team in every round (1 to 32)."""
+        """The pick of a team in every round (1 to 32) by the draft order (its own picks)."""
         return self.order.index(team) + 1
+
+    def picks_of(self, team: int) -> list:
+        """The picks the team makes in this draft: (round, the pick in the round), in draft order (SX.8j: traded picks included, its own traded away left out)."""
+        return [(i // D.TEAMS + 1, i % D.TEAMS + 1) for i, owner in enumerate(self.owners) if owner == team]
+
+    def own_picks_only(self, team: int) -> bool:
+        """The team makes exactly its own pick in every round (no trade moved one of them)."""
+        place = self.place_in_round(team)
+        return self.picks_of(team) == [(r, place) for r in range(1, D.DRAFT_ROUNDS + 1)]
 
     # ----- what a team needs -----
 
@@ -273,6 +288,12 @@ class Draft:
         """(low end, high end) of a rookie waiting for the cut."""
         low = self.middle_of[player.id] - D.RANGE_MIDDLE
         return low, low + D.RANGE_SPAN
+
+
+def owners_of(league: LeagueRecord, order: list) -> list:
+    """The team that makes each of the 224 picks: the team of the draft order, or the team a trade of the season moved that pick to (SX.8j)."""
+    from . import trades
+    return [trades.owner(league, i // D.TEAMS + 1, order[i % D.TEAMS]) for i in range(D.DRAFT_PICKS)]
 
 
 def open_places(draft: Draft, team: int) -> list:
@@ -401,7 +422,7 @@ def check_draft(league: LeagueRecord, whole) -> set:
     from .league import OFFSEASON
     if league.stage != OFFSEASON or league.stage_no not in (D.STAGE_DRAFT, D.STAGE_CUT):
         raise LeagueError("a draft in stage %r %r" % (league.stage, league.stage_no))
-    if not isinstance(data, dict) or set(data) != {"class", "order", "picks", "staff_all"}:
+    if not isinstance(data, dict) or set(data) != {"class", "order", "picks", "staff_all", "owners"}:
         raise LeagueError("the draft holds %r" % (sorted(data) if isinstance(data, dict) else type(data).__name__,))
     rows = data["class"]
     if not isinstance(rows, list) or len(rows) != T.FR_CLASS_SIZE:
@@ -425,6 +446,11 @@ def check_draft(league: LeagueRecord, whole) -> set:
         raise LeagueError("the draft order is %r" % (order,))
     if data["staff_all"] not in (0, 1) or isinstance(data["staff_all"], bool):
         raise LeagueError("staff_all is %r" % (data["staff_all"],))
+    owners = data["owners"]
+    if not isinstance(owners, list) or len(owners) != D.DRAFT_PICKS:
+        raise LeagueError("the draft's owners are %r" % (len(owners) if isinstance(owners, list) else owners,))
+    for team in owners:
+        whole(team, 1, D.TEAMS, "the owner of a pick")
     picks = data["picks"]
     if not isinstance(picks, list) or len(picks) > D.DRAFT_PICKS:
         raise LeagueError("the draft holds %r picks" % (len(picks) if isinstance(picks, list) else picks,))
@@ -438,7 +464,7 @@ def check_draft(league: LeagueRecord, whole) -> set:
         whole(team, 1, D.TEAMS, "a pick's team")
         whole(index, 0, len(rows) - 1, "a pick's prospect")
         whole(pid, 1, 10 ** 9, "a pick's player")
-        if team != order[number % D.TEAMS] or index in taken or pid in waiting:
+        if team != owners[number] or index in taken or pid in waiting:
             raise LeagueError("pick %d is %r, out of order or twice" % (number + 1, row))
         player = league.players.get(pid)
         if (player is None or player.status != "active" or player.place != -1 or player.team != team
@@ -450,7 +476,7 @@ def check_draft(league: LeagueRecord, whole) -> set:
         taken.add(index)
         waiting.add(pid)
         per_team[team] = per_team.get(team, 0) + 1
-        if per_team[team] > D.MAX_ROOKIES:
+        if per_team[team] > owners.count(team):
             raise LeagueError("team %d has %d rookies" % (team, per_team[team]))
     if league.pick_no != len(picks) + 1:
         raise LeagueError("the next pick is %d after %d picks" % (league.pick_no, len(picks)))

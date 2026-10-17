@@ -531,3 +531,58 @@ FR_FA_RESERVE = 0                 # tenths of a million left under the cap for t
 # million offers; need (an empty place), not money, limits a team, so "the cap now binding" is true of the rules and of a STRESS RUN with a cap of 1450 (25 percent lower,
 # work/simulate_franchise_sx8f_fast_100x20_sx8i_cap1450.txt: cap use 0.81 to 0.99, the room decided thousands of offers and the cap rule of the cut fired in 2,600 of 64,000 team-offseasons), in
 # which every research-G invariant (CP1, FA2, FA5 and the others) still holds and only CP4's band of the cap use and the mean rating move, as they should, not of the shipped game.
+
+# ----- trades, design 17 SX.8j (D-070; the history of every move is below) -----
+# A trade swaps two players of the SAME position between two teams (so every place stays filled in the season), with up to FR_TRADE_PICKS_MAX picks of the
+# coming draft added by the side that must give more. The value of a player to a team is his worth over the rookie who would replace him (the position's weight
+# times the rating over the fill's middle rating, `resign.value`'s unit), weighted by his age and the team's situation (FR_TRADE_AGE), by his potential while he is
+# young (FR_TRADE_POTENTIAL), plus what his contract saves against his market price (FR_TRADE_MONEY_DIVISOR); a pick is worth FR_TRADE_PICK_VALUE[round] weighted by the
+# team's situation (FR_TRADE_PICK_SHARE). A computer team agrees when what it gets is worth at least FR_TRADE_MARGIN rating points of the position more to it than
+# what it gives (times the position's weight: `trades.margin_of`) (research B5).
+# THE WINDOW: the NFL's 2026 deadline is 4 p.m. on 2026-11-10, the day after week 9 of 18 (research F2; nfl.com important dates): half the season. Half of 16 is 8 games played,
+# so the window closes at the kick-off of week FR_TRADE_LAST_WEEK = 9 (design 17 said "week 10 of 16" before it was worked out). The computer teams look for trades in the
+# preparations of the weeks FR_TRADE_FIRST_WEEK to FR_TRADE_LAST_WEEK (after 3 to 8 games: before that a record says nothing about a team's situation).
+FR_TRADE_FIRST_WEEK = 4
+FR_TRADE_LAST_WEEK = 9
+# START VALUES that no measurement has moved (the SX.8j review's note; the playtest and SX.8p may): FR_TRADE_MIN_GAMES, FR_TRADE_CONTEND, FR_TRADE_REBUILD,
+# FR_TRADE_VETERAN_AGE, FR_TRADE_UPGRADE, FR_TRADE_AGE, FR_TRADE_POTENTIAL, FR_TRADE_MONEY_DIVISOR, FR_TRADE_PICK_SHARE, FR_TRADE_SEASON_MAX, FR_TRADE_PICKS_MAX.
+# MEASURED: FR_TRADE_PICK_VALUE (work/measure_pick_value_sx8j.txt); SWEPT: FR_TRADE_MARGIN and FR_TRADE_WEEK_MAX (the history below).
+FR_TRADE_MIN_GAMES = 3            # a team's situation needs this many games played; before it every team is "middle"
+FR_TRADE_CONTEND = 2              # a team that has won at least this many more games than it lost is contending
+FR_TRADE_REBUILD = 2              # a team that has lost at least this many more games than it won is rebuilding
+FR_TRADE_MARGIN = 12              # a computer team agrees only when it gains at least this many rating points of the position (in value: times its weight)
+FR_TRADE_PICKS_MAX = 2            # picks one side may add to a trade
+FR_TRADE_VETERAN_AGE = 28         # a rebuilding team offers its players of this age or more (the trade block)
+FR_TRADE_UPGRADE = 3              # a contending team trades for a player rated at least this much over the one it gives
+FR_TRADE_SEASON_MAX = 2           # a computer team starts at most this many trades a season
+FR_TRADE_WEEK_MAX = 1             # at most this many trades between computer teams in a week
+FR_TRADE_LIST = 5                 # the offers the player hears for a player he puts on the block
+FR_TRADE_NEWS = 2                 # the trades of a week told in the news (the most valuable first)
+# the age weight of a player's value in percent, by the team's situation: (the oldest age of the row, percent)
+FR_TRADE_AGE = {"contend": ((24, 80), (29, 100), (32, 100), (99, 80)),
+                "middle": ((24, 100), (29, 100), (32, 80), (99, 55)),
+                "rebuild": ((24, 130), (29, 100), (32, 60), (99, 30))}
+FR_TRADE_YOUNG = 25               # the potential counts for a player of this age or less ...
+FR_TRADE_POTENTIAL = {"high": 115, "average": 100, "low": 85}     # ... in percent
+FR_TRADE_MONEY_DIVISOR = 20       # tenths of a million saved against his market price (for every year left) per point of value
+FR_TRADE_PICK_SHARE = {"contend": 70, "middle": 100, "rebuild": 130}   # a pick's value in percent, by the team's situation
+FR_TRADE_PICK_VALUE = (48, 38, 29, 19, 10, 3, 1)       # round 1 to 7, measured in SX.8j (see below)
+# SX.8j calibration (D-070; the reports are work/simulate_franchise_sx8f_fast_500x20_sx8j.txt, _fast_2000x20_sx8j_2000.txt, _fast_500x20_sx8j_off.txt (trades off) and
+# _full_5x20_sx8j.txt, the sweeps work/sweep_trades_sx8j.py, the measurement work/measure_pick_value_sx8j.txt). THE PICKS: a pick is worth what the player it becomes is
+# worth to a team in the situation "middle" (trades.player_value) at the start of his first and second season, 0 when the cut released him, the mean of the two, over 200
+# leagues x 12 seasons of the fast run without trades: (41.9, 53.7) (34.4, 41.1) (26.6, 31.1) (18.2, 20.3) (9.5, 9.9) (3.6, 3.3) (1.0, 0.9) -> (48, 38, 29, 19, 10, 3, 1);
+# the start values (60, 35, 22, 15, 10, 6, 4) were a guess. THE MARGIN AND THE COUNT (48 leagues x 20 seasons each): a flat margin in value points (the first build,
+# 10 and then 30) let quarterbacks alone through (11 of 12 trades in a small whole-program run at 30: a margin of 30 is 2.5 rating points of a quarterback and 15 of a
+# lineman), so the margin is rating points of the position times its weight (trades.margin_of). With 4 trades a week allowed the count stayed at 22 a league-season for
+# margins 3 to 6 (the week's limit bound, not the margin; 10: 13, 14: 2.9); "a few a year" (research B5) is reached by ONE computer trade a week (FR_TRADE_WEEK_MAX 1):
+# 6.0 trades a league-season at a margin of 5 or 8 (one in EVERY week of the window). THE INDEPENDENT REVIEW found that the first search gave the week's one trade to the
+# first contender of the turned order (a team's number decided: 101 to 193 trades a team in 40 x 20), so the search now keeps the best trade of every pair of a contender
+# and a rebuilder and the week takes them the greatest gain first (in rating points of the position); and that a fixed trade a week is no "few a year": with the new
+# search a margin of 12 gives 4.3 trades a league-season and leaves about three in ten window weeks without a trade (8: 6.0 in every week, 16: 1.1, 20: 0.1), so the margin
+# is 12 (quarterbacks 0.3 percent of the trades: a trade of quarterbacks rarely gains a contender 12 points of the position at the price a rebuilder asks).
+# WHAT THE TRADES DO, said plainly (500 leagues x 20 seasons, work/simulate_franchise_sx8f_fast_500x20_sx8j.txt, against the same leagues with trades off, _sx8j_off.txt,
+# whose season table is SX.8i's to the digit): the contenders get the rebuilders' veterans, so the spread of the 32 strengths rises by 0.125 on the average inside a season
+# and the win spread from 2.79 to 2.88; C-F1 per run holds again without D-069's share (no run outside 2.6 to 3.4, the lowest 2.70); the spread at the start of the seasons
+# from season 4 is 0.96 to 1.17 (the design's 1.0: under it in seasons 4 to 8, by 0.04 at most); the persistence of the bottom three is 0.370 against 0.362 without trades
+# (the rebuilders get young players and picks, the contenders players who will decline: the two nearly cancel), the longest streak 9; the position groups and the cap use do
+# not move (I8b and CP4 hold as before). SX.8p must still bring the spread to the design's band from the first seasons on.

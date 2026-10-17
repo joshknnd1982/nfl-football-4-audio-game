@@ -548,7 +548,7 @@ def test_a_market_in_progress_round_trips_through_the_file_and_is_format_four():
     league, free = market_league()
     league.market = stage_record(round=2, offers=[[free[0].id, 40], [free[1].id, 55]], signed=1, lost=2)
     data = json.loads(league.to_json())
-    assert data["format"] == D.FORMAT == 4 and data["market"] == league.market
+    assert data["format"] == D.FORMAT == 5 and data["market"] == league.market      # (format 5 since SX.8j: the market is format 4's)
     again = LeagueRecord.from_json(league.to_json())
     assert again.market == league.market and again.to_json() == league.to_json()
 
@@ -559,7 +559,7 @@ def test_a_format_three_file_loads_with_no_market_and_the_next_save_is_format_fo
     del data["market"]
     data["format"] = 3
     again = LeagueRecord.from_json(json.dumps(data))
-    assert again.market is None and json.loads(again.to_json())["format"] == 4
+    assert again.market is None and json.loads(again.to_json())["format"] == D.FORMAT
 
 
 def test_a_format_four_file_without_the_market_is_damage_and_a_newer_format_is_left_alone():
