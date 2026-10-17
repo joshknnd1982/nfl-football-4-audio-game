@@ -19,7 +19,7 @@ from ...game.season_mode import ClassicSeason, SeasonMode
 from .. import nx_texts as X
 from ..nfl_rules import is_nfl
 from . import data as D
-from . import history, injuries, injury_flow, weekly
+from . import history, injuries, injury_flow, staff, staff_flow, weekly
 from .league import SEASON, new_league, team_index, team_ref
 from .question import FranchiseQuestion, ask_yes_no
 from .strength import LeaguePlace
@@ -167,6 +167,7 @@ def activate(p, store) -> None:
     store.bind(g.season)
     store.words = history.Words(lambda team: g.league.team(*team_ref(team)))
     store.staff_setting = lambda: bool(g.options.settings.game.nx_fr_auto)    # SX.8k: the player's lineup follows the staff's rule when it is on
+    g.franchise_styles = lambda: staff.team_styles(store.league) if store.league is not None else None   # SX.8l: the coordinators choose the playbooks
     p.store = g.season_store = g.setup_store = store
     g.season_hooks = FranchiseHooks(store)
     p.mode = FranchiseSeason(p)
@@ -179,6 +180,7 @@ def deactivate(p) -> None:
         store.unbind()
     p.store, g.season_store, g.setup_store = p.classic_stores
     p.classic_stores = None
+    g.franchise_styles = None                          # SX.8l: outside the franchise every team plays team_styles.txt's style again
     g.season_hooks = CLASSIC_SEASON_HOOKS
     p.mode = ClassicSeason(p)
 
@@ -368,11 +370,14 @@ def start_new(p) -> None:
     g.get_coach()
     g.choose_team()
     team = team_index(season.tn1, season.tn2)
-    league = new_league(g.rnd, list(g.pool.original), season.coach, team, new_league_id(g), own_names(g))
+    table = getattr(g, "playbook_table", None)
+    league = new_league(g.rnd, list(g.pool.original), season.coach, team, new_league_id(g), own_names(g),
+                        team_styles=table.teams if table is not None else None)      # SX.8l: the coordinators start with the teams' styles
     store.create(league)
     set_kind(g, "franchise")                             # only now: a window closed before this leaves no franchise to look for
     g.say2(X.text("NXF-07"))
     say_team_rating(g, store.league)
+    g.say2(staff_flow.goal_line(store.league))           # SX.8l: the owner's goal of season 1
     g.make_schedule()
     season.gtp = 1
     store.write_gtp(1)

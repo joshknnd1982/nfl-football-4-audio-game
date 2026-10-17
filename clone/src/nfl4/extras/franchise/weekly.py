@@ -28,7 +28,7 @@ from .. import playbook_data as PD
 from .. import playbooks as PB
 from ..nfl_rules import is_nfl
 from . import data as D
-from . import injuries, injury_flow, news, todo, trade_flow, trades
+from . import injuries, injury_flow, news, staff, todo, trade_flow, trades
 from .league import SEASON, team_index
 from .news_pools import DEFAULT_POOLS
 from .question import FranchiseQuestion
@@ -102,12 +102,17 @@ def _game_plan_item(p, league, week: int):
     table = _table(g)
     opponent = team_index(season.tn3, season.tn4) - 1
 
+    teams = staff.team_styles(league)                # SX.8l: the opponent plays its coordinators' styles
+
     def style(side: str) -> str:
-        key = table.team_style(opponent, side)
+        key = teams[opponent][0 if side == "O" else 1] if teams is not None else table.team_style(opponent, side)
         return key if key in table.styles else PD.CLASSIC_KEY
 
+    def recommend(side: int, theirs: str) -> str:     # SX.8l: the player's coordinators make the staff's game plan
+        return staff.recommended(league, side, theirs, set(table.styles))
+
     return todo.game_plan_item(league, week, style("O"), style("D"), settings.nx_offense_playbook, settings.nx_defense_playbook,
-                               set(table.styles))
+                               set(table.styles), recommend if teams is not None else None)
 
 
 # ----- the news -----

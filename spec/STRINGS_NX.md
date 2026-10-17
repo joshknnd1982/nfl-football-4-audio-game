@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 733.
+- Texts: 775.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 401.
+- Franchise (design section 11): 443.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
 
 ## The clock (design section 5)
@@ -781,4 +781,46 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXI-A01 (answer, say2): "play him". an answer of the injury item (the staff's recommendation for a questionable player)
 - NXI-A02 (answer, say2): "rest him". an answer of the injury item (the staff's for a doubtful player, and the do-nothing answer)
 - NXI-55 (sentence, say5): " the staff decides who plays while the staff handles the to do list. ". F9's injury report with the staff setting on (SX.8k)
+- NXE-19 (piece, piece): "the staff". the name of stage 9 (SX.8l), right after the season in review
+- NXV-01 (sentence, say2): " the owner's goal was to <goal>. you met it. ". stage 1, the verdict (SX.8l): the goal met
+- NXV-02 (sentence, say2): " the owner's goal was to <goal>. you missed it. ". stage 1, the verdict: the goal missed
+- NXV-03 (sentence, say2): " your job rating is <a> of 100, up <d>. ". stage 1, the verdict: the job rating rose
+- NXV-04 (sentence, say2): " your job rating is <a> of 100, down <d>. ". stage 1, the verdict: the job rating fell
+- NXV-05 (sentence, say2): " your job rating stays at <a> of 100. ". stage 1, the verdict: the job rating did not move
+- NXV-06 (sentence, say2): " the owner is not happy. your job is in danger. ". stage 1, after the job rating when it is under FR_FIRE_BELOW + FR_DANGER
+- NXV-07 (sentence, say2): " the owner's goal for season <n>: <goal>. ". stage 6 and a new franchise, after the team's rating
+- NXV-G01 (piece, piece): "win at least <n> games". a goal of the owner (FR_GOALS: wins)
+- NXV-G02 (piece, piece): "reach the play offs". a goal of the owner (FR_GOALS: playoffs)
+- NXV-G03 (piece, piece): "reach the conference championship game". a goal of the owner (FR_GOALS: title_game)
+- NXV-10 (sentence, say2): " the owner has fired you. your job rating was <a>, after <w> wins and <l> losses. ". stage 9: the player is fired (never after a winning season)
+- NXV-11 (prompt, say2): " <coach> these teams want you as their head coach. choose your new team. ". stage 9: the offers (never the team that fired him)
+- NXV-A01 (answer, say2): "the <team>, rating <r>, number <k> of 32". stage 9: an offer, the best ranked first (the staff's recommendation)
+- NXV-12 (sentence, say2): " you are the new head coach of the <team>. ". stage 9: the job the player took
+- NXV-13 (sentence, say2): " head coaches fired in the league: <n>. ". stage 9: the league's firings
+- NXV-14 (sentence, say2): " no head coach was fired in the league. ". stage 9: no firing
+- NXV-15 (sentence, say2): " the <team> hired <name>, the offensive coordinator of the <other>, as head coach. ". stage 9: a head coach hired (at most three told)
+- NXV-16 (sentence, say2): " the <team> hired <name>, the defensive coordinator of the <other>, as head coach. ". stage 9: a head coach hired
+- NXV-17 (sentence, say2): " your offensive coordinator <name> left to be head coach of the <team>. ". stage 9: the player's coordinator was hired away
+- NXV-18 (sentence, say2): " your defensive coordinator <name> left to be head coach of the <team>. ". stage 9: the player's coordinator was hired away
+- NXV-20 (sentence, say2): " your offensive coordinator: <name>, <style>, rating <r>. ". stage 9's question and end, F9's job and staff
+- NXV-21 (sentence, say2): " your defensive coordinator: <name>, <style>, rating <r>. ". stage 9's question and end, F9's job and staff
+- NXV-22 (prompt, say2): " <coach> do you keep your coordinators? ". stage 9: the player's question (staff setting off)
+- NXV-A02 (answer, say2): "keep them". stage 9: keep both coordinators (the do-nothing answer)
+- NXV-A03 (answer, say2): "replace the offensive coordinator". stage 9
+- NXV-A04 (answer, say2): "replace the defensive coordinator". stage 9
+- NXV-A05 (answer, say2): "replace both". stage 9
+- NXV-A06 (answer, say2): "keep him". stage 9: one coordinator in place (the do-nothing answer)
+- NXV-A07 (answer, say2): "replace him". stage 9: one coordinator in place
+- NXV-23 (prompt, say2): " choose your new offensive coordinator. ". stage 9: the candidates follow, the best rated first
+- NXV-24 (prompt, say2): " choose your new defensive coordinator. ". stage 9: the candidates follow, the best rated first
+- NXV-A08 (answer, say2): "<name>, <style>, rating <r>". stage 9: a coordinator candidate
+- NXV-25 (sentence, say2): " <name> is your new offensive coordinator. ". stage 9: the coordinator hired
+- NXV-26 (sentence, say2): " <name> is your new defensive coordinator. ". stage 9: the coordinator hired
+- NXV-28 (sentence, say2): " the <team> let their head coach go to make room for you. ". stage 9: the team the player joined had a coach still in place
+- NXV-30 (sentence, say5): " the owner's goal this season: <goal>. ". F9, franchise, your job and staff
+- NXV-31 (sentence, say5): " your job rating: <a> of 100. ". F9, franchise, your job and staff
+- NXF-45 (menu, say5): "your job and staff". F9 Franchise item (SX.8l)
+- NXH-43 (help, say5): " Your job: the owner sets a goal each season and rates you from 0 to 100; a low rating costs your job unless you won more than you lost. Your coordinators' styles are your team playbook. ". F6, after NXH-42 (SX.8l)
+- NXV-09 (sentence, say2): " the owner has fired you. your job rating was <a>, after 1 win and <l> losses. ". stage 9: NXV-10 for a season of one win
+- NXV-32 (sentence, say5): " the owner has fired you. choose your new team at the question. ". F9, franchise, your job and staff, while the job question waits
 

@@ -101,6 +101,7 @@ class LeagueRecord:
     market: dict | None = None                         # the stage of free agency in progress (SX.8i, format 4): see market.py
     trades: dict = field(default_factory=lambda: {"picks": [], "log": []})   # the season's trades and the traded picks of the coming draft (SX.8j, format 5): see trades.py
     injuries: dict = field(default_factory=lambda: {"hurt": [], "stand_ins": [], "report": None})   # the season's injuries (SX.8k, format 6): see injuries.py
+    staff: dict | None = None                          # the head coaches, the coordinators and the stage "the staff" in progress (SX.8l, format 7): see staff.py
 
     # ----- the teams -----
 
@@ -197,7 +198,7 @@ class LeagueRecord:
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
                 "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
-                "injuries": self.injuries}
+                "injuries": self.injuries, "staff": self.staff}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -245,6 +246,8 @@ class LeagueRecord:
                 record.trades = data["trades"]
             if version >= 6:
                 record.injuries = data["injuries"]
+            if version >= 7:
+                record.staff = data["staff"]
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -254,6 +257,10 @@ class LeagueRecord:
             # (made first: the check of every older format reads the owners of a draft in progress)
             order = record.draft["order"]
             record.draft["owners"] = [order[i % len(order)] for i in range(D.DRAFT_PICKS)] if order else []
+        if version < 7:
+            # a file of format 6 or older has no staff: a new league's staff (no draw), made before any check, which reads the staff (the migration of format 7)
+            from . import staff as staff_rules
+            staff_rules.migrate(record)
         if version < 2:
             record.check(contracts=False)                      # a format-1 file is whole as it was; then it gets its contracts (a migration, no draw)
             from . import contracts
@@ -270,7 +277,7 @@ class LeagueRecord:
         """The stages in which every place of every team is filled: the season, stage 1 and stage 6 on."""
         if self.stage == SEASON:
             return True
-        return self.stage == OFFSEASON and self.stage_no in (D.STAGE_REVIEW, D.STAGE_NEW_SEASON)
+        return self.stage == OFFSEASON and self.stage_no in (D.STAGE_REVIEW, D.STAGE_STAFF, D.STAGE_NEW_SEASON)
 
     def check(self, contracts: bool = True) -> None:
         """LeagueError (with what is wrong) unless the record is usable at the stage it says it is in. `contracts` is False only for a
@@ -322,6 +329,8 @@ class LeagueRecord:
         trade_rules.check_trades(self, whole)                  # SX.8j: the season's trades and the traded picks of the coming draft
         from . import injuries as injury_rules
         injury_rules.check_injuries(self, whole)               # SX.8k: the season's injuries, the stand-ins and the week's report
+        from . import staff as staff_rules
+        staff_rules.check_staff(self, whole)                   # SX.8l: the head coaches, the coordinators and the stage of the staff in progress
         self._check_results(whole)
         self._check_season(whole, ints)
 
@@ -465,9 +474,12 @@ def draw_potential(rnd) -> str:
     return "high" if roll < high else "average" if roll < average else "low"
 
 
-def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_names: Roster | None = None) -> LeagueRecord:
+def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_names: Roster | None = None, team_styles=None) -> LeagueRecord:
     """A new league (design 4.5): the player's team first, with the 33 names of `own_names` when it is a complete roster (and
-    its quarterback when it names one), then T01 to T32 without it; every other value is drawn, in the order of design 12.1."""
+    its quarterback when it names one), then T01 to T32 without it; every other value is drawn, in the order of design 12.1. `team_styles`: the
+    playbooks' assignment of the 32 teams the coordinators start with (SX.8l; None: the built-in one)."""
+    if team_styles is None:
+        from ..playbook_data import TEAM_STYLES as team_styles
     league = LeagueRecord(league_id=league_id, season=1, stage=SEASON, coach=coach, team=team)
     used: set = set()
     given: list | None = None
@@ -497,4 +509,6 @@ def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_n
     from . import contracts
     contracts.give_initial_contracts(league)                    # SX.8g: the market price of each player; no draw
     league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]
+    from . import staff
+    staff.new_staff(league, surnames, team_styles)              # SX.8l: the head coaches and the coordinators, the goals of season 1; no draw
     return league

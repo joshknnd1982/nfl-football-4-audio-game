@@ -1,4 +1,4 @@
-"""The Franchise's free agency as stage 5 of 8 on the program rig (nfl4 only, rule 0.13; NFL_FRANCHISE_DESIGN 17 SX.8i, D-068): the market in rounds, the player's
+"""The Franchise's free agency as stage 6 of 9 on the program rig (nfl4 only, rule 0.13; NFL_FRANCHISE_DESIGN 17 SX.8i, D-068): the market in rounds, the player's
 offers, the staff setting, the short offseason, a window closed in the middle, F9's free agents and the file the stage writes. The rules are test_fr_market.py.
 """
 import pytest
@@ -15,14 +15,14 @@ from nfl4.extras.franchise.league import LeagueRecord
 TEAM = 5
 OWN = (33, 0, 7)                                     # the player's own players who were not signed again: the quarterback, a running back, a receiver
 OTHERS = ((2, 12, 82), (3, 18, 74), (4, 7, 88), (6, 23, 66), (8, 0, 72), (9, 31, 61), (10, 33, 80), (11, 13, 77), (12, 19, 69))      # (team, place, rating)
-HEADER = " stage 5 of 8. free agency. "
-DRAFT_HEADER = " stage 6 of 8. the draft. "
+HEADER = " stage 6 of 9. free agency. "
+DRAFT_HEADER = " stage 7 of 9. the draft. "
 END_ROUND = [UP, UP, ENTER]                          # the last item but one wraps round from the first: "end the round and hear the results"
 STAFF_REST = [UP, ENTER]                             # ... and the last: "let the staff make my offers from now on"
 
 
 def market_league(seed=3, own=OWN, others=OTHERS, wins=8, mutate=None, broke=()):
-    """A league at the start of free agency (stage 5 of 8): the player's own players of these places and the other teams' players of `others` are free agents
+    """A league at the start of free agency (stage 6 of 9): the player's own players of these places and the other teams' players of `others` are free agents
     (the ones stage 7 did not sign again), their places empty."""
     def change(league):
         for index in own:

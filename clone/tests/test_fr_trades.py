@@ -582,14 +582,14 @@ def test_format_five_round_trips_the_trades_and_a_format_four_file_loads_with_no
     league = scenario()
     TR.execute(league, TR.search(league, 5, standing())[0], 5, TR.KIND_COMPUTER)
     data = json.loads(league.to_json())
-    assert data["format"] == D.FORMAT == 6 and data["trades"] == league.trades     # (format 6 since SX.8k: the trades are format 5's)
+    assert data["format"] == D.FORMAT == 7 and data["trades"] == league.trades     # (format 7 since SX.8l: the trades are format 5's)
     again = LeagueRecord.from_json(league.to_json())
     assert again.trades == league.trades and again.to_json() == league.to_json()
     old = json.loads(fresh().to_json())
     del old["trades"]
     old["format"] = 4
     loaded = LeagueRecord.from_json(json.dumps(old))
-    assert loaded.trades == {"picks": [], "log": []} and json.loads(loaded.to_json())["format"] == 6       # (6 since SX.8k)
+    assert loaded.trades == {"picks": [], "log": []} and json.loads(loaded.to_json())["format"] == 7       # (7 since SX.8l)
 
 
 def test_a_format_five_file_without_its_trades_is_damage():
@@ -691,6 +691,7 @@ def test_a_draft_saved_by_format_four_gets_the_owners_of_the_draft_order():
     data["format"] = 4
     loaded = LeagueRecord.from_json(json.dumps(data))
     assert loaded.draft["owners"] == [order[i % D.TEAMS] for i in range(D.DRAFT_PICKS)]
+    loaded.staff = league.staff                    # SX.8l: a format-4 file gets a new league's staff (the migration of format 7); the rest is the file's
     assert loaded.to_json() == league.to_json()
 
 

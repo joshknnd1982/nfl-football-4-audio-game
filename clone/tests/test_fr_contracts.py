@@ -314,7 +314,7 @@ def test_the_cuts_own_list_is_counted_before_the_cap_rule_looks_at_the_team():
 def as_format_one(league):
     data = json.loads(league.to_json())
     data["format"] = 1
-    del data["dead"], data["resign"], data["market"], data["trades"], data["injuries"]   # what formats 2 to 6 added (SX.8j review: a draft of format 1 has no owners)
+    del data["dead"], data["resign"], data["market"], data["trades"], data["injuries"], data["staff"]   # what formats 2 to 7 added (SX.8j review: a draft of format 1 has no owners)
     if isinstance(data["draft"], dict):
         del data["draft"]["owners"]
     data["players"] = [row[:14] for row in data["players"]]
@@ -346,7 +346,7 @@ def test_a_format_one_file_still_loads_and_gets_its_contracts_by_the_rules_with_
             if market[player.team] <= T.FR_CAP:
                 assert player.salary == CT.market_salary(player.pos, player.rating)
     assert all(CT.cap_used(loaded, t) <= T.FR_CAP for t in range(1, D.TEAMS + 1))
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 6                    # the next save is format 6 (SX.8k)
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 7                    # the next save is format 7 (SX.8l)
     again = LeagueRecord.from_json(text)
     assert again.to_json() == loaded.to_json()                                        # a migration draws nothing: the same file, the same answer
     assert LeagueRecord.from_json(loaded.to_json()).to_json() == loaded.to_json()
@@ -435,14 +435,14 @@ def test_formats_other_than_one_to_three_are_damage_or_newer():
     text = fresh().to_json()
     for version in (0, -1, True, 1.5, "2", None):
         with pytest.raises(LeagueError) as raised:
-            LeagueRecord.from_json(text.replace('"format":6', '"format":%s' % json.dumps(version), 1))
+            LeagueRecord.from_json(text.replace('"format":7', '"format":%s' % json.dumps(version), 1))
         assert not isinstance(raised.value, NewerFormat)
     with pytest.raises(NewerFormat):
-        LeagueRecord.from_json(text.replace('"format":6', '"format":7', 1))
+        LeagueRecord.from_json(text.replace('"format":7', '"format":8', 1))
 
 
 def test_a_format_one_file_with_a_contract_column_is_damage_like_any_row_of_the_wrong_length():
-    text = fresh().to_json().replace('"format":6', '"format":1', 1)
+    text = fresh().to_json().replace('"format":7', '"format":1', 1)
     with pytest.raises(LeagueError):
         LeagueRecord.from_json(text)
 

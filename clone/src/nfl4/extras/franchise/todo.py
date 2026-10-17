@@ -76,10 +76,12 @@ def valid_players(league: LeagueRecord, item: dict) -> list:
 # ----- T2: the game plan -----
 
 def game_plan_item(league: LeagueRecord, week: int, their_offense: str, their_defense: str, offense_book: str, defense_book: str,
-                   styles: set) -> dict | None:
+                   styles: set, recommend=None) -> dict | None:
     """The item of a regular week when the player's offense or defense playbook setting is not Classic. The staff recommends, for
     each side the player plays a playbook on, the style `tuning.FR_GAME_PLAN` gives for the opponent's style on the other side (the
-    keys are Classic or a style of `styles`); a side the player keeps Classic stays Classic."""
+    keys are Classic or a style of `styles`); a side the player keeps Classic stays Classic. SX.8l: `recommend(side, their style)` is the player's
+    coordinators' recommendation (`staff.recommended`: a coordinator who reads the opponent answers its style as FR_GAME_PLAN does, a lesser one
+    recommends his own); None is the table alone."""
     classic = "classic"
     if not 1 <= week <= D.REGULAR_WEEKS or (offense_book == classic and defense_book == classic):
         return None
@@ -88,8 +90,12 @@ def game_plan_item(league: LeagueRecord, week: int, their_offense: str, their_de
         style = table.get(key, classic)
         return style if style in styles else classic
 
-    ours_o = recommended(T.FR_GAME_PLAN["offense"], their_defense) if offense_book != classic else classic
-    ours_d = recommended(T.FR_GAME_PLAN["defense"], their_offense) if defense_book != classic else classic
+    if recommend is not None:
+        ours_o = recommend(0, their_defense) if offense_book != classic else classic
+        ours_d = recommend(1, their_offense) if defense_book != classic else classic
+    else:
+        ours_o = recommended(T.FR_GAME_PLAN["offense"], their_defense) if offense_book != classic else classic
+        ours_d = recommended(T.FR_GAME_PLAN["defense"], their_offense) if defense_book != classic else classic
     return {"kind": D.TODO_GAME_PLAN, "season": league.season, "week": week, "state": D.ITEM_NEW,
             "styles": [their_offense, their_defense, ours_o, ours_d]}
 

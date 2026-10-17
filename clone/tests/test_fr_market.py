@@ -548,7 +548,7 @@ def test_a_market_in_progress_round_trips_through_the_file_and_is_format_four():
     league, free = market_league()
     league.market = stage_record(round=2, offers=[[free[0].id, 40], [free[1].id, 55]], signed=1, lost=2)
     data = json.loads(league.to_json())
-    assert data["format"] == D.FORMAT == 6 and data["market"] == league.market      # (format 6 since SX.8k: the market is format 4's)
+    assert data["format"] == D.FORMAT == 7 and data["market"] == league.market      # (format 7 since SX.8l: the market is format 4's)
     again = LeagueRecord.from_json(league.to_json())
     assert again.market == league.market and again.to_json() == league.to_json()
 
@@ -628,5 +628,5 @@ def test_the_offer_of_a_free_agent_who_has_signed_elsewhere_is_refused():
 
 def test_the_list_of_stages_places_free_agency_after_the_expiring_contracts_and_before_the_draft():
     numbers = [n for n, _ in D.STAGES]
-    assert numbers == [1, 2, 3, 7, 8, 4, 5, 6] and D.STAGE_MAX == max(numbers) == 8
+    assert numbers == [1, 9, 2, 3, 7, 8, 4, 5, 6] and D.STAGE_MAX == max(numbers) == 9      # (SX.8l: the staff, 9, right after stage 1)
     assert numbers.index(D.STAGE_FREE_AGENCY) == numbers.index(D.STAGE_CONTRACTS) + 1 == numbers.index(D.STAGE_DRAFT) - 1

@@ -39,7 +39,7 @@ def test_the_stage_names_itself_tells_the_players_pick_and_asks_seven_times(tmp_
     text = spoken(rig)
     final = saved_league(rig)
     place = final.draft["order"].index(TEAM) + 1
-    start = text.index(" stage 6 of 8. the draft. ")
+    start = text.index(" stage 7 of 9. the draft. ")
     assert text[start + 1] == X.text("NXK-01", n=place)
     assert len(prompts(text)) == 7 and text.count(X.text("NXK-05")) == 7
     assert [round_no for round_no in range(1, 8) if " Kim it is your pick, round %d, pick %d. " % (round_no, place) in
@@ -265,7 +265,7 @@ def test_a_draft_closed_in_the_middle_resumes_at_its_next_pick_with_the_same_cla
     assert 40 <= made < 224 and cut.pick_no == made + 1 and cut.stage_no == 4
     second = offseason_rig(tmp_path / "second", None, files=first.files, picks_told="mine", until=at_stage(5))
     text = spoken(second)
-    assert text[0] == " stage 6 of 8. the draft. " or " stage 6 of 8. the draft. " in text
+    assert text[0] == " stage 7 of 9. the draft. " or " stage 7 of 9. the draft. " in text
     final = saved_league(second)
     assert picks_of(final) == picks_of(saved_league(whole)) and final.draft["class"] == saved_league(whole).draft["class"]
     assert len(prompts(text)) == 7 - sum(1 for team, _, _ in cut.draft["picks"] if team == TEAM)         # only the picks still to come
@@ -310,7 +310,7 @@ def test_the_short_offseason_still_asks_for_the_picks_but_ends_the_draft_without
     rig = ran(tmp_path, short=True, until=at_stage(5))
     text = spoken(rig)
     end = text.index(X.text("NXK-11"))
-    assert len(prompts(text)) == 7 and " stage 6 of 8. the draft. " in text
+    assert len(prompts(text)) == 7 and " stage 7 of 9. the draft. " in text
     assert X.text("NXE-03") not in text[end:end + 9]
 
 
@@ -350,7 +350,7 @@ def test_the_franchise_settings_menu_cycles_the_picks_told_with_left_right_and_e
     from test_fr_menus import INTO_FRANCHISE, in_a_franchise
     from nfl4.game.keys import KEY_LEFT as LEFT
     from nfl4.game.keys import KEY_RIGHT as RIGHT
-    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + [DOWN] * 9 + [ENTER, DOWN, DOWN, ENTER, RIGHT, LEFT, LEFT, RIGHT])        # settings: the 10th item since SX.8k
+    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + [DOWN] * 10 + [ENTER, DOWN, DOWN, ENTER, RIGHT, LEFT, LEFT, RIGHT])        # settings: the 11th item since SX.8l
     text = spoken(rig)
     at = text.index(X.text("NXF-22"))
     assert text[at:at + 5] == [X.text("NXF-22"), X.text("NXF-25"), X.text("NXF-26"), X.text("NXF-25"), X.text("NXF-22")]
@@ -360,7 +360,7 @@ def test_the_franchise_settings_menu_cycles_the_picks_told_with_left_right_and_e
 
 def test_a_picks_told_setting_changed_in_f9_during_the_draft_applies_from_the_next_pick(tmp_path):
     from nfl4.game.keys import KEY_RIGHT as RIGHT
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 9 + [ENTER, DOWN, DOWN, RIGHT, RIGHT, ESC, ESC, ESC]
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 10 + [ENTER, DOWN, DOWN, RIGHT, RIGHT, ESC, ESC, ESC]     # settings: the 11th item since SX.8l
     rig = ran(tmp_path, keys=keys, picks_told="first")
     assert rig.game.options.settings.game.nx_fr_picks_told == "all"
     final = saved_league(rig)

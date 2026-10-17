@@ -12,7 +12,9 @@ from frrig import (COACH_AND_TEAM, DOWN, ENTER, ESC, F1, F9, WANT_FRANCHISE, ent
 from nfl4.extras import nx_texts as X
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
+from nfl4.extras.franchise import staff as ST
 from nfl4.extras.franchise import todo, weekly
+from nfl4.extras.franchise.league import team_index
 from nfl4.extras.playbooks import DEFAULT_TABLE
 from nfl4.game.keys import GameQuit
 
@@ -120,7 +122,7 @@ def test_with_the_staff_setting_on_every_item_takes_the_recommendation_with_one_
 
 
 def test_an_item_left_for_later_is_taken_by_the_staff_at_the_kick_off_when_the_setting_was_turned_on_meanwhile(tmp_path):
-    turn_on = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 9 + [ENTER, ENTER, ESC, ESC, ESC]       # F9, Franchise, settings (10th since SX.8k), the staff item: on
+    turn_on = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 10 + [ENTER, ENTER, ESC, ESC, ESC]       # F9, Franchise, settings (11th since SX.8l), the staff item: on
     rig = run(tmp_path, GAME + ANSWER_LATER + turn_on + [ENTER])
     text = spoken(rig)
     assert rig.game.options.settings.game.nx_fr_auto is True
@@ -173,19 +175,31 @@ def with_playbook(offense="pro", defense="classic"):
     return setup
 
 
+def staff_plan(rig):
+    """SX.8l: (the offense and the defense the player's coordinators recommend, the opponent's (offense, defense)) for week 1: the opponent plays its
+    coordinators' styles, and the staff's plan is `staff.recommended` of each side against the opponent's style on the other side of the ball."""
+    lg = league(rig)
+    division, place, _flag = lg.schedule[0]
+    theirs = ST.team_styles(lg)[team_index(division, place) - 1]
+    styles = set(DEFAULT_TABLE.styles)
+    return ST.recommended(lg, 0, theirs[1], styles), ST.recommended(lg, 1, theirs[0], styles), theirs
+
+
 def test_the_game_plan_is_asked_in_week_1_with_the_opponents_styles_and_the_staffs_recommendation(tmp_path):
     rig = run(tmp_path, [], setup=with_playbook())
     text = spoken(rig)
     prompt = next(t for t in text if t.startswith(" the game plan against the "))
     assert " they play " in prompt and " on offense and " in prompt and " on defense. the staff recommends " in prompt
-    assert prompt.endswith(" the staff recommends %s and %s. " % (DEFAULT_TABLE.style_name("west"), DEFAULT_TABLE.style_name("classic")))
+    ours_o, _ours_d, theirs = staff_plan(rig)
+    assert (" they play %s on offense and %s on defense. " % (DEFAULT_TABLE.style_name(theirs[0]), DEFAULT_TABLE.style_name(theirs[1]))) in prompt
+    assert prompt.endswith(" the staff recommends %s and %s. " % (DEFAULT_TABLE.style_name(ours_o), DEFAULT_TABLE.style_name("classic")))
     assert [item["state"] for item in league(rig).todo] == [D.ITEM_NEW]
 
 
 def test_the_staffs_game_plan_is_the_rules_of_that_game_and_the_settings_do_not_change(tmp_path):
     rig = run(tmp_path, [ENTER, ENTER], setup=with_playbook())              # the staff's plan, play game
     rules = rig.plays[0]["rules"]
-    assert rules is not None and (rules.offense_book, rules.defense_book) == ("west", "classic")
+    assert rules is not None and (rules.offense_book, rules.defense_book) == (staff_plan(rig)[0], "classic")
     assert X.text("NXD-23") in spoken(rig)
     settings = rig.game.options.settings.game
     assert (settings.nx_offense_playbook, settings.nx_defense_playbook) == ("pro", "classic")
@@ -194,7 +208,7 @@ def test_the_staffs_game_plan_is_the_rules_of_that_game_and_the_settings_do_not_
 def test_the_staffs_plan_covers_the_defense_when_the_player_plays_a_defense_playbook(tmp_path):
     rig = run(tmp_path, [ENTER, ENTER], setup=with_playbook("classic", "air"))
     rules = rig.plays[0]["rules"]
-    assert rules.offense_book == "classic" and rules.defense_book in T.FR_GAME_PLAN["defense"].values()
+    assert rules.offense_book == "classic" and rules.defense_book == staff_plan(rig)[1]
 
 
 def test_keep_your_playbooks_leaves_the_game_to_the_programs_rules(tmp_path):
@@ -212,7 +226,7 @@ def test_with_the_staff_setting_on_the_game_plan_is_taken_without_a_question(tmp
         with_playbook()(rig)
         rig.game.options.settings.game.nx_fr_auto = True
     rig = run(tmp_path, [ENTER], setup=setup)
-    assert rig.plays[0]["rules"].offense_book == "west" and X.text("NXD-04", n=1) in spoken(rig)
+    assert rig.plays[0]["rules"].offense_book == staff_plan(rig)[0] and X.text("NXD-04", n=1) in spoken(rig)
 
 
 def test_no_game_plan_item_when_both_playbooks_are_classic(tmp_path):
@@ -284,7 +298,7 @@ def test_f9_news_says_there_is_none_before_the_first_week_has_been_played(tmp_pa
 
 def test_the_staff_setting_is_in_the_franchise_settings_and_kept(tmp_path):
     from nfl4.data import settingsfile
-    rig = run(tmp_path, TO_FRANCHISE_MENU + [DOWN] * 9 + [ENTER, ENTER, ESC, ESC, ESC])
+    rig = run(tmp_path, TO_FRANCHISE_MENU + [DOWN] * 10 + [ENTER, ENTER, ESC, ESC, ESC])      # settings: the 11th item since SX.8l
     assert rig.game.options.settings.game.nx_fr_auto is True and "nx_fr_auto = on" in settingsfile.render(rig.game.options.settings)
     assert any(X.text("NXF-20") + "," + X.text("NXM-20") in t for t in spoken(rig))
 
@@ -296,7 +310,7 @@ def test_the_help_of_a_franchise_has_its_lines_for_f5_f6_and_f7_after_the_rules_
     g = rig.game
     assert g.franchise_help("116") == [X.text("NXH-34")]
     assert g.franchise_help("117") == [X.text("NXH-35"), X.text("NXH-37"), X.text("NXH-39"), X.text("NXH-40"), X.text("NXH-41"),
-                                       X.text("NXH-42")]       # SX.8k: injuries
+                                       X.text("NXH-42"), X.text("NXH-43")]       # SX.8k: injuries; SX.8l: your job
     assert g.franchise_help("118") == [X.text("NXH-36"), X.text("NXH-38")]
     assert g.franchise_help("119") == [] and all(len(X.text(i)) < 200 for i in ("NXH-34", "NXH-35", "NXH-36", "NXH-37", "NXH-38"))
     before = len(spoken(rig))
@@ -411,13 +425,14 @@ def test_a_loaded_games_waiting_items_are_closed_without_a_question_and_a_plan_t
 
 
 def test_the_plan_is_applied_only_to_the_sides_the_player_plays_a_playbook_on_when_the_game_is_made(tmp_path):
-    rig = run(tmp_path, [ENTER], setup=with_playbook("pro", "classic"))                 # the plan is taken: west on offense, Classic defense
+    rig = run(tmp_path, [ENTER], setup=with_playbook("pro", "classic"))                 # the plan is taken: the coordinators' offense, Classic defense
     p, settings = rig.game.program, rig.game.options.settings.game
-    assert weekly.game_rules(p).offense_book == "west" and weekly.game_rules(p).defense_book == "classic"
+    plan = staff_plan(rig)[0]
+    assert weekly.game_rules(p).offense_book == plan and weekly.game_rules(p).defense_book == "classic"
     settings.nx_defense_playbook = "air"                                                # the defense setting changes after the plan
     rig.game.apply_rules_setting()
     rules = weekly.game_rules(p)
-    assert (rules.offense_book, rules.defense_book) == ("west", "air")
+    assert (rules.offense_book, rules.defense_book) == (plan, "air")
     settings.nx_offense_playbook = "classic"
     rig.game.apply_rules_setting()
     rules = weekly.game_rules(p)
@@ -437,7 +452,8 @@ def test_extra_work_comes_in_the_weeks_of_the_tuning_and_in_no_other(tmp_path):
     assert max(T.FR_EXTRA_WORK_WEEKS) <= D.NEWS_LAST_WEEK            # a week's computer points are given at the next week's preparation
 
 
-def test_the_staffs_defense_plan_is_the_one_for_the_opponents_offense_style(tmp_path):
+def test_the_staffs_defense_plan_is_the_defensive_coordinators_against_the_opponents_offense_style(tmp_path):
     rig = run(tmp_path, [ENTER, ENTER], setup=with_playbook("classic", "air"))
     item = next(i for i in league(rig).todo if i["kind"] == D.TODO_GAME_PLAN)
-    assert item["styles"][3] == T.FR_GAME_PLAN["defense"][item["styles"][0]] and rig.plays[0]["rules"].defense_book == item["styles"][3]
+    lg = league(rig)
+    assert item["styles"][3] == ST.recommended(lg, 1, item["styles"][0], set(DEFAULT_TABLE.styles)) and rig.plays[0]["rules"].defense_book == item["styles"][3]

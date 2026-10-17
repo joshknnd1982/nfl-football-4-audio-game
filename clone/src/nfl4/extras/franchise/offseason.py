@@ -1,4 +1,4 @@
-"""The offseason of a Franchise: stage 1 the season in review (SX.8a), 2 the retirements and 3 the player development (SX.8c),
+"""The offseason of a Franchise: stage 1 the season in review (SX.8a), 9 the staff right after it (SX.8l, `staff_flow.py`), 2 the retirements and 3 the player development (SX.8c),
 4 the draft and 5 the roster cut with the fill (SX.8d, `draft_flow.py`), 6 the new season, 7 the expiring contracts (SX.8h,
 `resign_flow.py`) and 8 free agency (SX.8i, `market_flow.py`; the two sit between 3 and 4) (nfl4 only, rule 0.13). This is inspired by
 Jim Kitchen.
@@ -17,8 +17,8 @@ from __future__ import annotations
 from .. import nx_texts as X
 from . import aging
 from . import data as D
-from . import draft_flow, market_flow, resign_flow
-from . import history, injuries, news, trades, weekly
+from . import draft_flow, market_flow, resign_flow, staff_flow
+from . import history, injuries, news, staff, trades, weekly
 from .league import OFFSEASON, SEASON, team_ref
 from .news_pools import DEFAULT_POOLS
 from .question import wait_for_enter
@@ -66,6 +66,7 @@ def stage_review(p, n: int, m: int, short: bool) -> None:
     lines = [] if short else [_stage_line(n, m, "NXE-11")]
     lines.append(X.text("NXE-20", champion=words.team_name(entry["champion"]), n=entry["season"]))
     lines.append(X.text("NXE-21", w=entry["wins"][team], l=entry["losses"][team], finish=words.finish(entry["finish"][team])))
+    lines += staff_flow.verdict_lines(league, entry["wins"], entry["finish"])     # SX.8l: the owner's goal and the job rating (kept after the wait)
     if short:
         for line in lines:
             g.say2(line)
@@ -78,6 +79,7 @@ def stage_review(p, n: int, m: int, short: bool) -> None:
         lines += _news_texts(told)
         lines.append(X.text("NXE-03"))
         wait_for_enter(g, lines)
+    staff.apply_verdicts(league, entry["wins"], entry["finish"])     # SX.8l: every coach's job rating, the season his firing is judged by
     league.history.append(entry)
     league.results = []
     news.keep(league, told, recent, D.NEWS_OFFSEASON)     # the champion's line: kept after the wait with the rest of the stage
@@ -183,6 +185,7 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
     league.season += 1
     league.results = []
     league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]
+    staff.set_goals(league)                              # SX.8l: the owner's goal of every team by its rank at the season's start
     league.stage, league.stage_no = SEASON, 0
     league.told = [0, 0]
     league.prepared = [0, 0]
@@ -194,14 +197,16 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
     season.gtp = 1
     store.write_gtp(1)
     rating = history.team_rating_text(league)            # NXF-09: the team's rating and its number, after NXE-60 (design 14)
+    goal = staff_flow.goal_line(league)                  # SX.8l: the owner's goal of the coming season
     if short:
         g.say2(X.text("NXE-60", n=league.season))
         g.say2(rating)
+        g.say2(goal)
     else:                                                # design 3.3: every stage ends with NXE-03 (the league is saved already)
-        wait_for_enter(g, [_stage_line(n, m, "NXE-16"), X.text("NXE-60", n=league.season), rating, X.text("NXE-61"),
+        wait_for_enter(g, [_stage_line(n, m, "NXE-16"), X.text("NXE-60", n=league.season), rating, goal, X.text("NXE-61"),
                            X.text("NXE-03")])
 
 
-RUNNERS = {D.STAGE_REVIEW: stage_review, D.STAGE_AGING: stage_retirements, D.STAGE_DEVELOPMENT: stage_development,
+RUNNERS = {D.STAGE_REVIEW: stage_review, D.STAGE_STAFF: staff_flow.stage_staff, D.STAGE_AGING: stage_retirements, D.STAGE_DEVELOPMENT: stage_development,
            D.STAGE_CONTRACTS: resign_flow.stage_contracts, D.STAGE_FREE_AGENCY: market_flow.stage_free_agency,
            D.STAGE_DRAFT: draft_flow.stage_draft, D.STAGE_CUT: draft_flow.stage_cut, D.STAGE_NEW_SEASON: stage_new_season}

@@ -6,7 +6,7 @@ as they are; the questions inside the program's flow use `FranchiseQuestion`. Th
 built each time F9 opens (`franchise_item_shown`), so with Rules = Classic F9's list is exactly the original's and no franchise
 file is opened. SX.8a builds: the roster, league history, franchise settings (offseason only: the other settings come with their
 features), play classic seasons, back to your franchise and start a franchise now. SX.8b speaks the ratings and the potential in
-the roster and adds the team ratings; SX.8e adds the to-do list and the news.
+the roster and adds the team ratings; SX.8e adds the to-do list and the news; SX.8l your job and staff (the goal, the job rating, the coordinators).
 """
 from __future__ import annotations
 
@@ -16,11 +16,11 @@ from ...game.spoken_menu import Item, ListPicker, SpokenMenu
 from ..nfl_rules import is_nfl
 from .. import nx_texts as X
 from . import data as D
-from . import history, market_flow, mode, news, todo, trade_flow, weekly
+from . import history, market_flow, mode, news, staff_flow, todo, trade_flow, weekly
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
-HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
 
@@ -237,6 +237,11 @@ def franchise_menu(g, speech, keys) -> None:
     def trades_menu() -> None:
         trade_flow.trades_menu(g, speech, keys, store, _words(g), ask_in_menu)
 
+    # ----- your job and staff (design 17 SX.8l, NXF-45) -----
+
+    def job_menu() -> None:
+        _lines_picker(speech, keys, X.text("NXF-45"), staff_flow.job_lines(store.league))
+
     # ----- the settings -----
 
     def settings_menu() -> None:
@@ -294,6 +299,7 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(lambda: X.text("NXF-29"), enter=market_menu),
                  Item(lambda: X.text("NXF-43"), enter=trades_menu),
                  Item(lambda: X.text("NXF-44"), enter=injury_menu),
+                 Item(lambda: X.text("NXF-45"), enter=job_menu),
                  Item(lambda: X.text("NXF-16"), enter=settings_menu),
                  Item(lambda: X.text("NXF-17"), enter=ask_switch("classic", "NXF-23"))]
     elif store.exists:

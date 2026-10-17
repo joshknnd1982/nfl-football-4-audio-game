@@ -29,6 +29,7 @@ from . import playbook_data as D
 from . import playbooks as P
 from . import tuning as T
 from .franchise.ratings import FranchiseModifiers
+from .franchise.staff import game_team_styles
 from .qb_runs import to_goal
 
 log = logging.getLogger("nfl4.extras")
@@ -83,6 +84,9 @@ class PlaybookFlow:
         """The playbooks of the game (extras.offense_book and defense_book, one per side, a style key or "classic")."""
         rules, x, table = self.rules, state.extras, self.table
         season = game.season
+        teams = game_team_styles(game)                 # SX.8l: in a franchise the coordinators' styles are the teams' (None in every other game)
+        if teams is not None:
+            table = P.Table(table.names, table.disabled, table.styles, teams)
 
         def pick(choice: str, team: int, side: str) -> str:
             if choice == D.CLASSIC_KEY:

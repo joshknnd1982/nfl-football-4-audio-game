@@ -206,7 +206,7 @@ def test_both_missing_while_the_kind_is_franchise_says_so_and_makes_a_classic_se
 def test_a_newer_format_is_left_alone_and_the_franchise_is_not_used_this_run():
     files = MemoryFiles()
     store_over(files, a_league()).save()
-    files.data["league.sav"] = files.data["league.sav"].replace(b'"format":6', b'"format":7', 1)
+    files.data["league.sav"] = files.data["league.sav"].replace(b'"format":7', b'"format":8', 1)
     before = dict(files.data)
     after = opened(files, kind=True)
     assert not after.exists and not after.available and after.force_classic and after.take_notices() == [NXF[34]]
@@ -340,7 +340,7 @@ def test_a_league_sav_held_by_another_program_on_disk_is_not_damage(tmp_path):
 def test_a_newer_format_on_disk_is_left_untouched(tmp_path):
     folder = folder_with_two_saves(tmp_path)
     path = folder / "league.sav"
-    path.write_bytes(path.read_bytes().replace(b'"format":6', b'"format":7', 1))
+    path.write_bytes(path.read_bytes().replace(b'"format":7', b'"format":8', 1))
     raw = path.read_bytes()
     after = opened(DiskFiles(str(folder)))
     assert not after.available and after.take_notices() == [NXF[34]] and path.read_bytes() == raw

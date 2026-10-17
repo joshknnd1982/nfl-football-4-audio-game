@@ -403,7 +403,7 @@ def test_stage_two_names_the_players_of_your_team_who_retire_and_the_league_coun
     veterans = Veterans()
     rig = stage_rig(tmp_path, veterans)
     text = spoken(rig)
-    after = text[text.index(" stage 2 of 8. retirements. "):]
+    after = text[text.index(" stage 3 of 9. retirements. "):]
     assert after[1] == X.text("NXE-30")
     for name, position, rating, seasons in veterans.own:
         assert X.text("NXE-31", player=name, position=position, a=40, r=rating, n=seasons) in after
@@ -443,7 +443,7 @@ def test_at_most_three_stars_of_other_teams_are_named_the_highest_peak_first_and
                    key=lambda p: (-p.peak, p.id))
     assert len(stars) >= 5 and len(named) == 3
     assert [t.split(" of the ")[0].strip() for t in named] == [p.name for p in stars[:3]]
-    stage_two = text[text.index(" stage 2 of 8. retirements. "):]
+    stage_two = text[text.index(" stage 3 of 9. retirements. "):]
     stage_two = stage_two[:stage_two.index(X.text("NXE-03"))]          # the later stages may name a rookie with the retired star's surname
     assert sum(1 for t in stage_two if rig.start.player_at(5, 12).name + "," in t) == 1
 
@@ -575,7 +575,7 @@ def test_a_window_closed_at_the_wait_of_stage_two_resumes_at_stage_three_with_th
                                               and second.fstore.league.stage == "season" and second.fstore.league.season == 2))
     run_until(second)
     text = spoken(second)
-    assert " stage 2 of 8. retirements. " not in text and any(" stage 3 of 8. player development. " in t for t in text)
+    assert " stage 3 of 9. retirements. " not in text and any(" stage 4 of 9. player development. " in t for t in text)
     assert all(p.age == 26 for p in second.fstore.league.players.values() if p.status == "active" and p.drafted is None and p.id <= 1088)      # once
 
 
@@ -600,7 +600,7 @@ def test_play_classic_seasons_asked_at_a_stages_wait_leaves_the_stage_done_once(
     with_all_aged(league, 25)
     files = MemoryFiles()
     files.data["league.sav"] = league.to_json().encode("utf-8")
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 10 + [ENTER, ENTER, ESC, ENTER]   # F9, Franchise, classic (the 11th item since SX.8k), confirm
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 11 + [ENTER, ENTER, ESC, ENTER]   # F9, Franchise, classic (the 12th item since SX.8l), confirm
     rig = franchise_rig(tmp_path / "one", keys, files=files, kind="franchise", preset=preset_season(gtp=3), policy=quit_policy)
     run_until(rig)
     saved = LeagueRecord.from_json(files.data["league.sav"].decode("utf-8"))

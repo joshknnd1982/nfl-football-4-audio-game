@@ -1,4 +1,4 @@
-"""The Franchise's expiring contracts as stage 4 of 8 on the program rig (nfl4 only, rule 0.13; NFL_FRANCHISE_DESIGN 17 SX.8h, D-067): the other
+"""The Franchise's expiring contracts as stage 5 of 9 on the program rig (nfl4 only, rule 0.13; NFL_FRANCHISE_DESIGN 17 SX.8h, D-067): the other
 teams settled by the staff's rule, the player's players asked one at a time (sign, offer less, franchise tag, let go), the staff setting, the
 short offseason, a window closed in the middle and the file the stage writes. The rules are test_fr_resign.py.
 """
@@ -17,7 +17,7 @@ from nfl4.extras.franchise.league import LeagueRecord
 
 TEAM = 5
 PLACES = (33, 0, 7)                         # the quarterback, a running back, a receiver
-HEADER = " stage 4 of 8. expiring contracts. "
+HEADER = " stage 5 of 9. expiring contracts. "
 
 
 
@@ -27,7 +27,7 @@ def cap_alone_decides(monkeypatch):
     monkeypatch.setattr(T, "FR_RESIGN_TARGET", 1.0)
 
 def contract_league(seed=3, places=PLACES, wins=8, mutate=None, others=(12, 20)):
-    """A league at the start of stage 4 of 8 (the expiring contracts): these places of the player's team have no years left, and `others` of
+    """A league at the start of stage 5 of 9 (the expiring contracts): these places of the player's team have no years left, and `others` of
     every other team. `wins` is every team's record of the season just played (8: content, 12: happy, 3: unhappy). The player's quarterback is
     rated 78, so he is the most valuable of the three."""
     def change(league):
@@ -376,7 +376,7 @@ def test_the_short_offseason_still_asks_about_the_players_and_ends_the_stage_wit
     league = contract_league()
     rig = run(tmp_path, league, short=True)
     text = spoken(rig)
-    stage = text[text.index(HEADER):text.index(" stage 5 of 8. free agency. ")]
+    stage = text[text.index(HEADER):text.index(" stage 6 of 9. free agency. ")]
     assert len([t for t in stage if "he asks" in t]) == 3
     assert X.text("NXE-03") not in stage and X.text("NXW-31", n=3, m=0) in stage
 
@@ -384,7 +384,7 @@ def test_the_short_offseason_still_asks_about_the_players_and_ends_the_stage_wit
 def test_the_short_offseason_with_nobody_to_ask_says_one_sentence_per_line_and_no_wait(tmp_path):
     league = contract_league(places=())
     text = spoken(run(tmp_path, league, short=True))
-    stage = text[text.index(HEADER):text.index(" stage 5 of 8. free agency. ")]
+    stage = text[text.index(HEADER):text.index(" stage 6 of 9. free agency. ")]
     assert X.text("NXW-02") in stage and X.text("NXE-03") not in stage
 
 
@@ -418,7 +418,7 @@ def test_a_window_closed_at_the_stages_wait_resumes_at_the_draft_with_nothing_as
     first = run(tmp_path / "one", league, until=lambda r: X.text("NXE-03") in spoken(r)[-3:] and any(" signs, " in t for t in spoken(r)))
     saved = saved_league(first)
     assert saved.stage_no == D.STAGE_FREE_AGENCY and saved.resign is None
-    second = run(tmp_path / "two", None, files=first.files, until=at_stage(D.STAGE_DRAFT))             # the market (stage 5 of 8) runs, then the draft begins
+    second = run(tmp_path / "two", None, files=first.files, until=at_stage(D.STAGE_DRAFT))             # the market (stage 6 of 9) runs, then the draft begins
     assert HEADER not in spoken(second) and not any("he asks" in t and "with the team" in t for t in spoken(second))      # (the market's lines say "he asks" too)
 
 

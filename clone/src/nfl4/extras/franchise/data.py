@@ -6,11 +6,12 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 6                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 7                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
-#                                              6 (SX.8k) the injuries of the season, the stand-ins and the week's injury report (`LeagueRecord.injuries`)
+#                                              6 (SX.8k) the injuries of the season, the stand-ins and the week's injury report (`LeagueRecord.injuries`),
+#                                              7 (SX.8l) the staff: the head coaches with their job rating and goal, the coordinators, the stage in progress (`LeagueRecord.staff`)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
 FOLDER = "franchise"                         # the folder of the data folder that holds every franchise file
@@ -65,7 +66,9 @@ WEIGHT_OF_KEY = {(heading, number): WEIGHT[position] for heading, number, positi
 # a stage's number is its ID, not its place (the files of SX.8a to SX.8g keep their numbers), so it is number 7 and sits third from the
 # end of the list; the order the player hears is the list's.
 # SX.8i inserts free agency (number 8) right after the expiring contracts, before the draft (research B1's order).
-STAGES: tuple[tuple[int, str], ...] = ((1, "NXE-11"), (2, "NXE-12"), (3, "NXE-13"), (7, "NXE-17"), (8, "NXE-18"), (4, "NXE-14"), (5, "NXE-15"),
+# SX.8l inserts the staff (number 9) right after stage 1 (design 17: the firings, the job offers, the coordinators), so a coach who moves is the new team's in
+# every later stage.
+STAGES: tuple[tuple[int, str], ...] = ((1, "NXE-11"), (9, "NXE-19"), (2, "NXE-12"), (3, "NXE-13"), (7, "NXE-17"), (8, "NXE-18"), (4, "NXE-14"), (5, "NXE-15"),
                                        (6, "NXE-16"))
 
 # the draft (design 7): seven rounds of one pick for each team, in the same order in every round
@@ -77,7 +80,8 @@ CUT_FLOOR_GROUP_MAX = 2                      # the cut's rating floor (tuning FR
 STAGE_REVIEW, STAGE_AGING, STAGE_DEVELOPMENT, STAGE_DRAFT, STAGE_CUT, STAGE_NEW_SEASON = 1, 2, 3, 4, 5, 6
 STAGE_CONTRACTS = 7                          # SX.8h: the expiring contracts, after the development and before the draft
 STAGE_FREE_AGENCY = 8                        # SX.8i: free agency, after the expiring contracts and before the draft
-STAGE_MAX = 8                                # the highest stage number a record may name
+STAGE_STAFF = 9                              # SX.8l: the staff, after the season in review and before the retirements
+STAGE_MAX = 9                                # the highest stage number a record may name
 FREE_STAR_RATING = 80                        # a player of this rating or more who is not signed again is named in the stage's speech (at most STARS_NAMED)
 
 # the rounds a team can last in, for the history (the finish)

@@ -633,3 +633,47 @@ FR_INJ_SD_MAX = (1, 2)             # (numerator, denominator): the injuries move
 #                                    every season's mean at 2.73 or more (the first sweep, with the next man's own rating: _next_man_rating.txt)
 FR_INJ_ASK_GAP = 4                 # the to-do list asks about a doubtful or questionable player whose stand-in in the lineup is this many rating points lower or more ...
 FR_INJ_ASK_MAX = 2                 # ... at most this many a week, the biggest gap first (the others: F9, franchise, injury report)
+
+# ----- SX.8l: the staff, the job rating and the owner's goal (NX6 F9, N6.8; extras/franchise/staff.py; a franchise only) -----
+# THE TARGET of the firings (research B9, G): the NFL averages close to seven head-coach changes a year among its 32 teams (ESPN; Sportico: seven new head coaches a
+# season from 2016 to 2023; SI's table: 9 in 2023, 7 in 2024; SRC-SECONDARY, read in the search's summaries, 2026-10-17). The clone's league has 32 teams too, and a coach
+# leaves only when he is fired (no retirement of coaches), so the band of the head coaches fired in a league-season is FR_FIRE_TARGET, the mean over the runs.
+FR_FIRE_TARGET = (5.0, 9.0)
+FR_APPROVAL_START = 60             # the job rating (0 to 100) of a head coach new to his team
+FR_APPROVAL_LEAGUE_START = (60, 41, 13)   # a new league's computer coaches (base, span, stride): 60 + (team x 13) mod 41, 60 to 100, past their grace; the player
+#                                    is new (FR_APPROVAL_START, his grace). Measured (12 leagues x 8 seasons): with every coach new at 60 the grace of 32 coaches
+#                                    ended together and season 2 fired 13.2 (season 1 none; the review's finding 5); every coach at 70 past the grace still fired
+#                                    9.5 in season 1; with the spread the firings rise from 3.5 in season 1 to the steady state by season 7, no season over 6.1
+FR_APPROVAL_GOAL = (3, 15)        # the owner's goal met: + the first; missed: - the second (calibrated, see below; the start values were (8, 12))
+FR_APPROVAL_PER_WIN = 2           # + this for every regular-season win over 8 (- for every one under)
+FR_APPROVAL_FINISH = (0, 1, 2, 3, 4, 6)   # + by the finish: missed the play-offs, lost in the wild card round, the division round, the conference championship, the
+#                                    Super Bowl, the champion
+FR_FIRE_BELOW = 55                # a head coach whose job rating is under this after the season is fired, but NEVER after a winning season (more than 8 wins of 16:
+#                                    research G, EA's own fix of 2026-09-16)
+FR_FIRE_GRACE = 1                 # ... and never after his first this many seasons with the team (a new coach gets a season)
+FR_DANGER = 5                     # the verdict warns the player when his rating is under FR_FIRE_BELOW + this
+FR_OFFERS = 3                     # a fired head coach is offered at most this many jobs, never by the team that fired him (research B9, G)
+# the owner's goal of a season by the team's rank at the season's start (the exact strengths, design 4.4): (the last rank of the row, the kind, the number). The kinds:
+# "title_game" reach the conference championship game, "playoffs" reach the play-offs, "wins" win at least n games of the regular season. Set from the odds of
+# the fast run (12 leagues x 8 seasons with the staff left out, the chance by rank band of reaching each, wins at least n by rank: ranks 1 to 4 0.66 for 11,
+# 5 to 8 0.63 for the play-offs, 9 to 12 0.59 for 9, 13 to 16 0.62 and 17 to 20 0.53 for 8, 21 to 24 0.57 for 7, 25 to 28 0.61 for 6, 29 to 32 0.60 for 5): a goal
+# a team meets 53 to 66 percent of the time at every rank, 0.60 over all (in the 20-season runs the play-off band meets it 0.68 and ranks 13 to 20 0.53: the ranks
+# move with the league). The start values met it 39 percent at ranks 1 to 4, where the conference championship was asked, and 44 at ranks 27 to 32
+FR_GOALS = ((4, "wins", 11), (8, "playoffs", 0), (12, "wins", 9), (20, "wins", 8), (24, "wins", 7), (28, "wins", 6), (32, "wins", 5))
+# the coordinators: START VALUES with no league source (UNVERIFIED; no figure of the NFL rates a coordinator), judged by SX.8p and the owner's playtest. What
+# they make, measured in the 500-league run: 18 coordinators hired a league-season of 64 (a stay of about 3.5 seasons), 30 of 64 rated FR_COORD_ADAPT or more
+# after the stage (a team takes the best of three candidates)
+FR_COORD_RATING = (50, 21, 21)    # a coordinator candidate's rating: the first + below(the second) + below(the third), 50 to 90, mean 70
+FR_COORD_CANDIDATES = 3           # the candidates for an open coordinator's place (the computer team and the staff take the best rated, the first of equals)
+FR_COORD_KEEP = 60                # a computer team (and the staff, when it handles the player's team) replaces a coordinator rated under this ...
+#                                    ... and a team with a new head coach replaces both (he brings his own)
+FR_COORD_ADAPT = 75               # a coordinator rated this or more reads the opponent: the staff's game plan is FR_GAME_PLAN's answer to the opponent's style; a lesser
+#                                    one recommends his own style (design 8.1 T2 reads the coordinators)
+# SX.8l calibration (D-072; the sweeps are scratch runs of work/sim_league_sx8l.py, 8 leagues x 20 seasons each, the same seeds; the 500- and 2,000-league runs
+# are work/simulate_franchise_sx8f_fast_500x20_sx8l.txt and _fast_2000x20_sx8l_2000.txt). THE GOALS met 0.60 of the time with the table above. THE FIRINGS: the
+# start values (fired under 40, a goal met +8, missed -12) fired 2.1 head coaches a league-season: the play-off bonus and a goal met more often than missed lift the
+# mean job rating to 73 and few coaches ever fall under 40. Under 45 and 50 with (8, 12): 3.1 and 4.0; (4, 14) under 40, 45, 50: 3.8, 5.2, 6.4; (3, 15) under 50:
+# 7.1, with 4.4 a season fired in their first or second season, so a new coach gets one season (FR_FIRE_GRACE 1: 5.6 under 50); under 55 with the grace: 6.7 a
+# league-season (6.5 from season 11 on), the mean job rating 63, inside the NFL's band of FR_FIRE_TARGET. With a new league's spread of starting ratings
+# (FR_APPROVAL_LEAGUE_START, after the independent review) the final runs give 5.71 a league-season over 2,000 leagues x 20 seasons (6.27 from season 11 on,
+# each season's mean 3.63 to 6.33: the first seasons fire fewer while the league's ratings spread out), the mean job rating 67.3.
