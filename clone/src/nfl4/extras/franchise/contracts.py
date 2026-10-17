@@ -4,14 +4,15 @@ NFL_FRANCHISE_DESIGN 17 SX.8g (F6, N6.6, research B3 and F2, D-066). Plain rules
 the offseason's stages and the calibration's fast run use the very same code.
 
 A contract is two numbers on a `Player`: `salary` (tenths of a million dollars, the unit of the cap too) and `years` (the seasons left,
-the coming one included). An active player always has a contract of the minimum salary or more and 1 to `years_for_age` years; a retired or
+the coming one included). An active player has a contract of the minimum salary or more and 1 to `years_for_age` years (0 years between stages 2 and 7 of an offseason: it ran out and `resign.py` settles it); a retired or
 released player has none (0, 0). Nothing is drawn: a salary is the market price of the position and the rating, a rookie's is fixed by his
 pick, and the length is a rule of the age, so a league made twice from the same seed has the same contracts.
 
     market_salary / rookie_salary / years_for_age   the three price rules (all numbers are `extras\\tuning.py`, the `FR_` names)
     payroll / cap_used / cap_space                  a team's salaries (placed players and the rookies waiting for the cut), plus its dead money
-    turn_the_year                                   stage 2: the cap year turns (dead money gone), every contract has a year less, the ones that ran
-                                                    out are signed again at the market price (a STAND-IN until SX.8h's expiring-contracts stage)
+    turn_the_year                                   stage 2: the cap year turns (dead money gone), every contract has a year less; a contract that
+                                                    ran out stays with 0 years until SX.8h's expiring-contracts stage (`resign.py`) signs it again
+                                                    or lets the player go
     release                                         a released player costs dead money against the season that follows (`FR_DEAD_SHARE`)
     cap_over / cap_releases                         the cap rule of the roster cut: a team that would be over the cap after the cut and the fill
                                                     releases more players, the ones that cost most for what they give, until it is under
@@ -100,15 +101,21 @@ def team_players(league, team: int, waiting: dict | None = None) -> list:
     return placed + list(waiting.get(team, ()))
 
 
+def running(player) -> bool:
+    """A contract that counts against the cap: the player has years left. A contract that has run out (0 years, between stages 2 and 7 of
+    an offseason) keeps its last salary on the player, for the franchise tag's raise, but costs nothing."""
+    return player.years > 0
+
+
 def payroll(league, team: int, waiting: dict | None = None) -> int:
-    return sum(player.salary for player in team_players(league, team, waiting))
+    return sum(player.salary for player in team_players(league, team, waiting) if running(player))
 
 
 def payrolls(league) -> list:
     """The 32 payrolls (team 1 first) of every active player, placed or waiting."""
     totals = [0] * D.TEAMS
     for player in league.players.values():
-        if player.status == "active":
+        if player.status == "active" and running(player):
             totals[player.team - 1] += player.salary
     return totals
 
@@ -133,19 +140,18 @@ def cap_ranking(league) -> list:
 
 def turn_the_year(league) -> int:
     """Stage 2, after everybody is a year older and the retired have left: the cap year turns (the dead money of the season that is over is
-    gone), every contract has a year less, and a contract that ran out is signed again at the market price for the rating and the age he
-    has now. THE RE-SIGNING IS A STAND-IN until SX.8h's stage of the expiring contracts, which asks the player about his own players and
-    lets the others go to the free agents. Returns how many were signed again."""
+    gone) and every contract has a year less. A contract that ran out is left with 0 years (and its last salary): stage 7, the expiring
+    contracts (`resign.py`, SX.8h), signs the player again or lets him go. Returns how many contracts ran out."""
     league.dead = [0] * D.TEAMS
-    renewed = 0
+    expired = 0
     for player in league.players.values():
         if player.status != "active":
             continue
         player.years -= 1
         if player.years <= 0:
-            sign(player, *market_contract(player))
-            renewed += 1
-    return renewed
+            player.years = 0
+            expired += 1
+    return expired
 
 
 def leave(player) -> None:
@@ -269,6 +275,20 @@ def migrate(league) -> None:
 
 # ----- the whole-file check (league.py) -----
 
+def _years_may_be_zero(league):
+    """Who may hold a contract of 0 years, for the whole-file check: nobody outside the stages that hold them. After stage 2 (the record says
+    stage 3) and at the start of stage 7 (before the stage has settled the computer's teams) anybody; during stage 7 the player's own players
+    still to be asked (`resign["pending"]`). Returns None for anybody, else the set of the IDs allowed (empty: nobody)."""
+    from .league import OFFSEASON
+    if league.stage != OFFSEASON:
+        return set()
+    if league.stage_no == D.STAGE_DEVELOPMENT or (league.stage_no == D.STAGE_CONTRACTS and league.resign is None):
+        return None
+    if league.stage_no == D.STAGE_CONTRACTS and isinstance(league.resign, dict) and isinstance(league.resign.get("pending"), list):
+        return {pid for pid in league.resign["pending"] if isinstance(pid, int)}
+    return set()
+
+
 def check_contracts(league, whole) -> None:
     """LeagueError (through `whole`) unless every contract is in range: an active player has the minimum salary or more and 1 to the longest
     contract of the scale years, a retired or released player a value in range (the simulation's CP2 asks for none: the file is lenient
@@ -276,10 +296,11 @@ def check_contracts(league, whole) -> None:
     rules of the simulation, not of the file (a file that breaks them is still a file; the 20-season check reports them, CP1 to CP5)."""
     from .league import LeagueError
     longest = max(years for _age, years in T.FR_CONTRACT_YEARS)
+    pending = _years_may_be_zero(league)
     for player in league.players.values():
         if player.status == "active":
             whole(player.salary, T.FR_MIN_SALARY, T.FR_MAX_SALARY, "the salary of player %d" % player.id)
-            whole(player.years, 1, longest, "the contract years of player %d" % player.id)
+            whole(player.years, 0 if pending is None or player.id in pending else 1, longest, "the contract years of player %d" % player.id)
         else:
             whole(player.salary, 0, T.FR_MAX_SALARY, "the salary of player %d" % player.id)
             whole(player.years, 0, longest, "the contract years of player %d" % player.id)

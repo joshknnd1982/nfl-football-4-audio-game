@@ -269,10 +269,13 @@ def test_a_record_in_an_offseason_stage_with_empty_places_is_not_damage(monkeypa
 
 def test_an_unknown_stage_number_is_damage_and_a_newer_format_is_not():
     league = season_league()
-    league.stage, league.stage_no, league.gtp, league.records = OFFSEASON, 7, 0, [8, 8] * 32
+    league.stage, league.stage_no, league.gtp, league.records = OFFSEASON, 8, 0, [8, 8] * 32
     with pytest.raises(LeagueError):
-        LeagueRecord.from_json(league.to_json())                      # this version has six stages: there is no stage 7
-    text = season_league().to_json().replace('"format":2', '"format":3', 1)
+        LeagueRecord.from_json(league.to_json())                      # this version has seven stages (numbers 1 to 7): there is no stage 8
+    league.stage_no = 0
+    with pytest.raises(LeagueError):
+        LeagueRecord.from_json(league.to_json())                      # and no stage 0 in an offseason
+    text = season_league().to_json().replace('"format":3', '"format":4', 1)
     with pytest.raises(NewerFormat):
         LeagueRecord.from_json(text)
 

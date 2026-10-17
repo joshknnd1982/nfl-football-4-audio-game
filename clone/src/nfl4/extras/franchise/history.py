@@ -16,6 +16,7 @@ from .. import tuning as T
 from . import contracts
 from . import data as D
 from .league import LeagueError, LeagueRecord
+from .resign import MOOD_TEXT
 
 
 # ----- one season's entry -----
@@ -198,8 +199,19 @@ class Words:
         return X.text("NXA-20", money=contracts.millions(units))
 
     def contract(self, player) -> str:
-        """NXA-10 and NXA-11: "12.4 million for 3 years", "0.9 million for one year"."""
-        return X.text("NXA-11" if player.years == 1 else "NXA-10", salary=self.amount(player.salary), y=player.years)
+        """NXA-10 and NXA-11: "12.4 million for 3 years", "0.9 million for one year"; NXW-60 "contract ended" for a player whose contract ran
+        out and who has not been settled yet (between stages 2 and 7 of an offseason, SX.8h)."""
+        if player.years == 0:
+            return X.text("NXW-60")
+        return self.contract_of(player.salary, player.years)
+
+    def contract_of(self, salary: int, years: int) -> str:
+        """A contract that is not on a player yet (a price he asks, the franchise tag): the same pieces as `contract`."""
+        return X.text("NXA-11" if years == 1 else "NXA-10", salary=self.amount(salary), y=years)
+
+    def mood(self, how: str) -> str:
+        """NXW-20 to NXW-22: how a player of the team feels (SX.8h)."""
+        return X.text(MOOD_TEXT[how])
 
     def player_with_contract(self, player) -> str:
         """NXL-33: a player in the roster with his contract (SX.8g)."""

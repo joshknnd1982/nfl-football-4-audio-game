@@ -16,7 +16,7 @@ from __future__ import annotations
 from .. import nx_texts as X
 from . import aging
 from . import data as D
-from . import draft_flow
+from . import draft_flow, resign_flow
 from . import history, news, weekly
 from .league import OFFSEASON, SEASON, team_ref
 from .news_pools import DEFAULT_POOLS
@@ -200,4 +200,5 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
 
 
 RUNNERS = {D.STAGE_REVIEW: stage_review, D.STAGE_AGING: stage_retirements, D.STAGE_DEVELOPMENT: stage_development,
+           D.STAGE_CONTRACTS: resign_flow.stage_contracts,
            D.STAGE_DRAFT: draft_flow.stage_draft, D.STAGE_CUT: draft_flow.stage_cut, D.STAGE_NEW_SEASON: stage_new_season}

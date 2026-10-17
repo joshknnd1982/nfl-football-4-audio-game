@@ -44,7 +44,7 @@ def test_the_stage_names_itself_lists_what_the_staff_would_release_and_asks_rele
     text = spoken(rig)
     expected = staffs_releases(rig.start if rig.start.draft else LeagueRecord.from_json(league.to_json()))
     assert len(expected) >= 7
-    at = text.index(" stage 5 of 6. the roster cut. ")
+    at = text.index(" stage 6 of 7. the roster cut. ")
     assert text[at + 1] == X.text("NXE-50")
     lines = [X.text("NXE-51", player=p.name, position=rig.fstore.words.position(p.pos), a=p.age, r=p.rating) for p in expected]
     assert text[at + 2:at + 2 + len(lines)] == lines
@@ -171,7 +171,7 @@ def test_a_team_with_nobody_to_release_is_told_so_and_is_not_asked(tmp_path):
     league = draft_league(seed=3, team=TEAM, stage_no=D.STAGE_CUT)
     rig = run(tmp_path, league)
     text = spoken(rig)
-    at = text.index(" stage 5 of 6. the roster cut. ")
+    at = text.index(" stage 6 of 7. the roster cut. ")
     assert text[at + 1] == X.text("NXE-58") and text[at + 2].startswith(" your cap space is ")          # SX.8g: the cap space follows
     assert X.text("NXE-03") in text[at + 3:at + 5] and not [t for t in text if "release them" in t]
 
@@ -181,7 +181,7 @@ def test_with_the_staff_handling_the_cut_one_sentence_counts_the_releases_and_no
     count = len(staffs_releases(LeagueRecord.from_json(league.to_json())))
     rig = run(tmp_path, league, auto=True)
     text = spoken(rig)
-    at = text.index(" stage 5 of 6. the roster cut. ")
+    at = text.index(" stage 6 of 7. the roster cut. ")
     assert text[at + 1] == X.text("NXE-56", n=count)
     assert not [t for t in text if t == X.text("NXE-50") or "release them" in t]
 
@@ -205,9 +205,9 @@ def test_the_fill_is_told_for_the_players_team_with_each_new_players_line(tmp_pa
 def test_the_short_offseason_still_asks_the_cut_and_goes_on_without_a_wait(tmp_path):
     rig = run(tmp_path, cut_league(), short=True)
     text = spoken(rig)
-    at = text.index(" stage 5 of 6. the roster cut. ")
+    at = text.index(" stage 6 of 7. the roster cut. ")
     after = text[at:text.index(X.text("NXE-60", n=2))]
-    assert " 1. release them " in after and X.text("NXE-03") not in after and " stage 6 of 6. the new season. " not in after
+    assert " 1. release them " in after and X.text("NXE-03") not in after and " stage 7 of 7. the new season. " not in after
     assert rig.fstore.league.season == 2
 
 

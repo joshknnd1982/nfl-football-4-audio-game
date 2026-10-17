@@ -6,7 +6,8 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 2                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts
+FORMAT = 3                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+#                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
 FOLDER = "franchise"                         # the folder of the data folder that holds every franchise file
@@ -57,8 +58,10 @@ WEIGHT_OF_KEY = {(heading, number): WEIGHT[position] for heading, number, positi
 
 # the stages of an offseason (design 3.3): (the stage's number, the id of its name). A later session inserts its stage here, so
 # the spoken "stage n of m" follows the list. SX.8a built stages 1 and 6, SX.8c added 2 (aging and retirement) and 3 (progression
-# and regression); SX.8d adds 4 (the draft) and 5 (the roster cut and the fill).
-STAGES: tuple[tuple[int, str], ...] = ((1, "NXE-11"), (2, "NXE-12"), (3, "NXE-13"), (4, "NXE-14"), (5, "NXE-15"), (6, "NXE-16"))
+# and regression); SX.8d adds 4 (the draft) and 5 (the roster cut and the fill). SX.8h inserts the expiring contracts between 3 and 4:
+# a stage's number is its ID, not its place (the files of SX.8a to SX.8g keep their numbers), so it is number 7 and sits third from the
+# end of the list; the order the player hears is the list's.
+STAGES: tuple[tuple[int, str], ...] = ((1, "NXE-11"), (2, "NXE-12"), (3, "NXE-13"), (7, "NXE-17"), (4, "NXE-14"), (5, "NXE-15"), (6, "NXE-16"))
 
 # the draft (design 7): seven rounds of one pick for each team, in the same order in every round
 DRAFT_ROUNDS = 7
@@ -68,6 +71,9 @@ RANGE_MIDDLE = 3                             # the middle of that range: the low
 MAX_ROOKIES = DRAFT_ROUNDS                   # the rookies a team can have waiting for the cut (one a round)
 CUT_FLOOR_GROUP_MAX = 2                      # the cut's rating floor (tuning FR_CUT_FLOOR) is for groups of this many places or fewer
 STAGE_REVIEW, STAGE_AGING, STAGE_DEVELOPMENT, STAGE_DRAFT, STAGE_CUT, STAGE_NEW_SEASON = 1, 2, 3, 4, 5, 6
+STAGE_CONTRACTS = 7                          # SX.8h: the expiring contracts, after the development and before the draft
+STAGE_MAX = 7                                # the highest stage number a record may name
+FREE_STAR_RATING = 80                        # a player of this rating or more who is not signed again is named in the stage's speech (at most STARS_NAMED)
 
 # the rounds a team can last in, for the history (the finish)
 FINISH_MISSED, FINISH_WILD_CARD, FINISH_DIVISION, FINISH_CHAMPIONSHIP, FINISH_SUPER_BOWL, FINISH_CHAMPION = range(6)

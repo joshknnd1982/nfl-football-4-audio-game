@@ -39,7 +39,7 @@ def test_the_stage_names_itself_tells_the_players_pick_and_asks_seven_times(tmp_
     text = spoken(rig)
     final = saved_league(rig)
     place = final.draft["order"].index(TEAM) + 1
-    start = text.index(" stage 4 of 6. the draft. ")
+    start = text.index(" stage 5 of 7. the draft. ")
     assert text[start + 1] == X.text("NXK-01", n=place)
     assert len(prompts(text)) == 7 and text.count(X.text("NXK-05")) == 7
     assert [round_no for round_no in range(1, 8) if " Kim it is your pick, round %d, pick %d. " % (round_no, place) in
@@ -265,7 +265,7 @@ def test_a_draft_closed_in_the_middle_resumes_at_its_next_pick_with_the_same_cla
     assert 40 <= made < 224 and cut.pick_no == made + 1 and cut.stage_no == 4
     second = offseason_rig(tmp_path / "second", None, files=first.files, picks_told="mine", until=at_stage(5))
     text = spoken(second)
-    assert text[0] == " stage 4 of 6. the draft. " or " stage 4 of 6. the draft. " in text
+    assert text[0] == " stage 5 of 7. the draft. " or " stage 5 of 7. the draft. " in text
     final = saved_league(second)
     assert picks_of(final) == picks_of(saved_league(whole)) and final.draft["class"] == saved_league(whole).draft["class"]
     assert len(prompts(text)) == 7 - sum(1 for team, _, _ in cut.draft["picks"] if team == TEAM)         # only the picks still to come
@@ -310,7 +310,7 @@ def test_the_short_offseason_still_asks_for_the_picks_but_ends_the_draft_without
     rig = ran(tmp_path, short=True, until=at_stage(5))
     text = spoken(rig)
     end = text.index(X.text("NXK-11"))
-    assert len(prompts(text)) == 7 and " stage 4 of 6. the draft. " in text
+    assert len(prompts(text)) == 7 and " stage 5 of 7. the draft. " in text
     assert X.text("NXE-03") not in text[end:end + 9]
 
 

@@ -452,3 +452,33 @@ FR_DEAD_SHARE = 25
 # the fullest team 1.000, and the cap rule releases 441 players in 341 of 320,000 team-offseasons (0.1 percent): the cap almost never binds, so the free
 # agency of SX.8i is where it will (SX.8p measures it again). Contracts alone change nothing else: with FR_CAP so large that it never binds the 500-league season
 # table is identical to SX.8f's.
+
+# ----- re-signing, the talks and the franchise tag, design 17 SX.8h (D-067; the history of every move is below) -----
+# A player whose contract has run out (years left 0 after the year turned in stage 2) is either signed again at the market price of his
+# position, rating and age for the length of his age, or he is a free agent (status "free"). The staff and the computer's teams sign by value
+# under the cap, the player is asked about his own players (a short talk, at most FR_TALK_ROUNDS rounds, the player's mood decides what he
+# accepts) or the staff does it when the setting says so. Every number is data; nothing is drawn.
+FR_RESIGN_MIN_RATING = 60        # the staff and the computer's teams sign a player again only when he is rated at least this: the draft class's mean true rating
+#                                   (FR_ROOKIE_RATING 46 + 14), because the draft that follows replaces a weaker veteran at the cut and his release costs dead money
+#                                   (a margin over the fill's middle, 3 then 10, was tried: it asked 65 of a kicker or punter, whose draft supply is thin, and the kicker group's
+#                                   mean fell under 62 in the 2,000-league run)
+FR_RESIGN_RESERVE = 0             # tenths of a million left under the cap when signing, for the rookies of the draft (0: the cap rule of the cut is the net)
+FR_EXCLUSIVE_SEASONS = 3          # a player with fewer seasons in the league than this asks the minimum for one year (research B3: exclusive rights)
+FR_TALK_ROUNDS = 3                # a talk ends after this many rounds (research B3)
+FR_OFFER_LESS = 10                # "offer less" is this many percent under the present price
+FR_MOOD_SLACK = {"happy": 10, "content": 4, "unhappy": 0}     # the most percent under his price he accepts, by his mood
+FR_MOOD_WINS = (11, 5)            # a team's players are happy after this many regular-season wins (or after reaching the division round: a win or a bye), unhappy after this few or fewer
+FR_TAG_TOP = 5                    # the franchise tag pays the average of this many highest salaries at the position (research B3) ...
+FR_TAG_RAISE = 120                # ... or this percent of the player's last salary, whichever is more (and never less than his market price)
+# SX.8h calibration (D-067; the reports are work/simulate_franchise_sx8f_fast_500x20_sx8h.txt, _fast_2000x20_sx8h_2000.txt, _full_5x20_sx8h.txt, the stand-in baseline
+# ..._sx8h_standin.txt (everybody signed again at the market price after the development: SX.8g's behaviour at the new timing) and the sweep ..._sx8h_margin<m>.txt).
+# 251 contracts run out in a league-offseason (23 percent of the 1,088 players); the staff signs 93.5 percent again and lets 6.5 percent (16 players, mean rating 56.9,
+# none rated 80 or more) go; none for want of room under the cap, which (mean use 0.77) does not bind before free agency. HOW THE MINIMUM RATING WAS FOUND: the first rule
+# was a margin over the fill's middle rating (3 points): it let 1.0 percent go, and 14.6 percent of the cut's releases had been signed again in the same offseason (17.6
+# percent of the dead money, the independent review). A margin of 10 (the draft class's mean over the fill's) halved that and let 9.6 percent go, but asked 65 of a kicker
+# or punter, whose supply from the draft is as thin as the fill's: the kickers' league mean fell under 62 in the 2,000-league run; a margin of 14 broke the floor of a group (I5).
+# So the rule is one number for every group, the class's mean true rating, 60. The league as SX.8g left it is unchanged within the sampling error (persistence of the bottom
+# three 0.478, spread 1.12 to 1.77, quarterbacks 70.09 to 72.79, cap use 0.686 to 0.834, careers 4.90, dead money 1,487 against 1,683); the stage changes the player's decisions,
+# not the league's health. THE SUPPLY OF FREE AGENTS IS THIN (Q-031: 16 a league-offseason, none rated 80): SX.8i's market must make its own (FR_RESIGN_MIN_RATING and
+# FR_RESIGN_RESERVE are the knobs this stage offers it). The mood of a player is a rule of last season's record only (FR_MOOD_WINS), and FR_MOOD_SLACK equals FR_OFFER_LESS
+# for a happy player on purpose: his floor is exactly the offer for less.

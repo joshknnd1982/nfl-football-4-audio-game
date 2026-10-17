@@ -559,3 +559,29 @@ NWK04	franchise	remark	say2	 no team has more room under the cap than the <team>
 NXA-15	franchise	sentence	say2	 your team would be over the salary cap by <over>. the staff would release: 	stage 5, the cap list when the cut has no list of its own (review of SX.8g)
 NXA-16	franchise	sentence	say2	 your team is over the salary cap by <over>. nobody can be released to fix it. 	stage 5, the player's team could not get under the cap (review of SX.8g)
 NXA-21	franchise	piece	piece	minus <money> million	an amount of money below zero (cap space of a team over the cap)
+NXE-17	franchise	piece	piece	expiring contracts	the name of stage 7 (SX.8h), between the development and the draft
+NXW-01	franchise	sentence	say2	 <coach> <n> of your players have contracts that end. you will be asked about each one. 	stage 7, the player's players to be asked
+NXW-02	franchise	sentence	say2	 none of your players has a contract that ends. 	stage 7, nobody to ask
+NXW-03	franchise	prompt	say2	 <player>, <position>, age <a>, rating <r>, <potential> potential. he is <mood> with the team. he asks <contract>. 	stage 7, one player's talk, the first round
+NXW-04	franchise	sentence	say2	 you can pay him up to <room>. 	stage 7, the room under the salary cap for him
+NXW-05	franchise	sentence	say2	 you cannot afford his price. you can pay up to <room>. 	stage 7, no room for his price
+NXW-10	franchise	sentence	say2	 <player> signs, <contract>. 	stage 7, signed
+NXW-11	franchise	sentence	say2	 <player> wants more. he asks <contract>. round <round> of <m>. 	stage 7, a counter after an offer for less
+NXW-12	franchise	sentence	say2	 <player> ends the talks and leaves. 	stage 7, the last round failed
+NXW-13	franchise	sentence	say2	 <player> is let go. 	stage 7, let go
+NXW-14	franchise	sentence	say2	 <player> signs the franchise tag, <contract>. 	stage 7, the franchise tag
+NXW-20	franchise	piece	piece	happy	a player's mood
+NXW-21	franchise	piece	piece	content	a player's mood
+NXW-22	franchise	piece	piece	unhappy	a player's mood
+NXW-30	franchise	sentence	say2	 the staff signed <n> of your players again and let <m> go. 	stage 7, the staff handles the player's team
+NXW-31	franchise	sentence	say2	 signed: <n>. let go: <m>. 	stage 7, the end of the player's talks
+NXW-40	franchise	sentence	say2	 <player> of the <team>, <position>, rating <r>, is not signed again and is a free agent. 	stage 7, a star of another team who is let go (at most three)
+NXW-41	franchise	sentence	say2	 the other teams did not sign <n> of their players again. 	stage 7, the count of the other teams
+NXW-60	franchise	piece	piece	contract ended	a contract that ran out and is not settled yet (the roster between stages 2 and 7)
+NXW-A01	franchise	answer	say2	sign him	stage 7, the answers
+NXW-A02	franchise	answer	say2	offer less	stage 7, the answers
+NXW-A03	franchise	answer	say2	let him go	stage 7, the answers
+NXW-A04	franchise	answer	say2	use the franchise tag, <contract>	stage 7, the answers
+NXH-39	franchise	help	say5	 Contracts: before the draft you are asked about each player whose contract ends: sign him, offer less, use the franchise tag once a year, or let him go. 	F6, after NXH-37 (SX.8h)
+NXW-06	franchise	sentence	say2	 <coach> one of your players has a contract that ends. you will be asked about him. 	stage 7, one player to ask (review of SX.8h)
+NXW-07	franchise	sentence	say2	 you cannot afford his price. your team is over the salary cap. 	stage 7, no room at all (review of SX.8h)

@@ -91,7 +91,7 @@ def test_the_staffs_list_for_a_team_over_the_cap_names_the_cap_and_the_players_l
     rig = run(tmp_path, league)
     text = spoken(rig)
     words = rig.fstore.words
-    at = text.index(" stage 5 of 6. the roster cut. ")
+    at = text.index(" stage 6 of 7. the roster cut. ")
     over = CT.cap_over(start, TEAM, waiting, cut)
     assert over > 0
     expected = [X.text("NXE-50")] + [X.text("NXE-51", player=p.name, position=words.position(p.pos), a=p.age, r=p.rating) for p in cut]
@@ -186,7 +186,7 @@ def test_a_cap_list_with_no_cut_of_its_own_says_would_release_and_a_team_that_ca
     rig = run(tmp_path, league)
     text = spoken(rig)
     words = rig.fstore.words
-    at = text.index(" stage 5 of 6. the roster cut. ")
+    at = text.index(" stage 6 of 7. the roster cut. ")
     assert text[at + 1] == X.text("NXA-15", over=words.amount(CT.cap_over(start, TEAM, waiting, [])))
     assert not [t for t in text if t == X.text("NXE-50")] and " 1. release them " in text
     # and a team for whom nobody saves money stays over the cap, which the player is told (never a silent failure)

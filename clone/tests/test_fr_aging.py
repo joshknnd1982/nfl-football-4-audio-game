@@ -13,7 +13,7 @@ import pytest
 from frrig import enter_until, franchise_rig, run_until, spoken
 from nfl4.extras import nx_texts as X
 from nfl4.extras import tuning as T
-from nfl4.extras.franchise import aging
+from nfl4.extras.franchise import aging, resign
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import offseason
 from nfl4.extras.franchise.files import MemoryFiles
@@ -316,6 +316,7 @@ def test_twenty_offseasons_keep_every_place_filled_every_value_in_range_and_nobo
         assert all(aging.aged(p) >= 30 for p in retiring)
         aging.apply_aging(league, retiring)
         aging.apply_development(aging.plan_development(league, rnd))
+        resign.run_teams(league)
         aging.fill_places(league, rnd, SURNAMES)
         aging.drop_the_unkept(league)
         league.season += 1
@@ -402,7 +403,7 @@ def test_stage_two_names_the_players_of_your_team_who_retire_and_the_league_coun
     veterans = Veterans()
     rig = stage_rig(tmp_path, veterans)
     text = spoken(rig)
-    after = text[text.index(" stage 2 of 6. retirements. "):]
+    after = text[text.index(" stage 2 of 7. retirements. "):]
     assert after[1] == X.text("NXE-30")
     for name, position, rating, seasons in veterans.own:
         assert X.text("NXE-31", player=name, position=position, a=40, r=rating, n=seasons) in after
@@ -442,7 +443,7 @@ def test_at_most_three_stars_of_other_teams_are_named_the_highest_peak_first_and
                    key=lambda p: (-p.peak, p.id))
     assert len(stars) >= 5 and len(named) == 3
     assert [t.split(" of the ")[0].strip() for t in named] == [p.name for p in stars[:3]]
-    stage_two = text[text.index(" stage 2 of 6. retirements. "):]
+    stage_two = text[text.index(" stage 2 of 7. retirements. "):]
     stage_two = stage_two[:stage_two.index(X.text("NXE-03"))]          # the later stages may name a rookie with the retired star's surname
     assert sum(1 for t in stage_two if rig.start.player_at(5, 12).name + "," in t) == 1
 
@@ -468,7 +469,7 @@ def test_the_short_offseason_says_one_sentence_for_each_of_the_two_stages(tmp_pa
     retired = [p for p in rig.kept[3].players.values() if p.status == "retired"]
     own = [p for p in retired if p.team == 5]
     assert X.text("NXE-71", n=len(retired), m=len(own)) in text
-    before, after = rig.kept[3], rig.kept[4]
+    before, after = rig.kept[3], rig.kept[7]
     mine = [p for p in before.players.values() if p.status == "active" and p.team == 5]
     deltas = [after.players[p.id].rating - p.rating for p in mine]
     assert X.text("NXE-72", n=sum(1 for d in deltas if d > 0), m=sum(1 for d in deltas if d < 0)) in text
@@ -479,7 +480,7 @@ def test_the_short_offseason_says_one_sentence_for_each_of_the_two_stages(tmp_pa
 def test_stage_three_counts_the_players_team_and_names_its_best_and_its_biggest_drop(tmp_path):
     rig = stage_rig(tmp_path, lambda league: None)
     text = spoken(rig)
-    before, after = rig.kept[3], rig.kept[4]
+    before, after = rig.kept[3], rig.kept[7]
     own = [p for p in before.players.values() if p.status == "active" and p.team == 5]
     deltas = {p.id: after.players[p.id].rating - p.rating for p in own}
     improved = sum(1 for d in deltas.values() if d > 0)
@@ -507,7 +508,7 @@ def test_the_draws_of_stage_three_come_in_leagues_order_and_the_points_count_exa
     values = [below_value(5, 2)] * 1087
     source = ScriptedRandom(values, strict=False)
     rig = stage_rig(tmp_path, mutate, source=source)
-    before, after = rig.kept[3], rig.kept[4]
+    before, after = rig.kept[3], rig.kept[7]
     assert source.drawn >= len(values)
     survivors = [p for p in before.players.values() if p.status == "active"]
     assert len(survivors) == 1087
@@ -516,7 +517,7 @@ def test_the_draws_of_stage_three_come_in_leagues_order_and_the_points_count_exa
         expected = aging.clamp_rating(p.rating + aging.base_change(p.pos, p.age, p.potential) + points)
         assert after.players[p.id].rating == expected and after.players[p.id].points == 0, p.id
     assert sum(1 for pid in after.rosters[4] if pid == 0) == 1 and after.rosters[4][0] == 0        # the retired back place waits for the cut
-    assert after.stage_no == 4 and after.draft is None                                           # and the draft class is not made yet
+    assert after.stage_no == 7 and after.draft is None                                           # and the draft class is not made yet
 
 
 def test_the_roster_and_the_ratings_at_a_stages_wait_are_what_the_stage_just_said(tmp_path):
@@ -525,7 +526,7 @@ def test_the_roster_and_the_ratings_at_a_stages_wait_are_what_the_stage_just_sai
     stage_two = next(w for w in waits if any("retirements" in line for line in w[0]))
     stage_three = next(w for w in waits if any("player development" in line for line in w[0]))
     assert {pid: (p.age, p.rating, p.status) for pid, p in rig.kept[3].players.items()} == stage_two[1]
-    assert {pid: (p.age, p.rating, p.status) for pid, p in rig.kept[4].players.items()} == stage_three[1]
+    assert {pid: (p.age, p.rating, p.status) for pid, p in rig.kept[7].players.items()} == stage_three[1]
     assert not any("retires. seasons" in line for line in stage_three[0])
 
 
@@ -556,7 +557,7 @@ def test_the_development_points_are_not_counted_in_a_retired_players_file(tmp_pa
 def test_the_file_after_stage_two_has_empty_places_and_the_file_after_stage_three_none(tmp_path):
     rig = stage_rig(tmp_path, Veterans())
     assert any(pid == 0 for roster in rig.kept[3].rosters for pid in roster)         # stage 3's file: written when stage 2 ended
-    assert any(pid == 0 for roster in rig.kept[4].rosters for pid in roster)         # stage 4's: written when stage 3 ended
+    assert any(pid == 0 for roster in rig.kept[7].rosters for pid in roster)         # stage 7's: written when stage 3 ended
     assert rig.kept[6].stage_no == 6 and all(pid for roster in rig.kept[6].rosters for pid in roster)     # stage 6's: after the cut and the fill
     final = rig.fstore.league
     assert final.stage == "season" and final.season == 2 and all(pid for roster in final.rosters for pid in roster)
@@ -574,14 +575,14 @@ def test_a_window_closed_at_the_wait_of_stage_two_resumes_at_stage_three_with_th
                                               and second.fstore.league.stage == "season" and second.fstore.league.season == 2))
     run_until(second)
     text = spoken(second)
-    assert " stage 2 of 6. retirements. " not in text and any(" stage 3 of 6. player development. " in t for t in text)
+    assert " stage 2 of 7. retirements. " not in text and any(" stage 3 of 7. player development. " in t for t in text)
     assert all(p.age == 26 for p in second.fstore.league.players.values() if p.status == "active" and p.drafted is None and p.id <= 1088)      # once
 
 
-def test_a_window_closed_at_the_wait_of_stage_three_resumes_at_the_draft_with_the_development_done_once(tmp_path):
+def test_a_window_closed_at_the_wait_of_stage_three_resumes_at_the_expiring_contracts_with_the_development_done_once(tmp_path):
     first = stage_rig(tmp_path / "one", Veterans(), until=lambda r: X.text("NXE-43") in spoken(r))
     saved = LeagueRecord.from_json(first.files.data["league.sav"].decode("utf-8"))
-    assert saved.stage == "offseason" and saved.stage_no == 4 and saved.draft is None and saved.has_empty_place()
+    assert saved.stage == "offseason" and saved.stage_no == 7 and saved.draft is None and saved.has_empty_place()
     second = franchise_rig(tmp_path / "two", [], files=first.files, kind="franchise",
                            policy=enter_until(lambda: second.fstore is not None and second.fstore.league is not None
                                               and second.fstore.league.stage == "season" and second.fstore.league.season == 2))
@@ -617,7 +618,9 @@ def test_stage_three_leaves_the_empty_places_to_the_roster_cut_which_fills_them(
     rig = stage_rig(tmp_path, Veterans())
     empty = lambda league: sum(1 for roster in league.rosters for pid in roster if pid == 0)
     retired = sum(1 for player in rig.kept[3].players.values() if player.status == "retired")
-    assert empty(rig.kept[4]) == retired >= 4 and empty(rig.kept[5]) == retired and empty(rig.kept[6]) == 0
+    assert empty(rig.kept[7]) == retired >= 4                                    # stage 3's file: the retired players' places
+    assert empty(rig.kept[4]) >= retired and empty(rig.kept[5]) == empty(rig.kept[4])      # stage 7 lets some go (SX.8h); the draft changes no place
+    assert empty(rig.kept[6]) == 0
 
 
 def test_the_offseason_news_lines_are_sx8es_and_nothing_is_said_for_them_yet(tmp_path):

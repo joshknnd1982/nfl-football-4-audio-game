@@ -18,7 +18,7 @@ from .. import tuning as T
 from . import data as D
 
 SEASON, OFFSEASON, DRAFT = "season", "offseason", "draft"
-STATUSES = ("active", "retired", "released")
+STATUSES = ("active", "retired", "released", "free")      # SX.8h: "free", a player whose contract ended and who was not signed again
 
 
 class LeagueError(ValueError):
@@ -97,6 +97,7 @@ class LeagueRecord:
     news_recent: dict = field(default_factory=dict)    # per news pool, the IDs spoken last (SX.8e)
     draft: dict | None = None                          # the draft in progress (SX.8d)
     dead: list = field(default_factory=lambda: [0] * D.TEAMS)   # per team, the dead money of the cap year (SX.8g, format 2)
+    resign: dict | None = None                         # the stage of the expiring contracts in progress (SX.8h, format 3): see resign.py
 
     # ----- the teams -----
 
@@ -192,7 +193,7 @@ class LeagueRecord:
                 "gtp": self.gtp, "schedule": self.schedule, "records": self.records, "pairings": self.pairings,
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
-                "dead": self.dead}
+                "dead": self.dead, "resign": self.resign}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -221,7 +222,7 @@ class LeagueRecord:
                 raise LeagueError("the players are %r" % (type(rows).__name__,))
             record.players = {}
             for row in rows:
-                player = Player.from_list(row, contracts=version == D.FORMAT)
+                player = Player.from_list(row, contracts=version >= 2)
                 record.players[player.id] = player
             record.next_id = data["next_id"]
             record.gtp, record.schedule, record.records = data["gtp"], data["schedule"], data["records"]
@@ -230,16 +231,19 @@ class LeagueRecord:
             record.todo, record.news, record.news_recent = data["todo"], data["news"], data["news_recent"]
             record.prepared = data.get("prepared", [0, 0])         # a league.sav of SX.8a to SX.8d has none: its week is not prepared
             record.draft = data["draft"]
-            if version == D.FORMAT:
+            if version >= 2:
                 record.dead = data["dead"]
+            if version >= 3:
+                record.resign = data["resign"]
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
             raise LeagueError("a player of the franchise file is not a record: %s" % exc) from exc
-        if version < D.FORMAT:
+        if version < 2:
             record.check(contracts=False)                      # a format-1 file is whole as it was; then it gets its contracts (a migration, no draw)
             from . import contracts
             contracts.migrate(record)
+        # a format-2 file has no stage of expiring contracts in progress (`resign` None, from the dataclass default): nothing to migrate
         record.check()
         return record
 
@@ -269,7 +273,7 @@ class LeagueRecord:
         whole(self.season, 1, D.MAX_SEASONS, "the season")
         if self.stage not in (SEASON, OFFSEASON, DRAFT):
             raise LeagueError("the stage is %r" % (self.stage,))
-        whole(self.stage_no, 0, 6, "the stage number")
+        whole(self.stage_no, 0, D.STAGE_MAX, "the stage number")
         whole(self.pick_no, 0, 400, "the pick")
         if self.stage == OFFSEASON and self.stage_no not in {number for number, _ in D.STAGES}:
             raise LeagueError("the offseason stage %r is not one of this version's" % (self.stage_no,))
@@ -293,6 +297,8 @@ class LeagueRecord:
             ints(self.sums, D.TEAMS, 0, 78 * 99, "the strengths")
         if self.draft is not None and not isinstance(self.draft, dict):
             raise LeagueError("the draft is %r" % (type(self.draft).__name__,))
+        from . import resign as resign_rules
+        resign_rules.check_resign(self, whole)                 # SX.8h: the stage of the expiring contracts in progress
         self._check_results(whole)
         self._check_season(whole, ints)
 

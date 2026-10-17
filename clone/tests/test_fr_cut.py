@@ -8,7 +8,7 @@ import pytest
 
 from drrig import SURNAMES, draft_league
 from nfl4.extras import tuning as T
-from nfl4.extras.franchise import aging
+from nfl4.extras.franchise import aging, resign
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import draft as DR
 from nfl4.extras.franchise.league import LeagueRecord, Player
@@ -179,6 +179,7 @@ def offseason_by_rules(league, rnd, wins):
     retiring = aging.plan_retirements(league, rnd)
     aging.apply_aging(league, retiring)
     aging.apply_development(aging.plan_development(league, rnd))
+    resign.run_teams(league)
     draft = DR.Draft.create(league, rnd, SURNAMES)
     while not draft.done:
         _, _, team = draft.next_slot()
@@ -220,4 +221,4 @@ def test_the_released_and_the_retired_are_dropped_at_the_end_except_the_players_
     offseason_by_rules(league, rnd_of(12), None)
     leaving = [p for p in league.players.values() if p.status != "active"]
     assert all(p.team == 9 or p.peak >= D.STAR_PEAK for p in leaving)
-    assert {p.status for p in leaving if p.team == 9} == {"retired", "released"}          # the player's team keeps both kinds for its history
+    assert {"retired", "released"} <= {p.status for p in leaving if p.team == 9} <= {"retired", "released", "free"}          # the player's team keeps every kind for its history

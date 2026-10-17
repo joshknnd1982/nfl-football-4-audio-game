@@ -295,7 +295,7 @@ def test_the_help_of_a_franchise_has_its_lines_for_f5_f6_and_f7_after_the_rules_
     rig = run(tmp_path, [])
     g = rig.game
     assert g.franchise_help("116") == [X.text("NXH-34")]
-    assert g.franchise_help("117") == [X.text("NXH-35"), X.text("NXH-37")]
+    assert g.franchise_help("117") == [X.text("NXH-35"), X.text("NXH-37"), X.text("NXH-39")]
     assert g.franchise_help("118") == [X.text("NXH-36"), X.text("NXH-38")]
     assert g.franchise_help("119") == [] and all(len(X.text(i)) < 200 for i in ("NXH-34", "NXH-35", "NXH-36", "NXH-37", "NXH-38"))
     before = len(spoken(rig))

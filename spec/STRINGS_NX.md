@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 560.
+- Texts: 586.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 228.
+- Franchise (design section 11): 254.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4.
 
 ## The clock (design section 5)
@@ -608,4 +608,30 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXA-15 (sentence, say2): " your team would be over the salary cap by <over>. the staff would release: ". stage 5, the cap list when the cut has no list of its own (review of SX.8g)
 - NXA-16 (sentence, say2): " your team is over the salary cap by <over>. nobody can be released to fix it. ". stage 5, the player's team could not get under the cap (review of SX.8g)
 - NXA-21 (piece, piece): "minus <money> million". an amount of money below zero (cap space of a team over the cap)
+- NXE-17 (piece, piece): "expiring contracts". the name of stage 7 (SX.8h), between the development and the draft
+- NXW-01 (sentence, say2): " <coach> <n> of your players have contracts that end. you will be asked about each one. ". stage 7, the player's players to be asked
+- NXW-02 (sentence, say2): " none of your players has a contract that ends. ". stage 7, nobody to ask
+- NXW-03 (prompt, say2): " <player>, <position>, age <a>, rating <r>, <potential> potential. he is <mood> with the team. he asks <contract>. ". stage 7, one player's talk, the first round
+- NXW-04 (sentence, say2): " you can pay him up to <room>. ". stage 7, the room under the salary cap for him
+- NXW-05 (sentence, say2): " you cannot afford his price. you can pay up to <room>. ". stage 7, no room for his price
+- NXW-10 (sentence, say2): " <player> signs, <contract>. ". stage 7, signed
+- NXW-11 (sentence, say2): " <player> wants more. he asks <contract>. round <round> of <m>. ". stage 7, a counter after an offer for less
+- NXW-12 (sentence, say2): " <player> ends the talks and leaves. ". stage 7, the last round failed
+- NXW-13 (sentence, say2): " <player> is let go. ". stage 7, let go
+- NXW-14 (sentence, say2): " <player> signs the franchise tag, <contract>. ". stage 7, the franchise tag
+- NXW-20 (piece, piece): "happy". a player's mood
+- NXW-21 (piece, piece): "content". a player's mood
+- NXW-22 (piece, piece): "unhappy". a player's mood
+- NXW-30 (sentence, say2): " the staff signed <n> of your players again and let <m> go. ". stage 7, the staff handles the player's team
+- NXW-31 (sentence, say2): " signed: <n>. let go: <m>. ". stage 7, the end of the player's talks
+- NXW-40 (sentence, say2): " <player> of the <team>, <position>, rating <r>, is not signed again and is a free agent. ". stage 7, a star of another team who is let go (at most three)
+- NXW-41 (sentence, say2): " the other teams did not sign <n> of their players again. ". stage 7, the count of the other teams
+- NXW-60 (piece, piece): "contract ended". a contract that ran out and is not settled yet (the roster between stages 2 and 7)
+- NXW-A01 (answer, say2): "sign him". stage 7, the answers
+- NXW-A02 (answer, say2): "offer less". stage 7, the answers
+- NXW-A03 (answer, say2): "let him go". stage 7, the answers
+- NXW-A04 (answer, say2): "use the franchise tag, <contract>". stage 7, the answers
+- NXH-39 (help, say5): " Contracts: before the draft you are asked about each player whose contract ends: sign him, offer less, use the franchise tag once a year, or let him go. ". F6, after NXH-37 (SX.8h)
+- NXW-06 (sentence, say2): " <coach> one of your players has a contract that ends. you will be asked about him. ". stage 7, one player to ask (review of SX.8h)
+- NXW-07 (sentence, say2): " you cannot afford his price. your team is over the salary cap. ". stage 7, no room at all (review of SX.8h)
 

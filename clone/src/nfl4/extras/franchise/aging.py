@@ -86,7 +86,8 @@ def plan_retirements(league: LeagueRecord, rnd) -> list:
 def apply_aging(league: LeagueRecord, retiring: list) -> None:
     """Everybody active is a year older with a season more (at most the scale's ends), then the retiring players leave their
     places: retired, the season he retired after, the team he last played for kept (history names it). Then the cap year turns
-    (SX.8g, `contracts.turn_the_year`): a year off every contract, the dead money gone, the contracts that ran out signed again."""
+    (SX.8g, `contracts.turn_the_year`): a year off every contract, the dead money gone; a contract that runs out is left with 0 years
+    for stage 7 (SX.8h, `resign.py`) to settle."""
     for player in list(league_order(league)):
         player.age = aged(player)
         player.seasons = min(99, player.seasons + 1)

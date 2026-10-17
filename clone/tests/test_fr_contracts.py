@@ -120,17 +120,19 @@ def test_a_team_that_would_start_over_the_cap_is_lowered_by_one_share_and_the_ot
 
 # ----- the year turns (stage 2) -----
 
-def test_the_year_turns_a_year_off_every_contract_the_expired_ones_signed_again_at_the_market_and_the_dead_money_gone():
+def test_the_year_turns_a_year_off_every_contract_the_expired_ones_wait_with_no_years_and_the_dead_money_gone():
     league = fresh()
     league.dead[4] = 77
     ending = next(p for p in league.active_of(2) if p.years == 1)
     running = next(p for p in league.active_of(2) if p.years == 3 and p.age + 1 <= 27)
     before = (running.salary, running.years)
+    before_ending = ending.salary
     aging.apply_aging(league, [])
     assert league.dead == [0] * D.TEAMS
     assert (running.salary, running.years) == (before[0], before[1] - 1)             # a year less, the same salary
-    assert ending.salary == CT.market_salary(ending.pos, ending.rating) and ending.years == CT.years_for_age(ending.age)
-    assert all(1 <= p.years <= CT.years_for_age(p.age) for p in league.players.values() if p.status == "active")
+    assert ending.years == 0 and ending.salary == before_ending                      # the contract ran out: no years, the last salary kept (the tag's raise)
+    assert not CT.running(ending) and CT.payroll(league, 2) == sum(p.salary for p in league.active_of(2) if p.years > 0)
+    assert all(0 <= p.years <= CT.years_for_age(p.age) for p in league.players.values() if p.status == "active")
 
 
 def test_a_player_who_retires_leaves_no_contract_and_costs_no_dead_money():
@@ -342,7 +344,7 @@ def test_a_format_one_file_still_loads_and_gets_its_contracts_by_the_rules_with_
             if market[player.team] <= T.FR_CAP:
                 assert player.salary == CT.market_salary(player.pos, player.rating)
     assert all(CT.cap_used(loaded, t) <= T.FR_CAP for t in range(1, D.TEAMS + 1))
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 2                    # the next save is format 2
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 3                    # the next save is format 3
     again = LeagueRecord.from_json(text)
     assert again.to_json() == loaded.to_json()                                        # a migration draws nothing: the same file, the same answer
     assert LeagueRecord.from_json(loaded.to_json()).to_json() == loaded.to_json()
@@ -427,18 +429,18 @@ def test_a_released_or_retired_player_with_a_contract_out_of_range_is_damage():
         LeagueRecord.from_json(league.to_json())
 
 
-def test_formats_other_than_one_and_two_are_damage_or_newer():
+def test_formats_other_than_one_to_three_are_damage_or_newer():
     text = fresh().to_json()
     for version in (0, -1, True, 1.5, "2", None):
         with pytest.raises(LeagueError) as raised:
-            LeagueRecord.from_json(text.replace('"format":2', '"format":%s' % json.dumps(version), 1))
+            LeagueRecord.from_json(text.replace('"format":3', '"format":%s' % json.dumps(version), 1))
         assert not isinstance(raised.value, NewerFormat)
     with pytest.raises(NewerFormat):
-        LeagueRecord.from_json(text.replace('"format":2', '"format":3', 1))
+        LeagueRecord.from_json(text.replace('"format":3', '"format":4', 1))
 
 
 def test_a_format_one_file_with_a_contract_column_is_damage_like_any_row_of_the_wrong_length():
-    text = fresh().to_json().replace('"format":2', '"format":1', 1)
+    text = fresh().to_json().replace('"format":3', '"format":1', 1)
     with pytest.raises(LeagueError):
         LeagueRecord.from_json(text)
 
