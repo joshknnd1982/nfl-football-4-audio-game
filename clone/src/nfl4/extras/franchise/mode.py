@@ -53,7 +53,8 @@ class FranchiseHooks(ClassicSeasonHooks):
         league = self.store.league
         if league is None or league.stage != SEASON or len(league.sums) != D.TEAMS:
             return None
-        effective = injuries.effective_sums(league, league.gtp)
+        from . import people
+        effective = people.week_sums(league, league.gtp)        # SX.8n: and the morale of the players who play their own place
         key = (tuple(league.sums), tuple(effective))
         if self._place is None or self._sums != key:
             self._sums = key

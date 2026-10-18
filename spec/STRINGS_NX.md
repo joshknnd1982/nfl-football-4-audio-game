@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 824.
+- Texts: 864.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,8 +16,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 492.
-- Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
+- Franchise (design section 11): 532.
+- Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
 
 ## The clock (design section 5)
 
@@ -872,4 +872,44 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXU-56 (sentence, say2): " the staff answered the offer for <player>. ". stage 8: the staff handles the to-do list (SX.8m)
 - NXH-44 (help, say5): " Camp focus before the progression, undrafted free agents at the cut, compensatory picks for free agents lost, the non-exclusive tag. F9 roster: Enter renames your player. ". F6, after NXH-43 (SX.8m)
 - NXU-31 (sentence, say2): " <player> did not sign with you. ". stage 4: an offer of the player that signed nobody (the review of SX.8m)
+- NXU-P01 (sentence, say2): " he cares most about <trait>. ". stage 7, a talk: his personality, after NXW-03 (SX.8n)
+- NXU-P10 (piece, piece): "money". a personality (SX.8n)
+- NXU-P11 (piece, piece): "winning". a personality (SX.8n)
+- NXU-P12 (piece, piece): "loyalty". a personality (SX.8n)
+- NXU-P13 (piece, piece): "playing time". a personality (SX.8n)
+- NXU-P14 (piece, piece): "the game". a personality (SX.8n)
+- NXU-M01 (piece, piece): "high". a morale of 3 or more (SX.8n)
+- NXU-M02 (piece, piece): "good". a morale of -2 to 2 (SX.8n)
+- NXU-M03 (piece, piece): "low". a morale of -3 or less (SX.8n)
+- NXU-T01 (piece, piece): "a top player". a player tag: rated 85 or more (SX.8n; not "a star", the name of an EA development trait, the review)
+- NXU-T02 (piece, piece): "a rising player". a player tag: 24 or younger with high potential (SX.8n)
+- NXU-T03 (piece, piece): "a veteran". a player tag: 31 or older (SX.8n)
+- NXU-T05 (sentence, say5): " <tag>. morale <morale>. he cares most about <trait>. ". F9's roster, after NXL-33: the tag, the morale, the personality (SX.8n)
+- NXU-T06 (sentence, say5): " morale <morale>. he cares most about <trait>. ". F9's roster, after NXL-33, a player without a tag (SX.8n)
+- NXU-H01 (prompt, say2): " <player>, <position>, rating <r>, holds out at camp. he is paid <contract> and asks <ask>. ". stage 3: the player's holdout (SX.8n)
+- NXU-H02 (sentence, say2): " there is no room under the cap to pay him. ". stage 3: the raise does not fit (SX.8n)
+- NXU-H06 (sentence, say2): " players holding out in the league: <n>. ". stage 3: the other teams' holdouts (SX.8n)
+- NXU-H10 (answer, say2): "pay him". stage 3, a holdout (SX.8n)
+- NXU-H11 (answer, say2): "let him wait". stage 3, a holdout (SX.8n)
+- NXU-H12 (answer, say2): "trade him". stage 3, a holdout: he asks to be traded at once (SX.8n)
+- NXU-H20 (sentence, say2): " <player> signs a new contract, <contract>. ". stage 3: paid (SX.8n)
+- NXU-H21 (sentence, say2): " <player> stays away from camp. he is unhappy and may ask to be traded. ". stage 3: let him wait (SX.8n)
+- NXU-H22 (sentence, say2): " <player> goes on the trade block. the other teams make their offers when the season begins. ". stage 3: trade him (SX.8n)
+- NXU-H23 (sentence, say2): " the staff paid <player>, who held out: <contract>. ". stage 3, the staff setting on (SX.8n)
+- NXU-H24 (sentence, say2): " <player> held out, and the staff let him wait. ". stage 3, the staff setting on (SX.8n)
+- NXU-D01 (prompt, say2): " <player>, <position>, asks to be traded. offers from <n> teams. ". the to-do item of a trade demand (SX.8n)
+- NXU-D10 (answer, say2): "keep him". a trade demand: no trade this week (SX.8n)
+- NXU-D11 (answer, say2): "the <team>: <get>, rating <r>. <picks>". a trade demand: an offer (SX.8n)
+- NXU-D12 (sentence, say2): " <player> stays with your team for now. ". a trade demand: kept (SX.8n)
+- NXU-G01 (sentence, say2): " the goal of this game: win by <n> points or more. ". before the kick-off, the stronger team (SX.8n)
+- NXU-G02 (sentence, say2): " the goal of this game: win it. ". before the kick-off, two teams of about one strength (SX.8n)
+- NXU-G03 (sentence, say2): " the goal of this game: lose by no more than <n> points, or win. ". before the kick-off, the weaker team (SX.8n)
+- NXU-G04 (sentence, say2): " last week's goal was met. ". before the menu, after the news (SX.8n)
+- NXU-G05 (sentence, say2): " last week's goal was missed. ". before the menu, after the news (SX.8n)
+- NXH-45 (help, say5): " Players have a personality and a morale, which moves a rating by up to 2 points in a game. An underpaid player may hold out at camp and ask to be traded. Every game has a goal. ". F6, after NXH-44 (SX.8n)
+- NWH01 (remark, say2): " <player> of the <team> wants to be traded. ". a player asks to be traded (news, SX.8n)
+- NWH02 (remark, say2): " unhappy with the <team>, <player> asks for a trade. ". a player asks to be traded (news, SX.8n)
+- NWH03 (remark, say2): " the <team> hear a trade request from their <position>, <player>. ". a player asks to be traded (news, SX.8n)
+- NWH04 (remark, say2): " <player> tells the <team> he wants out. ". a player asks to be traded (news, SX.8n)
+- NXU-D13 (sentence, say2): " that trade can no longer be made. <player> stays with your team for now. ". a trade demand: the chosen offer can no longer be made (the review of SX.8n)
 

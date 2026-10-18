@@ -87,14 +87,16 @@ def stage_contracts(p, n: int, m: int, short: bool) -> None:
 def _talk(g, words, store, league, state: dict, player, preface: list) -> None:
     """One player's talk until he is settled (signed, tagged or let go): the decision is applied and written, then told."""
     team = league.team
-    how = R.mood(league, team)
-    talk = R.Talk.start(player, how)
+    from . import people
+    how = people.talk_mood(league, player, R.mood(league, team))      # SX.8n: his morale moves the team's mood a step
+    talk = R.Talk.start(player, how, people.slack_change(league, player, how))     # and his personality's rule in the talk
     tag_price = R.tag_salary(league, player)
     from . import tags
     open_price = tags.nonexclusive_salary(league, player)
     lines = list(preface)
     lines.append(X.text("NXW-03", player=player.name, position=words.position(player.pos), a=player.age, r=player.rating,
                         potential=words.potential(player.potential), mood=words.mood(how), contract=words.contract_of(talk.ask, talk.years)))
+    trait = X.text("NXU-P01", trait=X.text(people.TRAIT_TEXT[people.personality(player.id)]))     # SX.8n: what he cares about most (after the room)
     while True:
         space = R.room(league, team)
         kinds = []
@@ -111,6 +113,9 @@ def _talk(g, words, store, league, state: dict, player, preface: list) -> None:
             lines.append(X.text("NXW-04", room=words.amount(space)))
         else:
             lines.append(X.text("NXW-05", room=words.amount(space)) if space >= 0 else X.text("NXW-07"))
+        if trait is not None:
+            lines.append(trait)
+            trait = None
         items = [X.text("NXW-A04", contract=words.contract_of(tag_price, 1)) if kind == TAG
                  else X.text("NXU-A10", contract=words.contract_of(open_price, 1)) if kind == OPEN_TAG else X.text(ANSWER_TEXT[kind]) for kind in kinds]
         kind = kinds[FranchiseQuestion(g, lines, items).ask()]

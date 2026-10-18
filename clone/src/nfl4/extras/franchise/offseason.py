@@ -21,7 +21,8 @@ from . import camp
 from . import comp
 from . import data as D
 from . import tags
-from . import draft_flow, market_flow, resign_flow, staff_flow
+from . import draft_flow, market_flow, people_flow, resign_flow, staff_flow
+from . import people
 from . import history, injuries, news, staff, trades, weekly
 from .league import OFFSEASON, SEASON, team_ref
 from .news_pools import DEFAULT_POOLS
@@ -157,7 +158,10 @@ def stage_development(p, n: int, m: int, short: bool) -> None:
     league = store.league
     words = store.words
     header = _stage_line(n, m, "NXE-13")
-    choice, asked = camp_choice(g, league, header)          # SX.8m: the camp's focus, asked before anything changes
+    held, rest = people_flow.holdouts(p, header)            # SX.8n: the holdouts at the start of camp, settled and written before they are told
+    choice, asked = camp_choice(g, league, None if held else header, rest)    # SX.8m: the camp's focus, asked before anything changes
+    if asked:
+        rest = []
     camp_lines = []
     if camp.in_use():
         camps = camp.apply(league, {league.team: choice} if choice else {})       # every team's camp points (the computer teams' focus by the same rule)
@@ -166,7 +170,7 @@ def stage_development(p, n: int, m: int, short: bool) -> None:
                           else X.text("NXU-03", focus=X.text(camp.FOCUS_TEXT[focus])))
     plan = aging.plan_development(league, g.rnd)
     summary = aging.summarize(plan, league.team)
-    lines = ([] if asked else [header]) + camp_lines + [X.text("NXE-40", n=summary.improved, m=summary.declined, k=summary.same)]
+    lines = ([] if asked or held else [header]) + rest + camp_lines + [X.text("NXE-40", n=summary.improved, m=summary.declined, k=summary.same)]
     for text_id, change in (("NXE-41", summary.best), ("NXE-42", summary.worst)):
         if change is not None:
             lines.append(X.text(text_id, player=change.player.name, position=words.position(change.player.pos),
@@ -180,21 +184,22 @@ def stage_development(p, n: int, m: int, short: bool) -> None:
     league.stage_no = _next_stage(D.STAGE_DEVELOPMENT)
     store.save()
     if short:
-        for line in camp_lines:
+        for line in rest + camp_lines:
             g.say2(line)
         g.say2(short_line)
     else:
         wait_for_enter(g, lines)
 
 
-def camp_choice(g, league, header: str) -> tuple:
+def camp_choice(g, league, header, before=()) -> tuple:
     """(the player's focus or None for the staff's, whether he was asked): the staff's recommendation is the first answer; with the staff handling the
-    to-do list the staff's focus is taken without a question (SX.8m)."""
+    to-do list the staff's focus is taken without a question (SX.8m). `header`: the stage's line (None when a holdout question said it, SX.8n); `before`: lines
+    still to say (the league's holdouts), said with the question."""
     if g.options.settings.game.nx_fr_auto or not camp.in_use():
         return None, False
     recommended = camp.recommend(league, league.team)
     foci = [recommended] + [focus for focus in T.FR_CAMP_FOCI if focus != recommended]
-    situation = [header, X.text("NXU-01", focus=X.text(camp.FOCUS_TEXT[recommended]))]
+    situation = ([header] if header else []) + list(before) + [X.text("NXU-01", focus=X.text(camp.FOCUS_TEXT[recommended]))]
     answer = FranchiseQuestion(g, situation, [X.text(camp.FOCUS_TEXT[focus]) for focus in foci]).ask()
     return foci[answer], True
 
@@ -212,6 +217,7 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
     comp.drop_past(league)                               # SX.8m: the compensatory picks of the draft that is over
     tags.move_future(league)                             # SX.8m: the first-round picks owed for this season's draft join its table
     tags.close(league)
+    people.new_season(league)                            # SX.8n: the morale halved, the season's demands and goals over
     league.results = []
     league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]
     staff.set_goals(league)                              # SX.8l: the owner's goal of every team by its rank at the season's start

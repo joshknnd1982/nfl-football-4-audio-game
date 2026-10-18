@@ -151,6 +151,11 @@ def trade_events(league: LeagueRecord, made: list) -> list:
     return [event for _key, event in events[:T.FR_TRADE_NEWS]]
 
 
+def demand_events(league: LeagueRecord, filed: list) -> list:
+    """NWH (SX.8n): the players who asked to be traded this week (people.demands_week's rows [player, team, week, state]), in the order they asked."""
+    return [Event("NWH", team=row[1], player=league.players[row[0]]) for row in filed if row[0] in league.players]
+
+
 def improver_events(changes: list, team: int) -> list:
     """The player's team's players who improved by 5 or more, at most two, the biggest first (equal changes in league order)."""
     own = [c for c in changes if c.player.team == team and c.delta >= 5]

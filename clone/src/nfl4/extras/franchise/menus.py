@@ -20,7 +20,7 @@ from . import history, market_flow, mode, news, staff_flow, todo, trade_flow, we
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
-HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
 
@@ -59,6 +59,12 @@ def _lines_picker(speech, keys, title: str, lines: list, on_enter=None) -> None:
         speech.say_async(X.text("NXG-18"))
         return
     ListPicker(speech, keys, title, len(lines), lambda i: lines[i], on_enter=on_enter, close_on_enter=False).run()
+
+
+def roster_line(words, league, player) -> str:
+    """A player of the player's team in F9's roster: his line with his contract (NXL-33), then his tag, morale and word (SX.8n, NXU-T05 or NXU-T06)."""
+    from . import people_flow
+    return words.player_with_contract(player) + people_flow.roster_words(words, league, player)
 
 
 def franchise_menu(g, speech, keys) -> None:
@@ -175,7 +181,7 @@ def franchise_menu(g, speech, keys) -> None:
         word = _words(g)
         league = store.league
         players = [p for p in league.group_of(league.team, position) if p is not None]
-        lines = [word.player_with_contract(p) for p in players]      # SX.8b: the rating and the potential are spoken; SX.8g: and the contract
+        lines = [roster_line(word, league, p) for p in players]      # SX.8b: the rating and the potential are spoken; SX.8g: and the contract; SX.8n: the tag, morale, word
         rookies = rookies_of(position)
         for rookie in rookies:                                 # a rookie is told by his range until the cut (design 7.6, 11)
             if league.draft is not None:                       # the draft record lives until the cut is applied (stage 5)
@@ -190,7 +196,7 @@ def franchise_menu(g, speech, keys) -> None:
             player = everyone[index]
             text = rename.ask(g, speech, keys, store, player)
             if index < len(players):
-                lines[index] = word.player_with_contract(player)
+                lines[index] = roster_line(word, league, player)
             return text
 
         _lines_picker(speech, keys, word.group(position), lines, on_enter=enter)

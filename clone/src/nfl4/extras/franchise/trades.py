@@ -31,6 +31,7 @@ from . import injuries
 CONTEND, MIDDLE, REBUILD = "contend", "middle", "rebuild"
 KEYS = ("picks", "log")
 KIND_COMPUTER, KIND_OFFER, KIND_PLAYER = 0, 1, 2      # a trade of two computer teams; an offer the player (or the staff for him) accepted; the player's own proposal
+KIND_DEMAND = 3                                       # SX.8n: a trade of a player who asked to be traded (people.py): team a is his team
 
 
 def empty() -> dict:
@@ -449,7 +450,7 @@ def check_trades(league, whole) -> None:
         whole(row[0], 1, T.FR_TRADE_LAST_WEEK, "a trade's week")
         whole(row[1], 1, D.TEAMS, "a trade's team")
         whole(row[2], 1, D.TEAMS, "a trade's team")
-        whole(row[7], KIND_COMPUTER, KIND_PLAYER, "a trade's kind")
+        whole(row[7], KIND_COMPUTER, KIND_DEMAND, "a trade's kind")
         if row[1] == row[2]:
             raise LeagueError("a team traded with itself: %r" % (row,))
         for pid in (row[3], row[4]):

@@ -105,6 +105,7 @@ class LeagueRecord:
     comp: list = field(default_factory=list)           # the compensatory picks awarded for a coming draft (SX.8m, format 8): see comp.py
     future_picks: list = field(default_factory=list)   # the first-round picks owed for the draft after the coming one (SX.8m, format 8): see tags.py
     tags: dict = field(default_factory=lambda: {"history": {}, "open": None, "sheet": None})   # the non-exclusive tag (SX.8m, format 8): see tags.py
+    people: dict = field(default_factory=lambda: {"morale": {}, "begun": 0, "holdouts": [], "pending": [], "demands": [], "goal": None, "verdict": None})   # SX.8n, format 9: see people.py
 
     # ----- the teams -----
 
@@ -202,7 +203,8 @@ class LeagueRecord:
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
                 "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
-                "injuries": self.injuries, "staff": self.staff, "comp": self.comp, "future_picks": self.future_picks, "tags": self.tags}
+                "injuries": self.injuries, "staff": self.staff, "comp": self.comp, "future_picks": self.future_picks, "tags": self.tags,
+                "people": self.people}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -254,6 +256,8 @@ class LeagueRecord:
                 record.staff = data["staff"]
             if version >= 8:
                 record.comp, record.future_picks, record.tags = data["comp"], data["future_picks"], data["tags"]
+            if version >= 9:
+                record.people = data["people"]                      # SX.8n; a file of format 8 or older: nobody has a morale, nobody held out (the default)
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -349,6 +353,8 @@ class LeagueRecord:
         from . import comp as comp_rules, tags as tag_rules
         comp_rules.check_comp(self, whole)                     # SX.8m: the compensatory picks awarded for a coming draft
         tag_rules.check_tags(self, whole)                      # SX.8m: the non-exclusive tag and the first-round picks owed
+        from . import people as people_rules
+        people_rules.check_people(self, whole)                 # SX.8n: the morale, the camp's holdouts, the trade demands, the game goal
         self._check_results(whole)
         self._check_season(whole, ints)
 

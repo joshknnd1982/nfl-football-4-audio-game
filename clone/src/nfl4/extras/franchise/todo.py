@@ -7,6 +7,7 @@ NFL_FRANCHISE_DESIGN 8.1 and 8.2 (F5). Rules over the league record, no speech a
     {"kind": "game_plan",  "season": s, "week": w, "state": 0, "styles": [their offense, their defense, our offense, our defense]}   T2
     {"kind": "trade_offer", "season": s, "week": w, "state": 0, "trade": [a, b, player of a, player of b, picks of a, picks of b]}   SX.8j
     {"kind": "injury", "season": s, "week": w, "state": 0, "player": id}     SX.8k: play or rest a doubtful or questionable player (INJ-4)
+    {"kind": "trade_demand", "season": s, "week": w, "state": 0, "demand": [id, [trade, ...]]}   SX.8n: a player who asks to be traded, the other teams' offers
 
 An item has a deadline: the kick-off of its week's game. `state` is ITEM_NEW (not asked yet), ITEM_LATER (answered "later") or, for
 the game plan only, ITEM_SET (taken for this week's game; the game reads it). A new week's list replaces the old one. The kinds are
@@ -124,11 +125,17 @@ def answer_count(league: LeagueRecord, item: dict) -> int:
     plan, two."""
     if item["kind"] == D.TODO_EXTRA_WORK:
         return len(valid_players(league, item)) + 1
+    if item["kind"] == D.TODO_DEMAND:                # SX.8n: the offers and "keep him"
+        return len(item["demand"][1]) + 1
     return 2                                         # the game plan: use it, keep yours; a trade offer: accept, decline
 
 
 def is_do_nothing(league: LeagueRecord, item: dict, answer: int) -> bool:
-    """The last answer of an item is its "do nothing" answer (nobody this week, keep your playbooks)."""
+    """The last answer of an item is its "do nothing" answer (nobody this week, keep your playbooks); a trade demand's is "keep him", which is first when the
+    staff recommends keeping him (SX.8n)."""
+    if item["kind"] == D.TODO_DEMAND:
+        from . import people_flow
+        return people_flow.demand_choices(league, item)[answer] is None
     return answer == answer_count(league, item) - 1
 
 
@@ -139,6 +146,15 @@ def apply_answer(league: LeagueRecord, item: dict, answer: int):
         play = injury_flow.answers_order(league, item)[answer] if answer < 2 else False
         injuries.decide(league, item["player"], item["week"], play)
         return play
+    if item["kind"] == D.TODO_DEMAND:                # SX.8n: the staff's recommendation first (an offer, or "keep him", the do-nothing answer)
+        from . import people, people_flow, trades
+        choices = people_flow.demand_choices(league, item)
+        league.todo.remove(item)
+        trade = choices[answer] if answer < len(choices) else None
+        if trade is None or trades.problems(league, trade, item["week"]) is not None:
+            return None
+        people.trade_on_demand(league, trade, item["week"])
+        return trade
     return _apply_answer(league, item, answer)
 
 
@@ -208,7 +224,8 @@ def check_items(league: LeagueRecord, whole) -> None:
         if not isinstance(item, dict) or set(item) not in ({"kind", "season", "week", "state", "players"},
                                                             {"kind", "season", "week", "state", "styles"},
                                                             {"kind", "season", "week", "state", "trade"},
-                                                            {"kind", "season", "week", "state", "player"}):
+                                                            {"kind", "season", "week", "state", "player"},
+                                                            {"kind", "season", "week", "state", "demand"}):
             raise LeagueError("a to-do item is %r" % (item,))
         if item["kind"] not in D.TODO_KINDS:
             raise LeagueError("a to-do item of the kind %r" % (item["kind"],))
@@ -227,6 +244,10 @@ def check_items(league: LeagueRecord, whole) -> None:
                 raise LeagueError("an injury item is %r" % (item,))
         elif item["kind"] == D.TODO_TRADE:
             _check_trade_item(league, item, whole)
+        elif item["kind"] == D.TODO_DEMAND:
+            _check_demand_item(league, item, whole)
+        elif "demand" in item:
+            raise LeagueError("a to-do item of the kind %r is %r" % (item["kind"], item))
         elif item["kind"] == D.TODO_EXTRA_WORK:
             players = item.get("players")
             if "players" not in item or item["state"] == D.ITEM_SET or not isinstance(players, list) or not 1 <= len(players) <= 2:
@@ -240,6 +261,22 @@ def check_items(league: LeagueRecord, whole) -> None:
             if "styles" not in item or not isinstance(styles, list) or len(styles) != 4 or any(
                     not isinstance(s, str) or s not in BOOK_KEYS for s in styles):
                 raise LeagueError("a game-plan item is %r" % (item,))
+
+
+def _check_demand_item(league: LeagueRecord, item: dict, whole) -> None:
+    """A trade demand (SX.8n): a player of the player's team who asks to be traded, at most FR_DEMAND_OFFERS offers of other teams for him, never ITEM_SET."""
+    from .. import tuning as T
+    demand = item.get("demand")
+    if item["state"] == D.ITEM_SET or not isinstance(demand, list) or len(demand) != 2 or not isinstance(demand[1], list) or not demand[1] \
+            or len(demand[1]) > T.FR_DEMAND_OFFERS:
+        raise LeagueError("a trade demand is %r" % (item,))
+    whole(demand[0], 1, 10 ** 9, "a trade demand's player")
+    if demand[0] not in league.players:
+        raise LeagueError("a trade demand names a player who is not in the league: %r" % (item,))
+    for trade in demand[1]:
+        _check_trade_item(league, {"kind": D.TODO_TRADE, "state": item["state"], "trade": trade}, whole)
+        if trade[0] != league.team or trade[2] != demand[0]:
+            raise LeagueError("an offer of a trade demand is not for the demanding player: %r" % (item,))
 
 
 def _check_trade_item(league: LeagueRecord, item: dict, whole) -> None:

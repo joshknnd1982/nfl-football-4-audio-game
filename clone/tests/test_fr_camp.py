@@ -127,6 +127,7 @@ def test_a_window_closed_at_the_question_leaves_the_file_as_the_stage_found_it(t
     saved = saved_league(rig)
     assert saved.stage_no == D.STAGE_DEVELOPMENT
     assert all(p.points == 0 for p in saved.players.values())
+    league.people["begun"] = league.season                 # SX.8n: stage 3 starts with the camp's holdouts (none in this league), written before the camp's question
     assert saved.to_json() == league.to_json()
 
 

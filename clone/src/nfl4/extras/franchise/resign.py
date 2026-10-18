@@ -177,10 +177,12 @@ def mood(league, team: int) -> str:
     return CONTENT
 
 
-def floor_salary(salary: int, how: str, least: int = T.FR_MIN_SALARY) -> int:
+def floor_salary(salary: int, how: str, least: int = T.FR_MIN_SALARY, extra: int = 0) -> int:
     """The least a player in this mood accepts for his price: T.FR_MOOD_SLACK[how] percent under it, rounded half up like `lower_offer` (so a
-    happy player, whose slack is the step of an offer for less, always accepts the first offer), never under `least` (his minimum salary)."""
-    return max(least, (salary * (100 - T.FR_MOOD_SLACK[how]) + 50) // 100)
+    happy player, whose slack is the step of an offer for less, always accepts the first offer), never under `least` (his minimum salary). SX.8n: `extra`, his
+    personality's percent (`people.slack_change`), is added to the slack, which is never under 0."""
+    slack = max(0, T.FR_MOOD_SLACK[how] + extra)
+    return max(least, (salary * (100 - slack) + 50) // 100)
 
 
 def lower_offer(salary: int, least: int = T.FR_MIN_SALARY) -> int:
@@ -203,10 +205,10 @@ class Talk:
     least: int = T.FR_MIN_SALARY
 
     @classmethod
-    def start(cls, player, how: str) -> "Talk":
+    def start(cls, player, how: str, extra: int = 0) -> "Talk":
         salary, years = asking(player)
         least = CT.min_salary(player.seasons)
-        return cls(salary, years, floor_salary(salary, how, least), 1, least)
+        return cls(salary, years, floor_salary(salary, how, least, extra), 1, least)
 
     def offer_less(self) -> tuple:
         """(ACCEPTED, salary): the offer is at or over his floor and he signs at the offer; (COUNTER, salary): he comes down halfway to his floor

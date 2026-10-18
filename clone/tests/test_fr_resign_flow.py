@@ -23,8 +23,11 @@ HEADER = " stage 5 of 9. expiring contracts. "
 
 @pytest.fixture(autouse=True)
 def cap_alone_decides(monkeypatch):
-    """The staff's payroll target (FR_RESIGN_TARGET, SX.8i) is out of the way in these tests, which are about the cap and the talks; it has its own tests."""
+    """The staff's payroll target (FR_RESIGN_TARGET, SX.8i) is out of the way in these tests, which are about the cap and the talks; it has its own tests.
+    SX.8n: so is the personality's rule in the talk (its percent of slack is 0 here; it has its own tests in test_fr_people.py and test_fr_people_flow.py)."""
     monkeypatch.setattr(T, "FR_RESIGN_TARGET", 1.0)
+    monkeypatch.setattr(T, "FR_PERSON_TALK", {word: (0, 0, 0) for word in T.FR_PERSON_TALK})
+    monkeypatch.setattr(T, "FR_PERSON_STARTER", (0, 0))
 
 def contract_league(seed=3, places=PLACES, wins=8, mutate=None, others=(12, 20)):
     """A league at the start of stage 5 of 9 (the expiring contracts): these places of the player's team have no years left, and `others` of
@@ -305,7 +308,9 @@ def test_when_nobody_fits_the_stage_says_so_and_offers_only_letting_him_go(tmp_p
     words = rig.fstore.words
     assert X.text("NXW-05", room=words.amount(resign.room(start, TEAM))) in text
     at = text.index(X.text("NXW-05", room=words.amount(resign.room(start, TEAM))))
-    assert text[at + 1] == " 1. let him go "                                                 # the only answer there is
+    from nfl4.extras.franchise import people
+    assert text[at + 1] == X.text("NXU-P01", trait=X.text(people.TRAIT_TEXT[people.personality(first.id)]))     # SX.8n: his personality after the room
+    assert text[at + 2] == " 1. let him go "                                                 # the only answer there is
     assert rig.fstore.league.players[first.id].status == "free"
     after = LeagueRecord.from_json(rig.kept[D.STAGE_FREE_AGENCY].decode("utf-8"))
     assert CT.cap_used(after, TEAM) <= T.FR_CAP

@@ -47,7 +47,7 @@ def test_format_8_round_trips_every_new_value_through_the_real_store():
     league.market = M.begin()
     league.market["moves"] = [[1, 2, 3, 50]]
     loaded, files = through_store(league)
-    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 8
+    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 9          # (9 since SX.8n: the values are format 8's)
     assert (loaded.comp, loaded.future_picks, loaded.tags, loaded.market) == (league.comp, league.future_picks, league.tags, league.market)
     assert loaded.to_json() == league.to_json()
 
@@ -70,7 +70,7 @@ def test_a_format_7_file_loads_by_the_migration_and_is_saved_as_format_8():
     data = as_format_7(league)
     loaded = LeagueRecord.from_json(json.dumps(data))
     assert loaded.comp == [] and loaded.future_picks == [] and loaded.tags == {"history": {}, "open": None, "sheet": None}
-    assert json.loads(loaded.to_json())["format"] == 8
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT       # (9 since SX.8n)
 
 
 def test_a_format_7_market_in_progress_keeps_its_offers_and_gets_no_moves():

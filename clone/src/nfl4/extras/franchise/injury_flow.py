@@ -54,8 +54,11 @@ def write_roster(roster: Roster, table: list) -> None:
 def lineup_roster(league: LeagueRecord, team: int, week: int, staff: bool) -> Roster:
     """The team's Roster for the game of `week`: league.roster_for_game with the week's lineup (equal to it when nobody is hurt)."""
     roster = league.roster_for_game(team)
-    if not I.nobody_hurt(league) or league.injuries["stand_ins"]:
-        write_roster(roster, I.lineup(league, team, week, staff))
+    hurt = not I.nobody_hurt(league) or league.injuries["stand_ins"]
+    from . import people
+    if hurt or people.has_morale(league):                     # SX.8n: the morale moves the ratings the H8 door reads (the ratings' cap stays the ratings')
+        table = I.lineup(league, team, week, staff) if hurt else people.plain_table(league, team)
+        write_roster(roster, people.with_morale(league, team, table))
     return roster
 
 

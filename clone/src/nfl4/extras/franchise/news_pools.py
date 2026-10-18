@@ -39,7 +39,8 @@ PLACEHOLDERS = {"NWB": _FOR_GAME, "NWU": _FOR_GAME, "NWC": _FOR_GAME,
                 "NWP": ("<player>", "<position>", "<r>", "<coach>", "<team>"),
                 "NWK": ("<team>", "<cap>", "<coach>"),
                 "NWX": ("<team>", "<other>", "<player>", "<position>", "<coach>"),      # SX.8j: a trade of two other teams
-                "NWJ": ("<team>", "<player>", "<position>", "<n>", "<coach>")}          # SX.8k: another team's player out for up to <n> weeks
+                "NWJ": ("<team>", "<player>", "<position>", "<n>", "<coach>"),          # SX.8k: another team's player out for up to <n> weeks
+                "NWH": ("<team>", "<player>", "<position>", "<coach>")}                 # SX.8n: a player asks to be traded
 MAX_NUMBER = 9999
 Remark = R.Remark
 

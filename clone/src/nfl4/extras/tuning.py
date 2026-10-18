@@ -734,3 +734,96 @@ FR_TAG_SHEET_PICKS = 2            # first-round picks a team gives for a player 
 # by 0.43 (the camp at 3 players), 0.30 (the compensatory picks), 0.04 (the undrafted), 0.73 together by season 10 (70.44 to 71.17), toward I8's strict edge of 72.
 # Swept: FR_ROOKIE_RATING (45, 15) gives 69.67 to 70.31 over seasons 1 to 12 against SX.8l's 69.74 to 70.58 (at most 0.27 under it); three weeks of extra work
 # instead of four (70.86 at season 10) and the camp at one player with (45, 15) (69.98) were the other two. The camp stays at 2 players, the rookies' base is 45.
+
+# ----- SX.8n: the people's later items (NX6, design 17 SX.8n; extras/franchise/people.py and people_flow.py; a franchise only, D-074) -----
+# THE PERSONALITY (research B10's LATER: "4 or 5 personality words set at birth, each with one rule in contract talks and morale"; the words and their rules are
+# this game's own, UNVERIFIED: no league source rates a personality). Five words; a player's word is a rule of his player ID (no draw: the leagues with and without
+# the items are the same leagues draw for draw, B-P103), so it is fixed when he enters the league. The key is (ID x FR_PERSON_MIX) mod 1000 against the shares in
+# tenths of a percent: every 1,000 consecutive IDs have the shares exactly.
+FR_PERSON_MIX = 617
+FR_PERSON_SHARES = (("money", 20), ("winning", 25), ("loyalty", 20), ("playing_time", 20), ("the_game", 15))      # percent
+# each word's rule in the contract talks: the percent added to the slack his mood gives (resign.floor_salary; never under 0), by mood (happy, content, unhappy);
+# "playing_time" adds FR_PERSON_STARTER[0] when he holds the first place of his group and FR_PERSON_STARTER[1] when he does not
+FR_PERSON_TALK = {"money": (-4, -4, 0), "winning": (4, 0, -4), "loyalty": (4, 4, 4), "the_game": (-6, 0, 4)}
+FR_PERSON_STARTER = (4, -4)
+# each word's rule in the morale: what a win, a loss and a week he did not play move his morale (win up, loss down, not playing down)
+FR_PERSON_MORALE = {"money": (1, 1, 1), "winning": (2, 2, 1), "loyalty": (1, 1, 1), "playing_time": (1, 1, 3), "the_game": (1, 1, 0)}
+FR_HOLDOUT_ALWAYS = ("money",)    # money's rule in the morale: he holds out whenever he is underpaid, whatever his morale (the others only when their morale is low)
+FR_HOLDOUT_NEVER = ("loyalty",)   # loyalty's rule in the morale: he never holds out and never asks to be traded
+# THE MORALE (research B10's LATER: "one number per player, up or down by results and playing time, moving the rating by at most 1 or 2 points through H8"):
+# one whole number from -FR_MORALE_MAX to FR_MORALE_MAX, moved after each of the weeks 1 to FR_MORALE_LAST_WEEK by the week's result, the week's game goal and
+# whether he played (the week's lineup of the injuries), halved toward zero at every new season (stage 6). It moves the player's rating IN A GAME by
+# step(morale, FR_MORALE_STEP): -2 to +2 rating points. In a game the player plays the change goes through the ratings' own H8 door, so the ratings' cap of
+# 1 yard and 3 points stays the ratings' (the morale moves the rating the door reads, never the door's bounds); in the computer's games through the week's
+# sums, inside the bound of the week's changes FR_INJ_SD_MAX (injuries and morale together, D-074).
+FR_MORALE_MAX = 6
+FR_MORALE_DECAY = 1               # every week the morale first moves this much toward zero, then the week's change is added (calibrated, see SX.8n's sweeps below)
+FR_MORALE_STEP = (3, 2)           # (per, cap): -1 at -3 to -5, -2 at -6, +1 at 3 to 5, +2 at 6
+FR_MORALE_LAST_WEEK = 15          # the results of weeks 1 to 15 move it (the week-16 game has no preparation after it, as the injuries)
+FR_MORALE_WORD = 3                # " morale high " at this or more, " morale low " at minus this or less, else " morale good "
+FR_MORALE_TALK = 3                # in the contract talks a morale of this or more makes his mood one step better, of minus this or less one step worse
+# THE HOLDOUTS (research B10's LATER: "one spoken event at the start of camp: Ruiz holds out. 1 pay him, 2 wait, 3 trade him"; NFL: 2025 camps had about five to
+# eight veterans holding out or holding in for a new contract (Hendrickson, McLaurin, Watt, Parsons, Cook and others; CBS Sports' camp holdout tracker,
+# SRC-SECONDARY), about 4 a league-offseason scaled to 34 of 53 places: the target band FR_HOLDOUT_TARGET). At the start of stage 3 a player holds out when he is
+# under contract for the coming season, has played FR_HOLDOUT_SEASONS seasons or more, is rated FR_HOLDOUT_RATING or more, is paid under FR_HOLDOUT_UNDERPAID
+# percent of his market price, is not loyal, and is a money player or his morale is FR_HOLDOUT_MORALE or lower; at most FR_HOLDOUT_TEAM_MAX a team (the most
+# valuable). Paying him is the market contract of his rating for the length of his age; the computer teams and the staff pay when it fits under the cap and the
+# staff's payroll target of stage 7 (resign.target_payroll), else he waits: his morale falls to -FR_MORALE_MAX.
+FR_HOLDOUT_SEASONS = 3
+FR_HOLDOUT_RATING = 75
+FR_HOLDOUT_UNDERPAID = 75
+FR_HOLDOUT_MORALE = -2
+FR_HOLDOUT_TEAM_MAX = 1
+FR_HOLDOUT_PAY_AGE = 25           # the computer teams and the staff pay a holdout only this age or younger (a new long contract for an older player is a risk the
+#                                    staff does not take; the first probe paid every holdout, so nobody ever asked to be traded)
+FR_HOLDOUT_TARGET = (2.0, 6.0)    # holdouts a league-offseason (the check's band)
+# THE TRADE DEMANDS (research B10's LATER: "the step after a holdout; it becomes news, other teams make offers"; NFL: about four to six public trade requests a year
+# (2025: Garrett, Samuel, Meyers, Hendrickson the year before; PFF and CBS Sports, SRC-SECONDARY)). A player who waited asks to be traded from week
+# FR_DEMAND_WEEK when his morale is still FR_DEMAND_MORALE or lower; one the player put on the trade block at camp asks at once (week 1). Every week of the trade
+# window the other teams make their offers by the trades' own rule (trades.block_offers: each gains the margin of the position); a computer team takes the best
+# when it gives up at most FR_DEMAND_GIVE rating points of the position (in value, times the position's weight), else he waits for the next week; the player hears
+# the best FR_DEMAND_OFFERS offers in his to-do list. A demand ends with a trade (his morale back to 0) or at the deadline.
+FR_DEMAND_WEEK = 1
+FR_DEMAND_MORALE = -3
+FR_DEMAND_GIVE = 8
+FR_DEMAND_OFFERS = 3
+# THE WEEKLY GAME GOAL (research B9's LATER: "one weekly game goal spoken before kick-off"; the goals are this game's own, UNVERIFIED): every team's goal of a regular
+# week follows the two teams' strengths (league.sums): stronger by FR_GAME_GOAL_GAP rating points or more, win by FR_GAME_GOAL_MARGIN points or more; weaker by
+# as much, lose by no more than FR_GAME_GOAL_CLOSE points (or win); else win. A goal met lifts every player of the team by FR_GOAL_MORALE (0, see there); the
+# player hears his goal before the kick-off and the verdict before the next week's menu. The numbers are set so a goal is met about half the time in each of the three bands of
+# the fast run (a rule that favors a side is a parity machine, B-P90).
+FR_GAME_GOAL_GAP = 2
+FR_GAME_GOAL_MARGIN = 14
+FR_GAME_GOAL_CLOSE = 14
+FR_GAME_GOAL_PLAYED = (10, 10)    # (margin, close) in a game the engine plays (the player's): see SX.8n's calibration below
+FR_GOAL_MORALE = 0                # a goal met lifts every player of the team by this, a goal missed lowers him by it. 0: THE GOAL MOVES NO MORALE (SX.8n, D-074):
+#                                    with 1 the whole-program run's C-F2 was -1.00 and, with the played games' points, -0.84 (allowed 0.8): a goal is met as
+#                                    often as the team's margins allow, and the margins of the player's games are his own play (a stand-in's sides in the run,
+#                                    a person's skill in the game), which no number of the score table calibrates; so the goal is a spoken target with its
+#                                    verdict (research B9 asks no more), and the morale moves by the results and the playing time only (research B10)
+# THE PLAYER TAGS (research B2's LATER: "three at most as spoken words derived from age, rating, potential"): a star (rated FR_PTAG_STAR or more), else a rising
+# player (aged FR_PTAG_YOUNG or less with high potential), else a veteran (aged FR_PTAG_VETERAN or more), else none; spoken in F9's roster with his morale and
+# his word.
+FR_PTAG_STAR = 85
+FR_PTAG_YOUNG = 24
+FR_PTAG_VETERAN = 31
+# SX.8n CALIBRATION (D-074; work/sweep_people_sx8n.py, the reports work/sweep_people_sx8n_a.txt (16 leagues x 10 seasons) and _b.txt (32 x 12), the same
+# leagues with the items off as the baseline, B-P103). THE MORALE: the start values (no pull toward zero) walked to the edges (65 percent of the players at 3
+# or more by the season's end, a met goal only ever added and a loyal player never lost); with a goal missed taking away what a goal met gives and a pull of
+# 1 a week the team's mean effect was 0.71 rating points (55 of 78) and the win spread rose 0.30; a step of (4, 2) or (4, 1) gave 0.31 but held the bottom
+# three longer (persistence 0.42, 0.43 against 0.37); a pull of 2 a week gives 0.28 (22 of 78), the win spread 2.87 against 2.77 without the items, the
+# persistence 0.36 against 0.375, the mean rating unchanged (the morale moves no rating outside a game). THE GOALS: at 7 points the stronger team met its goal
+# 69 percent of the time and the weaker 34 (the score table's margins are wide); at 14 points 0.53 and 0.51, the even games 0.50. THE HOLDOUTS: a pay age of
+# 29 paid 95 percent of them and nobody asked to be traded; 27, 26 and 25 let 9, 14 and 25 percent wait; 25 with underpaid at 75 percent: 5.2 holdouts a
+# league-offseason (from the second season: every contract of a new league is at the market price), 1.6 waiting, 1.4 trade demands a league-season, 1.3 of
+# them traded (the NFL's 5 to 8 holdouts and 4 to 6 trade requests a year scale to 3 to 5 and 3 to 4: the demands are fewer, said plainly in D-074).
+# THE GOALS OF A PLAYED GAME (FR_GAME_GOAL_PLAYED): the whole-program run (5 x 20) found the player's team 1.00 win a season under its peers of the computer's
+# games (C-F2, allowed 0.8); its goals, judged by the score table's 14 points in a game the engine played, were met 0.256 as the stronger team and 0.725 as the
+# weaker (its morale fell most when it was the stronger side); with the goal's morale off the same run gave -0.70. The engine's margins (work/
+# measure_goal_margins_sx8n.py, 500 played games at gaps of 2, 2.5 and 3 rating points): the median margin is 10 at every gap; at 10 points the stronger
+# team meets its goal 0.517 and the weaker 0.516 (at 14: 0.415 and 0.614). So a game the engine plays (the player's, both of its teams) has the goals' points
+# (10, 10); the computer's games keep the score table's 14 (B-P106). With them the run gave -0.84 (the player's goals met 0.36 and 0.63: the stand-in's sides are
+# not symmetric, and in a person's game his own play sets the margins), so THE GOAL MOVES NO MORALE (FR_GOAL_MORALE 0) and the pull was swept again (work/
+# sweep_people_sx8n_c.txt, 32 x 12, the same leagues without the items: win spread 2.772, persistence of the bottom three 0.375): a pull of 2 left a team's
+# morale effect 0.08 rating points (no player ever at 3); a pull of 1 with the weights above 0.25 (win spread 2.862, persistence 0.384, holdouts 3.8, trade
+# demands 0.9 a league-season); a pull of 2 with every weight doubled 0.35 (2.857, 0.373, 5.3, 1.4). A pull of 1, the weights as designed.

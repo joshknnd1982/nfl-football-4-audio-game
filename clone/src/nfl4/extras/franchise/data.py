@@ -6,7 +6,7 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 8                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 9                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
@@ -15,6 +15,8 @@ FORMAT = 8                                   # league.sav's format; a higher one
 #                                              8 (SX.8m) the compensatory picks awarded (`comp`), the first-round picks owed for a later draft (`future_picks`), the
 #                                                non-exclusive tag with its history of salaries (`tags`), the market's moves (`market["moves"]`), a draft's
 #                                                compensatory picks (`draft["comp"]`)
+#                                              9 (SX.8n) the people: the morale of the players, the holdouts of the last camp, the trade demands, the player's game goal and
+#                                                its verdict (`LeagueRecord.people`, see people.py)
 COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the end of rounds 3 to 7 (NFL, SRC-OFFICIAL)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
@@ -108,7 +110,8 @@ SCORE_TABLE_SIZE = 32
 TODO_EXTRA_WORK, TODO_GAME_PLAN = "extra_work", "game_plan"
 TODO_TRADE = "trade_offer"                    # SX.8j: a trade a computer team offers the player (design 17)
 TODO_INJURY = "injury"                        # SX.8k: play or rest a doubtful or questionable player of the player's team (INJ-4)
-TODO_KINDS = (TODO_EXTRA_WORK, TODO_GAME_PLAN, TODO_TRADE, TODO_INJURY)
+TODO_DEMAND = "trade_demand"                  # SX.8n: a player of the player's team asks to be traded: the other teams' offers, or keep him
+TODO_KINDS = (TODO_EXTRA_WORK, TODO_GAME_PLAN, TODO_TRADE, TODO_INJURY, TODO_DEMAND)
 ITEM_NEW, ITEM_LATER, ITEM_SET = 0, 1, 2     # not asked yet; answered "later"; the game plan, taken for this week's game
 REGULAR_WEEKS = 16
 SUPER_BOWL_WEEK = 20                         # the last week (gtp) of a season: the Super Bowl
@@ -118,7 +121,8 @@ MAX_NEWS = 400                               # lines kept in league.sav (a seaso
 MAX_TODO = 200
 # the fourteen kinds of news line of news.txt (design 8.3, 15); the letter says the kind
 NEWS_POOLS = ("NWB", "NWU", "NWC", "NWS", "NWL", "NWY", "NWZ", "NWM", "NWT", "NWR", "NWD", "NWP", "NWK", "NWX",      # NWX (SX.8j): a trade between two other teams
-              "NWJ")                                                                                          # NWJ (SX.8k): another team's player out for weeks
+              "NWJ",                                                                                          # NWJ (SX.8k): another team's player out for weeks
+              "NWH")                                                                                          # NWH (SX.8n): a player asks to be traded
 # the pools of injuries.txt (SX.8k, INJ-5): the spoken name of each injury kind (tuning FR_INJ_KINDS) and IJX, the announcer's line when a player is hurt in a game
 INJURY_KIND_POOLS = ("IJA", "IJB", "IJC", "IJD", "IJE", "IJF", "IJG", "IJH", "IJK", "IJL", "IJM")
 INJURY_POOLS = INJURY_KIND_POOLS + ("IJX",)
@@ -128,6 +132,7 @@ STATUS_OUT, STATUS_DOUBTFUL, STATUS_QUESTIONABLE, STATUS_HEALTHY = "out", "doubt
 SALARY_PER_MILLION = 10                      # a salary is a whole number of tenths of a million dollars (SX.8g, D-066): 124 is 12.4 million
 MAX_DEAD = 100_000                           # the most dead money a team's record may hold (a bound for the whole-file check)
 
-MAX_TRADES = 200                             # the trades of one season kept in league.sav (SX.8j)
+MAX_DEMANDS = 64                             # the trade demands of one season kept in league.sav (SX.8n)
+MAX_TRADES = 200                            # the trades of one season kept in league.sav (SX.8j)
 MAX_RESULTS = 400                           # games of one season (16 weeks of 16 games and 13 play-off games), with room
 MAX_HISTORY = 500                            # seasons kept

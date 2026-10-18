@@ -16,6 +16,9 @@ wait) and writes league.sav, as `offseason.py` does for the stages:
 * SX.8k: the preparation first draws the injuries of the week that was played (`injuries.after_games`, the one code path of the fast run too; the
   player's game drew its own per play and is left out), makes the player's injury report (told after the news) and the news of another team's injury
   (NWJ), and asks about his doubtful and questionable players who matter (`injuries.to_ask`: play him or rest him; nothing is decided for him).
+* SX.8n: the preparation first moves every player's morale by the week that was played (`people.after_week`: the results, the game goals, who played; before the
+  injuries of that week's games are drawn), makes the trade demands of the week after the week's trades (`people.demands_week`: a computer team's demand may be
+  a trade, the player's is an item of his to-do list), tells a new demand in the news (NWH) and sets the player's game goal (told at the kick-off).
 * SX.8j: the preparation also makes the computer teams' trades of the week (`trades.week`, the one code path of the fast run too): a trade of two
   computer teams is made at once and told in the news (NWX); a trade with the player's team is an offer in his to-do list (accept, decline, later).
 """
@@ -28,7 +31,7 @@ from .. import playbook_data as PD
 from .. import playbooks as PB
 from ..nfl_rules import is_nfl
 from . import data as D
-from . import injuries, injury_flow, news, staff, todo, trade_flow, trades
+from . import injuries, injury_flow, news, people, people_flow, staff, todo, trade_flow, trades
 from .league import SEASON, team_index
 from .news_pools import DEFAULT_POOLS
 from .question import FranchiseQuestion
@@ -48,15 +51,20 @@ def prepare(p, league, week: int) -> None:
     todo.drop_old(league, week)
     events = []
     back = []
+    staff_setting = bool(getattr(g.options.settings.game, "nx_fr_auto", False))
     if week > 1:                                             # what the week that was just played brings (judged before a trade changes a strength)
         todo.computer_extra_work(league, week - 1)
         events = news.week_events(league, week - 1, cut=False)
+        people.after_week(league, week - 1, league.results, staff_setting)     # SX.8n: the morale (who played: before that week's injuries join the league)
         back = injuries.after_games(league, week - 1, g.rnd, surnames_of(g), played_teams(league, week - 1)).back
     made, offers = trades.week(league, week, league.records)
+    demanded, own_demands, filed = people.demands_week(league, week, league.records)       # SX.8n: after the week's own trades
     if week > 1:                                             # (SX.8j: the trades of the computer teams share the week's lines; SX.8k: so does another team's injury)
         hurt = injury_flow.headline(league, week)
-        extra = news.trade_events(league, made) + ([hurt] if hurt is not None else [])
+        extra = news.trade_events(league, made + demanded) + news.demand_events(league, filed) + ([hurt] if hurt is not None else [])
         news.make_entries(league, news.with_trades(events, extra), pools, store.words, g.rnd, week - 1)
+    elif filed or demanded:                                  # SX.8n: week 1 has no week before it; its demands and their trades are news at once (the review)
+        news.make_entries(league, news.with_trades([], news.trade_events(league, demanded) + news.demand_events(league, filed)), pools, store.words, g.rnd, 1)
     lines = injury_flow.report_lines(league, week, back, store.words, getattr(g, "injury_pools", None), g.rnd,
                                      bool(getattr(g.options.settings.game, "nx_fr_auto", False)))
     league.injuries["report"] = {"season": league.season, "week": week, "lines": lines, "told": 0} if lines else None
@@ -69,7 +77,9 @@ def prepare(p, league, week: int) -> None:
         items.append(plan)
     items += [todo.trade_item(league, week, offer) for offer in offers]
     items += [injury_flow.item(league, week, pid) for pid in injuries.to_ask(league, week)]
+    items += [people_flow.demand_item(league, week, row, choices) for row, choices in own_demands]
     league.todo.extend(items)
+    people.set_goal(league, week, team_index(p.season.tn3, p.season.tn4))    # SX.8n: the player's game goal of the week, told at the kick-off
     league.told = [league.season, week]
     league.prepared = [league.season, week]
     store.save()
@@ -171,6 +181,8 @@ def item_view(g, league, item: dict, later: bool = True) -> tuple:
         answers = [X.text("NXX-A01"), X.text("NXX-A02")]
     elif item["kind"] == D.TODO_INJURY:                      # SX.8k: play or rest a hurt player (the staff's recommendation first)
         situation, answers = injury_flow.item_view(words, league, item)
+    elif item["kind"] == D.TODO_DEMAND:                      # SX.8n: a player asks to be traded: the offers and "keep him" (the staff's recommendation first)
+        situation, answers = people_flow.demand_view(words, league, item)
     else:
         table = _table(g)
         theirs_o, theirs_d, ours_o, ours_d = item["styles"]
@@ -191,6 +203,7 @@ def finish_item(store, league, item: dict, answer: int, answers: int) -> tuple:
         store.save()
         return False, ""
     text = ""
+    wanted = people_flow.demand_choices(league, item)[answer] is not None if item["kind"] == D.TODO_DEMAND else False     # SX.8n: he chose a trade
     chosen = todo.apply_answer(league, item, answer)
     if item["kind"] == D.TODO_TRADE:
         trade = trades.Trade.from_list(item["trade"])
@@ -207,6 +220,8 @@ def finish_item(store, league, item: dict, answer: int, answers: int) -> tuple:
             text = X.text("NXD-11", player=chosen.name)
     elif item["kind"] == D.TODO_INJURY:
         text = injury_flow.result_text(league, item["player"], bool(chosen))
+    elif item["kind"] == D.TODO_DEMAND:
+        text = people_flow.demand_result(getattr(store, "words", None), league, item, chosen, wanted=wanted)
     elif item["state"] == D.ITEM_SET:
         text = X.text("NXD-23")
     store.save()
@@ -246,7 +261,7 @@ def staff_takes(p, league) -> int:
     made = []
     for item in items:
         result = todo.apply_answer(league, item, 0)
-        if item["kind"] == D.TODO_TRADE and result is not None:
+        if item["kind"] in (D.TODO_TRADE, D.TODO_DEMAND) and result is not None:
             made.append(result)
     if items:
         p.store.save()
@@ -282,6 +297,7 @@ def before_menu(p) -> None:
         g.say2(X.text("NXF-08", n=league.season))
     speak_news(p, league)
     injury_flow.say_report(p, league)                        # SX.8k: the injury report after the news, once
+    people_flow.say_verdict(p)                               # SX.8n: last week's game goal, met or missed, once
     if g.options.settings.game.nx_fr_auto:
         staff_takes(p, league)
     else:
@@ -294,6 +310,13 @@ def before_game(p) -> None:
     league = store.league
     if not in_regular_season(league):
         return
+    _deadline(p, league)
+    if not p.saved_game:                                      # SX.8n: the game goal, the last words before the kick-off (a loaded game's kick-off is past)
+        people_flow.say_goal(p)
+
+
+def _deadline(p, league) -> None:
+    g, store = p.g, p.store
     items = todo.waiting(league)
     if not items:
         return
