@@ -77,6 +77,16 @@ def dead_money(player) -> int:
     return (player.salary * player.years * T.FR_DEAD_SHARE + 50) // 100
 
 
+def released_free(player) -> bool:
+    """SX.8m: an undrafted rookie released at his first cut (still waiting for a place, never drafted) costs no dead money."""
+    return player.place < 0 and player.drafted is None and player.status == "active"
+
+
+def release_cost(player) -> int:
+    """The dead money releasing him would charge now: `dead_money`, or nothing for an undrafted rookie at his first cut (`released_free`)."""
+    return 0 if released_free(player) else dead_money(player)
+
+
 def sign(player, salary: int, years: int) -> None:
     player.salary, player.years = salary, years
 
@@ -93,10 +103,16 @@ def initial_contract(player) -> tuple:
     return salary, 1 + player.id % years
 
 
+def pick_number(round_no: int, in_round: int) -> int:
+    """The pick's place among the draft's regular picks (1 to 224), the number the rookie scale reads: a compensatory pick (33 and on of its round, SX.8m)
+    is paid as the last pick of its round (it sits at the round's end)."""
+    return (round_no - 1) * D.TEAMS + min(in_round, D.TEAMS)
+
+
 def draft_overall(player) -> int:
-    """The overall pick number of a drafted player: [season, round, pick in the round]."""
+    """The scale's pick number of a drafted player: [season, round, pick in the round]."""
     _season, round_no, in_round = player.drafted
-    return (round_no - 1) * D.TEAMS + in_round
+    return pick_number(round_no, in_round)
 
 
 # ----- a team's money -----
@@ -106,7 +122,7 @@ def team_players(league, team: int, waiting: dict | None = None) -> list:
     it is None the draft record's own picks are used)."""
     placed = [league.players[pid] for pid in league.rosters[team - 1] if pid]
     if waiting is None:
-        return placed + league.waiting_rookies(team)
+        return placed + league.waiting_rookies(team)          # (the drafted rookies and, SX.8m, the undrafted free agents in camp)
     return placed + list(waiting.get(team, ()))
 
 
@@ -194,7 +210,7 @@ def cap_after_cut(league, team: int, waiting: dict, released: list) -> int:
         held[player.pos] += 1
     empty = sum(max(0, D.GROUP_SIZE[position] - count) for position, count in held.items())
     return (sum(player.salary for player in kept) + empty * T.FR_MIN_SALARY + league.dead[team - 1]
-            + sum(dead_money(player) for player in released))
+            + sum(release_cost(player) for player in released))
 
 
 def cap_over(league, team: int, waiting: dict, released: list) -> int:

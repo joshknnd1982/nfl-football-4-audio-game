@@ -20,7 +20,7 @@ from . import history, market_flow, mode, news, staff_flow, todo, trade_flow, we
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
-HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
 
@@ -52,12 +52,13 @@ def _words(g) -> history.Words:
     return history.Words(lambda team: g.league.team(*team_ref(team)))
 
 
-def _lines_picker(speech, keys, title: str, lines: list) -> None:
+def _lines_picker(speech, keys, title: str, lines: list, on_enter=None) -> None:
+    """A list to hear; `on_enter(index)` (SX.8m: the roster's renaming) acts on Enter and returns the sentence to say, the list stays."""
     if not lines:
         speech.stop()
         speech.say_async(X.text("NXG-18"))
         return
-    ListPicker(speech, keys, title, len(lines), lambda i: lines[i], close_on_enter=False).run()
+    ListPicker(speech, keys, title, len(lines), lambda i: lines[i], on_enter=on_enter, close_on_enter=False).run()
 
 
 def franchise_menu(g, speech, keys) -> None:
@@ -175,13 +176,24 @@ def franchise_menu(g, speech, keys) -> None:
         league = store.league
         players = [p for p in league.group_of(league.team, position) if p is not None]
         lines = [word.player_with_contract(p) for p in players]      # SX.8b: the rating and the potential are spoken; SX.8g: and the contract
-        for rookie in rookies_of(position):                    # a rookie is told by his range until the cut (design 7.6, 11)
+        rookies = rookies_of(position)
+        for rookie in rookies:                                 # a rookie is told by his range until the cut (design 7.6, 11)
             if league.draft is not None:                       # the draft record lives until the cut is applied (stage 5)
                 low, high = league.rookie_range(rookie)
                 lines.append(word.prospect_line(rookie.name, rookie.pos, low, high, rookie.age, rookie.potential))
             else:
                 lines.append(word.player(rookie))
-        _lines_picker(speech, keys, word.group(position), lines)
+        everyone = players + rookies
+
+        def enter(index: int):                                 # SX.8m: Enter renames the player, with the original's typed prompt
+            from . import rename
+            player = everyone[index]
+            text = rename.ask(g, speech, keys, store, player)
+            if index < len(players):
+                lines[index] = word.player_with_contract(player)
+            return text
+
+        _lines_picker(speech, keys, word.group(position), lines, on_enter=enter)
 
     def roster_menu() -> None:
         word = _words(g)

@@ -547,9 +547,9 @@ def test_f9_lists_the_free_agents_with_their_asking_prices_during_the_stage(tmp_
     lists = []
     real = menus._lines_picker
 
-    def picker(speech, keys, title, lines):
+    def picker(speech, keys, title, lines, **kwargs):
         lists.append((title, list(lines)))
-        real(speech, keys, title, lines)
+        real(speech, keys, title, lines, **kwargs)
     monkeypatch.setattr(menus, "_lines_picker", picker)
     league = market_league()
     rig = run(tmp_path, league, keys=FREE_AGENTS_IN_F9 + [ESC] * 4, until=lambda r: bool(lists))

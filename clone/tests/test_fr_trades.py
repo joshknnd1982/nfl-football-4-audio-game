@@ -582,14 +582,14 @@ def test_format_five_round_trips_the_trades_and_a_format_four_file_loads_with_no
     league = scenario()
     TR.execute(league, TR.search(league, 5, standing())[0], 5, TR.KIND_COMPUTER)
     data = json.loads(league.to_json())
-    assert data["format"] == D.FORMAT == 7 and data["trades"] == league.trades     # (format 7 since SX.8l: the trades are format 5's)
+    assert data["format"] == D.FORMAT == 8 and data["trades"] == league.trades     # (format 8 since SX.8m: the trades are format 5's)
     again = LeagueRecord.from_json(league.to_json())
     assert again.trades == league.trades and again.to_json() == league.to_json()
     old = json.loads(fresh().to_json())
     del old["trades"]
     old["format"] = 4
     loaded = LeagueRecord.from_json(json.dumps(old))
-    assert loaded.trades == {"picks": [], "log": []} and json.loads(loaded.to_json())["format"] == 7       # (7 since SX.8l)
+    assert loaded.trades == {"picks": [], "log": []} and json.loads(loaded.to_json())["format"] == 8       # (8 since SX.8m)
 
 
 def test_a_format_five_file_without_its_trades_is_damage():
@@ -687,7 +687,8 @@ def test_a_draft_saved_by_format_four_gets_the_owners_of_the_draft_order():
         draft.make_pick(team, draft.best_for(team))
     data = json.loads(league.to_json())
     order = data["draft"]["order"]
-    del data["draft"]["owners"], data["trades"]
+    del data["draft"]["owners"], data["draft"]["comp"], data["draft"]["undrafted"], data["trades"]     # (what formats 5 to 8 added to a draft)
+    del data["comp"], data["future_picks"], data["tags"]
     data["format"] = 4
     loaded = LeagueRecord.from_json(json.dumps(data))
     assert loaded.draft["owners"] == [order[i % D.TEAMS] for i in range(D.DRAFT_PICKS)]

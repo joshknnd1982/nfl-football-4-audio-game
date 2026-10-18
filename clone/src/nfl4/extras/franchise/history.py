@@ -235,7 +235,7 @@ class Words:
 
     def prospect_line(self, name: str, position: str, low: int, high: int, age: int, potential: str) -> str:
         """NXK-06: a prospect, or a rookie before the cut, by the range the scouts give (SX.8d)."""
-        return X.text("NXK-06", player=name, position=self.position(position), lo=low, hi=high, a=age,
+        return X.text("NXK-06", player=name, position=self.position(position), lo=max(D.RATING_MIN, low), hi=high, a=age,     # (never under the scale, SX.8m)
                       potential=self.potential(potential))
 
     def open_places(self, places: list) -> str:

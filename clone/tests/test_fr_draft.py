@@ -54,9 +54,10 @@ def test_one_prospect_is_drawn_in_the_order_position_name_rating_twice_potential
     script = [below_value(35, 14), value_for(len(SURNAMES), free), below_value(15, 7), below_value(15, 9), below_value(100, 10),
               below_value(3, 1), below_value(7, 4)]
     prospect = DR.make_class(league, GameRandom(ScriptedRandom(script, strict=False)), SURNAMES)[0]
+    base = T.FR_ROOKIE_RATING[0]                                       # 45 since SX.8m (46 before: the design's)
     assert (prospect.pos, prospect.name, prospect.true, prospect.potential, prospect.age, prospect.low) == (
-        "DL", SURNAMES[free - 1], 46 + 7 + 9, "high", 22, 62 - 4)
-    assert (prospect.middle, prospect.high) == (61, 64)
+        "DL", SURNAMES[free - 1], base + 7 + 9, "high", 22, base + 16 - 4)
+    assert (prospect.middle, prospect.high) == (base + 15, base + 18)
 
 
 def test_a_name_in_use_by_an_active_player_is_drawn_again():
@@ -79,7 +80,8 @@ def test_the_class_has_the_designs_size_ranges_ages_and_unique_new_names(seed):
     names = [p.name for p in prospects]
     assert len(set(names)) == 260 and not set(names) & active
     for prospect in prospects:
-        assert 46 <= prospect.true <= 74 and 21 <= prospect.age <= 23
+        base, span = T.FR_ROOKIE_RATING
+        assert base <= prospect.true <= base + 2 * (span - 1) and 21 <= prospect.age <= 23
         assert prospect.low <= prospect.true <= prospect.low + 6 and prospect.high - prospect.low == 6
         assert prospect.potential in D.POTENTIALS and prospect.pos in D.POSITIONS
     shares = {pos: sum(1 for p in prospects if p.pos == pos) / 260 for pos in D.POSITIONS}

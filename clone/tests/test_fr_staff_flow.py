@@ -219,9 +219,9 @@ def test_f9_has_your_job_and_staff_with_the_goal_the_job_rating_and_the_coordina
     lists = []
     real = menus._lines_picker
 
-    def picker(speech, keys, title, lines):
+    def picker(speech, keys, title, lines, **kwargs):
         lists.append((title, list(lines)))
-        real(speech, keys, title, lines)
+        real(speech, keys, title, lines, **kwargs)
     monkeypatch.setattr(menus, "_lines_picker", picker)
     keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 9 + [ENTER, ESC, ESC, ESC, ESC]       # F9, Franchise, your job and staff (the 10th item)
     rig = offseason_rig(tmp_path, staff_league(), keys=keys, until=lambda r: bool(lists))
@@ -352,9 +352,9 @@ def test_f9_your_job_and_staff_says_he_was_fired_while_the_job_question_waits(tm
     lists = []
     real = menus._lines_picker
 
-    def picker(speech, keys, title, lines):
+    def picker(speech, keys, title, lines, **kwargs):
         lists.append((title, list(lines)))
-        real(speech, keys, title, lines)
+        real(speech, keys, title, lines, **kwargs)
     monkeypatch.setattr(menus, "_lines_picker", picker)
     keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 9 + [ENTER, ESC, ESC, ESC, ESC]       # at the job question: F9, Franchise, your job and staff
     run(tmp_path, staff_league(player_approval=20, player_wins=4), keys=keys, until=lambda r: bool(lists))

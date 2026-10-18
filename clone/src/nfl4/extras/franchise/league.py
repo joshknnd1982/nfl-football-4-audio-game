@@ -102,6 +102,9 @@ class LeagueRecord:
     trades: dict = field(default_factory=lambda: {"picks": [], "log": []})   # the season's trades and the traded picks of the coming draft (SX.8j, format 5): see trades.py
     injuries: dict = field(default_factory=lambda: {"hurt": [], "stand_ins": [], "report": None})   # the season's injuries (SX.8k, format 6): see injuries.py
     staff: dict | None = None                          # the head coaches, the coordinators and the stage "the staff" in progress (SX.8l, format 7): see staff.py
+    comp: list = field(default_factory=list)           # the compensatory picks awarded for a coming draft (SX.8m, format 8): see comp.py
+    future_picks: list = field(default_factory=list)   # the first-round picks owed for the draft after the coming one (SX.8m, format 8): see tags.py
+    tags: dict = field(default_factory=lambda: {"history": {}, "open": None, "sheet": None})   # the non-exclusive tag (SX.8m, format 8): see tags.py
 
     # ----- the teams -----
 
@@ -132,11 +135,12 @@ class LeagueRecord:
         """The team's rookies waiting for the cut (stages 4 and 5): drafted, active, without a place, in pick order."""
         if not self.draft:
             return []
-        return [self.players[pid] for t, _, pid in self.draft["picks"] if t == team and pid in self.players]
+        rows = self.draft["picks"] + self.draft.get("undrafted", [])          # SX.8m: and the undrafted free agents in camp
+        return [self.players[pid] for t, _, pid in rows if t == team and pid in self.players]
 
     def rookie_range(self, player: Player) -> tuple:
         """(low end, high end) of the spoken range of a rookie waiting for the cut."""
-        for _, index, pid in self.draft["picks"]:
+        for _, index, pid in self.draft["picks"] + self.draft.get("undrafted", []):
             if pid == player.id:
                 low = self.draft["class"][index][5]
                 return low, low + D.RANGE_SPAN
@@ -198,7 +202,7 @@ class LeagueRecord:
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
                 "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
-                "injuries": self.injuries, "staff": self.staff}
+                "injuries": self.injuries, "staff": self.staff, "comp": self.comp, "future_picks": self.future_picks, "tags": self.tags}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -248,6 +252,8 @@ class LeagueRecord:
                 record.injuries = data["injuries"]
             if version >= 7:
                 record.staff = data["staff"]
+            if version >= 8:
+                record.comp, record.future_picks, record.tags = data["comp"], data["future_picks"], data["tags"]
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -257,6 +263,15 @@ class LeagueRecord:
             # (made first: the check of every older format reads the owners of a draft in progress)
             order = record.draft["order"]
             record.draft["owners"] = [order[i % len(order)] for i in range(D.DRAFT_PICKS)] if order else []
+        if version < 8:
+            # a file of format 7 or older (SX.8m, the migration of format 8): no compensatory pick was ever awarded and no tag history kept (`comp`,
+            # `future_picks` and `tags` keep their empty defaults); a market in progress has no moves recorded and a draft in progress no compensatory picks
+            if isinstance(record.market, dict) and "moves" not in record.market:
+                record.market["moves"] = []
+            if isinstance(record.draft, dict) and "comp" not in record.draft:
+                record.draft["comp"] = []
+            if isinstance(record.draft, dict) and "undrafted" not in record.draft:
+                record.draft["undrafted"] = []
         if version < 7:
             # a file of format 6 or older has no staff: a new league's staff (no draw), made before any check, which reads the staff (the migration of format 7)
             from . import staff as staff_rules
@@ -331,6 +346,9 @@ class LeagueRecord:
         injury_rules.check_injuries(self, whole)               # SX.8k: the season's injuries, the stand-ins and the week's report
         from . import staff as staff_rules
         staff_rules.check_staff(self, whole)                   # SX.8l: the head coaches, the coordinators and the stage of the staff in progress
+        from . import comp as comp_rules, tags as tag_rules
+        comp_rules.check_comp(self, whole)                     # SX.8m: the compensatory picks awarded for a coming draft
+        tag_rules.check_tags(self, whole)                      # SX.8m: the non-exclusive tag and the first-round picks owed
         self._check_results(whole)
         self._check_season(whole, ints)
 

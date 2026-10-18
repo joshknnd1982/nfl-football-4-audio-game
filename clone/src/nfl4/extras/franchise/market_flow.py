@@ -12,13 +12,19 @@ player and writes league.sav, in the way `resign_flow.py` and `draft_flow.py` do
   player handed the rest of free agency to it. Nothing is decided for the player otherwise: with the staff setting off every round is asked, and a round
   with no offer signs nobody for him.
 * The free agents nobody signed leave: stage 6 drops them like the released.
+* SX.8m: when the player put the non-exclusive tag on one of his players (stage 7), the stage's first write also holds the offer sheet of the computer team
+  that wants him (`tags.offer_sheet`, or none); the player keeps him at the offer or lets him go for two first-round picks (the staff answers by its
+  recommendation when it handles his team), the answer is applied and written, then told. Every round's signings are kept in `market["moves"]`, and the
+  last round's write awards the compensatory picks of next year's draft (`comp.award`), which are told with the stage's end.
 """
 from __future__ import annotations
 
 from .. import nx_texts as X
 from .. import tuning as T
+from . import comp
 from . import data as D
 from . import market as M
+from . import tags
 from .question import FranchiseQuestion
 
 END, STAFF, SETTING = "end", "staff", "setting"  # how the player's questions of a round end: his offers are in, the rest is the staff's, the staff setting came on
@@ -36,12 +42,28 @@ def stage_free_agency(p, n: int, m: int, short: bool) -> None:
     words = store.words
     team = league.team
     settings = g.options.settings.game
+    opening: list = []                           # SX.8m: what the offer sheet's answer says, heard with the stage's first lines
+    header = off._stage_line(n, m, "NXE-18")
+    heard_header = False
     if league.market is None:                    # the stage starts: the market is opened and written before anything is said
         league.market = M.begin()
+        unwanted = None
+        if tags.tagged(league) is not None:      # SX.8m: the offer sheet for the player of the non-exclusive tag (or none), in the same write
+            sheet = tags.offer_sheet(league)
+            if sheet is None:
+                unwanted = tags.tagged(league)
+                tags.close(league)
+            else:
+                league.tags["sheet"] = list(sheet)
         store.save()
+        if unwanted is not None:
+            opening.append(X.text("NXU-55", player=unwanted.name))
+    if league.tags.get("sheet"):
+        heard_header = not settings.nx_fr_auto   # the question of the sheet begins with the stage's line
+        opening += _offer_sheet(g, words, store, league, bool(settings.nx_fr_auto), header)
     state = league.market
     count = len(M.pool(league))
-    preface = [off._stage_line(n, m, "NXE-18"), X.text("NXJ-I01") if count == 1 else X.text("NXJ-01", n=count)]
+    preface = ([] if heard_header else [header]) + opening + [X.text("NXJ-I01") if count == 1 else X.text("NXJ-01", n=count)]
     told_intro = said_staff = False
     leftover = 0
     while state["round"] <= T.FR_FA_ROUNDS:
@@ -66,6 +88,7 @@ def stage_free_agency(p, n: int, m: int, short: bool) -> None:
         # (when the staff makes the offers of the player's team it is a computer team of the round: `skip` is empty)
         offers = {bid.player: bid for bid in mine}
         result = M.run_round(league, number, mine, skip=() if staff else (team,))
+        state["moves"] += result.moves                # SX.8m: for the compensatory picks
         signed_mine = [(player, bid) for player, bid in result.signed if bid.team == team]
         lost = [bid for bid in offers.values() if bid.player not in {pl.id for pl, _ in signed_mine}]
         state["signed"] += len(signed_mine)
@@ -75,6 +98,7 @@ def stage_free_agency(p, n: int, m: int, short: bool) -> None:
         last = number == T.FR_FA_ROUNDS
         if last:
             leftover = len(M.pool(league))
+            comp.award(league, state["moves"])            # SX.8m: the compensatory picks of next year's draft
             league.market = None
             league.stage_no = off._next_stage(D.STAGE_FREE_AGENCY)
         store.save()                             # written before it is told (B-X53)
@@ -88,11 +112,14 @@ def stage_free_agency(p, n: int, m: int, short: bool) -> None:
         for line in lines:                       # (in a short offseason `_result_lines` holds only his own signings and offers: he must know them before the next round)
             g.say2(line)
     closing = X.text("NXJ-F02", n=state["signed"], m=state["lost"], k=leftover)
+    comp_lines = _comp_lines(league, short)
+    for line in comp_lines if short else []:
+        g.say2(line)
     if short:
         total = state["signed"]
         g.say2(X.text("NXJ-I04") if total == 0 else X.text("NXJ-I03") if total == 1 else X.text("NXJ-G02", n=total))
     else:
-        off.wait_for_enter(g, [closing, X.text("NXE-03")])
+        off.wait_for_enter(g, [closing] + comp_lines + [X.text("NXE-03")])
 
 
 def market_lines(league, words) -> list:
@@ -235,3 +262,48 @@ def _offer_menu(g, words, store, league, state: dict, number: int, player, needs
     state["offers"] = others + [[player.id, amount]]
     store.save()                                 # the offer is written as it is placed
     return [X.text("NXJ-C07", player=player.name, contract=words.contract_of(amount, years))]
+
+
+# ----- the offer sheet of the non-exclusive tag (SX.8m) -----
+
+def _offer_sheet(g, words, store, league, staff: bool, header: str) -> list:
+    """The computer team's offer for the player of the non-exclusive tag: keep him at the offer or let him go for its first-round picks of this draft and the
+    next. With the staff handling the player's team the staff's recommendation is taken. The answer is applied and written; returns the lines that tell it."""
+    team, salary, years = league.tags["sheet"]
+    player = tags.tagged(league)
+    contract = words.contract_of(salary, years)
+    can = tags.can_match(league, player, salary)
+    lead: list = []
+    if staff:
+        keep = tags.should_match(league, player, salary, years)
+        lead.append(X.text("NXU-56", player=player.name))
+    else:
+        situation = [header, X.text("NXU-50", team=words.team_name(team), player=player.name, position=words.position(player.pos), contract=contract),
+                     X.text("NXU-51") if can else X.text("NXU-52")]
+        recommended = tags.should_match(league, player, salary, years)
+        kinds = ([True, False] if recommended else [False, True]) if can else [False]
+        items = [X.text("NXU-A08") if kind else X.text("NXU-A09") for kind in kinds]
+        keep = kinds[FranchiseQuestion(g, situation, items).ask()]
+    if keep:
+        tags.match(league, player, salary, years)
+        text = X.text("NXU-53", player=player.name, contract=contract)
+    else:
+        tags.let_go(league, player, team, salary, years)
+        text = X.text("NXU-54", player=player.name, team=words.team_name(team))
+    tags.close(league)
+    store.save()                                  # written before it is told (B-X53)
+    return lead + [text]
+
+
+def _comp_lines(league, short: bool) -> list:
+    """The compensatory picks awarded at the end of the stage for next year's draft: the league's count (a full offseason) and the player's own."""
+    season = league.season + 1
+    rows = [row for row in league.comp if row[0] == season]
+    own = comp.of_team(league, league.team, season)
+    lines = []
+    if rows and not short:
+        lines.append(X.text("NXU-60", n=len(rows)) if len(rows) > 1 else X.text("NXU-64"))
+    if own:
+        rounds = ", ".join(X.text("NXU-62", round=r) for r in own)
+        lines.append(X.text("NXU-61", n=len(own), list=rounds) if len(own) > 1 else X.text("NXU-63", list=rounds))
+    return lines

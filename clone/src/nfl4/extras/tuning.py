@@ -321,7 +321,7 @@ FR_ROOKIE_POTENTIAL_SHARES = (25, 75)       # below(100): under 25 high, under 7
 # offset below(FR_SCOUT_SPAN), which places the true rating inside the spoken range (low end = true - offset, high end = low end + 6).
 FR_CLASS_SIZE = 260
 FR_CLASS_WEIGHTS = (("RB", 6), ("WR", 6), ("QB", 2), ("DL", 6), ("LB", 5), ("CB", 4), ("S", 2), ("RET", 2), ("K", 1), ("P", 1))
-FR_ROOKIE_RATING = (46, 15)                  # 46 + below(15) + below(15): 46 to 74, mean 60
+FR_ROOKIE_RATING = (45, 15)                  # 45 + below(15) + below(15): 45 to 73, mean 59 (SX.8m: 46 to 45, see below)
 FR_ROOKIE_AGE = (21, 3)                      # 21 + below(3)
 FR_SCOUT_SPAN = 7                            # the offset below(7): the true rating lies 0 to 6 above the low end of the spoken range
 # What a team's pick values (design 7.3): the middle of the range + the potential bonus + the need bonus, its parts added.
@@ -677,3 +677,60 @@ FR_COORD_ADAPT = 75               # a coordinator rated this or more reads the o
 # league-season (6.5 from season 11 on), the mean job rating 63, inside the NFL's band of FR_FIRE_TARGET. With a new league's spread of starting ratings
 # (FR_APPROVAL_LEAGUE_START, after the independent review) the final runs give 5.71 a league-season over 2,000 leagues x 20 seasons (6.27 from season 11 on,
 # each season's mean 3.63 to 6.33: the first seasons fire fewer while the league's ratings spread out), the mean job rating 67.3.
+
+# ----- SX.8m: the market's later items (NX6, design 17 SX.8m; extras/franchise/camp.py, undrafted.py, comp.py, tags.py, rename.py; a franchise only) -----
+# THE CAMP FOCUS (research B6's LATER: "focus this camp on offense, defense or young players, a small bounded bonus"; the item is the research's own idea, no league
+# source: UNVERIFIED): at the start of stage 3 every team chooses a focus and its FR_CAMP_PLAYERS first candidates of the focus get one development point each
+# (the points of design 8.2, at most FR_EXTRA_WORK_POINTS a season); a candidate is an active player of the focus with fewer points than that, in the order of
+# the extra work (the highest potential, the youngest, the highest rating). The computer teams and the staff take the focus whose side of the roster is
+# furthest under the league's mean of that side (`camp.recommend`), "young players" when neither is under it.
+FR_CAMP_FOCI = ("offense", "defense", "young")
+FR_CAMP_SIDES = {"offense": ("QB", "RB", "WR"), "defense": ("DL", "LB", "CB", "S")}
+FR_CAMP_YOUNG_AGE = 24            # "young players": aged this or less (after the year's aging of stage 2)
+FR_CAMP_PLAYERS = 2               # the players of the focus who get a point (the points are rating added to the league: C-F4 counts them; 3 lifted the league's
+#                                    mean rating by 0.3 to 0.5 from season 4 on against the same leagues without a camp, 16 leagues x 10 seasons, work/probe_later_sx8m.py)
+# THE UNDRAFTED FREE AGENTS (research B4's LATER; NFL: an undrafted rookie signs for three years, operations.nfl.com contract language, SRC-OFFICIAL in research F2;
+# the market right after the draft, Madden 27's draft classes with undrafted free agents, SRC-OFFICIAL in research B12): right after the last pick the prospects
+# of the class nobody drafted are a market for places in camp; a team offers to the prospects it wants by the draft's own need rule (an open place, or the
+# middle of his range over the weakest player who would hold a place), the most valuable to it first, at most FR_UDFA_CHASE; the prospects best first each
+# sign with the team that values him most (the draft's value), at most FR_UDFA_MAX a team, on the minimum salary of a rookie for FR_FILL_YEARS, and compete
+# in the roster cut like a drafted rookie (his release before the season costs no dead money). MEASURED first (16 leagues x 6 seasons, work/sx8m/probe_udfa.py):
+# a market for the places the cut leaves EMPTY could sign nobody: the draft fills the roster, 2 places a league-offseason are empty after the cut (kickers and
+# punters by the cut's floor), so the market sits before the cut, where the NFL has it. Start values (UNVERIFIED: the NFL's clubs sign 10 to 20 a year for a
+# 90-man camp, a 34-place roster has no camp of that size)
+FR_UDFA_CHASE = 4
+FR_UDFA_MAX = 2
+# THE COMPENSATORY PICKS (research B4's LATER, F2; NFL: a club that suffers a net loss of compensatory free agents in the free agency period is eligible for as many
+# compensatory picks, offsetting each one lost by each one gained of an equal or higher value; the formula (salary, playing time, post-season honors) is not
+# published; no club gets more than four in a year; the league awards at most 32, at the end of rounds 3 to 7, by the value of the players lost; SRC-OFFICIAL,
+# the league's announcements on operations.nfl.com read through the search's summaries, 2026-10-17: the pages themselves answered 404 to a fetch). The clone:
+# a qualifying free agent is one who signed with another team in the market for FR_COMP_QUALIFY or more (his salary is the value: the clone's market price is
+# a rule of the position and the rating); the picks come in the NEXT offseason's draft (the NFL's: the free agency of one year gives the picks of the next
+# draft); rounds by the value, the higher value first in its round. The values are start values (UNVERIFIED: the formula is not published), calibrated to the
+# NFL's count (32 to 39 a year with the special picks; 33 to 15 clubs in 2026: research F2).
+FR_COMP_QUALIFY = 20              # tenths of a million: a free agent signed for this or more is a compensatory free agent (calibrated, see below; start value 40)
+FR_COMP_ROUNDS = ((77, 3), (51, 4), (36, 5), (32, 6), (0, 7))     # (the least value, the round): the round of a pick by the value of the player lost (calibrated)
+# CALIBRATED (work/probe_later_sx8m.py, 32 leagues x 12 seasons): the NFL awards its 32 formula picks every year (2026: 33 to 15 clubs, by round 4 (one of them a
+# special pick), 8, 9, 3 and 9: nfl.com's announcement, SRC-OFFICIAL read in the search's summary, 2026-10-17). The clone's market moves 90 free agents a
+# league-offseason to another team (salaries' quartiles 2.8, 3.7, 4.9 million); the start values (qualify 4.0 million, rounds from 20, 13, 9, 6 million)
+# gave 18.1 picks a league-offseason, 11 of them in round 7. The count is bound by the net loss and a team's four (reached by 72 percent of the
+# league-offseasons), not by the threshold: 24.1, 23.8, 23.7 and 23.0 picks at 0.9, 1.5, 2.0 and 2.5 million (said plainly in D-073: fewer clubs end the
+# market with a net loss than in the NFL). 2.0 million; the rounds are the quantiles of the awarded values at the NFL's 2026 shares (10, 25, 28, 9, 28 percent).
+FR_COMP_TEAM_MAX = 4              # NFL: no club receives more than four compensatory picks in a year (SRC-OFFICIAL)
+FR_COMP_TOTAL = 32                # NFL: the compensatory picks of a draft are at most the number of clubs (SRC-OFFICIAL; the special picks for minority hiring are not built)
+# THE NON-EXCLUSIVE FRANCHISE TAG (research B3's LATER; NFL, operations.nfl.com franchise tags, SRC-OFFICIAL, read 2026-10-17: the non-exclusive tag pays the
+# higher of the position's cap percentage average or 120 percent of his prior salary; he may negotiate with other clubs; his club has five days to match an
+# offer sheet, else it is entitled to two first-round picks; the exclusive tag pays the higher of the average of the five largest prior salaries at the position
+# or the non-exclusive amount). The clone's cap is a constant (D-066), so the cap percentage average is the average over the last FR_TAG_HISTORY seasons of the
+# position's average of its FR_TAG_TOP highest salaries (kept in league.sav at every stage 7); the two first-round picks are the signing team's pick of the coming
+# draft and of the draft after it (which years: UNVERIFIED, the page does not say; the CBA's text was not read).
+FR_TAG_HISTORY = 5
+FR_TAG_SHEET_PICKS = 2            # first-round picks a team gives for a player of the non-exclusive tag
+# a computer team makes an offer sheet (the market price of his rating for the length of his age) when it has an empty place at his position, the room under the
+# cap, both of its first-round picks, and his value to it (trades.player_value at that contract) is at least the value of the picks it would give
+# (FR_TRADE_PICK_VALUE[0] each, by its situation); the team that values him most, equal values by the market's tie rule
+# SX.8m, THE ONE VALUE OF THE CORE THAT MOVED (D-073): the camp's points (2 a team a season) and the compensatory picks (about 24 more rookies a league-offseason,
+# more young players kept at the cut) lift the league's mean rating against the same leagues without them (32 leagues x 12 seasons, work/probe_later_sx8m.py):
+# by 0.43 (the camp at 3 players), 0.30 (the compensatory picks), 0.04 (the undrafted), 0.73 together by season 10 (70.44 to 71.17), toward I8's strict edge of 72.
+# Swept: FR_ROOKIE_RATING (45, 15) gives 69.67 to 70.31 over seasons 1 to 12 against SX.8l's 69.74 to 70.58 (at most 0.27 under it); three weeks of extra work
+# instead of four (70.86 at season 10) and the camp at one player with (45, 15) (69.98) were the other two. The camp stays at 2 players, the rookies' base is 45.

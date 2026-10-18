@@ -226,7 +226,10 @@ def test_the_short_offseason_says_a_sentence_per_stage_and_asks_for_no_key(tmp_p
     after = text[start:text.index(X.text("NXF-08", n=2))]
     assert [t for t in after if t.startswith(" the ") and "won the Super Bowl" in t]
     assert all("the draft" in t or "the roster cut" in t or "expiring contracts" in t or "free agency" in t or "the staff" in t
-               for t in after if " stage " in t)     # the stages that ask still name themselves (the staff asks about the coordinators since SX.8l)
+               or "player development" in t
+               for t in after if " stage " in t)     # the stages that ask still name themselves (the staff asks about the coordinators since SX.8l,
+    #                                                  the player development the camp's focus since SX.8m)
+    assert any(t.startswith(" camp focus: ") for t in after)
     assert not any("press enter" in t or "best record" in t or " as a head coach: " in t for t in after)
     assert after[-1].startswith(" season 2 begins.") or " season 2 begins. " in after
     assert " the new schedule is made. " not in after

@@ -63,13 +63,13 @@ def test_after_the_last_pick_the_rookies_are_told_by_their_ranges_and_the_stage_
     text = spoken(rig)
     final = saved_league(rig)
     end = text.index(X.text("NXK-11"))
-    rookies = final.waiting_rookies(TEAM)
+    rookies = [p for p in final.waiting_rookies(TEAM) if p.drafted is not None]          # (SX.8m: the undrafted in camp are told after them)
     expected = []
     for player in rookies:
         low, high = final.rookie_range(player)
         expected.append(X.text("NXK-06", player=player.name, position=position_word(player.pos), lo=low, hi=high, a=player.age,
                                potential=X.text(D.POTENTIAL_TEXT[player.potential])))
-    assert text[end + 1:end + 8] == expected and text[end + 8] == X.text("NXE-03")
+    assert text[end + 1:end + 8] == expected and X.text("NXE-03") in text[end + 8:end + 14]      # (SX.8m: the undrafted market's lines come between)
 
 
 def test_the_player_with_the_first_pick_and_the_player_with_the_last_pick_hear_the_right_pick_numbers(tmp_path):
@@ -324,7 +324,7 @@ def test_the_players_rookies_are_told_by_their_range_in_f9_until_the_cut(tmp_pat
     lists, menus_seen = [], []
     real_picker, real_menu = menus._lines_picker, spoken_menu.SpokenMenu.__init__
 
-    def picker(speech, keys, title, lines):
+    def picker(speech, keys, title, lines, **kwargs):
         lists.append((title, list(lines)))
         real_picker(speech, keys, title, lines)
 

@@ -10,15 +10,20 @@ league.sav, in the way `offseason.py` does for the other stages:
 * Stage 5 plans the cut of every team without changing anything (SX.8g: with the players the staff lets go to get a team under the salary
   cap), asks the player about his own team, then applies all the cuts, fills the empty places, ends the draft and writes league.sav in
   one block, and only then speaks the fill (the stage is idempotent until its save, B-X51).
+* SX.8m: stage 4 tells the draft's compensatory picks (`comp.py`); after its last pick the player is asked, before anything changes, which undrafted free
+  agents his team offers a place in camp; then every team's offers are judged together (`undrafted.run`: the computer teams, and the player's team too when
+  the staff handles it) in the stage's last write, and only then told. They wait for the cut like the drafted rookies.
 """
 from __future__ import annotations
 
 from .. import nx_texts as X
+from .. import tuning as T
 from . import aging
 from . import contracts as CT
 from . import data as D
 from . import draft as DR
 from . import news
+from . import undrafted as UD
 from .news_pools import DEFAULT_POOLS
 from .question import FranchiseQuestion
 
@@ -55,9 +60,14 @@ def stage_draft(p, n: int, m: int, short: bool) -> None:
     g.say2(off._stage_line(n, m, "NXE-14"))
     if draft.own_picks_only(league.team):
         g.say2(X.text("NXK-01", n=draft.place_in_round(league.team)))
-    else:                                        # SX.8j: a trade of the season moved one of his picks: the picks he makes, one by one
-        picks = [X.text("NXK-15", round=r, pick=k) for r, k in draft.picks_of(league.team)]
+    else:                                        # SX.8j: a trade of the season moved one of his picks: the picks he makes, one by one (the compensatory ones apart)
+        picks = [X.text("NXK-15", round=r, pick=k) for r, k in draft.picks_of(league.team) if k <= D.TEAMS]
         g.say2(X.text("NXK-14", list=", ".join(picks) if picks else X.text("NXK-13")))
+    if draft.comp:                               # SX.8m: the compensatory picks of this draft, the player's named
+        g.say2(X.text("NXU-10", n=len(draft.comp)) if len(draft.comp) > 1 else X.text("NXU-11"))
+        own_comp = draft.comp_picks_of(league.team)
+        if own_comp:
+            g.say2(X.text("NXU-12", list=", ".join(X.text("NXK-15", round=r, pick=k) for r, k in own_comp)))
     announced = 0                                # the round whose number was said last
     while not draft.done:
         overall = len(draft.picks) + 1
@@ -78,17 +88,22 @@ def stage_draft(p, n: int, m: int, short: bool) -> None:
                 announced = _announce(g, round_no, announced)
                 g.say2(X.text("NXK-12", player=player.name, position=words.position(player.pos)))
         else:
-            next_team = draft.slot(overall + 1)[2] if overall < D.DRAFT_PICKS else None
+            next_team = draft.slot(overall + 1)[2] if overall < draft.total else None
             if _told(g.options.settings.game.nx_fr_picks_told, overall, next_team, league.team):      # read at each pick: F9 may change it
                 announced = _announce(g, round_no, announced)
                 g.say2(X.text("NXK-03", n=in_round, team=words.team_name(team), player=player.name,
                               position=words.position(player.pos)))
-    # the draft is over: the stage is written (the draft record stays until the cut: F9 tells the rookies by their ranges)
+    # the draft is over: the undrafted free agents (SX.8m), asked before anything changes, then the stage is written (the draft record stays until the cut:
+    # F9 tells the rookies by their ranges)
+    staff_udfa = bool(g.options.settings.game.nx_fr_auto)
+    offers, chose = ([], False) if staff_udfa else _undrafted_choice(g, words, draft, league)
+    udfa = UD.run(draft, offers, skip=() if staff_udfa else (league.team,), own=(league.team,) if chose else ())
     own = league.waiting_rookies(league.team)
     first = league.players[draft.picks[0][2]]                               # the first pick of the draft: the NWD line (design 8.3)
     told, recent = news.render(league, [news.first_pick_event(draft.picks[0][0], first)], g.news_pools or DEFAULT_POOLS, words, g.rnd)
     lines = [X.text("NXK-11")] + [
-        words.prospect_line(player.name, player.pos, *draft.range_of(player), player.age, player.potential) for player in own]
+        words.prospect_line(player.name, player.pos, *draft.range_of(player), player.age, player.potential) for player in own if player.drafted is not None]
+    lines += _undrafted_lines(words, league, draft, udfa, offers, short)
     news.keep(league, told, recent, D.NEWS_OFFSEASON)
     league.stage_no = off._next_stage(D.STAGE_DRAFT)
     store.save()
@@ -224,3 +239,63 @@ def _own_choice(g, words, league, waiting: dict) -> list:
         if not chose:                                              # a group he was not asked about: the staff's floor still applies
             released += DR.floor_releases(remaining, position)     # (in a group he chose from, the players he kept are his decision)
     return released
+
+
+# ----- stage 4: the undrafted free agents (SX.8m) -----
+
+def _undrafted_choice(g, words, draft, league) -> list:
+    """The player's offers of a place in camp to the undrafted free agents (nothing has changed yet): the staff's offers, his own choice, or nobody. Returns
+    (the offers (`undrafted.Offer`), True when he chose them himself: his choice is not held to the staff's need rule)."""
+    team = league.team
+    prospects = UD.pool(draft)
+    if not prospects or UD.signed_by(draft, team) >= T.FR_UDFA_MAX:
+        return [], False
+    staff = UD.team_offers(draft, team, prospects)
+    names = {p.index: p for p in prospects}
+    situation = [X.text("NXU-24", n=len(prospects), m=T.FR_UDFA_MAX)]
+    situation.append(X.text("NXU-25", list=", ".join(names[o.prospect].name for o in staff)) if staff else X.text("NXU-26"))
+    answer = FranchiseQuestion(g, situation, [X.text("NXU-A04"), X.text("NXU-A05"), X.text("NXU-A06")]).ask()
+    if answer == 0:
+        return staff, False
+    if answer == 2:
+        return [], False
+    ranked = sorted(prospects, key=lambda p: (-draft.value(p, draft.needs(team)), p.index))       # the most valuable to his team first
+    chosen: list = []
+    start = 0
+    notice: list = []
+    while True:
+        lines = [words.prospect_line(p.name, p.pos, p.low, p.high, p.age, p.potential) + ("," + X.text("NXU-C01") if p.index in chosen else "")
+                 for p in ranked]
+        start = FranchiseQuestion(g, notice + [X.text("NXU-27")], [X.text("NXU-A07")] + lines, start=start).ask()
+        if start == 0:                                  # "done" is the first item: the list is long and paged, and Enter alone ends it
+            return [UD.Offer(team, index) for index in chosen], True
+        prospect = ranked[start - 1]
+        if prospect.index in chosen:
+            chosen.remove(prospect.index)
+            notice = [X.text("NXU-29", player=prospect.name)]
+        elif len(chosen) >= T.FR_UDFA_CHASE:
+            notice = [X.text("NXU-30")]
+        else:
+            chosen.append(prospect.index)
+            notice = [X.text("NXU-28", player=prospect.name)]
+
+
+def _undrafted_lines(words, league, draft, udfa, offers: list, short: bool) -> list:
+    """What the player hears of the undrafted market: who signed with his team (by range, as his rookies), his offers that went elsewhere, and (a full
+    offseason) the league's count."""
+    team = league.team
+    lines = []
+    own = [(prospect, player) for prospect, t, player in udfa.signed if t == team]
+    if own:
+        lines.append(X.text("NXU-20"))
+        lines += [words.prospect_line(player.name, player.pos, prospect.low, prospect.high, player.age, player.potential) for prospect, player in own]
+    won = {prospect.index: (t, prospect) for prospect, t, _ in udfa.signed}
+    for offer in offers:
+        other, prospect = won.get(offer.prospect, (None, None))
+        if other is not None and other != team:
+            lines.append(X.text("NXU-22", player=prospect.name, team=words.team_name(other)))
+        elif other is None:                                   # nobody signed him: his team had filled its places in camp (the review of SX.8m)
+            lines.append(X.text("NXU-31", player=draft.prospects[offer.prospect].name))
+    if not short and udfa.signed:
+        lines.append(X.text("NXU-23", n=len(udfa.signed)))
+    return lines

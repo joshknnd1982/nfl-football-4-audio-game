@@ -15,13 +15,17 @@ With the setting "offseason: short" a stage that needs no decision says its summ
 from __future__ import annotations
 
 from .. import nx_texts as X
+from .. import tuning as T
 from . import aging
+from . import camp
+from . import comp
 from . import data as D
+from . import tags
 from . import draft_flow, market_flow, resign_flow, staff_flow
 from . import history, injuries, news, staff, trades, weekly
 from .league import OFFSEASON, SEASON, team_ref
 from .news_pools import DEFAULT_POOLS
-from .question import wait_for_enter
+from .question import FranchiseQuestion, wait_for_enter
 
 
 def run(p) -> None:
@@ -152,9 +156,17 @@ def stage_development(p, n: int, m: int, short: bool) -> None:
     g, store = p.g, p.store
     league = store.league
     words = store.words
+    header = _stage_line(n, m, "NXE-13")
+    choice, asked = camp_choice(g, league, header)          # SX.8m: the camp's focus, asked before anything changes
+    camp_lines = []
+    if camp.in_use():
+        camps = camp.apply(league, {league.team: choice} if choice else {})       # every team's camp points (the computer teams' focus by the same rule)
+        focus, picked = camps[league.team]
+        camp_lines.append(X.text("NXU-02", focus=X.text(camp.FOCUS_TEXT[focus]), list=", ".join(pl.name for pl in picked)) if picked
+                          else X.text("NXU-03", focus=X.text(camp.FOCUS_TEXT[focus])))
     plan = aging.plan_development(league, g.rnd)
     summary = aging.summarize(plan, league.team)
-    lines = [_stage_line(n, m, "NXE-13"), X.text("NXE-40", n=summary.improved, m=summary.declined, k=summary.same)]
+    lines = ([] if asked else [header]) + camp_lines + [X.text("NXE-40", n=summary.improved, m=summary.declined, k=summary.same)]
     for text_id, change in (("NXE-41", summary.best), ("NXE-42", summary.worst)):
         if change is not None:
             lines.append(X.text(text_id, player=change.player.name, position=words.position(change.player.pos),
@@ -168,9 +180,23 @@ def stage_development(p, n: int, m: int, short: bool) -> None:
     league.stage_no = _next_stage(D.STAGE_DEVELOPMENT)
     store.save()
     if short:
+        for line in camp_lines:
+            g.say2(line)
         g.say2(short_line)
     else:
         wait_for_enter(g, lines)
+
+
+def camp_choice(g, league, header: str) -> tuple:
+    """(the player's focus or None for the staff's, whether he was asked): the staff's recommendation is the first answer; with the staff handling the
+    to-do list the staff's focus is taken without a question (SX.8m)."""
+    if g.options.settings.game.nx_fr_auto or not camp.in_use():
+        return None, False
+    recommended = camp.recommend(league, league.team)
+    foci = [recommended] + [focus for focus in T.FR_CAMP_FOCI if focus != recommended]
+    situation = [header, X.text("NXU-01", focus=X.text(camp.FOCUS_TEXT[recommended]))]
+    answer = FranchiseQuestion(g, situation, [X.text(camp.FOCUS_TEXT[focus]) for focus in foci]).ask()
+    return foci[answer], True
 
 
 def stage_new_season(p, n: int, m: int, short: bool) -> None:
@@ -183,6 +209,9 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
     aging.drop_the_unkept(league)
     news.drop_for_new_season(league)                     # the finished season's weekly news goes; its offseason's stays
     league.season += 1
+    comp.drop_past(league)                               # SX.8m: the compensatory picks of the draft that is over
+    tags.move_future(league)                             # SX.8m: the first-round picks owed for this season's draft join its table
+    tags.close(league)
     league.results = []
     league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]
     staff.set_goals(league)                              # SX.8l: the owner's goal of every team by its rank at the season's start

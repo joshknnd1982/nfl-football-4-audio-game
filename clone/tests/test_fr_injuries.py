@@ -530,7 +530,7 @@ def test_format_6_round_trips_with_injuries_and_stand_ins():
     I.settle(league, 2, FakeRnd(), SURNAMES)
     league.injuries["report"] = {"season": 1, "week": 2, "lines": [" the line. "], "told": 0}
     text = league.to_json()
-    assert json.loads(text)["format"] == 7 == D.FORMAT     # (7 since SX.8l: the injuries are format 6's)
+    assert json.loads(text)["format"] == 8 == D.FORMAT     # (8 since SX.8m: the injuries are format 6's)
     again = LeagueRecord.from_json(text)
     assert again.injuries == league.injuries and again.to_json() == text
 
@@ -541,7 +541,7 @@ def test_a_format_5_file_loads_with_nobody_hurt():
     data["format"] = 5
     del data["injuries"]
     again = LeagueRecord.from_json(json.dumps(data))
-    assert again.injuries == I.empty() and json.loads(again.to_json())["format"] == 7
+    assert again.injuries == I.empty() and json.loads(again.to_json())["format"] == 8
 
 
 @pytest.mark.parametrize("damage", [

@@ -146,6 +146,8 @@ class Outcome:
 def run_teams(league, skip: tuple = ()) -> Outcome:
     """Every team that is not in `skip`, team 1 to 32: plan, then apply. The fast run (every team a computer team) and the program (all but the
     player's, or all of them when the staff handles his) both call this."""
+    from . import tags
+    tags.record_history(league)                      # SX.8m: the positions' highest salaries before anybody is signed again (the non-exclusive tag's price)
     out = Outcome()
     for team in range(1, D.TEAMS + 1):
         if team in skip:
@@ -223,12 +225,14 @@ class Talk:
 
 def tag_salary(league, player) -> int:
     """One year at the average of the `FR_TAG_TOP` highest salaries at his position among the contracts that run, or `FR_TAG_RAISE` percent of
-    his last salary, or his market price, whichever is most, never over the maximum (research B3: exclusive style)."""
+    his last salary, or his market price, whichever is most, never over the maximum (research B3: exclusive style); SX.8m: never under the price of the
+    non-exclusive tag (the NFL's exclusive tag pays the higher of the five largest salaries and the non-exclusive amount)."""
     top = sorted((p.salary for p in league.players.values() if p.status == "active" and p.pos == player.pos and CT.running(p)),
                  reverse=True)[:T.FR_TAG_TOP]
     average = (sum(top) + len(top) // 2) // len(top) if top else 0
     raised = (player.salary * T.FR_TAG_RAISE + 50) // 100
-    return min(T.FR_MAX_SALARY, max(average, raised, CT.market_salary(player.pos, player.rating)))
+    from . import tags
+    return min(T.FR_MAX_SALARY, max(average, raised, CT.market_salary(player.pos, player.rating), tags.nonexclusive_salary(league, player)))
 
 
 # ----- the stage in progress (league.resign) -----

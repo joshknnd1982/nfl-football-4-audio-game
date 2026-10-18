@@ -23,6 +23,12 @@ from nfl4.game.names import load_surnames
 from nfl4.game.rnd import GameRandom
 from randsources import ScriptedRandom, below_value
 
+
+@pytest.fixture(autouse=True)
+def no_camp(monkeypatch):
+    """The camp's focus (SX.8m, its own tests in test_fr_camp.py) is out of the way here: these tests are about aging alone (FR_CAMP_PLAYERS 0: no camp)."""
+    monkeypatch.setattr(T, "FR_CAMP_PLAYERS", 0)
+
 SURNAMES = load_surnames()
 
 # The design's start values (NFL_FRANCHISE_DESIGN 6.2, 6.3): the formulas are tested with these.

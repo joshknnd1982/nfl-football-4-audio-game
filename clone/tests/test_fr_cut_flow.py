@@ -152,6 +152,10 @@ def test_what_the_player_keeps_by_his_own_choice_in_a_group_he_was_asked_about_s
     league = cut_league()
     for rookie in league.waiting_rookies(TEAM):
         retool(league, rookie, "RET", 60 + rookie.id % 7)
+        rookie.potential = "low"                             # no youth bonus: every rookie keeps under the 70 (the test is about the floor, not the bonus)
+        for _, index, pid in league.draft["picks"]:
+            if pid == rookie.id:
+                league.draft["class"][index][3] = "low"      # (the class row keeps the prospect's potential too)
     league.player_at(TEAM, D.PLACES_OF["RET"][0]).rating = 48
     league.player_at(TEAM, D.PLACES_OF["RET"][1]).rating = 70
     weak = league.player_at(TEAM, D.PLACES_OF["RET"][0])
@@ -250,9 +254,9 @@ def test_f9_at_the_cut_question_tells_the_waiting_rookies_by_their_ranges_as_the
     lists = []
     real = menus._lines_picker
 
-    def picker(speech, keys, title, lines):
+    def picker(speech, keys, title, lines, **kwargs):
         lists.append((title, list(lines)))
-        real(speech, keys, title, lines)
+        real(speech, keys, title, lines, **kwargs)
     monkeypatch.setattr(menus, "_lines_picker", picker)
     league = cut_league()
     start = LeagueRecord.from_json(league.to_json())

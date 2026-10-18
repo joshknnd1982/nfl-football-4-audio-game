@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 775.
+- Texts: 824.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 443.
+- Franchise (design section 11): 492.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
 
 ## The clock (design section 5)
@@ -823,4 +823,53 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXH-43 (help, say5): " Your job: the owner sets a goal each season and rates you from 0 to 100; a low rating costs your job unless you won more than you lost. Your coordinators' styles are your team playbook. ". F6, after NXH-42 (SX.8l)
 - NXV-09 (sentence, say2): " the owner has fired you. your job rating was <a>, after 1 win and <l> losses. ". stage 9: NXV-10 for a season of one win
 - NXV-32 (sentence, say5): " the owner has fired you. choose your new team at the question. ". F9, franchise, your job and staff, while the job question waits
+- NXU-01 (prompt, say2): " the camp. choose its focus. the staff recommends <focus>. ". stage 3, before the progression: the camp's focus (SX.8m)
+- NXU-02 (sentence, say2): " camp focus: <focus>. extra work for: <list>. ". stage 3: the focus and the players who got a point (SX.8m)
+- NXU-03 (sentence, say2): " camp focus: <focus>. no player could take the extra work. ". stage 3: the focus found nobody (SX.8m)
+- NXU-A01 (answer, say2): "offense". a camp focus: the quarterback, the running backs and the receivers (SX.8m)
+- NXU-A02 (answer, say2): "defense". a camp focus: the defensive players (SX.8m)
+- NXU-A03 (answer, say2): "young players". a camp focus: the players aged 24 or less (SX.8m)
+- NXU-10 (sentence, say2): " this draft has <n> compensatory picks, at the end of rounds 3 to 7. ". stage 4: the draft's compensatory picks (SX.8m)
+- NXU-11 (sentence, say2): " this draft has 1 compensatory pick. ". stage 4: one compensatory pick (SX.8m)
+- NXU-12 (sentence, say2): " your compensatory picks: <list>. ". stage 4: the player's compensatory picks, NXK-15 each (SX.8m)
+- NXU-60 (sentence, say2): " compensatory picks for next year's draft: <n> in the league. ". the end of free agency (SX.8m)
+- NXU-64 (sentence, say2): " compensatory picks for next year's draft: 1 in the league. ". the end of free agency, one pick (SX.8m)
+- NXU-61 (sentence, say2): " your team gets <n> of them: <list>. ". the end of free agency: the player's, NXU-62 each (SX.8m)
+- NXU-63 (sentence, say2): " your team gets one: <list>. ". the end of free agency: the player's one pick (SX.8m)
+- NXU-62 (piece, piece): "round <round>". a compensatory pick in NXU-61 and NXU-63 (SX.8m)
+- NXU-20 (sentence, say2): " undrafted free agents who signed with you for camp: ". stage 4, then NXK-06 for each (SX.8m)
+- NXU-22 (sentence, say2): " <player> signed with the <team>. ". stage 5: an undrafted free agent the player offered went elsewhere (SX.8m)
+- NXU-23 (sentence, say2): " undrafted free agents signed for camp in the league: <n>. ". stage 4, a full offseason (SX.8m)
+- NXU-24 (prompt, say2): " undrafted free agents. <n> prospects were not drafted; you may sign up to <m> for camp. ". stage 4, after the last pick: the undrafted market's question (SX.8m)
+- NXU-25 (sentence, say2): " the staff would offer: <list>. ". stage 5: the staff's offers by name (SX.8m)
+- NXU-26 (sentence, say2): " the staff would offer nobody. ". stage 5: no prospect is worth more than the fill (SX.8m)
+- NXU-27 (prompt, say2): " choose the undrafted free agents you offer a place in camp. ". stage 4, choose yourself: Enter offers or withdraws (SX.8m)
+- NXU-28 (sentence, say2): " you offer <player> a place. ". stage 5, choose yourself (SX.8m)
+- NXU-29 (sentence, say2): " your offer to <player> is withdrawn. ". stage 5, choose yourself (SX.8m)
+- NXU-30 (sentence, say2): " you have offered as many players as you may. ". stage 4, choose yourself: FR_UDFA_CHASE offers (SX.8m)
+- NXU-A04 (answer, say2): "make the staff's offers". stage 5, undrafted free agents (SX.8m)
+- NXU-A05 (answer, say2): "choose yourself". stage 5, undrafted free agents (SX.8m)
+- NXU-A06 (answer, say2): "offer nobody". stage 5, undrafted free agents (SX.8m)
+- NXU-A07 (answer, say2): "done". stage 5, choose yourself: the offers are made (SX.8m)
+- NXU-C01 (piece, piece): "offered". after a prospect the player offers a place (SX.8m)
+- NXU-40 (prompt, say5): " type the new name of <player>, then press enter. ". F9 roster, Enter on a player: the original's typed prompt (SX.8m)
+- NXU-41 (prompt, say5): " is <name> correct? ". F9 roster: the original's yes or no question (SX.8m)
+- NXU-42 (sentence, say5): " <player> keeps his name. ". F9 roster: no name typed, or the answer no (SX.8m)
+- NXU-43 (sentence, say5): " that is his name already. <player> keeps it. ". F9 roster: the same name (SX.8m)
+- NXU-44 (sentence, say5): " another player has that name. <player> keeps his name. ". F9 roster: names stay unique among the active (SX.8m)
+- NXU-45 (sentence, say5): " <player> waits for the roster cut and can be renamed after it. ". F9 roster: a drafted rookie before the cut (SX.8m)
+- NXU-46 (sentence, say5): " <player> is now <name>. ". F9 roster: renamed (SX.8m)
+- NXU-A10 (answer, say2): "use the non-exclusive tag, <contract>". stage 7, a talk: other teams may make him an offer (SX.8m)
+- NXU-57 (sentence, say2): " <player> gets the non-exclusive franchise tag, <contract>. other teams may make him an offer in free agency. ". stage 7: the non-exclusive tag (SX.8m)
+- NXU-50 (prompt, say2): " the <team> make an offer for <player>, your <position> under the non-exclusive tag: <contract>. ". stage 8: the offer sheet (SX.8m)
+- NXU-51 (sentence, say2): " you may keep him at that contract, or let him go for their first round picks of this draft and the next. ". stage 8: the offer sheet (SX.8m)
+- NXU-52 (sentence, say2): " your cap has no room to match it, so he goes for their first round picks of this draft and the next. ". stage 8: the offer sheet, no room (SX.8m)
+- NXU-A08 (answer, say2): "keep him at their offer". stage 8: match the offer sheet (SX.8m)
+- NXU-A09 (answer, say2): "let him go for the picks". stage 8: take the two first-round picks (SX.8m)
+- NXU-53 (sentence, say2): " <player> stays, <contract>. ". stage 8: the offer is matched (SX.8m)
+- NXU-54 (sentence, say2): " <player> joins the <team>. you get their first round picks of this draft and the next. ". stage 8: the picks are taken (SX.8m)
+- NXU-55 (sentence, say2): " no team made an offer for <player>. he stays on the tag. ". stage 8: no offer sheet (SX.8m)
+- NXU-56 (sentence, say2): " the staff answered the offer for <player>. ". stage 8: the staff handles the to-do list (SX.8m)
+- NXH-44 (help, say5): " Camp focus before the progression, undrafted free agents at the cut, compensatory picks for free agents lost, the non-exclusive tag. F9 roster: Enter renames your player. ". F6, after NXH-43 (SX.8m)
+- NXU-31 (sentence, say2): " <player> did not sign with you. ". stage 4: an offer of the player that signed nobody (the review of SX.8m)
 

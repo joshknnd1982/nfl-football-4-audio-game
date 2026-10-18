@@ -12,9 +12,11 @@ calibration's fast run use the very same code (the speech and the questions are 
 A drafted rookie is an ACTIVE player with `place` -1 (waiting) until the cut: the roster lists keep their 34 places, and the group's
 count plus the rookies waiting for it is what the need bonus and the cut look at. The draft record (`LeagueRecord.draft`) is a plain dict,
 {"class": [[pos, name, true rating, potential, age, low end of the range] ...], "order": [32 teams], "picks": [[team, prospect index,
-player ID] ...], "staff_all": 0 or 1, "owners": [the team that makes each of the 224 picks]}; it lives from the class (the start of stage 4) to the end of
+player ID] ...], "staff_all": 0 or 1, "owners": [the team that makes each of the 224 picks], "comp": [[round, team] of the compensatory picks]}; it lives from the class (the start of stage 4) to the end of
 stage 5, when the cut applies. SX.8j: a pick may have changed hands in a trade of the season (`trades.py`); the draft makes the owners its own when it is
-created (`owners`, pick by pick) and the trades' table of picks starts empty again.
+created (`owners`, pick by pick) and the trades' table of picks starts empty again. SX.8m: the compensatory picks awarded a year before (`comp.py`) sit at
+the end of rounds 3 to 7 (`sequence`: every round's 32 picks, then its compensatory picks), so a draft has 224 picks or more; a compensatory pick is "pick 33"
+and on of its round, paid by the rookie scale of its place in the whole draft.
 """
 from __future__ import annotations
 
@@ -57,7 +59,13 @@ class Prospect:
 
 # ----- the class (stage 4's draws, design 12 item 6) -----
 
-def make_class(league: LeagueRecord, rnd, surnames: list) -> list:
+def class_size(comp_count: int) -> int:
+    """The prospects of a class: `FR_CLASS_SIZE` (the 224 picks and a choice at the last ones) and one more for every compensatory pick (SX.8m), so the
+    prospects nobody drafts, the undrafted free agents of the cut, are as many whatever the draft's count."""
+    return T.FR_CLASS_SIZE + comp_count
+
+
+def make_class(league: LeagueRecord, rnd, surnames: list, comp_count: int = 0) -> list:
     """The class of this draft: for each prospect in order the position `below(sum of the weights)`, the name (`rnd(len(surnames))`
     again while an active player or a prospect of this class has it: design 7.4), the true rating `below(15)` twice, the potential
     `below(100)`, the age `below(3)` and the scouting offset `below(7)`. Nothing of the league is changed."""
@@ -68,7 +76,7 @@ def make_class(league: LeagueRecord, rnd, surnames: list) -> list:
     high, average = T.FR_ROOKIE_POTENTIAL_SHARES
     age_base, age_span = T.FR_ROOKIE_AGE
     prospects = []
-    for index in range(T.FR_CLASS_SIZE):
+    for index in range(class_size(comp_count)):
         roll = rnd.below(total)
         for position, weight in weights:
             if roll < weight:
@@ -143,18 +151,23 @@ class Draft:
         self.order = self.data["order"]
         self.picks = self.data["picks"]
         self.owners = self.data["owners"]
-        self.board = Board(self.prospects, {row[1] for row in self.picks})
+        self.comp = self.data["comp"]
+        self.sequence = sequence(self.owners, self.comp)        # (round, the pick in the round, the team) of every pick, in order
+        self.board = Board(self.prospects, {row[1] for row in self.picks} | {row[1] for row in self.data["undrafted"]})
         self.rookies: dict = {}                                 # team -> its rookies waiting for the cut, in pick order
         self.middle_of: dict = {}                               # player ID -> the middle of his spoken range
-        for team, index, pid in self.picks:
+        for team, index, pid in self.picks + self.data["undrafted"]:      # SX.8m: the undrafted free agents wait for the cut too
             self.rookies.setdefault(team, []).append(league.players[pid])
             self.middle_of[pid] = self.prospects[index].middle
 
     @classmethod
     def create(cls, league: LeagueRecord, rnd, surnames: list) -> "Draft":
-        prospects = make_class(league, rnd, surnames)
+        from . import comp
+        comp_count = sum(1 for row in league.comp if row[0] == league.season)
+        prospects = make_class(league, rnd, surnames, comp_count)
         order = order_of(league)
-        league.draft = {"class": [p.to_row() for p in prospects], "order": order, "picks": [], "staff_all": 0, "owners": owners_of(league, order)}
+        league.draft = {"class": [p.to_row() for p in prospects], "order": order, "picks": [], "staff_all": 0, "owners": owners_of(league, order),
+                        "comp": comp.for_draft(league, order), "undrafted": []}
         league.trades["picks"] = []                             # SX.8j: the traded picks are the draft's now
         league.pick_no = 1
         return cls(league)
@@ -170,12 +183,15 @@ class Draft:
 
     @property
     def done(self) -> bool:
-        return len(self.picks) >= D.DRAFT_PICKS
+        return len(self.picks) >= len(self.sequence)
 
     def slot(self, overall: int) -> tuple:
-        """(round 1 to 7, the pick in the round 1 to 32, the team) of pick number `overall` (1 to 224)."""
-        index = overall - 1
-        return index // D.TEAMS + 1, index % D.TEAMS + 1, self.owners[index]
+        """(round 1 to 7, the pick in the round, the team) of pick number `overall` (1 to the draft's count; a compensatory pick is 33 and on of its round)."""
+        return self.sequence[overall - 1]
+
+    @property
+    def total(self) -> int:
+        return len(self.sequence)
 
     def next_slot(self) -> tuple:
         return self.slot(len(self.picks) + 1)
@@ -186,12 +202,16 @@ class Draft:
 
     def picks_of(self, team: int) -> list:
         """The picks the team makes in this draft: (round, the pick in the round), in draft order (SX.8j: traded picks included, its own traded away left out)."""
-        return [(i // D.TEAMS + 1, i % D.TEAMS + 1) for i, owner in enumerate(self.owners) if owner == team]
+        return [(r, k) for r, k, owner in self.sequence if owner == team]
 
     def own_picks_only(self, team: int) -> bool:
-        """The team makes exactly its own pick in every round (no trade moved one of them)."""
+        """The team makes exactly its own pick in every round (no trade moved one of them; its compensatory picks are told apart, SX.8m)."""
         place = self.place_in_round(team)
-        return self.picks_of(team) == [(r, place) for r in range(1, D.DRAFT_ROUNDS + 1)]
+        return [(r, k) for r, k in self.picks_of(team) if k <= D.TEAMS] == [(r, place) for r in range(1, D.DRAFT_ROUNDS + 1)]
+
+    def comp_picks_of(self, team: int) -> list:
+        """The team's compensatory picks in this draft: (round, the pick in the round)."""
+        return [(r, k) for r, k, owner in self.sequence if owner == team and k > D.TEAMS]
 
     # ----- what a team needs -----
 
@@ -272,7 +292,7 @@ class Draft:
             raise LeagueError("%s was taken already" % prospect.name)
         player = Player(league.next_id, prospect.name, prospect.pos, prospect.true, prospect.potential, prospect.age, 0,
                         prospect.true, [league.season, round_no, in_round], 0, "active", 0, team, -1,
-                        contracts.rookie_salary(overall), T.FR_ROOKIE_YEARS)      # SX.8g: the scale of his pick, four years
+                        contracts.rookie_salary(contracts.pick_number(round_no, in_round)), T.FR_ROOKIE_YEARS)      # SX.8g: the scale of his pick, four years
         league.next_id += 1
         league.players[player.id] = player
         self.picks.append([team, prospect.index, player.id])
@@ -288,6 +308,16 @@ class Draft:
         """(low end, high end) of a rookie waiting for the cut."""
         low = self.middle_of[player.id] - D.RANGE_MIDDLE
         return low, low + D.RANGE_SPAN
+
+
+def sequence(owners: list, comp: list) -> list:
+    """(round, the pick in the round, the team) of every pick of a draft: each round's 32 picks by `owners`, then its compensatory picks in their order."""
+    out = []
+    for round_no in range(1, D.DRAFT_ROUNDS + 1):
+        out += [(round_no, k + 1, owners[(round_no - 1) * D.TEAMS + k]) for k in range(D.TEAMS)]
+        extra = [team for r, team in comp if r == round_no]
+        out += [(round_no, D.TEAMS + i + 1, team) for i, team in enumerate(extra)]
+    return out
 
 
 def owners_of(league: LeagueRecord, order: list) -> list:
@@ -399,7 +429,10 @@ def apply_cut(league: LeagueRecord, releases: dict, waiting: dict) -> int:
                 raise ValueError("the %s group of team %d keeps %d players for %d places" % (position, team, len(kept), len(places)))
             for player in players:
                 if player.id in gone:
-                    contracts.release(league, player)               # before the status: the dead money is charged to his team
+                    if contracts.released_free(player):
+                        contracts.leave(player)                     # SX.8m: an undrafted rookie released at his first cut costs nothing
+                    else:
+                        contracts.release(league, player)           # before the status: the dead money is charged to his team
                     player.status, player.left, player.place, player.points = "released", league.season, -1, 0
                     count += 1
             for index, player in zip(places, kept):
@@ -422,11 +455,12 @@ def check_draft(league: LeagueRecord, whole) -> set:
     from .league import OFFSEASON
     if league.stage != OFFSEASON or league.stage_no not in (D.STAGE_DRAFT, D.STAGE_CUT):
         raise LeagueError("a draft in stage %r %r" % (league.stage, league.stage_no))
-    if not isinstance(data, dict) or set(data) != {"class", "order", "picks", "staff_all", "owners"}:
+    if not isinstance(data, dict) or set(data) != {"class", "order", "picks", "staff_all", "owners", "comp", "undrafted"}:
         raise LeagueError("the draft holds %r" % (sorted(data) if isinstance(data, dict) else type(data).__name__,))
     rows = data["class"]
-    if not isinstance(rows, list) or len(rows) != T.FR_CLASS_SIZE:
-        raise LeagueError("the class holds %r prospects, not %d" % (len(rows) if isinstance(rows, list) else rows, T.FR_CLASS_SIZE))
+    size = class_size(len(data["comp"])) if isinstance(data["comp"], list) else T.FR_CLASS_SIZE
+    if not isinstance(rows, list) or len(rows) != size:
+        raise LeagueError("the class holds %r prospects, not %d" % (len(rows) if isinstance(rows, list) else rows, size))
     youngest, span = T.FR_ROOKIE_AGE
     for row in rows:
         if not isinstance(row, list) or len(row) != 6:
@@ -438,7 +472,7 @@ def check_draft(league: LeagueRecord, whole) -> set:
             raise LeagueError("a prospect has the name %r" % (name,))
         whole(true, D.RATING_MIN, D.RATING_MAX, "a prospect's rating")
         whole(age, youngest, youngest + span - 1, "a prospect's age")
-        whole(low, D.RATING_MIN, D.RATING_MAX, "a prospect's low end")
+        whole(low, max(D.RATING_MIN, T.FR_ROOKIE_RATING[0]) - (T.FR_SCOUT_SPAN - 1), D.RATING_MAX, "a prospect's low end")   # (SX.8m: a rookie rated 45 may be "about 39 to 45")
         if not low <= true <= low + D.RANGE_SPAN:
             raise LeagueError("a prospect rated %d has the range %d to %d" % (true, low, low + D.RANGE_SPAN))
     order = data["order"]
@@ -451,8 +485,11 @@ def check_draft(league: LeagueRecord, whole) -> set:
         raise LeagueError("the draft's owners are %r" % (len(owners) if isinstance(owners, list) else owners,))
     for team in owners:
         whole(team, 1, D.TEAMS, "the owner of a pick")
+    from . import comp
+    comp.check_rows(data["comp"], whole, "the draft's compensatory picks")       # SX.8m
+    slots = sequence(owners, data["comp"])
     picks = data["picks"]
-    if not isinstance(picks, list) or len(picks) > D.DRAFT_PICKS:
+    if not isinstance(picks, list) or len(picks) > len(slots):
         raise LeagueError("the draft holds %r picks" % (len(picks) if isinstance(picks, list) else picks,))
     waiting: set = set()
     taken: set = set()
@@ -464,11 +501,12 @@ def check_draft(league: LeagueRecord, whole) -> set:
         whole(team, 1, D.TEAMS, "a pick's team")
         whole(index, 0, len(rows) - 1, "a pick's prospect")
         whole(pid, 1, 10 ** 9, "a pick's player")
-        if team != owners[number] or index in taken or pid in waiting:
+        round_no, in_round, owner = slots[number]
+        if team != owner or index in taken or pid in waiting:
             raise LeagueError("pick %d is %r, out of order or twice" % (number + 1, row))
         player = league.players.get(pid)
         if (player is None or player.status != "active" or player.place != -1 or player.team != team
-                or player.drafted != [league.season, number // D.TEAMS + 1, number % D.TEAMS + 1]):
+                or player.drafted != [league.season, round_no, in_round]):
             raise LeagueError("pick %d is player %d, who is not a rookie waiting for the cut" % (number + 1, pid))
         prospect = rows[index]
         if (player.name, player.pos, player.rating, player.potential, player.age) != (prospect[1], prospect[0], prospect[2], prospect[3], prospect[4]):
@@ -476,10 +514,12 @@ def check_draft(league: LeagueRecord, whole) -> set:
         taken.add(index)
         waiting.add(pid)
         per_team[team] = per_team.get(team, 0) + 1
-        if per_team[team] > owners.count(team):
+        if per_team[team] > sum(1 for slot in slots if slot[2] == team):
             raise LeagueError("team %d has %d rookies" % (team, per_team[team]))
+    from . import undrafted
+    waiting |= undrafted.check_undrafted(league, data, whole, taken, len(picks) == len(slots))      # SX.8m: the undrafted free agents in camp
     if league.pick_no != len(picks) + 1:
         raise LeagueError("the next pick is %d after %d picks" % (league.pick_no, len(picks)))
-    if league.stage_no == D.STAGE_CUT and len(picks) != D.DRAFT_PICKS:
-        raise LeagueError("the cut after %d picks of %d" % (len(picks), D.DRAFT_PICKS))
+    if league.stage_no == D.STAGE_CUT and len(picks) != len(slots):
+        raise LeagueError("the cut after %d picks of %d" % (len(picks), len(slots)))
     return waiting

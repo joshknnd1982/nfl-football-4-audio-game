@@ -6,12 +6,16 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 7                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 8                                   # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
 #                                              6 (SX.8k) the injuries of the season, the stand-ins and the week's injury report (`LeagueRecord.injuries`),
 #                                              7 (SX.8l) the staff: the head coaches with their job rating and goal, the coordinators, the stage in progress (`LeagueRecord.staff`)
+#                                              8 (SX.8m) the compensatory picks awarded (`comp`), the first-round picks owed for a later draft (`future_picks`), the
+#                                                non-exclusive tag with its history of salaries (`tags`), the market's moves (`market["moves"]`), a draft's
+#                                                compensatory picks (`draft["comp"]`)
+COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the end of rounds 3 to 7 (NFL, SRC-OFFICIAL)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
 FOLDER = "franchise"                         # the folder of the data folder that holds every franchise file

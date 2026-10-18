@@ -115,16 +115,20 @@ def test_a_player_who_asks_the_minimum_gets_no_offer_for_less_since_nothing_is_l
     assert " 1. sign him " in text and not any("offer less" in t for t in text)
 
 
-def test_the_four_answers_are_sign_offer_less_the_franchise_tag_with_its_price_and_let_him_go(tmp_path):
+def test_the_five_answers_are_sign_offer_less_the_franchise_tag_with_its_price_the_nonexclusive_tag_and_let_him_go(tmp_path):
     league = contract_league()
-    rig = run(tmp_path, league, keys=pick(4))                                            # the 4th item of the first question: let him go
+    rig = run(tmp_path, league, keys=pick(5))                                            # the 5th item of the first question: let him go (SX.8m: 5 answers)
     text = spoken(rig)
     words = rig.fstore.words
     first = asked(league)[0]
     assert " 1. sign him " in text and " 2. offer less " in text
     tag = resign.tag_salary(start_of(league), first)
     assert " 3. %s " % X.text("NXW-A04", contract=words.contract_of(tag, 1)) in text
-    assert " 4. let him go " in text
+    from nfl4.extras.franchise import tags
+    begun = start_of(league)
+    resign.begin(begun, False)                                                               # (the history of salaries the stage keeps first)
+    assert " 4. %s " % X.text("NXU-A10", contract=words.contract_of(tags.nonexclusive_salary(begun, first), 1)) in text
+    assert " 5. let him go " in text
     assert X.text("NXW-13", player=first.name) in text                                       # and he was let go
 
 
@@ -231,7 +235,7 @@ def test_an_unhappy_player_is_not_moved_by_an_offer_for_less(tmp_path):
 def test_let_him_go_makes_him_a_free_agent_with_no_dead_money_and_leaves_his_place_empty_for_the_draft(tmp_path):
     league = contract_league()
     order = asked(league)
-    rig = run(tmp_path, league, keys=pick(4) + pick(1) + pick(1))
+    rig = run(tmp_path, league, keys=pick(5) + pick(1) + pick(1))
     final = rig.fstore.league
     gone = final.players[order[0].id]
     assert gone.status == "free" and gone.team == TEAM and gone.left == 1 and (gone.salary, gone.years) == (0, 0)
@@ -401,7 +405,7 @@ def test_a_window_closed_at_the_first_question_leaves_him_as_he_was_and_the_stag
 def test_a_window_closed_after_the_first_decision_resumes_at_the_second_player_with_the_first_kept(tmp_path):
     league = contract_league()
     order = asked(league)
-    first = run(tmp_path / "one", league, keys=pick(4), until=lambda r: any(" is let go. " in t for t in spoken(r)))
+    first = run(tmp_path / "one", league, keys=pick(5), until=lambda r: any(" is let go. " in t for t in spoken(r)))
     saved = saved_league(first)
     assert saved.resign["pending"] == [p.id for p in order[1:]] and saved.resign["let_go"] == 1 and saved.players[order[0].id].status == "free"
     second = run(tmp_path / "two", None, files=first.files)

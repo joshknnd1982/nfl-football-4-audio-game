@@ -20,7 +20,7 @@ from . import data as D
 from . import resign as R
 from .question import FranchiseQuestion
 
-SIGN, LESS, TAG, GO = "sign", "less", "tag", "go"
+SIGN, LESS, TAG, OPEN_TAG, GO = "sign", "less", "tag", "open_tag", "go"      # OPEN_TAG: the non-exclusive tag (SX.8m)
 ANSWER_TEXT = {SIGN: "NXW-A01", LESS: "NXW-A02", GO: "NXW-A03"}
 
 
@@ -90,6 +90,8 @@ def _talk(g, words, store, league, state: dict, player, preface: list) -> None:
     how = R.mood(league, team)
     talk = R.Talk.start(player, how)
     tag_price = R.tag_salary(league, player)
+    from . import tags
+    open_price = tags.nonexclusive_salary(league, player)
     lines = list(preface)
     lines.append(X.text("NXW-03", player=player.name, position=words.position(player.pos), a=player.age, r=player.rating,
                         potential=words.potential(player.potential), mood=words.mood(how), contract=words.contract_of(talk.ask, talk.years)))
@@ -102,12 +104,15 @@ def _talk(g, words, store, league, state: dict, player, preface: list) -> None:
             kinds.append(LESS)
         if not state["tag_used"] and tag_price <= space:
             kinds.append(TAG)
+        if not state["tag_used"] and open_price <= space:
+            kinds.append(OPEN_TAG)                    # SX.8m: other teams may make him an offer at free agency
         kinds.append(GO)
         if SIGN in kinds or LESS in kinds:
             lines.append(X.text("NXW-04", room=words.amount(space)))
         else:
             lines.append(X.text("NXW-05", room=words.amount(space)) if space >= 0 else X.text("NXW-07"))
-        items = [X.text("NXW-A04", contract=words.contract_of(tag_price, 1)) if kind == TAG else X.text(ANSWER_TEXT[kind]) for kind in kinds]
+        items = [X.text("NXW-A04", contract=words.contract_of(tag_price, 1)) if kind == TAG
+                 else X.text("NXU-A10", contract=words.contract_of(open_price, 1)) if kind == OPEN_TAG else X.text(ANSWER_TEXT[kind]) for kind in kinds]
         kind = kinds[FranchiseQuestion(g, lines, items).ask()]
         if kind == LESS:
             result, salary = talk.offer_less()
@@ -131,6 +136,12 @@ def _talk(g, words, store, league, state: dict, player, preface: list) -> None:
         state["signed"] += 1
         state["tag_used"] = 1
         text = X.text("NXW-14", player=player.name, contract=words.contract_of(tag_price, 1))
+    elif kind == OPEN_TAG:
+        R.sign_again(league, player, open_price, 1)
+        state["signed"] += 1
+        state["tag_used"] = 1
+        league.tags["open"] = [player.id, league.season]          # free agency (stage 8) asks the other teams
+        text = X.text("NXU-57", player=player.name, contract=words.contract_of(open_price, 1))
     else:
         R.let_go(league, player)
         state["let_go"] += 1

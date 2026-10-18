@@ -28,7 +28,7 @@ from . import contracts as CT
 from . import data as D
 from . import resign as R
 
-KEYS = ("round", "offers", "signed", "lost", "staff")
+KEYS = ("round", "offers", "signed", "lost", "staff", "moves")      # SX.8m: "moves", the signings of the rounds judged so far (comp.py)
 
 
 # ----- the market -----
@@ -182,6 +182,7 @@ class Round:
     number: int
     decisions: list = field(default_factory=list)
     signed: list = field(default_factory=list)       # [(player, bid)] in the order they were signed
+    moves: list = field(default_factory=list)        # SX.8m: [player ID, the team he left, the team he joined, salary] of every signing (comp.py)
 
 
 def can_sign(league, bid: Bid) -> bool:
@@ -216,6 +217,7 @@ def resolve(league, bids: list, round_no: int) -> Round:
         for bid in ranked:
             if can_sign(league, bid):
                 decision.winner = bid
+                result.moves.append([player.id, player.team, bid.team, bid.salary])     # (a free agent keeps the team he last played for until he signs)
                 sign(league, player, bid)
                 result.signed.append((player, bid))
                 touched.add(bid.team)
@@ -241,7 +243,7 @@ def run_market(league, skip: tuple = ()) -> list:
 
 def begin() -> dict:
     """Stage 8 starts: round 1, nothing offered yet. The caller stores it in `league.market` and saves."""
-    return {"round": 1, "offers": [], "signed": 0, "lost": 0, "staff": 0}
+    return {"round": 1, "offers": [], "signed": 0, "lost": 0, "staff": 0, "moves": []}
 
 
 def check_market(league, whole) -> None:
@@ -271,3 +273,13 @@ def check_market(league, whole) -> None:
         if row[0] in seen or player is None or player.status != "free" or player.left != league.season:
             raise LeagueError("player %r is offered a contract but is not a free agent of this offseason" % (row[0],))
         seen.add(row[0])
+    moves = data["moves"]                                      # SX.8m: the signings of the rounds judged so far
+    if not isinstance(moves, list) or len(moves) > D.TEAMS * D.PLACE_COUNT:
+        raise LeagueError("the market's moves are %r" % (type(moves).__name__ if not isinstance(moves, list) else len(moves),))
+    for row in moves:
+        if not isinstance(row, list) or len(row) != 4:
+            raise LeagueError("a move of the market is %r" % (row,))
+        whole(row[0], 1, 10 ** 9, "a moved player")
+        whole(row[1], 1, D.TEAMS, "the team a free agent left")
+        whole(row[2], 1, D.TEAMS, "the team a free agent joined")
+        whole(row[3], T.FR_MIN_SALARY, T.FR_MAX_SALARY, "the salary of a move")
