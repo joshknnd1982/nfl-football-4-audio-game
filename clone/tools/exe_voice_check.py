@@ -22,7 +22,8 @@ alive = proc.poll() is None
 print("alive after", round(time.perf_counter() - t0, 1), "s:", alive, "| exit code", proc.poll())
 if alive:
     subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True)
-log = os.path.join(data, "logs", "nfl4.log")
-print(open(log, encoding="utf-8", errors="replace").read()[-2500:] if os.path.exists(log) else "no log")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import logfiles  # noqa: E402  (one log file per launch since rule 0.15)
+print(logfiles.launch_text(data)[-2500:] or "no log")
 settings = open(os.path.join(data, "settings.txt"), encoding="utf-8").read()
 print("settings voice line:", [l for l in settings.splitlines() if l.startswith("speech_voice")])

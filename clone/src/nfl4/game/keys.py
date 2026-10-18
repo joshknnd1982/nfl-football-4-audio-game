@@ -22,6 +22,8 @@ import queue
 import threading
 import time
 
+from ..data import debuglog
+
 KEY_ESCAPE = 27
 KEY_ENTER = 13
 KEY_UP = 38
@@ -126,6 +128,7 @@ class KeyInput:
     # called by the game thread
     def pump(self) -> None:
         """DoEvents: run Form_KeyDown for every key posted since the last pump, in order."""
+        debuglog.beat()                            # the hang watchdog: the game thread is alive
         if self.quit.is_set():
             raise GameQuit()
         while True:
@@ -140,7 +143,12 @@ class KeyInput:
             if item in (KEY_ALT, KEY_F10):         # 0x42e645: KeyCode = Empty, g = "27", g2 = "", no menu
                 self.code_text = "27"
                 self.char = ""
+                debuglog.event("key", "pump", vk=item, as_code="27", ctx=debuglog.current_context())
                 continue
+            if debuglog.typing_now():                 # while the player types a name, a key is never written (playbook 7.11)
+                debuglog.event("key", "pump", typed=True, ctx=debuglog.current_context())
+            else:
+                debuglog.event("key", "pump", vk=item, ctx=debuglog.current_context())
             self.code_text = str(item)
             self.char = key_char(item)
             if self.key_handler is not None:       # 0x42e6f0 to 0x42e811: F12, F11, F8, F7, F6, F5, Ctrl
@@ -178,6 +186,7 @@ class KeyInput:
         Unlike getkey this never discards a key typed ahead, and it skips Shift, Ctrl and Alt on
         their own. The original's two fields are still filled (key code text, key character)."""
         while True:
+            debuglog.beat()
             if self.quit.is_set():
                 raise GameQuit()
             try:
@@ -192,6 +201,10 @@ class KeyInput:
             self.code_text = str(item)
             self.char = key_char(item)
             self.typed = ""
+            if debuglog.typing_now():
+                debuglog.event("key", "read", typed=True, ctx=debuglog.current_context())
+            else:
+                debuglog.event("key", "read", vk=item, ctx=debuglog.current_context())
             return item
 
     def take_typed(self, wait: float = 0.05) -> str:

@@ -13,10 +13,12 @@ changes a slot, with the time, for the tests' slot log (GAP_REGISTER G-A1).
 from __future__ import annotations
 
 import logging
+import os
 import time
 from dataclasses import dataclass
 from typing import Callable, Protocol
 
+from ..data import debuglog
 from ..data.settings import AudioSettings
 from .ids import BEEP_EXIT
 from .library import Pick, SoundLibrary
@@ -122,14 +124,15 @@ class Audio:
         """Stop the slot, then start the sound at volume (hundredths of a dB, 0 = full), pan and freq (Hz), once or
         looping. freq None, or outside DirectSound's 100 to 200,000 Hz, plays the file at its own rate.
         Returns the seconds one pass of the sound takes (0 when nothing plays)."""
-        return self._start(slot, self.library.pick(sound_id), volume, pan, freq, loop)
+        return self._start(slot, self.library.pick(sound_id), volume, pan, freq, loop, "id")
 
     def play_member(self, slot: int, member, volume: int = 0, pan: int = 0, freq: int | None = None) -> float:
         """A numbered pool's member (audio/pools.py): an original by its ID, exactly the call the original's draw made, an
         added file of the player's by its place, once. Returns the seconds one pass takes (0 when nothing plays)."""
         if member.sound_id is not None:
             return self.play(slot, member.sound_id, volume, pan, freq)
-        return self._start(slot, self.library.pick_file(member.path), volume, pan, freq, False)
+        return self._start(slot, self.library.pick_file(member.path), volume, pan, freq, False,
+                           "pool member %s added by the player" % member.number)
 
     def member_rate(self, member) -> int | None:
         """The member's own sample rate (GetFrequency of its buffer); None when nothing is playable."""
@@ -138,14 +141,16 @@ class Audio:
     def play_file(self, slot: int, path: str, volume: int = 0, pan: int = 0) -> float:
         """The same for a sound file of the player's named by its place (the banter's [sound file.wav], D-048): once, at the
         file's own rate. A file that cannot be used plays nothing (the library logs it and speaks its one notice)."""
-        return self._start(slot, self.library.pick_file(path), volume, pan, None, False)
+        return self._start(slot, self.library.pick_file(path), volume, pan, None, False, "file named in a line")
 
-    def _start(self, slot: int, pick: Pick, volume: int, pan: int, freq: int | None, loop: bool) -> float:
+    def _start(self, slot: int, pick: Pick, volume: int, pan: int, freq: int | None, loop: bool, via: str = "id") -> float:
         self.stop(slot, log_it=False)
         sound = pick.sound
         self._volumes[slot] = int(volume)
         if sound is None:
             self._log(slot, "play", pick, volume, 0, pan, loop)
+            debuglog.event("sound", "play", slot=SLOT_NAMES[slot], id=pick.sound_id, chain=pick.source, via=via, file=None,
+                           result="silence: nothing playable", volume=int(volume), pan=int(pan), loop=loop)
             return 0.0
         if freq is None or not usable_frequency(freq):
             if freq is not None and freq not in self._warned_frequency:
@@ -153,8 +158,7 @@ class Audio:
                 log.warning("frequency %s Hz is outside DirectSound's range; playing %s at its own rate",
                             freq, pick.sound_id)
             freq = sound.rate
-        log.debug("play slot %s %s volume %s freq %s pan %s%s", SLOT_NAMES[slot], pick.sound_id, volume, freq, pan,
-                  " loop" if loop else "")       # NFL4_DEBUG=1: timing tools read this
+        began = time.perf_counter()
         try:
             pcm = self._render(pick, freq, pan)
         except Exception:
@@ -166,11 +170,16 @@ class Audio:
         except Exception:
             log.exception("the mixer could not play %s", pick.sound_id)
             return 0.0
-        return frames_of(pcm) / MIX_RATE
+        seconds = frames_of(pcm) / MIX_RATE
+        debuglog.event("sound", "play", slot=SLOT_NAMES[slot], id=pick.sound_id, chain=pick.source, via=via,
+                       file=os.path.basename(pick.path) if pick.path else None, volume=int(volume), pan=int(pan), freq=int(freq),
+                       loop=loop or None, seconds=round(seconds, 3), result="ok", prepare_ms=round((time.perf_counter() - began) * 1000, 2))
+        return seconds
 
     def set_volume(self, slot: int, volume: int) -> None:
         """SetVolume on the slot's buffer, playing or not (the next play sets its own)."""
         self._volumes[slot] = int(volume)
+        debuglog.trace("sound", "volume", slot=SLOT_NAMES[slot], volume=int(volume))     # 43 percent of all lines otherwise
         if self.slot_log is not None:
             self.slot_log.append(SlotEvent(self.clock(), slot, "volume", volume=int(volume)))
         try:
@@ -191,6 +200,8 @@ class Audio:
             return False
 
     def stop(self, slot: int, log_it: bool = True) -> None:
+        if log_it:
+            debuglog.trace("sound", "stop", slot=SLOT_NAMES[slot])
         if log_it and self.slot_log is not None:
             self.slot_log.append(SlotEvent(self.clock(), slot, "stop"))
         try:
@@ -227,6 +238,7 @@ class Audio:
             self.play(EXTRA_SLOT, BEEP_EXIT)
             return True
         if self.beeper.beep():
+            debuglog.event("sound", "play", id=BEEP_EXIT, chain="system", via="Windows default sound", result="ok")
             if self.slot_log is not None:
                 self.slot_log.append(SlotEvent(self.clock(), EXTRA_SLOT, "play", BEEP_EXIT, source="system"))
             return True
@@ -241,6 +253,7 @@ class Audio:
         pcm = render_stereo(pick.sound, pick.sound.rate, 0, pick.volume)
         self._volumes[slot] = 0
         self._log(slot, "play", pick, 0, pick.sound.rate, 0, False)
+        debuglog.event("sound", "play", slot=SLOT_NAMES[slot], id=pick.sound_id, chain=pick.source, via="generated", result="ok")
         try:
             self.output.play(slot, pcm, 1.0, False)
         except Exception:

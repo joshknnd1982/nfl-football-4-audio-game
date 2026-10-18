@@ -55,7 +55,8 @@ def _make_com():
 def _window_open() -> bool:
     try:
         return bool(ctypes.windll.user32.FindWindowW(WINDOW_CLASS, None))
-    except Exception:
+    except Exception as exc:
+        log.debug("looking for the JAWS window failed: %s", exc)
         return False
 
 
@@ -96,6 +97,20 @@ class JawsBackend(SpeechBackend):
             self._local.obj = None
             log.info("JAWS %s failed: %s", method, exc)
             return None
+
+    def describe(self, running: bool = False) -> dict:
+        """What the startup report says about JAWS: is its COM class registered, and (only when JAWS runs, so that nothing
+        is started by looking) does the COM object answer."""
+        try:
+            import winreg
+            winreg.CloseKey(winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, PROG_ID))
+            installed = "yes, %s is registered" % PROG_ID
+        except OSError:
+            installed = "no, %s is not registered" % PROG_ID
+        if not running:
+            return {"installed": installed, "com": "not probed (JAWS is not running)"}
+        com = "the COM object was made" if self._object() is not None else "the COM object could not be made"
+        return {"installed": installed, "com": com}
 
     # ----- SpeechBackend ---------------------------------------------------------------
     def is_available(self) -> bool:

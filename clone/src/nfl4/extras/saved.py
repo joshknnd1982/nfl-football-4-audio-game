@@ -13,6 +13,8 @@ values. Before such a game is loaded:
 """
 from __future__ import annotations
 
+import logging
+
 from ..game import prompt_texts as T
 from ..game.rules import CLASSIC
 from . import nx_texts as X
@@ -27,7 +29,8 @@ def record_usable(text: str | None) -> bool:
         return False
     try:
         ExtrasRecord.from_json(text)
-    except ValueError:
+    except ValueError as exc:
+        logging.getLogger("nfl4.extras").warning("the extras record of a saved game is not usable (%s)", exc)
         return False
     return True
 

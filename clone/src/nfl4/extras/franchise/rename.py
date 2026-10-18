@@ -15,6 +15,7 @@ character the window typed, so a capital letter is typed with Shift as anywhere 
 """
 from __future__ import annotations
 
+from ...data import debuglog
 from ...game import prompt_texts as PT
 from ...game import prompts as P
 from ...game.keys import KEY_ENTER
@@ -44,10 +45,20 @@ def check_name(league, player, name: str):
 
 def rename(league, player, name: str) -> None:
     player.name = name
+    debuglog.add_typed(name)
 
 
 def typed(g, speech, keys, prompt: str) -> str:
-    """The original's `getter` with F9's key reading: the typed text."""
+    """The original's `getter` with F9's key reading: the typed text. The debug log writes no key and no echoed letter while it
+    is typed, and hides the result (playbook 7.11, privacy)."""
+    with debuglog.context("typing: rename a player"):
+        text = _typed(g, speech, keys, prompt)
+    debuglog.add_typed(text)
+    debuglog.event("input", "text_entered", chars=len(text), prompt="rename a player")
+    return text
+
+
+def _typed(g, speech, keys, prompt: str) -> str:
     while True:
         speech.stop()
         speech.say_async(prompt)

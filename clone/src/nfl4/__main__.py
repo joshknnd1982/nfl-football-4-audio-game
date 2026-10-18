@@ -1,6 +1,12 @@
 """Run NFL Football 4: python -m nfl4 (from clone/src). This is inspired by Jim Kitchen."""
+import sys
+
 from nfl4.app import main
 from nfl4.data.lifecycle import finish
 
 if __name__ == "__main__":
-    finish(main())      # flush the log and end the process at once: nothing may stay behind (playbook 7.2.1)
+    code = 1
+    try:
+        code = main(sys.argv[1:])
+    finally:
+        finish(code)        # also when main raises: the log's last line, the state file and the process's end (7.2.1)      # flush the log and end the process at once: nothing may stay behind (playbook 7.2.1)

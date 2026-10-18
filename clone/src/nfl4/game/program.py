@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import logging
 
+from ..data import debuglog
 from . import program_texts as P
 from . import prompt_texts as T
 from . import texts
@@ -109,11 +110,12 @@ class Program:
             sounds.make_play_noise()                            # 0x487b2f
         # SetPlayerNames 0x487b4a and GetTeams 0x487b65: the name pool and the league are the Game's (loaded when needed)
         if self.store.first_run():                              # 0x487bff: footbal0.dat missing
-            g.say2(P.WELCOME_TO)                                # 0x487c20
+            # 0x487c20 g.say2(P.WELCOME_TO) is not said: the welcome sentence below says "Welcome to" itself, once (rule 0.16, G-F1)
             keys.pump()                                         # 0x487c44
             self._stop_intro(second_pump=False)                 # 0x487c4f (Stop), 0x487c65 (DoEvents), 0x487c88, L68 = 0 0x487cb7
             g.voice_speak(" ", wait=True)                       # 0x487cfa Voice.Speak " ", 0 (waits for the line above)
-            g.say(texts.TITLE_SPOKEN)                           # 0x487d35: the title in place of " Jim's N. F. L. Football, version 4. "
+            g.say(texts.TITLE_SPOKEN)                           # 0x487d35: the welcome in place of " Jim's N. F. L. Football, version 4. "
+            debuglog.event("app", "welcome_spoken", logging.INFO, first_start=True, text=texts.TITLE_SPOKEN)
             g.speak_notices()
             g.dy(INTRO_PAUSE, 0x487d81)
             g.hotkeys.speckeys()                                # 0x487daa: the F5 key list
@@ -122,7 +124,8 @@ class Program:
             if self._sapi_speaks():
                 g.hotkeys.change_voice()                        # 0x487e0d ChangeVoice (writes footbal0.dat: settings.txt)
         else:
-            g.say(texts.TITLE_SPOKEN)                           # rule 0.5.1, G-F1: once per launch, the intro loop goes on
+            g.say(texts.TITLE_SPOKEN)                           # rule 0.16, G-F1: once per launch, the intro loop goes on
+            debuglog.event("app", "welcome_spoken", logging.INFO, first_start=False, text=texts.TITLE_SPOKEN)
             g.speak_notices()
 
     # ----- the season set-up (0x487e25 to 0x4882de) -----
@@ -134,7 +137,9 @@ class Program:
         """A new season: the coach, the team, the schedule, week 1 (GetCoach 0x488234, ChooseTeam 0x48825d, makes 0x488278,
         gtp = 1 and football.gtp 0x4882b2 to 0x4882de); the code is `ClassicSeason.new_season` (H15). `coach` and `ask` are
         the N. F. L. rules' question of NFL_FRANCHISE_DESIGN 3.2 (ignored with Rules = Classic)."""
+        self.g.rnd.mark("season_start", kind=self.mode.kind)         # the debug log: the generator and its draws so far (7.11)
         self.mode.new_season(coach, ask)
+        debuglog.event("app", "season_made", kind=self.mode.kind, week=self.season.gtp, team=self.season.tn1)
 
     def request_switch(self, target: str | None = None) -> None:
         """A menu (F9, the Rules) asked for another kind of season: the main menu ends its wait and the week loop switches."""
@@ -176,6 +181,7 @@ class Program:
         if self.beds_stopped and self.sounds is not None:       # G-A5: the beds start again, as at the start of the program
             self.sounds.start_crowds()
         self.beds_stopped = False
+        debuglog.event("app", "week", week=season.gtp, kind=self.mode.kind, saved_game=self.saved_game or None)
         if not self.log_open:                                   # 0x48836a to 0x488454: once per run
             self.log_open = True
             fresh = not self.saved_game and season.gtp == 1     # 0x48843a: Output with the title line, else Append
@@ -263,6 +269,7 @@ class Program:
                         return 0
                     code = keys.code_text
                     if code == KEY_ENTER:                       # 0x489b1a
+                        debuglog.event("app", "main_menu_choice", choice=choice, week=season.gtp)
                         return choice
                     if code == KEY_UP:                          # 0x489b31
                         choice = choice - 1 or MENU_CHOICES
@@ -303,9 +310,15 @@ class Program:
         plan_rules = arguments.pop("rules", None)               # and, when the player took it, the staff's game plan (SX.8e)
         if rules is None:
             rules = plan_rules
-        result = g.play_game(rules=rules, own_names=own_names, saved=saved, save_sink=store.save_game,
-                             roster_sink=store.write_player_names,   # 0x489ddb
-                             **arguments)
+        g.rnd.mark("game_start", week=season.gtp, rules=getattr(rules or g.rules, "name", None) or None,
+                   resumed_save=saved is not None or None, tn1=season.tn1, tn2=season.tn2, tn3=season.tn3, tn4=season.tn4,
+                   vtrnt=season.vtrnt)
+        with debuglog.context("game week %s" % season.gtp):
+            result = g.play_game(rules=rules, own_names=own_names, saved=saved, save_sink=store.save_game,
+                                 roster_sink=store.write_player_names,   # 0x489ddb
+                                 **arguments)
+        debuglog.event("app", "game_end", week=season.gtp, scores=getattr(result, "scores", None), saved=result.saved or None,
+                       draws=g.rnd.draws)
         if result.saved:                                        # 0x489e2c: SavedGame = 1 skips pog and the standings
             self.saved_game = True
             self.ending = "saved"

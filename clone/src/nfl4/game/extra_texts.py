@@ -6,6 +6,8 @@ about text and the names are nfl4's since S7.1.
 """
 from __future__ import annotations
 
+import os
+
 from .. import VERSION
 
 # ----- menus in general -----
@@ -82,6 +84,39 @@ def output_label(mode: str, nvda_running: bool, original: bool, jaws_running: bo
     elif mode == "auto" and not (nvda_running or jaws_running):
         text += " " + NEITHER_RUNNING
     return text
+
+
+# the debug log (owner rule 0.15, playbook 7.11): the level, and the problem report
+DEBUG_LOG_NAMES = {"detailed": "detailed, the log that lets a bug on this computer be fixed",
+                   "trace": "trace, even more detail, only when you are asked for it",
+                   "normal": "normal, only problems and the main events",
+                   "off": "off, no log at all, so a bug on this computer cannot be fixed"}
+DEBUG_LOG_LEVELS = ("detailed", "trace", "normal", "off")
+
+
+def debug_log_label(level: str) -> str:
+    return f"Debug log: {DEBUG_LOG_NAMES.get(level, level)}{', the default' if level == 'detailed' else ''}."
+
+
+PROBLEM_REPORT_ITEM = "Save a problem report."
+PROBLEM_REPORT_TITLE = "Problem report"
+PROBLEM_REPORT_HELP = (MENU_HELP + " Enter on the first item makes one file with what the game wrote down about this computer. "
+                       "It never leaves your computer by itself: you send it.")
+PROBLEM_REPORT_PLAIN = "Save the report without my saved games."
+PROBLEM_REPORT_WITH_SAVES = "Save the report with my saved games and season files."
+PROBLEM_REPORT_OPEN = "Open the folder with the last report."
+PROBLEM_REPORT_SAVING = "Saving the problem report."
+PROBLEM_REPORT_NONE_YET = "No report has been saved yet."
+
+
+def problem_report_saved(path: str) -> str:
+    folder = os.path.basename(os.path.dirname(path)) or "its folder"
+    return (f"The problem report was saved in the {folder} folder as {os.path.basename(path)}. Send that file to the owner: "
+            "the readme says how. Choose the next item to open the folder.")
+
+
+def problem_report_failed(why: str) -> str:
+    return f"The problem report could not be saved: {why}"
 
 
 RESTORE_SPEECH = "Restore the original speech settings."

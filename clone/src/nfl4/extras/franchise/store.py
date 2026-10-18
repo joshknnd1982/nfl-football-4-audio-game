@@ -17,6 +17,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 
+from ...data import debuglog
 from ...data.files import savedgame
 from ...data.healing import FileInUse
 from ...game.gamestate import SavedGame
@@ -198,6 +199,7 @@ class FranchiseStore:
         if not self.files.commit(D.LEAGUE_FILE):
             self._write_failed()
             return False
+        debuglog.event("franchise", "saved", season=league.season, stage=league.stage, stage_no=league.stage_no, bytes=len(data))
         return True
 
     def _write_failed(self) -> None:
@@ -266,7 +268,8 @@ class FranchiseStore:
             return False
         try:
             raw = self.files.read(D.SAVED_FILE)
-        except FileInUse:
+        except FileInUse as exc:
+            log.warning("the franchise's saved game is held by another program (%s)", exc)
             return False
         except ValueError:
             raw = None
@@ -298,7 +301,8 @@ class FranchiseStore:
             return None
         try:
             return ExtrasRecord.from_json(saved.extras).franchise
-        except ValueError:
+        except ValueError as exc:
+            log.warning("the extras of a saved game cannot be read (%s)", exc)
             return None
 
     def take_saved_game(self) -> SavedGame | None:
@@ -348,6 +352,7 @@ class FranchiseStore:
         if league is None or league.stage != SEASON:
             return False
         season.coach = league.coach
+        debuglog.add_typed(season.coach)
         season.tn1, season.tn2 = (league.team - 1) // 4 + 1, (league.team - 1) % 4 + 1
         season.schedule = [ScheduleEntry(*entry) for entry in league.schedule]
         season.gtp = league.gtp

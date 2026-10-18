@@ -132,6 +132,7 @@ class PygameOutput:
         try:
             return bool(self._channels[slot].get_busy())
         except Exception:
+            log.exception("could not ask slot %d if it is busy", slot)
             return False
 
     def stop(self, slot: int) -> None:

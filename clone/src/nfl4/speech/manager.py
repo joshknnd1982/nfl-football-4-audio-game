@@ -20,7 +20,9 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 
+from ..data import debuglog
 from .backend import SpeechBackend
 
 log = logging.getLogger(__name__)
@@ -48,6 +50,7 @@ class SpeechManager:
     def mode(self, value: str) -> None:
         if value in MODES:
             self.stop()
+            debuglog.event("speech", "mode", old=self._mode, new=value)
             self._mode = value
 
     def _order(self) -> list[SpeechBackend]:
@@ -69,15 +72,18 @@ class SpeechManager:
                 if backend.is_available():
                     return backend
             except Exception as exc:
-                log.warning("%s availability check failed: %s", backend.name, exc)
+                log.warning("%s availability check failed: %s", backend.name, exc, exc_info=exc)
         return None
 
     def _send(self, text: str, role: str | None, rate_step: int) -> SpeechBackend | None:
         """Queue text on the first engine that takes it. Returns that engine."""
         self.last_role = role
+        began = time.perf_counter()
+        skipped = []
         for i, backend in enumerate(self._order()):
             try:
                 if not backend.is_available():
+                    skipped.append(backend.name)
                     continue
                 if getattr(backend, "takes_roles", False):
                     taken = backend.speak(text, role=role, rate_step=rate_step)
@@ -88,10 +94,16 @@ class SpeechManager:
                         self._fallback_logged = True
                         log.warning("speech mode %s: preferred engine unavailable, using %s",
                                     self._mode, backend.name)
+                    debuglog.event("speech", "request", role=role, rate_step=rate_step or None, backend=backend.name,
+                                   accepted_ms=round((time.perf_counter() - began) * 1000, 2), tried_first=skipped or None,
+                                   chars=len(text), queued=(backend.queue_length() if hasattr(backend, "queue_length") else None),
+                                   text="<typed echo>" if debuglog.typing_now() and len(text.strip()) <= 3 else text)
                     return backend
+                skipped.append(backend.name + " refused")
             except Exception as exc:  # backends should not raise; be safe anyway
-                log.warning("%s speak failed: %s", backend.name, exc)
-        log.warning("no speech engine could say %r", text)
+                log.warning("%s speak failed: %s", backend.name, exc, exc_info=exc)
+                skipped.append(backend.name + " raised")
+        log.warning("no speech engine could say %r (tried: %s)", text, ", ".join(skipped) or "none")
         return None
 
     def say(self, text: str, abort: threading.Event | None = None, *, role: str | None = None,
@@ -99,10 +111,18 @@ class SpeechManager:
         """Speak and wait until everything queued is spoken (the original's say). abort ends the wait early."""
         backend = self._send(text, role, rate_step)
         if backend is not None:
+            began = time.perf_counter()
+            previous = debuglog.state()
+            debuglog.set_state("speech wait (%s)" % backend.name)
             try:
                 backend.wait_until_done(abort)
             except Exception as exc:  # a dying engine must not turn a wait into a program error
-                log.warning("%s wait failed: %s", backend.name, exc)
+                log.warning("%s wait failed: %s", backend.name, exc, exc_info=exc)
+            finally:
+                debuglog.set_state(previous)
+                debuglog.beat()
+                debuglog.event("speech", "ended", backend=backend.name, waited_ms=round((time.perf_counter() - began) * 1000),
+                               aborted=bool(abort is not None and abort.is_set()) or None)
 
     def say_async(self, text: str, *, role: str | None = None, rate_step: int = 0) -> None:
         """Queue after current speech and return at once (the original's say2)."""
@@ -110,12 +130,13 @@ class SpeechManager:
 
     def stop(self) -> None:
         """Stop speech at once (the original's stopspeech), on every engine."""
+        debuglog.event("speech", "stop")
         for backend in (self.sapi, self.nvda, self.jaws):
             if backend is not None:
                 try:
                     backend.stop()
                 except Exception as exc:
-                    log.warning("%s stop failed: %s", backend.name, exc)
+                    log.warning("%s stop failed: %s", backend.name, exc, exc_info=exc)
 
     def is_speaking(self) -> bool:
         """True while the engine in use still has speech queued or playing (the original's RunningState = 2)."""
@@ -123,7 +144,7 @@ class SpeechManager:
         try:
             return bool(backend is not None and getattr(backend, "is_speaking", lambda: False)())
         except Exception as exc:
-            log.warning("%s speaking check failed: %s", backend.name, exc)
+            log.warning("%s speaking check failed: %s", getattr(backend, "name", "?"), exc, exc_info=exc)
             return False
 
     # ----- settings (clone additions): passed to SAPI 5, the one engine that has them -----
@@ -135,7 +156,7 @@ class SpeechManager:
         try:
             return call(self.sapi)
         except Exception as exc:
-            log.warning("sapi %s failed: %s", what, exc)
+            log.warning("sapi %s failed: %s", what, exc, exc_info=exc)
             return default
 
     def set_rate(self, rate: int | None) -> None:
@@ -198,14 +219,14 @@ class SpeechManager:
         try:
             return self.nvda is not None and bool(self.nvda.is_available())
         except Exception as exc:
-            log.warning("nvda availability check failed: %s", exc)
+            log.warning("nvda availability check failed: %s", exc, exc_info=exc)
             return False
 
     def jaws_running(self) -> bool:
         try:
             return self.jaws is not None and bool(self.jaws.is_available())
         except Exception as exc:
-            log.warning("jaws availability check failed: %s", exc)
+            log.warning("jaws availability check failed: %s", exc, exc_info=exc)
             return False
 
     def screen_reader_message(self, text: str) -> bool:
@@ -215,7 +236,7 @@ class SpeechManager:
                 if backend is not None and backend.is_available() and backend.speak(text):
                     return True
             except Exception as exc:
-                log.warning("%s message failed: %s", backend.name, exc)
+                log.warning("%s message failed: %s", getattr(backend, "name", "?"), exc, exc_info=exc)
         return False
 
     def close(self) -> None:
@@ -223,5 +244,5 @@ class SpeechManager:
             if backend is not None:
                 try:
                     backend.close()
-                except Exception:
-                    pass
+                except Exception as exc:
+                    log.warning("%s close failed: %s", backend.name, exc, exc_info=exc)

@@ -86,7 +86,9 @@ def split_chunks(text: str) -> list[str]:
     """Pieces of text to make and play one after the other. Short texts stay whole (rendered mode)."""
     if len(text) <= CHUNK_FROM_CHARS:
         return [text]
-    pieces = [p for p in re.split(r"(?<=[.!?:;])\s+|\n+", text) if p.strip()]
+    # a single capital letter and a full stop is an initial ("N. F. L."), not the end of a sentence: the welcome sentence of
+    # rule 0.16 must not be cut after "N." into two pieces with a gap between them
+    pieces = [p for p in re.split(r"(?<=[.!?:;])(?<!\b[A-Z]\.)\s+|\n+", text) if p.strip()]
     chunks: list[str] = []
     carry = ""
     for piece in pieces:
@@ -261,6 +263,8 @@ class SapiBackend(SpeechBackend):
         self._reprobe: set[str] = set()            # voices chosen again: probe them when nothing is speaking
         self._last_voice: _Voice | None = None     # the voice that spoke last (a stop with nothing in hand purges it)
         self.last_start_at = 0.0  # time.monotonic() when speech was last handed to the output (latency tool)
+        self._first_request = 0.0
+        self.first_utterance = ""   # the startup report's "time of the first test utterance": request to hand-over, in ms
         self._commands: queue.Queue = queue.Queue()
         self._cv = threading.Condition()
         self._queued = 0        # speak commands sent but not yet taken by the speech thread
@@ -301,6 +305,8 @@ class SapiBackend(SpeechBackend):
         """Queue text for the speaker `role` (None: the default speaker), rate_step steps faster than the rate."""
         if not self.is_available():
             return False
+        if not self._first_request:
+            self._first_request = time.monotonic()
         with self._cv:
             self._queued += 1
         self._commands.put(("speak", text, role if role in self._roles else self._default_role, int(rate_step)))
@@ -320,6 +326,10 @@ class SapiBackend(SpeechBackend):
     def is_speaking(self) -> bool:
         with self._cv:
             return bool(self._queued or self._busy)
+
+    def queue_length(self) -> int:
+        """Texts sent to the speech thread and not yet taken (the debug log writes it with every request)."""
+        return self._queued
 
     # ----- speakers ---------------------------------------------------------------------
     @property
@@ -417,8 +427,8 @@ class SapiBackend(SpeechBackend):
             for voice in list(self._voices.values()):
                 try:
                     voice.com.Speak("", SVSF_ASYNC | SVSF_PURGE_BEFORE_SPEAK)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    log.debug("purging %s at the end failed: %s", voice.name, exc)
             self._voices.clear()
             self._resolved.clear()
             self._tokens = None
@@ -426,8 +436,8 @@ class SapiBackend(SpeechBackend):
             if self._player is not None:
                 try:
                     self._player.close()
-                except Exception:
-                    pass
+                except Exception as exc:
+                    log.warning("the speech player did not close cleanly: %s", exc, exc_info=exc)
                 self._player = None
             with self._cv:
                 self._queued = 0
@@ -491,7 +501,8 @@ class SapiBackend(SpeechBackend):
             candidate = self._token_factory()
             candidate.SetId(voice_id)
             token = candidate
-        except Exception:
+        except Exception as exc:
+            log.debug("direct lookup of voice %s failed (%s); searching SAPI's list", voice_id, exc)
             pass
         if token is None:
             try:  # tokens from token enumerators may not accept SetId: scan the list
@@ -512,7 +523,8 @@ class SapiBackend(SpeechBackend):
         token_id = str(token.Id)
         try:
             name = str(token.GetDescription())
-        except Exception:
+        except Exception as exc:
+            log.debug("voice %s has no description (%s)", token_id, exc)
             name = token_id.rsplit("\\", 1)[-1]
         return token_id, name
 
@@ -715,6 +727,7 @@ class SapiBackend(SpeechBackend):
                 self._log_error("Speak", exc)
                 return None
             self.last_start_at = time.monotonic()
+            self._note_first_start()
             self._last_voice = voice
             log.debug("speak %r (%s, direct)", entry.text, entry.role)
             return _Work("direct", entry, voice)
@@ -808,6 +821,7 @@ class SapiBackend(SpeechBackend):
             if data and not self._player.write(data):
                 log.warning("the audio device refused speech")
             self.last_start_at = time.monotonic()
+            self._note_first_start()
             return bool(data)
         except Exception as exc:
             self._log_error("play", exc)
@@ -841,6 +855,11 @@ class SapiBackend(SpeechBackend):
         except Exception as exc:
             self._log_error(kind, exc)
 
+    def _note_first_start(self) -> None:
+        if not self.first_utterance and self._first_request:
+            self.first_utterance = "%d ms from the request to the hand-over to the output" % round(
+                (self.last_start_at - self._first_request) * 1000)
+
     def _note_healthy(self) -> None:
         hook, self.on_healthy = self.on_healthy, None
         if hook is not None:
@@ -852,4 +871,4 @@ class SapiBackend(SpeechBackend):
     def _log_error(self, what: str, exc: Exception) -> None:
         if self._errors_logged < 20:  # a broken engine must not flood the log
             self._errors_logged += 1
-            log.warning("SAPI 5 %s failed: %s: %s", what, type(exc).__name__, exc)
+            log.warning("SAPI 5 %s failed: %s: %s", what, type(exc).__name__, exc, exc_info=exc)

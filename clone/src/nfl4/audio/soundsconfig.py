@@ -183,7 +183,8 @@ def drop_entry(sounds_dir: str, sound_id: str) -> bool:
     path = os.path.join(sounds_dir, FILE_NAME)
     try:
         text = read_player_text(path)
-    except (OSError, ValueError, UnicodeError):
+    except (OSError, ValueError, UnicodeError) as exc:
+        log.debug("%s cannot be read to restore a sound (%s)", path, exc)
         return False
     wanted = canonical_id(sound_id)
     kept: list[str] = []

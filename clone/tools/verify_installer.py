@@ -17,6 +17,7 @@ import winreg
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))     # python -I does not add the script's folder
 import who_holds_folder      # same folder: which processes hold a folder's files (Restart Manager)
+import logfiles              # the newest launch log (one file per launch, rule 0.15)
 
 GAME = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RELEASE = os.path.join(GAME, "release")
@@ -165,8 +166,8 @@ def main():
         alive = start_and_close(os.path.join(APP, "nfl4.exe"), fresh)
         check("installed exe starts and keeps running", alive)
         check("a missing settings folder is recreated with sounds.txt and a log",
-              os.path.exists(os.path.join(fresh, "sounds", "sounds.txt")) and os.path.exists(os.path.join(fresh, "logs", "nfl4.log")))
-        log_text = open(os.path.join(fresh, "logs", "nfl4.log"), encoding="utf-8", errors="replace").read()
+              os.path.exists(os.path.join(fresh, "sounds", "sounds.txt")) and bool(logfiles.launch_files(fresh)))
+        log_text = logfiles.launch_text(fresh)
         check("no warnings or errors in the installed exe's log", " ERROR " not in log_text and "Traceback" not in log_text)
         check(f"installed exe says version {VERSION}", f"Brain clone {VERSION} starting" in log_text)
 

@@ -20,6 +20,8 @@ import sys
 import tempfile
 import threading
 
+from . import debuglog
+
 log = logging.getLogger(__name__)
 
 EXIT_DEADLINE_SECONDS = 6.0
@@ -48,7 +50,8 @@ def leave_program_folder(program_dir: str, safe_dir: str) -> str | None:
             os.chdir(target)
             log.debug("working directory moved out of the program folder to %s", target)
             return target
-        except OSError:
+        except OSError as exc:
+            log.debug("cannot move the working directory to %s: %s", target, exc)
             continue
     return None
 
@@ -57,7 +60,8 @@ def arm_exit_deadline(seconds: float = EXIT_DEADLINE_SECONDS, exit_fn=os._exit, 
     """End the process in `seconds` whatever is still running (daemon timer; call .cancel() to disarm)."""
     def expire():
         log.warning("closing did not finish in %.0f s: ending the process", seconds)
-        _flush_logs()
+        debuglog.set_exit_reason("exit deadline")
+        _flush_logs(code)
         exit_fn(code)
 
     timer = threading.Timer(seconds, expire)
@@ -66,7 +70,12 @@ def arm_exit_deadline(seconds: float = EXIT_DEADLINE_SECONDS, exit_fn=os._exit, 
     return timer
 
 
-def _flush_logs() -> None:
+def _flush_logs(code: int = 0) -> None:
+    """The debug log's last line `closed` and its queue written out, then the other handlers and the standard streams."""
+    try:
+        debuglog.shutdown(code=code)
+    except Exception:
+        log.debug("closing the debug log failed", exc_info=True)
     try:
         logging.shutdown()
     except Exception:
@@ -82,5 +91,6 @@ def _flush_logs() -> None:
 def finish(code: int = 0, exit_fn=os._exit) -> None:
     """The last call of the program: flush the log, then end the process at once. Threads that are stuck in native
     code (a voice engine, the audio device, an RPC call) cannot keep it alive and nothing stays open afterwards."""
-    _flush_logs()
-    exit_fn(int(code) if isinstance(code, int) else 0)
+    code = int(code) if isinstance(code, int) else 0
+    _flush_logs(code)
+    exit_fn(code)

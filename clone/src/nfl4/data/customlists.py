@@ -223,7 +223,8 @@ def _newest_copy_is_same(path: str) -> bool:
     try:
         numbers = sorted(int(m.group(1)) for m in map(pattern.match, os.listdir(folder)) if m)
         return bool(numbers) and open(f"{path}.damaged{numbers[-1]}", "rb").read() == open(path, "rb").read()
-    except OSError:
+    except OSError as exc:
+        log.debug("could not compare %s with its damaged copy (%s)", path, exc)
         return False
 
 

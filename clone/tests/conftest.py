@@ -8,7 +8,7 @@ import os
 
 import pytest
 
-from nfl4.data import paths
+from nfl4.data import debuglog, paths
 
 # whole files, and single tests of other files, that read the shipped wav files
 NEEDS_SHIPPED_FILES = {"test_audio_engine.py", "test_audio_mixer.py", "test_audio_realdevice.py",
@@ -35,6 +35,14 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if os.path.basename(str(item.fspath)) in NEEDS_SHIPPED_FILES or item.name.split("[")[0] in NEEDS_SHIPPED_TESTS:
             item.add_marker(skip)
+
+
+@pytest.fixture(autouse=True)
+def close_the_debug_log():
+    """A test that starts the whole program (app.main) leaves its debug log open, as the entry point's finish() closes it
+    in real life. Closing it after the test keeps its files and thread out of the next test (data/debuglog.py)."""
+    yield
+    debuglog.shutdown_quietly()
 
 
 @pytest.fixture(autouse=True)

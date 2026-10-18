@@ -372,6 +372,7 @@ def start_new(p) -> None:
     g.choose_team()
     team = team_index(season.tn1, season.tn2)
     table = getattr(g, "playbook_table", None)
+    g.rnd.mark("league_start", team=team)               # the debug log: the generator and its draws so far, to replay the league (7.11)
     league = new_league(g.rnd, list(g.pool.original), season.coach, team, new_league_id(g), own_names(g),
                         team_styles=table.teams if table is not None else None)      # SX.8l: the coordinators start with the teams' styles
     store.create(league)

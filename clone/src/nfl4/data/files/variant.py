@@ -83,7 +83,7 @@ def pack_number(value: int | float) -> bytes:
         if struct.unpack("<f", struct.pack("<f", value))[0] == value:
             return pack_single(value)
     except OverflowError:
-        pass
+        pass            # too large for a single: stored as a double, which is the original's rule for such a value
     return pack_double(value)
 
 

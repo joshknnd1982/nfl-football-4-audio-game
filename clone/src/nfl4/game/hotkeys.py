@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import logging
 
+from ..data import debuglog
 from ..speech.roles import F11_NAMES, ROLES, VOLUME_ORDER
 from . import extra_texts as words
 from . import help_texts as H
@@ -58,11 +59,15 @@ class HotKeys:
                           (KEY_CTRL, self.adjrate)):
             if keys.code_text == key:
                 self.runs.append(key)
-                menu()
+                with debuglog.context("hot key " + key):
+                    debuglog.event("menu", "hot_key", key=key, menu=getattr(menu, "__name__", "?"))
+                    menu()
         menu = self.added.get(keys.code_text)
         if menu is not None:
             self.runs.append(keys.code_text)
-            menu()
+            with debuglog.context("hot key " + keys.code_text):
+                debuglog.event("menu", "hot_key", key=keys.code_text, menu=getattr(menu, "__name__", "?"))
+                menu()
 
     # ----- the frame every menu shares -----
 

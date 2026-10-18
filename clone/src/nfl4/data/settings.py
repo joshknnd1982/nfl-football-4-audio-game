@@ -43,6 +43,8 @@ class GameSettings:
     nx_fr_auto: bool = False               # the staff handles the to-do list and the roster cut (SX.8e)
     nx_fr_offseason: str = "full"          # "full" or "short": every stage of the offseason, or a sentence per stage
     nx_fr_picks_told: str = "first"        # "first", "mine" or "all": which picks of the draft are told (SX.8d)
+    # the detailed debug log (owner rule 0.15, playbook 7.11): detailed (default), trace, normal or off; a clone addition
+    debug_log: str = "detailed"
 
 
 @dataclass

@@ -24,6 +24,7 @@ import ctypes
 import logging
 from ctypes import wintypes
 
+from ..data import debuglog
 from ..game.texts import CAPTION
 
 log = logging.getLogger(__name__)
@@ -34,6 +35,35 @@ VK_F10 = 121
 
 WM_DESTROY, WM_CLOSE = 0x0002, 0x0010
 WM_KEYDOWN, WM_KEYUP, WM_CHAR, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_SYSCHAR = 0x0100, 0x0101, 0x0102, 0x0104, 0x0105, 0x0106
+KEY_NAMES = {8: "Backspace", 9: "Tab", 13: "Enter", 16: "Shift", 17: "Ctrl", 18: "Alt", 19: "Pause", 20: "CapsLock", 27: "Escape",
+             32: "Space", 33: "PageUp", 34: "PageDown", 35: "End", 36: "Home", 37: "Left", 38: "Up", 39: "Right", 40: "Down",
+             44: "PrintScreen", 45: "Insert", 46: "Delete", 91: "LeftWindows", 92: "RightWindows", 93: "Menu", 144: "NumLock",
+             145: "ScrollLock", 186: "Semicolon", 187: "Equals", 188: "Comma", 189: "Minus", 190: "Period", 191: "Slash",
+             192: "Backquote", 219: "OpenBracket", 220: "Backslash", 221: "CloseBracket", 222: "Quote"}
+
+
+def key_name(vk: int) -> str:
+    if 48 <= vk <= 57 or 65 <= vk <= 90:
+        return chr(vk)
+    if 96 <= vk <= 105:
+        return "Numpad%d" % (vk - 96)
+    if 112 <= vk <= 135:
+        return "F%d" % (vk - 111)
+    return KEY_NAMES.get(vk, "vk%d" % vk)
+
+
+def log_key(vk: int, lparam: int) -> None:
+    """One key down in the debug log: its code and name, the modifiers held, whether it is an auto-repeat and the screen it
+    reaches. While the player types text (a coach's name) only `typed` is written, never the key (playbook 7.11, privacy)."""
+    if debuglog.typing_now():
+        debuglog.event("key", "down", typed=True, ctx=debuglog.current_context())
+        return
+    held = "".join(name for name, code in (("Ctrl+", 0x11), ("Shift+", 0x10), ("Alt+", 0x12))
+                   if user32.GetKeyState(code) & 0x8000 and vk != code)
+    debuglog.event("key", "down", vk=vk, name=held + key_name(vk), repeat=bool(lparam & 0x40000000),
+                   ctx=debuglog.current_context())
+
+
 WS_OVERLAPPEDWINDOW = 0x00CF0000
 CW_USEDEFAULT = -2147483648
 SW_SHOW = 5
@@ -149,6 +179,7 @@ class GameWindow:
             if msg in (WM_KEYDOWN, WM_SYSKEYDOWN):
                 if wparam == VK_F4 and msg == WM_SYSKEYDOWN:
                     return user32.DefWindowProcW(hwnd, msg, wparam, lparam)   # Alt+F4: Windows closes the window
+                log_key(int(wparam), int(lparam))
                 self._on_key(int(wparam))
                 return 0
             if msg == WM_CHAR:                     # one the loop did not pair with its key (not expected)
@@ -161,6 +192,7 @@ class GameWindow:
             if msg == WM_SYSCHAR:
                 return 0                                                      # no beep for Alt+letter
             if msg == WM_CLOSE:
+                debuglog.event("app", "window_close", logging.INFO)
                 self._on_close()
                 user32.DestroyWindow(hwnd)
                 return 0

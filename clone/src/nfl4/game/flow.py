@@ -19,7 +19,7 @@ import logging
 import time
 from typing import Callable
 
-from ..data import paths
+from ..data import debuglog, paths
 from ..data.settings import Settings
 from . import scorespeech
 from .banter_pool import DEFAULT_POOL, BanterPool
@@ -279,7 +279,9 @@ class Game(Speakers):
 
     def getqbs(self, state, saved: bool = False, own_from_file: str = "") -> tuple[str, str]:
         """Getqbs (GAME_SPEC 4.12): the two quarterbacks' names (game/prompts.py)."""
-        return self.prompts.getqbs(state, saved=saved, own_from_file=own_from_file)
+        names = self.prompts.getqbs(state, saved=saved, own_from_file=own_from_file)
+        debuglog.add_typed(*names)            # typed now or read from footplay.txt: the debug log hides them (playbook 7.11)
+        return names
 
     def halftime(self) -> None:
         """halftime (p_485b80): foot0, 15 celebration sounds, foot0 (game/sounds.py)."""

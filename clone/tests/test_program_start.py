@@ -113,23 +113,24 @@ def test_the_first_start_welcomes_says_the_title_the_key_list_and_where_f9_is(tm
     rig.sounds.stop_oneshot = lambda: (marker(rig, "intro stopped"), real())[-1]
     rig.run()
     events = [(kind, text) for kind, text in rig.sapi.events if kind in ("speak", "marker")]
-    assert [text for _, text in events][:6] == [P.WELCOME_TO, "intro stopped", " ", texts.TITLE_SPOKEN, H.SPECIAL_KEYS,
-                                                P.FIRST_START_F9]
+    assert [text for _, text in events][:5] == ["intro stopped", " ", texts.TITLE_SPOKEN, H.SPECIAL_KEYS, P.FIRST_START_F9]
     # the pauses of 0x487d81 and 0x487dea, 0.2 s each, around the key list
     assert [(site, seconds) for site, seconds in rig.game.pause_log if site in (0x487d81, 0x487dea)] == [
         (0x487d81, 0.2), (0x487dea, 0.2)]
-    assert said(rig).count(texts.TITLE_SPOKEN) == 1                    # no second title at the first start
+    assert said(rig).count(texts.TITLE_SPOKEN) == 1                    # no second welcome at the first start
+    assert P.WELCOME_TO not in said(rig)                               # the original's " Welcome to " is part of the sentence (rule 0.16)
 
 
 def test_the_first_start_waits_for_the_welcome_to_end_before_the_title(tmp_path):
-    # say2 " Welcome to ", the intro stops, Voice.Speak " ", 0 waits for the welcome (0x487cfa), then say (waited) the title
+    # the intro stops, Voice.Speak " ", 0 (0x487cfa), then say (waited) the welcome sentence, which replaces the original's
+    # say2 " Welcome to " and its title (rule 0.16)
     rig = first_start_rig(tmp_path, EXIT_KEYS, speech_per_char=0.01)
     real = rig.sounds.stop_oneshot
     rig.sounds.stop_oneshot = lambda: (marker(rig, "intro stopped"), real())[-1]
     rig.run()
     kinds = [(kind, text[:13]) for kind, text in rig.sapi.events][:8]
-    assert kinds == [("speak", " Welcome to "), ("marker", "intro stopped"), ("speak", " "), ("wait", ""),
-                     ("speak", " NFL Football"), ("wait", ""), ("stop", ""), ("speak", "Special key i")]
+    assert kinds == [("marker", "intro stopped"), ("speak", " "), ("wait", ""), ("speak", "Welcome to Jo"), ("wait", ""),
+                     ("stop", ""), ("speak", "Special key i"), ("speak", " Press F9 for")]
 
 
 def test_the_first_start_asks_the_five_voices_when_sapi_speaks(tmp_path):
@@ -152,7 +153,7 @@ def test_the_first_start_asks_no_voices_when_a_screen_reader_speaks_d022(tmp_pat
     rig.run()
     spoken = rig.nvda.spoken()
     assert [t for t in spoken if t.startswith("Choose the voice")] == []
-    assert spoken[:5] == [P.WELCOME_TO, " ", texts.TITLE_SPOKEN, H.SPECIAL_KEYS, P.FIRST_START_F9]
+    assert spoken[:4] == [" ", texts.TITLE_SPOKEN, H.SPECIAL_KEYS, P.FIRST_START_F9]
 
 
 def test_a_later_start_has_no_welcome_no_key_list_and_no_voice_choice(tmp_path):

@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import logging
 import random
+import secrets
 from typing import Callable, TypeVar
 
+from ..data import debuglog
 from .vbnum import int_of, single
 
 log = logging.getLogger("nfl4.game")
@@ -27,10 +29,17 @@ T = TypeVar("T")
 
 class GameRandom:
     """source: anything with random() giving 0 <= x < 1 (random.Random in the game, a seeded one or a scripted one in
-    tests). None = a generator seeded from the operating system (D-013)."""
+    tests). None = a generator seeded from the operating system (D-013). The seed is made here and written to the debug log
+    (playbook 7.11), so a session can be replayed from its log: the same seed and the same keys give the same draws."""
 
     def __init__(self, source=None):
-        self.source = source if source is not None else random.Random()
+        self.seed: int | None = None            # the seed of the generator made here; None for a source the caller gave
+        if source is None:
+            self.seed = secrets.randbits(64)
+            source = random.Random(self.seed)
+            debuglog.event("rnd", "seed", seed=self.seed)
+        self.source = source
+        self.draws = 0                          # how many numbers were drawn (the log says it at every game, season and league start)
         self.redraw_limit = REDRAW_LIMIT
         self.fallbacks = 0          # how often a redraw ran out of tries (a test asserts it stays 0 on the real data)
         # S7.3b: when a list, every draw appends its size n (Int(Rnd * n)) or 0 (a bare Rnd), so a test can compare the
@@ -41,6 +50,9 @@ class GameRandom:
         x = self.source.random()
         if not 0.0 <= x < 1.0:
             raise ValueError("a random source gave %r, which is not below 1 and not negative" % (x,))
+        self.draws += 1
+        if debuglog.trace_on:                   # the trace level of the debug log: every draw, in order
+            debuglog.event("rnd", "draw", debuglog.TRACE, n=self.draws, x="%.15g" % x)
         return x
 
     def random(self) -> float:
@@ -84,5 +96,10 @@ class GameRandom:
             if accept(value):
                 return value
         self.fallbacks += 1
-        log.warning("%s: no valid draw in %d tries, taking the first valid candidate (G-D1)", what, self.redraw_limit)
+        log.warning("%s: no valid draw in %d tries, taking the first valid candidate (G-D1) draws=%d", what, self.redraw_limit,
+                    self.draws)
         return scan()
+
+    def mark(self, what: str, **fields) -> None:
+        """The debug log's line for the start of a game, season or league: which generator and how many draws so far."""
+        debuglog.event("rnd", what, seed=self.seed if self.seed is not None else "given", draws=self.draws, **fields)

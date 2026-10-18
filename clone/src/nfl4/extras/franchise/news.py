@@ -18,6 +18,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from ...data import debuglog
 from .. import tuning as T
 from . import data as D
 from . import history
@@ -197,6 +198,9 @@ def render(league: LeagueRecord, events: list, pools: NewsPools, words, rnd) -> 
     lines = []
     for event in events:
         line = make_line(pools, event.pool, placeholders(event, league, words), recent.setdefault(event.pool, []), rnd)
+        # the debug log: one line for each happening of the league (a trade, an injury, a holdout, a pick, a retirement ...)
+        debuglog.event("franchise", "news", pool=event.pool, team=event.team or None, other=event.other or None, n=event.n or None,
+                       player=getattr(event.player, "id", None), season=league.season, stage=league.stage, told=line is not None)
         if line is not None:
             lines.append((event.pool, line[1]))
     return lines, recent

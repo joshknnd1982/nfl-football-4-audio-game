@@ -10,6 +10,9 @@ does, and what used to lock the folder) and a scratch data folder, speech volume
      last log line (no lingering process), and then nothing holds its program folder (the folder can be renamed: fixesforgames.md B-U2),
   5. which modules the process loaded (pygame, SDL), to see the bundle is complete.
 NVDA mode is not exercised here (it would speak through the owner's screen reader).
+  6. (rules 0.15 and 0.16) the debug log: the launch log begins with the startup report, which has every required item with a value or
+     "n/a (reason)", the welcome sentence is spoken once (`welcome_spoken`), the LAST line of the log is `closed`, and the problem
+     report (`nfl4.exe --problem-report`) makes a zip with the listed members.
 Usage: <python with soundcard, numpy, pywin32> exe_smoke.py <path to nfl4.exe> <bits 32|64> <scratch folder> [sound volume] [sapi|nvda|jaws|auto]
 """
 import os
@@ -21,6 +24,8 @@ import time
 
 import numpy as np
 import soundcard as sc
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import logfiles
 import win32api
 import win32con
 import win32gui
@@ -33,7 +38,6 @@ OUTPUT = sys.argv[5] if len(sys.argv) > 5 else "sapi"
 os.makedirs(scratch, exist_ok=True)
 with open(os.path.join(scratch, "settings.txt"), "w", encoding="utf-8") as handle:
     handle.write(f"# Brain settings, format 1\nspeech_volume = 0\nsound_volume = {SOUND_VOLUME}\nspeech_output = {OUTPUT}\n")
-log_path = os.path.join(scratch, "logs", "nfl4.log")
 results = []
 
 
@@ -95,11 +99,7 @@ def key(vk):
 
 
 def log_text():
-    try:
-        with open(log_path, encoding="utf-8", errors="replace") as handle:
-            return handle.read()
-    except OSError:
-        return ""
+    return logfiles.launch_text(scratch)
 
 
 # wait until the main prompt has been spoken (speech at volume 0 still takes its time)
@@ -108,7 +108,9 @@ for _ in range(300):
         break
     time.sleep(0.1)
 text = log_text()
-check("speaks the title", "by Josh Kennedy, inspired by Jim Kitchen" in text)
+WELCOME = "Welcome to Josh Kennedy's N. F. L. football, loosely inspired by Jim Kitchen's original games."
+check("speaks the welcome sentence once", text.count(" welcome_spoken ") == 1 and WELCOME in text)
+check("the window title is the caption", "NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen" in text)
 check("speaks the main prompt", "Press a number from one to nine" in text)
 time.sleep(1.5)
 
@@ -144,7 +146,7 @@ key(27)                                    # Escape: exit (the original speaks i
 escaped = time.perf_counter()
 closed_logged = None
 while proc.poll() is None and time.perf_counter() - escaped < 40:
-    if closed_logged is None and "Brain clone closed" in log_text():
+    if closed_logged is None and " app " in log_text() and " closed code=" in log_text():
         closed_logged = time.perf_counter()
     time.sleep(0.05)
 if proc.poll() is None:
@@ -152,7 +154,7 @@ if proc.poll() is None:
     code = None
 else:
     code = proc.returncode
-if closed_logged is None and "Brain clone closed" in log_text():
+if closed_logged is None and " closed code=" in log_text():
     closed_logged = time.perf_counter()     # the process ended within one polling step of the line
 lingered = None if closed_logged is None else time.perf_counter() - closed_logged
 stop_capture.set()
@@ -170,7 +172,22 @@ except OSError as exc:
     print("  cannot rename the program folder:", exc)
 check("nothing holds the program folder after exit (it can be renamed)", renamed)
 text = log_text()
-check("closes through its own exit path", "Brain clone closed" in text)
+check("closes through its own exit path", "NFL Football 4 clone closed" in text)
+lines = text.splitlines()
+check("the launch log begins with the startup report", bool(lines) and lines[0].startswith("==== startup report"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from nfl4.data.sysreport import REQUIRED_KEYS   # noqa: E402  (the list of items the report must hold)
+header = lines[:lines.index("==== end of startup report ====")] if "==== end of startup report ====" in lines else []
+held = {l.split(" = ", 1)[0]: l.split(" = ", 1)[1] for l in header if " = " in l}
+missing = [k for k in REQUIRED_KEYS if not held.get(k, "").strip()]
+check("the startup report has every item with a value or n/a (reason)", not missing, ", ".join(missing[:5]))
+check("the report's n/a items always say why", all(v.startswith("n/a (") for v in held.values() if v.startswith("n/a")))
+check("the last line of the log is `closed`", bool(lines) and " closed code=" in lines[-1], lines[-1][:80] if lines else "empty")
+report_out = os.path.join(scratch, "report-out")
+made = subprocess.run([exe, "--problem-report", "--quiet", "--folder=" + report_out], env=env, cwd=os.path.dirname(exe),
+                      capture_output=True, text=True, timeout=120)
+zips = [n for n in os.listdir(report_out)] if os.path.isdir(report_out) else []
+check("--problem-report makes one zip without a window", made.returncode == 0 and len(zips) == 1, made.stdout.strip()[:100])
 bad = [l for l in text.splitlines() if (" WARNING " in l or " ERROR " in l or "Traceback" in l)
        and not (OUTPUT != "sapi" and "preferred engine unavailable" in l)]
 check("no warnings or errors in the log", not bad, "; ".join(bad[:3]))

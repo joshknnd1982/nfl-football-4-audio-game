@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from ..data import debuglog
 from . import prompt_texts as T
 from .vbnum import str_
 
@@ -106,6 +107,14 @@ class Prompts:
         return self.keys.char
 
     def getter(self, prompt: str) -> str:
+        """The typed text: the debug log writes only that text was typed and how long it is, never the keys or the text (7.11)."""
+        with debuglog.context("typing: " + prompt.strip()[:40]):
+            text = self._getter(prompt)
+        debuglog.add_typed(text, ccn(text), cqn(text))      # what is spoken is the cleaned form (apostrophes and accents go)
+        debuglog.event("input", "text_entered", chars=len(text), prompt=prompt.strip()[:40])
+        return text
+
+    def _getter(self, prompt: str) -> str:
         """The typed text r: F1 speaks the prompt again and empties r; Shift makes the next key upper case; Backspace
         speaks and removes the last character; Enter ends; every other key is echoed and appended."""
         g, keys = self.g, self.keys

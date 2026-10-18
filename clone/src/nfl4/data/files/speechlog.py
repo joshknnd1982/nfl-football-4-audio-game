@@ -64,8 +64,8 @@ class SpeechLog:
         if handle is not None:
             try:
                 handle.close()
-            except OSError:
-                pass
+            except OSError as exc:
+                log.debug("footballlog.txt did not close cleanly (%s)", exc)
 
     def _give_up(self, why: str) -> None:
         if not self._failed:

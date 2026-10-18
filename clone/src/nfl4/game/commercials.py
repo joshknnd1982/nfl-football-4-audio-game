@@ -79,7 +79,8 @@ class Commercials:
         for folder in (self.folder, os.path.join(self.folder, break_name)):
             try:
                 names = sorted(os.listdir(folder), key=str.lower)
-            except OSError:
+            except OSError as exc:
+                log.debug("commercials folder %s cannot be listed (%s)", folder, exc)
                 continue
             for name in names:
                 path = os.path.join(folder, name)

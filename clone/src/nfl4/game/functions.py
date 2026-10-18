@@ -27,7 +27,7 @@ from ..audio.ids import SOUND_IDS, canonical_id, describe
 from ..audio.output import EXTRA_SLOT
 from ..audio.pools import POOL_ORDER, POOLS
 from ..audio.restore import restore_all_sounds, restore_sound
-from ..data import paths
+from ..data import debuglog, paths, problem_report
 from ..data.settings import SOUND_LEVEL_MAX, SOUND_LEVEL_MIN
 from ..speech.manager import MODES
 from . import extra_texts as words
@@ -202,6 +202,19 @@ class Functions:
             folder = self.settings_dir or paths.user_data_dir()
             return words.SETTINGS_FOLDER_OPENING if self.open_folder(folder) else words.SETTINGS_FOLDER_FAILED
 
+        game_settings = options.settings.game
+
+        def change_log(step: int) -> None:
+            levels = words.DEBUG_LOG_LEVELS
+            game_settings.debug_log = levels[(levels.index(game_settings.debug_log) + step) % len(levels)]
+            debuglog.set_level(game_settings.debug_log)
+            options.save()
+
+        def reset_log() -> None:
+            game_settings.debug_log = debuglog.DEFAULT_LEVEL
+            debuglog.set_level(game_settings.debug_log)
+            options.save()
+
         items = [
             Item(lambda: words.output_label(sp.mode, self.speech.nvda_running(), sp.mode == original.mode,
                                             self.speech.jaws_running()),
@@ -213,8 +226,42 @@ class Functions:
             Item(lambda: words.CHOOSE_VOICES_ITEM, enter=voices),
             Item(lambda: words.RESTORE_SPEECH, enter=restore_all),
             Item(lambda: words.SETTINGS_FOLDER_ITEM, enter=open_settings_folder),
+            Item(lambda: words.debug_log_label(game_settings.debug_log), enter=reset_log, change=change_log),
+            Item(lambda: words.PROBLEM_REPORT_ITEM, enter=self._enter(self.problem_report_menu)),
         ]
         SpokenMenu(self.speech, self.keys, words.SETTINGS_TITLE, items, help_text=words.SETTINGS_HELP).run()
+
+    # ----- the problem report (owner rule 0.15, playbook 7.11) -----
+
+    def problem_report_menu(self) -> None:
+        """One file to send to the owner: the logs, the setup and the settings, with or without the saved games."""
+        last: list[str] = []
+
+        def save(with_saves: bool) -> str:
+            self.speech.stop()
+            self.speech.say_async(words.PROBLEM_REPORT_SAVING)
+            try:
+                path = problem_report.make(with_saves, system_kwargs=self.system_kwargs(), custom=self.g.customization)
+            except Exception as exc:
+                log.exception("the problem report could not be made")
+                return words.problem_report_failed(str(exc)[:120] or type(exc).__name__)
+            last[:] = [path]
+            return words.problem_report_saved(path)
+
+        def open_last() -> str:
+            if not last:
+                return words.PROBLEM_REPORT_NONE_YET
+            return words.SETTINGS_FOLDER_OPENING if self.open_folder(os.path.dirname(last[0])) else words.SETTINGS_FOLDER_FAILED
+
+        items = [Item(lambda: words.PROBLEM_REPORT_PLAIN, enter=lambda: save(False)),
+                 Item(lambda: words.PROBLEM_REPORT_WITH_SAVES, enter=lambda: save(True)),
+                 Item(lambda: words.PROBLEM_REPORT_OPEN, enter=open_last)]
+        SpokenMenu(self.speech, self.keys, words.PROBLEM_REPORT_TITLE, items, help_text=words.PROBLEM_REPORT_HELP).run()
+
+    def system_kwargs(self) -> dict:
+        """What the startup report needs to be made again now (the problem report's system.txt)."""
+        return dict(speech=self.speech, speech_settings=self.options.settings.speech, audio=self.audio, store=None,
+                    custom=self.g.customization, settings=self.options.settings)
 
     # ----- sounds -----
 

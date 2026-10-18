@@ -57,21 +57,27 @@ class VoiceGuard:
             try:
                 with open(self._trial, encoding="utf-8", errors="replace") as handle:
                     held = handle.readline().strip()
-            except OSError:
+            except OSError as exc:
+                log.debug("the voice trial file cannot be read (%s)", exc)
                 return
             if held.lower() != voice_id.strip().lower():
                 return
         try:
             os.remove(self._trial)
-        except OSError:
-            pass
+        except FileNotFoundError:
+            pass                              # no trial was open: nothing to clear
+        except OSError as exc:
+            log.debug("the voice trial file was not removed (%s)", exc)
 
     def recover(self) -> str | None:
         """A trial that never ended: the voice in it crashed the program. Returns its id (now on the list)."""
         try:
             with open(self._trial, encoding="utf-8", errors="replace") as handle:
                 voice_id = handle.readline().strip()
-        except OSError:
+        except FileNotFoundError:
+            return None                       # the usual start: no trial was left open
+        except OSError as exc:
+            log.debug("no voice trial to recover (%s)", exc)
             return None
         self.clear()
         if not voice_id:

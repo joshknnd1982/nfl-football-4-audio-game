@@ -15,6 +15,8 @@ import re
 import shutil
 import time
 
+from . import debuglog
+
 log = logging.getLogger("nfl4.data")
 
 KEEP_DAMAGED_COPIES = 3
@@ -46,36 +48,48 @@ def read_player_text(path: str, retries: int = LOCK_RETRIES, pause: float = LOCK
     ValueError / UnicodeError: the file is damaged (too large, binary, undecodable).
     FileInUse: it could not be opened after a few brief retries (locked or no permission).
     Other OSError: it could not be read for another reason (treated like FileInUse by the callers)."""
+    began = time.perf_counter()
     for attempt in range(max(1, retries)):
         try:
             if os.path.getsize(path) > MAX_FILE_BYTES:
                 raise ValueError("the file is far too large")
             with open(path, "rb") as handle:
                 raw = handle.read(MAX_FILE_BYTES + 1)
-            return decode_player_text(raw)
+            text = decode_player_text(raw)
+            debuglog.event("file", "read", path=path, bytes=len(raw), result="ok", attempts=attempt + 1,
+                           ms=round((time.perf_counter() - began) * 1000, 1))
+            return text
         except PermissionError as exc:
             if attempt + 1 < retries:
+                debuglog.event("file", "read_locked", logging.WARNING, path=path, attempt=attempt + 1, error=exc)
                 time.sleep(pause)
                 continue
+            debuglog.event("file", "read", logging.WARNING, path=path, result="in use or no permission", error=exc)
             raise FileInUse(str(exc)) from exc
+        except (OSError, ValueError, UnicodeError) as exc:
+            debuglog.event("file", "read", logging.WARNING, path=path, result="failed", kind=type(exc).__name__, error=exc)
+            raise
     raise FileInUse(path)    # not reached; keeps the type checker calm
 
 
 def write_text_atomic(path: str, text: str) -> bool:
     """Write the file in one step so a crash never leaves half a file. False if it cannot be written."""
     tmp = path + ".tmp"
+    began = time.perf_counter()
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(tmp, "w", encoding="utf-8", newline="\r\n") as handle:
             handle.write(text)
         os.replace(tmp, path)
+        debuglog.event("file", "write", path=path, chars=len(text), result="ok", ms=round((time.perf_counter() - began) * 1000, 1))
         return True
-    except (OSError, UnicodeError):
+    except (OSError, UnicodeError) as exc:
         log.exception("could not write %s", path)
+        debuglog.event("file", "write", logging.WARNING, path=path, result="failed", kind=type(exc).__name__, error=exc)
         try:
             os.remove(tmp)
-        except OSError:
-            pass
+        except OSError as gone:
+            log.debug("the temporary file %s was not removed: %s", tmp, gone)
         return False
 
 
@@ -84,17 +98,29 @@ def read_bytes(path: str, retries: int = LOCK_RETRIES, pause: float = LOCK_PAUSE
 
     FileNotFoundError: there is no such file. ValueError: it is far too large to be one of ours (damaged).
     FileInUse: it exists but could not be opened after a few brief retries (locked, or no permission)."""
+    began = time.perf_counter()
     for attempt in range(max(1, retries)):
         try:
             if os.path.getsize(path) > MAX_FILE_BYTES:
                 raise ValueError("the file is far too large")
             with open(path, "rb") as handle:
-                return handle.read(MAX_FILE_BYTES + 1)
+                data = handle.read(MAX_FILE_BYTES + 1)
+            debuglog.event("file", "read", path=path, bytes=len(data), result="ok", attempts=attempt + 1,
+                           ms=round((time.perf_counter() - began) * 1000, 1))
+            return data
         except PermissionError as exc:
             if attempt + 1 < retries:
+                debuglog.event("file", "read_locked", logging.WARNING, path=path, attempt=attempt + 1, error=exc)
                 time.sleep(pause)
                 continue
+            debuglog.event("file", "read", logging.WARNING, path=path, result="in use or no permission", error=exc)
             raise FileInUse(str(exc)) from exc
+        except FileNotFoundError:
+            debuglog.event("file", "read", path=path, result="missing")
+            raise
+        except (OSError, ValueError) as exc:
+            debuglog.event("file", "read", logging.WARNING, path=path, result="failed", kind=type(exc).__name__, error=exc)
+            raise
     raise FileInUse(path)    # not reached; keeps the type checker calm
 
 
@@ -102,6 +128,7 @@ def write_bytes_atomic(path: str, data: bytes) -> bool:
     """Write a binary file in one step (a temporary file, then a rename) so a crash never leaves half a file. False if it
     cannot be written."""
     tmp = path + ".tmp"
+    began = time.perf_counter()
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(tmp, "wb") as handle:
@@ -109,13 +136,15 @@ def write_bytes_atomic(path: str, data: bytes) -> bool:
             handle.flush()
             os.fsync(handle.fileno())          # a power loss must not leave an empty file after the rename
         os.replace(tmp, path)
+        debuglog.event("file", "write", path=path, bytes=len(data), result="ok", ms=round((time.perf_counter() - began) * 1000, 1))
         return True
-    except OSError:
+    except OSError as exc:
         log.exception("could not write %s", path)
+        debuglog.event("file", "write", logging.WARNING, path=path, result="failed", kind=type(exc).__name__, error=exc)
         try:
             os.remove(tmp)
-        except OSError:
-            pass
+        except OSError as gone:
+            log.debug("the temporary file %s was not removed: %s", tmp, gone)
         return False
 
 
@@ -129,15 +158,18 @@ def save_damaged_copy(path: str) -> str | None:
         numbers = sorted(int(m.group(1)) for m in map(pattern.match, os.listdir(folder)) if m)
         number = (numbers[-1] if numbers else 0) + 1
         target = f"{path}.damaged{number}"
-        if os.path.getsize(path) > MOVE_INSTEAD_OF_COPY_BYTES:
+        size = os.path.getsize(path)
+        if size > MOVE_INSTEAD_OF_COPY_BYTES:
             os.replace(path, target)
         else:
             shutil.copyfile(path, target)
+        debuglog.event("file", "damaged_copy", logging.WARNING, path=path, copy=target, bytes=size,
+                       moved=size > MOVE_INSTEAD_OF_COPY_BYTES)
         for old in numbers[:max(0, len(numbers) + 1 - KEEP_DAMAGED_COPIES)]:
             try:
                 os.remove(f"{path}.damaged{old}")
-            except OSError:
-                pass
+            except OSError as gone:
+                log.debug("an old damaged copy %s%d was not removed: %s", path + ".damaged", old, gone)
         return target
     except OSError:
         log.exception("could not save a copy of damaged file %s", path)
@@ -149,6 +181,7 @@ def save_backup_copy(path: str, suffix: str) -> str | None:
     target = path + suffix
     try:
         shutil.copyfile(path, target)
+        debuglog.event("file", "backup_copy", path=path, copy=target)
         return target
     except OSError:
         log.exception("could not save a backup of %s", path)

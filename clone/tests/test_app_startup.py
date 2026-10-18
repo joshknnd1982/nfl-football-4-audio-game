@@ -17,6 +17,7 @@ import nfl4.ui.window as window_module
 from nfl4.audio.engine import NO_SOUND_NOTICE
 from nfl4.audio.library import SOUND_FILE_NOTICE
 from nfl4.audio.output import OutputError
+from nfl4.data import debuglog
 from nfl4.data.voiceguard import CRASHED_FILE, TRIAL_FILE
 from nfl4.game import program_texts, texts
 from nfl4.speech.fake import FakeBackend
@@ -89,6 +90,14 @@ def closing_after(seconds):
     return Closing
 
 
+def launch_log(folder) -> str:
+    """The text of the newest launch log in the logs folder (playbook 7.11: one file per launch; both halves)."""
+    debuglog.flush()
+    logs = sorted(p for p in (folder / "logs").glob("nfl4-2*.log"))
+    assert logs, "no launch log was written"
+    return "\n".join(p.read_text(encoding="utf-8") for p in logs[-2:])
+
+
 def write_settings(folder, lines):
     (folder / "settings.txt").write_text("# NFL Football 4 settings, format 1\n" + "".join(l + "\n" for l in lines),
                                          encoding="utf-8")
@@ -105,14 +114,50 @@ def test_a_normal_start_says_the_title_and_closes_cleanly(tmp_path, monkeypatch)
     assert made.sapi.said[0] == (texts.TITLE_SPOKEN, ANNOUNCER, 0)
     assert window.closed and time.monotonic() - window.closed[0] < 2.5
     assert (tmp_path / "settings.txt").is_file() and not (tmp_path / TRIAL_FILE).exists()
-    log_text = (tmp_path / "logs" / "nfl4.log").read_text(encoding="utf-8")
+    log_text = launch_log(tmp_path)
     assert "NFL Football 4 clone closed" in log_text
     assert os.path.normcase(os.getcwd()) == os.path.normcase(str(tmp_path))  # left the program folder (7.2.1)
 
 
+def test_the_welcome_sentence_is_exactly_the_owners_and_the_caption_is_unchanged():
+    """Rule 0.16, playbook 7.12: both parts, the letters of NFL spaced for the voices, no second welcome; rule 0.5.1 keeps the caption."""
+    assert texts.TITLE_SPOKEN == "Welcome to Josh Kennedy's N. F. L. football, loosely inspired by Jim Kitchen's original games."
+    assert texts.GAME_SPOKEN == "N. F. L. football" and texts.INSPIRATION == "Jim Kitchen's original games"
+    assert texts.TITLE_SPOKEN.lower().count("welcome") == 1 and "NFL" not in texts.TITLE_SPOKEN
+    assert texts.CAPTION == "NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen"
+
+
+@pytest.mark.window
+def test_the_welcome_is_spoken_once_per_launch_where_the_title_was_and_the_log_says_so(tmp_path, monkeypatch):
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
+    assert app.main() == 0
+    assert made.sapi.spoken()[0] == texts.TITLE_SPOKEN and made.sapi.spoken().count(texts.TITLE_SPOKEN) == 1
+    log_text = launch_log(tmp_path)
+    assert log_text.count(" welcome_spoken ") == 1 and "welcome_sentence = " + texts.TITLE_SPOKEN in log_text
+
+
+@pytest.mark.window
+def test_a_real_start_writes_a_complete_startup_report_and_the_events_after_it(tmp_path, monkeypatch):
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(app, "create_speech", Made())
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
+    assert app.main() == 0
+    lines = launch_log(tmp_path).splitlines()
+    assert lines[0].startswith("==== startup report") and "==== end of startup report ====" in lines
+    held = {l.split(" = ", 1)[0]: l.split(" = ", 1)[1] for l in lines[:lines.index("==== end of startup report ====")] if " = " in l}
+    from nfl4.data.sysreport import REQUIRED_KEYS
+    assert [k for k in REQUIRED_KEYS if not held.get(k, "").strip()] == []
+    assert all(v.startswith("n/a (") for v in held.values() if v.startswith("n/a"))
+    after = lines[lines.index("==== end of startup report ====") + 1:]
+    assert any(" key " in l or " speech " in l for l in after) and any(" window_close" in l for l in after)
+
+
 @pytest.mark.window
 def test_the_start_that_makes_settings_txt_is_the_first_start_with_the_welcome(tmp_path, monkeypatch):
-    """The original's missing footbal0.dat (GAME_SPEC 3 step 6): the welcome, then the title, the key list and where F9 is."""
+    """The original's missing footbal0.dat (GAME_SPEC 3 step 6): the welcome sentence (rule 0.16), the key list and where F9 is."""
     monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
     (tmp_path / "settings.txt").unlink()
     made = Made()
@@ -120,7 +165,7 @@ def test_the_start_that_makes_settings_txt_is_the_first_start_with_the_welcome(t
     monkeypatch.setattr(window_module, "GameWindow", closing_after(1.5))
     assert app.main() == 0
     spoken = made.sapi.spoken()
-    assert spoken[:2] == [program_texts.WELCOME_TO, " "] and spoken[2] == texts.TITLE_SPOKEN
+    assert spoken[:2] == [" ", texts.TITLE_SPOKEN] and program_texts.WELCOME_TO not in spoken     # the sentence says "Welcome to" itself
     assert program_texts.FIRST_START_F9 in spoken and (tmp_path / "settings.txt").is_file()
 
 
@@ -138,7 +183,7 @@ def test_a_sound_file_that_cannot_be_used_is_reported_once_at_start(tmp_path, mo
     spoken = made.sapi.spoken()
     assert spoken[0] == texts.TITLE_SPOKEN and spoken.count(SOUND_FILE_NOTICE) == 1
     assert (tmp_path / "sounds" / "sounds.txt").is_file()
-    log_text = (tmp_path / "logs" / "nfl4.log").read_text(encoding="utf-8")
+    log_text = launch_log(tmp_path)
     assert "foot7.wav cannot be used" in log_text and "foot12.wav cannot be used" in log_text
 
 

@@ -223,7 +223,8 @@ class SoundLibrary:
         for source, path in self._candidates(key, entry):
             try:
                 stat = os.stat(path)
-            except OSError:
+            except OSError as exc:
+                log.debug("%s: candidate %s cannot be read (%s); the next link of the chain", key, path, exc)
                 continue
             try:
                 sound = self._decode(path, stat)

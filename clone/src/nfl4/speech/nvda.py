@@ -125,6 +125,21 @@ class NvdaBackend(SpeechBackend):
             log.warning("NVDA %s failed: %s", name, exc)
             return -1
 
+    def describe(self) -> dict:
+        """What the startup report (data/sysreport.py) says about this engine: the DLL, whether it loads, whether NVDA answers."""
+        present = os.path.isfile(self._path)
+        dll = self._load() if present else None
+        if not present:
+            load = "the controller DLL file is missing"
+        elif dll is None:
+            load = "the controller DLL failed to load (see the log line 'NVDA controller client not usable')"
+        else:
+            load = "loaded; speakSsml %s" % ("available" if self._ssml_ok else "not available (plain text, old NVDA)")
+        answer = self._call("nvdaController_testIfRunning") if dll is not None else None
+        if answer is not None:
+            load += "; testIfRunning=%d (%s)" % (answer, "NVDA answers" if answer == 0 else "NVDA does not answer")
+        return {"dll": "%s (%s)" % (self._path, "present" if present else "MISSING"), "load": load}
+
     # ----- SpeechBackend -----------------------------------------------------------
     def is_available(self) -> bool:
         if self._clock() < self._failed_until:

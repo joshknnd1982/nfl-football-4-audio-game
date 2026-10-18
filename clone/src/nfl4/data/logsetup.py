@@ -1,47 +1,24 @@
-"""Log file setup. This is inspired by Jim Kitchen.
+"""Log file setup: the entry points the program calls. This is inspired by Jim Kitchen.
 
-One plain-text log in the per-user logs folder, rotated so it never grows without limit.
-If the folder cannot be written, logging goes nowhere and the game carries on (playbook 7.10).
+The detailed debug log itself (one file per launch, the startup report, the crash log, the redaction) is in
+data/debuglog.py (CLAUDE.md 0.15, playbook 7.11). If the folder cannot be written, logging goes to the temp folder and
+then nowhere, and the game carries on (playbook 7.10).
 """
 from __future__ import annotations
 
 import logging
-import logging.handlers
-import os
-import sys
-import threading
 
-from .paths import log_dir
+from . import debuglog
 
 
-def setup_logging(level: int = logging.INFO) -> str | None:
-    """Returns the log file path, or None if no log file could be opened."""
-    root = logging.getLogger()
-    root.setLevel(level)
-    try:
-        folder = log_dir()
-        os.makedirs(folder, exist_ok=True)
-        path = os.path.join(folder, "nfl4.log")
-        handler = logging.handlers.RotatingFileHandler(path, maxBytes=512_000, backupCount=2,
-                                                       encoding="utf-8")
-    except OSError:
-        root.addHandler(logging.NullHandler())
-        return None
-    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
-    root.addHandler(handler)
-    return path
+def setup_logging(level: str | int | None = None, folder: str | None = None) -> str | None:
+    """Start the log. `level` is a debug_log name (detailed, trace, normal, off); the old logging numbers still work
+    (DEBUG is detailed, anything higher is normal). Returns the log file path, or None when no file could be opened."""
+    if isinstance(level, int):
+        level = "detailed" if level <= logging.DEBUG else "normal"
+    return debuglog.start(level or debuglog.DEFAULT_LEVEL, folder)
 
 
 def install_exception_logging() -> None:
     """Whatever escapes on any thread goes to the log instead of vanishing (playbook 7.10 last-resort handler)."""
-    log = logging.getLogger("nfl4")
-
-    def main_thread_hook(kind, value, trace):
-        log.error("unhandled error", exc_info=(kind, value, trace))
-
-    def other_thread_hook(args):
-        log.error("unhandled error in thread %s", getattr(args.thread, "name", "?"),
-                  exc_info=(args.exc_type, args.exc_value, args.exc_traceback))
-
-    sys.excepthook = main_thread_hook
-    threading.excepthook = other_thread_hook
+    debuglog.install_exception_hooks()

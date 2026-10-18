@@ -36,6 +36,7 @@ import os
 import shutil
 from dataclasses import dataclass, field
 
+from ...data import debuglog
 from ...game.gamestate import SavedGame
 from ...game.playoffs import Pairing, TeamRef
 from ...game.schedule import ScheduleEntry
@@ -116,7 +117,7 @@ class FileProgramStore:
         try:
             os.remove(path)
         except FileNotFoundError:
-            pass
+            log.debug("%s was not there to delete", path)
         except OSError:
             log.exception("could not delete %s", path)
 
@@ -276,6 +277,7 @@ class FileProgramStore:
         if loaded is None:
             return False
         season.coach = loaded.team.coach
+        debuglog.add_typed(season.coach)          # the coach's name was typed once; the debug log hides it in every launch
         season.tn1, season.tn2 = loaded.team.tn1, loaded.team.tn2
         season.schedule = list(loaded.schedule)
         season.gtp = loaded.gtp

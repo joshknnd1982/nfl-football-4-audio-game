@@ -20,7 +20,7 @@ import re
 from typing import Callable
 
 from ..speech.roles import ROLES
-from . import paths
+from . import debuglog, paths
 from .healing import read_player_text, save_damaged_copy, write_text_atomic
 from .settings import AudioSettings, GameSettings, Settings, SpeechSettings
 
@@ -77,6 +77,11 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # nx_fr_auto          on or off: the staff handles your to do list and the roster cut of the franchise (default off)
 # nx_fr_offseason     full = every stage of the offseason is told (default), short = a sentence for each stage
 # nx_fr_picks_told    first = the first picks and yours (default), mine = only yours, all = every pick of the draft
+# debug_log           detailed = the log of what the game does, for fixing a bug on your computer (default), trace = even more
+#                     (only when asked), normal = only problems and the main events, off = no log at all. The log files are in
+#                     the logs folder next to this file and never leave your computer unless you send them. Without a log a
+#                     bug that happens only on your computer cannot be fixed. F9, Speech settings, "Save a problem report"
+#                     makes one file to send.
 #
 """
 
@@ -121,6 +126,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_fr_auto = {'on' if game.nx_fr_auto else 'off'}",
         f"nx_fr_offseason = {game.nx_fr_offseason}",
         f"nx_fr_picks_told = {game.nx_fr_picks_told}",
+        f"debug_log = {game.debug_log}",
     ]
     return "\n".join(lines) + "\n"
 
@@ -270,6 +276,10 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if value.lower() not in ("first", "mine", "all"):
             raise ValueError(f"'{value[:20]}' is not first, mine or all")
         game.nx_fr_picks_told = value.lower()
+    elif name == "debug_log":
+        if value.lower() not in debuglog.LEVEL_NAMES:
+            raise ValueError(f"'{value[:20]}' is not detailed, trace, normal or off")
+        game.debug_log = value.lower()
     else:
         raise KeyError(name)
 
@@ -294,6 +304,7 @@ class SettingsStore:
         self._unwritable_noted = False
         self.created = False             # True when this start made settings.txt: the first start (the original's missing
         #                                  footbal0.dat, GAME_SPEC 3 step 6, which shows the welcome and the voice choice)
+        self._written: dict[str, str] = {}   # name -> value of the last text written or read, for the debug log's "setting" lines
 
     # ----- loading -----
 
@@ -329,6 +340,8 @@ class SettingsStore:
             return
         self.settings = settings
         self._problems = problems
+        self._remember(settings)
+        debuglog.event("settings", "loaded", path=self.path, problems=len(problems))
         if problems:
             for problem in problems:
                 log.warning("%s: %s", FILE_NAME, problem)
@@ -348,9 +361,23 @@ class SettingsStore:
             return False
         return self._write(self.settings)
 
+    def _remember(self, settings: Settings) -> dict[str, str]:
+        """The values of the text render() makes, by name (the voice notes and the header are left out)."""
+        values: dict[str, str] = {}
+        for line in render(settings).splitlines():
+            if line and not line.startswith("#"):
+                name, _, value = line.partition(" = ")
+                values[name] = value
+        old, self._written = self._written, values
+        return old
+
     def _write(self, settings: Settings) -> bool:
         if write_text_atomic(self.path, render(settings, self.voice_name)):
             self._unwritable_noted = False
+            old = self._remember(settings)
+            for name, value in self._written.items():        # the debug log: every setting that changed, old and new
+                if old.get(name, value) != value:
+                    debuglog.event("settings", "changed", logging.INFO, name=name, old=old[name], new=value)
             return True
         if not self._unwritable_noted:
             self._unwritable_noted = True

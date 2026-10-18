@@ -14,6 +14,7 @@ import time
 from dataclasses import dataclass
 from typing import Callable
 
+from ..data import debuglog
 from . import extra_texts as words
 from .keys import (KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESCAPE, KEY_F1, KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN,
                    KEY_PAGE_UP, KEY_RIGHT, KEY_SPACE, KEY_UP, KeyInput, typed_character)
@@ -33,9 +34,20 @@ class Item:
 
 
 class _Speaker:
+    kind = "menu"
+    title = ""
+
     def __init__(self, speech, keys: KeyInput):
         self.speech = speech
         self.keys = keys
+
+    def run(self):
+        """Every menu, list and page set the debug log's context (the screen the keys reach) while it is open."""
+        with debuglog.context("%s: %s" % (self.kind, self.title)):
+            debuglog.event("menu", "open", kind=self.kind, title=self.title)
+            result = self._run()
+            debuglog.event("menu", "close", kind=self.kind, title=self.title, result=result)
+            return result
 
     def say(self, text: str) -> None:
         """Replace whatever is being said with text (a menu answers every key at once)."""
@@ -70,7 +82,7 @@ class SpokenMenu(_Speaker):
         number = int(char) or 10
         return number - 1 if number <= len(self.items) else None
 
-    def run(self) -> None:
+    def _run(self) -> None:
         self.say(words.menu_opening(self.title, len(self.items)) + " " + self.items[0].label())
         while True:
             code = self.keys.read_key()
@@ -94,6 +106,7 @@ class SpokenMenu(_Speaker):
                 item.change(-1 if code == KEY_LEFT else 1)
                 self.say(item.label())
             elif code == KEY_ENTER and item.enter is not None:
+                debuglog.event("menu", "enter", title=self.title, index=self.index, item=item.label())
                 result = item.enter()
                 self.say(result if result is not None else item.label())
             elif code == KEY_F1:
@@ -131,7 +144,9 @@ class ListPicker(_Speaker):
         self._typed = ""
         self._typed_at = -1e9
 
-    def run(self) -> int | None:
+    kind = "list"
+
+    def _run(self) -> int | None:
         self.say(f"{self.title}. {self.count} items. Press F1 for help. {self.name(self.index)}")
         while True:
             code = self.keys.read_key()
@@ -148,6 +163,7 @@ class ListPicker(_Speaker):
             elif code == KEY_END:
                 self.index = self.count - 1
             elif code == KEY_ENTER:
+                debuglog.event("menu", "enter", title=self.title, index=self.index)
                 if self.close_on_enter:
                     return self.index
                 result = self.on_enter(self.index) if self.on_enter is not None else None
@@ -185,7 +201,9 @@ class TextPages(_Speaker):
         self.lines = lines
         self.index = 0
 
-    def run(self) -> None:
+    kind = "pages"
+
+    def _run(self) -> None:
         self.speech.stop()
         self.speech.say_async(self.title + ".")
         for line in self.lines:

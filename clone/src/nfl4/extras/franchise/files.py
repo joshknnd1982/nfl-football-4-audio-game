@@ -13,6 +13,7 @@ import os
 import shutil
 import time
 
+from ...data import debuglog
 from ...data.healing import FileInUse, save_damaged_copy, write_text_atomic
 from . import data as D
 
@@ -44,8 +45,11 @@ class DiskFiles:
                 if os.path.getsize(path) > D.SAVE_MAX_BYTES:
                     raise ValueError("the file is far too large")
                 with open(path, "rb") as handle:
-                    return handle.read()
+                    data = handle.read()
+                debuglog.event("file", "read", path=path, bytes=len(data), result="ok")
+                return data
             except FileNotFoundError:
+                debuglog.event("file", "read", path=path, result="missing")
                 return None
             except PermissionError as exc:
                 if attempt + 1 < LOCK_RETRIES:
@@ -84,6 +88,7 @@ class DiskFiles:
         """Step 3: the temporary file becomes the file (the moment a write counts)."""
         try:
             os.replace(self.path(name) + TMP, self.path(name))
+            debuglog.event("file", "write", path=self.path(name), result="ok (temporary file renamed)")
             return True
         except OSError:
             log.exception("could not rename %s", name + TMP)
@@ -104,7 +109,7 @@ class DiskFiles:
         try:
             os.remove(self.path(name))
         except FileNotFoundError:
-            pass
+            log.debug("%s was not there to delete", name)
         except OSError:
             log.exception("could not delete %s", name)
 

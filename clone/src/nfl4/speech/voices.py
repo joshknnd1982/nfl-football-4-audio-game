@@ -45,8 +45,8 @@ def engine_of(token, voice_id: str) -> str:
         vendor = str(token.GetAttribute("Vendor")).strip()
         if vendor:
             return vendor
-    except Exception:
-        pass
+    except Exception as exc:
+        log.debug("voice %s has no Vendor attribute (%s)", voice_id, exc)
     return ENGINE_FALLBACK
 
 

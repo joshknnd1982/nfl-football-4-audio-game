@@ -132,14 +132,15 @@ def speech_menu(rig, keys):
     return run_f9(rig)
 
 
-def test_the_speech_menu_names_its_seven_items_and_starts_with_the_original_values(tmp_path):
+def test_the_speech_menu_names_its_nine_items_and_starts_with_the_original_values(tmp_path):
     rig = rig_for(tmp_path, [])
-    spoken = speech_menu(rig, [DOWN] * 7)
-    assert spoken[1:9] == ["Speech settings. 7 items. Press F1 for help. Speech output: SAPI 5 voice only, original.",
-                           "Speech rate: 0, original.", "Speech pitch: 0, original.",
-                           "Letter keys in lists: type letters to search for a name, original.",
-                           words.CHOOSE_VOICES_ITEM, words.RESTORE_SPEECH, words.SETTINGS_FOLDER_ITEM,
-                           "Speech output: SAPI 5 voice only, original."]
+    spoken = speech_menu(rig, [DOWN] * 9)
+    assert spoken[1:11] == ["Speech settings. 9 items. Press F1 for help. Speech output: SAPI 5 voice only, original.",
+                            "Speech rate: 0, original.", "Speech pitch: 0, original.",
+                            "Letter keys in lists: type letters to search for a name, original.",
+                            words.CHOOSE_VOICES_ITEM, words.RESTORE_SPEECH, words.SETTINGS_FOLDER_ITEM,
+                            words.debug_log_label("detailed"), words.PROBLEM_REPORT_ITEM,
+                            "Speech output: SAPI 5 voice only, original."]
 
 
 def test_right_changes_the_speech_output_and_saves_it_enter_goes_back_to_the_original(tmp_path):
@@ -213,21 +214,21 @@ def test_the_voices_item_runs_the_five_pickers_of_f12_and_says_it_is_done(tmp_pa
 def test_the_settings_folder_item_opens_the_folder_of_settings_txt(tmp_path):
     rig = rig_for(tmp_path, [])
     rig.game.functions.settings_dir = str(tmp_path)
-    spoken = speech_menu(rig, [UP, ENTER])
+    spoken = speech_menu(rig, [DOWN] * 6 + [ENTER])
     assert rig.folders.opened == [str(tmp_path)] and spoken[-2] == words.SETTINGS_FOLDER_OPENING
 
 
 def test_a_folder_that_cannot_be_opened_is_said(tmp_path):
     rig = rig_for(tmp_path, [])
     rig.folders.ok = False
-    spoken = speech_menu(rig, [UP, ENTER])
+    spoken = speech_menu(rig, [DOWN] * 6 + [ENTER])
     assert spoken[-2] == words.SETTINGS_FOLDER_FAILED
 
 
 def test_a_menu_that_fails_says_so_and_the_game_goes_on(tmp_path, caplog):
     rig = rig_for(tmp_path, [])
     rig.folders.error = RuntimeError("explorer is gone")
-    rig.keys.answers = [ENTER, UP, ENTER, ESC]
+    rig.keys.answers = [ENTER] + [DOWN] * 6 + [ENTER, ESC]
     spoken = run_f9(rig)
     assert spoken[-1] == words.FAILED and rig.keys.answers == []
     assert any("an F9 menu failed" in r.message for r in caplog.records)

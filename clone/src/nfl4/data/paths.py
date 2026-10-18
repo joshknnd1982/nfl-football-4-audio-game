@@ -8,6 +8,7 @@ Program folder: the folder of nfl4.exe in a build, clone/ when run from source.
 """
 from __future__ import annotations
 
+import logging
 import os
 import sys
 
@@ -51,7 +52,8 @@ def open_folder(path: str) -> bool:
         os.makedirs(path, exist_ok=True)
         os.startfile(path)   # noqa: S606 (Windows only, a folder the program itself made)
         return True
-    except OSError:
+    except OSError as exc:
+        logging.getLogger("nfl4.data").warning("the folder %s could not be opened: %s", path, exc)
         return False
 
 

@@ -534,8 +534,8 @@ class Customization:
                 continue
             try:
                 os.makedirs(os.path.dirname(file.path), exist_ok=True)
-            except OSError:
-                pass
+            except OSError as exc:
+                log.warning("the folder of %s could not be made (%s)", file.path, exc)
             if file.write_defaults():
                 self._unwritable_told.discard(spec.key)
             elif spec.key not in self._unwritable_told:       # said once per file, and not again for one the start said
