@@ -594,3 +594,40 @@ def test_a_slow_probe_that_finishes_after_the_wait_still_lands_in_the_file_as_la
     text = written(path)
     assert "report was not complete" in text and "-- late startup report items" in text and "sapi_voice_count = 1811" in text
     assert text.index("first_event") < text.index("late startup report items") < text.index("second_event")
+
+
+def _report_thread(seconds):
+    """A startup report that takes `seconds` to finish its last section (the slow SAPI probe of a busy machine)."""
+    report = debuglog.report()                                  # this log's report: a thread that ends after the test touches no other test's log
+
+    def slow():
+        time.sleep(seconds)
+        report.section("slow", [("sapi_voice_count", "3")])
+        report.done.set()
+    thread = threading.Thread(target=slow, daemon=True)
+    report.thread = thread
+    thread.start()
+
+
+def test_a_program_closed_before_its_report_is_done_waits_for_it(tmp_path):
+    """shutdown waits up to REPORT_CLOSE_SECONDS for a report still being made (a program closed at once still gets a whole report), and no longer
+    (nfl4 SX.8p, B-X98: the start-up test's bound for closing counts this wait)."""
+    debuglog.start("detailed", str(tmp_path))
+    filled = []
+    debuglog.report().on_close = lambda: filled.append(True)
+    _report_thread(0.4)
+    started = time.monotonic()
+    debuglog.shutdown("test")
+    took = time.monotonic() - started
+    assert not filled and 0.3 < took < debuglog.REPORT_CLOSE_SECONDS + 2.0     # the report finished in the wait: nothing filled as missing
+
+
+def test_a_report_slower_than_the_wait_is_filled_in_at_the_end(tmp_path):
+    debuglog.start("detailed", str(tmp_path))
+    filled = []
+    debuglog.report().on_close = lambda: filled.append(True)
+    _report_thread(debuglog.REPORT_CLOSE_SECONDS + 3.0)
+    started = time.monotonic()
+    debuglog.shutdown("test")
+    took = time.monotonic() - started
+    assert filled and debuglog.REPORT_CLOSE_SECONDS - 0.2 < took < debuglog.REPORT_CLOSE_SECONDS + 2.0

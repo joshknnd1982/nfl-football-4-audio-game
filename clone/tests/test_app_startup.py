@@ -112,7 +112,9 @@ def test_a_normal_start_says_the_title_and_closes_cleanly(tmp_path, monkeypatch)
     monkeypatch.setattr(window_module, "GameWindow", window)
     assert app.main() == 0
     assert made.sapi.said[0] == (texts.TITLE_SPOKEN, ANNOUNCER, 0)
-    assert window.closed and time.monotonic() - window.closed[0] < 2.5
+    # S7.1's 2.5 s to close, plus the wait for a startup report still running (SX.L): under a whole suite the report's speech section took
+    # 4.4 s and the close 2.6 s (nfl4 SX.8p, B-X98)
+    assert window.closed and time.monotonic() - window.closed[0] < 2.5 + debuglog.REPORT_CLOSE_SECONDS
     assert (tmp_path / "settings.txt").is_file() and not (tmp_path / TRIAL_FILE).exists()
     log_text = launch_log(tmp_path)
     assert "NFL Football 4 clone closed" in log_text
@@ -225,8 +227,8 @@ def test_closing_the_window_while_the_game_talks_ends_the_program_within_two_sec
     window = closing_after(1.0)
     monkeypatch.setattr(window_module, "GameWindow", window)
     assert app.main() == 0
-    assert window.closed and time.monotonic() - window.closed[0] < 2.5
-    assert made.sapi.spoken()[0] == texts.TITLE_SPOKEN                        # it really was in the middle of the title
+    assert window.closed and time.monotonic() - window.closed[0] < 2.5 + debuglog.REPORT_CLOSE_SECONDS     # and the report's wait (SX.L, B-X98)
+    assert made.sapi.spoken()[0] == texts.TITLE_SPOKEN                       # it really was in the middle of the title
 
 
 @pytest.mark.window

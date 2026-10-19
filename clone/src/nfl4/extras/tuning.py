@@ -908,3 +908,23 @@ FR_FIT_STYLES = {"pass": "air", "run": "power", "rush": "pressure", "cover": "we
 # the fit helped only the player's opponents, in his games, and no game of the score table has it. So the fit is EVERY team's: the player's "team" playbook
 # is his coordinators', who follow his best players as every team's do, and the staff's game plan of a coordinator who keeps his own style recommends the
 # style his lineup fits; a playbook the player names in F9 is his and never changes (nothing is decided for him that he did not leave to his staff).
+
+# ----- SX.8p: the whole Franchise's 20-season test with every block on (design 16 and 17 SX.8p, D-078; NO value moved) -----
+# Judged against the DESIGN's own bands (work/sx8p/design_bands_sx8p.py, beside the restated verdicts of work/simulate_franchise_sx8f.py), 500 leagues x
+# 20 seasons at the values of this file (work/simulate_franchise_sx8f_fast_500x20_sx8p_base.txt) miss three: the spread of the 32 strengths under 1.0 in
+# 24.8 percent of the single run-seasons (every season's mean over the runs 0.99 to 1.77), a single-place group's league mean outside 64 to 76 in 0.25 to
+# 0.42 percent of them (QB, K, P; RET 0.04), and a team among the three weakest more than 5 seasons in a row in 17.2 percent of the leagues (one given team
+# in 0.61 percent). THE SWEEP (work/sx8p/sweep_sx8p.py, the same 300 leagues as the fast run, proved row for row by work/sx8p/same_leagues_sx8p.py;
+# work/sx8p/sweep_sx8p.txt): at these values 16.3 percent of the leagues have a streak over 5 and 24.3 percent of the run-seasons a spread under 1.0;
+# FR_ROOKIE_RATING (41, 19) (a wider top, the same mean): 16.7 and 19.0, the quarterbacks outside 64 to 76 in 8.3 percent of the run-seasons; FR_DRAFT_VALUE
+# with the need bonuses 12, 20 and 6: 18.7 and 25.1; FR_RESIGN_TARGET 0.55 (more free agents): 14.7 and 13.8, the persistence of the bottom three 0.334
+# against 0.371; FR_TEAM_LEVEL -3..+3: 21.3 and 22.0 (the first seasons only); FR_PROGRESS_NOISE (7, -3) (a design rule, measured, not a knob): 17.3 and
+# 13.0. No knob reaches a band (none reaches 0 leagues with a streak over 5, none puts every run-season's spread over 1.0), so none moved and the three
+# bands are restated by D-078 with these measurements: a team's exact sum keeps a lag-1 correlation of 0.655 from one season to the next (a plain
+# model of 32 teams at that correlation, with no draft order, is only a reference: work/sx8p/analyze_bands_sx8p.txt); a single-place group's league
+# mean keeps a correlation of 0.80 to 0.89 (a cohort). FR_RESIGN_TARGET is the one knob that lifts the spread: on the same 300 leagues 0.50 gives
+# 7.6 percent of the run-seasons under 1.0 and 0.45 gives 3.2 (every season's mean 1.10 and 1.18 at least; the streaks over 5 13.3 and 14.7 percent,
+# the persistence 0.324 and 0.330), but the checked runs of 100 leagues (work/simulate_franchise_sx8f_fast_100x20_sx8p_target50.txt and _target45.txt)
+# show what it costs: the staff signs again 16.7 and 8.8 percent of the contracts that run out (48 percent at 0.62), the market grows to 211 and 232 free
+# agents a league-offseason, and the league's mean cap use falls to 0.658 and 0.640 (CP4's band starts at 0.65: 0.45 FAILS it). It stays 0.62, the market
+# SX.8i calibrated (Q-031); it is the knob the owner's playtest may turn if the teams sound too close together in the middle seasons.

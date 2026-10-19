@@ -54,6 +54,7 @@ HEARTBEAT_SECONDS = 30.0
 HANG_SECONDS = 10.0                  # no heartbeat from the game thread for this long: dump every thread's stack once
 HANG_SPEECH_SECONDS = 90.0           # a wait for speech is allowed to be long (a long announcement); a hang is far longer
 REPORT_WAIT_SECONDS = 8.0            # the writer holds the first lines back this long for the startup report
+REPORT_CLOSE_SECONDS = 1.5           # a program closed before its startup report is done waits this long for it (shutdown)
 MAX_LINE = 8 * 1024                  # one line is never longer than this (a 5 MB speech text would break the half-file cap)
 MAX_TRACEBACK = 64 * 1024
 QUEUE_LIMIT = 50_000                 # a stuck disk must never grow the memory without end: past this, lines are dropped
@@ -880,7 +881,7 @@ def shutdown(reason: str = "", code: int | None = 0, say: bool = True) -> None:
               errors=log.errors, dropped=log.dropped)
     log.stop_watchdog.set()
     if log.report.thread is not None and not log.report.done.is_set():
-        log.report.thread.join(1.5)                      # a program closed at once still gets a whole report
+        log.report.thread.join(REPORT_CLOSE_SECONDS)     # a program closed at once still gets a whole report
     if not log.report.done.is_set() and log.report.on_close is not None:
         try:
             log.report.on_close()
