@@ -14,6 +14,7 @@ played in the quarter (the counter), total = plays in this quarter (30 to 37), q
         m = pct * 15 / CountDown;  mins = Int(m);  secs = Int((Int(m * 100) - mins * 100) * 60 / 100)
         draw j = Int(Rnd * spread) - low until 0 <= secs + j <= 59;  secs = secs + j
     if quarter = 3 and played = 0:  mins = 15;  secs = 0
+    CLONE (Q6, D-025 b): quarter above 4, played = 0 and played = oldtime (F4 never pressed since the last counter 0): mins = 15; secs = 0
     text = " ";  if mins > 0: text = Str$(mins) & " minute" (& "s" if mins > 1)
     if secs > 0: text = text & " " & Str$(secs) & " second" (& "s" if secs > 1)
     say5(text & " remaining in the " & (first, second, third, fourth, over time) & " quarter. ")
@@ -88,7 +89,8 @@ class QuarterClock:
     def advance(self, played: int, total: int, quarter: int, rnd: GameRandom) -> str:
         """sgc: update oldtime, mins, secs and CountDown for this play counter and return the sentence for say5."""
         word = quarter_word(quarter)         # a quarter outside 1 to 10 fails before any state changes, as Lf4(...) would
-        if played != self.oldtime:
+        computed = played != self.oldtime
+        if computed:
             self.oldtime = played
             left = single(total - played)
             pct = int_of(single(single(left * 100) / total))
@@ -110,6 +112,8 @@ class QuarterClock:
                                    lambda: self.secs, "clock seconds")
         if quarter == 3 and played == 0:
             self.mins, self.secs = 15, 0
+        elif quarter > 4 and played == 0 and not computed:
+            self.mins, self.secs = 15, 0      # Q6 / D-025 (b), not reproduced: the start of an overtime period speaks its full time
         return clock_sentence(self.mins, self.secs, word)
 
 

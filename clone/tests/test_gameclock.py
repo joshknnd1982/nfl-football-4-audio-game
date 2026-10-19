@@ -103,6 +103,27 @@ def test_a_fresh_clock_treats_play_counter_0_as_the_old_time_and_computes_nothin
     assert (clock.mins, clock.secs, clock.oldtime) == (0, 0, 0)
 
 
+def test_the_start_of_an_overtime_period_speaks_its_full_time_when_f4_was_never_pressed_since_counter_0_q6():
+    """Q6 / D-025 (b), not reproduced: the original says " remaining in the over time quarter." with no time (or repeats the
+    last time pressed at counter 0); the clone speaks 15 minutes, and draws nothing for it."""
+    clock = QuarterClock()
+    assert advance(clock, 0, 30, 5) == " 15 minutes remaining in the over time quarter. "
+    assert (clock.mins, clock.secs, clock.oldtime) == (15, 0, 0)
+    clock = QuarterClock()
+    clock.oldtime, clock.mins, clock.secs = 0, 4, 12                  # last pressed at counter 0 with another time left over
+    assert advance(clock, 0, 30, 6) == " 15 minutes remaining in the over time quarter. "
+
+
+def test_an_overtime_period_after_f4_was_pressed_later_is_computed_as_the_original_does_and_the_rest_is_kept_q6():
+    clock = QuarterClock()
+    clock.oldtime = 12                                                  # F4 was pressed at counter 12 of the last period
+    text = advance(clock, 0, 30, 5, [jitter(30, 7)])                    # played 0 is not oldtime: computed (one seconds draw)
+    assert text.startswith(" 15 minutes") and (clock.mins, clock.oldtime) == (15, 0)
+    from nfl4.game.gameclock import clock_sentence                      # a clock at the very end of a quarter gives no seconds (kept)
+    assert clock_sentence(2, 0, "second") == " 2 minutes remaining in the second quarter. "
+    assert clock_sentence(0, 0, "fourth") == "  remaining in the fourth quarter. "
+
+
 def test_the_third_quarter_starts_at_15_minutes_and_the_counter_0_is_forced_to_it():
     clock = QuarterClock()
     assert advance(clock, 0, 33, 3) == " 15 minutes remaining in the third quarter. "

@@ -702,6 +702,8 @@ The clone is built from this spec on the starter kit (D-002) in P6 to P8. Every 
 - The value order of the original's files as far as the clone keeps them (12; D-024 item 4).
 - The quirks kept in 17.5.
 
+Conformance map (P8 S8.1, 2026-10-19, D-080): every requirement of sections 1 to 14, every quirk Q1 to Q62, each bullet of this list, the gap-register entries that close in S8.1, the 26 sounds the owner confirmed by ear and the extra features' requirements C1 to C10 and N1.1 to N7.7 has a row in `clone/tests/data/conformance_map.tsv` naming its tests; `clone/tests/test_conformance.py` fails when the spec and the map differ; the readable form is `spec/CONFORMANCE_MATRIX.md`.
+
 ### 17.3 What the clone changes (each with its decision and its test)
 - Program flow: the clone returns to the week loop and the menu after a game (Q1, D-024 item 1); the standings wait only after spoken standings (Q53, G-F2); at the season's end a spoken notice and the new-season set-up (G-F3, D-029 item 4), footplay.txt first saved as footplay.previous.txt (G-F4, Q55); the spoken title at every launch (0.5.1, G-F1).
 - Speech: one queue for all roles, nothing cut by a voice change (Q52, G-S1); NVDA and JAWS backends beside SAPI, SAPI 5 the default mode (D-004, G-S7); the 7.4.2 voice picker per role (G-S8); the voice picked and the role's volume applied at every call (D-022); the rate kept in -10 to 10 (D-022); the rate counter with NVDA and JAWS changes only the pauses (G-S4); the key echo rate (G-S5; S5.2: settled by a test, the echo is spoken at the normal rate as the original is heard, Q58, so this is no change); He or She from the SAPI voice token of the role as in the original, always He with NVDA or JAWS (G-S6); the log in the data folder with a 1 MB cap (G-S10).

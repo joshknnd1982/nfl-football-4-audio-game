@@ -99,7 +99,9 @@ def test_f9_in_the_main_menu_repeats_the_menu_from_the_top_with_the_choice_kept(
     rig.run()
     spoken = said(rig)
     at = spoken.index(TOP + "Speech settings.")
-    assert spoken[at + 1].startswith(" Today's game is") and spoken[at + 2:at + 4] == [" Kim select ", " 2. see schedule "]
+    # the hand-back is F1, which says the whole announcement again, the week line first (Q5, D-025 a)
+    assert spoken[at + 1].startswith(" This is week ") and spoken[at + 2].startswith(" Today's game is")
+    assert spoken[at + 3:at + 5] == [" Kim select ", " 2. see schedule "]
 
 
 def test_f9_while_a_name_is_typed_runs_the_menu_and_the_name_starts_again(tmp_path):

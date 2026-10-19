@@ -88,13 +88,27 @@ def test_a_play_off_week_says_this_is_the_then_the_week_name_in_the_menu_text(tm
     assert lines[5] == "" and lines[6].startswith(" Today's game is") and lines[7] == ""
 
 
-def test_a_week_of_the_regular_season_has_no_week_text_in_the_menu(tmp_path):
+def test_a_week_of_the_regular_season_has_no_week_text_in_the_menu_and_f1_says_the_week_line_again_q5(tmp_path):
     rig = program_rig(tmp_path, [F1] + EXIT, preset=preset_season(gtp=2)).run()
     spoken = said(rig)
-    # F1 speaks again from the top: today's game, then the select line (no week text in a regular week, L118 = "")
+    # the first pass: today's game, then the select line (no week text in a regular week, L118 = "")
     first_today = next(i for i, t in enumerate(spoken) if t.startswith(" Today's game is"))
     assert spoken[first_today + 1: first_today + 3] == [SELECT, CHOICE[1]]
-    assert spoken[first_today + 3].startswith(" Today's game is")
+    # Q5 / D-025 (a), not reproduced: F1 says the whole announcement, the week line first (the original says only today's game)
+    assert spoken[first_today + 3] == " This is week  2 of Jim's N. F. L. football "
+    assert spoken[first_today + 4].startswith(" Today's game is")
+
+
+def test_f1_in_a_play_off_week_says_this_is_the_before_the_week_name_q5(tmp_path):
+    def preset(season):
+        preset_season(gtp=18)(season)
+        season.playoffs.pairings = [(TeamRef(1, 1), TeamRef(3, 2)), (TeamRef(2, 1), TeamRef(4, 4))]
+    rig = program_rig(tmp_path, [F1] + EXIT, preset=preset).run()
+    spoken = said(rig)
+    name = " division play off week of Jim's N. F. L. football "
+    assert spoken[1:5] == [" This is the ", " ", name, spoken[4]] and spoken[4].startswith(" Today's game is")   # the first pass
+    again = spoken.index(" This is the ", 3)                        # F1: the whole announcement again, "This is the" first
+    assert spoken[again + 1] == name and spoken[again + 2].startswith(" Today's game is")
 
 
 # ----- the menu's keys -----
@@ -131,7 +145,8 @@ def test_f1_says_everything_again_from_the_top_with_the_choice_kept(tmp_path):
     speech = menu_speech(rig)
     today = speech[0]
     assert speech[1:] == [SELECT, CHOICE[1], CHOICE[2],           # first pass
-                          today, SELECT, CHOICE[2],               # F1: from the top, choice 2 kept
+                          " This is week  2 of Jim's N. F. L. football ",    # F1: the whole announcement (Q5, D-025 a)
+                          today, SELECT, CHOICE[2],               # from the top, choice 2 kept
                           CHOICE[3], CHOICE[4]]
 
 
@@ -157,7 +172,7 @@ def test_a_hot_key_menu_in_the_menu_repeats_from_the_top_with_the_choice_kept(tm
     speech = menu_speech(rig)
     today = speech[0]
     after_f5 = speech.index(H.SPECIAL_KEYS)
-    assert speech[after_f5 + 1:after_f5 + 4] == [today, SELECT, CHOICE[2]]
+    assert speech[after_f5 + 1:after_f5 + 5] == [" This is week  2 of Jim's N. F. L. football ", today, SELECT, CHOICE[2]]   # F1 is handed back (Q5)
 
 
 # ----- choices 2 and 3 return to the week line (0x48a8df, 0x48a930) -----

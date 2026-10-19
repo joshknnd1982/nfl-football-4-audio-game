@@ -46,6 +46,7 @@ class Program:
         self.beds_stopped = False       # pag stopped the crowd beds: the week loop starts them again (G-A5)
         self.log_open = False           # L7c: footballlog.txt is opened once per run
         self.week_text = ""             # L118: the play-off week's text the menu speaks again (regular weeks: nothing)
+        self.week_intro = ""            # Q5 / D-025 (a): the week line itself, said again before the menu's own lines after F1
         self.today_text = ""            # L11c: "Today's game is ..."
         self.ending = ""                # why the program ends: "exit" (menu choice 4) or "saved" (Save Game)
         # H15 (nfl4 only, rule 0.13): the season frame as one mode object; ClassicSeason is the original's code moved
@@ -202,6 +203,7 @@ class Program:
         g, season = self.g, self.season
         line = P.THIS_IS_WEEK + str_(season.gtp) + P.OF_JIMS_FOOTBALL     # 0x488493 to 0x4884e8
         g.say2(line)                                            # 0x4884f4
+        self.week_intro = line                                  # Q5 not reproduced: F1 in the menu says it again
         g.log_print(P.THIS_IS_WEEK_LOG + trim(str_(season.gtp)) + P.OF_JIMS_FOOTBALL)   # 0x4885c8 Print #3
         self._stop_intro()                                      # 0x488609 L68 test, 0x488618 Stop, 0x488636, 0x488671, 0x488694
         g.voice_speak(" ", wait=True)                           # 0x4886f2 Voice.Speak " ", 0
@@ -211,6 +213,7 @@ class Program:
     def _playoff_week_line(self) -> None:
         g, season = self.g, self.season
         g.say2(P.THIS_IS_THE)                                   # 0x488884
+        self.week_intro = P.THIS_IS_THE                         # Q5 not reproduced: F1 in the menu says it again
         self._stop_intro()                                      # 0x4888c8 L68 test, 0x4888dd Stop, 0x4888f7, 0x48892c, 0x48894f
         g.voice_speak(" ", wait=True)                           # 0x4889a9 Voice.Speak " ", 0
         name = " " + T.PLAYOFF_WEEK_NAMES.get(season.gtp, "")   # 0x488960, 0x488ad0: " " & the week's name
@@ -253,8 +256,11 @@ class Program:
         while True:                                             # L_489857: L34 = 1
             choice = 1                                          # 0x489874
             repeat = True
+            whole = False                                       # Q5: F1 repeats the whole announcement, the week line first
             while repeat:                                       # L_489876
                 repeat = False
+                if whole and self.week_intro != "":             # Q5 / D-025 (a), not reproduced: the original repeats no week line
+                    g.say2(self.week_intro)
                 if self.week_text != "":                        # 0x489888
                     g.say2(self.week_text)                      # 0x489896
                 g.say2(self.today_text)                         # 0x4898b8
@@ -282,7 +288,7 @@ class Program:
                         choice = digit
                         continue
                     if code == KEY_F1:                          # 0x489d42: again from the top, the choice kept
-                        repeat = True
+                        repeat = whole = True
                         break
                     g.saykey()                                  # 0x489d4b, then L_489857: the choice starts at 1 again
                     break

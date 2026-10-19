@@ -98,14 +98,44 @@ def test_the_ball_down_and_distance_are_valid_at_every_next_play(games):
             assert half in (1, 2) and 1 <= yard <= 50 and 1 <= down <= 4 and to_go >= 1, engine.steps[-1]
 
 
+SCORE_LINE = re.compile(r"^\s*(\w[\w ]*?)\.\s+(\d+)\.\s+(\w[\w ]*?)\.\s+(\d+)\s*$")
+
+
+def announced_scores(rig):
+    """The (Bengals, Jets) score of every " The score is " announcement of a game, in order."""
+    texts = [t for t, *_ in rig.said]
+    found = []
+    for index, text in enumerate(texts[:-1]):
+        if text == " The score is ":
+            tied = re.match(r"^\s*tied\s+(\d+)\s+all\s*$", texts[index + 1])
+            if tied:                                           # " tied 7 all"
+                found.append((int(tied.group(1)),) * 2)
+                continue
+            match = SCORE_LINE.match(texts[index + 1].strip("\n"))
+            assert match, texts[index + 1]
+            by_name = {match.group(1).strip(): int(match.group(2)), match.group(3).strip(): int(match.group(4))}
+            found.append((by_name["Bengals"], by_name["Jets"]))
+    return found
+
+
 def test_scores_change_only_by_the_values_of_football(games):
-    for _, engine, _ in games:
+    """Between two next-play steps a touchdown can be followed by a kick-off returned for a touchdown, so a step can hold
+    several scores (seed 3841 of the 10,000 games: 7 and then 10 for the other side); the score is announced after
+    every score, the extra point after the touchdown's announcement, so the values are checked between two announcements
+    (seed 51: 6, then 1), and between two steps a score is never 1."""
+    for rig, engine, _ in games:
         previous = (0, 0)
         for step in engine.steps:
             for side in (0, 1):
                 change = step[6 + side] - previous[side]
-                assert change in (0, 2, 3, 6, 7, 8), change             # a touchdown with its try counts as one play
+                assert change >= 0 and change != 1, change
             previous = step[6:8]
+        before = (0, 0)
+        for now in announced_scores(rig):
+            for side in (0, 1):
+                assert now[side] - before[side] in (0, 1, 2, 3, 6, 7, 8), (before, now)   # the try follows the touchdown's announcement
+            before = now
+        assert before[0] <= engine.s.score(1) and before[1] <= engine.s.score(2)
 
 
 def test_every_period_lasts_its_drawn_number_of_counted_plays_q14(games):

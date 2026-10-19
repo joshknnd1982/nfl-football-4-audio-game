@@ -121,3 +121,23 @@ Count: 37 entries. SETTLED 9, DEFAULT 23, NOTED 5. Entries naming each closing s
 - S8.3: G-S9, G-A4, G-A6, G-F5, G-F9.
 - S9.2: G-K4.
 <!-- CLOSES-END -->
+
+## 10. What S8.1 closed (P8 S8.1, 2026-10-19, D-080; the tests are in `spec/CONFORMANCE_MATRIX.md` under each id)
+
+The 15 entries whose "Closes:" part names S8.1 each have a row in `clone/tests/data/conformance_map.tsv` and tests that ran green in 64-bit and in 32-bit with numpy absent. The register's entries and its generated section 9 are unchanged (a "Closes:" part is a plan; this section is the result). An entry that also names S8.2, S8.3 or S9.2 stays open for that session (the listening, the stress tests, the built exe).
+
+- G-S1 (one queue, the barrier, the purge): CLOSED for S8.1. `test_sapi_roles.py`, `test_speakers.py` (stopspeech purges the queue), `test_speech_roles_manager.py`.
+- G-S3 (Str$ and the doubled spaces): S8.1 part CLOSED (exact texts: `test_vbnum.py`, `test_season_texts.py`, `test_season_frame.py`, `test_program_menu.py`); S8.2 listens with NVDA and JAWS.
+- G-S5 (the key echo rate): CLOSED. `test_conformance_gaps.py` (the echo purges, queues the character in the last voice at the normal rate, F1 is not echoed, a control character is never sent).
+- G-K1 (keys typed while the program is busy): S8.1 part CLOSED (`test_keys.py`, `test_game_sounds.py`); S8.2 plays it.
+- G-K4 (closing the window): S8.1 part CLOSED (`test_window.py`, `test_app_startup.py`, `test_program_exit.py`); S9.2 runs the built exe.
+- G-A1 (the seven sound slots): CLOSED. `test_audio_engine.py`, `test_game_sounds.py`.
+- G-A2 (the play noise loop): CLOSED. The safety net itself is now tested (`test_conformance_gaps.py`: it stops the noise at a key wait and counts it; the one wait that keeps the noise, Q61, has its test in `test_conformance_review.py`), and the 10,000 whole games never needed it (`work/s81/prop_games_10000.txt`).
+- G-A5 (the crowd beds after a game): CLOSED. `test_program_game.py`.
+- G-F2 (after a game): CLOSED. `test_program_game.py`.
+- G-F3 (the end of a season): S8.1 part CLOSED (`test_program_game.py`, `test_files_program.py`, `test_season_games.py` and the 10,000 seasons); S8.2 plays it.
+- G-F4 (footplay.previous.txt): S8.1 part CLOSED (`test_files_program.py`, `test_files_store.py`).
+- G-F6 (the exit paths): S8.1 part CLOSED (`test_program_exit.py`); S8.2 listens.
+- G-D1 (the redraw loops are bounded): CLOSED. `test_rnd.py`, `test_schedule.py`, `test_names.py`, `test_season_week.py`, `test_playoffs.py`, and no fallback in 10,000 games and 10,000 seasons.
+- G-D2 (one random function): CLOSED. `test_rnd.py`, `test_season_frame.py`.
+- G-C1 (the invariants): CLOSED. 10,000 whole Classic games and 10,000 whole seasons (`work/s81/property_games_s81.py`, `property_seasons_s81.py`; reports `prop_games_10000.txt` and `prop_seasons_10000.txt`, 0 failures; `test_conformance_gaps.py` reads the two reports). The first run of the games found two failures that were not game faults but a too narrow invariant of the suite's own test (a step between two next-plays can hold several scores, a touchdown and a kick-off returned for a touchdown; the extra point comes after the touchdown's announcement): the invariant now reads the score announcements (`test_pag_games.py`), B-T71.
