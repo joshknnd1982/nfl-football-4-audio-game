@@ -432,22 +432,73 @@ def team_styles(league) -> tuple | None:
     return tuple(out)
 
 
+def lean(table: list) -> tuple:
+    """(offense, defense) of a lineup `table` (identity, name, rating per place): +1 when it leans by FR_FIT_GAP rating points or more to the pass (the
+    passing rating (2 x the quarterback + the receivers' carry-weighted mean) / 3 over the backs' carry-weighted mean) or to the rush (the line and linebackers'
+    mean over the cornerbacks and safeties'), -1 the other way, else 0. Whole numbers only (the sides of each comparison multiplied out)."""
+    from . import workload
+    gap = T.FR_FIT_GAP
+    rb = [(workload.carry_weight(table[i][2]), table[i][2]) for i in D.PLACES_OF["RB"]]
+    wr = [(workload.carry_weight(table[i][2]), table[i][2]) for i in D.PLACES_OF["WR"]]
+    w_rb, s_rb = sum(w for w, _ in rb), sum(w * r for w, r in rb)
+    w_wr, s_wr = sum(w for w, _ in wr), sum(w * r for w, r in wr)
+    qb = table[D.PLACES_OF["QB"][0]][2]
+    edge = (2 * qb * w_wr + s_wr) * w_rb - 3 * w_wr * s_rb           # 3 x w_rb x w_wr x (passing - running)
+    bound = 3 * gap * w_rb * w_wr
+    offense = 1 if edge >= bound else -1 if edge <= -bound else 0
+    front = [table[i][2] for position in ("DL", "LB") for i in D.PLACES_OF[position]]
+    cover = [table[i][2] for position in ("CB", "S") for i in D.PLACES_OF[position]]
+    edge = len(cover) * sum(front) - len(front) * sum(cover)           # len(front) x len(cover) x (front - cover)
+    bound = gap * len(front) * len(cover)
+    defense = 1 if edge >= bound else -1 if edge <= -bound else 0
+    return offense, defense
+
+
+def fit(table: list, offense_style: str, defense_style: str) -> tuple:
+    """The styles a team's coordinators play with the lineup `table` (research B8's LATER: its best players): FR_FIT_STYLES' passing or running style when
+    its offense leans, its rushing or covering style when its defense leans, else the coordinators' own styles."""
+    offense, defense = lean(table)
+    styles = T.FR_FIT_STYLES
+    return (styles["pass"] if offense > 0 else styles["run"] if offense < 0 else offense_style,
+            styles["rush"] if defense > 0 else styles["cover"] if defense < 0 else defense_style)
+
+
+def fitted_styles(league, week: int) -> tuple | None:
+    """Every team's (offense style, defense style) for the game of `week` in a franchise (SX.8o, D-076): the styles its coordinators play with its week's
+    lineup (`fit`: the ratings the game reads, the hurt men's places played by the next man up, the morale). EVERY team, the player's too: his "team"
+    playbook is his coordinators', who follow his best players as every team's do (a playbook he chooses by name in F9 is his and never changes; the
+    whole-program run's C-F2 was -1.07 wins with the computer teams alone fitted, so the fit helped only his opponents, B-P107). Outside the season (the
+    offseason has empty places): the coordinators' styles. None while a place is open."""
+    base = team_styles(league)
+    if base is None or league.stage != "season" or not 1 <= week <= D.SUPER_BOWL_WEEK:
+        return base
+    from . import injuries, people, workload
+    hurt = people.hurt_teams(league, week)
+    out = []
+    for team, (offense_style, defense_style) in enumerate(base, start=1):
+        staff_rule = team != league.team                   # the player's team: his own decisions about his hurt men (written at the kick-off)
+        table = injuries.lineup(league, team, week, staff_rule, hurt_before=week) if team in hurt else people.plain_table(league, team)
+        out.append(fit(workload.rated_table(league, team, table), offense_style, defense_style))
+    return tuple(out)
+
+
 def game_team_styles(game) -> tuple | None:
     """The teams' styles of the franchise in use (`Game.franchise_styles`, set while the franchise is in use, `mode.activate`); None in every other game."""
     source = getattr(game, "franchise_styles", None)
     return source() if source is not None else None
 
 
-def recommended(league, side: int, their_style: str, styles) -> str:
+def recommended(league, side: int, their_style: str, styles, own_style: str | None = None) -> str:
     """The staff's game plan of the player's side `side` against the opponent's style on the other side of the ball (design 8.1 T2): a coordinator rated
-    FR_COORD_ADAPT or more answers it as FR_GAME_PLAN says, a lesser one recommends his own style. A style the player's files do not have is Classic."""
+    FR_COORD_ADAPT or more answers it as FR_GAME_PLAN says, a lesser one recommends his own style (`own_style`: the style his team's lineup fits,
+    SX.8o; else his record's). A style the player's files do not have is Classic."""
     c = coordinator_of(league, league.team, side)
     if c is None:
         return PD.CLASSIC_KEY
     if c["rating"] >= T.FR_COORD_ADAPT:
         key = T.FR_GAME_PLAN["offense" if side == 0 else "defense"].get(their_style, PD.CLASSIC_KEY)
     else:
-        key = c["style"]
+        key = own_style or c["style"]
     return key if key in styles else PD.CLASSIC_KEY
 
 

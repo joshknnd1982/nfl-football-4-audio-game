@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 864.
+- Texts: 884.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 532.
+- Franchise (design section 11): 552.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
 
 ## The clock (design section 5)
@@ -912,4 +912,24 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NWH03 (remark, say2): " the <team> hear a trade request from their <position>, <player>. ". a player asks to be traded (news, SX.8n)
 - NWH04 (remark, say2): " <player> tells the <team> he wants out. ". a player asks to be traded (news, SX.8n)
 - NXU-D13 (sentence, say2): " that trade can no longer be made. <player> stays with your team for now. ". a trade demand: the chosen offer can no longer be made (the review of SX.8n)
+- NXG-06 (menu, say5): "awards by season". history menu (SX.8o)
+- NXG-07 (menu, say5): "hall of fame". history menu (SX.8o)
+- NXG-A01 (piece, piece): "most valuable player". an award (SX.8o; the NFL's AP award, a plain sports word)
+- NXG-A02 (piece, piece): "offensive player of the year". an award (SX.8o)
+- NXG-A03 (piece, piece): "defensive player of the year". an award (SX.8o)
+- NXG-A04 (piece, piece): "rookie of the year". an award (SX.8o)
+- NXG-A05 (piece, piece): "coach of the year". an award (SX.8o)
+- NXG-B01 (sentence, say2): " the awards of the season. ". stage 1, before the awards (SX.8o)
+- NXG-B02 (sentence, say2): " <award>: <player>, <position> of the <team>. ". stage 1, an award of another team's player (SX.8o)
+- NXG-B03 (sentence, say2): " <award>: <player>, your <position>. ". stage 1, an award of the player's own player (SX.8o)
+- NXG-B04 (sentence, say2): " <award>: <name> of the <team>. ". stage 1, the coach of the year of another team (SX.8o)
+- NXG-B05 (sentence, say2): " <award>: you, coach <coach>. ". stage 1, the player is the coach of the year (SX.8o)
+- NXG-B06 (sentence, say2): " the hall of fame's new class: ". stage 1, before the players who enter the hall (SX.8o)
+- NXG-B07 (sentence, say2): " <player>, <position>, the <team>, <n> seasons, best rating <r>. ". stage 1, a player who enters the hall (SX.8o)
+- NXG-B08 (sentence, say2): " the hall of fame takes <n> new members. ". stage 1 with the offseason short: the class's size (SX.8o)
+- NXG-20 (sentence, say5): " season <n>, <award>: <player>, <position>, the <team>. ". history line: an award (SX.8o)
+- NXG-21 (sentence, say5): " season <n>, <award>: <name>, the <team>. ". history line: the coach of the year (SX.8o)
+- NXG-22 (sentence, say5): " <player>, <position>, the <team>, <n> seasons, best rating <r>, entered in season <s>. ". history line: a member of the hall (SX.8o)
+- NXH-46 (help, say5): " Season awards, and the best players enter the hall of fame five seasons after they leave. Ratings decide who carries the ball; a back who carries a lot is hurt more often. ". F6, after NXH-45 (SX.8o)
+- NXG-B09 (sentence, say2): " the hall of fame takes one new member. ". stage 1 with the offseason short: a class of one (the review of SX.8o)
 

@@ -22,12 +22,13 @@ from __future__ import annotations
 from .. import playbook_data as PD
 from .. import tuning as T
 from ..playbooks import PlaybookModifiers, clamp
-from ...game.playtables import FIELD_GOAL_ODDS, PUNT_ODDS, PUNT_SHORTEST
+from ...game.playtables import FIELD_GOAL_ODDS, PUNT_ODDS, PUNT_SHORTEST, RETURN_SHORTEST
 from . import data as D
 
 RUN, PASS, QB, FUMBLE = "run", "pass", "qb", "fumble"
 RUNNING_BACKS, RECEIVERS, DEFENSE, KICKERS, QUARTERBACK = ("Running Backs:", "Receivers:", "Defensive Players:", "Kickers:",
                                                            "Quarterback:")
+RETURNERS = "Special Teams Players:"
 
 
 def step(x: int, per: int, cap: int) -> int:
@@ -130,3 +131,28 @@ class FranchiseModifiers(PlaybookModifiers):
         if punter is None:
             return super().punt(side)
         return PUNT_ODDS, PUNT_SHORTEST + step(punter - D.RATING_NEUTRAL, *T.FR_PUNT_STEP)
+
+    def return_shortest(self, side: int, returner: int) -> int:
+        """SX.8o: the shortest kick-off return moves by the returner's rating (FR_RETURN_STEP), as the shortest punt moves by the punter's."""
+        rating = self._rating(side, RETURNERS, returner)
+        if rating is None:
+            return super().return_shortest(side, returner)
+        return RETURN_SHORTEST + step(rating - D.RATING_NEUTRAL, *T.FR_RETURN_STEP)
+
+    # ----- who carries (SX.8o, H17) -----
+
+    def carrier_weights(self, state) -> list | None:
+        """The weights of the six places in the draw of the ball carrier (a run: the backs, a pass: the receivers of the side with the ball), or None:
+        no ratings (every game outside a franchise), a kick or a quarterback run. Equal weights are the original's draw (workload.draw)."""
+        roster = self.state.rosters.get(state.wisoff) if self.state is not None and state is self.state else None
+        if roster is None or not roster.ratings:
+            return None                                     # every game outside a franchise: nothing of the Franchise is asked
+        from . import workload
+        kind = workload.kind_of(state.offense_play)
+        if kind is None:
+            return None
+        heading = RUNNING_BACKS if kind == workload.RUN else RECEIVERS
+        ratings = [self._rating(state.wisoff, heading, number) for number in range(1, 7)]
+        if ratings[0] is None:
+            return None
+        return workload.weights(ratings)

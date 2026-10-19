@@ -8,8 +8,7 @@ from __future__ import annotations
 from . import outcome as O
 from . import phrases as P
 from .gamestate import other
-from .playtables import (FIELD_GOAL_DRAWS, FIELD_GOAL_NEEDED, RETURN_KIND_ODDS, RETURN_RANGE, RETURN_RANGES,
-                         RETURN_SHORTEST)
+from .playtables import FIELD_GOAL_DRAWS, FIELD_GOAL_NEEDED, RETURN_KIND_ODDS, RETURN_RANGE, RETURN_RANGES
 from .rules import NORMAL_KICKOFF, ONSIDE_KEPT, ONSIDE_KICKOFF, ONSIDE_RUN, PERIOD_OVER
 
 KEY_F1, KEY_F2, KEY_F3, KEY_F4 = "112", "113", "114", "115"
@@ -237,7 +236,8 @@ class KickSteps:
         g.say4(P.RETURN_RUNS[run - 1])
         kind = rnd(RETURN_KIND_ODDS)
         reach = RETURN_RANGES.get(kind, RETURN_RANGE)
-        yards = rnd.below_single(reach) + RETURN_SHORTEST         # a Variant range: VarMul, a Single
+        yards = rnd.below_single(reach) + self.rules.modifiers.return_shortest(s.wisoff, s.returner)   # a Variant range: VarMul, a Single;
+        #                                                         H8 (nfl4 only, SX.8o): RETURN_SHORTEST except in a Franchise game (the returner's rating)
         self.rady(0x445d42)
         if yards > 4:
             self.rady(0x445dc0)

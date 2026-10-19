@@ -23,6 +23,7 @@ from .. import nx_texts as X
 from .. import tuning as T
 from . import data as D
 from . import injuries as I
+from . import workload
 from .injury_pools import DEFAULT_POOLS, make_line
 from .league import LeagueRecord
 
@@ -88,7 +89,8 @@ class GameInjuries:
     def record(self) -> dict:
         extras = self.state.extras
         if getattr(extras, "injuries", None) is None:
-            extras.injuries = {"hurt": [], "stand_ins": []}
+            extras.injuries = {"hurt": [], "stand_ins": [], "carries": {}}
+        extras.injuries.setdefault("carries", {})        # SX.8o: a game saved before it has none
         return extras.injuries
 
     def out(self, side: int) -> frozenset:
@@ -102,6 +104,9 @@ class GameInjuries:
         team = self.teams[side - 1]
         table = I.lineup(self.league, team, self.week, self.staff_of(side), out=self.out(side), extra_stand_ins=self.record["stand_ins"],
                          make=lambda position: self.make_stand_in(team, position))
+        from . import people
+        if people.has_morale(self.league):                # the morale moves the ratings the H8 door and the carrier's weights read (SX.8n; the
+            table = people.with_morale(self.league, team, table)     # review of SX.8o: the refresh at the kick-off and after an injury had dropped it)
         write_roster(self.state.rosters[side], table)
         self.state.quarterbacks[side] = table[QB_PLACE][1]
         self.identity[side] = [entry[0] for entry in table]
@@ -125,6 +130,12 @@ class GameInjuries:
         record["hurt"][:] = [row for row in record["hurt"] if self.fits(row)]
         record["stand_ins"][:] = [row for row in record["stand_ins"] if row[0] in self.teams and row[1] in D.POSITIONS and isinstance(row[2], str)
                                   and 1 <= len(row[2]) <= 40 and not any(ord(c) < 32 for c in row[2]) and D.RATING_MIN <= row[3] <= D.RATING_MAX]
+        carries = record["carries"]                    # SX.8o: a loaded game's carries count only for running backs of the two teams
+        for key in list(carries):
+            player = self.league.players.get(int(key)) if isinstance(key, str) and key.isdigit() else None
+            if player is None or player.status != "active" or player.team not in self.teams or player.pos != "RB" or not isinstance(carries[key], int) \
+                    or not 1 <= carries[key] <= workload.MAX_CARRIES:
+                del carries[key]
         for side in (1, 2):
             self.refresh(side)
         return state.quarterbacks[1], state.quarterbacks[2]
@@ -174,18 +185,38 @@ class GameInjuries:
             return side, RET_FIRST + (returner if returner in (1, 2) else 1) - 1, False
         return None
 
+    def rush_of(self, outcome, side: int, place: int):
+        """The running back who carried a run of the game (SX.8o), or None (a pass, a quarterback's run, a stand-in)."""
+        if outcome.kind != O.RUN or outcome.qb_run or place not in D.PLACES_OF["RB"]:
+            return None
+        identity = self.identity[side][place]
+        return identity if isinstance(identity, int) else None
+
     def after_play(self, state, outcome) -> None:
-        """INJ-3: the draws of a play that can hurt a player, in a game of weeks 1 to FR_INJ_LAST_WEEK."""
+        """INJ-3: the draws of a play that can hurt a player, in a game of weeks 1 to FR_INJ_LAST_WEEK. SX.8o: a back's rush counts as his carry, and when
+        the play hurt nobody a back past his free carries draws once more (the workload rule, `workload.carry_chance`)."""
         if not self.exposed or self.state is None:
             return
         found = self.exposed_places(outcome, state)
         if found is None:
             return
         side, place, tackled = found
+        rush = self.rush_of(outcome, side, place)
+        if rush is not None:
+            carries = self.record["carries"]
+            carries[str(rush)] = carries.get(str(rush), 0) + 10
         if self.rnd.below(10000) >= T.FR_INJ_PLAY:
+            if rush is not None:
+                extra = workload.extra_percent(self.league, rush)
+                if extra and self.rnd.below(10000) < workload.carry_chance(extra):
+                    self.hurt(side, place)
             return
         if tackled and self.rnd.below(100) < T.FR_INJ_TACKLER:
             side, place = other(side), DEFENSE_FIRST + outcome.defender1 - 1
+        self.hurt(side, place)
+
+    def hurt(self, side: int, place: int) -> None:
+        """The player who plays `place` of `side` is hurt (not a stand-in, not a man already out, not past the team's limit)."""
         identity = self.identity[side][place]
         if not isinstance(identity, int):
             return                                      # a stand-in is not hurt
@@ -230,7 +261,9 @@ class GameInjuries:
                 self.league.injuries["stand_ins"].append(list(row))
         for pid, kind, games, offset in record["hurt"]:
             I.injure(self.league, pid, kind, games, offset, self.week)
-        record["hurt"], record["stand_ins"] = [], []
+        for key, tenths in sorted(record["carries"].items()):     # SX.8o: the backs' carries of the game join the season's
+            workload.add_carries(self.league, int(key), tenths)
+        record["hurt"], record["stand_ins"], record["carries"] = [], [], {}
 
 
 # ----- the week's report (made in the preparation, told after the news) -----

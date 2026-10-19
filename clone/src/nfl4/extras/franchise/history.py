@@ -360,4 +360,6 @@ def history_text(league: LeagueRecord, words: Words) -> str:
         for p in stars:
             out.append("%s, %s, %s, %d seasons, best rating %d, retired after season %d." %
                        (p.name, words.position(p.pos), words.team_name(p.team), p.seasons, p.peak, p.left))
+    from . import honors_flow
+    out += honors_flow.text_lines(league, words)          # SX.8o: the awards and the hall of fame
     return "\n".join(out) + "\n"

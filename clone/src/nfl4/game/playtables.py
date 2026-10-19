@@ -109,5 +109,9 @@ class Modifiers:
     def punt(self, side: int) -> tuple[int, int]:
         return PUNT_ODDS, PUNT_SHORTEST
 
+    def return_shortest(self, side: int, returner: int) -> int:
+        """The shortest kick-off return of the receiving side's returner (nfl4 only, SX.8o: a Franchise game moves it by his rating)."""
+        return RETURN_SHORTEST
+
 
 NEUTRAL = Modifiers()

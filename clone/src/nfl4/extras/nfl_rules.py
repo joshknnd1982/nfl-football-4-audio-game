@@ -275,6 +275,14 @@ class NflRules(ClassicRules):
         injuries = self.game_injuries()
         return second if injuries is None else injuries.other_man(state.defense, first, second)
 
+    def draw_carrier(self, state, rnd) -> int:
+        """H17 (SX.8o): the ball carrier; a Franchise game weighs the places by the players' ratings (equal weights, and every other game: rnd(6))."""
+        values = self.modifiers.carrier_weights(state) if hasattr(self.modifiers, "carrier_weights") else None
+        if values is None:
+            return rnd(6)
+        from .franchise import workload
+        return workload.draw(rnd, values)
+
     def after_draws(self, state) -> None:
         """H16 (SX.8k): the snap's draws are made; a Franchise game keeps its two tacklers two men."""
         injuries = self.game_injuries()

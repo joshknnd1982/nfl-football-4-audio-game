@@ -177,12 +177,15 @@ def with_playbook(offense="pro", defense="classic"):
 
 def staff_plan(rig):
     """SX.8l: (the offense and the defense the player's coordinators recommend, the opponent's (offense, defense)) for week 1: the opponent plays its
-    coordinators' styles, and the staff's plan is `staff.recommended` of each side against the opponent's style on the other side of the ball."""
+    coordinators' styles, and the staff's plan is `staff.recommended` of each side against the opponent's style on the other side of the ball. SX.8o: the
+    styles every team's coordinators play with its week-1 lineup (staff.fitted_styles), the player's own included."""
     lg = league(rig)
     division, place, _flag = lg.schedule[0]
-    theirs = ST.team_styles(lg)[team_index(division, place) - 1]
+    fitted = ST.fitted_styles(lg, 1)
+    theirs = fitted[team_index(division, place) - 1]
+    own = fitted[lg.team - 1]
     styles = set(DEFAULT_TABLE.styles)
-    return ST.recommended(lg, 0, theirs[1], styles), ST.recommended(lg, 1, theirs[0], styles), theirs
+    return ST.recommended(lg, 0, theirs[1], styles, own[0]), ST.recommended(lg, 1, theirs[0], styles, own[1]), theirs
 
 
 def test_the_game_plan_is_asked_in_week_1_with_the_opponents_styles_and_the_staffs_recommendation(tmp_path):
@@ -310,7 +313,8 @@ def test_the_help_of_a_franchise_has_its_lines_for_f5_f6_and_f7_after_the_rules_
     g = rig.game
     assert g.franchise_help("116") == [X.text("NXH-34")]
     assert g.franchise_help("117") == [X.text("NXH-35"), X.text("NXH-37"), X.text("NXH-39"), X.text("NXH-40"), X.text("NXH-41"),
-                                       X.text("NXH-42"), X.text("NXH-43"), X.text("NXH-44"), X.text("NXH-45")]       # SX.8k: injuries; SX.8l: your job; SX.8m: the market's later items; SX.8n: the people
+                                       X.text("NXH-42"), X.text("NXH-43"), X.text("NXH-44"), X.text("NXH-45"),
+                                       X.text("NXH-46")]       # SX.8k: injuries; SX.8l: your job; SX.8m: the market's later items; SX.8n: the people; SX.8o: the game's
     assert g.franchise_help("118") == [X.text("NXH-36"), X.text("NXH-38")]
     assert g.franchise_help("119") == [] and all(len(X.text(i)) < 200 for i in ("NXH-34", "NXH-35", "NXH-36", "NXH-37", "NXH-38"))
     before = len(spoken(rig))

@@ -23,7 +23,7 @@ from . import data as D
 from . import tags
 from . import draft_flow, market_flow, people_flow, resign_flow, staff_flow
 from . import people
-from . import history, injuries, news, staff, trades, weekly
+from . import history, honors, honors_flow, injuries, news, staff, trades, weekly, workload
 from .league import OFFSEASON, SEASON, team_ref
 from .news_pools import DEFAULT_POOLS
 from .question import FranchiseQuestion, wait_for_enter
@@ -39,6 +39,7 @@ def run(p) -> None:
     numbers = [number for number, _ in D.STAGES]
     if league.stage == SEASON:                           # the season is over: the finished season's values are kept
         store.sync()
+        workload.count_games(league, D.REGULAR_WEEKS, bool(g.options.settings.game.nx_fr_auto))   # SX.8o: the games of week 16 (weeks 1 to 15: the preparations)
         injuries.end_of_season(league)                   # SX.8k: every player is fit for the next season (in the step that ends the season)
         league.stage, league.stage_no = OFFSEASON, numbers[0]
         store.save()
@@ -72,8 +73,10 @@ def stage_review(p, n: int, m: int, short: bool) -> None:
     lines.append(X.text("NXE-20", champion=words.team_name(entry["champion"]), n=entry["season"]))
     lines.append(X.text("NXE-21", w=entry["wins"][team], l=entry["losses"][team], finish=words.finish(entry["finish"][team])))
     lines += staff_flow.verdict_lines(league, entry["wins"], entry["finish"])     # SX.8l: the owner's goal and the job rating (kept after the wait)
+    awards, inducted = honors.stage_one(league, entry["wins"], entry["finish"])    # SX.8o: the season's awards and the hall's class (kept after the wait)
+    honor_lines = honors_flow.stage_lines(league, words, awards, inducted)
     if short:
-        for line in lines:
+        for line in lines + honors_flow.short_lines(league, words, awards, inducted):
             g.say2(line)
     else:
         best, worst = entry["best"], entry["worst"]
@@ -82,9 +85,11 @@ def stage_review(p, n: int, m: int, short: bool) -> None:
         career = history.career(history_with(league, entry))
         lines.append(X.text("NXE-29", n=career.seasons, w=career.wins, l=career.losses))
         lines += _news_texts(told)
+        lines += honor_lines
         lines.append(X.text("NXE-03"))
         wait_for_enter(g, lines)
     staff.apply_verdicts(league, entry["wins"], entry["finish"])     # SX.8l: every coach's job rating, the season his firing is judged by
+    honors.apply(league, awards, inducted)               # SX.8o
     league.history.append(entry)
     league.results = []
     news.keep(league, told, recent, D.NEWS_OFFSEASON)     # the champion's line: kept after the wait with the rest of the stage
@@ -211,6 +216,7 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
     league = store.league
     season = g.season
     trades.new_season(league)                            # SX.8j: the season's trades are history (before the players they name may be dropped)
+    workload.new_season(league)                          # SX.8o: the season's games and carries are over (before the players they name may be dropped)
     aging.drop_the_unkept(league)
     news.drop_for_new_season(league)                     # the finished season's weekly news goes; its offseason's stays
     league.season += 1

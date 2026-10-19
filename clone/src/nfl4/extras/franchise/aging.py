@@ -197,9 +197,12 @@ def fill_places(league: LeagueRecord, rnd, surnames: list) -> int:
 
 def drop_the_unkept(league: LeagueRecord) -> int:
     """Retired and released players history does not need are dropped at the end of the offseason (design 4.3): the player's own
-    team's and every star (a peak of `STAR_PEAK` or more) stay. Player IDs are never reused. Returns how many were dropped."""
+    team's and every star (a peak of `STAR_PEAK` or more) stay, and (SX.8o) every award winner and member of the hall of fame. Player IDs are never
+    reused. Returns how many were dropped."""
+    from . import honors
+    kept = honors.keeps(league)
     gone = [pid for pid, p in league.players.items()
-            if p.status != "active" and p.team != league.team and p.peak < D.STAR_PEAK]
+            if p.status != "active" and p.team != league.team and p.peak < D.STAR_PEAK and pid not in kept]
     for pid in gone:
         del league.players[pid]
     return len(gone)

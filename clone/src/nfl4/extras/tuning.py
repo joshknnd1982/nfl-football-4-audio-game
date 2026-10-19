@@ -827,3 +827,84 @@ FR_PTAG_VETERAN = 31
 # sweep_people_sx8n_c.txt, 32 x 12, the same leagues without the items: win spread 2.772, persistence of the bottom three 0.375): a pull of 2 left a team's
 # morale effect 0.08 rating points (no player ever at 3); a pull of 1 with the weights above 0.25 (win spread 2.862, persistence 0.384, holdouts 3.8, trade
 # demands 0.9 a league-season); a pull of 2 with every weight doubled 0.35 (2.857, 0.373, 5.3, 1.4). A pull of 1, the weights as designed.
+
+# ----- SX.8o: the game's later items (NX6, design 17 SX.8o; extras/franchise/workload.py, honors.py and staff.fitted_styles; a franchise only, D-076) -----
+# THE WEIGHTED BALL CARRIER (research B2: "the original draws the ball carrier by slot ... ratings can weight the draw through H8"; research C: "with H7 and
+# H8 a rating can weight that draw"; the weights are this game's own, UNVERIFIED): in a franchise game the snap's draw of who carries (a run: the six backs;
+# a pass: the six receivers) weighs each place by base + step(rating - 70, per, cap) of the rating the game's roster gives it (the lineup with the morale).
+# Equal weights are the original's draw itself, rnd(6) (every game outside a franchise, and a franchise game of equal ratings: N2).
+FR_CARRY_WEIGHT = (4, 4, 1)       # (base, per, cap): 3 to 5, so the best of six can carry 5/3 times as often as the weakest (calibrated, see below)
+# SX.8o CALIBRATION of the carry weights and the returners (work/sx8o/played_sx8o.py centering 6000: the same 6,000 played games of drawn rosters against
+# rosters of 70s, design 5.4 C-F3 (B-P62: within 2 percent), with the items, with cap 1, and without them (FR_CARRY_WEIGHT (4, 4, 0), FR_RETURN_STEP (4, 0))):
+# without: points +1.52 and +0.94 percent (the Classic playbooks, the styles), yards a play +0.36 and +0.02; the start value (4, 4, 2): +2.48 and +1.58,
+# yards +1.39 and +1.21 (the better back gets the ball more, so the offense's rating in the play's Mod rises: the item's purpose, but the Classic playbooks'
+# points left the band); (4, 4, 1): +1.90 and +1.55, yards +1.09 and +0.67, inside; with 10,000 games, the very games of SX.8b's centering run
+# (work/sx8o/played_sx8o_centering_10000_cap1.txt against work/calibrate_ratings_sx8b_centering_10000.txt): +1.50 and +1.44 against SX.8b's +0.87 and
+# +0.94, yards +0.98 and +0.93 against -0.01 and +0.19: the items add about 0.6 percent of points and 1 percent of yards a play, inside the band. C-F2 (played 1000 a gap, the start value): the stronger team won 0.628
+# at a gap of 1 rating point and 0.673 at 1.5 (SX.8b's 0.666 at 1.3 and 0.701 at 1.8): unchanged within the error.
+# THE RETURNERS' RATING (research B2's slots; design 5.1 "the returners (the kick-off return has no H8 call)"): the shortest kick-off return (the original's
+# 12 yards) moves by step(returner's rating - 70, per, cap), as the punter's rating moves the shortest punt; the draws are the original's. UNVERIFIED (no
+# league figure rates a returner); the NFL's best kick returners gain a few yards more a return than the league's mean (SRC-SECONDARY, read in passing).
+FR_RETURN_STEP = (4, 3)           # (per, cap): -3 to +3 yards
+# THE WORKLOAD RULE (INJ-3, research B7's LATER: "a simple workload rule (a running back who carries a lot gets hurt more)"; per-hit wear stays SKIP; the
+# numbers are this game's own, UNVERIFIED): a running back's carries of the season are counted (tenths of a carry: a game the engine plays counts every rush,
+# a game it does not play counts the team's running plays, FR_WORKLOAD_RUNS, shared by the carry weights of the week's lineup). From FR_WORKLOAD_FREE on, his
+# chance of being hurt as the ball carrier rises by FR_WORKLOAD_PCT percent for every FR_WORKLOAD_PER more, at most FR_WORKLOAD_MAX percent: one more
+# draw a carry in a game the engine plays, one more draw a game in the week's draws of a game it does not play, the same expected injuries (B-P107).
+FR_WORKLOAD_RUNS = 234            # tenths: the running plays of a team in a game (work/measure_exposure_sx8k.py: 23.4 a team-game, the quarterback runs apart)
+FR_WORKLOAD_FREE = 600            # tenths: 60 carries a season before the rule acts (an even share of six backs over 15 weeks is 58.5)
+FR_WORKLOAD_PER = 50              # tenths: every 5 carries more ...
+FR_WORKLOAD_PCT = 20              # ... add this many percent to his chance as the ball carrier
+FR_WORKLOAD_MAX = 100             # percent: at most double
+# SX.8o CALIBRATION of the workload (work/sx8o/measure_honors_sx8o.py, 64 leagues x 20 seasons of the fast run; the top back of a team carries 24 percent of
+# its runs by the carry weights, about 85 carries by week 15): the start values (free 60 carries, +10 percent every 10 more) hurt 1.07 backs a league-season
+# by the rule (the top backs pass the free count only in the last weeks): no one could hear it; free 40, +10 every 5: 14.3 a league-season but 77 percent of
+# all backs past the free count by the season's end (an even share passes 40 in week 10: the rule then acts on every back, not on the one who carries a lot);
+# free 60 (an even share), +20 every 5: 5.2 a league-season, 36 percent of the backs past it by the season's end, the running backs' new injuries 263 a
+# league-season against 260 without the rule (+1.3 percent), the league's rate 34.7 a team-season (FR_INJ_TARGET 31.3 to 38.0). With the carry weights' cap
+# of 1 (above; the top back carries 22.7 percent of his team's runs): 3.2 a league-season, 33.5 percent of the backs past the free count, the running backs'
+# new injuries 260.7, the league's rate 34.6. A team's top back late in the season is hurt as the ball carrier up to about 1.5 times as often.
+# THE AWARDS (research B11's LATER: "league-wide player awards and a hall of fame ... need a new statistics model"; the NFL's AP awards read at NFL Honors:
+# most valuable player, offensive and defensive player of the year, the rookies of the year, coach of the year, nfl.com's lists of the winners, SRC-OFFICIAL).
+# NO STATISTICS MODEL (D-076): the computer's games are a score table with no plays, so an invented box score would be fiction and the player's own games
+# would have real numbers where the others have none; an award reads only what every team has: the ratings, the games a player played his own place
+# (counted every week for every team), the team's wins and the play-offs. A player's value is WEIGHT x (rating - FR_AWARD_BASE) x games / 16 plus
+# FR_AWARD_WIN a win of his team; at least FR_AWARD_MIN_GAMES games. The most valuable player comes from a play-off team; one rookie award for both sides.
+FR_AWARD_BASE = 60
+FR_AWARD_WIN = 2
+FR_AWARD_MIN_GAMES = 10
+# coach of the year: the most wins over what his team's rank at the season's start lets expect (the mean wins of each band of four ranks, MEASURED over
+# 64 leagues x 20 seasons of the fast run: 11.18, 9.92, 8.93, 8.23, 7.60, 6.94, 6.14, 5.06; the start values were 11.0, 10.0, 9.0, 8.5, 7.5, 7.0, 6.0, 5.0)
+FR_COACH_EXPECT = (112, 99, 89, 82, 76, 69, 61, 51)     # tenths of a win, ranks 1 to 4, 5 to 8, ... 29 to 32
+# THE HALL OF FAME (research B11's LATER; the Pro Football Hall of Fame: a player is eligible after five full seasons retired, a class elects four to eight,
+# at most five modern-era players: nfl.com's coverage of the classes of 2024 to 2026 and secondary pages, SRC-SECONDARY). At every stage 1 the kept players
+# who retired (or left) FR_HOF_WAIT or more seasons before are candidates; a candidate's hall value is his peak + his seasons + his award points
+# (FR_HOF_AWARD_POINTS); those at FR_HOF_BAR or more enter, the highest first, at most FR_HOF_CLASS a season (five modern-era players scaled by 34 of 53).
+FR_HOF_WAIT = 5
+FR_HOF_CLASS = 3
+FR_HOF_BAR = 105
+FR_HOF_AWARD_POINTS = {"mvp": 6, "opoy": 4, "dpoy": 4, "roy": 1}
+# SX.8o CALIBRATION of the hall (64 leagues x 30 seasons, work/sx8o/measure_honors_sx8o_64x30_bar*.txt): the first five seasons have no candidate (the wait);
+# the bar at 100 (the start value) filled every class to FR_HOF_CLASS from season 19 on (2.52 a season from season 11), so the class size alone decided;
+# at 110 the hall took 1.4 a season at most (1.14 from season 11), under the NFL's rate scaled to this league (about 3: five modern-era players of a 53-man
+# league's 1,700 players, scaled to 1,088); 105: 2.09 a season from season 11 and 2.8 to 2.98 from season 22 on, the bar still deciding (the classes are not
+# always full), the inducted's hall value 112.6 on the average.
+# THE AWARDS' POSITIONS (measured, said plainly in D-076): the most valuable player is a quarterback in every season but a few in a thousand (the position's
+# weight of design 4.4, 12 of 78; the NFL's has been a quarterback in most seasons since 2000); the offensive player of the year a receiver in about four of
+# five (the backs' window of growth ends earlier, design 6.2), the defensive one a lineman or linebacker in about seven of ten (they have the most places).
+# THE COMPUTER TEAMS' PLAYBOOKS FOLLOW THEIR BEST PLAYERS (research B8's LATER: "each computer team's style follows its best players (a team with a strong
+# quarterback passes more), through the same bounded modifiers"; EA: teams adapt their playbooks to their personnel, SRC-OFFICIAL in research B8): in a
+# franchise game a computer team plays its coordinator's style unless its lineup leans: the passing rating ((2 x the quarterback + the receivers' carry-weighted
+# mean) / 3) FR_FIT_GAP or more over the backs' carry-weighted mean plays FR_FIT_STYLES["pass"], as much under it "run"; on defense the line and linebackers'
+# mean over the backs' (cornerbacks and safeties) "rush", under it "cover". The styles are the playbooks' own (their mixes and tilts, design 10.3).
+FR_FIT_GAP = 5
+FR_FIT_STYLES = {"pass": "air", "run": "power", "rush": "pressure", "cover": "west"}
+# SAID PLAINLY (the review of SX.8o): the run fit works through its tilts, not its mix. Every style passes more than it runs (MASS: Power Run calls runs 40
+# percent of the time, Pro Style and Option 44, Air Raid 20); Power Run's bonus is a yard on its inside runs against the run calls, so a team of strong backs
+# gains on the runs it calls, though it calls a few fewer than a Pro Style or Option team. Measured by the reviewer (3 leagues x 3 seasons, 4,608 computer
+# team-weeks): 36.5 percent change their offense style, 21.3 percent their defense style.
+# MEASURED IN THE WHOLE PROGRAM (B-P107; work/simulate_franchise_sx8f_full_5x20_*.txt): with the COMPUTER teams alone fitted the player's team won 1.07 games a
+# season fewer than its peers of the computer's games (C-F2, allowed 0.8); without the fit -0.21; without the fit, the carry weights and the returners -0.53:
+# the fit helped only the player's opponents, in his games, and no game of the score table has it. So the fit is EVERY team's: the player's "team" playbook
+# is his coordinators', who follow his best players as every team's do, and the staff's game plan of a coordinator who keeps his own style recommends the
+# style his lineup fits; a playbook the player names in F9 is his and never changes (nothing is decided for him that he did not leave to his staff).

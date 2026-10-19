@@ -106,6 +106,8 @@ class LeagueRecord:
     future_picks: list = field(default_factory=list)   # the first-round picks owed for the draft after the coming one (SX.8m, format 8): see tags.py
     tags: dict = field(default_factory=lambda: {"history": {}, "open": None, "sheet": None})   # the non-exclusive tag (SX.8m, format 8): see tags.py
     people: dict = field(default_factory=lambda: {"morale": {}, "begun": 0, "holdouts": [], "pending": [], "demands": [], "goal": None, "verdict": None})   # SX.8n, format 9: see people.py
+    honors: dict = field(default_factory=lambda: {"awards": [], "hall": []})   # SX.8o, format 10: the awards and the hall of fame (honors.py)
+    usage: dict = field(default_factory=lambda: {"season": 0, "games": {}, "carries": {}})   # SX.8o, format 10: the season's games and carries (workload.py)
 
     # ----- the teams -----
 
@@ -204,7 +206,7 @@ class LeagueRecord:
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
                 "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
                 "injuries": self.injuries, "staff": self.staff, "comp": self.comp, "future_picks": self.future_picks, "tags": self.tags,
-                "people": self.people}
+                "people": self.people, "honors": self.honors, "usage": self.usage}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -258,6 +260,9 @@ class LeagueRecord:
                 record.comp, record.future_picks, record.tags = data["comp"], data["future_picks"], data["tags"]
             if version >= 9:
                 record.people = data["people"]                      # SX.8n; a file of format 8 or older: nobody has a morale, nobody held out (the default)
+            if version >= 10:
+                record.honors, record.usage = data["honors"], data["usage"]     # SX.8o; a file of format 9 or older: no award and nobody in the hall yet,
+                #                                                                   no game or carry counted this season (the defaults: a migration with no draw)
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -355,6 +360,9 @@ class LeagueRecord:
         tag_rules.check_tags(self, whole)                      # SX.8m: the non-exclusive tag and the first-round picks owed
         from . import people as people_rules
         people_rules.check_people(self, whole)                 # SX.8n: the morale, the camp's holdouts, the trade demands, the game goal
+        from . import honors as honor_rules, workload as workload_rules
+        honor_rules.check_honors(self, whole)                  # SX.8o: the awards and the hall of fame
+        workload_rules.check_usage(self, whole)                # SX.8o: the season's games and carries
         self._check_results(whole)
         self._check_season(whole, ints)
 

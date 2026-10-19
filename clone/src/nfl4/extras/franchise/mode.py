@@ -168,7 +168,8 @@ def activate(p, store) -> None:
     store.bind(g.season)
     store.words = history.Words(lambda team: g.league.team(*team_ref(team)))
     store.staff_setting = lambda: bool(g.options.settings.game.nx_fr_auto)    # SX.8k: the player's lineup follows the staff's rule when it is on
-    g.franchise_styles = lambda: staff.team_styles(store.league) if store.league is not None else None   # SX.8l: the coordinators choose the playbooks
+    # SX.8l: the coordinators choose the playbooks; SX.8o: a computer team's follow its best players (staff.fitted_styles, the week's lineups)
+    g.franchise_styles = lambda: staff.fitted_styles(store.league, store.league.gtp) if store.league is not None else None
     p.store = g.season_store = g.setup_store = store
     g.season_hooks = FranchiseHooks(store)
     p.mode = FranchiseSeason(p)

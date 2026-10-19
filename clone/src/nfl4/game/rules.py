@@ -78,6 +78,10 @@ Added in PX SX.8k (injuries, FRANCHISE ONLY, D-071), never taken in Classic and 
     H16 second_tackler(state, first, second)  the kick-off return's two tacklers, the same     the second unchanged
     H2 after_outcome                       the draws of a play that can hurt a player and the announcer's line (NflRules, only when the
                                            game has the Franchise's injuries: Game.game_injuries)
+
+Added in PX SX.8o (the game's later items, D-075), never taken in Classic and never outside a franchise game:
+    H17 draw_carrier(state, rnd)           the snap's draw of the ball carrier (snap_draws)   rnd(6), the original's draw
+    H8 return_shortest(side, returner)     the kick-off return's shortest length              RETURN_SHORTEST (12)
 """
 from __future__ import annotations
 
@@ -133,6 +137,9 @@ class ClassicRules:
 
     def after_draws(self, state) -> None:
         return None
+
+    def draw_carrier(self, state, rnd) -> int:
+        return rnd(6)
 
     def second_tackler(self, state, first: int, second: int) -> int:
         return second

@@ -31,7 +31,7 @@ from .. import playbook_data as PD
 from .. import playbooks as PB
 from ..nfl_rules import is_nfl
 from . import data as D
-from . import injuries, injury_flow, news, people, people_flow, staff, todo, trade_flow, trades
+from . import injuries, injury_flow, news, people, people_flow, staff, todo, trade_flow, trades, workload
 from .league import SEASON, team_index
 from .news_pools import DEFAULT_POOLS
 from .question import FranchiseQuestion
@@ -56,6 +56,7 @@ def prepare(p, league, week: int) -> None:
         todo.computer_extra_work(league, week - 1)
         events = news.week_events(league, week - 1, cut=False)
         people.after_week(league, week - 1, league.results, staff_setting)     # SX.8n: the morale (who played: before that week's injuries join the league)
+        workload.count_games(league, week - 1, staff_setting)                  # SX.8o: the games each player played his own place (the awards)
         back = injuries.after_games(league, week - 1, g.rnd, surnames_of(g), played_teams(league, week - 1)).back
     made, offers = trades.week(league, week, league.records)
     demanded, own_demands, filed = people.demands_week(league, week, league.records)       # SX.8n: after the week's own trades
@@ -112,14 +113,14 @@ def _game_plan_item(p, league, week: int):
     table = _table(g)
     opponent = team_index(season.tn3, season.tn4) - 1
 
-    teams = staff.team_styles(league)                # SX.8l: the opponent plays its coordinators' styles
+    teams = staff.fitted_styles(league, week)        # SX.8l: the opponent plays its coordinators' styles; SX.8o: or the styles its best players fit
 
     def style(side: str) -> str:
         key = teams[opponent][0 if side == "O" else 1] if teams is not None else table.team_style(opponent, side)
         return key if key in table.styles else PD.CLASSIC_KEY
 
-    def recommend(side: int, theirs: str) -> str:     # SX.8l: the player's coordinators make the staff's game plan
-        return staff.recommended(league, side, theirs, set(table.styles))
+    def recommend(side: int, theirs: str) -> str:     # SX.8l: the player's coordinators make the staff's game plan; SX.8o: with his lineup's fit
+        return staff.recommended(league, side, theirs, set(table.styles), teams[league.team - 1][side] if teams is not None else None)
 
     return todo.game_plan_item(league, week, style("O"), style("D"), settings.nx_offense_playbook, settings.nx_defense_playbook,
                                set(table.styles), recommend if teams is not None else None)

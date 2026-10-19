@@ -315,13 +315,20 @@ def test_the_game_plan_names_the_opponents_coordinators_styles_not_the_files(tmp
     theirs = [keys_[(keys_.index(PD.TEAM_STYLES[opponent - 1][side]) + 1) % len(keys_)] for side in S.SIDES]
     assert tuple(theirs) != PD.TEAM_STYLES[opponent - 1]
     prompt = next(t for t in spoken(rig) if t.startswith(" the game plan against the "))
-    assert " they play %s on offense and %s on defense. " % (DEFAULT_TABLE.style_name(theirs[0]), DEFAULT_TABLE.style_name(theirs[1])) in prompt
+    fitted = S.fitted_styles(league, 1)[opponent - 1]               # SX.8o: the styles its coordinators play with its week-1 lineup
+    assert " they play %s on offense and %s on defense. " % (DEFAULT_TABLE.style_name(fitted[0]), DEFAULT_TABLE.style_name(fitted[1])) in prompt
+    plain = [side for side in S.SIDES if fitted[side] == theirs[side]]     # a side whose lineup does not lean plays the coordinator's own style ...
+    assert plain and all(theirs[side] != PD.TEAM_STYLES[opponent - 1][side] for side in plain)      # ... which is not the file's (B-X74)
+    for side in S.SIDES:
+        assert fitted[side] in (theirs[side], T.FR_FIT_STYLES["pass"], T.FR_FIT_STYLES["run"], T.FR_FIT_STYLES["rush"], T.FR_FIT_STYLES["cover"])
 
 
 def test_leaving_the_franchise_clears_its_styles_and_a_classic_season_plays_the_files(tmp_path):
     from frrig import COACH_AND_TEAM, WANT_FRANCHISE, franchise_rig, quit_policy, run_until
     rig = run_until(franchise_rig(tmp_path / "in", WANT_FRANCHISE + COACH_AND_TEAM, policy=quit_policy))
-    assert rig.game.franchise_styles is not None and rig.game.franchise_styles() == S.team_styles(rig.fstore.league)
+    league = rig.fstore.league                                    # SX.8o: the computer teams' styles follow their best players (staff.fitted_styles)
+    assert rig.game.franchise_styles is not None and rig.game.franchise_styles() == S.fitted_styles(league, league.gtp)
+    assert rig.game.franchise_styles()[league.team - 1] == S.team_styles(league)[league.team - 1]
     keys = WANT_FRANCHISE + COACH_AND_TEAM + [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 11 + [ENTER, ENTER, ESC]     # play classic seasons (12th)
     rig = run_until(franchise_rig(tmp_path / "out", keys, policy=quit_policy))
     assert rig.game.program.mode.kind == "classic" and rig.game.franchise_styles is None

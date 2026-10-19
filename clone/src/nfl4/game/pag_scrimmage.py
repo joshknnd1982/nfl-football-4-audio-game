@@ -82,7 +82,7 @@ class ScrimmageSteps:
         g, s, rnd = self.g, self.s, self.rnd
         s.yards = 0
         g.empty_replay()
-        s.carrier = rnd(6)
+        s.carrier = self.rules.draw_carrier(s, rnd)      # H17 (nfl4 only, SX.8o): rnd(6), weighted by ratings in a Franchise game only
         s.defender1 = rnd(17)
         s.defender2 = rnd.redraw(lambda: rnd(17), lambda d: d != s.defender1,
                                  lambda: 2 if s.defender1 == 1 else 1, "second defender")

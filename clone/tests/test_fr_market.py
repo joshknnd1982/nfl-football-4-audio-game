@@ -548,7 +548,7 @@ def test_a_market_in_progress_round_trips_through_the_file_and_is_format_four():
     league, free = market_league()
     league.market = stage_record(round=2, offers=[[free[0].id, 40], [free[1].id, 55]], signed=1, lost=2)
     data = json.loads(league.to_json())
-    assert data["format"] == D.FORMAT == 9 and data["market"] == league.market      # (format 9 since SX.8n: the market is format 4's)
+    assert data["format"] == D.FORMAT == 10 and data["market"] == league.market      # (format 10 since SX.8o: the market is format 4's)
     again = LeagueRecord.from_json(league.to_json())
     assert again.market == league.market and again.to_json() == league.to_json()
 

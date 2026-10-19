@@ -92,7 +92,7 @@ def closing_after(seconds):
 
 def launch_log(folder) -> str:
     """The text of the newest launch log in the logs folder (playbook 7.11: one file per launch; both halves)."""
-    debuglog.flush()
+    debuglog.flush(debuglog.REPORT_WAIT_SECONDS + 10)          # the writer holds the first lines for the startup report: wait past the hold (B-X97)
     logs = sorted(p for p in (folder / "logs").glob("nfl4-2*.log"))
     assert logs, "no launch log was written"
     return "\n".join(p.read_text(encoding="utf-8") for p in logs[-2:])

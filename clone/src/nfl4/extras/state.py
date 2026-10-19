@@ -244,9 +244,16 @@ class ExtrasRecord:
 def check_game_injuries(record, whole) -> None:
     """The injuries of a franchise game in progress (SX.8k): their shape and ranges (the franchise checks the players against its league when it loads
     the game)."""
-    if not isinstance(record, dict) or set(record) != {"hurt", "stand_ins"}:
+    if not isinstance(record, dict) or set(record) not in ({"hurt", "stand_ins"}, {"hurt", "stand_ins", "carries"}):     # SX.8o adds the carries
         raise ValueError("the injuries of the game are %r" % (record,))
     hurt, stand_ins = record["hurt"], record["stand_ins"]
+    carries = record.get("carries", {})
+    if not isinstance(carries, dict) or len(carries) > 12:
+        raise ValueError("the carries of the game are %r" % (carries,))
+    for key, value in carries.items():
+        if not isinstance(key, str) or not key.isascii() or not key.isdigit() or len(key) > 9:
+            raise ValueError("a carry of the game is %r" % (key,))
+        whole(value, 1, 20000, "the carries of a player of the game")
     if not isinstance(hurt, list) or len(hurt) > 68 or not isinstance(stand_ins, list) or len(stand_ins) > 20:
         raise ValueError("the injuries of the game are %r" % (record,))
     for row in hurt:

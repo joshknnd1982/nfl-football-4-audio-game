@@ -16,11 +16,11 @@ from ...game.spoken_menu import Item, ListPicker, SpokenMenu
 from ..nfl_rules import is_nfl
 from .. import nx_texts as X
 from . import data as D
-from . import history, market_flow, mode, news, staff_flow, todo, trade_flow, weekly
+from . import history, honors_flow, market_flow, mode, news, staff_flow, todo, trade_flow, weekly
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
-HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45", "NXH-46"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
 
@@ -221,7 +221,9 @@ def franchise_menu(g, speech, keys) -> None:
                     ("NXG-02", lambda: [history.record_line(league)] if league.history else []),
                     ("NXG-03", lambda: history.season_lines(league, word)),
                     ("NXG-04", lambda: history.record_lines(league, word)),
-                    ("NXG-05", lambda: history.retired_lines(league, word))]
+                    ("NXG-05", lambda: history.retired_lines(league, word)),
+                    ("NXG-06", lambda: honors_flow.award_lines(league, word)),       # SX.8o
+                    ("NXG-07", lambda: honors_flow.hall_lines(league, word))]
         items = [Item(lambda text_id=text_id: X.text(text_id),
                       enter=lambda text_id=text_id, make=make: _lines_picker(speech, keys, X.text(text_id), make()))
                  for text_id, make in sections]

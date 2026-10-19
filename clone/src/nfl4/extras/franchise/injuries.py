@@ -36,6 +36,11 @@ lineup at a place `below(34)`); the game part when the engine did not play the t
 FR_INJ_GAME_WEIGHT); an injury draws its kind (`below` the shares of the kinds his position can have), its games missed (`below(hi - lo + 1) + lo`) and
 the offset of its spoken range (`below(width + 1)`). A team with FR_INJ_TEAM_MAX players hurt gets no further injury (INJ-6: no team starved). A game
 the player plays has its injuries per play instead (`injury_flow.GameInjuries`, the same `injure`).
+
+SX.8o (D-076, workload.py): in the game part the backs' and the receivers' places weigh by their shares of the carries (the carry weights of the ratings the
+game read, as the weighted ball carrier of a played game shares them); then the workload rule: every back of the team whose carries of the season are past
+FR_WORKLOAD_FREE draws `below(10000)` against `workload.game_chance` (his expected carries of the game, raised by his extra percent), and the team's
+expected carries join the season's counts. A team whose game the engine played counted its carries and drew its workload per play.
 """
 from __future__ import annotations
 
@@ -332,10 +337,13 @@ class WeekInjuries:
         self.worse: list = []
         self.back: list = []
         self.stand_ins: list = []
+        self.workload: list = []               # SX.8o: the backs hit by the workload rule's draw
 
 
-def _place_by_weight(rnd) -> int:
-    weights = [T.FR_INJ_GAME_WEIGHT[D.POSITION_OF_PLACE[i]] for i in range(D.PLACE_COUNT)]
+def _place_by_weight(rnd, weights=None) -> int:
+    """A place of the week's game part: FR_INJ_GAME_WEIGHT, the backs' and the receivers' places by their shares of the carries (SX.8o, `weights`)."""
+    if weights is None:
+        weights = [T.FR_INJ_GAME_WEIGHT[D.POSITION_OF_PLACE[i]] for i in range(D.PLACE_COUNT)]
     roll = rnd.below(sum(weights))
     for index, weight in enumerate(weights):
         if roll < weight:
@@ -386,8 +394,10 @@ def after_games(league: LeagueRecord, week: int, rnd, surnames: list, played=())
     done = WeekInjuries()
     if not 1 <= week <= T.FR_INJ_LAST_WEEK:
         return done
+    from . import workload
     for team in range(1, D.TEAMS + 1):
         table = [week_table(league, team, week), set()]
+        rated = workload.rated_table(league, team, table[0])      # SX.8o: the ratings the game read (the carry weights of its backs and receivers)
         for player, state in hurt_of(league, team, week):
             if row_of(league, player.id)[2] >= week:
                 continue                                   # hurt in this week's game itself (a game the engine played): no draw of "worse"
@@ -401,11 +411,25 @@ def after_games(league: LeagueRecord, week: int, rnd, surnames: list, played=())
             if rnd.below(10000) < chance:
                 _hit(league, team, week, rnd.below(D.PLACE_COUNT), rnd, done, table)
         if team in played:
-            continue
+            continue                                       # its carries and its workload came per play (injury_flow.GameInjuries)
         draws, chance = T.FR_INJ_GAME
+        shares = workload.place_weights(rated)
         for _ in range(draws):
             if rnd.below(10000) < chance:
-                _hit(league, team, week, _place_by_weight(rnd), rnd, done, table)
+                _hit(league, team, week, _place_by_weight(rnd, shares), rnd, done, table)
+        carries = workload.expected_carries(rated)
+        for pid, tenths in carries.items():                # SX.8o, the workload rule (INJ-3): the backs' carries of the season before this game
+            extra = workload.extra_percent(league, pid)
+            if extra and pid not in table[1]:
+                if rnd.below(10000) < workload.game_chance(tenths, extra):
+                    index = next((i for i in D.PLACES_OF["RB"] if table[0][i][0] == pid), None)
+                    if index is not None:
+                        before = len(done.new) + len(done.again)
+                        _hit(league, team, week, index, rnd, done, table)
+                        if len(done.new) + len(done.again) > before:
+                            done.workload.append(pid)
+        for pid, tenths in carries.items():
+            workload.add_carries(league, pid, tenths)
     settle(league, week + 1, rnd, surnames, done)
     return done
 

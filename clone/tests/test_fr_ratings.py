@@ -369,7 +369,10 @@ def test_a_better_carrier_against_two_weak_tacklers_reads_a_moved_row_and_a_larg
     opponent = rated_roster("O", 70, d5=60, d9=70)
     rig = rated_engine(tmp_path, own, opponent, offense_play=1, defense_play=3)
     d = quiet_snap_count(Draws())
-    snap_draws(d, carrier=3, d1=5, d2=9)
+    # SX.8o: the carrier is drawn by the backs' carry weights (the back rated 90 weighs more), so back 3 is the roll just past the first two weights
+    from nfl4.extras.franchise import workload
+    weights = workload.weights([70, 70, 90, 70, 70, 70])
+    d.below(sum(weights), weights[0] + weights[1]).rnd(17, 5).rnd(17, 9).rnd(13, 1).rady()
     first_handoff(d, group=1, phrase=1)
     d.rnd(3, 1).rnd(53, 1).below(7, 0)                  # the direction; the fumble 1 in 50 + 3; the row is 1 to 8: width 7, 1 yard
     after_play(d, oob=99)
@@ -458,3 +461,21 @@ def test_the_player_in_the_play_still_counts_with_the_edge(calibrated):
     assert m.team_edge(1, 2) == -2 and m.gap("run") == (40 - 70) - 2
     other = bound(carrier=2, d1=1, d2=2, own=own, opponent=rated_roster("O"), offense_play=1)
     assert other.gap("run") == -2                                                 # another back of the same team: only the edge
+
+
+# ----- SX.8o: the kick-off return reads the receiving side's returner through H8 (the mutation check's survivors) -----
+
+def test_the_kick_off_return_asks_h8_for_the_receiving_sides_returner(tmp_path):
+    rig = rated_engine(tmp_path, rated_roster("", 70), rated_roster("O", 70), offense_play=0, defense_play=1)
+    asked = []
+
+    def shortest(side, returner):
+        asked.append((side, returner))
+        return 200                                                     # far past any return of the original: the engine adds what H8 gives
+    rig.rules.modifiers.return_shortest = shortest
+    from randsources import ScriptedRandom
+    rig.rnd.source = ScriptedRandom(seed=7)                          # the return's own draws from a seeded source (their values do not matter here)
+    s = rig.engine.s
+    s.wisoff, s.defense, s.returner = 2, 1, 2                          # the receivers are side 2, their second returner runs it back
+    rig.engine.kick_return()
+    assert asked == [(2, 2)] and s.yards >= 200
