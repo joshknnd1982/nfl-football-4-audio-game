@@ -64,6 +64,8 @@ def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=No
     if nfl:
         settings.rules = "nfl"
         game.apply_rules_setting()
+    else:
+        settings.rules = "classic"              # SX.9: the default of a new player is the N. F. L. rules (NQ2); this program is Classic
     if kind is not None:
         settings.nx_season_kind = kind
     rig.files = files if files is not None else MemoryFiles()

@@ -53,7 +53,9 @@ def test_the_programs_rules_carry_the_players_books_and_the_computers_team_style
     assert is_nfl(rules) and (rules.offense_book, rules.defense_book, rules.playbooks_on) == ("west", "team", True)
     again = rules.for_game()
     assert (again.offense_book, again.defense_book, again.playbooks_on) == ("west", "team", True)
-    assert rules_from_settings(Settings.defaults().game) is CLASSIC
+    classic = Settings.defaults().game
+    classic.rules = "classic"
+    assert rules_from_settings(classic) is CLASSIC
     plain = NflRules()                                                  # made by hand: Classic plays, no style for the computer
     assert (plain.offense_book, plain.defense_book, plain.playbooks_on) == ("classic", "classic", False)
 

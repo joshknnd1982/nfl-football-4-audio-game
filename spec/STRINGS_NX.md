@@ -6,13 +6,13 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 884.
+- Texts: 887.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 22.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
-- Penalties (design section 9): 77.
+- Penalties (design section 9): 80.
 - Playbooks (design section 10): 99.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
@@ -224,6 +224,9 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXH-13 (help, say5): " Offsetting penalties: Fouls by both teams on one play. They cancel each other and the down is played again. ". F7 addition (H12, C6), when penalties are on
 - NXP-21 (sentence, say2): " <quarterback> throws the ball away to avoid the sack. ". intentional grounding in place of a sack (design 9.2 P15): the tackle sentence of the pass
 - NXP-S17 (piece, piece): "the kick will be made again". situation: accepting a foul by the kicking team on an onside kick that it recovered (6-3-1)
+- NXP-22 (sentence, say5): " the game can be saved after this choice. ". S at the accept-or-decline prompt when the choice cannot be kept in a saved game (a score, a turnover, a try, a kept choice that would change sides, the last second of a quarter or a half; SX.9)
+- NXP-23 (sentence, say5): " a penalty is waiting for your choice. ". a loaded game with a pending accept-or-decline choice, before the flag is told again (C10, SX.9)
+- NXH-47 (help, say5): " At the question about a penalty, S. saves the game with the question kept, when it can be kept. The loaded game asks it again. ". F5 addition (H12, C6), when penalties are on (SX.9)
 
 ## Playbooks (design section 10)
 

@@ -202,6 +202,10 @@ class Rig:
                                      sleep=self.clock.sleep)
         self.game = Game(self.speech, self.keys, clock=self.clock, sleep=self.clock.sleep,
                          notice_sources=notice_sources, sounds=self.sounds, rnd=self.rnd)
+        # nfl4 (SX.9, NQ2): a new player's settings say the N. F. L. rules; the rig's Game plays Classic (its rules are CLASSIC unless a test
+        # hands others), the baseline every conformance test is written for, so its settings say Classic too. A test of the N. F. L. rules
+        # sets them (frrig, nflrig, rules_from_settings); tests/test_sx9_switches.py checks the program's own default
+        self.game.options.settings.game.rules = "classic"
 
     def run(self):
         self.game.run()

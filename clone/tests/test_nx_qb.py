@@ -210,7 +210,8 @@ def test_the_programs_rules_follow_the_quarterback_runs_setting():
     settings.game.nx_qb_runs = False
     rules = rules_from_settings(settings.game)
     assert rules.qb_on is False and rules.for_game().qb_on is False
-    assert rules_from_settings(Settings.defaults().game) is CLASSIC
+    settings.game.rules = "classic"
+    assert rules_from_settings(settings.game) is CLASSIC
 
 
 def test_a_rules_object_made_by_hand_has_no_quarterback_runs():

@@ -114,6 +114,9 @@ PERIOD_END = "period end"       # the period ends (a run off took its last secon
 REVIEWED_FIELD = "reviewed field play"      # the gain sentence of the corrected yards, the end point, the downs (gain_and_end)
 REVIEWED_TOUCHDOWN = "reviewed touchdown"   # the score the ruling had denied: the touchdown step after its countdown
 REVIEWED_FUMBLE = "reviewed fumble"         # the fumble the ruling had called down: the ball turns over (reviewed_fumble)
+# Save Game at the accept-or-decline prompt (N. F. L. rules mode only, SX.9, C10): the extras have put the board as if the penalty
+# were declined and kept the choice in the extras record; the engine saves the game (save_game) and the loaded game asks it again
+SAVE_PENDING = "save with the choice pending"
 
 
 class ClassicRules:
@@ -190,6 +193,11 @@ class ClassicRules:
         raise RuntimeError("Classic has no onside kicks: before_kickoff never answers ONSIDE_KICKOFF")
 
     def between_plays(self, state) -> None:
+        return None
+
+    def resume_choice(self, state) -> str | None:
+        """A loaded game, or a Save Game that could not write the file: a choice the saved game kept is asked again (SX.9, C10).
+        The engine's next step's answer, or None (Classic: always None, the play menu)."""
         return None
 
     def extra_stats_lines(self, state) -> list[str]:

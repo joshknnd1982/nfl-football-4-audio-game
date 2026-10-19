@@ -892,6 +892,9 @@ TEXTS: dict[str, str] = {
     'NXG-22': ' <player>, <position>, the <team>, <n> seasons, best rating <r>, entered in season <s>. ',
     'NXH-46': ' Season awards, and the best players enter the hall of fame five seasons after they leave. Ratings decide who carries the ball; a back who carries a lot is hurt more often. ',
     'NXG-B09': ' the hall of fame takes one new member. ',
+    'NXP-22': ' the game can be saved after this choice. ',
+    'NXP-23': ' a penalty is waiting for your choice. ',
+    'NXH-47': ' At the question about a penalty, S. saves the game with the question kept, when it can be kept. The loaded game asks it again. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -1779,6 +1782,9 @@ SPEAKERS: dict[str, str] = {
     'NXG-22': 'say5',
     'NXH-46': 'say5',
     'NXG-B09': 'say2',
+    'NXP-22': 'say5',
+    'NXP-23': 'say5',
+    'NXH-47': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -2666,6 +2672,9 @@ KINDS: dict[str, str] = {
     'NXG-22': 'sentence',
     'NXH-46': 'help',
     'NXG-B09': 'sentence',
+    'NXP-22': 'sentence',
+    'NXP-23': 'sentence',
+    'NXH-47': 'help',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

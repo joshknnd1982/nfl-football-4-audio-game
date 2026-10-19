@@ -12,6 +12,7 @@
 /NEXT_PROMPT.txt
 /PROJECT_STATE.md
 /SESSION_LOG.md
+/PLAYTEST_LIST.md
 # Build output and release files (attached to the GitHub release, not committed)
 /release/*.exe
 /release/*.zip

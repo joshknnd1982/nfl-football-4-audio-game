@@ -95,6 +95,9 @@ class ExtrasRecord:
     # SX.8k: the injuries of a franchise game in progress ({"hurt": [[player id, kind, games, offset]], "stand_ins": [[team, position, name,
     # rating]]}), so Save Game keeps them; None (and left out of the saved text) in every other game
     injuries: dict | None = None
+    # SX.9 (C10): the accept-or-decline choice a Save Game at the prompt kept (penalty_flow.PenaltyFlow.suspend); None (and left out of the
+    # saved text) in every other game, so a record without it loads as before
+    pending_choice: dict | None = None
 
     # ----- per side -----
 
@@ -147,6 +150,8 @@ class ExtrasRecord:
             del data["franchise"]
         if data["injuries"] is None:
             del data["injuries"]
+        if data["pending_choice"] is None:
+            del data["pending_choice"]
         return json.dumps(data, sort_keys=True, separators=(",", ":"))
 
     @classmethod
@@ -228,6 +233,10 @@ class ExtrasRecord:
             whole(self.franchise["week"], 0, 20, "the franchise week")
         if self.injuries is not None:
             check_game_injuries(self.injuries, whole)
+        if self.pending_choice is not None:
+            if not self.penalties_on:
+                raise ValueError("a penalty choice is kept in a game without penalties")
+            check_pending_choice(self.pending_choice, whole, flag)
         pair(self.flags, lambda v, w: whole(v, 0, 9999, w), "the penalties")
         pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
         if self.foul_clock not in FOUL_CLOCKS:
@@ -239,6 +248,76 @@ class ExtrasRecord:
                 raise ValueError("the recent remarks of %r are %r" % (pool, ids))
             if any(not isinstance(i, str) or len(i) > 12 for i in ids):
                 raise ValueError("a recent remark ID of %r is not an ID" % (pool,))
+
+
+PENDING_KEYS = {"foul", "id", "side", "slot", "spot", "down", "accepted", "declined", "stats", "qb"}
+RESULT_KEYS = {"kind", "ball", "los", "down", "to_go", "new_series", "points", "yards", "notes", "keeps_play", "play_first_down",
+               "penalty_first_down", "erased_score", "untimed", "pieces"}
+STAT_COUNT = 10                 # data/files/savedgame.STATISTICS: the ten statistics of 4.19 per side
+
+
+def check_pending_choice(record, whole, flag) -> None:
+    """The accept-or-decline choice a Save Game at the prompt kept (SX.9, C10): its shape and ranges. Only the choice the save can keep: both
+    answers a new down for the team that had the ball (penalty_flow.PenaltyFlow.can_save)."""
+    from . import fouls_2026 as F
+    from .penalties import NEW_DOWN
+
+    def text_list(values, what):
+        if (not isinstance(values, list) or len(values) > 6
+                or any(not isinstance(v, str) or len(v) > 400 or any(ord(c) < 32 for c in v) for v in values)):
+            raise ValueError("%s of the kept choice is %r" % (what, values))
+
+    if not isinstance(record, dict) or set(record) != PENDING_KEYS:
+        raise ValueError("the kept penalty choice is %r" % (record,))
+    whole(record["foul"], 0, len(F.FOULS) - 1, "the kept choice's foul")
+    if record["id"] != F.FOULS[record["foul"]].id:
+        raise ValueError("the kept choice's foul is %r, not %r" % (record["id"], F.FOULS[record["foul"]].id))
+    whole(record["side"], 1, 2, "the side that fouled")
+    whole(record["slot"], 0, 17, "the player who fouled")
+    if record["spot"] is not None:
+        whole(record["spot"], -50, 150, "the foul's spot")
+    down = record["down"]
+    if not isinstance(down, dict) or set(down) != {"offense", "los", "down", "to_go", "two_point"}:
+        raise ValueError("the kept choice's down is %r" % (down,))
+    whole(down["offense"], 1, 2, "the kept choice's offense")
+    whole(down["los"], 0, 99, "the kept choice's line of scrimmage")      # 0: a kick-off's down (the return starts at the goal line)
+    whole(down["down"], 1, 4, "the kept choice's down")
+    whole(down["to_go"], 1, 100, "the kept choice's distance")
+    if down["two_point"] is not False:
+        raise ValueError("a choice on a try is never kept")
+    for name in ("accepted", "declined"):
+        result = record[name]
+        if not isinstance(result, dict) or set(result) != RESULT_KEYS:
+            raise ValueError("the kept choice's %s result is %r" % (name, result))
+        if result["kind"] != NEW_DOWN or result["ball"] != down["offense"]:
+            raise ValueError("the kept choice's %s result is not a new down for the team with the ball" % name)
+        whole(result["los"], 1, 99, "the %s result's line" % name)
+        whole(result["down"], 1, 4, "the %s result's down" % name)
+        whole(result["to_go"], 1, 100, "the %s result's distance" % name)
+        whole(result["yards"], -100, 100, "the %s result's yards" % name)
+        if not isinstance(result["points"], list) or len(result["points"]) != 2:
+            raise ValueError("the %s result's points are %r" % (name, result["points"]))
+        for value in result["points"]:
+            whole(value, 0, 0, "the %s result's points" % name)
+        for key in ("new_series", "keeps_play", "play_first_down", "penalty_first_down"):
+            flag(result[key], "the %s result's %s" % (name, key))
+        if result["untimed"] is not False or result["erased_score"] is not None:
+            raise ValueError("the kept choice's %s result has an untimed down or an erased score" % name)
+        text_list(result["notes"], "the %s result's notes" % name)
+        text_list(result["pieces"], "the %s result's pieces" % name)
+    stats = record["stats"]
+    if not isinstance(stats, list) or len(stats) != 2 or any(not isinstance(s, list) or len(s) != STAT_COUNT for s in stats):
+        raise ValueError("the kept choice's statistics are %r" % (stats,))
+    for side in stats:
+        for value in side:
+            whole(value, -999999, 999999, "a statistic of the kept choice")
+    qb = record["qb"]
+    if not isinstance(qb, list) or len(qb) != 2 or any(not isinstance(s, list) or len(s) != 2 for s in qb):
+        raise ValueError("the kept choice's quarterback runs are %r" % (qb,))
+    for value in qb[0]:
+        whole(value, 0, 9999, "the kept choice's quarterback runs")
+    for value in qb[1]:
+        whole(value, -99999, 999999, "the kept choice's quarterback running yards")
 
 
 def check_game_injuries(record, whole) -> None:

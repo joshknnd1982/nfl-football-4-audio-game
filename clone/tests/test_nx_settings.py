@@ -3,7 +3,8 @@ NFL_EXTRAS_DESIGN 12.1 and 12.2, NFL_EXTRA_FEATURES C1; PX SX.2). This is inspir
 
 The menu has the items whose features exist (SX.2: Rules, Time outs, Reset), says " used with the N. F. L. rules " after a
 switch while Rules is Classic, saves every change at once and says that it applies from the next game. Classic stays the
-default (NQ2) and with it no file of the extras is ever made.
+choice of a settings file that says so, and with it no file of the extras is ever made; a new player's default is the N. F. L. rules
+(NQ2, SX.9).
 """
 import os
 
@@ -28,9 +29,11 @@ NEXT_GAME = X.text("NXM-23")
 
 # ----- settings.txt -----
 
-def test_the_defaults_are_classic_with_timeouts_on():
-    settings = Settings.defaults()
-    assert settings.game.rules == "classic" and settings.game.nx_timeouts is True
+def test_the_defaults_are_the_nfl_rules_with_timeouts_on():
+    settings = Settings.defaults()                 # SX.9: a new player's default (NQ2, D-079)
+    assert settings.game.rules == "nfl" and settings.game.nx_timeouts is True
+    assert is_nfl(rules_from_settings(settings.game))
+    settings.game.rules = "classic"
     assert rules_from_settings(settings.game) is CLASSIC
 
 
@@ -43,7 +46,7 @@ def test_the_rules_line_is_read(line, rules):
 
 def test_a_bad_rules_or_switch_line_is_a_problem_and_keeps_the_default():
     settings, problems = settingsfile.parse(settingsfile.HEADER + "rules = madden\nnx_timeouts = maybe\n")
-    assert settings.game.rules == "classic" and settings.game.nx_timeouts is True and len(problems) == 2
+    assert settings.game.rules == "nfl" and settings.game.nx_timeouts is True and len(problems) == 2
 
 
 def test_the_file_is_written_with_both_lines_and_reads_back_the_same():
@@ -116,17 +119,13 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert spoken[16] == "Defense playbook: Classic"
     assert spoken[17] == "Defense playbook: Team playbook" + NEXT_GAME
     assert spoken[18] == X.text("NXM-19")
-    defaults = ("Rules: Classic. Time outs on  used with the N. F. L. rules. Replay challenges on  used with the N. F. L."
-                " rules. Quarterback runs on  used with the N. F. L."
-                " rules. Onside kicks on  used with the N. F. L. rules."
-                " Onside question: when it makes sense used with the N. F. L. rules. Penalties on  used with the N. F. L."
-                " rules. Offense playbook: Classic used with the N. F. L. rules."
-                " Defense playbook: Classic used with the N. F. L. rules ")
+    defaults = ("Rules: N. F. L. rules. Time outs on. Replay challenges on. Quarterback runs on. Onside kicks on."   # SX.9: the default is
+                " Onside question: when it makes sense. Penalties on. Offense playbook: Classic. Defense playbook: Classic")  # the N. F. L. rules
     assert spoken[19] == defaults + NEXT_GAME
     assert spoken[20] == defaults                                       # nothing changed now
-    assert spoken[21] == "Rules: Classic"
+    assert spoken[21] == "Rules: N. F. L. rules"
     game = rig.game.options.settings.game
-    assert (game.rules, game.nx_timeouts, game.nx_penalties) == ("classic", True, True) and rig.game.rules is CLASSIC
+    assert (game.rules, game.nx_timeouts, game.nx_penalties) == ("nfl", True, True) and is_nfl(rig.game.rules)
     assert (game.nx_onside, game.nx_onside_question, game.nx_qb_runs) == (True, "sensible", True)
     assert (game.nx_offense_playbook, game.nx_defense_playbook) == ("classic", "classic")      # Classic is the default playbook
     assert game.nx_challenges is True

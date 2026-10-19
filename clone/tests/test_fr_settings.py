@@ -12,7 +12,7 @@ from nfl4.extras.rules_menu import DEFAULTS, SWITCHES
 def test_the_defaults_keep_classic_the_default_of_the_kind_of_season():
     game = Settings.defaults().game
     assert (game.nx_season_kind, game.nx_fr_auto, game.nx_fr_offseason, game.nx_fr_picks_told) == ("classic", False, "full", "first")
-    assert game.rules == "classic"
+    assert game.rules == "nfl"                     # SX.9: the Rules setting of a new player (NQ2); the kind of season stays classic
 
 
 def test_the_four_keys_are_written_and_read_back():

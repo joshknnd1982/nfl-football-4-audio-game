@@ -353,8 +353,10 @@ def test_a_damaged_season_is_said_after_the_title_and_a_copy_is_kept(tmp_path, m
 
 @pytest.mark.window
 def test_a_start_with_no_files_asks_for_the_coach_and_writes_no_season_file_before_the_answers(tmp_path, monkeypatch):
+    """With rules = classic the original's start: the coach's name first (SX.9: a new player's default is the N. F. L. rules, below)."""
     from nfl4.game import prompt_texts
     monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    write_settings(tmp_path, ["rules = classic"])
     made = Made()
     monkeypatch.setattr(app, "create_speech", made)
     monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
@@ -364,16 +366,34 @@ def test_a_start_with_no_files_asks_for_the_coach_and_writes_no_season_file_befo
         == ["settings.txt"]
 
 
-# ----- the player's names and banter (S7.7, data/customize.py) -----
-
 @pytest.mark.window
-def test_a_start_makes_the_customization_files_and_says_nothing_about_them(tmp_path, monkeypatch):
+def test_a_new_player_starts_with_the_nfl_rules_and_is_asked_the_kind_of_season_first(tmp_path, monkeypatch):
+    """SX.9 (NQ2, D-079): no settings file: the N. F. L. rules; the new season's question (classic season first) comes before the coach's name,
+    and nothing of a season or a franchise is written before the answers."""
+    from nfl4.extras import nx_texts as X
     monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
     made = Made()
     monkeypatch.setattr(app, "create_speech", made)
     monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
     assert app.main() == 0
-    # Classic (the default Rules): no file of the extras (remarks.txt) is made (nfl4 only, CUSTOMIZABLE_CONTENT 13, SX.2)
+    spoken = made.sapi.spoken()
+    assert X.text("NXF-01", coach="coach") in spoken
+    assert sorted(p.name for p in tmp_path.iterdir() if p.is_file() and p.name.endswith((".dat", ".gtp", ".sav", ".txt"))) \
+        == ["settings.txt"]
+    assert not (tmp_path / "franchise").exists()
+
+
+# ----- the player's names and banter (S7.7, data/customize.py) -----
+
+@pytest.mark.window
+def test_a_start_makes_the_customization_files_and_says_nothing_about_them(tmp_path, monkeypatch):
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
+    write_settings(tmp_path, ["rules = classic"])
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
+    assert app.main() == 0
+    # Classic: no file of the extras (remarks.txt) is made (nfl4 only, CUSTOMIZABLE_CONTENT 13, SX.2; the default since SX.9 is the N. F. L. rules)
     assert sorted(p.name for p in (tmp_path / "customize").iterdir()) == ["banter.txt", "divisions.txt", "sounds",
                                                                          "surnames.txt", "teams.txt"]
     spoken = " ".join(made.sapi.spoken())

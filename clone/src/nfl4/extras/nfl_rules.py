@@ -424,6 +424,14 @@ class NflRules(ClassicRules):
         if x.running and x.pending >= x.left > 0:
             self.game.say5(X.text("NXC-05") if x.left == 1 else X.text("NXC-03", n=x.left))
 
+    def resume_choice(self, state) -> str | None:
+        """SX.9 (C10): the accept-or-decline choice a Save Game at the prompt kept, asked first when the game is loaded (or again when
+        the file could not be written)."""
+        x = state.extras
+        if x is None or x.pending_choice is None:
+            return None
+        return self.penalty.resume(state)
+
     # ----- timeouts -----
 
     def player_timeout(self, state) -> bool:
@@ -487,14 +495,14 @@ class NflRules(ClassicRules):
         return lines
 
     def extra_help(self, key: str) -> list[str]:
-        ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-14", "NXH-18", "NXH-27"),
+        ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-47", "NXH-14", "NXH-18", "NXH-27"),
                KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15", "NXH-16",
                         "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30"),
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
                         "NXH-33")}.get(key, ())
         timeout_lines = ("NXH-01", "NXH-05", "NXH-07")
         challenge_lines = ("NXH-23", "NXH-24", "NXH-25", "NXH-26")
-        penalty_lines = ("NXH-09", "NXH-10", "NXH-11", "NXH-12", "NXH-13", "NXH-22")
+        penalty_lines = ("NXH-09", "NXH-47", "NXH-10", "NXH-11", "NXH-12", "NXH-13", "NXH-22")
         onside_lines = ("NXH-14", "NXH-15", "NXH-16", "NXH-17")
         qb_lines = ("NXH-18", "NXH-19", "NXH-20", "NXH-21", "NXH-22")
         playbook_lines = ("NXH-27", "NXH-28", "NXH-29", "NXH-30", "NXH-31", "NXH-32", "NXH-33")

@@ -53,6 +53,7 @@ class Catalog:
 def rig_for(tmp_path, answers, **kwargs):
     rig = program_rig(tmp_path, answers, preset=preset_season(), **kwargs)
     settings = Settings.defaults()
+    settings.game.rules = "classic"         # SX.9: the rig's Game plays Classic (a new player's default is the N. F. L. rules)
     settings.audio = rig.sounds.settings
     rig.saves = Saves()
     rig.game.options = Options(settings, rig.speech, save=rig.saves)

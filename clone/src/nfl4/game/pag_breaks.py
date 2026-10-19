@@ -234,8 +234,8 @@ class BreakSteps:
         record = s.saved(g.quarter_clock.countdown)
         if self.save_sink is not None and self.save_sink(record) is False:   # football.sav could not be written (S7.5)
             self.result.saved = False
-            g.say(program_texts.SAVE_FAILED)                        # the game goes on: nothing was kept
-            return self.play_menu
+            g.say(program_texts.SAVE_FAILED)                        # the game goes on: nothing was kept (N. F. L. rules, SX.9:
+            return self.continuation(self.rules.resume_choice(s)) or self.play_menu     # a choice at the prompt is asked again)
         self.keys.pump()
         g.say(P.GAME_SAVED)
         self.keys.pump()

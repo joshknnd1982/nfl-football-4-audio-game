@@ -21,17 +21,26 @@ When fouls happen and the draws (design 9.1 and 15, as built):
   enforcement, and a remark of pool PN with chance 1 in 3 after an accepted penalty (comments on).
 
 What the engine does next is the answer (game/rules.py NEXT_DOWN and the others), or None: the play stands.
+
+Save Game at the prompt (C10, SX.9): S at the player's accept-or-decline prompt keeps the choice in the saved game when both answers give
+the team that had the ball a new down before the last second of a period, a quarter or a half (`can_save`; else the prompt says NXP-22 and goes on). The board is
+put as if the penalty were declined (what a file opened without the N. F. L. rules plays on), the choice goes into the extras record
+(`pending_choice`) and the engine saves (SAVE_PENDING). A loaded game asks it first (`resume`, the hook resume_choice): NXP-23, the flag
+again, the same prompt; accepting undoes the play's first down and enforces the penalty as it would have been. The ruling of that play and
+the injuries of the rest of it are not kept (a loaded game has no play to challenge, design 12.3); nothing is drawn by the save or the
+resume.
 """
 from __future__ import annotations
 
 import copy
 import logging
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, fields, replace
 
+from ..data.files.savedgame import STATISTICS
 from ..game import outcome as O
 from ..game.gamestate import own_half
 from ..game.playtables import QB_SNEAK
-from ..game.rules import (KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, SAFETY_BY_PENALTY, TRY_AGAIN, TRY_FAILS)
+from ..game.rules import (KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, SAFETY_BY_PENALTY, SAVE_PENDING, TRY_AGAIN, TRY_FAILS)
 from . import fouls_2026 as F
 from . import nx_texts as X
 from . import penalties as PEN
@@ -47,6 +56,7 @@ KEY_ENTER, KEY_TAB, KEY_UP, KEY_DOWN = "13", "9", "38", "40"
 KEY_F1, KEY_F2, KEY_F3, KEY_F4 = "112", "113", "114", "115"
 ACCEPT, DECLINE, ACCEPT_RUNOFF, YARDS_ONLY = "accept", "decline", "accept with the run off", "accept the yards only"
 ANSWER_TEXTS = {ACCEPT: "NXP-A01", DECLINE: "NXP-A02", ACCEPT_RUNOFF: "NXP-A03", YARDS_ONLY: "NXP-A04"}
+SAVE = "save the game"        # S at the prompt (SX.9, C10): not an answer of the list, the key that keeps the choice in a saved game
 TOUCH_BACK_SPOT = 20          # the original's touch back (5.10)
 
 
@@ -83,6 +93,21 @@ def clock_after_foul(record, quarter: int, keeps: bool) -> tuple[bool, bool]:
     if record.foul_clock == "pre" and record.foul_by_offense and quarter >= 4:
         return False, False
     return base, base
+
+
+def result_record(result: PEN.Result) -> dict:
+    """A Result as plain JSON values (the kept choice, SX.9)."""
+    record = asdict(result)
+    for name in ("points", "notes", "pieces"):
+        record[name] = list(record[name])
+    return record
+
+
+def result_from(record: dict) -> PEN.Result:
+    values = dict(record)
+    for name in ("points", "notes", "pieces"):
+        values[name] = tuple(values[name])
+    return PEN.Result(**{f.name: values[f.name] for f in fields(PEN.Result)})
 
 
 @dataclass
@@ -390,8 +415,9 @@ class PenaltyFlow:
     # ----- the choice -----
 
     def decide(self, state, flag: Flag, accepted: PEN.Result, declined: PEN.Result,
-               runoff: PEN.Result | None = None) -> str:
-        """The offended team's answer: the computer's rule for a side the computer plays, else the player's prompt."""
+               runoff: PEN.Result | None = None, can_save: bool = False) -> str:
+        """The offended team's answer: the computer's rule for a side the computer plays, else the player's prompt (SAVE: S kept the
+        choice in a saved game, only when `can_save`)."""
         offended = 2 if flag.side == 1 else 1
         if runoff is not None:
             lead = state.score(offended) - state.score(flag.side)
@@ -403,13 +429,14 @@ class PenaltyFlow:
             team = state.teams.get(offended, "")
             g.say4(X.text("NXP-07" if best == DECLINE else "NXP-06", team=team))
             return best
-        return self.ask(state, flag, accepted, declined, runoff, best)
+        return self.ask(state, flag, accepted, declined, runoff, best, can_save)
 
     def ask(self, state, flag: Flag, accepted: PEN.Result, declined: PEN.Result, runoff: PEN.Result | None,
-            best: str) -> str:
+            best: str, can_save: bool = False) -> str:
         """The prompt (design 9.3, C9): what accepting and what declining gives, then the answer, starting at the better
         one by the computer's own rule. Up, Down or Tab change it, A accepts and D declines, Enter takes it, F1 says the
-        flag and the prompt again, F2 to F4 as in a play menu, any other key is echoed and the prompt is said again."""
+        flag and the prompt again, F2 to F4 as in a play menu, S saves the game with the choice kept (SX.9, C10; when it
+        cannot be kept, NXP-22 and the answer again), any other key is echoed and the prompt is said again."""
         g, keys = self.game, self.game.keys
         choices = [ACCEPT_RUNOFF, YARDS_ONLY, DECLINE] if runoff is not None else [ACCEPT, DECLINE]
         current = choices.index(best)
@@ -454,6 +481,11 @@ class PenaltyFlow:
                     continue
                 if char == "d":
                     current = len(choices) - 1
+                    continue
+                if char == "s":
+                    if can_save:
+                        return SAVE
+                    g.say5(X.text("NXP-22"))
                     continue
                 g.saykey()
                 break
@@ -570,10 +602,74 @@ class PenaltyFlow:
                 declined = replace(declined, pieces=declined.pieces + (X.text("NXP-S08"),))
             if accepted.kind == PEN.NEW_DOWN and not accepted.untimed:
                 accepted = replace(accepted, pieces=accepted.pieces + (X.text("NXP-S08"),))
-        answer = self.decide(state, flag, accepted, declined)
+        answer = self.decide(state, flag, accepted, declined, can_save=self.can_save(state, accepted, declined))
+        if answer == SAVE:
+            return self.suspend(state, flag, accepted, declined)
         if answer == DECLINE:
             self.note(state, "declined", flag)
             return None
+        self.note(state, "accepted", flag, accepted.yards)
+        then = self.apply(state, flag, accepted)
+        self.remark(state, flag)
+        return then
+
+    # ----- Save Game at the prompt (C10, SX.9) -----
+
+    def can_save(self, state, accepted: PEN.Result, declined: PEN.Result) -> bool:
+        """The choice can be kept in a saved game: both answers give the team that had the ball a new down (the board the loaded game
+        starts from is a down to play), not on a try, not on the last second of a half or a quarter (the period's end and the untimed
+        down belong to the play just run)."""
+        down = self.down
+        return (down is not None and not down.two_point and state.extras.left > 0
+                and accepted.kind == declined.kind == PEN.NEW_DOWN and accepted.ball == declined.ball == down.offense
+                and not accepted.untimed and accepted.erased_score is None)
+
+    def suspend(self, state, flag: Flag, accepted: PEN.Result, declined: PEN.Result) -> str:
+        """S at the prompt: the board as if the penalty were declined (the play stands, its first down counted as the original counts
+        it), the choice kept in the extras record, and the engine saves the game."""
+        x = state.extras
+        pending = {"foul": F.FOULS.index(flag.foul), "id": flag.foul.id, "side": flag.side, "slot": flag.slot, "spot": flag.spot,
+                   "down": asdict(self.down), "accepted": result_record(accepted), "declined": result_record(declined),
+                   "stats": [[int(getattr(self.stats[side], name)) for name in STATISTICS] for side in (1, 2)],
+                   "qb": [list(self.qb_stats[0]), list(self.qb_stats[1])]}
+        self.apply(state, None, replace(declined, keeps_play=True))
+        x.pending_choice = pending
+        self.note(state, "kept in the save", flag)
+        log.info("penalty choice kept in the saved game: %s by side %d", flag.foul.id, flag.side)
+        return SAVE_PENDING
+
+    def resume(self, state) -> str | None:
+        """A loaded game's kept choice (or a Save Game that could not write the file): NXP-23, the flag again, the prompt. Declining
+        leaves the board as it is (the play stood); accepting takes back the play's first down and enforces the penalty from the down
+        of the snap, as the prompt would have. S keeps it again. The engine's next step."""
+        x, g = state.extras, self.game
+        pending, x.pending_choice = x.pending_choice, None
+        if pending is None:
+            return None
+        flag = Flag(F.FOULS[pending["foul"]], pending["side"], pending["slot"], pending["spot"])
+        self.down = PEN.Down(**pending["down"])
+        accepted, declined = result_from(pending["accepted"]), result_from(pending["declined"])
+        snap = copy.deepcopy(state.stats)
+        for side in (1, 2):
+            for name, value in zip(STATISTICS, pending["stats"][side - 1]):
+                setattr(snap[side], name, value)
+        self.stats = snap
+        self.qb_stats = (list(pending["qb"][0]), list(pending["qb"][1]))
+        log.info("a kept penalty choice is asked again: %s by side %d, down %d and %d from %d", flag.foul.id, flag.side, self.down.down,
+                 self.down.to_go, self.down.los)
+        g.say5(X.text("NXP-23"))
+        self.announce(state, [flag], False)
+        answer = self.decide(state, flag, accepted, declined, can_save=True)
+        log.info("the kept penalty choice is answered: %s", answer)
+        if answer == SAVE:
+            x.pending_choice = pending
+            self.note(state, "kept in the save", flag)
+            return SAVE_PENDING
+        if answer == DECLINE:
+            self.note(state, "declined", flag)
+            return NEXT_DOWN
+        if declined.play_first_down:               # the play's own first down, counted when the board was put
+            state.stats[declined.ball].first_downs -= 1
         self.note(state, "accepted", flag, accepted.yards)
         then = self.apply(state, flag, accepted)
         self.remark(state, flag)

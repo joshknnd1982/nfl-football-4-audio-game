@@ -38,7 +38,7 @@ from .pag_results import ResultSteps
 from .pag_scrimmage import ScrimmageSteps
 from .playtables import DEFENSE_MATCH
 from .rules import (CLASSIC, KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, REVIEWED_FIELD, REVIEWED_FUMBLE,
-                    REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, TRY_AGAIN, TRY_FAILS)
+                    REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, SAVE_PENDING, TRY_AGAIN, TRY_FAILS)
 from .setup import Roster
 
 log = logging.getLogger("nfl4.game")
@@ -217,6 +217,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
             return self.touchdown_reached
         if then == REVIEWED_FUMBLE:
             return self.reviewed_fumble
+        if then == SAVE_PENDING:                  # N. F. L. rules (SX.9, C10): S at the accept-or-decline prompt
+            return self.save_game
         raise ValueError("unknown continuation %r" % (then,))
 
     def ran(self) -> bool:
@@ -261,8 +263,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         self.snd.set_crwd1(-100)                            # 0x43b8fe
         self.dy(0.2, 0x43b9d9)
         self.snd.play(0, 0)
-        if self.saved is not None:
-            return self.play_menu                           # SavedGame = 0, 0x43bb41
+        if self.saved is not None:                          # SavedGame = 0, 0x43bb41; N. F. L. rules (SX.9, C10): a choice the
+            return self.continuation(self.rules.resume_choice(s)) or self.play_menu     # save kept is asked first
         return self.coin_toss
 
     def get_sex_of(self) -> None:

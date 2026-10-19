@@ -31,6 +31,10 @@ F9_TITLE = "Added functions"
 F9_HELP = (MENU_HELP + " The five items are the speech settings, the sounds, the names and the banter, the rules, and the "
            "about text. "
            "The original's own keys work as always: Control sets the speech rate, F11 the volumes, F12 the voices.")
+# nfl4 only (SX.9): with the N. F. L. rules the Franchise item is a sixth item, before About
+F9_HELP_FRANCHISE = (MENU_HELP + " The six items are the speech settings, the sounds, the names and the banter, the rules, the "
+                     "franchise, and the about text. "
+                     "The original's own keys work as always: Control sets the speech rate, F11 the volumes, F12 the voices.")
 SPEECH_ITEM = "Speech settings."
 SOUNDS_ITEM = "Sounds."
 ABOUT_ITEM = "About NFL Football 4."
@@ -45,6 +49,14 @@ ABOUT_LINES = (
     "He made his games free for the blind community. He died in 2015.",
     "This version is new code, written from a description of how his program behaves. "
     "It plays his original sound files.",
+    # nfl4 only (rule 0.13, NFL_EXTRA_FEATURES NX-R6, SX.9): the added rules and the franchise, and the trademark notice. The notice is the
+    # only text of the game that names Madden or Electronic Arts (tests/test_sx9_about.py)
+    "Added to the original game: the N. F. L. rules, with a real clock and time outs, penalties you may accept or decline, "
+    "onside kicks, quarterback runs, replay challenges and playbooks, and a franchise that lasts from season to season. "
+    "The Rules item of this menu switches them, or chooses Classic, the game exactly as the original.",
+    "The playbooks and the franchise are inspired by the playbooks and franchise ideas of Madden N. F. L. "
+    "Madden N. F. L. is a trademark of Electronic Arts. "
+    "This project is not made, endorsed or supported by Electronic Arts or the N. F. L.",
 )
 
 # ----- settings menu (F2) -----

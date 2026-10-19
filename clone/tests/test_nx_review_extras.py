@@ -48,7 +48,8 @@ def test_the_programs_rules_follow_the_replay_challenges_setting():
     settings.game.nx_challenges = False
     rules = rules_from_settings(settings.game)
     assert rules.challenges_on is False and rules.for_game().challenges_on is False
-    assert rules_from_settings(Settings.defaults().game) is CLASSIC
+    settings.game.rules = "classic"
+    assert rules_from_settings(settings.game) is CLASSIC
     assert NflRules().challenges_on is False                      # a rules object made by hand has none
 
 

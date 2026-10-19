@@ -86,10 +86,12 @@ class Functions:
                      Item(lambda: words.SOUNDS_ITEM, enter=self._enter(self.sounds_menu)),
                      Item(lambda: words.CUSTOMIZE_ITEM, enter=self._enter(self.customize_menu)),
                      Item(self.rules_item, enter=self._enter(self.rules_menu))]
+            help_text = words.F9_HELP
             if self.franchise_shown():                         # nfl4 only (SX.8a): built per opening, only with the N. F. L. rules
                 items.append(Item(self.franchise_label, enter=self._enter(self.franchise_menu)))
+                help_text = words.F9_HELP_FRANCHISE            # SX.9: the help counts the sixth item
             items.append(Item(lambda: words.ABOUT_ITEM, enter=self._enter(self.about)))
-            SpokenMenu(self.speech, self.keys, words.F9_TITLE, items, help_text=words.F9_HELP).run()
+            SpokenMenu(self.speech, self.keys, words.F9_TITLE, items, help_text=help_text).run()
         except GameQuit:
             raise
         except Exception:

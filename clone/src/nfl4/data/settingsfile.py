@@ -60,8 +60,8 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # commercials         off = none (default), every = one of your own commercial files at every break of the game, second =
 #                     at every second break, third = at every third break; the Sounds menu changes it (the files are
 #                     yours: see the commercials folder next to this file)
-# rules               classic = the game exactly as the original (original), nfl = the N. F. L. rules with a real clock
-#                     and the added features; the Rules item of the F9 menu changes it, from the next game on
+# rules               classic = the game exactly as the original, nfl = the N. F. L. rules with a real clock and the added
+#                     features (default nfl); the Rules item of the F9 menu changes it, from the next game on
 # nx_timeouts         on or off: the time outs of the N. F. L. rules (default on)
 # nx_challenges       on or off: the replay challenges and the replay official's reviews of the N. F. L. rules (default on)
 # nx_penalties        on or off: the penalties of the N. F. L. rules, with accept or decline (default on)

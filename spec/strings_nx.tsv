@@ -883,3 +883,6 @@ NXG-21	franchise	sentence	say5	 season <n>, <award>: <name>, the <team>. 	histor
 NXG-22	franchise	sentence	say5	 <player>, <position>, the <team>, <n> seasons, best rating <r>, entered in season <s>. 	history line: a member of the hall (SX.8o)
 NXH-46	franchise	help	say5	 Season awards, and the best players enter the hall of fame five seasons after they leave. Ratings decide who carries the ball; a back who carries a lot is hurt more often. 	F6, after NXH-45 (SX.8o)
 NXG-B09	franchise	sentence	say2	 the hall of fame takes one new member. 	stage 1 with the offseason short: a class of one (the review of SX.8o)
+NXP-22	penalties	sentence	say5	 the game can be saved after this choice. 	S at the accept-or-decline prompt when the choice cannot be kept in a saved game (a score, a turnover, a try, a kept choice that would change sides, the last second of a quarter or a half; SX.9)
+NXP-23	penalties	sentence	say5	 a penalty is waiting for your choice. 	a loaded game with a pending accept-or-decline choice, before the flag is told again (C10, SX.9)
+NXH-47	penalties	help	say5	 At the question about a penalty, S. saves the game with the question kept, when it can be kept. The loaded game asks it again. 	F5 addition (H12, C6), when penalties are on (SX.9)

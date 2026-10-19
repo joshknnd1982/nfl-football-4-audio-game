@@ -29,7 +29,7 @@ class SpeechSettings:
 class GameSettings:
     comments: bool = True        # F8 (ctog, GAME_SPEC 4.5): comtog 0 or Empty = the announcer's comments are on
     # nfl4 only (rule 0.13, NFL_EXTRAS_DESIGN 12.1, PX SX.2): the Rules setting and the switches of the extra features
-    rules: str = "classic"       # "classic" (the original, the default until SX.9: NQ2) or "nfl" (the N. F. L. rules)
+    rules: str = "nfl"           # "nfl" (the N. F. L. rules: the default for a new player since SX.9, NQ2) or "classic" (the original)
     nx_timeouts: bool = True     # the real clock's timeouts in N. F. L. rules mode
     nx_penalties: bool = True    # the penalties with accept or decline in N. F. L. rules mode (SX.3)
     nx_onside: bool = True       # the onside kicks of the N. F. L. rules mode (SX.4)
