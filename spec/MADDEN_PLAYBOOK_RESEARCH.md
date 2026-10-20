@@ -88,6 +88,7 @@ List B, EA's own naming or branding, not used (NX-R6):
 - Branded play and formation labels: names such as "Tush Push" and "Goal Line Sneak" as EA play names (use "quarterback sneak, push"), "Gun Doubles Clamp Stack" style formation names, long play strings (for example "Cheap Flat X Post", "Boomerang RPO Alert Swing"), generic book names such as "Shotgun Classic" and "Multiple D", and scheme labels such as "West Coast Zone Run" or "Vertical Power Run" as one label (the single words are fine).
 - Match-coverage check names (Box, Bingo, Stubbie, Skinny, Solo and so on) are coaching words but EA uses them as menu options; leave them out.
 - I give only a few examples on purpose and did not copy any play list.
+- Added 2026-10-20 (PX SX.10a): more EA names that are not used are in `spec\NFL_PLAYS_RESEARCH.md` section 6.4; Madden 27's concepts in plain words are in its section 6.2.
 
 ## 4. Proposed style playbooks (7)
 
