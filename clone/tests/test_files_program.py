@@ -20,7 +20,7 @@ from test_files_savedgame import a_game
 from test_files_store import TEAM, a_names_file, a_season_on_disk, data, make
 
 EXIT_KEYS = [DOWN, DOWN, DOWN, ENTER]
-WEEK_1 = " This is week  1 of Jim's N. F. L. football "
+WEEK_1 = " This is week  1 of Josh Kennedy's N. F. L. football "
 NEW_SEASON = ["k", "i", "m", ENTER, ENTER, ENTER, ENTER]       # the coach "kim", yes; the first team, yes
 
 
@@ -55,19 +55,19 @@ def test_a_new_season_writes_footbal1_footbal2_and_football_gtp_and_the_next_sta
 def test_the_log_is_a_new_file_in_week_1_and_appended_to_later(tmp_path):
     run(file_rig(tmp_path, NEW_SEASON + EXIT_KEYS))
     log = data(tmp_path, "footballlog.txt").read_bytes().decode("utf-8").split("\r\n")
-    assert log[:3] == [texts.CAPTION, "", " This is week #1 of Jim's N. F. L. football "]
+    assert log[:3] == [texts.CAPTION, "", " This is week #1 of Josh Kennedy's N. F. L. football "]
     a_season_on_disk(tmp_path, gtp=4)
     before = data(tmp_path, "footballlog.txt").read_bytes()
     run(file_rig(tmp_path / "later", EXIT_KEYS, store=make(tmp_path)))
     after = data(tmp_path, "footballlog.txt").read_bytes()
     assert after.startswith(before) and len(after) > len(before)
-    assert b" This is week #4 of Jim's N. F. L. football " in after[len(before):]
+    assert b" This is week #4 of Josh Kennedy's N. F. L. football " in after[len(before):]
 
 
 def test_a_season_on_disk_in_week_5_is_the_week_the_program_announces(tmp_path):
     a_season_on_disk(tmp_path, gtp=5)
     rig = run(file_rig(tmp_path, EXIT_KEYS))
-    assert said(rig)[:2] == [texts.TITLE_SPOKEN, " This is week  5 of Jim's N. F. L. football "]
+    assert said(rig)[:2] == [texts.TITLE_SPOKEN, " This is week  5 of Josh Kennedy's N. F. L. football "]
     assert rig.game.season.coach == "Kim Lee" and (rig.game.season.tn1, rig.game.season.tn2) == TEAM
     assert rig.game.season.set_week_opponent() is not None
 
@@ -120,7 +120,7 @@ def test_a_damaged_saved_game_is_said_set_aside_and_the_season_goes_on(tmp_path)
     data(tmp_path, "football.sav").write_bytes(b"cut")
     rig = run(file_rig(tmp_path, EXIT_KEYS, store=make(tmp_path)))
     spoken = said(rig)
-    assert spoken[:3] == [texts.TITLE_SPOKEN, SAVED_DAMAGED, " This is week  3 of Jim's N. F. L. football "]
+    assert spoken[:3] == [texts.TITLE_SPOKEN, SAVED_DAMAGED, " This is week  3 of Josh Kennedy's N. F. L. football "]
     assert (tmp_path / "data" / "football.sav.damaged1").exists() and rig.plays == []
 
 

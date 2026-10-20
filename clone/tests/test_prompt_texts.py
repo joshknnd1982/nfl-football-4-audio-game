@@ -41,7 +41,7 @@ def test_every_help_piece_is_a_string_of_its_procedure():
     for name, procedure in owners.items():
         pieces = getattr(H, name + "_PIECES")
         assert [p for p in pieces if procedure not in rows.get(p, set())] == [], name
-        assert getattr(H, name) == getattr(H, name + "_JOINER").join(pieces)
+        assert getattr(H, name + "_ORIGINAL", getattr(H, name)) == getattr(H, name + "_JOINER").join(pieces)
     assert sum(len(getattr(H, n + "_PIECES")) for n in owners) == 103
 
 

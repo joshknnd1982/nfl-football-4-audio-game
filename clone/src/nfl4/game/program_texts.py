@@ -13,6 +13,7 @@ WELCOME_TO = " Welcome to "                                 # string 2554: then 
 # ----- the week line (0x488493 to 0x4884e8, 0x488874) -----
 THIS_IS_WEEK = " This is week "                             # string 2561: then Str$(gtp)
 OF_JIMS_FOOTBALL = " of Jim's N. F. L. football "           # string 2560: ends the week line and the play-off week text
+OF_FOOTBALL = " of Josh Kennedy's N. F. L. football "          # CLONE (owner 2026-10-20, S8.2): the week line says the clone's author, not "Jim's" (2560 above is the original)
 THIS_IS_WEEK_LOG = " This is week #"                        # string 2562: the log's line, then Trim$(Str$(gtp))
 THIS_IS_THE = " This is the "                               # string 2559: the play-off week line starts with it
 
@@ -33,4 +34,3 @@ LOG_TITLE_ORIGINAL = "NFL football  By Jim Kitchen"          # string 2558
 # ----- clone texts (not in the exe): GAME_SPEC 3, GAP_REGISTER G-F3 (a draft wording, S8.2 listens) -----
 SEASON_OVER = " The season is over. A new season begins. "
 SAVE_FAILED = " The game could not be saved. "                # G-F5: football.sav could not be written; the game goes on
-FIRST_START_F9 = " Press F9 for the added functions: the speech settings, the sounds and the about text. "

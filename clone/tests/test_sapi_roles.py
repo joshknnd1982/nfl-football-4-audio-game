@@ -435,12 +435,12 @@ def test_a_voice_object_that_cannot_be_made_falls_back_to_the_announcers():
 def test_a_synchronous_line_waits_for_everything_queued_before_it(rig):
     from nfl4.speech.manager import SpeechManager
     manager = SpeechManager(rig.backend, None)
-    manager.say_async("This is week  1 of Jim's N. F. L. football ", role=ANNOUNCER)
+    manager.say_async("This is week  1 of Josh Kennedy's N. F. L. football ", role=ANNOUNCER)
     manager.say_async(" Hike! ", role=OWN_QUARTERBACK)
     t0 = time.monotonic()
     manager.say(" He drops back ", role=ANNOUNCER)
     assert time.monotonic() - t0 >= 3 * PLAY_SECONDS - 0.01
-    assert [h[3] for h in rig.heard()] == ["This is week  1 of Jim's N. F. L. football ", " Hike! ", " He drops back "]
+    assert [h[3] for h in rig.heard()] == ["This is week  1 of Josh Kennedy's N. F. L. football ", " Hike! ", " He drops back "]
     assert not rig.backend.is_speaking()
 
 

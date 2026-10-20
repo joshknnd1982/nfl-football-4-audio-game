@@ -133,6 +133,11 @@ TERMINOLOGY_PIECES = (
     "On defense the blitz play is where the defensive team sends a couple of extra players at the line in hopes of getting to the quarterback before he can get the pass off or perhaps to tackle the running back before he can get running good.  So it can be a good play to call if it works, however if the quarterback can get the pass off the extra defenders that were doing the blitz are no longer down field to try to stop the receiver from catching the ball or running with it after he catches it.  So if the blitz doesn't work the offence may end up with a very long gain on the ",   # 0x421521
 )
 TERMINOLOGY_JOINER = ' '
-TERMINOLOGY = TERMINOLOGY_JOINER.join(TERMINOLOGY_PIECES)
+TERMINOLOGY_ORIGINAL = TERMINOLOGY_JOINER.join(TERMINOLOGY_PIECES)
+# CLONE (owner 2026-10-20, S8.2, CLAUDE.md 0.18): the original's piece "In Jim's NFL football game." names Jim as the game's owner; the
+# clone says its own author and the inspiration. Everything else of the text is the original's.
+JIMS_GAME_PIECE = "In Jim's NFL football game."
+JOSHS_GAME_PIECE = "In Josh Kennedy's N. F. L. football game, inspired by Jim Kitchen."
+TERMINOLOGY = TERMINOLOGY_ORIGINAL.replace(JIMS_GAME_PIECE, JOSHS_GAME_PIECE)
 
 TERMINOLOGY_CLONE_END = "play."            # D-014: the readme ends the blitz text "... on the play."

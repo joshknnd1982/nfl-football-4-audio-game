@@ -68,11 +68,15 @@ class Program:
     def season(self):
         return self.g.season
 
-    def _stop_intro(self, second_pump: bool = True) -> None:
+    def _stop_intro(self, second_pump: bool = True, reason: str = "week_line") -> None:
         """`If L68 = 1: m220.Stop, DoEvents, Set m220 = Nothing, DoEvents, L68 = 0` (the week lines 0x488618 to 0x488694 and
-        0x4888dd to 0x48894f). The first start's copy (0x487c4f to 0x487cb7) has no second DoEvents and does not test L68."""
+        0x4888dd to 0x48894f). The first start's copy (0x487c4f to 0x487cb7) has no second DoEvents and does not test L68.
+        S8.2 (owner 2026-10-20, CLAUDE.md 0.21, B-A22): the loop also ends when the welcome ends and, as a safety, before the first
+        question of the season set-up; the original let it run to the week line, which a new season or a franchise makes a minute
+        of the same sound while the player answers. Safe to call twice; the log says why it stopped."""
         if not self.intro_playing:
             return
+        debuglog.event("sound", "loop_stop", sound="intro foot0", reason=reason)
         if self.sounds is not None:
             self.sounds.stop_oneshot()                          # Me.m220.Stop
         self.keys.pump()                                        # DoEvents (0x487c65, 0x488636, 0x4888f7)
@@ -105,6 +109,7 @@ class Program:
             sounds.start_crowds()                               # 0x4876f0 crowd1, crwd1 = -1200 0x48772c, crowd2 0x487731
             sounds.intro()                                      # clk 0x48778d, foot0 once, then looped (L68 = 1)
             self.intro_playing = True                           # 0x487b05
+            debuglog.event("sound", "loop_start", sound="intro foot0")
         keys.pump()                                             # 0x487b0b DoEvents
         if sounds is not None:
             sounds.make_hike()                                  # 0x487b14
@@ -113,14 +118,14 @@ class Program:
         if self.store.first_run():                              # 0x487bff: footbal0.dat missing
             # 0x487c20 g.say2(P.WELCOME_TO) is not said: the welcome sentence below says "Welcome to" itself, once (rule 0.16, G-F1)
             keys.pump()                                         # 0x487c44
-            self._stop_intro(second_pump=False)                 # 0x487c4f (Stop), 0x487c65 (DoEvents), 0x487c88, L68 = 0 0x487cb7
+            self._stop_intro(second_pump=False, reason="first_start")   # 0x487c4f (Stop), 0x487c65 (DoEvents), 0x487c88, L68 = 0 0x487cb7
             g.voice_speak(" ", wait=True)                       # 0x487cfa Voice.Speak " ", 0 (waits for the line above)
             g.say(texts.TITLE_SPOKEN)                           # 0x487d35: the welcome in place of " Jim's N. F. L. Football, version 4. "
             debuglog.event("app", "welcome_spoken", logging.INFO, first_start=True, text=texts.TITLE_SPOKEN)
             g.speak_notices()
             g.dy(INTRO_PAUSE, 0x487d81)
             g.hotkeys.speckeys()                                # 0x487daa: the F5 key list
-            g.say5(P.FIRST_START_F9)                            # the clone's one added sentence: where F9 is (G-K2)
+            # S8.2: where F9 is is now a line of the key list itself (hotkeys.speckeys), so the first start has no separate sentence
             g.dy(INTRO_PAUSE, 0x487dea)
             if self._sapi_speaks():
                 g.hotkeys.change_voice()                        # 0x487e0d ChangeVoice (writes footbal0.dat: settings.txt)
@@ -128,10 +133,12 @@ class Program:
             g.say(texts.TITLE_SPOKEN)                           # rule 0.16, G-F1: once per launch, the intro loop goes on
             debuglog.event("app", "welcome_spoken", logging.INFO, first_start=False, text=texts.TITLE_SPOKEN)
             g.speak_notices()
+            self._stop_intro(second_pump=False, reason="welcome_done")   # S8.2: the intro ends with the welcome, not at the week line
 
     # ----- the season set-up (0x487e25 to 0x4882de) -----
 
     def season_setup(self) -> None:
+        self._stop_intro(reason="before_first_prompt")           # S8.2 safety: no loop plays while the set-up waits for the player
         self.mode.season_setup()                                # 0x488018 to 0x4882f1: footbal1.dat, else a new season
 
     def new_season(self, coach: str | None = None, ask: bool = True) -> None:
@@ -201,10 +208,10 @@ class Program:
 
     def _regular_week_line(self) -> None:
         g, season = self.g, self.season
-        line = P.THIS_IS_WEEK + str_(season.gtp) + P.OF_JIMS_FOOTBALL     # 0x488493 to 0x4884e8
+        line = P.THIS_IS_WEEK + str_(season.gtp) + P.OF_FOOTBALL     # 0x488493 to 0x4884e8
         g.say2(line)                                            # 0x4884f4
         self.week_intro = line                                  # Q5 not reproduced: F1 in the menu says it again
-        g.log_print(P.THIS_IS_WEEK_LOG + trim(str_(season.gtp)) + P.OF_JIMS_FOOTBALL)   # 0x4885c8 Print #3
+        g.log_print(P.THIS_IS_WEEK_LOG + trim(str_(season.gtp)) + P.OF_FOOTBALL)   # 0x4885c8 Print #3
         self._stop_intro()                                      # 0x488609 L68 test, 0x488618 Stop, 0x488636, 0x488671, 0x488694
         g.voice_speak(" ", wait=True)                           # 0x4886f2 Voice.Speak " ", 0
         season.set_week_opponent()                              # 0x488772 to 0x488822: footbal2.dat, the gtp-th record
@@ -221,7 +228,7 @@ class Program:
         g.log_print("#" + trim(str_(season.gtp)))               # 0x488b7d (16 + the week of the play-offs)
         g.log_print(name)                                       # 0x488b8d
         g.log_print("")                                         # 0x488b96
-        self.week_text = name + P.OF_JIMS_FOOTBALL              # 0x488bb7, 0x488bc5 (L118)
+        self.week_text = name + P.OF_FOOTBALL              # 0x488bb7, 0x488bc5 (L118)
         season.set_playoff_opponent()                           # 0x488bde to 0x488d6a: footbal4.dat
 
     def todays_game(self) -> str:

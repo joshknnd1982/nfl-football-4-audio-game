@@ -11,6 +11,7 @@ import pytest
 from gamerig import Rig
 from nfl4.audio.output import SLOT_CROWD1, SLOT_CROWD2, SLOT_HIKE
 from nfl4.data.settings import Settings
+from nfl4.game import extra_texts as words
 from nfl4.game import help_texts as H
 from nfl4.game import prompt_texts as T
 from nfl4.game.keys import KeyInput
@@ -108,9 +109,9 @@ def test_f5_speaks_the_key_list_waits_for_its_end_and_hands_f1_back():
     rig = Rig([F5], speech_per_char=SPEECH)
     start = rig.clock.now
     assert run_key(rig) == "112"
-    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("stop", "")]   # the last stop is getkey's
+    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("speak", words.KEYS_ADDED_F9), ("stop", "")]   # the last stop is getkey's
     assert rig.said[0] == (H.SPECIAL_KEYS, ANNOUNCER, 0)                         # say5: the announcer
-    assert rig.clock.now - start == pytest.approx(len(H.SPECIAL_KEYS) * SPEECH, abs=0.01)
+    assert rig.clock.now - start == pytest.approx((len(H.SPECIAL_KEYS) + len(words.KEYS_ADDED_F9)) * SPEECH, abs=0.01)
     assert rig.game.hotkeys.runs == ["116"]
 
 
@@ -123,7 +124,7 @@ def test_the_key_list_is_the_original_text():
 def test_a_key_during_the_key_list_stops_it_and_still_hands_f1_back():
     rig = Rig([F5, ("cut", 1.0, A_KEY)], speech_per_char=SPEECH)
     assert run_key(rig) == "112"
-    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("stop", ""), ("stop", "")]
+    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("speak", words.KEYS_ADDED_F9), ("stop", ""), ("stop", "")]
 
 
 def test_a_global_key_inside_a_menu_nests_a_second_menu():
@@ -132,7 +133,7 @@ def test_a_global_key_inside_a_menu_nests_a_second_menu():
     rig = Rig([F5, ("cut", 0.5, F6)], speech_per_char=SPEECH)
     rig.game.pause_log = []
     assert run_key(rig) == "112"
-    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("stop", ""), ("speak", H.GAME_INSTRUCTIONS),
+    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("speak", words.KEYS_ADDED_F9), ("stop", ""), ("speak", H.GAME_INSTRUCTIONS),
                            ("speak", H.FOOTBALL_INSTRUCTIONS), ("stop", ""), ("stop", "")]
     assert rig.game.hotkeys.runs == ["116", "117"]
     assert rig.game.pause_log == [(0x42028d, 0.3)]
@@ -208,7 +209,7 @@ class HelpRules(ClassicRules):
         return ["Added help for " + key + "."]
 
 
-@pytest.mark.parametrize("key, last_original", [(F5, H.SPECIAL_KEYS), (F6, H.FOOTBALL_INSTRUCTIONS),
+@pytest.mark.parametrize("key, last_original", [(F5, words.KEYS_ADDED_F9), (F6, H.FOOTBALL_INSTRUCTIONS),
                                                 (F7, H.TERMINOLOGY + "play.")])
 def test_h12_lines_follow_the_original_text_and_classic_has_none(key, last_original):
     assert ClassicRules().extra_help(str(key)) == []
@@ -279,12 +280,14 @@ def test_f11_sets_the_five_voice_volumes_each_in_its_own_voice_then_the_sound_vo
                ENTER, ENTER, ENTER,                 # your punter, your opponents quarterback, your opponents punter
                UP, DOWN, ENTER]                     # the sounds: 0 + 100 is the maximum, then -100
     rig = Rig(answers, sounds_dir=tmp_path)
+    rig.keys.hint_enabled = True                         # S8.2: this test pins the hint too
     options, saves = with_options(rig)
     assert run_key(rig) == "112"
     assert rig.said == [
         (volume_prompt(ANNOUNCER), ANNOUNCER, 0), (T.VOLUME_MAXIMUM, ANNOUNCER, 0), (T.VOLUME_MAXIMUM, ANNOUNCER, 0),
         (volume_prompt(OWN_QUARTERBACK), OWN_QUARTERBACK, 0), (T.VOLUME_LOWER, OWN_QUARTERBACK, 0),
         (volume_prompt(OWN_QUARTERBACK), OWN_QUARTERBACK, 0),                 # F1: no echo (saykey is not called)
+        (words.F1_HELP_HINT, OWN_QUARTERBACK, 0),                              # S8.2: then where the help is, in the voice that spoke
         ("x", OWN_QUARTERBACK, 0), (volume_prompt(OWN_QUARTERBACK), OWN_QUARTERBACK, 0),
         (volume_prompt(OWN_PUNTER), OWN_PUNTER, 0),
         (volume_prompt(OPPONENT_QUARTERBACK), OPPONENT_QUARTERBACK, 0),

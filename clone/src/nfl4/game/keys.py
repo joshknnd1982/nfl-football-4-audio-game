@@ -113,6 +113,10 @@ class KeyInput:
         self._sleep = sleep
         # Form_KeyDown's calls of the global menus: key_handler(g) after every key (game/hotkeys.py sets it)
         self.key_handler = None
+        # S8.2: F1 repeats the prompt; at the next key wait the game says where the help is (hotkeys.py sets f1_hint)
+        self.f1_hint = None
+        self.f1_hint_window = 3.0
+        self._f1_at = None
 
     # called by the window thread
     def post(self, key_code: int) -> None:
@@ -151,8 +155,15 @@ class KeyInput:
                 debuglog.event("key", "pump", vk=item, ctx=debuglog.current_context())
             self.code_text = str(item)
             self.char = key_char(item)
+            self._f1_at = self._clock() if item == KEY_F1 else None     # only a real F1 key, never the hand-back's
             if self.key_handler is not None:       # 0x42e6f0 to 0x42e811: F12, F11, F8, F7, F6, F5, Ctrl
                 self.key_handler(self.code_text)
+
+    def _say_f1_hint(self) -> None:
+        """At the first key wait after the player's F1 (the prompt is queued by then): the one-sentence help hint, once."""
+        at, self._f1_at = self._f1_at, None
+        if at is not None and self.f1_hint is not None and self._clock() - at <= self.f1_hint_window:
+            self.f1_hint()
 
     def wait_speech(self, speech) -> None:
         """`Do: DoEvents: Loop While g = "" And Voice.Status.RunningState = 2` (speckeys, readins, SayHints and the
@@ -217,6 +228,7 @@ class KeyInput:
     def wait_key(self) -> None:
         """The bare `Do: DoEvents: Loop While g = ""` of pag's final score (0x45391f): no clk, no stopspeech, no ambient
         sounds; the caller has called clk before."""
+        self._say_f1_hint()
         while self.code_text == "":
             self._sleep(0.001)
             self.pump()
@@ -224,6 +236,7 @@ class KeyInput:
     def getkey(self, speech) -> None:
         """clk, wait with DoEvents for a key, then stop speech at once (getkey p_429b40: 0x429b7c, 0x429ba4, 0x429bb8)."""
         self.clk()
+        self._say_f1_hint()
         while self.code_text == "":
             self._sleep(0.001)
             self.pump()
@@ -235,6 +248,7 @@ class KeyInput:
         0x429c63, 0x429c6c, 0x429c98, 0x429c9d, 0x429ccb.)"""
         ambient.start_ambient_wait()
         self.clk()
+        self._say_f1_hint()
         while True:
             self.pump()
             ambient.play_ran()

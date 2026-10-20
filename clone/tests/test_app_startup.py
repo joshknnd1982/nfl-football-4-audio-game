@@ -12,6 +12,7 @@ import time
 import pytest
 
 import nfl4.app as app
+from nfl4.game import extra_texts
 import nfl4.audio.engine as audio_engine
 import nfl4.ui.window as window_module
 from nfl4.audio.engine import NO_SOUND_NOTICE
@@ -168,7 +169,7 @@ def test_the_start_that_makes_settings_txt_is_the_first_start_with_the_welcome(t
     assert app.main() == 0
     spoken = made.sapi.spoken()
     assert spoken[:2] == [" ", texts.TITLE_SPOKEN] and program_texts.WELCOME_TO not in spoken     # the sentence says "Welcome to" itself
-    assert program_texts.FIRST_START_F9 in spoken and (tmp_path / "settings.txt").is_file()
+    assert extra_texts.KEYS_ADDED_F9 in spoken and (tmp_path / "settings.txt").is_file()
 
 
 @pytest.mark.window
@@ -329,9 +330,9 @@ def test_a_season_on_disk_is_announced_and_the_log_is_appended(tmp_path, monkeyp
     monkeypatch.setattr(window_module, "GameWindow", closing_after(1.5))
     assert app.main() == 0
     spoken = made.sapi.spoken()
-    assert spoken[0] == texts.TITLE_SPOKEN and " This is week  5 of Jim's N. F. L. football " in spoken
+    assert spoken[0] == texts.TITLE_SPOKEN and " This is week  5 of Josh Kennedy's N. F. L. football " in spoken
     log = (tmp_path / "footballlog.txt").read_bytes()
-    assert log.startswith(b"an earlier week\r\n") and b" This is week #5 of Jim's N. F. L. football " in log
+    assert log.startswith(b"an earlier week\r\n") and b" This is week #5 of Josh Kennedy's N. F. L. football " in log
     assert not (tmp_path / "customize" / "footplay.txt").exists()          # no game was played: no names of the player's own
 
 

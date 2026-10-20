@@ -192,7 +192,7 @@ def test_a_change_of_the_rules_does_not_ask_for_a_switch_when_the_franchise_cann
     assert not rig.game.program.switch_requested
     # no restart of the week (a restart would say the week line a second time AND again after the hand-back): the line is said at the
     # start and once more by the F1 that the F9 menu hands back, which repeats the whole announcement (Q5, D-025 a)
-    assert spoken(rig).count(" This is week  3 of Jim's N. F. L. football ") == 2
+    assert spoken(rig).count(" This is week  3 of Josh Kennedy's N. F. L. football ") == 2
 
 
 def test_the_rules_item_says_the_franchise_uses_the_nfl_rules_only_while_they_are_on_and_after_a_stop(tmp_path):

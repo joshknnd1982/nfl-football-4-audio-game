@@ -7,13 +7,14 @@ own tests (test_pag_*.py, test_season_*.py); here the order of the calls, the sp
 subject. The expected lists were written from the lifted lines.
 """
 from nfl4.game import program_texts as P
+from nfl4.game import texts
 from nfl4.game import prompt_texts as T
 from nfl4.game.playoffs import TeamRef
 from programrig import DOWN, ENTER, F1, Outcome, played, preset_season, program_rig, said, saved_game
 
 EXIT = [DOWN, DOWN, DOWN, ENTER]
-WEEK = " This is week  %d of Jim's N. F. L. football "
-THANK_YOU = " Thank you for playing N. F. L. football version 4 By Jim Kitchen "
+WEEK = " This is week  %d of Josh Kennedy's N. F. L. football "
+THANK_YOU = texts.THANK_YOU
 COACH_AND_TEAM = ["k", "i", "m", ENTER, ENTER, ENTER, ENTER]          # kim, yes; the first team, yes
 HEADING = " Standings after week number %d"
 
@@ -78,7 +79,7 @@ def test_silent_standings_after_week_16_wait_for_no_key_q53_not_reproduced(tmp_p
     spoken = said(rig)
     assert not any(t.startswith(" Standings after") for t in spoken)
     assert rig.keys.answers == []
-    assert " This is the " in spoken and " division play off week of Jim's N. F. L. football " in spoken
+    assert " This is the " in spoken and " division play off week of Josh Kennedy's N. F. L. football " in spoken
 
 
 def test_the_crowd_beds_restart_when_the_week_loop_begins_again_g_a5(tmp_path):

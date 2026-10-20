@@ -49,7 +49,7 @@ def at(text, sentence, start=0):
 def test_a_week_speaks_the_news_then_the_to_do_list_then_the_coachs_select_and_none_of_them_again_on_f1(tmp_path):
     rig = run(tmp_path, GAME + [ENTER, F1, F1])
     text = spoken(rig)
-    week2 = at(text, " This is week  2 of Jim's N. F. L. football ")
+    week2 = at(text, " This is week  2 of Josh Kennedy's N. F. L. football ")
     news = at(text, X.text("NXN-01"), week2)
     listing = at(text, X.text("NXD-02", coach="kim"), news)
     item = at(text, X.text("NXD-05", n=1), listing)

@@ -22,9 +22,9 @@ def test_a_fresh_log_starts_a_new_file_and_an_ordinary_one_appends(tmp_path):
     log.close()
     assert read(path) == b"NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen\r\n\r\n"
     log.open(fresh=False)
-    log.line(" This is week #2 of Jim's N. F. L. football ")
+    log.line(" This is week #2 of Josh Kennedy's N. F. L. football ")
     log.close()
-    assert read(path).endswith(b"\r\n\r\n This is week #2 of Jim's N. F. L. football \r\n")
+    assert read(path).endswith(b"\r\n\r\n This is week #2 of Josh Kennedy's N. F. L. football \r\n")
     log.open(fresh=True)
     log.close()
     assert read(path) == b""                                    # Output: the old file is gone

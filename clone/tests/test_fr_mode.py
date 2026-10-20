@@ -259,12 +259,12 @@ def test_a_restart_in_week_1_does_not_tell_the_season_line_again_and_a_restart_i
     run_until(second)
     text = spoken(second)
     assert X.text("NXF-08", n=1) not in text and QUESTION not in text and X.text("NXF-05", team="Bengals") not in text
-    assert text[1:3] and " This is week  1 of Jim's N. F. L. football " in text
+    assert text[1:3] and " This is week  1 of Josh Kennedy's N. F. L. football " in text
     third = franchise_rig(tmp_path / "three", [], files=first.files, kind="franchise",
                           policy=enter_until(lambda: third.game.season.gtp == 6))
     run_until(third)
     text = spoken(third)
-    assert " This is week  5 of Jim's N. F. L. football " in text and " This is week  1 of Jim's N. F. L. football " not in text
+    assert " This is week  5 of Josh Kennedy's N. F. L. football " in text and " This is week  1 of Josh Kennedy's N. F. L. football " not in text
 
 
 def test_a_franchise_file_that_is_missing_at_the_start_makes_a_classic_season_with_the_notice(tmp_path):
@@ -368,7 +368,7 @@ def test_playing_classic_seasons_from_the_franchise_goes_back_to_the_classic_wee
     assert X.text("NXF-06") in text and rig.game.program.mode.kind == "classic" and rig.game.season_store is None      # the rig's classic stores
     assert settings_of(rig).nx_season_kind == "classic" and rig.game.season.coach == "Kim"
     tail = text[text.index(X.text("NXF-06")):]
-    assert " This is week  4 of Jim's N. F. L. football " in tail                       # the classic season goes on at week 4
+    assert " This is week  4 of Josh Kennedy's N. F. L. football " in tail                       # the classic season goes on at week 4
     assert [play["gtp"] for play in rig.plays] == [3, 1, 2, 4]
     assert league(rig).gtp == 3 and league(rig).season == 1                              # the franchise waits at its week 3
     assert X.text("NXF-05", team=team) not in text

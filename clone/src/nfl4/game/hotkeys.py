@@ -46,6 +46,7 @@ class HotKeys:
 
     def install(self) -> None:
         self.g.keys.key_handler = self.dispatch
+        self.g.keys.f1_hint = self._f1_hint
 
     # ----- Form_KeyDown -----
 
@@ -79,6 +80,12 @@ class HotKeys:
     def options(self):
         return self.g.options
 
+    def _f1_hint(self) -> None:
+        """S8.2 (owner 2026-10-20): the prompt F1 repeated is followed by one sentence naming the help keys. Neither logged
+        in footballlog.txt nor kept for the replay (voice_speak, like the key echo)."""
+        debuglog.event("key", "f1_hint")
+        self.g.voice_speak(words.F1_HELP_HINT, wait=False)
+
     def _hand_back(self) -> None:
         """clk, then g = "112": the interrupted wait repeats its prompt (D-018)."""
         self.keys.clk()
@@ -104,6 +111,7 @@ class HotKeys:
         keys.clk()                                       # 0x4208a6
         g.stopspeech()                                   # 0x4208c5
         g.say5(H.SPECIAL_KEYS)                           # 0x4209da
+        g.say5(words.KEYS_ADDED_F9)                      # S8.2: F9 is in the list, in Classic too
         self._extra_help(KEY_F5)
         self._wait_speech()                              # 0x420a00 to 0x420aa4
         if keys.code_text != "":

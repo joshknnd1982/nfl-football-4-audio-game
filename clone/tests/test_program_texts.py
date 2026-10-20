@@ -12,7 +12,7 @@ from nfl4.game import texts
 from test_prompt_texts import module_texts
 from specfiles import original_strings, strings_table
 
-CLONE_ONLY = {"SEASON_OVER", "FIRST_START_F9", "SAVE_FAILED"}
+CLONE_ONLY = {"SEASON_OVER", "SAVE_FAILED", "OF_FOOTBALL"}
 
 
 def owners():
@@ -40,7 +40,9 @@ def test_the_menu_choices_and_the_week_names_are_form_loads_own_strings():
 
 def test_the_exit_texts_are_form_loads_and_the_title_is_the_clones_rule_0_5_1():
     rows = owners()
-    assert "p_486990" in rows[texts.THANK_YOU] and "p_486990" in rows[texts.NO_GAME_MENU.strip()]
+    assert texts.THANK_YOU not in original_strings() and "Josh Kennedy" in texts.THANK_YOU and "Jim Kitchen" in texts.THANK_YOU
+    assert "Josh Kennedy" in P.OF_FOOTBALL and "Jim" not in P.OF_FOOTBALL     # S8.2: the week line names the clone's author
+    assert "p_486990" in rows[texts.THANK_YOU_ORIGINAL] and "p_486990" in rows[texts.NO_GAME_MENU.strip()]
     assert texts.TITLE_SPOKEN not in original_strings() and P.LOG_TITLE_ORIGINAL in original_strings()
 
 

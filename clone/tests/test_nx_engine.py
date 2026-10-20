@@ -263,6 +263,7 @@ def test_the_statistics_add_the_timeouts_used(tmp_path):
 
 
 def test_f5_f6_f7_add_their_lines_after_the_original_text_during_an_nfl_game(tmp_path):
+    from nfl4.game import extra_texts as words
     from nfl4.game import help_texts as H
     rig = nfl_engine_rig(tmp_path)
     hot = rig.game.hotkeys
@@ -271,7 +272,8 @@ def test_f5_f6_f7_add_their_lines_after_the_original_text_during_an_nfl_game(tmp
         start = len(rig.said)
         menu()
         said = texts(rig, start)
-        assert said[0] == original and said[1:] == [X.text(i) for i in ids]
+        lead = [original] + ([words.KEYS_ADDED_F9] if menu == hot.speckeys else [])      # S8.2: F9 is in the key list, in every mode
+        assert said[:len(lead)] == lead and said[len(lead):] == [X.text(i) for i in ids]
     rig.rules.state.extras.timeouts_on = False
     assert rig.rules.extra_help("117") == [X.text("NXH-03"), X.text("NXH-04"), X.text("NXH-06")]
 
@@ -281,5 +283,6 @@ def test_the_help_of_a_classic_program_has_no_added_lines(tmp_path):
     rig.game.play_engine = None                                      # no game: the program's rules, Classic
     start = len(rig.said)
     rig.game.hotkeys.speckeys()
+    from nfl4.game import extra_texts as words
     from nfl4.game import help_texts as H
-    assert texts(rig, start) == [H.SPECIAL_KEYS]
+    assert texts(rig, start) == [H.SPECIAL_KEYS, words.KEYS_ADDED_F9]

@@ -3,6 +3,7 @@
 GAME_SPEC 3 steps 3 to 7 (CODE (lifted) Form_Load p_486990 0x486f9b to 0x4882de), rule 0.5.1 (the title), G-F1, G-S8, D-022
 item 4, D-006. Every expected list below was written from the lifted lines (the addresses are in game/program.py).
 """
+from nfl4.game import extra_texts as words
 from nfl4.game import help_texts as H
 from nfl4.game import program_texts as P
 from nfl4.game import prompt_texts as T
@@ -15,7 +16,7 @@ from seasonrig import RecordingStore
 EXIT_KEYS = [DOWN, DOWN, DOWN, ENTER]         # the main menu: choice 4, exit game
 INTRO, CROWD1, CROWD2 = "snd_foot0", "snd_foot1", "snd_foot2"
 SLOT_ONESHOT, SLOT_CROWD1, SLOT_CROWD2 = 0, 1, 2
-WEEK_1 = " This is week  1 of Jim's N. F. L. football "      # Str$(1) is " 1": two spaces, as in the original
+WEEK_1 = " This is week  1 of Josh Kennedy's N. F. L. football "      # Str$(1) is " 1": two spaces, as in the original
 
 
 class Catalog:
@@ -62,7 +63,7 @@ def test_the_player_s_sound_volume_is_added_to_every_start_up_level(tmp_path):
 
 # ----- the title (rule 0.5.1, G-F1) -----
 
-def test_a_normal_start_says_the_title_once_then_the_week_line_and_stops_the_intro_there(tmp_path):
+def test_a_normal_start_says_the_title_once_stops_the_intro_with_it_then_the_week_line(tmp_path):
     rig = program_rig(tmp_path, EXIT_KEYS, preset=preset_season())
     stops = []
     real = rig.sounds.stop_oneshot
@@ -70,7 +71,7 @@ def test_a_normal_start_says_the_title_once_then_the_week_line_and_stops_the_int
     rig.run()
     events = [(kind, text) for kind, text in rig.sapi.events if kind in ("speak", "marker")]
     texts_in_order = [text for kind, text in events]
-    assert texts_in_order[:4] == [texts.TITLE_SPOKEN, WEEK_1, "intro stopped", " "]
+    assert texts_in_order[:4] == [texts.TITLE_SPOKEN, "intro stopped", WEEK_1, " "]       # S8.2 (CLAUDE.md 0.21): the intro ends with the welcome
     assert said(rig).count(texts.TITLE_SPOKEN) == 1 and len(stops) == 1
     assert rig.said[0][1] == ANNOUNCER
 
@@ -113,7 +114,7 @@ def test_the_first_start_welcomes_says_the_title_the_key_list_and_where_f9_is(tm
     rig.sounds.stop_oneshot = lambda: (marker(rig, "intro stopped"), real())[-1]
     rig.run()
     events = [(kind, text) for kind, text in rig.sapi.events if kind in ("speak", "marker")]
-    assert [text for _, text in events][:5] == ["intro stopped", " ", texts.TITLE_SPOKEN, H.SPECIAL_KEYS, P.FIRST_START_F9]
+    assert [text for _, text in events][:5] == ["intro stopped", " ", texts.TITLE_SPOKEN, H.SPECIAL_KEYS, words.KEYS_ADDED_F9]
     # the pauses of 0x487d81 and 0x487dea, 0.2 s each, around the key list
     assert [(site, seconds) for site, seconds in rig.game.pause_log if site in (0x487d81, 0x487dea)] == [
         (0x487d81, 0.2), (0x487dea, 0.2)]
@@ -130,7 +131,7 @@ def test_the_first_start_waits_for_the_welcome_to_end_before_the_title(tmp_path)
     rig.run()
     kinds = [(kind, text[:13]) for kind, text in rig.sapi.events][:8]
     assert kinds == [("marker", "intro stopped"), ("speak", " "), ("wait", ""), ("speak", "Welcome to Jo"), ("wait", ""),
-                     ("stop", ""), ("speak", "Special key i"), ("speak", " Press F9 for")]
+                     ("stop", ""), ("speak", "Special key i"), ("speak", " F9. added fu")]
 
 
 def test_the_first_start_asks_the_five_voices_when_sapi_speaks(tmp_path):
@@ -143,7 +144,7 @@ def test_the_first_start_asks_the_five_voices_when_sapi_speaks(tmp_path):
                       "Choose the voice for your opponents punter"]
     # the choice comes after the key list and its F9 sentence, before the week line
     spoken = said(rig)
-    assert spoken.index(H.SPECIAL_KEYS) < spoken.index(P.FIRST_START_F9) < spoken.index(
+    assert spoken.index(H.SPECIAL_KEYS) < spoken.index(words.KEYS_ADDED_F9) < spoken.index(
         next(t for t in spoken if t.startswith("Choose the voice for"))) < spoken.index(WEEK_1)
 
 
@@ -153,7 +154,7 @@ def test_the_first_start_asks_no_voices_when_a_screen_reader_speaks_d022(tmp_pat
     rig.run()
     spoken = rig.nvda.spoken()
     assert [t for t in spoken if t.startswith("Choose the voice")] == []
-    assert spoken[:4] == [" ", texts.TITLE_SPOKEN, H.SPECIAL_KEYS, P.FIRST_START_F9]
+    assert spoken[:4] == [" ", texts.TITLE_SPOKEN, H.SPECIAL_KEYS, words.KEYS_ADDED_F9]
 
 
 def test_a_later_start_has_no_welcome_no_key_list_and_no_voice_choice(tmp_path):
@@ -161,7 +162,7 @@ def test_a_later_start_has_no_welcome_no_key_list_and_no_voice_choice(tmp_path):
     rig.game.options.voice_catalog = Catalog(VOICES)
     rig.run()
     spoken = said(rig)
-    assert P.WELCOME_TO not in spoken and H.SPECIAL_KEYS not in spoken and P.FIRST_START_F9 not in spoken
+    assert P.WELCOME_TO not in spoken and H.SPECIAL_KEYS not in spoken and words.KEYS_ADDED_F9 not in spoken
     assert [t for t in spoken if t.startswith("Choose the voice")] == []
 
 
@@ -189,7 +190,7 @@ def test_a_new_season_asks_the_coach_the_team_makes_the_schedule_and_writes_week
 def test_a_season_that_continues_asks_nothing_and_goes_to_the_week_line(tmp_path):
     rig = program_rig(tmp_path, EXIT_KEYS, preset=preset_season(coach="Bob", team=(3, 2), gtp=5)).run()
     spoken = said(rig)
-    assert T.ENTER_COACH not in spoken and spoken[1] == " This is week  5 of Jim's N. F. L. football "
+    assert T.ENTER_COACH not in spoken and spoken[1] == " This is week  5 of Josh Kennedy's N. F. L. football "
 
 
 def test_the_log_is_opened_once_after_the_season_is_read_and_starts_with_the_title_line(tmp_path):
@@ -200,7 +201,7 @@ def test_the_log_is_opened_once_after_the_season_is_read_and_starts_with_the_tit
     assert rig.store.calls[:2] == ["load_season", ("open_log", True)]            # 0x48836a: no saved game and week 1: Output
     today = " Today's game is Bengals 0 and  0 verses the %s 0 and  0" % rig.game.opponent_team()
     assert lines == [texts.CAPTION, "",                                          # 0x488422, 0x48842f
-                     " This is week #1 of Jim's N. F. L. football ",             # 0x4885c8 Print #3 (Trim$ number)
+                     " This is week #1 of Josh Kennedy's N. F. L. football ",             # 0x4885c8 Print #3 (Trim$ number)
                      "", today, ""]                                              # 0x48981b, 0x48982b, 0x489845
 
 

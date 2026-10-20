@@ -53,6 +53,16 @@ class ScriptedKeys(KeyInput):
         self.waits = 0
         self.speech_waits = 0
         self.read = []
+        # S8.2: the F1 help hint is a clone addition of the key layer (CLAUDE.md 0.17). The rigs leave it OFF so that the many tests that
+        # pin the original's exact speech after F1 (and the golden Classic transcript) keep doing so; the tests of the hint switch it on
+        # (`rig.keys.hint_enabled = True`): test_s82_help_and_names.py, the main menu's F1 and F11's F1.
+        self.hint_enabled = False
+
+    def _say_f1_hint(self):
+        if not self.hint_enabled:
+            self._f1_at = None
+            return
+        super()._say_f1_hint()
 
     def type_next(self) -> bool:
         """Type the next answer (after any waits in front of it). False when there is none."""
@@ -71,6 +81,7 @@ class ScriptedKeys(KeyInput):
 
     def getkey(self, speech):
         self.clk()
+        self._say_f1_hint()
         self.waits += 1
         if self.code_text == "":
             self.type_next()
@@ -110,6 +121,7 @@ class ScriptedKeys(KeyInput):
     def wait_key(self):
         """pag's bare DoEvents loop at the final score: the next answer is typed when it waits."""
         self.waits += 1
+        self._say_f1_hint()
         self.pump()
         if self.code_text == "":
             self.type_next()
@@ -125,6 +137,7 @@ class ScriptedKeys(KeyInput):
         DoEvents and PlayRan on every step as the original's loop does, before the next key is typed."""
         ambient.start_ambient_wait()
         self.clk()
+        self._say_f1_hint()
         self.waits += 1
         wait_left = 0.0
         for _ in range(20_000_000):

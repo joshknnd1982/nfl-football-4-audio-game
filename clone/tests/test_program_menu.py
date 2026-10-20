@@ -7,7 +7,9 @@ everything from the week text (the choice kept); any other key is echoed and the
 """
 import pytest
 
+from nfl4.game import extra_texts as words
 from nfl4.game import help_texts as H
+from nfl4.game import texts
 from nfl4.game.playoffs import TeamRef
 from programrig import DOWN, ENTER, ESC, F1, F5, UP, preset_season, program_rig, said
 
@@ -20,7 +22,7 @@ def menu_speech(rig):
     """The speech of the main menu only: from the first "Today's game" on, up to the thank-you."""
     spoken = said(rig)
     start = next(i for i, t in enumerate(spoken) if t.startswith(" Today's game is"))
-    end = spoken.index(" Thank you for playing N. F. L. football version 4 By Jim Kitchen ")
+    end = spoken.index(texts.THANK_YOU)
     return spoken[start:end]
 
 
@@ -42,8 +44,8 @@ def test_the_week_line_has_str_numbers_and_the_log_gets_the_trimmed_one(tmp_path
     rig.game.log_sink = lines.append
     rig.run()
     spoken = said(rig)
-    assert spoken[1:3] == [" This is week  12 of Jim's N. F. L. football ", " "]       # Str$(12) = " 12"; the synchronous " "
-    assert " This is week #12 of Jim's N. F. L. football " in lines
+    assert spoken[1:3] == [" This is week  12 of Josh Kennedy's N. F. L. football ", " "]       # Str$(12) = " 12"; the synchronous " "
+    assert " This is week #12 of Josh Kennedy's N. F. L. football " in lines
 
 
 @pytest.mark.parametrize("flag", [1, 2])
@@ -80,7 +82,7 @@ def test_a_play_off_week_says_this_is_the_then_the_week_name_in_the_menu_text(tm
     rig.run()
     spoken = said(rig)
     assert spoken[1:3] == [" This is the ", " "]                                      # 0x488884, the synchronous " "
-    assert spoken[3] == " division play off week of Jim's N. F. L. football "         # say2(L118) in the menu
+    assert spoken[3] == " division play off week of Josh Kennedy's N. F. L. football "         # say2(L118) in the menu
     assert spoken[4].startswith(" Today's game is") and spoken[5] == SELECT
     assert rig.game.season.vtrnt == 2 and (rig.game.season.tn3, rig.game.season.tn4) == (3, 2)   # the player is the visitor
     # gtp 18 is not week 1: the log is appended to (an empty line first, 0x488454), then 0x488adf to 0x488b96, then today's block
@@ -95,7 +97,7 @@ def test_a_week_of_the_regular_season_has_no_week_text_in_the_menu_and_f1_says_t
     first_today = next(i for i, t in enumerate(spoken) if t.startswith(" Today's game is"))
     assert spoken[first_today + 1: first_today + 3] == [SELECT, CHOICE[1]]
     # Q5 / D-025 (a), not reproduced: F1 says the whole announcement, the week line first (the original says only today's game)
-    assert spoken[first_today + 3] == " This is week  2 of Jim's N. F. L. football "
+    assert spoken[first_today + 3] == " This is week  2 of Josh Kennedy's N. F. L. football "
     assert spoken[first_today + 4].startswith(" Today's game is")
 
 
@@ -105,7 +107,7 @@ def test_f1_in_a_play_off_week_says_this_is_the_before_the_week_name_q5(tmp_path
         season.playoffs.pairings = [(TeamRef(1, 1), TeamRef(3, 2)), (TeamRef(2, 1), TeamRef(4, 4))]
     rig = program_rig(tmp_path, [F1] + EXIT, preset=preset).run()
     spoken = said(rig)
-    name = " division play off week of Jim's N. F. L. football "
+    name = " division play off week of Josh Kennedy's N. F. L. football "
     assert spoken[1:5] == [" This is the ", " ", name, spoken[4]] and spoken[4].startswith(" Today's game is")   # the first pass
     again = spoken.index(" This is the ", 3)                        # F1: the whole announcement again, "This is the" first
     assert spoken[again + 1] == name and spoken[again + 2].startswith(" Today's game is")
@@ -141,12 +143,15 @@ def test_the_keypad_s_0_and_5_to_9_are_any_other_key_and_never_a_choice(tmp_path
 
 
 def test_f1_says_everything_again_from_the_top_with_the_choice_kept(tmp_path):
-    rig = program_rig(tmp_path, [DOWN, F1, DOWN, DOWN, ENTER], preset=preset_season(gtp=2)).run()
+    rig = program_rig(tmp_path, [DOWN, F1, DOWN, DOWN, ENTER], preset=preset_season(gtp=2))
+    rig.keys.hint_enabled = True                                  # S8.2: this test pins the hint too
+    rig.run()
     speech = menu_speech(rig)
     today = speech[0]
     assert speech[1:] == [SELECT, CHOICE[1], CHOICE[2],           # first pass
-                          " This is week  2 of Jim's N. F. L. football ",    # F1: the whole announcement (Q5, D-025 a)
+                          " This is week  2 of Josh Kennedy's N. F. L. football ",    # F1: the whole announcement (Q5, D-025 a)
                           today, SELECT, CHOICE[2],               # from the top, choice 2 kept
+                          words.F1_HELP_HINT,                     # S8.2: F1 repeated the prompt, then says where the help is
                           CHOICE[3], CHOICE[4]]
 
 
@@ -172,7 +177,7 @@ def test_a_hot_key_menu_in_the_menu_repeats_from_the_top_with_the_choice_kept(tm
     speech = menu_speech(rig)
     today = speech[0]
     after_f5 = speech.index(H.SPECIAL_KEYS)
-    assert speech[after_f5 + 1:after_f5 + 5] == [" This is week  2 of Jim's N. F. L. football ", today, SELECT, CHOICE[2]]   # F1 is handed back (Q5)
+    assert speech[after_f5 + 2:after_f5 + 6] == [" This is week  2 of Josh Kennedy's N. F. L. football ", today, SELECT, CHOICE[2]]   # F1 is handed back (Q5)
 
 
 # ----- choices 2 and 3 return to the week line (0x48a8df, 0x48a930) -----
@@ -180,7 +185,7 @@ def test_a_hot_key_menu_in_the_menu_repeats_from_the_top_with_the_choice_kept(tm
 def test_see_schedule_returns_to_the_week_line_and_the_menu(tmp_path):
     rig = program_rig(tmp_path, [DOWN, ENTER] + EXIT, preset=preset_season(gtp=3)).run()
     spoken = said(rig)
-    week = " This is week  3 of Jim's N. F. L. football "
+    week = " This is week  3 of Josh Kennedy's N. F. L. football "
     assert spoken.count(week) == 2                                  # the week line again, as the original (GAME_SPEC 3 step 7)
     assert " Bengals schedual. " in spoken
     assert spoken.index(" Bengals schedual. ") < len(spoken) - spoken[::-1].index(week)
@@ -189,7 +194,7 @@ def test_see_schedule_returns_to_the_week_line_and_the_menu(tmp_path):
 def test_see_standings_returns_to_the_week_line_and_the_menu(tmp_path):
     rig = program_rig(tmp_path, [DOWN, DOWN, ENTER] + EXIT, preset=preset_season(gtp=3)).run()
     spoken = said(rig)
-    week = " This is week  3 of Jim's N. F. L. football "
+    week = " This is week  3 of Josh Kennedy's N. F. L. football "
     assert spoken.count(week) == 2
     assert " Standings after week number 2" in spoken
 
