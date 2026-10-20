@@ -43,7 +43,7 @@ def test_a_time_out_called_before_a_won_challenge_keeps_the_clock_stopped_and_th
     time u = 3 + 1 = 4 seconds of the 30 run: 892, the clock is stopped), then wins the challenge: the 4 seconds of the ruled play
     are given back (896), the corrected play takes its own 4 (892) and NO runoff is drawn: the stopped clock stays stopped to the
     snap, and the time out is gone for good (2 left, used 1)."""
-    rig = timeout_scene(tmp_path, ["t", ENTER, "c", ENTER, "y", ENTER])
+    rig = timeout_scene(tmp_path, ["t", "c", ENTER, "y", ENTER])
     x = rig.engine.s.extras
     assert (x.left, x.pending, x.running) == (900 - 4, 30, True)
     d = Draws().below(6, 1).rady().rady()                           # the time out's u, the referee's two pauses
@@ -100,10 +100,10 @@ def test_a_throw_away_has_no_catch_to_rule_on_and_any_other_incompletion_has(tmp
 def test_the_challenge_item_is_made_again_after_the_last_time_out_and_the_letter_says_why(tmp_path):
     """One time out left: the menu has the Challenge item (8) and Time Out (9). The player takes the time out (u = 4); the menu
     starts again without the item and C says that a time out is needed (NXR-11)."""
-    rig = timeout_scene(tmp_path, ["t", ENTER, "c", ESCAPE], extras={"timeouts": [1, 3]})
+    rig = timeout_scene(tmp_path, ["t", "c", ESCAPE], extras={"timeouts": [1, 3]})
     mark = len(rig.said)
     assert the_menu(rig, Draws().below(6, 1)) == "concede"
-    assert texts(rig, mark) == [SELECT, " 1. Line Plunge ", " 9. Time Out ", X.text("NXT-01", team="Bengals"), X.text("NXT-10"),
+    assert texts(rig, mark) == [SELECT, " 1. Line Plunge ", X.text("NXT-01", team="Bengals"), X.text("NXT-10"),
                                 SELECT, " 1. Line Plunge ", X.text("NXR-11"), " 1. Line Plunge "]
     assert [i.text for i in rig.rules.offense_menu(rig.engine.s, False)][-2:] == [" 8. Time Out ", " 9. Save Game "]
 
@@ -111,7 +111,7 @@ def test_the_challenge_item_is_made_again_after_the_last_time_out_and_the_letter
 def test_a_lost_challenge_is_the_time_out_of_its_dead_ball_period_and_a_second_one_is_refused(tmp_path):
     """The ruling was right but close: the review confirms it, the Bengals lose a time out (2 left, used 1) and cannot call
     another in this dead-ball period (4-5-1 Item 3): T at the menu says so (NXT-05) and nothing is charged."""
-    rig = timeout_scene(tmp_path, ["c", ENTER, "y", ENTER, "t", ENTER, ESCAPE], ruling=CLOSE())
+    rig = timeout_scene(tmp_path, ["c", ENTER, "y", ENTER, "t", ESCAPE], ruling=CLOSE())
     mark = len(rig.said)
     assert the_menu(rig, Draws().rady().rady()) == "concede"
     assert texts(rig, mark) == [
@@ -119,7 +119,7 @@ def test_a_lost_challenge_is_the_time_out_of_its_dead_ball_period_and_a_second_o
         " Kim do you wish to challenge the ruling that " + LINE_SHORT + "? ",
         " you have 2 challenges and 3 time outs left. a time out is lost if the ruling stands. ", NO, YES,
         X.text("NXR-04"), X.text("NXR-07"), " the Bengals lose a time out. ",
-        SELECT, " 1. Line Plunge ", " 8. Time Out ", X.text("NXT-05"), " 8. Time Out "]
+        SELECT, " 1. Line Plunge ", X.text("NXT-05"), SELECT, " 1. Line Plunge "]
     x = rig.engine.s.extras
     assert (x.timeouts, x.used, x.called) == ([2, 3], [1, 0], [True, False])
 

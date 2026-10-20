@@ -26,6 +26,7 @@ import logging
 from dataclasses import dataclass
 from typing import Callable
 
+from ..data import debuglog
 from ..speech.roles import OPPONENT_PUNTER, OPPONENT_QUARTERBACK, OWN_PUNTER, OWN_QUARTERBACK, pronoun
 from . import phrases as P
 from .gamestate import GameState, SavedGame, other, own_half
@@ -38,10 +39,20 @@ from .pag_results import ResultSteps
 from .pag_scrimmage import ScrimmageSteps
 from .playtables import DEFENSE_MATCH
 from .rules import (CLASSIC, KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, REVIEWED_FIELD, REVIEWED_FUMBLE,
-                    REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, SAVE_PENDING, TRY_AGAIN, TRY_FAILS)
+                    REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, SAVE_PENDING, TIMEOUT_GRANTED, TRY_AGAIN, TRY_FAILS)
 from .setup import Roster
 
 log = logging.getLogger("nfl4.game")
+
+
+class PlayWithdrawn(BaseException):
+    """A timeout was called by the T key before the snap (or the kick): the plays that were called are withdrawn, nothing of the play is
+    run, and the engine goes on at `back` (owner rule 0.22, playbook 7.16). It is a BaseException so that no `except Exception` of the
+    menus it unwinds through can swallow it; only PlayEngine.run catches it."""
+
+    def __init__(self, back):
+        super().__init__("a timeout was called before the snap")
+        self.back = back
 
 KEY_F1, KEY_F2, KEY_F3, KEY_F4 = "112", "113", "114", "115"
 KEY_ENTER, KEY_ESCAPE, KEY_UP, KEY_DOWN, KEY_TAB = "13", "27", "38", "40", "9"
@@ -77,6 +88,78 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         self.outcomes: list[PlayOutcome] = []        # every H2 record of this game, in order (the tests read them)
         self.noise_net = 0                           # G-A2: how often the safety net had to stop the play noise
         self.last_outcome: PlayOutcome | None = None
+        # the T key (owner rule 0.22, playbook 7.16, H18; the N. F. L. rules mode only): where the game is. game_on from the opening
+        # kick-off (or a loaded game) to the final whistle; live from the snap or the kick to the play's end point (a request is kept);
+        # back = the step a granted timeout goes back to when the play is not yet run (the play menu, the extra point's choice), None
+        # when the timeout is simply granted where the game is (a kick-off, the narration between plays)
+        self.game_on = False
+        self.t_live = False
+        self.t_screen = False                        # a "press any key" wait between periods or after a score: T is that key and is kept
+        self.t_back = None
+        self.t_clock = None                          # the period clock as it was before the snap took the pending runoff
+        self.t_choice: tuple[int, int] | None = None     # previous_play and repeats before the computer's choice
+
+    # ----- the T key (H18) -----
+
+    @property
+    def t_armed(self) -> bool:
+        """The T key calls a timeout in this game right now (the rules have timeouts and the game is being played)."""
+        return self.game_on and self.rules.timeout_keys(self.s) and not debuglog.typing_now()
+
+    def t_cut(self) -> bool:
+        """The window thread, the moment T is posted: True when the key will call (or refuse) a timeout before the play is run, so the
+        speech that is playing is cut at once. During a live play the key is only kept, and nothing is cut."""
+        if not self.t_armed or self.t_live:
+            return False
+        self.g.speech.stop()
+        return True
+
+    def on_timeout_key(self) -> bool:
+        """The T key reaches the game thread (HotKeys.dispatch, inside KeyInput.pump). True when it was taken; the wait it interrupted gets
+        F1 back, with `resumed` saying whether a timeout was called (the menu starts again) or not (it goes on where it was)."""
+        if not self.t_armed:
+            return False
+        if self.t_screen:                            # the key is also the "any key" of the wait; the timeout waits for the next menu
+            self.rules.timeout_key(self.s, True, None, None, "a pause between periods")
+            return True
+        s, live = self.s, self.t_live
+        back = None if live else self.t_back
+        snapped = back is not None and self.t_clock is not None       # the snap's bookkeeping is undone when the timeout is granted
+        result = self.rules.timeout_key(s, live, self.undo_snap_clock if snapped else None,
+                                        self.clock.snapped_called(self.t_clock) if snapped else None)
+        if result == TIMEOUT_GRANTED and back is not None:
+            raise PlayWithdrawn(back)
+        self.keys.hand_back(result)
+        return True
+
+    def go_live(self) -> None:
+        """The snap or the kick: a T key already waiting is taken first (it may still withdraw the play), then the play is live."""
+        self.keys.service_timeout()
+        self.t_live, self.t_back = True, None
+
+    def dead_ball(self, back=None) -> None:
+        """A dead-ball moment begins (a menu, a question, a kick-off, the try's choice): a request kept during the live play is granted
+        now; `back` is where a timeout goes back to."""
+        self.t_live, self.t_back = False, back
+        self.rules.grant_kept_timeout(self.s)
+
+    def undo_snap_clock(self) -> None:
+        capture, self.t_clock = self.t_clock, None
+        if capture is not None:
+            self.clock.restore(capture)
+
+    def withdrawn(self, withdrawal: PlayWithdrawn):
+        """The step after a timeout before the snap: the computer's choice is forgotten (the repeat counters are as they were), the plays are
+        withdrawn and the menu is spoken again from its top."""
+        s = self.s
+        if self.t_choice is not None:
+            s.previous_play, s.repeats = self.t_choice
+            self.t_choice = None
+        self.rules.withdraw_play(s)
+        self.g.qorp, self.g.ptf = 1, 0                 # a kick's set-up speaks as the punter and writes the speech log: neither goes on
+        self.t_live, self.t_back = False, None
+        debuglog.event("extras", "play_withdrawn", back=getattr(withdrawal.back, "__name__", "?"), quarter=s.quarter, down=s.down)
+        return withdrawal.back
 
     # ----- the speakers, pauses and keys as pag uses them -----
 
@@ -170,6 +253,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
     def outcome(self, kind: str, **fields) -> PlayOutcome:
         """The narration end point of a play: the record goes through Rules.after_outcome (Classic: unchanged)."""
         s = self.s
+        self.t_live, self.t_back = False, None       # the play is over: the ball is dead (H18)
         values = dict(yards=s.yards, carrier=s.carrier, defender1=s.defender1, defender2=s.defender2,
                       spot_before=self._spot_before, two_point_try=s.two_point, qb_run=s.qb_run, slid=s.slid)
         values.update(fields)
@@ -237,7 +321,10 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
     def run(self) -> GameResult:
         step = self.start()
         while step is not None:
-            step = step()
+            try:
+                step = step()
+            except PlayWithdrawn as withdrawal:        # T before the snap (H18): the play is not run, the menu comes again
+                step = self.withdrawn(withdrawal)
         return self.result
 
     def start(self):
@@ -264,6 +351,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         self.dy(0.2, 0x43b9d9)
         self.snd.play(0, 0)
         if self.saved is not None:                          # SavedGame = 0, 0x43bb41; N. F. L. rules (SX.9, C10): a choice the
+            self.game_on = True                             # the loaded game is in play (H18: T works from its first question)
             return self.continuation(self.rules.resume_choice(s)) or self.play_menu     # save kept is asked first
         return self.coin_toss
 
@@ -390,6 +478,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         g, s = self.g, self.s
         current = 1
         speak_prompt = True
+        self.dead_ball()                                   # H18: the ball is dead; a time out kept from the last play is granted first
         while True:
             if speak_prompt:
                 g.say5(" " + self.coach + prompt)
@@ -426,6 +515,13 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                 continue
             speak_prompt = True
             if code == KEY_F1:
+                how = self.keys.take_resumed()
+                if how:                                    # the T key (H18): not F1
+                    if how == TIMEOUT_GRANTED:             # a time out was called: the menu starts again from its top
+                        current = 1
+                        if rebuild is not None:
+                            items = rebuild()
+                    continue                               # refused: the menu goes on where it was, its prompt said again
                 self.field_position()
                 continue
             if code == KEY_F2:
@@ -488,6 +584,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
     def offense_chosen(self):
         """L_43e5be (then the hook that lets the N. F. L. rules mode replace the family by a play of its playbook, design 10.4;
         Classic: nothing, no draw). Every step below returns `snap`, which has not run yet."""
+        self.t_choice = (self.s.previous_play, self.s.repeats)     # a time out before the snap takes the choice back (H18)
         step = self._defense_choice()
         self.rules.computer_defense(self.s)
         return step
@@ -514,6 +611,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
     def defense_chosen(self):
         """L_43f04c: the computer's offense (5.7), then the hook that lets the N. F. L. rules mode replace the drawn play by a
         quarterback run (design 7.4; Classic: nothing, no draw). Every step below returns `snap`, which has not run yet."""
+        self.t_choice = (self.s.previous_play, self.s.repeats)     # a time out before the snap takes the choice back (H18)
         step = self._offense_choice()
         self.rules.computer_offense(self.s)
         return step

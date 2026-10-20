@@ -94,8 +94,10 @@ class Speakers:
     def _speak(self, text: str, role: str, wait: bool, rate_step: int = 0) -> None:
         if text == "":
             return                                  # nothing to say (Speak "" is a no-op in flags 0 and 1)
+        self.keys.service_timeout()                 # owner rule 0.22: a T key that came in during a long text is taken first
         if wait:
             self.speech.say(text, self.keys.quit, role=role, rate_step=rate_step)
+            self.keys.service_timeout()             # and one that cut this text is taken before the next one is said
         else:
             self.speech.say_async(text, role=role, rate_step=rate_step)
 

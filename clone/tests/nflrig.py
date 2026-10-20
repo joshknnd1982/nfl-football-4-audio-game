@@ -35,6 +35,7 @@ def nfl_engine_rig(tmp_path, answers=(), comments=False, rules=None, extras=None
     rig.game.comtog_source = (lambda: 0) if comments else (lambda: 1)
     rules = rules if rules is not None else NflRules()
     engine = PlayEngine(rig.game, rules, quarterback_names=lambda s: QUARTERBACKS)
+    engine.game_on = True                  # SX.2b: the game is in play (the T key calls a timeout); a test of the first kick-off sets it back
     s = engine.s
     s.teams = {1: "Bengals", 2: "Jets"}
     s.rosters = {1: named_roster(""), 2: named_roster("O")}

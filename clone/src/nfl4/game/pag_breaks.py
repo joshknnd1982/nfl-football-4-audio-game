@@ -103,22 +103,26 @@ class BreakSteps:
 
     def key_wait(self) -> None:
         g, s = self.g, self.s
-        while True:
-            self.getkey2()
-            code = self.g_code
-            if code == KEY_F2:
-                g.inrep()
-                continue
-            if code == KEY_F1:
-                g.say5(P.PRESS_ANY_KEY)
-                continue
-            if code == KEY_F3:
-                g.say_score(s.score(1), s.score(2))
-                continue
-            if code == KEY_F4:
-                self.clock.speak()
-                continue
-            return
+        self.t_screen = True                                        # H18: T is the "any key" here, and its timeout waits for the next menu
+        try:
+            while True:
+                self.getkey2()
+                code = self.g_code
+                if code == KEY_F2:
+                    g.inrep()
+                    continue
+                if code == KEY_F1:
+                    g.say5(P.PRESS_ANY_KEY)
+                    continue
+                if code == KEY_F3:
+                    g.say_score(s.score(1), s.score(2))
+                    continue
+                if code == KEY_F4:
+                    self.clock.speak()
+                    continue
+                return
+        finally:
+            self.t_screen = False
 
     # ----- GoSub 0x45d0be: the statistics -----
 
@@ -145,14 +149,18 @@ class BreakSteps:
             g.say2(line)
         g.log_print("")
         g.ptf = 0
-        while True:
-            g.norep = 1
-            self.getkey()
-            g.stopspeech()
-            if self.g_code in (KEY_F1, KEY_F2):
-                g.inrep()
-                continue
-            break
+        self.t_screen = True                                        # H18: as in key_wait
+        try:
+            while True:
+                g.norep = 1
+                self.getkey()
+                g.stopspeech()
+                if self.g_code in (KEY_F1, KEY_F2):
+                    g.inrep()
+                    continue
+                break
+        finally:
+            self.t_screen = False
         g.empty_replay()
         g.norep = 0
         # `If L194 = 1 And gtp = 20 Then superbowl, end` cannot happen: the game's end ran superbowl, which set gtp 42
@@ -185,6 +193,7 @@ class BreakSteps:
             s.defense = other(s.wisoff)                              # the side with the ball at the end receives
             s.half = own_half(s.wisoff)                              # Q25 not reproduced: the half is set (D-027)
             return self.kick_off
+        self.game_on = False                                        # H18: the final whistle: T calls nothing any more
         g.ptf = 1
         g.say4(P.GAME_IS_OVER)
         g.log_print("")
@@ -230,10 +239,12 @@ class BreakSteps:
 
     def save_game(self):
         g, s = self.g, self.s
+        self.game_on = False                                        # H18: the game is saved (it is put back on if it could not be)
         self.result.saved = True                                    # SavedGame = 1
         record = s.saved(g.quarter_clock.countdown)
         if self.save_sink is not None and self.save_sink(record) is False:   # football.sav could not be written (S7.5)
             self.result.saved = False
+            self.game_on = True
             g.say(program_texts.SAVE_FAILED)                        # the game goes on: nothing was kept (N. F. L. rules, SX.9:
             return self.continuation(self.rules.resume_choice(s)) or self.play_menu     # a choice at the prompt is asked again)
         self.keys.pump()
@@ -275,6 +286,7 @@ class BreakSteps:
                 continue
             if answer == 2:
                 return self.play_menu
+            self.game_on = False                                    # H18: conceded, the game is over
             own, opponent = s.score(1), s.score(2)
             if own >= opponent:                                     # a loss whatever the score (Me.m414)
                 own = 0

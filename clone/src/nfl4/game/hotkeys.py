@@ -30,6 +30,7 @@ log = logging.getLogger("nfl4.game")
 
 KEY_F1 = "112"
 KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F11, KEY_F12, KEY_CTRL = "116", "117", "118", "119", "122", "123", "17"
+KEY_T = "84"                    # the T key (owner rule 0.22): the key CODE, never the character (F5 is "t" in this key model, B-W6)
 KEY_ENTER, KEY_ESCAPE, KEY_UP, KEY_DOWN = "13", "27", "38", "40"
 VOLUME_STEP = 5                 # F11 part 1: a voice's volume in steps of 5 (0 to 100)
 SOUND_STEP = 100                # F11 part 2: wavol in steps of 100 hundredths of a decibel (0 to -5000)
@@ -37,9 +38,15 @@ SOUND_FLOOR = -5000
 READINS_PAUSE = 0.3             # readins' dy(0.3) between its two parts
 
 
+class HotMenuClosed(Exception):
+    """The T key was pressed inside a global menu (F8, F11, F12, Ctrl or a help) during a game: the menu is closed and the timeout called
+    (owner rule 0.22). Raised by `HotKeys.timeout_key`, caught by `HotKeys.dispatch`."""
+
+
 class HotKeys:
     def __init__(self, game):
         self.g = game
+        self.depth = 0                 # global menus running now (a menu may nest a second one)
         # the clone's added global keys, after the original's (S7.4b: F9, GAP_REGISTER G-K2); code text -> menu
         self.added: dict[str, object] = {}
         self.runs: list[str] = []      # every menu started, in order (the tests read it)
@@ -47,6 +54,16 @@ class HotKeys:
     def install(self) -> None:
         self.g.keys.key_handler = self.dispatch
         self.g.keys.f1_hint = self._f1_hint
+        self.g.keys.timeout_eager = self._timeout_eager           # owner rule 0.22: the window thread cuts the speech on T
+        self.g.keys.timeout_close = self._timeout_closes_menu     # and F9, which reads its own keys, closes on T during a game
+
+    def _timeout_eager(self) -> bool:
+        engine = self.g.play_engine
+        return engine is not None and engine.t_cut()
+
+    def _timeout_closes_menu(self) -> bool:
+        engine = self.g.play_engine
+        return engine is not None and engine.t_armed
 
     # ----- Form_KeyDown -----
 
@@ -55,20 +72,40 @@ class HotKeys:
         0x42e6f5 ChangeVoice, 0x42e730 adjvol, 0x42e75d ctog, 0x42e78a SayHints, 0x42e7b7 readins, 0x42e7e4 speckeys,
         0x42e811 adjrate)."""
         keys = self.g.keys
+        if keys.code_text == KEY_T:                  # owner rule 0.22: a timeout anywhere in a game (the N. F. L. rules); else a plain key
+            self.timeout_key()
+            return
         for key, menu in ((KEY_F12, self.change_voice), (KEY_F11, self.adjvol), (KEY_F8, self.ctog),
                           (KEY_F7, self.say_hints), (KEY_F6, self.readins), (KEY_F5, self.speckeys),
                           (KEY_CTRL, self.adjrate)):
             if keys.code_text == key:
                 self.runs.append(key)
-                with debuglog.context("hot key " + key):
-                    debuglog.event("menu", "hot_key", key=key, menu=getattr(menu, "__name__", "?"))
-                    menu()
+                self._run(key, menu)
         menu = self.added.get(keys.code_text)
         if menu is not None:
             self.runs.append(keys.code_text)
-            with debuglog.context("hot key " + keys.code_text):
-                debuglog.event("menu", "hot_key", key=keys.code_text, menu=getattr(menu, "__name__", "?"))
+            self._run(keys.code_text, menu)
+
+    def _run(self, key: str, menu) -> None:
+        with debuglog.context("hot key " + key):
+            debuglog.event("menu", "hot_key", key=key, menu=getattr(menu, "__name__", "?"))
+            self.depth += 1
+            try:
                 menu()
+            except HotMenuClosed:                    # T inside the menu: it is closed, the timeout is called, the wait goes on
+                debuglog.event("menu", "hot_key_closed_by_t", key=key)
+                self._hand_back_keeping_resumed()
+            finally:
+                self.depth -= 1
+
+    def timeout_key(self) -> None:
+        """The T key (owner rule 0.22, playbook 7.16): the play engine of the game in progress calls or refuses a timeout; outside a
+        game, or in Classic, it is the plain key it always was. Inside a global menu the menu is closed after the call."""
+        engine = self.g.play_engine
+        if engine is None or not engine.on_timeout_key():
+            return
+        if self.depth > 0:
+            raise HotMenuClosed()
 
     # ----- the frame every menu shares -----
 
@@ -90,6 +127,12 @@ class HotKeys:
         """clk, then g = "112": the interrupted wait repeats its prompt (D-018)."""
         self.keys.clk()
         self.keys.code_text = KEY_F1
+
+    def _hand_back_keeping_resumed(self) -> None:
+        """The hand-back after a menu that T closed: what the T key left for the wait (a timeout was called, or not) stays."""
+        how = self.keys.take_resumed()
+        self._hand_back()
+        self.keys.resumed = how
 
     def _extra_help(self, key: str) -> None:
         """H12: the added help of the N. F. L. rules mode after the original text (Classic: none). During a game the rules

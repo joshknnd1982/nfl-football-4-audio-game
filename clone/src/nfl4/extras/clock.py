@@ -222,6 +222,22 @@ class NflPeriodClock:
             return False
         return x.left <= 0
 
+    def capture(self) -> tuple:
+        """What `before_snap` is about to change: the time left, the pending runoff, the timeouts called in this dead-ball period, the
+        out-of-bounds mark and the untimed down. A timeout called by the T key during the snap count gives the snap back (restore)."""
+        x = self.x
+        return x.left, x.pending, x.running, list(x.called), x.out_of_bounds, x.extension, x.extension_snap
+
+    @staticmethod
+    def snapped_called(token: tuple) -> list:
+        """The timeouts called in the dead-ball period that the snap ended (the T key's refusal reads it, SX.2b)."""
+        return token[3]
+
+    def restore(self, token: tuple) -> None:
+        x = self.x
+        x.left, x.pending, x.running, called, x.out_of_bounds, x.extension, x.extension_snap = token
+        x.called = list(called)
+
     # ----- the extras' own calls -----
 
     def play_time(self, outcome, rnd) -> int:

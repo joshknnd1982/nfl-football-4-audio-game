@@ -110,7 +110,7 @@ def test_the_offense_menu_has_the_three_runs_before_time_out_and_save_game(tmp_p
                                        " 12. Save Game "]
     assert [i.digit for i in items[:10]] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]       # the key 0 is item 10
     assert [i.action for i in items[7:10]] == [(menus.PLAY, 8), (menus.PLAY, 9), (menus.PLAY, 10)]
-    assert (items[10].letter, items[11].letter) == ("t", "s") and all(i.letter == "" for i in items[:10])
+    assert (items[10].letter, items[11].letter) == ("", "s") and all(i.letter == "" for i in items[:10])
 
 
 def test_with_time_outs_off_save_game_is_item_11(tmp_path):

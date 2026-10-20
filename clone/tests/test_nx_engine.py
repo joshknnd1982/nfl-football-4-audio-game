@@ -40,7 +40,7 @@ def test_the_offense_menu_ends_with_time_out_and_save_game_with_their_letters(tm
                                        " 5. Long Pass ", " 6. Field Goal ", " 7. Punt ", " 8. Time Out ",
                                        " 9. Save Game "]
     assert [i.digit for i in items] == list(range(1, 10))
-    assert items[7].action == TIMEOUT_ACTION and items[7].letter == "t"
+    assert items[7].action == TIMEOUT_ACTION and items[7].letter == ""          # the T key calls it at once: no item has the letter T (rule 0.22)
     assert items[8].action == (menus.SAVE, 0) and items[8].letter == "s"
     assert all(i.letter == "" for i in items[:7])
 
@@ -61,8 +61,8 @@ def test_classic_menus_have_no_letters():
 
 # ----- the player's timeout (N1.2, design 6.3) -----
 
-def test_t_goes_to_time_out_and_enter_calls_it_then_the_menu_starts_again(tmp_path):
-    rig = nfl_engine_rig(tmp_path, answers=["t", ENTER, ENTER], wisoff=1, defense=2, half=2, yard_line=30,
+def test_t_calls_the_time_out_at_once_and_the_menu_starts_again(tmp_path):
+    rig = nfl_engine_rig(tmp_path, answers=["t", ENTER], wisoff=1, defense=2, half=2, yard_line=30,
                          extras=dict(left=500, pending=33, running=True))
     draws = Draws().below(6, 1)                                     # u = 4 seconds of the 33 pending
     script(rig, draws)
@@ -70,7 +70,7 @@ def test_t_goes_to_time_out_and_enter_calls_it_then_the_menu_starts_again(tmp_pa
     check(rig, draws)
     assert step == rig.engine.offense_chosen and rig.engine.s.offense_play == 1
     said = texts(rig)
-    assert said == [" Kim" + P.SELECT_OFFENSE, " 1. Line Plunge ", " 8. Time Out ", " time out called by the Bengals. ",
+    assert said == [" Kim" + P.SELECT_OFFENSE, " 1. Line Plunge ", " time out called by the Bengals. ",
                     " you have 2 time outs left. ", " Kim" + P.SELECT_OFFENSE, " 1. Line Plunge "]
     x = rig.engine.s.extras
     assert x.timeouts == [2, 3] and x.used == [1, 0] and x.called == [True, False]
@@ -79,29 +79,29 @@ def test_t_goes_to_time_out_and_enter_calls_it_then_the_menu_starts_again(tmp_pa
 
 
 def test_a_second_timeout_in_the_same_dead_ball_period_is_refused_and_the_menu_stays(tmp_path):
-    rig = nfl_engine_rig(tmp_path, answers=["t", ENTER, "1", ENTER], wisoff=2, defense=1, half=2, yard_line=30,
+    rig = nfl_engine_rig(tmp_path, answers=["t", "1", ENTER], wisoff=2, defense=1, half=2, yard_line=30,
                          extras=dict(left=500, called=[True, False], timeouts=[2, 3]))
     script(rig, Draws().rnd(9, 3))                                   # the computer's offense draw after the choice
     step = rig.engine.defense_menu()
     assert step == rig.engine.defense_chosen
     said = texts(rig)
-    assert said[2:5] == [" 7. Time Out ", X.text("NXT-05"), " 7. Time Out "]
+    assert said[:4] == [" Kim" + P.SELECT_DEFENSE, " 1. Goal Line ", X.text("NXT-05"), " Kim" + P.SELECT_DEFENSE]
     assert rig.engine.s.extras.timeouts == [2, 3]
 
 
 def test_a_timeout_with_none_left_is_refused_never_granted(tmp_path):
-    rig = nfl_engine_rig(tmp_path, answers=["t", ENTER, UP, UP, ENTER], wisoff=1, defense=2, half=2, yard_line=30,
+    rig = nfl_engine_rig(tmp_path, answers=["t", DOWN, DOWN, DOWN, DOWN, DOWN, ENTER], wisoff=1, defense=2, half=2, yard_line=30,
                          extras=dict(left=500, timeouts=[0, 3]))
     script(rig, Draws())
     step = rig.engine.offense_menu()
     assert step == rig.engine.offense_chosen and rig.engine.s.offense_play == 6
     said = texts(rig)
-    assert said[2:6] == [" 8. Time Out ", " you have no time outs left. ", " 8. Time Out ", " 7. Punt "]
+    assert said[2:6] == [" you have no time outs left. ", " Kim" + P.SELECT_OFFENSE, " 1. Line Plunge ", " 2. End Run "]
     assert rig.engine.s.extras.timeouts == [0, 3] and rig.engine.s.extras.used == [0, 0]
 
 
 def test_the_last_timeout_says_none_are_left_and_a_remark_may_follow(tmp_path):
-    rig = nfl_engine_rig(tmp_path, answers=["t", ENTER, "s", ENTER], comments=True, wisoff=1, defense=2, half=2,
+    rig = nfl_engine_rig(tmp_path, answers=["t", "s", ENTER], comments=True, wisoff=1, defense=2, half=2,
                          yard_line=30, extras=dict(left=500, timeouts=[1, 3]))
     draws = Draws().rnd(3, 1).rnd(5, 2)                              # the remark chance 1 in 3, then TO02
     script(rig, draws)

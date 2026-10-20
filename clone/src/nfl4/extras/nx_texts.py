@@ -203,11 +203,11 @@ TEXTS: dict[str, str] = {
     'PN02': ' that is a drive killer. ',
     'PN03': ' the officials are busy today. ',
     'PN04': ' you cannot do that in this league. ',
-    'NXH-01': ' T. in a play menu, go to Time Out, then Enter calls the time out. F1. also says the time outs left. ',
+    'NXH-01': ' T. calls a time out at once, anywhere in a game, until the play is run. F1. also says the time outs left. ',
     'NXH-02': ' With the N. F. L. rules. F4. announce the real game clock. F1. also says whether the clock is running. ',
     'NXH-03': ' With the N. F. L. rules every quarter has a real clock of 15 minutes. The clock keeps running after a run or a catch in bounds and after a sack. ',
     'NXH-04': ' It stops after an incomplete pass, a score, a change of possession and a play out of bounds late in a half. The quarter ends when the clock runs out. ',
-    'NXH-05': ' Each team has three time outs in each half, two in each over time period, and three for each two over time periods of the play offs. A time out stops the clock until the next snap. ',
+    'NXH-05': ' Each team has three time outs in a half, two in an over time period, three for two over time periods of the play offs. T calls one until the play is run; it stops the clock. ',
     'NXH-06': ' The two minute warning stops the clock at two minutes left in the second and the fourth quarter. ',
     'NXH-07': ' Time out: A stop of the game clock that a team asks for. ',
     'NXH-08': ' Two minute warning: The automatic stop of the clock at two minutes left in each half. Out of bounds: A runner or receiver stopped outside the side line. ',
@@ -895,6 +895,8 @@ TEXTS: dict[str, str] = {
     'NXP-22': ' the game can be saved after this choice. ',
     'NXP-23': ' a penalty is waiting for your choice. ',
     'NXH-47': ' At the question about a penalty, S. saves the game with the question kept, when it can be kept. The loaded game asks it again. ',
+    'NXT-15': ' the ball is live. you will have the time out when the play ends. ',
+    'NXT-16': ' there is no time left for a time out. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -1785,6 +1787,8 @@ SPEAKERS: dict[str, str] = {
     'NXP-22': 'say5',
     'NXP-23': 'say5',
     'NXH-47': 'say5',
+    'NXT-15': 'say5',
+    'NXT-16': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -2675,6 +2679,8 @@ KINDS: dict[str, str] = {
     'NXP-22': 'sentence',
     'NXP-23': 'sentence',
     'NXH-47': 'help',
+    'NXT-15': 'sentence',
+    'NXT-16': 'sentence',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

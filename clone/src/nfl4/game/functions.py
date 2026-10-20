@@ -32,7 +32,7 @@ from ..data.settings import SOUND_LEVEL_MAX, SOUND_LEVEL_MIN
 from ..speech.manager import MODES
 from . import extra_texts as words
 from . import prompt_texts as T
-from .keys import KEY_ENTER, GameQuit
+from .keys import KEY_ENTER, GameQuit, MenuClosedByTimeoutKey
 from .spoken_menu import Item, ListPicker, SpokenMenu, TextPages
 
 log = logging.getLogger("nfl4.game")
@@ -94,6 +94,14 @@ class Functions:
             SpokenMenu(self.speech, self.keys, words.F9_TITLE, items, help_text=help_text).run()
         except GameQuit:
             raise
+        except MenuClosedByTimeoutKey:                # the T key during a game (owner rule 0.22): the menu is closed, the timeout called
+            self.speech.stop()
+            self.keys.code_text = "84"
+            self.g.hotkeys.timeout_key()              # may raise PlayWithdrawn: the play is not run
+            how = self.keys.take_resumed()
+            self.g.hotkeys._hand_back()
+            self.keys.resumed = how
+            return
         except Exception:
             log.exception("F9 failed")
             self.speech.stop()

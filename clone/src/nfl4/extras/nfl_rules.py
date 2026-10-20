@@ -15,6 +15,8 @@ answers the hooks of the features that are built. SX.2: the real clock (C2) and 
     H11 extra_stats_lines " Time Outs Used" after " Points Scored"
     H12 extra_help        the added lines of F5, F6 and F7 (C6)
     H13 extra_situation   F1: whether the clock runs, and the timeouts left
+    H18 timeout_keys, timeout_key, grant_kept_timeout, withdraw_play   the T key (SX.2b, owner rule 0.22): a timeout at once
+                          anywhere in a game until the play is run; kept for the end of a live play (below, `timeout_key`)
 
 SX.3, the penalties (NX7, design 9; extras/penalty_flow.py, extras/penalties.py), when the game's Penalties switch is on:
     H2  before_snap       the draw of a foul before or at the snap; a dead-ball foul answers FOUL_BEFORE_SNAP
@@ -69,11 +71,13 @@ from __future__ import annotations
 
 import logging
 
+from ..data import debuglog
 from ..game import menus
 from ..game import outcome as O
 from ..game.gamestate import other
 from ..game.playtables import QB_DRAW, QB_KEEPER, QB_SNEAK
-from ..game.rules import FOUL_BEFORE_SNAP, GO_ON, NORMAL_KICKOFF, PERIOD_OVER, SCRAMBLE, ClassicRules
+from ..game.rules import (FOUL_BEFORE_SNAP, GO_ON, NORMAL_KICKOFF, PERIOD_OVER, SCRAMBLE, TIMEOUT_GRANTED, TIMEOUT_KEPT,
+                          TIMEOUT_REFUSED, ClassicRules)
 from ..game.setup import DEFENSE_ITEMS, OFFENSE_ITEMS
 from . import nx_texts as X
 from . import remarks
@@ -118,6 +122,8 @@ class NflRules(ClassicRules):
         self.qb_on = bool(qb_on)                  # the quarterback's sneak, keeper, draw and scramble (SX.5, off unless given)
         self.challenges_on = bool(challenges_on)  # the ruling model, booth reviews and challenges (SX.6, off unless given)
         self.auto_sides = tuple(auto_sides)       # the sides whose timeouts, penalty choices and onside kicks the computer decides
+        self.timeout_kept = False                 # H18: the T key was pressed while a play was live: granted at the next dead-ball moment
+        self.after_play = False                   # H18: a play just ended and H10 has not run yet (a timeout then stops the whole runoff)
         # SX.7, the playbooks: the player's choice for a new game (classic, team or a style key, design 12.1: the F9 items 8 and
         # 9) and whether the computer's side plays the style of its team; a hand-made object has neither (Classic plays)
         self.offense_book = offense_book
@@ -159,6 +165,7 @@ class NflRules(ClassicRules):
 
     def before_snap(self, state, offense_play: int, defense_play: int) -> str:
         """Step 2: a foul before or at the snap (design 9.1)."""
+        self.after_play = False
         self.review.replaying = self.review.clock_held = False    # SX.6: a new play: no corrected end point is still waited for
         if state.extras.penalties_on:
             self.penalty.take_snap(state)
@@ -232,6 +239,7 @@ class NflRules(ClassicRules):
             self.review.forget()                   # the ruling of an earlier play is gone
             board = capture(state)                 # the board a reversal goes back to: before the bookkeeping below
         left_before = x.left                       # and the clock a reversal goes back to: before the live time
+        self.after_play = True                     # H18: until H10 runs, a timeout (the T key) takes the whole runoff away
         x.plays += 1
         x.running = False                          # the play is over: H10 decides whether the clock runs to the next snap
         x.pending = 0
@@ -325,8 +333,8 @@ class NflRules(ClassicRules):
         """Design 10.4: Time Out (T) when timeouts are on, then Save Game (S) last."""
         if state.extras.challenges_on and self.review.can_challenge(state, 1):       # SX.6: only while one is allowed
             items.append(menu_item(len(items) + 1, X.text("NXM-04"), CHALLENGE_ACTION, "c"))
-        if state.extras.timeouts_on:
-            items.append(menu_item(len(items) + 1, X.text("NXM-05"), TIMEOUT_ACTION, "t"))
+        if state.extras.timeouts_on:               # no letter: the T key calls the timeout at once, anywhere (H18, rule 0.22)
+            items.append(menu_item(len(items) + 1, X.text("NXM-05"), TIMEOUT_ACTION))
         items.append(menu_item(len(items) + 1, X.text("NXM-06"), (menus.SAVE, 0), "s"))
         return items
 
@@ -357,6 +365,7 @@ class NflRules(ClassicRules):
     def before_kickoff(self, state, kicking_side: int) -> str:
         x = state.extras
         x.out_of_bounds = False
+        self.after_play = False
         self.books.clear()                         # SX.7: a kick-off is a new play: nothing is called
         self.review.clock_held = False             # SX.6: a kick-off is a new dead-ball period
         if x.left <= 0 and state.quarter in (2, 4):
@@ -394,6 +403,7 @@ class NflRules(ClassicRules):
         if x.handled == x.plays:                  # nothing new since the last call (the statistics speak the down again)
             return None
         x.handled = x.plays
+        self.after_play = False
         if x.challenges_on:                       # SX.6: the computer's flag on the last play, before the clock goes on
             then = self.review.computer_challenge(state)
             if then is not None:                  # the ruling was reversed: the engine goes on at the step that applies it
@@ -415,6 +425,8 @@ class NflRules(ClassicRules):
             self.review.clock_held = False
         lead = state.score(state.wisoff) - state.score(other(state.wisoff))
         self.clock.runoff(self.rnd, keeps, ready, lead, cap)
+        if self.timeout_kept:                     # H18: the T key pressed during the play: granted now, before the next prompt
+            self.grant_kept_timeout(state)
         if x.timeouts_on and x.left > 0:          # at 0:00 the period is over: no timeout can be granted
             for side in (state.wisoff, other(state.wisoff)):
                 if side not in self.auto_sides or timeouts.refusal(x, side) is not None:
@@ -445,6 +457,66 @@ class NflRules(ClassicRules):
             return False
         self.grant(state, 1)
         return True
+
+    # ----- the T key (H18, owner rule 0.22, playbook 7.16) -----
+
+    def timeout_keys(self, state) -> bool:
+        return state.extras is not None and state.extras.timeouts_on
+
+    def timeout_key(self, state, live: bool, undo=None, called=None, where: str = "live play") -> str:
+        """The T key reached the game thread. During a live play the request is kept for the next dead-ball moment (the real rule grants a
+        timeout only while the ball is dead, NFL 3-36-2 and 4-5-1) and nothing is said. Otherwise the speech that is playing is cut at
+        once and the timeout is called or refused with its sentence. `undo` gives the snap's runoff back (the T came during the snap
+        count, so the play is not run); `called` is then what the snap took of the dead-ball period."""
+        if live:
+            self.timeout_kept = True
+            self._log_timeout_key(state, where, TIMEOUT_KEPT)
+            return TIMEOUT_KEPT
+        self.game.stopspeech()
+        return self._call_timeout(state, "before the snap" if undo is not None else "dead ball", undo, called)
+
+    def grant_kept_timeout(self, state) -> None:
+        """A request kept during the live play is granted (or refused with its sentence) at the first dead-ball moment."""
+        if not self.timeout_kept:
+            return
+        self.timeout_kept = False
+        if state.extras is None or not state.extras.timeouts_on:
+            return
+        self._call_timeout(state, "after the play", None)
+
+    def _call_timeout(self, state, where: str, undo=None, called=None) -> str:
+        x, g = state.extras, self.game
+        why = None
+        if x.left <= 0 and not x.extension:
+            why, sentence = "no time", X.text("NXT-16")
+        else:
+            reason = timeouts.refusal(x, 1, called)
+            if reason is not None:
+                why, sentence = reason, X.text("NXT-04" if reason == "none" else "NXT-05")
+        if why is not None:
+            g.say5(sentence)
+            self._log_timeout_key(state, where, TIMEOUT_REFUSED, why)
+            return TIMEOUT_REFUSED
+        if undo is not None:
+            undo()
+        if self.after_play:                       # between the end of a play and H10: no runoff is drawn, the clock stays stopped
+            self.review.clock_held = True
+        self.grant(state, 1)
+        self._log_timeout_key(state, where, TIMEOUT_GRANTED)
+        return TIMEOUT_GRANTED
+
+    def _log_timeout_key(self, state, where: str, result: str, why: str = "") -> None:
+        x = state.extras
+        debuglog.event("extras", "timeout_key", logging.INFO, where=where, result=result, why=why or None, quarter=state.quarter,
+                       left=x.left, timeouts=x.timeouts_of(1), called=x.called_by(1))
+
+    def withdraw_play(self, state) -> None:
+        """A timeout was called before the snap: the plays that were called are withdrawn (nothing of them is run)."""
+        self.books.clear()
+
+    @staticmethod
+    def live_timeout_sentence() -> str:
+        return X.text("NXT-15")
 
     def grant(self, state, side: int) -> None:
         """A timeout: charged, the clock stopped after u seconds, the whistle (foot11), the announcer, a remark 1 in 3."""
@@ -534,7 +606,7 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
     return NflRules(timeouts_on=getattr(game_settings, "nx_timeouts", True), auto_sides=auto_sides,
                     penalties_on=getattr(game_settings, "nx_penalties", True),
                     onside_on=getattr(game_settings, "nx_onside", True),
-                    onside_always=getattr(game_settings, "nx_onside_question", "sensible") == "always",
+                    onside_always=getattr(game_settings, "nx_onside_question", "always") == "always",
                     qb_on=getattr(game_settings, "nx_qb_runs", True),
                     challenges_on=getattr(game_settings, "nx_challenges", True),
                     offense_book=getattr(game_settings, "nx_offense_playbook", "classic"),

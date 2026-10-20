@@ -25,7 +25,7 @@ default for a new player, the game adds seven features that follow the rules of 
 
 ### Playing with the N. F. L. rules
 
-- The play menus have new items after the plays: Challenge the Ruling (letter C), Time Out (letter T) and, always last, Save Game
+- The play menus have new items after the plays: Challenge the Ruling (letter C), Time Out (reached by its number; the T key calls a time out at once, anywhere in a game, until the play is run) and, always last, Save Game
   (letter S).
 - When the other team commits a foul, the game says what accepting and what declining would give, and asks you. A accepts, D declines,
   Up and Down change the answer, Enter takes it, F1 says the flag again. S saves the game with the question kept, when it can be kept (not on a score, a turnover, a try or

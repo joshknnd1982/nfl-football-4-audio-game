@@ -110,8 +110,8 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert spoken[7] == "Quarterback runs off " + NEXT_GAME
     assert spoken[8] == "Onside kicks on "
     assert spoken[9] == "Onside kicks off " + NEXT_GAME
-    assert spoken[10] == "Onside question: when it makes sense"
-    assert spoken[11] == "Onside question: always" + NEXT_GAME
+    assert spoken[10] == "Onside question: always"                      # SX.2b, D-085: the 2026 rule is the default
+    assert spoken[11] == "Onside question: when it makes sense" + NEXT_GAME
     assert spoken[12] == "Penalties on "
     assert spoken[13] == "Penalties off " + NEXT_GAME
     assert spoken[14] == "Offense playbook: Classic"                    # Rules is on N. F. L. rules now: nothing "used with"
@@ -120,13 +120,13 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert spoken[17] == "Defense playbook: Team playbook" + NEXT_GAME
     assert spoken[18] == X.text("NXM-19")
     defaults = ("Rules: N. F. L. rules. Time outs on. Replay challenges on. Quarterback runs on. Onside kicks on."   # SX.9: the default is
-                " Onside question: when it makes sense. Penalties on. Offense playbook: Classic. Defense playbook: Classic")  # the N. F. L. rules
+                " Onside question: always. Penalties on. Offense playbook: Classic. Defense playbook: Classic")  # the N. F. L. rules
     assert spoken[19] == defaults + NEXT_GAME
     assert spoken[20] == defaults                                       # nothing changed now
     assert spoken[21] == "Rules: N. F. L. rules"
     game = rig.game.options.settings.game
     assert (game.rules, game.nx_timeouts, game.nx_penalties) == ("nfl", True, True) and is_nfl(rig.game.rules)
-    assert (game.nx_onside, game.nx_onside_question, game.nx_qb_runs) == (True, "sensible", True)
+    assert (game.nx_onside, game.nx_onside_question, game.nx_qb_runs) == (True, "always", True)
     assert (game.nx_offense_playbook, game.nx_defense_playbook) == ("classic", "classic")      # Classic is the default playbook
     assert game.nx_challenges is True
 
@@ -185,3 +185,11 @@ def test_the_nfl_program_rules_are_given_to_the_game(tmp_path):
     rig.game.options.settings.game.rules = "nfl"
     rig.game.apply_rules_setting()
     assert isinstance(rig.game.rules, NflRules) and rig.game.rules.for_game() is not rig.game.rules
+
+
+def test_the_players_choice_of_the_onside_question_is_remembered_as_his_own(rig):
+    """SX.2b, D-085: "always" is the default; the player's toggle is a choice, marked so that a later read keeps it."""
+    game = rig.game.options.settings.game
+    assert game.nx_onside_question == "always" and game.nx_onside_question_chosen is False
+    rules_menu(rig, [ENTER, "6", ENTER])
+    assert game.nx_onside_question == "sensible" and game.nx_onside_question_chosen is True

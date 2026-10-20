@@ -230,24 +230,24 @@ def test_the_settings_read_and_write_the_onside_lines():
     again, problems = settingsfile.parse(settingsfile.render(settings))
     assert problems == [] and again.game == settings.game
     defaults = Settings.defaults().game
-    assert defaults.nx_onside is True and defaults.nx_onside_question == "sensible"
+    assert defaults.nx_onside is True and defaults.nx_onside_question == "always" and defaults.nx_onside_question_chosen is False
 
 
 def test_a_bad_onside_value_is_a_problem_and_keeps_the_default():
     settings, problems = settingsfile.parse(settingsfile.HEADER + "nx_onside = sometimes\nnx_onside_question = when\n")
-    assert len(problems) == 2 and settings.game.nx_onside is True and settings.game.nx_onside_question == "sensible"
+    assert len(problems) == 2 and settings.game.nx_onside is True and settings.game.nx_onside_question == "always"
 
 
 def test_the_programs_rules_follow_the_onside_settings():
     settings = Settings.defaults()
     settings.game.rules = "nfl"
     rules = rules_from_settings(settings.game)
-    assert is_nfl(rules) and rules.onside_on is True and rules.onside_always is False
-    settings.game.nx_onside, settings.game.nx_onside_question = False, "always"
+    assert is_nfl(rules) and rules.onside_on is True and rules.onside_always is True       # SX.2b, D-085: asked at every kick by default
+    settings.game.nx_onside, settings.game.nx_onside_question = False, "sensible"
     rules = rules_from_settings(settings.game)
-    assert rules.onside_on is False and rules.onside_always is True
+    assert rules.onside_on is False and rules.onside_always is False
     again = rules.for_game()
-    assert again.onside_on is False and again.onside_always is True
+    assert again.onside_on is False and again.onside_always is False
 
 
 def test_a_rules_object_made_by_hand_has_no_onside_kicks():

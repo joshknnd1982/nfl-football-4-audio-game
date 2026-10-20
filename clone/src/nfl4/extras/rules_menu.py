@@ -19,9 +19,9 @@ from .playbook_data import CLASSIC_KEY, PLAYBOOK_CHOICES, STYLE_BY_KEY, TEAM_KEY
 
 CLASSIC, NFL = "classic", "nfl"
 DEFAULTS = {"rules": NFL, "nx_timeouts": True, "nx_penalties": True, "nx_onside": True,
-            "nx_onside_question": "sensible", "nx_qb_runs": True, "nx_challenges": True,    # design 12.1 (NQ2: the N. F. L. rules since SX.9)
+            "nx_onside_question": "always", "nx_onside_question_chosen": False, "nx_qb_runs": True, "nx_challenges": True,    # design 12.1 (NQ2: the N. F. L. rules since SX.9)
             "nx_offense_playbook": CLASSIC_KEY, "nx_defense_playbook": CLASSIC_KEY}         # NX5: Classic is the default playbook
-SWITCHES = ("rules", "nx_timeouts", "nx_challenges", "nx_qb_runs", "nx_penalties", "nx_onside", "nx_onside_question",
+SWITCHES = ("rules", "nx_timeouts", "nx_challenges", "nx_qb_runs", "nx_penalties", "nx_onside", "nx_onside_question", "nx_onside_question_chosen",
             "nx_offense_playbook", "nx_defense_playbook")
 
 
@@ -93,6 +93,7 @@ def rules_menu(game, speech, keys) -> None:
 
     def toggle_question(step: int = 1) -> None:
         settings.nx_onside_question = "sensible" if settings.nx_onside_question == "always" else "always"
+        settings.nx_onside_question_chosen = True       # the player's own choice: a later read keeps it (D-085)
         apply()
 
     def change_offense_playbook(step: int = 1) -> None:

@@ -98,7 +98,7 @@ def test_quarters_two_and_four_use_most_of_the_timeouts(games):
 # ----- games played through the menus -----
 
 def player_policy(rig, seed):
-    """Enter, digits, Down, now and then T (and Enter on Time Out), F1 to F4, Escape answered no; never Save Game."""
+    """Enter, digits, Down, now and then T (which calls a time out at once), F1 to F4, Escape answered no; never Save Game."""
     rng = random.Random(seed)
 
     def policy(keys):
@@ -135,7 +135,7 @@ def test_a_whole_game_through_the_menus_with_the_players_timeouts(tmp_path, seed
     assert result.scores is not None and result.scores[0] != result.scores[1]
     assert rig.rnd.fallbacks == 0
     said = [t for t, _, _ in rig.said]
-    assert " 8. Time Out " in said or " 7. Time Out " in said
+    assert rules.state.extras.used[0] >= 1                # the player's own timeouts: the T key of the policy calls them (SX.2b, rule 0.22)
     assert sum(rules.state.extras.used) == len(rules.timeouts)
     per_unit = {}
     for quarter, side, left, remaining, unit in rules.timeouts:

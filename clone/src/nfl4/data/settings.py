@@ -33,7 +33,9 @@ class GameSettings:
     nx_timeouts: bool = True     # the real clock's timeouts in N. F. L. rules mode
     nx_penalties: bool = True    # the penalties with accept or decline in N. F. L. rules mode (SX.3)
     nx_onside: bool = True       # the onside kicks of the N. F. L. rules mode (SX.4)
-    nx_onside_question: str = "sensible"   # "sensible": the player is asked when it makes sense; "always": at every kick-off
+    nx_onside_question: str = "always"     # "always": the player is asked at every kick-off and safety kick (the 2026 rule 6-1-6, D-085);
+    #                                        "sensible": only when it makes sense (the player's own choice in the Rules menu)
+    nx_onside_question_chosen: bool = False   # the player chose "sensible" or "always" himself (a file from before SX.2b never did)
     nx_qb_runs: bool = True      # the quarterback sneak, keeper, draw and scramble of the N. F. L. rules mode (SX.5)
     nx_challenges: bool = True   # the ruling model, booth reviews and replay challenges of the N. F. L. rules mode (SX.6)
     nx_offense_playbook: str = "classic"   # the player's offense playbook (SX.7): classic, team (the team's style) or a style key

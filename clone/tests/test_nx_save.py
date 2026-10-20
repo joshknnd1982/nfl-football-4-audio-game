@@ -232,13 +232,13 @@ def test_an_nfl_game_saved_through_the_menu_after_a_timeout_loads_with_its_recor
 
     def saver(keys):
         last = rig.said[-1][0] if rig.said else ""
-        if last.endswith("Time Out ") and not called:
-            called.append(1)
-            return ENTER
         if last.endswith("Save Game ") and called:
             return ENTER
         if re.match(r"^ \d\. ", last):
-            return "s" if called else "t"
+            if not called:
+                called.append(1)
+                return "t"                      # the T key calls the time out at once (SX.2b), the menu starts again
+            return "s"
         return ENTER
     rig.keys.policy = saver
     first = SameRules()

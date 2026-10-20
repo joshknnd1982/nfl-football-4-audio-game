@@ -59,12 +59,13 @@ def enter_unit(record, period: int) -> bool:
     return True
 
 
-def refusal(record, side: int) -> str | None:
+def refusal(record, side: int, called=None) -> str | None:
     """Why a request is refused (the menu says so; the rules ignore such a request, 4-5-1 Item 3), or None: "none" when the
-    team has none left, "called" when it already called one in this dead-ball period."""
+    team has none left, "called" when it already called one in this dead-ball period. `called` is the record's `called` as it was
+    before the snap took the dead-ball period away (the T key during the snap count, SX.2b)."""
     if record.timeouts_of(side) <= 0:
         return "none"
-    if record.called_by(side):
+    if (record.called_by(side) if called is None else called[side - 1]):
         return "called"
     return None
 

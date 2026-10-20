@@ -90,9 +90,9 @@ def test_with_the_quarterback_runs_on_the_group_comes_after_play_action_and_the_
                              " 11. Save Game "]
     assert len(items_of(rig)) <= 12
     items = rig.rules.offense_menu(rig.engine.s, False)
-    assert [i.letter for i in items if i.letter] == ["t", "s"]
+    assert [i.letter for i in items if i.letter] == ["s"]               # no item has the letter T (rule 0.22)
     assert [i.digit for i in items[:9]] == list(range(1, 10))              # the groups and the kicks have digits
-    assert all(i.letter for i in items[9:])                            # an item past the ninth has a letter
+    assert all(i.letter or i.digit == 0 or i.text.endswith("Time Out ") for i in items[9:])   # past the ninth: a letter, the key 0, or Time Out (the T key)
 
 
 def test_a_group_lists_its_plays_by_id_then_back_and_the_tail(tmp_path):
@@ -102,7 +102,7 @@ def test_a_group_lists_its_plays_by_id_then_back_and_the_tail(tmp_path):
                              " 7. Time Out ", " 8. Save Game "]
     items = rig.rules.offense_menu(rig.engine.s, False)
     assert items[0].action == ("obook", 1) and items[4].action == ("obook", 6) and items[5].action == ("back", 0)
-    assert items[5].letter == "b" and items[6].letter == "t" and items[7].letter == "s"
+    assert items[5].letter == "b" and items[6].letter == "" and items[7].letter == "s"
     rig.rules.books.group = 7                                           # the quarterback group is not there with the switch off
     assert items_of(rig)[0] == " 1. Inside Runs "
     assert rig.rules.books.group is None
@@ -491,6 +491,6 @@ def test_the_key_0_is_the_tenth_item_and_an_item_past_the_tenth_has_no_digit(tmp
     rig = rig_for(tmp_path, offense="power", qb_on=True, timeouts_on=True, answers=["0", ESCAPE])
     items = rig.rules.offense_menu(rig.engine.s, False)
     assert [i.text for i in items][9:] == [" 10. Time Out ", " 11. Save Game "]
-    assert [i.digit for i in items][9:] == [0, -1] and items[9].letter == "t"
+    assert [i.digit for i in items][9:] == [0, -1] and items[9].letter == ""
     assert the_menu(rig) == "concede"
     assert texts(rig) == [SELECT, " 1. Inside Runs ", " 10. Time Out "]

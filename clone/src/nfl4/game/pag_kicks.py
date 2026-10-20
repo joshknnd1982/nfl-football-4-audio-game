@@ -35,6 +35,7 @@ class KickSteps:
             self.say3(P.HUT + ("!" if rnd(3) == 3 else ""))
             self.rady(0x43a73c)
         self.rady(0x43a774)
+        self.go_live()                                    # H18: a T key waiting is taken; the kick is live from the snap
         self.say3(P.KICK_HIKE)
         g.qorp = 1
 
@@ -143,6 +144,8 @@ class KickSteps:
     def kick_off(self):
         """The receiving side is wisoff, the kicking side L504."""
         g, s, snd, rnd = self.g, self.s, self.snd, self.rnd
+        self.game_on = True                                  # H18: the game is in play from the first kick-off (T calls a timeout)
+        self.dead_ball()                                     # the ball is dead; a time out kept from the last play is granted first
         kind = self.rules.before_kickoff(s, s.defense)       # H4: the kind (Classic: "normal", no question)
         if kind == PERIOD_OVER:                              # N. F. L. rules (SX.2): a score as time ran out in the
             return self.next_play                            # second or fourth quarter: the period ends, no kick-off
@@ -162,6 +165,7 @@ class KickSteps:
         g.say4(self.kicker(s.defense, 1) + P.READY_TO_KICK_OFF)
         snd.play_tackle(8)
         snd.c2uf()
+        self.go_live()                                       # H18: the kick is made; a T key waiting still withdraws nothing here
         snd.play(7, -1200)
         snd.play_noise()
         g.say4(P.KICKOFF_UP)
@@ -206,6 +210,8 @@ class KickSteps:
         noise of the kick-off still loops here, as in the original (no PlayTackle before this question)."""
         g, s = self.g, self.s
         while True:                                          # L_4452a1
+            if self.keys.take_resumed() == "kept":           # H18: T in this question, the ball is live: said once, then asked again
+                g.say5(self.rules.live_timeout_sentence())
             g.say5(" " + self.coach + P.RUN_IT_OUT_1 + self.returner(s.wisoff, s.returner) + P.RUN_IT_OUT_2)
             answer = 1
             while True:                                      # L_445429
@@ -288,6 +294,7 @@ class KickSteps:
     def extra_point_choice(self):
         """L_44f6f0 (Q18: F2, F3, F4 and every other key give the prompt again with the kick)."""
         g, s = self.g, self.s
+        self.dead_ball()                                     # H18: the ball is dead; T calls a time out before the try, as a coach may
         while True:
             g.say5(" " + self.coach + P.SELECT)
             choice = 1
@@ -297,6 +304,7 @@ class KickSteps:
                 if self.g_code == KEY_ENTER:
                     g.empty_replay()
                     if choice == 1:
+                        self.t_back = self.extra_point_choice    # H18: a time out before the kick asks the choice again
                         return self.extra_point
                     g.log_print("")
                     s.two_point = True

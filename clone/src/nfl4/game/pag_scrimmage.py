@@ -20,13 +20,19 @@ class ScrimmageSteps:
     def snap(self):
         """L_43fd12: after the choice of both plays."""
         s = self.s
+        capture = getattr(self.clock, "capture", None)   # H18 (the N. F. L. rules clock only): a time out called by T before the snap
+        self.t_clock = capture() if capture is not None else None     # gives back the runoff that the snap takes now
+        self.t_back = self.play_menu                     # and the play is withdrawn: the menu comes again
         if self.clock.before_snap():                     # H1: a pending runoff ran the period out (N. F. L. rules only;
+            self.t_back = None
             return self.period_checks                    # Classic returns None): the period ends before the snap
         verdict = self.rules.before_snap(s, s.offense_play, s.defense_play)   # H2 step 2 (Classic: always on)
         if verdict == FOUL_BEFORE_SNAP:                  # N. F. L. rules (SX.3): a dead-ball foul, the play is not run:
             self.snap_count(until_first_hut=True)        # the snap count up to " hut 1 ", then the flag
+            self.t_back = None
             return self.continuation(self.rules.foul_before_snap(s)) or self.play_menu
         if verdict != GO_ON:
+            self.t_back = None
             return self.play_menu
         self.mark_spot()
         s.qb_run, s.slid = "", False                    # no quarterback run yet (N. F. L. rules mode, SX.5)
@@ -73,6 +79,7 @@ class ScrimmageSteps:
             self.rady(0x440b16)
             self.say3(P.HUT + ("!" if rnd(2) == 1 else ""))
         self.rady(0x440cb2)
+        self.go_live()                                                          # H18: a T key waiting is taken; the play is live from the hike
         g.voice_speak(P.HIKE, wait=False)                                       # `Voice.Speak " Hike! ", 1`
         snd.play_hike()
         snd.c2dh()

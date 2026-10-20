@@ -6,9 +6,9 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 887.
+- Texts: 889.
 - The clock (design section 5): 10.
-- Timeouts (design 6.3): 22.
+- Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
@@ -49,13 +49,15 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - TO03 (remark, say): " they had to use that one, the clock was really running. ". pool TO default
 - TO04 (remark, say): " a time out to talk things over on the side line. ". pool TO default
 - TO05 (remark, say): " I would have saved that one, Ghip. ". pool TO default
-- NXH-01 (help, say5): " T. in a play menu, go to Time Out, then Enter calls the time out. F1. also says the time outs left. ". F5 addition (H12, C6), when time outs are on
-- NXH-05 (help, say5): " Each team has three time outs in each half, two in each over time period, and three for each two over time periods of the play offs. A time out stops the clock until the next snap. ". F6 addition (H12, C6), when time outs are on
+- NXH-01 (help, say5): " T. calls a time out at once, anywhere in a game, until the play is run. F1. also says the time outs left. ". F5 addition (H12, C6), when time outs are on
+- NXH-05 (help, say5): " Each team has three time outs in a half, two in an over time period, three for two over time periods of the play offs. T calls one until the play is run; it stops the clock. ". F6 addition (H12, C6), when time outs are on
 - NXH-07 (help, say5): " Time out: A stop of the game clock that a team asks for. ". F7 addition (H12, C6), when time outs are on
 - NXT-11 (sentence, say4): " they have 1 time out left. ". NXT-02 when the computer has one left
 - NXT-12 (sentence, say4): " you have 1 time out left. ". NXT-03 when the player has one left
 - NXT-13 (sentence, say5): " you have 1 time out left, and the <team> have <m>. ". NXT-08 when the player has one left (F1, H13)
 - NXT-14 (sentence, say4): " each team has <n> time outs for these two periods. ". start of a pair of play-off overtime periods that share their time outs (design 4)
+- NXT-15 (sentence, say5): " the ball is live. you will have the time out when the play ends. ". the T key during a live play, said only where a question waits (the run-out question, SX.2b, D-084)
+- NXT-16 (sentence, say5): " there is no time left for a time out. ". the T key when the period has no time left (SX.2b)
 
 ## Challenges and reviews (design 6.1, 6.2, 6.4)
 
@@ -336,7 +338,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXM-02 (menu, say5): "Quarterback Keeper". offense item
 - NXM-03 (menu, say5): "Quarterback Draw". offense item
 - NXM-04 (menu, say5): "Challenge the Ruling". item, letter C, only while allowed
-- NXM-05 (menu, say5): "Time Out". item, letter T
+- NXM-05 (menu, say5): "Time Out". item, no letter: the T key calls the time out at once (SX.2b)
 - NXM-06 (menu, say5): "Save Game". item, letter S (the original's text; Save Game moves to the end of the list in N. F. L. rules mode)
 - NXM-07 (menu, say5): "Rules". F9 item before About
 - NXM-08 (menu, say5): "Rules: Classic". F9 Rules item 1

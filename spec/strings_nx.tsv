@@ -121,7 +121,7 @@ NXM-01	menus	menu	say5	Quarterback Sneak	offense item (Classic playbook in N. F.
 NXM-02	menus	menu	say5	Quarterback Keeper	offense item
 NXM-03	menus	menu	say5	Quarterback Draw	offense item
 NXM-04	menus	menu	say5	Challenge the Ruling	item, letter C, only while allowed
-NXM-05	menus	menu	say5	Time Out	item, letter T
+NXM-05	menus	menu	say5	Time Out	item, no letter: the T key calls the time out at once (SX.2b)
 NXM-06	menus	menu	say5	Save Game	item, letter S (the original's text; Save Game moves to the end of the list in N. F. L. rules mode)
 NXM-07	menus	menu	say5	Rules	F9 item before About
 NXM-08	menus	menu	say5	Rules: Classic	F9 Rules item 1
@@ -194,11 +194,11 @@ PN01	penalties	remark	say	 another flag, Ghip. 	pool PN default
 PN02	penalties	remark	say	 that is a drive killer. 	pool PN default
 PN03	penalties	remark	say	 the officials are busy today. 	pool PN default
 PN04	penalties	remark	say	 you cannot do that in this league. 	pool PN default
-NXH-01	timeouts	help	say5	 T. in a play menu, go to Time Out, then Enter calls the time out. F1. also says the time outs left. 	F5 addition (H12, C6), when time outs are on
+NXH-01	timeouts	help	say5	 T. calls a time out at once, anywhere in a game, until the play is run. F1. also says the time outs left. 	F5 addition (H12, C6), when time outs are on
 NXH-02	clock	help	say5	 With the N. F. L. rules. F4. announce the real game clock. F1. also says whether the clock is running. 	F5 addition (H12, C6)
 NXH-03	clock	help	say5	 With the N. F. L. rules every quarter has a real clock of 15 minutes. The clock keeps running after a run or a catch in bounds and after a sack. 	F6 addition (H12, C6), after the football instructions
 NXH-04	clock	help	say5	 It stops after an incomplete pass, a score, a change of possession and a play out of bounds late in a half. The quarter ends when the clock runs out. 	F6 addition (H12, C6)
-NXH-05	timeouts	help	say5	 Each team has three time outs in each half, two in each over time period, and three for each two over time periods of the play offs. A time out stops the clock until the next snap. 	F6 addition (H12, C6), when time outs are on
+NXH-05	timeouts	help	say5	 Each team has three time outs in a half, two in an over time period, three for two over time periods of the play offs. T calls one until the play is run; it stops the clock. 	F6 addition (H12, C6), when time outs are on
 NXH-06	clock	help	say5	 The two minute warning stops the clock at two minutes left in the second and the fourth quarter. 	F6 addition (H12, C6)
 NXH-07	timeouts	help	say5	 Time out: A stop of the game clock that a team asks for. 	F7 addition (H12, C6), when time outs are on
 NXH-08	clock	help	say5	 Two minute warning: The automatic stop of the clock at two minutes left in each half. Out of bounds: A runner or receiver stopped outside the side line. 	F7 addition (H12, C6)
@@ -886,3 +886,5 @@ NXG-B09	franchise	sentence	say2	 the hall of fame takes one new member. 	stage 1
 NXP-22	penalties	sentence	say5	 the game can be saved after this choice. 	S at the accept-or-decline prompt when the choice cannot be kept in a saved game (a score, a turnover, a try, a kept choice that would change sides, the last second of a quarter or a half; SX.9)
 NXP-23	penalties	sentence	say5	 a penalty is waiting for your choice. 	a loaded game with a pending accept-or-decline choice, before the flag is told again (C10, SX.9)
 NXH-47	penalties	help	say5	 At the question about a penalty, S. saves the game with the question kept, when it can be kept. The loaded game asks it again. 	F5 addition (H12, C6), when penalties are on (SX.9)
+NXT-15	timeouts	sentence	say5	 the ball is live. you will have the time out when the play ends. 	the T key during a live play, said only where a question waits (the run-out question, SX.2b, D-084)
+NXT-16	timeouts	sentence	say5	 there is no time left for a time out. 	the T key when the period has no time left (SX.2b)

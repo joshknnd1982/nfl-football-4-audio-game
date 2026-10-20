@@ -82,6 +82,16 @@ Added in PX SX.8k (injuries, FRANCHISE ONLY, D-071), never taken in Classic and 
 Added in PX SX.8o (the game's later items, D-075), never taken in Classic and never outside a franchise game:
     H17 draw_carrier(state, rnd)           the snap's draw of the ball carrier (snap_draws)   rnd(6), the original's draw
     H8 return_shortest(side, returner)     the kick-off return's shortest length              RETURN_SHORTEST (12)
+
+Added in PX SX.2b (the T key, owner rule 0.22, D-084), never taken in Classic:
+    H18 timeout_keys(state)                the T key calls a timeout in this game              False (the key is the original's)
+    H18 timeout_key(state, live, undo, called)  T was pressed: kept for the end of a live play,     never called
+                                           or refused with its sentence, or granted (the
+                                           speech cut, the whistle, the sentences, the clock)
+    H18 grant_kept_timeout(state)          a request kept during a live play is granted        nothing
+                                           at the next dead-ball moment
+    H18 withdraw_play(state)               a timeout granted before the snap: the plays that   nothing
+                                           were called are withdrawn
 """
 from __future__ import annotations
 
@@ -117,6 +127,9 @@ REVIEWED_FUMBLE = "reviewed fumble"         # the fumble the ruling had called d
 # Save Game at the accept-or-decline prompt (N. F. L. rules mode only, SX.9, C10): the extras have put the board as if the penalty
 # were declined and kept the choice in the extras record; the engine saves the game (save_game) and the loaded game asks it again
 SAVE_PENDING = "save with the choice pending"
+# What the T key (H18, SX.2b) did: the request is kept for the end of the live play, a timeout was called, or it was refused (none left,
+# one already called in this dead-ball period, the period over)
+TIMEOUT_KEPT, TIMEOUT_GRANTED, TIMEOUT_REFUSED = "kept", "granted", "refused"
 
 
 class ClassicRules:
@@ -198,6 +211,20 @@ class ClassicRules:
     def resume_choice(self, state) -> str | None:
         """A loaded game, or a Save Game that could not write the file: a choice the saved game kept is asked again (SX.9, C10).
         The engine's next step's answer, or None (Classic: always None, the play menu)."""
+        return None
+
+    # H18 (SX.2b, owner rule 0.22): the T key calls a timeout anywhere in a game until the play is run. Classic has no timeouts:
+    # the key is the original's (an unknown key), the engine never asks for more than `timeout_keys`.
+    def timeout_keys(self, state) -> bool:
+        return False
+
+    def timeout_key(self, state, live: bool, undo=None, called=None, where: str = "live play") -> str:
+        raise RuntimeError("Classic has no timeouts: the T key is never handled")
+
+    def grant_kept_timeout(self, state) -> None:
+        return None
+
+    def withdraw_play(self, state) -> None:
         return None
 
     def extra_stats_lines(self, state) -> list[str]:

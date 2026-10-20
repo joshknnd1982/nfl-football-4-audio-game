@@ -166,7 +166,7 @@ def test_the_help_speaks_of_time_outs_only_when_they_are_on_and_says_the_overtim
     rig = nfl_engine_rig(tmp_path, rules=NflRules(timeouts_on=False))
     for key in ("116", "117", "118"):
         assert not any("time out" in line.lower() for line in rig.rules.extra_help(key))
-    assert "two in each over time period" in X.text("NXH-05") and "more in over time" not in X.text("NXH-05")
+    assert "two in an over time period" in X.text("NXH-05") and "more in over time" not in X.text("NXH-05")
     rig = nfl_engine_rig(tmp_path / "on")
     assert rig.rules.extra_help("116") == [X.text("NXH-02"), X.text("NXH-01")]
 
@@ -174,7 +174,7 @@ def test_the_help_speaks_of_time_outs_only_when_they_are_on_and_says_the_overtim
 def test_one_time_out_and_one_second_are_said_in_the_singular(tmp_path):
     rig = nfl_engine_rig(tmp_path, extras=dict(timeouts=[1, 2]))
     assert rig.rules.extra_situation(rig.engine.s)[1] == " you have 1 time out left, and the Jets have 2. "
-    rig = nfl_engine_rig(tmp_path / "b", answers=["t", ENTER, ENTER], wisoff=1, defense=2, half=2, yard_line=30,
+    rig = nfl_engine_rig(tmp_path / "b", answers=["t", ENTER], wisoff=1, defense=2, half=2, yard_line=30,
                          extras=dict(left=500, timeouts=[2, 3]))
     rig.rnd.source = ScriptedRandom([], strict=True)
     rig.engine.offense_menu()

@@ -135,11 +135,11 @@ def test_the_menu_with_every_extra_on_numbers_the_items_and_puts_the_challenge_b
     items = rig.rules.offense_menu(rig.engine.s, False)
     assert [(i.text, i.letter) for i in items][6:] == [
         (" 7. Punt ", ""), (" 8. Quarterback Sneak ", ""), (" 9. Quarterback Keeper ", ""), (" 10. Quarterback Draw ", ""),
-        (" 11. Challenge the Ruling ", "c"), (" 12. Time Out ", "t"), (" 13. Save Game ", "s")]
+        (" 11. Challenge the Ruling ", "c"), (" 12. Time Out ", ""), (" 13. Save Game ", "s")]
     assert [i.digit for i in items][7:10] == [8, 9, 0]
     defense = rig.rules.defense_menu(rig.engine.s)
     assert [(i.text, i.letter) for i in defense][6:] == [
-        (" 7. Challenge the Ruling ", "c"), (" 8. Time Out ", "t"), (" 9. Save Game ", "s")]
+        (" 7. Challenge the Ruling ", "c"), (" 8. Time Out ", ""), (" 9. Save Game ", "s")]
     assert isinstance(rules, NflRules)
 
 
