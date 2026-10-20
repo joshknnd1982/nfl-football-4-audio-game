@@ -129,7 +129,23 @@ def make(include_saves: bool = False, destination: str | None = None, system_kwa
     os.makedirs(folder, exist_ok=True)
     name = "nfl4-problem-report-%s.zip" % time.strftime("%Y%m%d-%H%M%S")
     target = os.path.join(folder, name)
-    logs = paths.log_dir()
+    part = target + ".part"                            # a zip that is cut short (disk full) must never look like a report (S8.3, B-P119)
+    try:
+        members = _write_zip(part, include_saves, system_kwargs, custom)
+        os.replace(part, target)
+    except BaseException:
+        try:
+            os.remove(part)
+        except OSError:
+            pass
+        raise
+    debuglog.event("report", "problem_report", logging.INFO, path=target, members=len(members), saves=include_saves,
+                   ms=round((time.perf_counter() - began) * 1000))
+    return target
+
+
+def _write_zip(target: str, include_saves: bool, system_kwargs: dict | None, custom) -> list[str]:
+    """The members of the report written into the zip at `target`; the names of the members."""
     members: list[str] = []
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as bundle:
         def add(arcname: str, text: str) -> None:
@@ -178,9 +194,7 @@ def make(include_saves: bool = False, destination: str | None = None, system_kwa
                         members.append(arc)
                 except OSError as exc:
                     log.warning("saved file %s not added: %s", path, exc)
-    debuglog.event("report", "problem_report", logging.INFO, path=target, members=len(members), saves=include_saves,
-                   ms=round((time.perf_counter() - began) * 1000))
-    return target
+    return members
 
 
 def listing(path: str) -> list[str]:

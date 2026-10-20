@@ -161,19 +161,23 @@ class TimedOutput:
     """No sound; a slot is busy for exactly as long as its sound would take (a loop until it is stopped).
     Records what was played and every level change."""
 
-    def __init__(self, clock: Callable[[], float] = time.monotonic):
+    def __init__(self, clock: Callable[[], float] = time.monotonic, keep: bool = True):
         self._clock = clock
+        self._keep = keep
         self._ends = [0.0] * CHANNELS
         self._lock = threading.Lock()
         self.gains = [1.0] * CHANNELS
-        self.played: list[tuple[int, bytes, float, bool]] = []   # (slot, pcm, gain, loop)
+        # (slot, pcm, gain, loop) of every play, for the tests; the program's silent output (no sound device) keeps nothing, because
+        # every sound it was given would stay in memory for the whole run (S8.3, fixesforgames B-A20)
+        self.played: list[tuple[int, bytes, float, bool]] = []
 
     def play(self, slot: int, pcm: bytes, gain: float, loop: bool = False) -> None:
         with self._lock:
             seconds = len(pcm) / STEREO_FRAME / MIX_RATE
             self._ends[slot] = math.inf if loop and seconds > 0 else self._clock() + seconds
             self.gains[slot] = gain
-            self.played.append((slot, pcm, gain, loop))
+            if self._keep:
+                self.played.append((slot, pcm, gain, loop))
 
     def set_gain(self, slot: int, gain: float) -> None:
         with self._lock:

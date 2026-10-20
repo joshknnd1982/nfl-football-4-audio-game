@@ -65,6 +65,8 @@ SAFT_44KHZ_16BIT_MONO = 34  # SpeechAudioFormatType; matches WaveOut's fixed for
 RENDER_RATE = 44100
 CHUNK_FROM_CHARS = 60  # longer texts are made and played sentence by sentence
 CHUNK_MIN_CHARS = 25   # a sentence shorter than this is joined to the next one
+MAX_CHUNK_CHARS = 300   # a piece longer than this is cut at spaces (S8.3)
+MAX_WORD_CHARS = 100    # no word is longer than this in a piece made into memory (S8.3)
 PROBE_TEXT = "Select. no panning"   # Brain's calibration text for the 0.25 s limit (any short text works)
 PROBE_LIMIT_SECONDS = 0.25  # a voice slower than this for the probe text is spoken directly, not rendered
 STALL_SECONDS = 8.0   # no progress this long while speaking = deadlock with another program
@@ -85,7 +87,7 @@ def apply_pitch(text: str, pitch: int) -> tuple[str, int]:
 def split_chunks(text: str) -> list[str]:
     """Pieces of text to make and play one after the other. Short texts stay whole (rendered mode)."""
     if len(text) <= CHUNK_FROM_CHARS:
-        return [text]
+        return [_tidy(text)] if _LONE_STOP.search(text) else [text]
     # a single capital letter and a full stop is an initial ("N. F. L."), not the end of a sentence: the welcome sentence of
     # rule 0.16 must not be cut after "N." into two pieces with a gap between them
     pieces = [p for p in re.split(r"(?<=[.!?:;])(?<!\b[A-Z]\.)\s+|\n+", text) if p.strip()]
@@ -103,7 +105,41 @@ def split_chunks(text: str) -> list[str]:
             chunks[-1] = chunks[-1] + " " + carry
         else:
             chunks.append(carry)
-    return chunks or [text]
+    # S8.3 (fixesforgames B-S28): the old emulated engines were measured to die on two kinds of piece: one with a lone full stop or comma in it
+    # (SAM, heap corruption on ". 31 items. Press F1 for help." and on "Press F1 for help. , current voice", which the list titles make when a
+    # name is empty) and one with a 4,000 letter word (Votrax, stack overrun). A token of only stops says nothing, and no word is longer
+    # than MAX_WORD_CHARS.
+    cleaned = [_cut_long(_tidy(piece)) for piece in chunks]
+    result = [part for group in cleaned for part in group if part.strip()]
+    return result or [text]
+
+
+_LONE_STOP = re.compile(r"(?<!\S)[.,;:]+(?!\S)")
+
+
+def _tidy(piece: str) -> str:
+    """The piece without a token that is only full stops, commas, semicolons or colons (an empty list title followed by ". 31 items" makes
+    one): it says nothing, and SAM died on it (fixesforgames B-S28). Spaces stay as they were."""
+    return _LONE_STOP.sub("", piece)
+
+
+def _cut_long(piece: str) -> list[str]:
+    """A piece over MAX_CHUNK_CHARS is cut at spaces; a word over MAX_WORD_CHARS is cut into pieces of that size."""
+    if len(piece) <= MAX_CHUNK_CHARS and len(max(piece.split(), key=len, default="")) <= MAX_WORD_CHARS:
+        return [piece]
+    words: list[str] = []
+    for word in piece.split():
+        words += [word[i:i + MAX_WORD_CHARS] for i in range(0, len(word), MAX_WORD_CHARS)]
+    parts, line = [], ""
+    for word in words:
+        if line and len(line) + 1 + len(word) > MAX_CHUNK_CHARS:
+            parts.append(line)
+            line = word
+        else:
+            line = (line + " " + word).strip()
+    if line:
+        parts.append(line)
+    return parts
 
 
 _DIGIT_WORDS = "zero one two three four five six seven eight nine".split()

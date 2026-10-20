@@ -94,10 +94,7 @@ class SpeechManager:
                         self._fallback_logged = True
                         log.warning("speech mode %s: preferred engine unavailable, using %s",
                                     self._mode, backend.name)
-                    debuglog.event("speech", "request", role=role, rate_step=rate_step or None, backend=backend.name,
-                                   accepted_ms=round((time.perf_counter() - began) * 1000, 2), tried_first=skipped or None,
-                                   chars=len(text), queued=(backend.queue_length() if hasattr(backend, "queue_length") else None),
-                                   text="<typed echo>" if debuglog.typing_now() and len(text.strip()) <= 3 else text)
+                    self._log_request(backend, text, role, rate_step, began, skipped)
                     return backend
                 skipped.append(backend.name + " refused")
             except Exception as exc:  # backends should not raise; be safe anyway
@@ -105,6 +102,23 @@ class SpeechManager:
                 skipped.append(backend.name + " raised")
         log.warning("no speech engine could say %r (tried: %s)", text, ", ".join(skipped) or "none")
         return None
+
+    @staticmethod
+    def _log_request(backend, text, role, rate_step, began, skipped) -> None:
+        """The log line of a text an engine took. Whatever goes wrong while it is written (an engine whose queue_length raises, a log
+        that fails) is not a refusal: the text is spoken already and must not be offered to the next engine (S8.3, fixesforgames B-P118)."""
+        try:
+            queued = backend.queue_length() if hasattr(backend, "queue_length") else None
+        except Exception as exc:
+            log.debug("%s queue_length failed: %s", backend.name, exc)
+            queued = None
+        try:
+            debuglog.event("speech", "request", role=role, rate_step=rate_step or None, backend=backend.name,
+                           accepted_ms=round((time.perf_counter() - began) * 1000, 2), tried_first=skipped or None,
+                           chars=len(text), queued=queued,
+                           text="<typed echo>" if debuglog.typing_now() and len(text.strip()) <= 3 else text)
+        except Exception as exc:
+            log.debug("the log line of a speech request failed: %s", exc)
 
     def say(self, text: str, abort: threading.Event | None = None, *, role: str | None = None,
             rate_step: int = 0) -> None:

@@ -1,0 +1,229 @@
+"""The log and the problem report under stress (S8.3; playbook 7.11, rule 0.15). This is inspired by Jim Kitchen.
+
+tests/test_debuglog.py holds the contract one condition at a time. Here the conditions meet the size of a real bad day: a launch log at its
+cap read into a report with the account name all through it, a destination that fills up halfway through the zip, folders that are files,
+logs that are directories, binary junk, a log written by the running program while the report reads it, the program started with its logs
+folder blocked, full or locked, and a long play session that must keep the caps and the redaction.
+"""
+import errno
+import getpass
+import logging
+import os
+import re
+import threading
+import time
+import zipfile
+
+import pytest
+
+import nfl4.app as app
+import nfl4.ui.window as window_module
+from nfl4.data import debuglog, problem_report
+from nfl4.game import texts
+from test_app_startup import Made, closing_after
+from test_debuglog import begin, leaks, written
+
+USER = getpass.getuser()
+SYSTEM = dict(system_kwargs=dict(args=[], settings=None))
+
+
+def big_log(path, megabytes, user=USER):
+    """A log of about `megabytes` MB whose every line holds a path with the account name, the way a bad day's log looks."""
+    line = ("12:00:00.000 +0.001 DEBUG game file abc123 read path=C:\\Users\\%s\\AppData\\Roaming\\NFL Football 4\\footbal1.dat "
+            "chars=%d result=ok ms=0.4 mail=%s@example.com\n")
+    with open(path, "w", encoding="utf-8") as handle:
+        written_bytes, n = 0, 0
+        while written_bytes < megabytes * 1024 * 1024:
+            text = line % (user, n, user)
+            handle.write(text)
+            written_bytes += len(text)
+            n += 1
+
+
+@pytest.fixture
+def data(tmp_path, monkeypatch):
+    folder = tmp_path / "data"
+    folder.mkdir()
+    monkeypatch.setenv("NFL4_DATA_DIR", str(folder))
+    monkeypatch.setattr(problem_report, "log_folders", lambda: [str(folder / "logs")])
+    (folder / "logs").mkdir()
+    return folder
+
+
+def test_three_launches_at_their_cap_make_a_report_in_time_with_the_account_name_nowhere(data, tmp_path):
+    for n in range(3):
+        big_log(data / "logs" / ("nfl4-202610%02d-100000.log" % (n + 1)), 5)
+        big_log(data / "logs" / ("nfl4-202610%02d-100000-b.log" % (n + 1)), 5)
+    started = time.monotonic()
+    path = problem_report.make(False, str(tmp_path / "out"), **SYSTEM)
+    seconds = time.monotonic() - started
+    assert seconds < 60, seconds
+    with zipfile.ZipFile(path) as bundle:
+        logs = [n for n in bundle.namelist() if n.startswith("logs/")]
+        assert len(logs) == 6
+        for member in logs:
+            text = bundle.read(member).decode("utf-8")
+            assert not leaks(text, USER) and f"{USER}@" not in text, member
+    assert os.path.getsize(path) < 40 * 1024 * 1024
+
+
+def test_a_destination_that_fills_up_in_the_middle_raises_one_clean_error_and_leaves_no_half_zip(data, tmp_path, monkeypatch):
+    import zipfile as zf
+    for n in range(3):
+        big_log(data / "logs" / ("nfl4-202610%02d-100000.log" % (n + 1)), 1)
+    real = zf.ZipFile.writestr
+    calls = {"n": 0}
+
+    def full(self, *args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] >= 4:
+            raise OSError(errno.ENOSPC, "No space left on device")
+        return real(self, *args, **kwargs)
+    monkeypatch.setattr(zf.ZipFile, "writestr", full)
+    out = tmp_path / "out"
+    with pytest.raises(OSError):
+        problem_report.make(False, str(out), **SYSTEM)
+    assert [n for n in os.listdir(out)] == [], "a half-written zip was left where the player looks for the report"
+
+
+def test_a_destination_that_is_a_file_raises_an_error_and_the_command_line_says_so_with_code_1(data, tmp_path, capsys):
+    blocker = tmp_path / "blocker"
+    blocker.write_text("a file where the folder should be")
+    with pytest.raises(OSError):
+        problem_report.make(False, str(blocker), **SYSTEM)
+    assert app.main(["--problem-report", "--quiet", "--folder=" + str(blocker)]) == 1
+    assert "could not be made" in capsys.readouterr().out
+
+
+def test_logs_that_are_folders_binary_junk_or_not_text_are_skipped_or_read_and_the_report_is_still_made(data, tmp_path):
+    logs = data / "logs"
+    (logs / "nfl4-20261001-100000.log").mkdir()
+    (logs / "nfl4-20261002-100000.log").write_bytes(bytes(range(256)) * 400)
+    (logs / "nfl4-20261003-100000.log").write_bytes(("C:\\Users\\%s\\x \u00fcn\u00ef\n" % USER).encode("utf-16"))
+    (logs / "nfl4-20261004-100000.log").write_bytes(b"")
+    (logs / "nfl4-crash.log").mkdir()
+    path = problem_report.make(False, str(tmp_path / "out"), **SYSTEM)
+    names = problem_report.listing(path)
+    assert "README.txt" in names and "system.txt" in names and "customization.txt" in names
+
+
+def test_the_report_made_while_the_program_writes_its_log_holds_what_was_written_so_far(tmp_path, monkeypatch):
+    monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path / "data"))
+    logs = tmp_path / "data" / "logs"
+    path = begin(logs)
+    monkeypatch.setattr(problem_report, "log_folders", lambda: [str(logs)])
+    stop = threading.Event()
+
+    def writer():
+        n = 0
+        while not stop.is_set():
+            debuglog.event("app", "busy_writing", n=n, path="C:\\Users\\%s\\x" % USER)
+            n += 1
+            time.sleep(0.0005)                        # a thousand lines a second is far more than the program writes
+    thread = threading.Thread(target=writer, daemon=True)
+    thread.start()
+    try:
+        report = problem_report.make(False, str(tmp_path / "out"), **SYSTEM)
+    finally:
+        stop.set()
+        thread.join(5)
+    with zipfile.ZipFile(report) as bundle:
+        member = [n for n in bundle.namelist() if n.startswith("logs/")][0]
+        text = bundle.read(member).decode("utf-8")
+        assert "busy_writing" in text and not leaks(text, USER)
+
+
+def test_every_place_for_the_report_failing_ends_in_the_temp_folder(tmp_path, monkeypatch):
+    monkeypatch.setattr(problem_report.sysreport, "known_folder", lambda *a: str(tmp_path / "no" / "such" / "folder"))
+    blocker = tmp_path / "blocker"
+    blocker.write_text("file")
+    monkeypatch.setattr(problem_report.os.path, "expanduser", lambda p: str(blocker))
+    monkeypatch.setenv("NFL4_DATA_DIR", str(blocker / "data"))
+    monkeypatch.setenv("TEMP", str(tmp_path))
+    assert problem_report.desktop_folder() == str(tmp_path)
+
+
+# ----- the whole program with its logs folder in a bad state -----
+
+pytestmark_window = pytest.mark.window
+
+
+def start(folder, monkeypatch, seconds=1.0):
+    monkeypatch.setenv("NFL4_DATA_DIR", str(folder))
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    monkeypatch.setattr(window_module.GameWindow, "show", lambda self: False)
+    made = Made()
+    monkeypatch.setattr(app, "create_speech", made)
+    monkeypatch.setattr(window_module, "GameWindow", closing_after(seconds))
+    return app.main(), made
+
+
+def settings(folder):
+    (folder / "settings.txt").write_text("# NFL Football 4 settings, format 1\n", encoding="utf-8")
+    (folder / "sounds").mkdir(exist_ok=True)
+    from wavmaker import sine, write
+    write(folder / "sounds" / "foot0.wav", sine(400, 0.05, 11025), rate=11025)
+
+
+@pytest.mark.window
+def test_the_program_with_a_file_where_its_logs_folder_belongs_starts_plays_and_logs_to_the_temp_folder(tmp_path, monkeypatch):
+    folder = tmp_path / "data"
+    folder.mkdir()
+    settings(folder)
+    (folder / "logs").write_text("a file where the logs folder should be")
+    monkeypatch.setattr(debuglog.tempfile, "gettempdir", lambda: str(tmp_path / "tmp"))
+    code, made = start(folder, monkeypatch)
+    assert code == 0 and texts.TITLE_SPOKEN in made.sapi.spoken()[:3]
+    debuglog.flush(debuglog.REPORT_WAIT_SECONDS + 10)
+    assert list((tmp_path / "tmp" / "nfl4-logs").glob("nfl4-2*.log")), "the fall back to the temp folder wrote nothing"
+
+
+@pytest.mark.window
+def test_the_program_with_a_full_disk_for_its_log_starts_speaks_and_closes(tmp_path, monkeypatch):
+    folder = tmp_path / "data"
+    folder.mkdir()
+    settings(folder)
+
+    def full(self, data):
+        raise OSError(errno.ENOSPC, "No space left on device")
+    monkeypatch.setattr(debuglog._Ring, "_raw", full)
+    code, made = start(folder, monkeypatch)
+    assert code == 0 and texts.TITLE_SPOKEN in made.sapi.spoken()[:3]
+
+
+@pytest.mark.window
+def test_the_program_with_ten_old_logs_one_of_them_locked_starts_and_keeps_the_newest_ten(tmp_path, monkeypatch):
+    import filedamage
+    folder = tmp_path / "data"
+    logs = folder / "logs"
+    logs.mkdir(parents=True)
+    settings(folder)
+    old = [logs / ("nfl4-2026010%d-000000.log" % n) for n in range(1, 10)] + [logs / "nfl4-20251231-000000.log"]
+    for f in old:
+        f.write_text("old")
+    with filedamage.holding(old[-1]):                 # the oldest, which is the one to delete
+        code, made = start(folder, monkeypatch)
+    assert code == 0 and texts.TITLE_SPOKEN in made.sapi.spoken()[:3]
+    debuglog.flush(debuglog.REPORT_WAIT_SECONDS + 10)
+    assert len(list(logs.glob("nfl4-2*.log"))) <= 11
+
+
+# ----- a long session -----
+
+def test_a_long_session_keeps_the_caps_the_redaction_and_the_speed_of_the_game_thread(tmp_path):
+    logs = tmp_path / "logs"
+    path = begin(logs, half_bytes=256 * 1024)
+    started = time.perf_counter()
+    for n in range(60000):
+        debuglog.event("game", "play", n=n, path="C:\\Users\\%s\\AppData\\x\\file%d.dat" % (USER, n), mail="%s@example.com" % USER,
+                       text="Zoë and the account %s" % USER)
+    elapsed = time.perf_counter() - started
+    debuglog.flush(30)
+    assert elapsed < 10, "the game thread waited for the log: %.1f s for 60,000 events" % elapsed
+    total = 0
+    for name in os.listdir(logs):
+        total += os.path.getsize(logs / name)
+    assert total <= 2 * 256 * 1024 + 64 * 1024, total
+    text = written(path)
+    assert not leaks(text, USER) and f"{USER}@" not in text
+    assert text.count("system") >= 0 and "play" in text

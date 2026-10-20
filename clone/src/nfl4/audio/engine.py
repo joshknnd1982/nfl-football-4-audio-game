@@ -32,6 +32,10 @@ _RENDER_BUDGET = 64 * 1024 * 1024    # bytes of rendered sound kept for the next
 
 # GAP_REGISTER G-A4 (draft wording, section 8; CLONE text): said once when no sound device could be opened.
 NO_SOUND_NOTICE = " The sound system could not be started. The game goes on without sounds. "
+# S8.3 (CLONE text, GAP_REGISTER section 8): said once, at the next notices, when the device that worked stops working in the middle of a run
+DEVICE_LOST_NOTICE = " The sound system stopped working. The game goes on without sounds. "
+# plays in a row that the mixer refused before the device is called lost (one refusal can be a single bad sound)
+DEVICE_LOST_AFTER = 3
 
 
 class Beeper(Protocol):
@@ -83,12 +87,14 @@ class Audio:
             except OutputError as exc:
                 self.error = str(exc)
                 log.error("%s; running without sound", exc)
-                output = TimedOutput(clock)
+                output = TimedOutput(clock, keep=False)
             except Exception as exc:
                 self.error = f"{type(exc).__name__}: {exc}"
                 log.exception("sound system failed to start; running without sound")
-                output = TimedOutput(clock)
+                output = TimedOutput(clock, keep=False)
         self.output = output
+        self._device_lost = False
+        self._refused_plays = 0
         self._volumes = [0] * CHANNELS          # GetVolume: DirectSound's default level is 0 (full)
         self._renders: dict[tuple, tuple[Pick, bytes]] = {}
         self._render_bytes = 0
@@ -104,7 +110,7 @@ class Audio:
         notices = []
         if self.error is not None and not self._device_notice_given:
             self._device_notice_given = True
-            notices.append(NO_SOUND_NOTICE)
+            notices.append(DEVICE_LOST_NOTICE if self._device_lost else NO_SOUND_NOTICE)
         return notices + self.library.take_notices()
 
     def refresh(self) -> None:
@@ -167,14 +173,43 @@ class Audio:
         self._log(slot, "play", pick, volume, freq, pan, loop)
         try:
             self.output.play(slot, pcm, level_gain(volume), loop)
-        except Exception:
-            log.exception("the mixer could not play %s", pick.sound_id)
-            return 0.0
+            self._refused_plays = 0
+        except Exception as exc:
+            if not self._mixer_refused(pick.sound_id, exc):
+                return 0.0
+            try:
+                self.output.play(slot, pcm, level_gain(volume), loop)       # the silent output keeps the game's waits as long as the sound
+            except Exception:
+                log.exception("the silent output could not play %s", pick.sound_id)
+                return 0.0
         seconds = frames_of(pcm) / MIX_RATE
         debuglog.event("sound", "play", slot=SLOT_NAMES[slot], id=pick.sound_id, chain=pick.source, via=via,
                        file=os.path.basename(pick.path) if pick.path else None, volume=int(volume), pan=int(pan), freq=int(freq),
                        loop=loop or None, seconds=round(seconds, 3), result="ok", prepare_ms=round((time.perf_counter() - began) * 1000, 2))
         return seconds
+
+    def _mixer_refused(self, sound_id: str, exc: Exception) -> bool:
+        """The mixer raised while playing. One refusal may be one bad sound: logged with its traceback the first time, a warning after that.
+        After DEVICE_LOST_AFTER in a row the device is called lost (unplugged, taken by another program): the silent output takes over, as at
+        start-up with no device, so the waits that the game makes for its sounds keep their length, one notice is queued and the log says
+        so (S8.3, G-A4). True when the play should be tried again on the silent output."""
+        self._refused_plays += 1
+        if self._refused_plays == 1:
+            log.exception("the mixer could not play %s", sound_id)
+        else:
+            log.warning("the mixer could not play %s (%d in a row): %s", sound_id, self._refused_plays, exc)
+        if self._refused_plays < DEVICE_LOST_AFTER or self._device_lost:
+            return False
+        self._device_lost = True
+        self.error = f"the sound device stopped working: {type(exc).__name__}: {exc}"
+        log.error("%s; running without sound from now on", self.error)
+        debuglog.event("sound", "device lost", reason=self.error, result="silent output from now on")
+        try:
+            self.output.close()
+        except Exception as close_exc:
+            log.debug("the lost mixer did not close cleanly: %s", close_exc)
+        self.output = TimedOutput(self.clock, keep=False)
+        return True
 
     def set_volume(self, slot: int, volume: int) -> None:
         """SetVolume on the slot's buffer, playing or not (the next play sets its own)."""
