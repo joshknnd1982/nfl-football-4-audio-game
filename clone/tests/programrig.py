@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from gamerig import Rig
 from nfl4.game.pag import GameResult
-from nfl4.game.program_store import MemoryProgramStore
+from nfl4.game.program_store import MemoryProgramStore, SeasonPeek
 from pagrig import PolicyKeys, enter_policy
 
 ENTER, ESC, UP, DOWN, F1, F5, F9 = 13, 27, 38, 40, 112, 116, 120
@@ -26,13 +26,37 @@ class RigStore(MemoryProgramStore):
         super().__init__(first)
         self.preset = preset
         self.calls = []
+        self.loaded = False
+        self.backup_preset = None
+        self.season_sentence = SeasonPeek("Kim", 1, 1, 1, 4, 1)     # what the start-up menu says about the preset season (SX.14)
 
     def load_season(self, season):
         self.calls.append("load_season")
         if self.preset is None:
             return False
         self.preset(season)
+        self.loaded = True
         return True
+
+    # ----- SX.14: the season the start-up menu asks about, and its delete and restore -----
+
+    def season_peek(self):
+        return self.season_sentence if self.preset is not None and not self.loaded else None
+
+    def delete_season(self):
+        self.calls.append("delete_season")
+        self.backup_preset, self.preset = self.preset, None
+        return True
+
+    def restore_season(self):
+        self.calls.append("restore_season")
+        if self.preset is not None or self.backup_preset is None:
+            return False
+        self.preset, self.backup_preset = self.backup_preset, None
+        return True
+
+    def season_deleted(self):
+        return self.backup_preset is not None
 
     def delete_season_files(self):
         self.calls.append("delete_season_files")
@@ -90,8 +114,8 @@ def program_rig(tmp_path, answers=(), policy=None, first=False, preset=None, out
     rig.plays = []
     game = rig.game
 
-    def play_game(rules=None, own_names=None, saved=None, quarterback_names=None, save_sink=None, roster_sink=None):
-        rig.plays.append({"own_names": own_names, "saved": saved, "save_sink": save_sink, "roster_sink": roster_sink})
+    def play_game(rules=None, own_names=None, saved=None, quarterback_names=None, save_sink=None, roster_sink=None, **more):
+        rig.plays.append({"own_names": own_names, "saved": saved, "save_sink": save_sink, "roster_sink": roster_sink, **more})
         outcome = rig.outcomes.pop(0)
         if callable(outcome):
             outcome = outcome(rig)

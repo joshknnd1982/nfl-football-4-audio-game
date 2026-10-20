@@ -321,7 +321,8 @@ def a_season_in(folder, gtp=5):
 
 
 @pytest.mark.window
-def test_a_season_on_disk_is_announced_and_the_log_is_appended(tmp_path, monkeypatch):
+def test_a_season_on_disk_is_announced_by_the_start_up_question_and_nothing_is_started_without_a_key(tmp_path, monkeypatch):
+    from nfl4.game import save_texts
     monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
     a_season_in(tmp_path, gtp=5)
     (tmp_path / "footballlog.txt").write_bytes(b"an earlier week\r\n")
@@ -330,9 +331,10 @@ def test_a_season_on_disk_is_announced_and_the_log_is_appended(tmp_path, monkeyp
     monkeypatch.setattr(window_module, "GameWindow", closing_after(1.5))
     assert app.main() == 0
     spoken = made.sapi.spoken()
-    assert spoken[0] == texts.TITLE_SPOKEN and " This is week  5 of Josh Kennedy's N. F. L. football " in spoken
-    log = (tmp_path / "footballlog.txt").read_bytes()
-    assert log.startswith(b"an earlier week\r\n") and b" This is week #5 of Josh Kennedy's N. F. L. football " in log
+    assert spoken[0] == texts.TITLE_SPOKEN                                   # SX.14 (rule 0.23): then the sentence about the season and the question
+    assert any(t.startswith(" You have a season in progress") and "week 5" in t for t in spoken) and save_texts.MENU_PROMPT in spoken
+    assert not any(t.startswith(" This is week") for t in spoken)           # no key was pressed: the week is not started
+    assert (tmp_path / "footballlog.txt").read_bytes() == b"an earlier week\r\n"
     assert not (tmp_path / "customize" / "footplay.txt").exists()          # no game was played: no names of the player's own
 
 

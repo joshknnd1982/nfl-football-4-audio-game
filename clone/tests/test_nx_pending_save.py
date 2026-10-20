@@ -6,6 +6,7 @@ second of a half: the board is the declined one, the choice is in the extras rec
 again first; the board after the answer is the board the same answer gives without the save. Elsewhere S says NXP-22 and the prompt
 goes on. Nothing is drawn by the save or by the resume.
 """
+from savesrig import read_saved
 import json
 import random
 import re
@@ -309,7 +310,7 @@ def test_a_whole_game_saved_at_a_prompt_and_loaded_gives_the_board_the_answer_gi
     rig, rules, result = one_game(tmp_path / "a", 900 + seed, plan, sink=store.save_game)
     assert result.saved and rules.used.state.extras.pending_choice is not None
     at = plan["at"]
-    saved = store.take_saved_game()
+    saved = read_saved(store)
     assert json.loads(saved.extras)["pending_choice"] == rules.used.state.extras.pending_choice
     # the same game without the save: the same keys up to that prompt, then the answer
     base = {"seed": 40 + seed, "at": at, "key": answer, "done": False}
@@ -378,7 +379,7 @@ def test_a_franchise_game_saved_at_the_prompt_keeps_its_mark_and_its_choice(tmp_
     again = FranchiseStore(files)
     again.open(True)
     assert again.has_saved_game() and again.take_notices() == []
-    saved = again.take_saved_game()
+    saved = read_saved(again)
     record = ExtrasRecord.from_json(saved.extras)
     assert record.franchise is not None and record.pending_choice == rig.engine.s.extras.pending_choice
 
@@ -422,7 +423,7 @@ def test_every_switch_on_and_a_later_prompt_the_whole_record_after_the_answer_is
     rig, rules, result = every_switch_game(tmp_path / "a", 1900 + seed, plan, sink=store.save_game)
     if not result.saved:
         pytest.skip("no prompt from this one on could be kept in this game")
-    saved = store.take_saved_game()
+    saved = read_saved(store)
     base = {"seed": 140 + seed, "at": plan["at"], "key": answer, "done": False}
     rig_b, rules_b, result_b = every_switch_game(tmp_path / "b", 1900 + seed, base)
     assert len(rules_b.boards) == 1

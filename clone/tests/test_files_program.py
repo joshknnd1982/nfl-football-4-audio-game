@@ -4,6 +4,7 @@ GAME_SPEC 3 steps 6 to 9, D-024 items 1, 4 and 5, D-046 item 2, G-F3 to G-F5, G-
 Form_Load's flow on the virtual clock with a stand-in for pag; here the store behind it is the real one over a temporary data
 folder, and each test starts the program again over the same folder with a new store, the way a second launch does.
 """
+from savesrig import read_saved
 import os
 
 import pytest
@@ -114,14 +115,14 @@ def test_save_game_inside_the_program_writes_football_sav_and_ends_the_program(t
     assert again.take_notices() == [] and again.has_saved_game()
 
 
-def test_a_damaged_saved_game_is_said_set_aside_and_the_season_goes_on(tmp_path):
+def test_a_damaged_saved_game_is_not_loaded_and_not_set_aside_and_the_season_goes_on(tmp_path):
     store = a_season_on_disk(tmp_path, gtp=3)
     store.save_game(a_game())
     data(tmp_path, "football.sav").write_bytes(b"cut")
     rig = run(file_rig(tmp_path, EXIT_KEYS, store=make(tmp_path)))
     spoken = said(rig)
-    assert spoken[:3] == [texts.TITLE_SPOKEN, SAVED_DAMAGED, " This is week  3 of Josh Kennedy's N. F. L. football "]
-    assert (tmp_path / "data" / "football.sav.damaged1").exists() and rig.plays == []
+    assert spoken[:2] == [texts.TITLE_SPOKEN, " This is week  3 of Josh Kennedy's N. F. L. football "]      # SX.14: the start-up menu names it; the store does not
+    assert (tmp_path / "data" / "football.sav").exists() and not (tmp_path / "data" / "football.sav.damaged1").exists() and rig.plays == []
 
 
 def test_a_season_that_ends_keeps_the_names_as_previous_and_starts_the_next_season(tmp_path):

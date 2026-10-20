@@ -4,6 +4,7 @@ GAME_SPEC 4.12, 4.18, 5.5 and 12: pag draws the player's 33 names when footplay.
 (0x455908 to 0x456f0b), Getqbs appends the quarterback (0x431978 to 0x4319ba), Save Game writes football.sav (0x45f655) and
 the next start reads it back and deletes it. S7.5, D-024 items 4 and 5, D-025 d, G-F5.
 """
+from savesrig import read_saved
 import random
 
 from nfl4.data.files import playernames, savedgame
@@ -164,7 +165,7 @@ def test_a_whole_saved_game_survives_the_file_and_is_loaded_by_pag(tmp_path):
     stats_game.stats = {1: SideStats(score=10), 2: SideStats(score=3)}
     assert store.save_game(stats_game)
     again = make(tmp_path)
-    saved = again.take_saved_game()
+    saved = read_saved(again)
     assert saved == stats_game
     rig = make_rig(tmp_path / "rig", answers=["7", ENTER])
     result = play(rig, saved=saved, quarterback_names=lambda s: ("Starr", s.quarterbacks[2]))

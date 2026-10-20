@@ -71,6 +71,11 @@ class SavedGame:
     # None when there was none or it could not be read (then the extras start from their start values, C10)
     extras: str | None = None
     extras_marked: bool = False
+    # nfl4 only (SX.14, rule 0.23, playbook 7.17): two more sections after the extras. `info` is the one-sentence summary's facts (the
+    # teams, the week, the date, the time left; JSON), `resume` the rest of the engine's state that an automatic save keeps so a
+    # crashed game goes on with the same draws (JSON). None in a file of the original and in a save made without them.
+    info: str | None = None
+    resume: str | None = None
 
 
 @dataclass

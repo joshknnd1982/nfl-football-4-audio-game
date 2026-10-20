@@ -8,7 +8,7 @@ clock (H1).
 from __future__ import annotations
 
 from . import phrases as P
-from . import program_texts
+from . import program_texts, save_texts
 from .gamestate import other, own_half
 from .vbnum import trim
 
@@ -238,11 +238,20 @@ class BreakSteps:
     # ----- Save Game (4.18; L_45f5f9) -----
 
     def save_game(self):
-        g, s = self.g, self.s
+        g, s, ui = self.g, self.s, self.save_ui
         self.game_on = False                                        # H18: the game is saved (it is put back on if it could not be)
         self.result.saved = True                                    # SavedGame = 1
-        record = s.saved(g.quarter_clock.countdown)
-        if self.save_sink is not None and self.save_sink(record) is False:   # football.sav could not be written (S7.5)
+        record = self.save_record()
+        slot = None
+        if ui is not None:                                          # SX.14 (NX-S6): which of the three places, the game's own first
+            slot = ui.choose_slot(self, record)
+            if slot is None:                                        # Escape: nothing is saved and the game goes on where it was
+                self.result.saved = False
+                self.game_on = True
+                g.say(save_texts.SAVE_CANCELLED)
+                return self.continuation(self.rules.resume_choice(s)) or self.play_menu
+        written = (self.save_sink(record) if ui is None else self.save_sink(record, slot)) if self.save_sink is not None else None
+        if written is False:                                        # football.sav could not be written (S7.5)
             self.result.saved = False
             self.game_on = True
             g.say(program_texts.SAVE_FAILED)                        # the game goes on: nothing was kept (N. F. L. rules, SX.9:
@@ -250,6 +259,12 @@ class BreakSteps:
         self.keys.pump()
         g.say(P.GAME_SAVED)
         self.keys.pump()
+        if ui is not None:                                          # SX.14 (NX-S5): quit (the original's end) or keep playing
+            if ui.quit_or_keep(self, slot) == "keep":
+                self.result.saved = False
+                self.game_on = True
+                return self.continuation(self.rules.resume_choice(s)) or self.play_menu
+            ui.saved_and_quit(self, slot)
         return None                                                 # the crowds are not stopped (Q33)
 
     # ----- quit and concede (4.18; L_45ffe2) -----

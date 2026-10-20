@@ -23,9 +23,11 @@ import logging
 from ..data import debuglog
 from . import program_texts as P
 from . import prompt_texts as T
-from . import texts
+from . import save_texts, texts
 from .keys import GameQuit
+from .save_menu import SaveUi
 from .season_mode import ClassicSeason
+from .startup_menu import StartupMenu, primary
 from .vbnum import str_, trim
 
 log = logging.getLogger("nfl4.game")
@@ -53,6 +55,14 @@ class Program:
         self.mode = ClassicSeason(self)
         self.switch_requested = False   # a menu asked for another kind of season (F9, a change of the Rules): the week loop acts
         self.switch_target = None       # the kind it asked for when the settings do not say yet (a franchise to be made)
+        # SX.14 (CLAUDE.md 0.23, playbook 7.17): the start-up choice and the save questions. The tests' rigs switch them off (Game.startup_menu =
+        # False) so the many tests that pin the original's start-up stay exact; only the tests of the choice switch them on.
+        self.menu_on = bool(getattr(game, "startup_menu", True))
+        self.load_entry = None          # the save the start-up menu chose to continue (a shelf Entry); loaded at the first "play game"
+        self.slot_in_use = None         # the slot the game in progress was loaded from or last saved in (Save Game offers it first)
+        self.new_game = None            # "season" or "franchise": the start-up menu chose a new game
+        self.new_defaults = None        # (coach, tn1, tn2) of the season a new season replaced: the last choices are the defaults (NX-S7)
+        self.save_ui = SaveUi(self) if self.menu_on else None
 
     # ----- helpers -----
 
@@ -102,7 +112,13 @@ class Program:
     def startup(self) -> None:
         g, keys, sounds = self.g, self.keys, self.sounds
         self.mode.choose_at_start()                             # H15: which kind of season is in use (Classic: nothing)
-        self.saved_game = self.store.has_saved_game()           # 0x4874e2 to 0x48756e: football.sav, SavedGame = 1
+        # 0x4874e2 to 0x48756e: football.sav, SavedGame = 1. With the start-up menu (rule 0.23) nothing is loaded here: the player chooses
+        # after the welcome; without it (the tests of the original's start-up) the newest saved game is played at once, as the original did
+        self.saved_game = False
+        self.load_entry = None
+        if not self.menu_on and self.store.has_saved_game():
+            self.saved_game = True
+            self.load_entry = primary(self.store.shelf.scan(self.store.classify))
         g.ptf = 0                                               # 0x4872bc
         g.qorp = 1                                              # 0x4873dd
         if sounds is not None:
@@ -134,19 +150,63 @@ class Program:
             debuglog.event("app", "welcome_spoken", logging.INFO, first_start=False, text=texts.TITLE_SPOKEN)
             g.speak_notices()
             self._stop_intro(second_pump=False, reason="welcome_done")   # S8.2: the intro ends with the welcome, not at the week line
+        if self.menu_on:                                        # SX.14: what to do with what is saved, before anything is loaded
+            StartupMenu(self).run()
+
+    # ----- the kind of season in use, and a new game chosen at the start (SX.14) -----
+
+    def use_kind(self, kind: str) -> bool:
+        """Put the franchise or the classic season in use before the season is loaded (the start-up menu's choice). False when there is no
+        franchise to put in use. Nothing is parked: no season has been loaded yet."""
+        if self.mode.kind == kind:
+            return True
+        from ..extras.franchise import mode as franchise_mode
+        from ..extras.nfl_rules import is_nfl
+        g = self.g
+        if kind == "franchise":
+            store = g.franchise()
+            if not (store.opened and store.available and store.exists):
+                return False
+            franchise_mode.set_kind(g, "franchise")
+            franchise_mode.activate(self, store)
+        else:
+            franchise_mode.deactivate(self)
+            if is_nfl(g.rules):
+                franchise_mode.set_kind(g, "classic")
+        debuglog.event("app", "kind_in_use", kind=self.mode.kind)
+        return True
+
+    def begin_new_game(self) -> None:
+        """The new game the start-up menu chose (NX-S7): a new season (with the last coach and team as the default) or a new franchise.
+        What it replaces was already asked about and is in the backup."""
+        kind, self.new_game = self.new_game, None
+        defaults, self.new_defaults = self.new_defaults, None
+        self.use_kind("classic")
+        if kind == "franchise":
+            from ..extras.franchise import mode as franchise_mode
+            self.g.rnd.mark("season_start", kind="franchise")
+            franchise_mode.to_franchise(self, new=True)
+            return
+        self.new_season(None, ask=False, defaults=defaults)
 
     # ----- the season set-up (0x487e25 to 0x4882de) -----
 
     def season_setup(self) -> None:
         self._stop_intro(reason="before_first_prompt")           # S8.2 safety: no loop plays while the set-up waits for the player
+        if self.new_game is not None:                           # SX.14: a new game was chosen at the start
+            self.begin_new_game()
+            return
         self.mode.season_setup()                                # 0x488018 to 0x4882f1: footbal1.dat, else a new season
 
-    def new_season(self, coach: str | None = None, ask: bool = True) -> None:
+    def new_season(self, coach: str | None = None, ask: bool = True, defaults: tuple | None = None) -> None:
         """A new season: the coach, the team, the schedule, week 1 (GetCoach 0x488234, ChooseTeam 0x48825d, makes 0x488278,
         gtp = 1 and football.gtp 0x4882b2 to 0x4882de); the code is `ClassicSeason.new_season` (H15). `coach` and `ask` are
-        the N. F. L. rules' question of NFL_FRANCHISE_DESIGN 3.2 (ignored with Rules = Classic)."""
+        the N. F. L. rules' question of NFL_FRANCHISE_DESIGN 3.2 (ignored with Rules = Classic). `defaults`: SX.14, NX-S7."""
         self.g.rnd.mark("season_start", kind=self.mode.kind)         # the debug log: the generator and its draws so far (7.11)
-        self.mode.new_season(coach, ask)
+        if defaults is None:
+            self.mode.new_season(coach, ask)
+        else:
+            self.mode.new_season(coach, ask, defaults)
         debuglog.event("app", "season_made", kind=self.mode.kind, week=self.season.gtp, team=self.season.tn1)
 
     def request_switch(self, target: str | None = None) -> None:
@@ -307,18 +367,21 @@ class Program:
         leaves for its exit after any game; the clone goes back to the week loop (D-024 item 1)."""
         g, season, store = self.g, self.season, self.store
         self.mode.before_game()                                 # H15: the to-do list's deadline (Classic: nothing)
-        saved = store.take_saved_game() if self.saved_game else None   # pag reads football.sav and deletes it (0x43afa4)
+        # pag read football.sav and deleted it (0x43afa4); the clone keeps it until the game it holds ends (NX-S3, rule 0.23), so a crash
+        # or a closed window after the load loses nothing
+        entry = self.load_entry if self.saved_game else None
+        saved = entry.saved if entry is not None else None
+        self.slot_in_use = entry.slot if entry is not None and not entry.is_auto else None
+        self.load_entry = None
+        if entry is not None:
+            debuglog.event("save", "load", file=entry.name, auto=entry.is_auto, resume=bool(getattr(saved, "resume", None)))
         self.saved_game = False                                 # SavedGame = 0 when the game is loaded (0x43bb41)
         own_names = store.player_names()                        # footplay.txt read (pag 0x4544e1), repaired when it has a problem
-        g.speak_notices()                                       # S7.5: a damaged saved game or footplay.txt, said before the game
+        g.speak_notices()                                       # S7.5: a damaged footplay.txt, said before the game
         rules = None                                            # the program's rules; a save of the N. F. L. rules may ask
         if getattr(saved, "extras_marked", False):              # (nfl4 only, rule 0.13, SX.2: NFL_EXTRAS_DESIGN 12.3)
             from ..extras.saved import rules_for_saved_game
-            try:
-                rules = rules_for_saved_game(g, saved)
-            except GameQuit:                                    # the window closed at the question: football.sav was
-                store.save_game(saved)                          # already read and deleted, so it is written back
-                raise
+            rules = rules_for_saved_game(g, saved)              # (a window closed at the question loses nothing: the file is still there)
         arguments = self.mode.game_arguments()                  # H15 (nfl4 only): the Franchise's opponent and quarterbacks
         plan_rules = arguments.pop("rules", None)               # and, when the player took it, the staff's game plan (SX.8e)
         if rules is None:
@@ -326,12 +389,16 @@ class Program:
         g.rnd.mark("game_start", week=season.gtp, rules=getattr(rules or g.rules, "name", None) or None,
                    resumed_save=saved is not None or None, tn1=season.tn1, tn2=season.tn2, tn3=season.tn3, tn4=season.tn4,
                    vtrnt=season.vtrnt)
+        week = season.gtp                                       # the week this game belongs to: its saves end with it
         with debuglog.context("game week %s" % season.gtp):
             result = g.play_game(rules=rules, own_names=own_names, saved=saved, save_sink=store.save_game,
                                  roster_sink=store.write_player_names,   # 0x489ddb
+                                 autosave_sink=store.autosave if self.menu_on else None, save_ui=self.save_ui,
                                  **arguments)
         debuglog.event("app", "game_end", week=season.gtp, scores=getattr(result, "scores", None), saved=result.saved or None,
                        draws=g.rnd.draws)
+        if not result.saved:                                    # the game was played out or conceded: its saves have done their work
+            self.game_over(week, entry)
         if result.saved:                                        # 0x489e2c: SavedGame = 1 skips pog and the standings
             self.saved_game = True
             self.ending = "saved"
@@ -347,6 +414,19 @@ class Program:
         if season.gtp == 0:
             self.season_over()
         return False
+
+    def game_over(self, week: int, loaded) -> None:
+        """NX-S3: a game that ended (played out or conceded) retires its saves: the automatic save goes, and the saves of this week (the
+        one it was loaded from too) move to the backup, three deep, and are never offered again. Said in one sentence when a saved game
+        moved. Nothing a crash or a closed window leaves behind is touched: this runs only when the game really ended."""
+        shelf = self.store.shelf
+        entries = shelf.scan(None)
+        targets = [entry for entry in entries
+                   if entry.is_auto or entry.info.get("week") == week or (loaded is not None and entry.name == loaded.name)]
+        moved = shelf.retire(targets, "the game of week %s ended" % week)
+        if moved:
+            self.g.say2(save_texts.GAME_OVER_SAVES_MOVED)
+        self.slot_in_use = None
 
     def after_game_standings(self) -> None:
         """The standings after the games of the week: clk, SayStand, wait while the voice speaks and no key came, stop,

@@ -22,6 +22,7 @@ presentation (S7.3c: Game.superbowl).
 """
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
 from typing import Callable
@@ -29,6 +30,9 @@ from typing import Callable
 from ..data import debuglog
 from ..speech.roles import OPPONENT_PUNTER, OPPONENT_QUARTERBACK, OWN_PUNTER, OWN_QUARTERBACK, pronoun
 from . import phrases as P
+from . import resume
+from .keys import GameQuit
+from .save_summary import make_info
 from .gamestate import GameState, SavedGame, other, own_half
 from .menus import PLAY, SAVE
 from .outcome import PlayOutcome
@@ -73,7 +77,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                  quarterback_names: Callable[[GameState], tuple[str, str]] | None = None,
                  save_sink: Callable[[SavedGame], None] | None = None,
                  roster_sink: Callable[[Roster], object] | None = None,
-                 opponent_names: Roster | None = None):
+                 opponent_names: Roster | None = None, autosave_sink: Callable[[SavedGame], object] | None = None,
+                 save_ui=None):
         self.g = game
         self.rules = rules
         self.own_names = own_names
@@ -81,6 +86,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         self.saved = saved
         self.quarterback_names = quarterback_names
         self.save_sink = save_sink
+        self.autosave_sink = autosave_sink            # SX.14 (NX-S4): writes the automatic save; None in the tests that do not look at it
+        self.save_ui = save_ui                        # SX.14 (NX-S5, NX-S6): the slot and the quit-or-keep-playing questions of Save Game; None: the original's
         self.roster_sink = roster_sink                # S7.5: writes footplay.txt when the player's names were drawn
         self.s = GameState()
         self.clock = rules.period_clock(game, self.s)
@@ -352,6 +359,10 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         self.snd.play(0, 0)
         if self.saved is not None:                          # SavedGame = 0, 0x43bb41; N. F. L. rules (SX.9, C10): a choice the
             self.game_on = True                             # the loaded game is in play (H18: T works from its first question)
+            if self.saved.resume:                           # SX.14 (NX-S4): an automatic save goes on with the same draws and histories
+                if resume.restore(self, self.saved.resume):
+                    self.get_sex_of()                       # the voices may have changed since: the He and She words follow them
+                    debuglog.event("save", "resumed", draws=self.g.rnd.draws, quarter=s.quarter, counter=s.counter)
             return self.continuation(self.rules.resume_choice(s)) or self.play_menu     # save kept is asked first
         return self.coin_toss
 
@@ -465,8 +476,37 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
     # ----- the play menus (4.15) -----
 
     def play_menu(self):
-        """L_43dd89: the menu of the side with the ball."""
+        """L_43dd89: the menu of the side with the ball. A safe point (NX-S4): the board is whole, nothing is being said and no draw is
+        pending, so the automatic save is written here: after every play, after the period's statistics, after the half time's kick-off."""
+        self.autosave()
         return self.defense_menu if self.s.wisoff == 2 else self.offense_menu
+
+    def save_record(self, auto: bool = False) -> SavedGame:
+        """What Save Game or the automatic save writes: football.sav's values, the extras, and the summary's facts (the shelf adds the
+        date and the slot); an automatic save adds the engine's resume state. Pure: no draw, no speech."""
+        s = self.s
+        record = s.saved(self.g.quarter_clock.countdown)
+        if self.save_ui is not None or self.autosave_sink is not None:     # the program's saves carry their summary; a bare sink's do not
+            record.info = json.dumps(make_info(self), separators=(",", ":"))
+        if auto:
+            text = resume.capture(self)
+            if len(text.encode("utf-8")) <= resume.LIMIT_BYTES:      # a String Variant holds 65,535 bytes; a record that is larger goes without
+                record.resume = text
+            else:
+                debuglog.event("save", "resume_too_large", logging.WARNING, bytes=len(text))
+        return record
+
+    def autosave(self) -> None:
+        """NX-S4: the game in progress is kept in the automatic save at every safe point, whole (a temporary file, then a rename). It
+        never draws a number, never speaks, and a failure only goes to the debug log: a game is never stopped for its safety net."""
+        if self.autosave_sink is None or not self.game_on:
+            return
+        try:
+            self.autosave_sink(self.save_record(auto=True))
+        except GameQuit:                                # the window closed: that is not a failure of the save
+            raise
+        except Exception:
+            log.exception("the automatic save failed: the game goes on without it")
 
     def _menu(self, items, prompt: str, rebuild=None):
         """The loop of both play menus. Returns ("chosen", action), ("concede", None) or ("step", the engine's next step). An

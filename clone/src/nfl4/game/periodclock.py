@@ -65,6 +65,18 @@ class ClassicPeriodClock:
         """F4: sgc(L738, L2cc(L3c0), L3c0)."""
         self.game.sgc(self.state.counter, self._total(), self.state.quarter)
 
+    def summary_left(self) -> tuple[int, None]:
+        """The whole minutes left for the one-sentence summary of a save (SX.14): sgc's own arithmetic without its drawn seconds,
+        so it draws nothing and changes no state. The seconds are None: a classic game's time is made up from the counter."""
+        total, state = self._total(), self.state
+        if state.quarter == 3 and state.counter == 0:
+            return 15, None
+        if total <= 0:
+            return 0, None
+        percent = max(0, total - state.counter) * 100 // total
+        countdown = self.game.quarter_clock.countdown or 100
+        return int(percent * 15 / countdown), None
+
     def after_play(self, outcome=None) -> None:
         """The next-play step: L738 = L738 + 1."""
         self.state.counter += 1

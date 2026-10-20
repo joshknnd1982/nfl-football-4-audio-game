@@ -18,7 +18,7 @@ import dataclasses
 import logging
 
 from ...data import debuglog
-from ...data.files import savedgame
+from ...data.files.shelf import AUTO_FILE, ORPHAN, OK, STALE, SaveShelf
 from ...data.healing import FileInUse
 from ...game.gamestate import SavedGame
 from ...game.playoffs import PlayoffState
@@ -56,7 +56,7 @@ class FranchiseStore:
         self.unwritable = False
         self.keep_old = False                   # the old franchise could not be archived: the new league is never written over it
         self._notices: list = []
-        self._saved_ok = False
+        self.shelf = SaveShelf(files)           # SX.14: the franchise's saved games (three slots, the automatic save, the backup)
         self._write_notice_given = False
 
     # ----- notices -----
@@ -225,8 +225,7 @@ class FranchiseStore:
         old = D.OLD_FOLDER + "/"
         if self.files.exists(D.LEAGUE_FILE) and not self.files.move(D.LEAGUE_FILE, old + "league-0.sav"):
             return False
-        pairs = ((D.LEAGUE_FILE, "league-%d.sav"), (D.HISTORY_FILE, "history-%d.txt"), (D.SAVED_FILE, "football-%d.sav"))
-        for source, pattern in pairs:
+        for source, pattern in self._companions():
             self.files.remove(old + pattern % D.OLD_COPIES)
             for number in range(D.OLD_COPIES - 1, 0, -1):
                 if self.files.exists(old + pattern % number):
@@ -239,7 +238,6 @@ class FranchiseStore:
         self.files.remove(D.PREVIOUS_FILE)
         self.files.remove(D.LEAGUE_FILE + TMP)
         self.league = None
-        self._saved_ok = False
         return True
 
     def create(self, league: LeagueRecord) -> bool:
@@ -260,35 +258,26 @@ class FranchiseStore:
     def first_run(self) -> bool:
         return False
 
-    def has_saved_game(self) -> bool:
-        """The franchise's own football.sav, which must belong to this league's season and week (design 10.2)."""
-        self._saved_ok = False
+    def current_mark(self) -> dict | None:
+        """The league, season and week a franchise game is saved in (design 10.2); None while the franchise is not in a season."""
         league = self.league
-        if league is None or league.stage != SEASON or not self.files.exists(D.SAVED_FILE):
-            return False
-        try:
-            raw = self.files.read(D.SAVED_FILE)
-        except FileInUse as exc:
-            log.warning("the franchise's saved game is held by another program (%s)", exc)
-            return False
-        except ValueError:
-            raw = None
-        saved = None
-        if raw is not None:
-            try:
-                saved = savedgame.decode(raw)
-            except Exception:
-                saved = None
-        if saved is None:
-            self.files.set_aside(D.SAVED_FILE)
-            self._notice_text(SAVED_DAMAGED)
-            return False
-        if self._saved_value(saved) != {"league": league.league_id, "season": league.season, "week": league.gtp}:
-            self.files.set_aside(D.SAVED_FILE)
-            self._notice("NXF-33")
-            return False
-        self._saved_ok = True
-        return True
+        if league is None or league.stage != SEASON:
+            return None
+        return {"league": league.league_id, "season": league.season, "week": league.gtp}
+
+    def classify(self, entry) -> tuple[str, str]:
+        """Which saves of the franchise folder can be continued (SX.14, NX-S8): the ones marked with this league's season and week.
+        Nothing is set aside here any more; the start-up menu names a save that cannot be played and only the player moves it."""
+        mark = self.current_mark()
+        if mark is None:
+            return ORPHAN, "the franchise is not in a season"
+        if self._saved_value(entry.saved) != mark:
+            return STALE, "it belongs to another week of the franchise"
+        return OK, ""
+
+    def has_saved_game(self) -> bool:
+        """A saved game of this league's season and week is there (design 10.2)."""
+        return any(entry.playable for entry in self.shelf.scan(self.classify))
 
     def _notice_text(self, text: str) -> None:
         if text not in self._notices:
@@ -297,7 +286,7 @@ class FranchiseStore:
     @staticmethod
     def _saved_value(saved: SavedGame):
         from ..state import ExtrasRecord
-        if saved.extras is None:
+        if saved is None or saved.extras is None:
             return None
         try:
             return ExtrasRecord.from_json(saved.extras).franchise
@@ -305,46 +294,78 @@ class FranchiseStore:
             log.warning("the extras of a saved game cannot be read (%s)", exc)
             return None
 
-    def take_saved_game(self) -> SavedGame | None:
-        self._saved_ok = False
-        try:
-            raw = self.files.read(D.SAVED_FILE)
-        except (FileInUse, ValueError):
-            return None
-        if raw is None:
-            return None
-        try:
-            saved = savedgame.decode(raw)
-        except Exception:
-            self.files.set_aside(D.SAVED_FILE)
-            self._notice_text(SAVED_DAMAGED)
-            return None
-        self.files.remove(D.SAVED_FILE)
-        return saved
-
-    def save_game(self, saved: SavedGame) -> bool:
-        """Save Game in a franchise: football.sav in the franchise folder with the extras record's franchise value."""
-        league = self.league
-        if league is None or not self.available:
-            return False
-        if saved.extras is not None:
+    def _marked(self, saved: SavedGame) -> SavedGame:
+        """The saved game with the extras record's franchise value (the league, season and week it belongs to)."""
+        mark = self.current_mark()
+        if saved.extras is not None and mark is not None:
             from ..state import ExtrasRecord
             try:
                 record = ExtrasRecord.from_json(saved.extras)
-                record.franchise = {"league": league.league_id, "season": league.season, "week": league.gtp}
-                saved = dataclasses.replace(saved, extras=record.to_json())
+                record.franchise = mark
+                return dataclasses.replace(saved, extras=record.to_json())
             except ValueError:
                 log.warning("the extras of the franchise game cannot be marked: it is saved without the mark")
-        try:
-            data = savedgame.encode(saved)
-        except Exception:
-            log.exception("could not encode the saved game")
-            self._write_failed()
+        return saved
+
+    def save_game(self, saved: SavedGame, slot: int | None = None) -> bool:
+        """Save Game in a franchise: a slot of the franchise folder (slot 1 is football.sav) with the extras record's franchise value."""
+        if self.league is None or not self.available:
             return False
-        if not self.files.write(D.SAVED_FILE, data):
+        if not self.shelf.write_slot(slot or 1, self._marked(saved)):
             self._write_failed()
             return False
         return True
+
+    def autosave(self, saved: SavedGame) -> bool:
+        """The automatic save of a franchise game (NX-S4), marked like a saved game."""
+        if self.league is None or not self.available:
+            return False
+        if not self.shelf.write_auto(self._marked(saved)):
+            self._write_failed()
+            return False
+        return True
+
+    # ----- the player's own choices at the start (NX-S1, NX-S2): delete and restore -----
+
+    def delete_franchise(self) -> bool:
+        """The franchise moves to the backup (old\\league-1.sav and its companions, the three newest kept) and there is none until a new one
+        is made or this one is restored. False when it could not be moved: nothing is lost."""
+        if self.league is None:
+            return True
+        if not self.archive_current():
+            return False
+        debuglog.event("save", "franchise_delete")
+        return True
+
+    def deleted_exists(self) -> bool:
+        return self.league is None and self.files.exists(D.OLD_FOLDER + "/" + "league-1.sav")
+
+    def restore_deleted(self) -> bool:
+        """The franchise deleted last comes back (old\\league-1.sav and its companions), the older copies move up one. False when a
+        franchise is there now, none was deleted, or it could not be moved."""
+        if not self.deleted_exists():
+            return False
+        old = D.OLD_FOLDER + "/"
+        for target, pattern in self._companions():
+            source = old + pattern % 1
+            if self.files.exists(source) and not self.files.move(source, target):
+                debuglog.event("save", "franchise_restore_failed", file=target)
+                return False
+        for _target, pattern in self._companions():
+            for number in range(2, D.OLD_COPIES + 1):
+                if self.files.exists(old + pattern % number):
+                    self.files.move(old + pattern % number, old + pattern % (number - 1))
+        self.opened = False
+        self.problem = ""
+        self.open(True)
+        debuglog.event("save", "franchise_restore", ok=self.league is not None)
+        return self.league is not None
+
+    @staticmethod
+    def _companions() -> tuple:
+        """(the file in the franchise folder, its name pattern in old\\) for everything a franchise is."""
+        return ((D.LEAGUE_FILE, "league-%d.sav"), (D.HISTORY_FILE, "history-%d.txt"), (D.SAVED_FILE, "football-%d.sav"),
+                ("football2.sav", "football2-%d.sav"), ("football3.sav", "football3-%d.sav"), (AUTO_FILE, "autosave-%d.sav"))
 
     def load_season(self, season: SeasonState) -> bool:
         """The record's season goes into the Game's SeasonState (the franchise is in use and in the season)."""

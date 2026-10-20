@@ -28,8 +28,11 @@ def menu_opening(title: str, count: int) -> str:
 
 # ----- the key help that names the clone's added keys (owner rule 2026-10-20, S8.2, CLAUDE.md 0.17, playbook 7.13) -----
 # F5 (special key instructions) must list EVERY key the clone adds, in Classic too: F9 is the clone's one added global key.
+# SX.14 (rule 0.23): the saved-game questions use the original's menu keys, and Save Game now asks for a place; the same line says so
+KEYS_ADDED_SAVES = (" Saved games. When something is saved, the game asks first what to do: Up and Down and the digits choose, Enter takes "
+                    "the choice, and F1 says it again. Save Game asks for one of three places, then whether to quit or keep playing. ")
 KEYS_ADDED_F9 = (" F9. added functions: the speech settings, the sounds, the names and the banter, the rules, "
-                 "and the about text. ")
+                 "and the about text. " + KEYS_ADDED_SAVES.lstrip())
 # F1 repeats the prompt as the original does; right after it one short sentence says where the help is.
 F1_HELP_HINT = (" For help, F5 lists the special keys, F6 explains the game, F7 gives the football words, "
                 "and F9 opens the added functions. ")

@@ -219,6 +219,9 @@ class Rig:
         # hands others), the baseline every conformance test is written for, so its settings say Classic too. A test of the N. F. L. rules
         # sets them (frrig, nflrig, rules_from_settings); tests/test_sx9_switches.py checks the program's own default
         self.game.options.settings.game.rules = "classic"
+        # SX.14 (rule 0.23): the start-up choice and the save questions are the program's; the rig leaves them OFF by default, so the many tests
+        # that pin the original's start-up stay exact. Only the tests of the choice switch them on (`rig.game.startup_menu = True`).
+        self.game.startup_menu = False
 
     def run(self):
         self.game.run()

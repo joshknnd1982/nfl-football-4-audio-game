@@ -5,6 +5,7 @@ A Classic save is the S7.5 file byte for byte; a save of the N. F. L. rules adds
 string; a damaged or newer record keeps the original's values and starts the extras fresh with one spoken notice; a Classic
 program asks once whether to play such a save with the N. F. L. rules.
 """
+from savesrig import read_saved
 import json
 import random
 
@@ -244,7 +245,7 @@ def test_an_nfl_game_saved_through_the_menu_after_a_timeout_loads_with_its_recor
     first = SameRules()
     result = play(rig, rules=first, save_sink=store.save_game)
     assert result.saved and first.state.extras.used[0] == 1
-    saved = store.take_saved_game()
+    saved = read_saved(store)
     assert saved.extras_marked and saved.extras is not None
     rig2 = make_rig(tmp_path / "b", rng=random.Random(9), fast=True)
     second = SameRules()

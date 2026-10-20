@@ -34,6 +34,10 @@ from .variant import (VT_STRING, FileDamaged, VariantFileError, VariantReader, p
 FILE_NAME = "football.sav"
 EXTRAS_MARKER = b"NX-EXTRAS"
 EXTRAS_FORMAT = 1
+INFO_MARKER = b"NX-INFO"            # SX.14: the facts of the one-sentence summary (teams, week, date, time left), UTF-8 JSON
+RESUME_MARKER = b"NX-RESUME"        # SX.14: what an automatic save keeps so the game goes on with the same draws, UTF-8 JSON
+SECTION_FORMAT = 1
+_SECTIONS = (EXTRAS_MARKER, INFO_MARKER, RESUME_MARKER)
 STATISTICS = ("pass_attempts", "completions", "passing_yards", "sacked", "intercepted", "running_plays", "running_yards",
               "fumbles_lost", "first_downs", "score")
 NAME_LIMIT = 200           # a name is at most 30 typed characters (G-K5) or a pool surname; the bound keeps junk out
@@ -54,6 +58,9 @@ def encode(saved: SavedGame) -> bytes:
         out += pack_integer(saved.opening_receiver)
     if saved.extras is not None:
         out += pack_string(EXTRAS_MARKER) + pack_integer(EXTRAS_FORMAT) + pack_string(saved.extras.encode("utf-8"))
+    for marker, text in ((INFO_MARKER, saved.info), (RESUME_MARKER, saved.resume)):
+        if text is not None:
+            out += pack_string(marker) + pack_integer(SECTION_FORMAT) + pack_string(text.encode("utf-8"))
     return bytes(out)
 
 
@@ -90,36 +97,45 @@ def decode(raw: bytes) -> SavedGame:
         opening = None
         if not reader.at_end and reader.raw[reader.position] != VT_STRING:     # a String's type word begins with 8
             opening = _within(reader.next_int(), 1, 2, "the side that received the opening kick-off")
-        extras, marked = None, False
-        if not reader.at_end:
-            extras, marked = _extras(reader)
+        sections = _sections(reader) if not reader.at_end else {}
     except FileDamaged:
         raise
     except VariantFileError as exc:
         raise FileDamaged(str(exc)) from exc
     name = "".join(chr(code) for code in codes)
+    extras = sections.get(EXTRAS_MARKER)
     return SavedGame(wisoff, defense, half, quarter, counter, plays, countdown, stats, yard_line, down, to_go, name, opening,
-                     extras, marked)
+                     extras, EXTRAS_MARKER in sections, sections.get(INFO_MARKER), sections.get(RESUME_MARKER))
 
 
-def _extras(reader: VariantReader) -> tuple[str | None, bool]:
-    """The extras section (nfl4 SX.2): (the JSON text, True), or (None, True) for a marker whose record cannot be used,
-    including a file cut inside the marker itself (its bytes are then a beginning of the marker's record). Anything else
-    after the game is a damaged file, as before."""
-    marker = pack_string(EXTRAS_MARKER)
-    rest = reader.raw[reader.position:]
-    if len(rest) < len(marker) and marker.startswith(rest):
-        return None, True
-    if not rest.startswith(marker):
-        raise FileDamaged("the file holds more than a game")
-    reader.next_string()
-    try:
-        version = reader.next_int()
-        record = reader.next_string()
-        if not reader.at_end:
-            raise VariantFileError("the file holds more after the extras")
-        if version != EXTRAS_FORMAT:
-            raise VariantFileError("the extras are format %r, this game reads format %d" % (version, EXTRAS_FORMAT))
-        return record.decode("utf-8"), True
-    except (VariantFileError, UnicodeDecodeError):
-        return None, True
+def _sections(reader: VariantReader) -> dict:
+    """The sections after the game (nfl4 SX.2 and SX.14): {marker: JSON text, or None when the section's record cannot be used}.
+    A file cut inside a marker is read as that marker with no record (its bytes are a beginning of the marker's record); a
+    section the clone does not know is a damaged file, as before. The extras section that is followed by something else
+    keeps its marker and drops its record (SX.2's rule)."""
+    found: dict = {}
+    while not reader.at_end:
+        rest = reader.raw[reader.position:]
+        marker = next((m for m in _SECTIONS if rest.startswith(pack_string(m))), None)
+        if marker is None:
+            cut = next((m for m in _SECTIONS if len(rest) < len(pack_string(m)) and pack_string(m).startswith(rest)), None)
+            if cut is None and EXTRAS_MARKER in found:        # SX.2's rule: more after the extras than the clone knows drops the record
+                found[EXTRAS_MARKER] = None
+                return found
+            if cut is None or cut in found:
+                raise FileDamaged("the file holds more than a game")
+            found[cut] = None
+            return found
+        if marker in found:
+            raise FileDamaged("the file holds the %s section twice" % marker.decode())
+        reader.next_string()
+        try:
+            version = reader.next_int()
+            record = reader.next_string()
+            if version != (EXTRAS_FORMAT if marker == EXTRAS_MARKER else SECTION_FORMAT):
+                raise VariantFileError("%s is format %r, this game reads another" % (marker.decode(), version))
+            found[marker] = record.decode("utf-8")
+        except (VariantFileError, UnicodeDecodeError):
+            found[marker] = None
+            return found
+    return found

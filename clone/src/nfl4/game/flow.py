@@ -101,6 +101,8 @@ class Game(Speakers):
         self.hotkeys = HotKeys(self)                  # F5 to F8, F11, F12, Ctrl inside every wait (S7.4a, D-018)
         self.hotkeys.install()
         self.program_store = program_store if program_store is not None else MemoryProgramStore()   # S7.4b, S7.5
+        # SX.14 (CLAUDE.md 0.23): the start-up choice and the save questions; the tests of the original's start-up (tests/gamerig.py) turn them off
+        self.startup_menu = True
         self.functions = Functions(self, open_folder=open_folder, settings_dir=settings_dir)       # F9 (S7.4b, G-K2)
         self.functions.install()
         self.program = None                           # the running Program (game/program.py), for the tests and the exit
@@ -256,7 +258,8 @@ class Game(Speakers):
     # ----- the game itself: pag (S7.3b) -----
 
     def play_game(self, rules=None, own_names: Roster | None = None, saved=None, quarterback_names=None,
-                  save_sink=None, roster_sink=None, opponent_names: Roster | None = None, game_injuries=None):
+                  save_sink=None, roster_sink=None, opponent_names: Roster | None = None, game_injuries=None,
+                  autosave_sink=None, save_ui=None):
         """pag (GAME_SPEC 4.14 to 5.13): one game against this week's opponent. Returns a GameResult (Me.m414, saved,
         conceded); m414 is kept for the season engine. rules: game.rules.ClassicRules (the original) unless the
         N. F. L. rules mode hands its own (nfl4 only, phase PX). opponent_names: the Franchise's opponent (H7, SX.8b). game_injuries: a
@@ -265,7 +268,7 @@ class Game(Speakers):
         rules = (rules or self.rules).for_game()       # the N. F. L. rules get a fresh object per game; Classic is itself
         engine = PlayEngine(self, rules, own_names=own_names, saved=saved,
                             quarterback_names=quarterback_names, save_sink=save_sink, roster_sink=roster_sink,
-                            opponent_names=opponent_names)
+                            opponent_names=opponent_names, autosave_sink=autosave_sink, save_ui=save_ui)
         self.play_engine = engine
         self.game_injuries = game_injuries
         try:

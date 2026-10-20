@@ -179,6 +179,11 @@ class NflPeriodClock:
             text = clock_sentence(left // 60, left % 60, word)
         self.game.say_clock(text)
 
+    def summary_left(self) -> tuple[int, int]:
+        """The minutes and seconds left, for the one-sentence summary of a save (SX.14)."""
+        left = max(0, self.x.left)
+        return left // 60, left % 60
+
     # ----- what the engine does -----
 
     def after_play(self, outcome=None) -> None:

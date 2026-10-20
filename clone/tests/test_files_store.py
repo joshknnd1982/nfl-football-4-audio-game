@@ -3,6 +3,7 @@
 GAME_SPEC 3 and 12, D-024 items 3 to 5, D-029 item 5, G-F3 to G-F5, G-F8, playbook 7.10. Every test works in a temporary data
 folder; the store checks its files once, when it is made, so each test makes a second store to "start the program again".
 """
+from savesrig import read_saved
 import os
 import random
 import stat
@@ -269,58 +270,60 @@ def test_a_season_end_clears_what_a_later_load_would_have_returned(tmp_path):
 
 # ----- the saved game -----
 
-def test_a_saved_game_is_written_found_at_the_next_start_read_and_deleted(tmp_path):
+def test_a_saved_game_is_written_found_at_the_next_start_and_read_but_never_deleted_by_reading(tmp_path):
     store = a_season_on_disk(tmp_path, gtp=3)
     saved = a_game()
     assert store.save_game(saved) is True
     again = make(tmp_path)
     assert again.take_notices() == [] and again.has_saved_game() is True
-    assert again.take_saved_game() == saved
-    assert not data(tmp_path, "football.sav").exists() and again.has_saved_game() is False
-    assert again.take_saved_game() is None
+    assert read_saved(again) == saved
+    assert data(tmp_path, "football.sav").exists() and again.has_saved_game() is True      # SX.14 (NX-S3): the original's Kill on load is gone
+    assert read_saved(again) == saved
 
 
 def test_a_saved_game_of_the_original_without_the_extra_value_is_accepted(tmp_path):
     store = a_season_on_disk(tmp_path, gtp=3)
     store.save_game(a_game(opening=None))
     again = make(tmp_path)
-    assert again.has_saved_game() and again.take_saved_game().opening_receiver is None
+    assert again.has_saved_game() and read_saved(again).opening_receiver is None
 
 
 @pytest.mark.parametrize("how", ["empty", "half", "random", "text", "huge"])
-def test_a_saved_game_that_cannot_be_read_is_set_aside_with_one_notice_and_the_season_goes_on(tmp_path, how):
+def test_a_saved_game_that_cannot_be_read_is_named_by_the_shelf_and_left_where_it_is(tmp_path, how):
     store = a_season_on_disk(tmp_path, gtp=3)
     store.save_game(a_game())
     corrupt(data(tmp_path, "football.sav"), how)
     again = make(tmp_path)
-    assert again.take_notices() == [SAVED_DAMAGED] and again.has_saved_game() is False
-    assert os.path.exists(data(tmp_path, "football.sav.damaged1")) and not data(tmp_path, "football.sav").exists()
+    assert again.take_notices() == [] and again.has_saved_game() is False             # SX.14 (NX-S8): named by the menu, never set aside by the store
+    assert [e.status for e in again.shelf.scan(again.classify)] == ["damaged"]
+    assert data(tmp_path, "football.sav").exists() and not os.path.exists(data(tmp_path, "football.sav.damaged1"))
     assert again.load_season(SeasonState())                                  # the season itself is fine
 
 
-def test_a_saved_game_that_belongs_to_no_season_is_set_aside(tmp_path):
+def test_a_saved_game_that_belongs_to_no_season_is_named_an_orphan_and_left_where_it_is(tmp_path):
     store = make(tmp_path)
     store.save_game(a_game())
     again = make(tmp_path)
-    assert again.take_notices() == [SAVED_DAMAGED] and again.has_saved_game() is False
-    assert os.path.exists(data(tmp_path, "football.sav.damaged1"))
+    assert again.take_notices() == [] and again.has_saved_game() is False
+    assert [e.status for e in again.shelf.scan(again.classify)] == ["orphan"] and data(tmp_path, "football.sav").exists()
 
 
-def test_a_damaged_season_takes_its_saved_game_with_it_and_says_both(tmp_path):
+def test_a_damaged_season_is_set_aside_and_its_saved_game_waits_as_an_orphan(tmp_path):
     store = a_season_on_disk(tmp_path, gtp=3)
     store.save_game(a_game())
     corrupt(data(tmp_path, "footbal2.dat"), "half")
     again = make(tmp_path)
-    assert again.take_notices() == [SEASON_DAMAGED, SAVED_DAMAGED] and again.has_saved_game() is False
+    assert again.take_notices() == [SEASON_DAMAGED] and again.has_saved_game() is False
+    assert [e.status for e in again.shelf.scan(again.classify)] == ["orphan"]
 
 
-def test_a_saved_game_that_goes_bad_between_the_start_and_the_game_is_handled_too(tmp_path):
+def test_a_saved_game_that_goes_bad_between_the_start_and_the_game_is_named_damaged_not_an_error(tmp_path):
     store = a_season_on_disk(tmp_path, gtp=3)
     store.save_game(a_game())
     again = make(tmp_path)
     assert again.has_saved_game()
     data(tmp_path, "football.sav").write_bytes(b"cut")
-    assert again.take_saved_game() is None and again.take_notices() == [SAVED_DAMAGED]
+    assert read_saved(again) is None and again.take_notices() == [] and data(tmp_path, "football.sav").exists()
 
 
 def test_a_saved_game_that_cannot_be_written_says_so_to_the_caller(tmp_path):
@@ -495,7 +498,7 @@ def test_a_few_hundred_random_corruptions_never_stop_the_start_and_leave_a_valid
                 assert season.playoffs.contains_player(season.own_team)
         else:
             assert not again.has_saved_game()
-        again.take_saved_game()
+        read_saved(again)
         got = again.player_names()
         if got is not None:
             assert got.names() == names_file.names()                      # the names never go with a damaged season
@@ -514,7 +517,7 @@ def test_a_saved_game_made_at_the_start_of_quarter_3_or_overtime_has_a_play_coun
     saved.counter = 0
     assert store.save_game(saved)
     again = make(tmp_path)
-    assert again.take_notices() == [] and again.has_saved_game() and again.take_saved_game().counter == 0
+    assert again.take_notices() == [] and again.has_saved_game() and read_saved(again).counter == 0
 
 
 def test_a_season_that_cannot_be_read_for_another_reason_is_not_damage_and_keeps_the_saved_game(tmp_path, monkeypatch):
@@ -532,7 +535,7 @@ def test_a_season_that_cannot_be_read_for_another_reason_is_not_damage_and_keeps
     monkeypatch.setattr(store_module, "read_bytes", broken)
     again = make(tmp_path)
     assert again.take_notices() == [LOCKED] and again.load_season(SeasonState()) is False
-    assert again.has_saved_game() is False
+    assert again.has_saved_game() is False                       # its season could not be read: it cannot be played this time
     assert data(tmp_path, "football.sav").exists() and data(tmp_path, "footbal1.dat").exists()      # nothing judged or deleted
     assert not [n for n in os.listdir(tmp_path / "data") if ".damaged" in n]
     again.write_coach_and_team(1, 1, "New")                       # nothing is written over the real season this run
@@ -590,13 +593,12 @@ def test_a_write_that_cannot_be_encoded_is_a_failed_write_not_an_error(tmp_path)
     assert not [n for n in os.listdir(tmp_path / "data" / "customize") if n.endswith(".tmp")] if (tmp_path / "data" / "customize").exists() else True
 
 
-def test_a_saved_game_that_cannot_be_read_when_taken_is_not_an_error(tmp_path, monkeypatch):
+def test_a_saved_game_that_vanishes_between_the_start_and_the_game_is_not_an_error(tmp_path):
     store = a_season_on_disk(tmp_path, gtp=3)
     store.save_game(a_game())
     again = make(tmp_path)
-    from nfl4.data.files import store as store_module
-    monkeypatch.setattr(store_module, "read_bytes", lambda *a, **k: (_ for _ in ()).throw(FileNotFoundError("gone")))
-    assert again.take_saved_game() is None
+    data(tmp_path, "football.sav").unlink()
+    assert read_saved(again) is None and again.has_saved_game() is False
 
 
 def test_a_write_is_flushed_to_the_disk_before_it_replaces_the_file(tmp_path, monkeypatch):

@@ -36,6 +36,13 @@ class DiskFiles:
     def folder_exists(self) -> bool:
         return os.path.isdir(self.folder)
 
+    def mtime(self, name: str) -> float:
+        """When the file was last written (seconds since 1970); 0 when it cannot be told (SX.14: the date of a save with no summary)."""
+        try:
+            return os.path.getmtime(self.path(name))
+        except OSError:
+            return 0.0
+
     def read(self, name: str) -> bytes | None:
         """The file whole; None when it is not there; FileInUse when it cannot be opened (held, no permission); ValueError
         when it is over the size limit (damage, not read)."""
@@ -140,6 +147,8 @@ class MemoryFiles:
         self.unwritable = False
         self.steps: list[tuple] = []
         self.aside: list[str] = []
+        self.times: dict[str, float] = {}       # SX.14: when a file was last written (a tick of 1 second per write, or set by a test)
+        self._tick = 1_000_000_000.0
 
     def path(self, name: str) -> str:
         return "memory:" + name
@@ -149,6 +158,9 @@ class MemoryFiles:
 
     def folder_exists(self) -> bool:
         return bool(self.data)
+
+    def mtime(self, name: str) -> float:
+        return self.times.get(name, 0.0) if name in self.data else 0.0
 
     def read(self, name: str) -> bytes | None:
         if name in self.held:
@@ -177,6 +189,8 @@ class MemoryFiles:
         if self.unwritable or name + TMP not in self.data:
             return False
         self.data[name] = self.data.pop(name + TMP)
+        self._tick += 1.0
+        self.times[name] = self._tick
         return True
 
     def write(self, name: str, data: bytes) -> bool:
@@ -200,4 +214,5 @@ class MemoryFiles:
         if self.unwritable or source not in self.data:
             return False
         self.data[target] = self.data.pop(source)
+        self.times[target] = self.times.pop(source, 0.0)
         return True

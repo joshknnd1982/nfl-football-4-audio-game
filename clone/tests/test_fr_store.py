@@ -5,6 +5,7 @@ NFL_FRANCHISE_DESIGN 10.1 and 10.2, invariant I10: at any moment league.sav or l
 playbook 7.10 is run on a real folder (delete, empty, cut in half, random bytes, another encoding, huge, read-only, held by another
 program, newer format, a value out of range for its stage, a stale .tmp); the crash points are every step of a write.
 """
+from savesrig import read_saved
 import json
 import random
 
@@ -387,11 +388,11 @@ def test_a_saved_game_carries_the_league_season_and_week_and_loads_only_there():
     assert b"franchise" in files.data["football.sav"]
     again = opened(files)
     assert again.has_saved_game() and again.take_notices() == []
-    saved = again.take_saved_game()
-    assert saved is not None and "football.sav" not in files.data and not again.has_saved_game()
+    saved = read_saved(again)
+    assert saved is not None and "football.sav" in files.data and again.has_saved_game()      # SX.14 (NX-S3): reading deletes nothing
 
 
-def test_a_saved_game_of_another_week_is_set_aside_with_the_notice():
+def test_a_saved_game_of_another_week_is_named_old_and_left_where_it_is():
     files = MemoryFiles()
     league = a_league()
     store = store_over(files, league)
@@ -400,11 +401,11 @@ def test_a_saved_game_of_another_week_is_set_aside_with_the_notice():
     league.gtp, league.records = 2, [1, 0] * 32
     store.save()
     again = opened(files)
-    assert not again.has_saved_game() and again.take_notices() == [NXF[33]]
-    assert "football.sav" not in files.data and files.aside == ["football.sav"]
+    assert not again.has_saved_game() and again.take_notices() == []                 # SX.14 (NX-S8): the menu names it, the store sets nothing aside
+    assert [e.status for e in again.shelf.scan(again.classify)] == ["stale"] and "football.sav" in files.data and files.aside == []
 
 
-def test_a_saved_game_without_the_mark_or_damaged_is_set_aside():
+def test_a_saved_game_without_the_mark_is_old_and_a_damaged_one_is_named_damaged_and_both_stay():
     files = MemoryFiles()
     store = store_over(files, a_league())
     store.save()
@@ -412,7 +413,8 @@ def test_a_saved_game_without_the_mark_or_damaged_is_set_aside():
     assert not opened(files).has_saved_game()
     files.data["football.sav"] = b"junk"
     again = opened(files)
-    assert not again.has_saved_game() and again.take_notices() == [" The saved game could not be read and was set aside. "]
+    assert not again.has_saved_game() and again.take_notices() == []
+    assert [e.status for e in again.shelf.scan(again.classify)] == ["damaged"] and "football.sav" in files.data and files.aside == []
 
 
 def test_the_extras_record_without_a_franchise_value_is_the_old_text():

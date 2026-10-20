@@ -47,12 +47,15 @@ from ..healing import (read_bytes, read_player_text, save_damaged_copy, write_by
                        write_text_atomic)
 from . import (byesfile, coachteam, pairingsfile, playernames, recordsfile, savedgame, schedulefile, speechlog,
                weekfile)
+from . import shelf as shelf_module
+from .shelf import ORPHAN, OK, STALE, SaveShelf
 from .variant import FileDamaged
 
 log = logging.getLogger("nfl4.data")
 
 SEASON_FILES = (coachteam.FILE_NAME, schedulefile.FILE_NAME, weekfile.FILE_NAME, recordsfile.FILE_NAME,
                 pairingsfile.FILE_NAME, byesfile.FILE_NAME)
+SEASON_BACKUP = os.path.join(shelf_module.BACKUP_FOLDER, "season")      # SX.14: the season the player deleted last
 SAVED_NAME = savedgame.FILE_NAME
 LOG_NAME = speechlog.FILE_NAME
 
@@ -84,7 +87,9 @@ class FileProgramStore:
         self.speech_log = speechlog.SpeechLog(os.path.join(data_dir, LOG_NAME))
         self._notices: list[str] = []
         self._season: LoadedSeason | None = None
-        self._saved_ok = False
+        self._week: int | None = None          # SX.14: the week of the season in the files (None: no season); the saved games are judged by it
+        from ...extras.franchise.files import DiskFiles
+        self.shelf = SaveShelf(DiskFiles(data_dir))      # SX.14: the slots, the automatic save and the backup of deleted ones
         self._own_division: int | None = None
         self._write_notice_given = False
         self._hold_writes = False              # the season files are locked by another program: write nothing this run
@@ -169,11 +174,9 @@ class FileProgramStore:
         except Exception:                      # whatever goes wrong, the game starts a new season (7.10)
             log.exception("reading the season files failed")
             self._season = None
-        try:
-            self._saved_ok = self._check_saved_game()
-        except Exception:
-            log.exception("checking the saved game failed")
-            self._saved_ok = False
+        self._week = self._season.gtp if self._season is not None else None
+        # SX.14 (NX-S8): a saved game that cannot be used is no longer set aside here. It stays where it is, the start-up menu
+        # names it, and only the player's choice moves it (to the backup); `classify` says which saves can be continued
 
     def _read_required(self, name: str) -> bytes:
         self._reading = self.path(name)
@@ -244,25 +247,17 @@ class FileProgramStore:
         for name in SEASON_FILES:
             self._remove(self.path(name))
 
-    def _check_saved_game(self) -> bool:
-        path = self.path(SAVED_NAME)
-        if not os.path.exists(path):
-            return False
-        if self._hold_writes:                                   # the season could not be read: judge nothing, delete nothing
-            log.warning("%s is left alone: the season files are in use", path)
-            return False
-        try:
-            savedgame.decode(read_bytes(path))
-            if self._season is None or not 1 <= self._season.gtp <= weekfile.LAST_WEEK:
-                raise FileDamaged("it belongs to no season")     # it disagrees with football.gtp (G-F5)
-            return True
-        except OSError:
-            log.warning("%s could not be read: no saved game this time", path, exc_info=True)
-            return False
-        except (FileDamaged, ValueError) as exc:
-            self._set_aside(path, str(exc))
-            self._notice(SAVED_DAMAGED)
-            return False
+    def classify(self, entry) -> tuple[str, str]:
+        """Which saves of the data folder can be continued (SX.14): one of this season's week (a file of the original has no week
+        and counts as this week's, as before), while a season is there."""
+        if self._hold_writes:                                   # the season could not be read: the save stays, and cannot be played this time
+            return ORPHAN, "the season files are in use by another program"
+        if self._week is None or not 1 <= self._week <= weekfile.LAST_WEEK:
+            return ORPHAN, "it belongs to no season"            # it disagrees with football.gtp (G-F5)
+        week = entry.info.get("week")
+        if isinstance(week, int) and week != self._week:
+            return STALE, "it is from week %d and the season is in week %d" % (week, self._week)
+        return OK, ""
 
     # ----- ProgramStore -----
 
@@ -270,7 +265,84 @@ class FileProgramStore:
         return self.first
 
     def has_saved_game(self) -> bool:
-        return self._saved_ok
+        return any(entry.playable for entry in self.shelf.scan(self.classify))
+
+    def season_peek(self):
+        """The season the files hold, before it is loaded, for the start-up menu's sentence (None: no season, or already loaded)."""
+        from ...game.program_store import SeasonPeek
+        loaded = self._season
+        if loaded is None:
+            return None
+        wins, losses = loaded.records.record(loaded.team.tn1, loaded.team.tn2)
+        return SeasonPeek(loaded.team.coach, loaded.team.tn1, loaded.team.tn2, loaded.gtp, wins, losses)
+
+    def season_deleted(self) -> bool:
+        return os.path.exists(self._backup_path(coachteam.FILE_NAME))
+
+    def _backup_path(self, name: str) -> str:
+        return os.path.join(self.data_dir, SEASON_BACKUP, name)
+
+    def _season_names(self) -> list[tuple[str, str]]:
+        """(the file, its place in the backup) of everything a season is: the six season files and the player's footplay.txt."""
+        names = [(self.path(name), self._backup_path(name)) for name in SEASON_FILES]
+        names.append((self.names_path, self._backup_path(playernames.FILE_NAME)))
+        # the saved games of the season go with it (they hold no opponent: they need their season), and come back with it
+        names += [(self.path(name), self._backup_path(name)) for name in (*shelf_module.SLOT_FILE.values(), shelf_module.AUTO_FILE)]
+        return names
+
+    def delete_season(self) -> bool:
+        """The season moves to the backup folder (the one before it there is replaced) and the next start is a new season. False
+        when a file could not be moved: everything moved so far is put back, so the season is never half deleted."""
+        if self._hold_writes or self._hold_names:
+            return False
+        done: list[tuple[str, str]] = []
+        try:
+            for _source, target in self._season_names():
+                self._remove(target)
+            os.makedirs(os.path.join(self.data_dir, SEASON_BACKUP), exist_ok=True)
+            for source, target in self._season_names():
+                if os.path.exists(source):
+                    os.replace(source, target)
+                    done.append((source, target))
+        except OSError:
+            log.exception("the season could not be moved to the backup: it is put back")
+            for source, target in reversed(done):
+                try:
+                    os.replace(target, source)
+                except OSError:
+                    log.exception("could not put %s back", source)
+            return False
+        debuglog.event("save", "season_delete", files=len(done))
+        self._season, self._week = None, None
+        return True
+
+    def restore_season(self) -> bool:
+        """The deleted season comes back, when there is no season now. False when there is one, none was deleted, or it could not be moved."""
+        if not self.season_deleted() or os.path.exists(self.path(coachteam.FILE_NAME)):
+            return False
+        done: list[tuple[str, str]] = []
+        try:
+            os.makedirs(self.customize_dir, exist_ok=True)
+            for source, target in self._season_names():
+                if os.path.exists(target) and not os.path.exists(source):
+                    os.replace(target, source)
+                    done.append((source, target))
+        except OSError:
+            log.exception("the season could not be restored: it is put back in the backup")
+            for source, target in reversed(done):
+                try:
+                    os.replace(source, target)
+                except OSError:
+                    log.exception("could not put %s back", target)
+            return False
+        debuglog.event("save", "season_restore", files=len(done))
+        try:
+            self._season = self._read_season()
+        except Exception:
+            log.exception("reading the restored season failed")
+            self._season = None
+        self._week = self._season.gtp if self._season is not None else None
+        return self._season is not None
 
     def load_season(self, season: SeasonState) -> bool:
         loaded, self._season = self._season, None
@@ -355,26 +427,24 @@ class FileProgramStore:
         """The original's write of footplay.txt after pag drew the names (0x455908 to 0x456f0b)."""
         return self._write_text(self.names_path, lambda: playernames.format_roster(roster))
 
-    def take_saved_game(self) -> SavedGame | None:
-        """football.sav read, then deleted (pag 0x43afa4: the saved game exists once)."""
-        path = self.path(SAVED_NAME)
-        self._saved_ok = False
-        if not os.path.exists(path):
-            return None
-        try:
-            saved = savedgame.decode(read_bytes(path))
-        except OSError:
-            log.warning("%s could not be read", path, exc_info=True)
-            return None
-        except (FileDamaged, ValueError) as exc:
-            self._set_aside(path, str(exc))
-            self._notice(SAVED_DAMAGED)
-            return None
-        self._remove(path)
-        return saved
+    def save_game(self, saved: SavedGame, slot: int | None = None) -> bool:
+        """Save Game (SX.14: one of the three slots; slot 1 is the original's football.sav). The original's pag deleted the file as it
+        loaded it (Kill, 0x43afa4); the clone keeps it until its game ends (NX-S3), so nothing here reads and removes."""
+        if self._hold_writes:
+            return False
+        if self.shelf.write_slot(slot or 1, saved):
+            return True
+        self._write_failed(self.path(SAVED_NAME))
+        return False
 
-    def save_game(self, saved: SavedGame) -> bool:
-        return self._write(self.path(SAVED_NAME), lambda: savedgame.encode(saved))
+    def autosave(self, saved: SavedGame) -> bool:
+        """The automatic save (NX-S4): whole, quiet; a failure is told once and the game goes on."""
+        if self._hold_writes:
+            return False
+        if self.shelf.write_auto(saved):
+            return True
+        self._write_failed(self.path(shelf_module.AUTO_FILE))
+        return False
 
     def delete_season_files(self) -> None:
         """The season's end (GAME_SPEC 3 step 9): footbal1.dat to footbal5.dat, football.gtp and footplay.txt go; the
@@ -396,6 +466,7 @@ class FileProgramStore:
         if keep_names and not self._hold_names:
             self._remove(names)
         self._season = None
+        self._week = None
 
     # ----- SeasonStore -----
 
@@ -403,6 +474,7 @@ class FileProgramStore:
         self._write(self.path(recordsfile.FILE_NAME), lambda: recordsfile.encode(records))
 
     def write_gtp(self, gtp: int) -> None:
+        self._week = gtp if gtp else None                      # SX.14: the week the saved games are judged by
         self._write(self.path(weekfile.FILE_NAME), lambda: weekfile.encode(gtp))
 
     def write_pairings(self, pairings: list[Pairing]) -> None:

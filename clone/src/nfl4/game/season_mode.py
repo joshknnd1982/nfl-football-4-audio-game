@@ -78,20 +78,40 @@ class ClassicSeason(SeasonMode):
         if not p.store.load_season(p.season):                   # 0x488018 to 0x4882f1: footbal1.dat, else a new season
             p.new_season()
 
-    def new_season(self, coach: str | None = None, ask: bool = True) -> None:
+    def new_season(self, coach: str | None = None, ask: bool = True, defaults: tuple | None = None) -> None:
         """A new season: the coach, the team, the schedule, week 1 (GetCoach 0x488234, ChooseTeam 0x48825d, makes 0x488278,
-        gtp = 1 and football.gtp 0x4882b2 to 0x4882de). With the N. F. L. rules the question of design 3.2 comes first."""
+        gtp = 1 and football.gtp 0x4882b2 to 0x4882de). With the N. F. L. rules the question of design 3.2 comes first.
+        `defaults` (SX.14, NX-S7): the coach and team of the season this one replaces; one yes or no question takes them, so a player
+        who plays on as before presses Enter once instead of typing a name and choosing a team."""
         p = self.p
         g = p.g
         if ask and self._nfl():
             from ..extras.franchise import mode as franchise_mode
             if franchise_mode.ask_kind(p, coach):               # the player chose a franchise: its set-up is done
                 return
-        g.get_coach()
-        g.choose_team()
+        if not self._same_coach_and_team(defaults):
+            g.get_coach()
+            g.choose_team()
         g.make_schedule()
         p.season.gtp = 1
         (g.season_store or NULL_STORE).write_gtp(1)
+
+    def _same_coach_and_team(self, defaults: tuple | None) -> bool:
+        """The start-up menu's new season (NX-S7): the last coach and team as the default. True when the player took them (the season
+        state and footbal1.dat are then set as ChooseTeam sets them), False to run the original's prompts."""
+        if not defaults or not defaults[0] or defaults[0] == "coach":
+            return False
+        from ..extras.franchise.question import ask_yes_no
+        from . import save_texts
+        coach, tn1, tn2 = defaults
+        g = self.p.g
+        if not ask_yes_no(g, save_texts.SAME_COACH_QUESTION % (coach, g.league.team(tn1, tn2).strip())):
+            return False
+        g.season.coach = coach
+        g.season.tn1, g.season.tn2 = tn1, tn2
+        from .prompts import NullSetupStore
+        (g.setup_store or NullSetupStore()).write_coach_and_team(tn1, tn2, coach)
+        return True
 
     # ----- the end of a season -----
 

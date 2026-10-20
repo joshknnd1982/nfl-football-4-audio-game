@@ -128,7 +128,7 @@ def test_a_saved_game_skips_the_menu_and_loads_the_game(tmp_path):
     rig.run()
     spoken = said(rig)
     assert SELECT_LINE(rig) not in spoken and " 1. play game " not in spoken
-    assert rig.plays[0]["saved"] is record and rig.store.saved is None      # pag reads football.sav and deletes it
+    assert rig.plays[0]["saved"] is record and rig.store.saved is record    # SX.14 (NX-S3): the original deleted it as it loaded it; the clone keeps it
     assert spoken[1].startswith(" This is week") and spoken[3].startswith(" Today's game is")
 
 

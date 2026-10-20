@@ -82,7 +82,7 @@ class FranchiseSeason(SeasonMode):
     def season_setup(self) -> None:
         resume(self.p)
 
-    def new_season(self, coach: str | None = None, ask: bool = True) -> None:
+    def new_season(self, coach: str | None = None, ask: bool = True, defaults: tuple | None = None) -> None:
         """Not reached in normal play (a franchise goes from its offseason into its next season by itself); a franchise whose
         season cannot be loaded hands over to a classic season."""
         to_classic(self.p, announce=False)
@@ -282,7 +282,7 @@ def to_franchise(p, new: bool, announce: bool = True) -> None:
         return
     if announce:
         g.say2(X.text("NXF-05", team=g.league.team(*team_ref(store.league.team))))
-    p.saved_game = store.has_saved_game()
+    p.saved_game = False                              # SX.14 (rule 0.23): a switch loads no saved game by itself; it waits for the next start's menu
     resume(p)
 
 
@@ -299,7 +299,7 @@ def to_classic(p, announce: bool) -> None:
     else:
         g.season.reset_for_new_season()
         loaded = p.store.load_season(g.season)
-    p.saved_game = p.store.has_saved_game()
+    p.saved_game = False                              # SX.14 (rule 0.23): see to_franchise
     if not loaded:                                    # no classic season to go on with: the original's prompts, no question
         g.season.reset_for_new_season()
         p.mode.new_season(None, ask=False)

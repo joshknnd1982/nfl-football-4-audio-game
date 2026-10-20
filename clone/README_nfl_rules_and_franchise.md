@@ -48,6 +48,29 @@ The announcer's remarks of the added features (remarks.txt), the names of the fo
 playbooks), the franchise's news (news.txt) and the injuries' words (injuries.txt) are in the customize folder and can be changed like
 banter.txt. CUSTOMIZE.md explains every file. With the Rules setting Classic the game never makes or reads them.
 
+### Saved games, seasons and the start of the game
+
+When the game starts and something is saved (a saved game, a game that was not finished, a season or a franchise), the game says one sentence
+about each of them and asks what to do. Up and Down and the digits choose, Enter takes the choice, F1 says it again. The first item is what
+the original game did, so Enter alone continues it. The items are: continue the saved game, choose another saved game, continue the season,
+continue the franchise, start a new game, delete the saved game, the season or the franchise, and restore what was deleted.
+
+- Nothing is loaded, deleted or replaced without a key from you. A delete asks again and starts at "no". A deleted saved game, season or
+  franchise is moved to the backup, not erased, and the last one can be restored until you delete another.
+- A saved game is kept until its game is over. The original game erased it as it loaded it; this game does not, so a crash or a closed
+  window never loses it. When the game ends, the saves of that week move to the backup folder (the last three are kept) and the game says so.
+- The game writes an automatic save at every play. If the program stops in the middle of a game, the next start offers "the game that was not
+  finished" and goes on from the same play with the same outcomes.
+- Save Game asks which of three places to use (the game's own place first, or the first empty one), says what a place holds before it is
+  replaced and asks once, and then asks whether to quit (the first item) or keep playing.
+- A saved game that is damaged, in use by another program, from a week that is over, or without a season is named and left where it is. Only
+  you move it, by deleting it.
+- A new game asks what kind (a new season or a new franchise, the last kind first). If it would replace your season, it says so, asks, and
+  keeps the old season and its saved games in the backup. For a new season, one question takes your last coach and team.
+- The files are in your data folder (see README_if_something_goes_wrong.md): football.sav, football2.sav and football3.sav are the three
+  places, autosave.sav is the automatic save, the folder backup holds what was deleted or finished, and a franchise keeps its own set in its
+  folder. Older saved games of the original game are place 1.
+
 ### Trademark notice
 
 The playbooks and the franchise mode are inspired by the playbooks and franchise ideas of Madden NFL. Madden NFL is a trademark of
