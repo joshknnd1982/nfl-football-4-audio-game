@@ -67,7 +67,10 @@ ABOUT_LINES = (
     "The Rules item of this menu switches them, or chooses Classic, the game exactly as the original.",
     "The playbooks and the franchise are inspired by the playbooks and franchise ideas of Madden N. F. L. "
     "Madden N. F. L. is a trademark of Electronic Arts. "
-    "This project is not made, endorsed or supported by Electronic Arts or the N. F. L.",
+    "This project is not made, endorsed or supported by Electronic Arts or the N. F. L. "
+    # SX.10b (D-088 item 4, D-090): the plays are football concepts in plain words, many of them also in Madden's playbooks
+    "The plays are football concepts named in plain football words; many of them are also in the playbooks of Madden N. F. L. "
+    "No text, play name, play list, ratings, art or sound of Madden N. F. L. is copied.",
 )
 
 # ----- settings menu (F2) -----

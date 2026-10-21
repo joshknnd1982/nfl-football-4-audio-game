@@ -22,6 +22,18 @@ def test_the_about_text_has_the_notice_and_names_the_added_rules():
     assert "not made, endorsed or supported by Electronic Arts or the N. F. L." in text
     assert "N. F. L. rules" in text and "franchise" in text and "Classic" in text
     assert words.ABOUT_LINES[1].startswith("This is inspired by Jim Kitchen.")       # rule 0.5 stays as it was
+    # SX.10b (D-088 item 4): the plays are concepts in plain words, nothing of EA's is copied; no "no play list is used" any more
+    assert "The plays are football concepts named in plain football words" in text
+    assert "No text, play name, play list, ratings, art or sound of Madden N. F. L. is copied." in text
+
+
+def test_the_readme_notice_says_the_plays_are_concepts_and_nothing_is_copied():
+    readme = (Path(__file__).resolve().parent.parent / "README_nfl_rules_and_franchise.md").read_text(encoding="utf-8")
+    flat = " ".join(readme.split())
+    assert "Madden NFL is a trademark of Electronic Arts." in flat
+    assert "The plays are football concepts named in plain football words" in flat
+    assert "No text, play name, play list, ratings, art or sound of Madden NFL is copied." in flat
+    assert "play list, ratings, art or sound of Madden NFL is used" not in flat
 
 
 def _strings(path: Path):

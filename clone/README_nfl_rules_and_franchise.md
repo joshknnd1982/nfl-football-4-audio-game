@@ -74,5 +74,6 @@ continue the franchise, start a new game, delete the saved game, the season or t
 ### Trademark notice
 
 The playbooks and the franchise mode are inspired by the playbooks and franchise ideas of Madden NFL. Madden NFL is a trademark of
-Electronic Arts. This project is not made, endorsed or supported by EA or the NFL. No text, play list, ratings, art or sound of Madden
-NFL is used.
+Electronic Arts. This project is not made, endorsed or supported by EA or the NFL. The plays are football concepts named in plain
+football words; many of them are also in the playbooks of Madden NFL. No text, play name, play list, ratings, art or sound of Madden
+NFL is copied.

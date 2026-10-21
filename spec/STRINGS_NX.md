@@ -6,14 +6,14 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 889.
+- Texts: 1191.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 80.
-- Playbooks (design section 10): 99.
+- Playbooks (design section 10): 401.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 552.
@@ -331,6 +331,308 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXH-31 (help, say5): " Playbook: The plays a team may call. Style: The kind of football a playbook is built for, such as West Coast or Air Raid. Group: A kind of play, such as inside runs, that opens a short list. ". F7 addition (H12, C6), when a playbook is in use
 - NXH-32 (help, say5): " Inside zone: A run into the middle of the line. Stretch: A run that goes wide before it turns up field. Screen: A short pass behind the line with blockers in front. ". F7 addition (H12, C6), when a playbook is in use
 - NXH-33 (help, say5): " Play action: A pass that starts with a fake hand off. Bootleg: The quarterback leaves the pocket. Cover two: Two safeties play deep. Cover three: Three share the deep zones. ". F7 addition (H12, C6), when a playbook is in use
+- NXY-53 (menu, say5): "Split Zone". offense play O053 of the catalog (run, list og01, SRC-SECONDARY)
+- NXY-54 (menu, say5): "Mid Zone". offense play O054 of the catalog (run, list og01, SRC-SECONDARY)
+- NXY-55 (menu, say5): "Delayed Draw". offense play O055 of the catalog (draw, list og01, SRC-SECONDARY)
+- NXY-56 (menu, say5): "Lead Draw". offense play O056 of the catalog (draw, list og01, SRC-SECONDARY)
+- NXY-57 (menu, say5): "Wham". offense play O057 of the catalog (run, list og01, UNVERIFIED)
+- NXY-58 (menu, say5): "Belly". offense play O058 of the catalog (run, list og01, UNVERIFIED)
+- NXY-59 (menu, say5): "Fullback Dive". offense play O059 of the catalog (run, list og01, SRC-SECONDARY)
+- NXY-60 (menu, say5): "Duo". offense play O060 of the catalog (run, list og02, SRC-SECONDARY)
+- NXY-61 (menu, say5): "Counter Trey". offense play O061 of the catalog (run, list og02, UNVERIFIED)
+- NXY-62 (menu, say5): "Fullback Trap". offense play O062 of the catalog (run, list og02, SRC-SECONDARY)
+- NXY-63 (menu, say5): "Off Tackle". offense play O063 of the catalog (run, list og02, SRC-SECONDARY)
+- NXY-64 (menu, say5): "Cutback Run". offense play O064 of the catalog (run, list og02, SRC-SECONDARY)
+- NXY-65 (menu, say5): "Quick Toss". offense play O065 of the catalog (run, list og03, SRC-SECONDARY)
+- NXY-66 (menu, say5): "Crack Toss". offense play O066 of the catalog (run, list og03, UNVERIFIED)
+- NXY-67 (menu, say5): "Pin and Pull Sweep". offense play O067 of the catalog (run, list og03, UNVERIFIED)
+- NXY-68 (menu, say5): "Double Pull Sweep". offense play O068 of the catalog (run, list og03, SRC-SECONDARY)
+- NXY-69 (menu, say5): "Fake Reverse". offense play O069 of the catalog (run, list og04, UNVERIFIED)
+- NXY-70 (menu, say5): "Orbit Sweep". offense play O070 of the catalog (run, list og04, UNVERIFIED)
+- NXY-71 (menu, say5): "Jet Fake Inside Zone". offense play O071 of the catalog (run, list og04, SRC-SECONDARY)
+- NXY-72 (menu, say5): "Flat Screen". offense play O072 of the catalog (screen, list og05, SRC-SECONDARY)
+- NXY-73 (menu, say5): "Middle Screen". offense play O073 of the catalog (screen, list og05, SRC-SECONDARY)
+- NXY-74 (menu, say5): "Jailbreak Screen". offense play O074 of the catalog (screen, list og05, SRC-SECONDARY)
+- NXY-75 (menu, say5): "Fullback Screen". offense play O075 of the catalog (screen, list og05, SRC-SECONDARY)
+- NXY-76 (menu, say5): "Shovel Pass". offense play O076 of the catalog (screen, list og05, SRC-SECONDARY)
+- NXY-77 (menu, say5): "Slant Flat". offense play O077 of the catalog (pass, list og06, SRC-SECONDARY)
+- NXY-78 (menu, say5): "Snag". offense play O078 of the catalog (pass, list og06, SRC-SECONDARY)
+- NXY-79 (menu, say5): "Speed Out". offense play O079 of the catalog (pass, list og06, SRC-SECONDARY)
+- NXY-80 (menu, say5): "Fade". offense play O080 of the catalog (pass, list og06, SRC-OFFICIAL)
+- NXY-81 (menu, say5): "Back Shoulder Fade". offense play O081 of the catalog (pass, list og06, SRC-SECONDARY)
+- NXY-82 (menu, say5): "Drive". offense play O082 of the catalog (pass, list og07, SRC-SECONDARY)
+- NXY-83 (menu, say5): "Angle Route". offense play O083 of the catalog (pass, list og07, SRC-SECONDARY)
+- NXY-84 (menu, say5): "Swing Pass". offense play O084 of the catalog (pass, list og07, SRC-SECONDARY)
+- NXY-85 (menu, say5): "Check Down". offense play O085 of the catalog (pass, list og07, SRC-SECONDARY)
+- NXY-86 (menu, say5): "Flat Route". offense play O086 of the catalog (pass, list og07, SRC-OFFICIAL)
+- NXY-A65 (menu, say5): "Whip Route". offense play O165 of the catalog (pass, list og07, UNVERIFIED)
+- NXY-88 (menu, say5): "Dig". offense play O088 of the catalog (pass, list og08, SRC-OFFICIAL)
+- NXY-89 (menu, say5): "Levels". offense play O089 of the catalog (pass, list og08, SRC-OFFICIAL)
+- NXY-90 (menu, say5): "Y Cross". offense play O090 of the catalog (pass, list og08, SRC-SECONDARY)
+- NXY-91 (menu, say5): "Smash". offense play O091 of the catalog (pass, list og08, SRC-SECONDARY)
+- NXY-92 (menu, say5): "Curl". offense play O092 of the catalog (pass, list og08, SRC-OFFICIAL)
+- NXY-93 (menu, say5): "Comeback". offense play O093 of the catalog (pass, list og08, SRC-OFFICIAL)
+- NXY-94 (menu, say5): "Out Route". offense play O094 of the catalog (pass, list og08, SRC-OFFICIAL)
+- NXY-95 (menu, say5): "Deep Out". offense play O095 of the catalog (pass, list og08, SRC-SECONDARY)
+- NXY-96 (menu, say5): "Choice Route". offense play O096 of the catalog (pass, list og08, SRC-SECONDARY)
+- NXY-97 (menu, say5): "Sail". offense play O097 of the catalog (pass, list og08, UNVERIFIED)
+- NXY-98 (menu, say5): "Seam". offense play O098 of the catalog (pass, list og09, SRC-SECONDARY)
+- NXY-99 (menu, say5): "Post Corner". offense play O099 of the catalog (pass, list og09, SRC-SECONDARY)
+- NXY-A00 (menu, say5): "Double Posts". offense play O100 of the catalog (pass, list og09, UNVERIFIED)
+- NXY-A01 (menu, say5): "Dagger". offense play O101 of the catalog (pass, list og10, UNVERIFIED)
+- NXY-A02 (menu, say5): "Mills". offense play O102 of the catalog (pass, list og10, UNVERIFIED)
+- NXY-A03 (menu, say5): "Yankee". offense play O103 of the catalog (pass, list og10, UNVERIFIED)
+- NXY-A04 (menu, say5): "Divide". offense play O104 of the catalog (pass, list og10, SRC-SECONDARY)
+- NXY-A05 (menu, say5): "Scissors". offense play O105 of the catalog (pass, list og10, SRC-SECONDARY)
+- NXY-A06 (menu, say5): "Post Wheel". offense play O106 of the catalog (pass, list og10, UNVERIFIED)
+- NXY-A07 (menu, say5): "Sluggo". offense play O107 of the catalog (pass, list og10, SRC-SECONDARY)
+- NXY-A08 (menu, say5): "Stutter Go". offense play O108 of the catalog (pass, list og10, SRC-SECONDARY)
+- NXY-A09 (menu, say5): "Out and Up". offense play O109 of the catalog (pass, list og10, SRC-SECONDARY)
+- NXY-A11 (menu, say5): "Play Action Flood". offense play O111 of the catalog (play_action, list og11, SRC-SECONDARY)
+- NXY-A12 (menu, say5): "Play Action Wheel". offense play O112 of the catalog (play_action, list og11, SRC-SECONDARY)
+- NXY-A13 (menu, say5): "Play Action Screen". offense play O113 of the catalog (screen, list og11, SRC-SECONDARY)
+- NXY-A14 (menu, say5): "Play Action Leak". offense play O114 of the catalog (play_action, list og11, SRC-SECONDARY)
+- NXY-A15 (menu, say5): "Play Action Dig". offense play O115 of the catalog (play_action, list og11, SRC-SECONDARY)
+- NXY-A16 (menu, say5): "Play Action Corner". offense play O116 of the catalog (play_action, list og11, SRC-SECONDARY)
+- NXY-A17 (menu, say5): "Naked Bootleg". offense play O117 of the catalog (boot, list og12, SRC-SECONDARY)
+- NXY-A18 (menu, say5): "Waggle". offense play O118 of the catalog (boot, list og12, SRC-OFFICIAL)
+- NXY-A19 (menu, say5): "Sprint Out". offense play O119 of the catalog (boot, list og12, SRC-SECONDARY)
+- NXY-A20 (menu, say5): "Max Protect Shot". offense play O120 of the catalog (max_protect, list og12, UNVERIFIED)
+- NXY-A21 (menu, say5): "Quarterback Counter". offense play O121 of the catalog (qb_run, list og13, SRC-SECONDARY)
+- NXY-A22 (menu, say5): "Quarterback Zone". offense play O122 of the catalog (qb_run, list og13, SRC-SECONDARY)
+- NXY-A23 (menu, say5): "Quarterback Crack Sweep". offense play O123 of the catalog (qb_run, list og13, SRC-SECONDARY)
+- NXY-A24 (menu, say5): "Zone Read". offense play O124 of the catalog (option, list og14, SRC-SECONDARY)
+- NXY-A25 (menu, say5): "Triple Option". offense play O125 of the catalog (option, list og14, SRC-SECONDARY)
+- NXY-A26 (menu, say5): "Midline Option". offense play O126 of the catalog (option, list og14, SRC-SECONDARY)
+- NXY-A27 (menu, say5): "Inside Veer". offense play O127 of the catalog (option, list og14, SRC-SECONDARY)
+- NXY-A28 (menu, say5): "Inverted Veer". offense play O128 of the catalog (option, list og14, SRC-SECONDARY)
+- NXY-A29 (menu, say5): "Power Read". offense play O129 of the catalog (option, list og14, SRC-SECONDARY)
+- NXY-A30 (menu, say5): "Receiver Pitch Option". offense play O130 of the catalog (option, list og14, SRC-SECONDARY)
+- NXY-A31 (menu, say5): "Bubble Option". offense play O131 of the catalog (rpo, list og15, SRC-SECONDARY)
+- NXY-A32 (menu, say5): "Glance Option". offense play O132 of the catalog (rpo, list og15, SRC-SECONDARY)
+- NXY-A33 (menu, say5): "Quick Flat Option". offense play O133 of the catalog (rpo, list og15, SRC-SECONDARY)
+- NXY-A34 (menu, say5): "Stick Option". offense play O134 of the catalog (rpo, list og15, SRC-SECONDARY)
+- NXY-A35 (menu, say5): "Tight End Option". offense play O135 of the catalog (rpo, list og15, SRC-SECONDARY)
+- NXY-A36 (menu, say5): "Jet Option". offense play O136 of the catalog (rpo, list og15, SRC-SECONDARY)
+- NXY-A37 (menu, say5): "Alert Throw". offense play O137 of the catalog (rpo, list og15, UNVERIFIED)
+- NXY-A38 (menu, say5): "Flea Flicker". offense play O138 of the catalog (trick_pass, list og16, SRC-SECONDARY)
+- NXY-A39 (menu, say5): "Halfback Pass". offense play O139 of the catalog (trick_pass, list og16, SRC-SECONDARY)
+- NXY-A40 (menu, say5): "Double Pass". offense play O140 of the catalog (trick_pass, list og16, SRC-OFFICIAL)
+- NXY-A41 (menu, say5): "Throwback to the Quarterback". offense play O141 of the catalog (trick_pass, list og16, SRC-SECONDARY)
+- NXY-A42 (menu, say5): "Hook and Lateral". offense play O142 of the catalog (trick_pass, list og16, SRC-SECONDARY)
+- NXY-A43 (menu, say5): "Statue of Liberty". offense play O143 of the catalog (trick_run, list og16, SRC-SECONDARY)
+- NXY-A44 (menu, say5): "Jet Touch Pass". offense play O144 of the catalog (screen, list og16, SRC-SECONDARY)
+- NXY-A45 (menu, say5): "Fake Sneak Swing". offense play O145 of the catalog (trick_pass, list og16, SRC-SECONDARY)
+- NXY-A46 (menu, say5): "Double Screen". offense play O146 of the catalog (screen, list og16, SRC-SECONDARY)
+- NXY-A47 (menu, say5): "Reverse Pass". offense play O147 of the catalog (trick_pass, list og16, SRC-SECONDARY)
+- NXY-A48 (menu, say5): "Goal Line Fade". offense play O148 of the catalog (pass, list og17, SRC-SECONDARY)
+- NXY-A49 (menu, say5): "Rub Routes". offense play O149 of the catalog (pass, list og17, SRC-SECONDARY)
+- NXY-A50 (menu, say5): "Jumbo Power". offense play O150 of the catalog (run, list og17, SRC-SECONDARY)
+- NXY-A51 (menu, say5): "Tight End Flat". offense play O151 of the catalog (play_action, list og17, SRC-SECONDARY)
+- NXY-A52 (menu, say5): "Kneel Down". offense play O152 of the catalog (kneel, list og18, SRC-OFFICIAL)
+- NXY-A53 (menu, say5): "Spike the Ball". offense play O153 of the catalog (spike, list og18, SRC-OFFICIAL)
+- NXY-A54 (menu, say5): "Fake Spike". offense play O154 of the catalog (trick_pass, list og18, SRC-SECONDARY)
+- NXY-A55 (menu, say5): "Fake Kneel". offense play O155 of the catalog (trick_pass, list og18, SRC-SECONDARY)
+- NXY-A56 (menu, say5): "Laterals at the End". offense play O156 of the catalog (laterals, list og18, SRC-SECONDARY)
+- NXY-A57 (menu, say5): "Wishbone Dive". offense play O157 of the catalog (run, list og19, SRC-SECONDARY)
+- NXY-A58 (menu, say5): "Flexbone Option". offense play O158 of the catalog (option, list og19, SRC-SECONDARY)
+- NXY-A59 (menu, say5): "Single Wing Power". offense play O159 of the catalog (run, list og19, SRC-SECONDARY)
+- NXY-A60 (menu, say5): "Wing T Buck Sweep". offense play O160 of the catalog (run, list og19, SRC-SECONDARY)
+- NXY-A61 (menu, say5): "Full House Dive". offense play O161 of the catalog (run, list og19, SRC-SECONDARY)
+- NXY-A62 (menu, say5): "Wildcat Run". offense play O162 of the catalog (run, list og19, SRC-SECONDARY)
+- NXY-A63 (menu, say5): "Wildcat Pass". offense play O163 of the catalog (trick_pass, list og19, SRC-SECONDARY)
+- NXY-A64 (menu, say5): "Split T Option". offense play O164 of the catalog (option, list og19, SRC-SECONDARY)
+- NXY-A66 (menu, say5): "Return Route". offense play O166 of the catalog (pass, list og20, UNVERIFIED)
+- NXY-A67 (menu, say5): "Bench Route". offense play O167 of the catalog (pass, list og20, UNVERIFIED)
+- NXY-A10 (menu, say5): "Zig Route". offense play O110 of the catalog (pass, list og20, UNVERIFIED)
+- NXY-87 (menu, say5): "Double Slants". offense play O087 of the catalog (pass, list og20, SRC-OFFICIAL)
+- NXZ-31 (menu, say5): "Goal Line Six Two". defense call D031 of the catalog (call, list dg01, SRC-SECONDARY)
+- NXZ-32 (menu, say5): "Goal Line Five Three". defense call D032 of the catalog (call, list dg01, SRC-SECONDARY)
+- NXZ-33 (menu, say5): "Short Yardage Four Four". defense call D033 of the catalog (call, list dg01, SRC-SECONDARY)
+- NXZ-34 (menu, say5): "Goal Line Man". defense call D034 of the catalog (call, list dg01, SRC-SECONDARY)
+- NXZ-35 (menu, say5): "Four Three Over". defense call D035 of the catalog (call, list dg02, SRC-SECONDARY)
+- NXZ-36 (menu, say5): "Four Three Under". defense call D036 of the catalog (call, list dg02, SRC-SECONDARY)
+- NXZ-37 (menu, say5): "Three Four Odd". defense call D037 of the catalog (call, list dg02, SRC-SECONDARY)
+- NXZ-38 (menu, say5): "Tite Front". defense call D038 of the catalog (call, list dg02, SRC-SECONDARY)
+- NXZ-39 (menu, say5): "Forty Six Defense". defense call D039 of the catalog (call, list dg02, SRC-SECONDARY)
+- NXZ-40 (menu, say5): "Five Two". defense call D040 of the catalog (call, list dg02, SRC-SECONDARY)
+- NXZ-41 (menu, say5): "Six One". defense call D041 of the catalog (call, list dg02, SRC-SECONDARY)
+- NXZ-84 (menu, say5): "Big Nickel". defense call D084 of the catalog (call, list dg02, UNVERIFIED)
+- NXZ-42 (menu, say5): "Slant Line". defense call D042 of the catalog (call, list dg03, SRC-SECONDARY)
+- NXZ-43 (menu, say5): "Angle Line". defense call D043 of the catalog (call, list dg03, SRC-SECONDARY)
+- NXZ-44 (menu, say5): "Pinch Line". defense call D044 of the catalog (call, list dg03, SRC-SECONDARY)
+- NXZ-45 (menu, say5): "Spill the Run". defense call D045 of the catalog (call, list dg03, SRC-SECONDARY)
+- NXZ-46 (menu, say5): "Box the Run". defense call D046 of the catalog (call, list dg03, SRC-SECONDARY)
+- NXZ-47 (menu, say5): "Two Gap Front". defense call D047 of the catalog (call, list dg03, SRC-SECONDARY)
+- NXZ-48 (menu, say5): "One Gap Charge". defense call D048 of the catalog (call, list dg03, SRC-SECONDARY)
+- NXZ-49 (menu, say5): "Wide Nine". defense call D049 of the catalog (call, list dg04, SRC-SECONDARY)
+- NXZ-50 (menu, say5): "Quarterback Contain". defense call D050 of the catalog (call, list dg04, SRC-OFFICIAL)
+- NXZ-51 (menu, say5): "Pitch Assignment". defense call D051 of the catalog (call, list dg04, SRC-SECONDARY)
+- NXZ-52 (menu, say5): "Scrape Exchange". defense call D052 of the catalog (call, list dg04, UNVERIFIED)
+- NXZ-53 (menu, say5): "Double A Gap". defense call D053 of the catalog (call, list dg05, SRC-SECONDARY)
+- NXZ-54 (menu, say5): "Nickel Blitz". defense call D054 of the catalog (call, list dg05, SRC-SECONDARY)
+- NXZ-55 (menu, say5): "Dime Blitz". defense call D055 of the catalog (call, list dg05, SRC-SECONDARY)
+- NXZ-56 (menu, say5): "Defensive Back Fire". defense call D056 of the catalog (call, list dg05, SRC-SECONDARY)
+- NXZ-57 (menu, say5): "Fire Zone". defense call D057 of the catalog (call, list dg06, SRC-OFFICIAL)
+- NXZ-58 (menu, say5): "Overload Blitz". defense call D058 of the catalog (call, list dg06, UNVERIFIED)
+- NXZ-59 (menu, say5): "Simulated Pressure". defense call D059 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-60 (menu, say5): "Creeper". defense call D060 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-61 (menu, say5): "Delayed Blitz". defense call D061 of the catalog (call, list dg06, UNVERIFIED)
+- NXZ-62 (menu, say5): "Cross Blitz". defense call D062 of the catalog (call, list dg06, UNVERIFIED)
+- NXZ-63 (menu, say5): "Free Fire". defense call D063 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-64 (menu, say5): "Twist Stunt". defense call D064 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-65 (menu, say5): "Loop Stunt". defense call D065 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-66 (menu, say5): "Edge Blitz". defense call D066 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-67 (menu, say5): "Cover Three Sky". defense call D067 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-68 (menu, say5): "Cover Three Cloud". defense call D068 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-69 (menu, say5): "Cover Three Buzz". defense call D069 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-70 (menu, say5): "Cover Three Match". defense call D070 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-71 (menu, say5): "Drop Eight". defense call D071 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-72 (menu, say5): "Cover One Robber". defense call D072 of the catalog (call, list dg08, SRC-SECONDARY)
+- NXZ-73 (menu, say5): "Two Man". defense call D073 of the catalog (call, list dg08, SRC-SECONDARY)
+- NXZ-74 (menu, say5): "Off Man". defense call D074 of the catalog (call, list dg08, SRC-SECONDARY)
+- NXZ-75 (menu, say5): "Man Three Deep". defense call D075 of the catalog (call, list dg08, UNVERIFIED)
+- NXZ-76 (menu, say5): "Cover One Contain". defense call D076 of the catalog (call, list dg08, SRC-SECONDARY)
+- NXZ-77 (menu, say5): "Match Quarters". defense call D077 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-78 (menu, say5): "Cover Nine". defense call D078 of the catalog (call, list dg09, UNVERIFIED)
+- NXZ-79 (menu, say5): "Two Deep Disguise". defense call D079 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-80 (menu, say5): "Cover Two Match". defense call D080 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-88 (menu, say5): "Cover Two Hard Flat". defense call D088 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-89 (menu, say5): "Cover Two Invert". defense call D089 of the catalog (call, list dg09, UNVERIFIED)
+- NXZ-90 (menu, say5): "Cover Four Drop". defense call D090 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-81 (menu, say5): "Bracket Coverage". defense call D081 of the catalog (call, list dg10, SRC-OFFICIAL)
+- NXZ-82 (menu, say5): "Safety Rotation". defense call D082 of the catalog (call, list dg10, SRC-OFFICIAL)
+- NXZ-83 (menu, say5): "Quarter Defense". defense call D083 of the catalog (call, list dg10, SRC-SECONDARY)
+- NXZ-91 (menu, say5): "Cover Three Seam". defense call D091 of the catalog (call, list dg10, SRC-SECONDARY)
+- NXZ-92 (menu, say5): "Cover Four Press". defense call D092 of the catalog (call, list dg10, SRC-SECONDARY)
+- NXZ-85 (menu, say5): "Hail Mary Defense". defense call D085 of the catalog (call, list dg11, SRC-SECONDARY)
+- NXZ-86 (menu, say5): "Two Point Defense". defense call D086 of the catalog (call, list dg11, SRC-SECONDARY)
+- NXZ-87 (menu, say5): "Two Minute Defense". defense call D087 of the catalog (call, list dg11, SRC-SECONDARY)
+- NXB-K01 (menu, say5): "Deep Kick". special teams play K001 of the catalog (kickoff, list kg01, SRC-OFFICIAL)
+- NXB-K02 (menu, say5): "Short Kick". special teams play K002 of the catalog (kickoff, list kg01, SRC-OFFICIAL)
+- NXB-K03 (menu, say5): "Squib Kick". special teams play K003 of the catalog (kickoff, list kg01, SRC-SECONDARY)
+- NXB-K04 (menu, say5): "Onside Kick". special teams play K004 of the catalog (kickoff, list kg01, SRC-OFFICIAL)
+- NXB-K11 (menu, say5): "Punt". special teams play K011 of the catalog (punt, list kg02, SRC-SECONDARY)
+- NXB-K12 (menu, say5): "Pin Punt". special teams play K012 of the catalog (punt, list kg02, SRC-SECONDARY)
+- NXB-K13 (menu, say5): "Rugby Punt". special teams play K013 of the catalog (punt, list kg02, SRC-SECONDARY)
+- NXB-K14 (menu, say5): "Tight Punt". special teams play K014 of the catalog (punt, list kg02, SRC-OFFICIAL)
+- NXB-K15 (menu, say5): "Fake Punt Run". special teams play K015 of the catalog (fake, list kg02, SRC-SECONDARY)
+- NXB-K16 (menu, say5): "Fake Punt Pass". special teams play K016 of the catalog (fake, list kg02, SRC-SECONDARY)
+- NXB-K21 (menu, say5): "Field Goal". special teams play K021 of the catalog (field_goal, list kg03, SRC-SECONDARY)
+- NXB-K22 (menu, say5): "Fake Field Goal Run". special teams play K022 of the catalog (fake, list kg03, SRC-SECONDARY)
+- NXB-K23 (menu, say5): "Fake Field Goal Pass". special teams play K023 of the catalog (fake, list kg03, SRC-SECONDARY)
+- NXB-K24 (menu, say5): "Extra Point Kick". special teams play K024 of the catalog (try, list kg03, SRC-OFFICIAL)
+- NXB-K25 (menu, say5): "Fair Catch Kick". special teams play K025 of the catalog (fair_catch_kick, list kg03, SRC-OFFICIAL)
+- NXB-K26 (menu, say5): "Swinging Gate Try". special teams play K026 of the catalog (try, list kg03, SRC-SECONDARY)
+- NXB-K27 (menu, say5): "Safety Punt". special teams play K027 of the catalog (kickoff, list kg01, SRC-OFFICIAL)
+- NXB-K31 (menu, say5): "Punt Return". special teams play K031 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-K32 (menu, say5): "Fair Catch". special teams play K032 of the catalog (kick_defense, list kg04, SRC-OFFICIAL)
+- NXB-K33 (menu, say5): "Punt Block". special teams play K033 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-K34 (menu, say5): "Punt Safe". special teams play K034 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-K35 (menu, say5): "Field Goal Block". special teams play K035 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-K36 (menu, say5): "Field Goal Safe". special teams play K036 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-11 (menu, say5): "Inside Runs". list og01 (O side) opened by Right on family 1, list 1
+- NXB-12 (menu, say5): "Power and Gap Runs". list og02 (O side) opened by Right on family 1, list 2
+- NXB-13 (menu, say5): "Outside Runs". list og03 (O side) opened by Right on family 2, list 1
+- NXB-14 (menu, say5): "Misdirection Runs". list og04 (O side) opened by Right on family 2, list 2
+- NXB-15 (menu, say5): "Screens". list og05 (O side) opened by Right on family 3, list 1
+- NXB-16 (menu, say5): "Quick Passes". list og06 (O side) opened by Right on family 4, list 1
+- NXB-17 (menu, say5): "Crossers and Backs". list og07 (O side) opened by Right on family 4, list 2
+- NXB-18 (menu, say5): "Intermediate Passes". list og08 (O side) opened by Right on family 4, list 3
+- NXB-19 (menu, say5): "Deep Passes". list og09 (O side) opened by Right on family 5, list 1
+- NXB-20 (menu, say5): "Deep Combinations". list og10 (O side) opened by Right on family 5, list 2
+- NXB-21 (menu, say5): "Play Action". list og11 (O side) under More Plays
+- NXB-22 (menu, say5): "Moving Pocket". list og12 (O side) under More Plays
+- NXB-23 (menu, say5): "Quarterback Runs". list og13 (O side) under More Plays
+- NXB-24 (menu, say5): "Option Runs". list og14 (O side) under More Plays
+- NXB-25 (menu, say5): "Run Pass Options". list og15 (O side) under More Plays
+- NXB-26 (menu, say5): "Trick Plays". list og16 (O side) under More Plays
+- NXB-27 (menu, say5): "Goal Line and Short Yardage". list og17 (O side) under More Plays
+- NXB-28 (menu, say5): "Clock Plays". list og18 (O side) under More Plays
+- NXB-29 (menu, say5): "Old Formations". list og19 (O side) under More Plays
+- NXB-30 (menu, say5): "More Routes". list og20 (O side) under More Plays
+- NXB-31 (menu, say5): "Goal Line Defenses". list dg01 (D side) opened by Right on family 1, list 1
+- NXB-32 (menu, say5): "Run Fronts". list dg02 (D side) opened by Right on family 2, list 1
+- NXB-33 (menu, say5): "Run Stunts". list dg03 (D side) opened by Right on family 2, list 2
+- NXB-34 (menu, say5): "Edge and Contain". list dg04 (D side) opened by Right on family 3, list 1
+- NXB-35 (menu, say5): "Blitzes". list dg05 (D side) opened by Right on family 4, list 1
+- NXB-36 (menu, say5): "Pressure Looks". list dg06 (D side) opened by Right on family 4, list 2
+- NXB-37 (menu, say5): "Zone Coverages". list dg07 (D side) opened by Right on family 5, list 1
+- NXB-38 (menu, say5): "Man Coverages". list dg08 (D side) opened by Right on family 5, list 2
+- NXB-39 (menu, say5): "Two Deep Coverages". list dg09 (D side) opened by Right on family 6, list 1
+- NXB-40 (menu, say5): "Deep Help". list dg10 (D side) opened by Right on family 6, list 2
+- NXB-41 (menu, say5): "Situation Defenses". list dg11 (D side) under More Plays
+- NXB-42 (menu, say5): "Kick Offs". list kg01 (K side) under More Plays
+- NXB-43 (menu, say5): "Punts". list kg02 (K side) under More Plays
+- NXB-44 (menu, say5): "Field Goals and Tries". list kg03 (K side) under More Plays
+- NXB-45 (menu, say5): "Kick Defense". list kg04 (K side) under More Plays
+- NXB-50 (menu, say5): "More Plays". top item of a play menu, letter M: the lists that are not the original's families (design 2.4)
+- NXB-51 (menu, say5): "Favourites". top item, letter F, only when the player has favourites (design 2.5)
+- NXB-52 (menu, say5): "Again". top item, letter A: said with the last play's name after it (design 2.5)
+- NXB-53 (menu, say5): "Find a Play by Name". item of More Plays, letter N: a typed search (design 2.5)
+- NXB-54 (menu, say5): "Formation and Tempo". top item, letter O: the remembered settings of a game (design 2.5)
+- NXB-56 (prompt, say5): " type the first letters of the play's name, then press enter. ". the typed search's prompt
+- NXB-57 (sentence, say5): " no play has that name. ". the typed search found nothing
+- NXB-58 (sentence, say5): " added to your favourites. ". the plus key in a list (design 2.5)
+- NXB-59 (sentence, say5): " taken off your favourites. ". the minus key in a list or in Favourites
+- NXB-60 (sentence, say5): " your favourites list is full. ". ten favourites already
+- NXB-61 (sentence, say5): " list <n> of <m>. ". after a list's name when it opens: its place among its family's lists
+- NXB-62 (menu, say5): "Formation". setting (design 2.5)
+- NXB-63 (menu, say5): "Personnel". setting: the backs and tight ends, said in plain words
+- NXB-64 (menu, say5): "Motion". setting
+- NXB-65 (menu, say5): "Side". setting: the play run to the left or the right
+- NXB-66 (menu, say5): "Tempo". setting: normal, no huddle or hurry up
+- NXB-67 (menu, say5): "Protection". setting: normal, max protect or slide
+- NXB-68 (menu, say5): "Defensive Personnel". setting: matched to the offense or chosen
+- NXB-69 (menu, say5): "Coverage Shade". setting: press or off
+- NXB-70 (answer, say5): "the playbook's choice". value book of the setting formation
+- NXB-71 (answer, say5): "under center". value under_center of the setting formation
+- NXB-72 (answer, say5): "shotgun". value shotgun of the setting formation
+- NXB-73 (answer, say5): "pistol". value pistol of the setting formation
+- NXB-74 (answer, say5): "singleback". value singleback of the setting formation
+- NXB-75 (answer, say5): "I formation". value i_form of the setting formation
+- NXB-76 (answer, say5): "split backs". value split_backs of the setting formation
+- NXB-77 (answer, say5): "empty backfield". value empty of the setting formation
+- NXB-78 (answer, say5): "heavy goal line". value heavy of the setting formation
+- NXB-79 (answer, say5): "the playbook's choice". value book of the setting personnel
+- NXB-80 (answer, say5): "one back, one tight end". value 11 of the setting personnel
+- NXB-81 (answer, say5): "one back, two tight ends". value 12 of the setting personnel
+- NXB-82 (answer, say5): "one back, three tight ends". value 13 of the setting personnel
+- NXB-83 (answer, say5): "two backs, one tight end". value 21 of the setting personnel
+- NXB-84 (answer, say5): "two backs, two tight ends". value 22 of the setting personnel
+- NXB-85 (answer, say5): "one back, four receivers". value 10 of the setting personnel
+- NXB-86 (answer, say5): "two backs, three receivers". value 20 of the setting personnel
+- NXB-87 (answer, say5): "no back, one tight end". value 01 of the setting personnel
+- NXB-88 (answer, say5): "no back, five receivers". value 00 of the setting personnel
+- NXB-89 (answer, say5): "the playbook's choice". value book of the setting motion
+- NXB-90 (answer, say5): "none". value none of the setting motion
+- NXB-91 (answer, say5): "jet motion". value jet of the setting motion
+- NXB-92 (answer, say5): "orbit motion". value orbit of the setting motion
+- NXB-93 (answer, say5): "a shift". value shift of the setting motion
+- NXB-94 (answer, say5): "the playbook's choice". value book of the setting side
+- NXB-95 (answer, say5): "to the left". value left of the setting side
+- NXB-96 (answer, say5): "to the right". value right of the setting side
+- NXB-97 (answer, say5): "normal". value normal of the setting tempo
+- NXB-98 (answer, say5): "no huddle". value no_huddle of the setting tempo
+- NXB-99 (answer, say5): "hurry up". value hurry_up of the setting tempo
+- NXB-A00 (answer, say5): "normal". value normal of the setting protection
+- NXB-A01 (answer, say5): "max protect". value max of the setting protection
+- NXB-A02 (answer, say5): "slide protection". value slide of the setting protection
+- NXB-A03 (answer, say5): "matched to the offense". value match of the setting defense_personnel
+- NXB-A04 (answer, say5): "base, four three". value base 4-3 of the setting defense_personnel
+- NXB-A05 (answer, say5): "base, three four". value base 3-4 of the setting defense_personnel
+- NXB-A06 (answer, say5): "nickel, four two five". value nickel 4-2-5 of the setting defense_personnel
+- NXB-A07 (answer, say5): "nickel, three three five". value nickel 3-3-5 of the setting defense_personnel
+- NXB-A08 (answer, say5): "nickel, two four five". value nickel 2-4-5 of the setting defense_personnel
+- NXB-A09 (answer, say5): "big nickel, three safeties". value big nickel of the setting defense_personnel
+- NXB-A10 (answer, say5): "dime, four one six". value dime 4-1-6 of the setting defense_personnel
+- NXB-A11 (answer, say5): "dime, three two six". value dime 3-2-6 of the setting defense_personnel
+- NXB-A12 (answer, say5): "quarter, seven defensive backs". value quarter of the setting defense_personnel
+- NXB-A13 (answer, say5): "two five". value 2-5 of the setting defense_personnel
+- NXB-A14 (answer, say5): "heavy goal line". value heavy of the setting defense_personnel
+- NXB-A15 (answer, say5): "the playbook's choice". value book of the setting coverage_shade
+- NXB-A16 (answer, say5): "press". value press of the setting coverage_shade
+- NXB-A17 (answer, say5): "off coverage". value off of the setting coverage_shade
 
 ## Menus and settings (design 10.4, 12)
 

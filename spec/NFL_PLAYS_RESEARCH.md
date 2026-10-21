@@ -408,3 +408,4 @@ Secondary (the main ones):
 ## 13. History
 
 - 1.0 (2026-10-20, PX SX.10a, D-084, D-085, D-086): written from four research passes (offense, defense, special teams with the two-point plays, Madden NFL 27's playbooks), reviewed and merged here; section 7 added for the owner's report that the game must follow the 2026 rules (D-085). No game code changed.
+- 1.0, note of 2026-10-20 (PX SX.10b, D-090): the questions of section 10 are decided in `spec\NFL_PLAYS_DESIGN.md` 1.0 section 0; Q-P15 was answered by the owner (download) and the numbers section 11 could not settle (completion by depth band, by coverage and blitz, yards by box count, screen, run-pass option and trick-play rates, punt, kick-off and field-goal shapes) are computed from the nflverse and FTN data in `work\sx10b\data_numbers_sx10b.txt` and kept with their credit in `clone\src\nfl4\extras\plays\model_data.py`. This file's text is unchanged.
