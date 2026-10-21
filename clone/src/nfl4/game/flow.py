@@ -69,6 +69,7 @@ class Game(Speakers):
         self.playbook_table = None                    # the extras' playbooks files (nfl4 only, SX.7); None = the defaults
         self.news_pools = None                        # the Franchise's news.txt (nfl4 only, SX.8e); None = the defaults
         self.injury_pools = None                      # the Franchise's injuries.txt (nfl4 only, SX.8k); None = the defaults
+        self.favourite_plays = None                   # the player's favourites.txt (nfl4 only, SX.10c): (offense, defense) IDs
         self.customization = None                     # data.customize.Customization: the player's files (S7.7)
         self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
         self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
@@ -150,6 +151,7 @@ class Game(Speakers):
             self.playbook_table = snapshot.playbooks          # and the playbooks' three files (SX.7)
             self.news_pools = snapshot.news                   # and the Franchise's news.txt (SX.8e)
             self.injury_pools = snapshot.injuries             # and its injuries.txt (SX.8k)
+            self.favourite_plays = snapshot.favourites        # and the favourite plays (SX.10c)
         except Exception:
             log.exception("the player's customization could not be applied")
 

@@ -167,6 +167,12 @@ def handled_letters() -> dict:
     found = {}
     for path, tree in parsed():
         for node in ast.walk(tree):
+            if (isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name)
+                    and node.targets[0].id.endswith("LETTERS") and isinstance(node.value, ast.Dict)):
+                for value in node.value.values:            # a table of menu letters (extras/plays/play_menus.LETTERS, SX.10c)
+                    if isinstance(value, ast.Constant) and isinstance(value.value, str) and len(value.value) == 1:
+                        found.setdefault(value.value, path.name)
+                continue
             if isinstance(node, ast.Compare):
                 left = ast.unparse(node.left).lower()
                 if "char" in left or "letter" in left:

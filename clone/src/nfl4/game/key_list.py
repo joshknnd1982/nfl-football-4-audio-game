@@ -84,8 +84,24 @@ ROWS: tuple[KeyRow, ...] = (
            " In the saved game and franchise questions. Page Up and Page Down turn the page. "),
     KeyRow("timeout", "T", "Anywhere in a game being played, until the play is run", "calls your time out at once; a call during a "
            "running play is granted when the play ends", "nfl", False, " T. calls a time out", consts=("KEY_T",), feature="timeouts"),
-    KeyRow("back", "Backspace or Left, B", "In a playbook group of plays", "go back from the plays of a group to the list of groups; "
-           "B chooses the Back item", "nfl", False, "Backspace or Left goes back", letters="b", feature="playbooks"),
+    KeyRow("back", "Backspace or Left, B", "In a list of plays or a playbook group", "go back one level, from a list of plays to the "
+           "menu it came from; B chooses the Back item", "nfl", False, "Backspace or Left goes back", letters="b", feature="playbooks"),
+    KeyRow("right", "Right", "In the offense menu of the N. F. L. rules with a playbook", "on a play family opens its lists of plays, "
+           "and in a list goes to the family's next list", "nfl", False, "",
+           " Right. in the offense menu, opens the lists of plays of a family, and then the next list. ", consts=("KEY_RIGHT",),
+           feature="playbooks"),
+    KeyRow("plus_minus", "Plus and Minus", "In a list of plays", "plus adds the current play to your favourites and minus takes it "
+           "off; the main row's plus and the keypad's plus both work", "nfl", False, "",
+           " Plus and Minus. in a list of plays, add the play to your favourites or take it off. ",
+           consts=("KEY_PLUS_PAD", "KEY_PLUS_MAIN", "KEY_MINUS_PAD", "KEY_MINUS_MAIN"), feature="playbooks"),
+    KeyRow("play_letters", "F, A, M, K, P, O, N", "In the offense menu of the N. F. L. rules with a playbook", "F opens your "
+           "favourites, A calls your last play again, M opens more plays, K kneels down and P spikes the ball when they help, O opens "
+           "formation and tempo, and N in more plays finds a play by its name", "nfl", False, "",
+           " F, A, M, K, P, O and N. in the offense menu: favourites, again, more plays, kneel down, spike the ball, formation and "
+           "tempo, and find a play by name. ", letters="famkpon", feature="playbooks"),
+    KeyRow("find", "Letters, Backspace, Enter", "In Find a Play by Name", "type the first letters of a word of the play's name, here "
+           "T is a letter too; Backspace deletes the last one and Enter finds the plays", "nfl", False, "",
+           " Find a Play by Name. type the first letters of the name, then Enter. ", feature="playbooks"),
     KeyRow("save", "S", "In a play menu", "chooses the Save Game item, the last one; at the penalty question it saves the game with "
            "the question kept", "nfl", False, "", " S. in a play menu, chooses Save Game. ", letters="s"),
     KeyRow("challenge", "C", "In a play menu", "chooses Challenge the Ruling, or says why you cannot challenge", "nfl", False,

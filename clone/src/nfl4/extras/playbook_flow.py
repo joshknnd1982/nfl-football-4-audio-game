@@ -5,7 +5,7 @@ NflRules (extras/nfl_rules.py) owns one `PlaybookFlow` per game and calls it fro
 
     resolve(game, state)                  the playbooks of the two sides, once per game (period_clock): the player's from the
                                           F9 settings (Classic, the team's style or a style), the computer's team style
-    offense_items / defense_items(state)  H3: the menu of the player's playbook (None while it is Classic): the groups, then the
+    defense_items(state)                  H3: the defense menu of the player's playbook (None while it is Classic): the groups, then the
                                           plays of the open group and Back; Field Goal and Punt stay in the top menu
     action(state, action)                 H3 menu_action: a group opens, Back goes up, a play is chosen (answers (PLAY, family))
     back(state)                           H3 menu_back: Backspace or Left in a group
@@ -130,28 +130,6 @@ class PlaybookFlow:
             if len(groups[play.group]) < D.MAX_PER_GROUP:
                 groups[play.group].append(play)
         return groups
-
-    def offense_items(self, state) -> list[menus.MenuItem] | None:
-        if self.style(state, 1, "O") == P.CLASSIC:
-            self.group = None
-            return None
-        groups = self._plays(state, "O")
-        if not any(group in groups for group in (1, 2, 3, 4, 5, 6, 7)):
-            return None                             # every play is off: the original's menu
-        if self.group in groups:
-            items = [item(n, self.table.name(p.id), (OFFENSE_BOOK, p.number)) for n, p in enumerate(groups[self.group], 1)]
-            items.append(item(len(items) + 1, X.text("NXB-10"), (BACK, 0), "b"))
-            return items
-        self.group = None
-        items = []
-        for group in (1, 2, 3, 4, 5, 6, 7):
-            if group in groups:
-                items.append(item(len(items) + 1, X.text(GROUP_TEXT[group]), (OFFENSE_GROUP, group)))
-            elif group <= 5:                         # no play of the group is on: the original's play stands in
-                items.append(item(len(items) + 1, classic_text(OFFENSE_ITEMS, group), (menus.PLAY, group)))
-        items.append(item(len(items) + 1, X.text("NXB-08"), (menus.PLAY, 6)))
-        items.append(item(len(items) + 1, X.text("NXB-09"), (menus.PLAY, 7)))
-        return items
 
     def defense_items(self, state) -> list[menus.MenuItem] | None:
         if self.style(state, 1, "D") == P.CLASSIC or state.two_point:      # the try is the original's, on both sides of the ball

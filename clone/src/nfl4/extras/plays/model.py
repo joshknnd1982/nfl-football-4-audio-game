@@ -76,6 +76,14 @@ class Situation(NamedTuple):
     formation: str = ""             # "": the concept's own (catalog.SETTINGS["formation"])
     motion: str = ""                # "": the concept's own; "none" switches it off
     protection: str = "normal"
+    # the Franchise's ratings door (H8, SX.10c; design 7): a shift of the run, the completion points, the sack and fumble rates
+    # and the catch's yards, from the ratings' bounded Mod of extras/franchise/ratings.py. Zero (and 100) in every other game, so
+    # every result and every draw is the same as without them
+    run_shift: int = 0              # hundredths of a yard a carry
+    comp_shift: int = 0             # completion points in hundredths
+    sack_shift: int = 0             # added to the sack rate per 10,000 drop-backs
+    fumble_pct: int = 100           # percent of the fumble rates
+    catch_yards: int = 0            # added to a completion's yards
 
 
 class Result(NamedTuple):
@@ -252,7 +260,7 @@ def sack_rate(concept: C.Concept, call: C.Call, situation: Situation, tags: froz
             rate = rate * CALL_PASS_TAGS[tag][3] // 100
     if "delayed" in tags:
         rate = rate * (90 if concept.params[1] <= 70 else 110) // 100
-    return min(3000, rate * SACK_SCALE // 100)
+    return max(0, min(3000, rate * SACK_SCALE // 100 + situation.sack_shift))
 
 
 def band_weights(route: RouteProfile, call: C.Call, tags: frozenset, deeper: int, to_goal: int) -> list:
@@ -303,6 +311,7 @@ def completion_rate(concept, route: RouteProfile, call: C.Call, tags, band: int,
     comp += matchup(concept, tags) * MATCHUP_PASS_COMP
     if situation.to_goal <= 10:
         comp -= RED_ZONE_COMP[0] + (10 - situation.to_goal) * RED_ZONE_COMP[1]
+    comp += situation.comp_shift
     return max(500, min(9700, comp))
 
 
@@ -345,10 +354,11 @@ def interception_return(rnd) -> tuple[int, bool]:
     return between(rnd, row[0], row[1]), False
 
 
-def fumble(rnd, kind: str) -> tuple[bool, bool, bool]:
-    """(fumbled, lost, returned for a touchdown) for a run, a completion, a sack or a scramble (COMPUTED)."""
+def fumble(rnd, kind: str, pct: int = 100) -> tuple[bool, bool, bool]:
+    """(fumbled, lost, returned for a touchdown) for a run, a completion, a sack or a scramble (COMPUTED); `pct` the ratings door's
+    percent of the rate."""
     rate, lost_share = M.FUMBLE[kind]
-    if not chance(rnd, rate):
+    if not chance(rnd, rate * pct // 100):
         return False, False, False
     lost = chance(rnd, lost_share)
     return True, lost, lost and chance(rnd, M.FUMBLE_RETURN_TD.get(kind, 0))
@@ -366,7 +376,7 @@ def pass_play(concept: C.Concept, call: C.Call, situation: Situation, rnd) -> Re
         yards = SACK_YARDS[pick(rnd, [w for _y, w in SACK_YARDS])][0]
         if yards == -17:
             yards = between(rnd, -20, -16)
-        fumbled, lost, td = fumble(rnd, "sack")
+        fumbled, lost, td = fumble(rnd, "sack", situation.fumble_pct)
         if fumbled:
             return Result("fumble", yards, fumble_lost=lost, return_touchdown=td)
         return Result("sack", yards)
@@ -398,8 +408,8 @@ def pass_play(concept: C.Concept, call: C.Call, situation: Situation, rnd) -> Re
         if chance(rnd, LATERAL_FUMBLE[0] * 2):
             return Result("fumble", yards, route_name, band, air, fumble_lost=chance(rnd, LATERAL_FUMBLE[1]))
         yards += between(rnd, 3, 12)
-    yards = min(yards, situation.to_goal)
-    fumbled, lost, td = fumble(rnd, "completion")
+    yards = min(yards + situation.catch_yards, situation.to_goal)
+    fumbled, lost, td = fumble(rnd, "completion", situation.fumble_pct)
     if fumbled:
         return Result("fumble", yards, route_name, band, air, fumble_lost=lost, return_touchdown=td)
     oob = yards < situation.to_goal and chance(rnd, route.oob)
@@ -497,13 +507,14 @@ def run_play(concept: C.Concept, call: C.Call, situation: Situation, rnd, gap: s
         shift = concept.params[1]
     shift += matchup(concept, tags) * MATCHUP_RUN_SHIFT
     shift += M.FORMATION_RUN_SHIFT.get(formation_class(concept, situation), 0)
+    shift += situation.run_shift
     if table == "trick":
         bins = shift_bins(list(M.TRICK_RUN), shift)
     else:
         bins = run_bins(gap, call, tags, shift, situation.to_goal)
     yards = min(bin_yards(rnd, pick(rnd, bins)), situation.to_goal)
     rate = (170, SCALE) if table == "trick" else M.FUMBLE["run"]
-    if chance(rnd, rate[0]):
+    if chance(rnd, rate[0] * situation.fumble_pct // 100):
         lost = chance(rnd, rate[1])
         return Result("fumble", yards, gap=gap, fumble_lost=lost,
                       return_touchdown=lost and chance(rnd, M.FUMBLE_RETURN_TD["run"]))
@@ -519,13 +530,14 @@ def qb_play(concept: C.Concept, call: C.Call, situation: Situation, rnd, table: 
     shift += matchup(concept, tags) * MATCHUP_RUN_SHIFT
     if "spy" in tags or "qb_contain" in tags:
         shift -= MATCHUP_RUN_SHIFT
+    shift += situation.run_shift
     bins = list(M.QB_SNEAK if table == "sneak" else M.QB_DESIGNED)
     bins = shift_bins(bins, shift)
     if table != "sneak":                     # a sneak's bins are already the short-yardage shape
         bins = goal_line(bins, situation.to_goal)
     yards = min(bin_yards(rnd, pick(rnd, bins), qb=table != "sneak"), situation.to_goal)
     rate = M.FUMBLE["run"] if table == "sneak" else M.QB_RUN_FUMBLE
-    if chance(rnd, rate[0]):
+    if chance(rnd, rate[0] * situation.fumble_pct // 100):
         return Result("fumble", yards, gap="qb", fumble_lost=chance(rnd, rate[1]))
     oob = table != "sneak" and 0 < yards < situation.to_goal and chance(rnd, 1800)
     return Result("run", yards, gap="qb", out_of_bounds=oob)

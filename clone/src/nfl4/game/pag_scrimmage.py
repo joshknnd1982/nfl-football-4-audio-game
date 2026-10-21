@@ -109,6 +109,9 @@ class ScrimmageSteps:
         g.say4(s.text)
         self.rady(0x441b18)
         s.play_kind = 1
+        result = self.rules.model_play(s)                  # H19 (SX.10c): a catalog play's result from the outcome models; Classic:
+        if result is not None:                             # None, no draw, the original's tables below
+            return self.catalog_play(result)
         pair = (s.offense_play, s.defense_play)
         if s.offense_play <= 2:
             return self.run_play(self.rules.modifiers.run(*pair, RUNS[pair]))
@@ -219,6 +222,11 @@ class ScrimmageSteps:
         return self.complete(entry)
 
     def sack(self):
+        self.sack_sentence()
+        return self.fumble_or_yards(SACK.low, SACK.high)
+
+    def sack_sentence(self) -> None:
+        """The sack's statistic, its phrase (the pool and its memory), the tackle sentence and sound (also a catalog play's sack, SX.10c)."""
         s = self.s
         s.stats[s.wisoff].sacked += 1
         number = s.sack_history.draw(self.rnd, SACK_PHRASES, "sack phrase")
@@ -233,7 +241,6 @@ class ScrimmageSteps:
             s.tackle_sentence = texts[number]
         s.tackle_sound = 2 if number == 6 else 3
         s.result_kind = O.SACK
-        return self.fumble_or_yards(SACK.low, SACK.high)
 
     def thrown_away(self, sentence: str):
         """N. F. L. rules (SX.3; never in Classic): in place of the sack the passer throws the ball away (intentional

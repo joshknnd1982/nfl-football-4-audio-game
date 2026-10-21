@@ -54,3 +54,5 @@ class PlayOutcome:
     # what the engine does next when the extras took over the end of the play (game/rules.py NEXT_DOWN and the others;
     # SX.3, an accepted penalty); None in Classic: the engine goes on as the original
     then: str | None = None
+    # the catalog play whose outcome model made this result (N. F. L. rules mode, SX.10c: "O152" a kneel); empty in Classic
+    catalog: str = ""

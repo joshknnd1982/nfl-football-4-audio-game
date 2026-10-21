@@ -91,7 +91,7 @@ def test_the_catalog_names_a_player_changed_are_what_the_menu_says(tmp_path):
 # ----- a player through the two-level menus -----
 
 def menu_policy(rig, seed):
-    """Enter, digits, Down, Backspace, Left, the letters B and T, F1 to F4; Escape answered no; never Save Game."""
+    """Enter, digits, Right (SX.10c), Down, Backspace, Left, the letters B and T, plus, F1 to F4; Escape answered no; never Save Game."""
     rng = random.Random(seed)
 
     def policy(keys):
@@ -105,12 +105,16 @@ def menu_policy(rig, seed):
         roll = rng.random()
         if roll < 0.40:
             return ENTER
-        if roll < 0.70:
+        if roll < 0.62:
             return str(rng.randint(1, 9))
-        if roll < 0.78:
+        if roll < 0.70:
+            return 39               # Right: a family's lists (SX.10c)
+        if roll < 0.77:
             return rng.choice((BACKSPACE, LEFT, "b"))
-        if roll < 0.84:
+        if roll < 0.80:
             return "t"
+        if roll < 0.84:
+            return 187              # plus: a favourite (SX.10c)
         if roll < 0.91:
             return DOWN
         if roll < 0.99:
@@ -131,9 +135,10 @@ def test_a_whole_game_through_the_two_level_menus(tmp_path, seed):
     assert rules is not None and result.scores is not None and result.scores[0] != result.scores[1]
     assert rig.rnd.fallbacks == 0
     said = [t for t, _, _ in rig.said]
-    assert " 1. Inside Runs " in said and any(t.strip().endswith(". Back") for t in said)
-    mine = [e for e in rules.books.events if e[0] == 1]
-    assert mine and sum(1 for e in mine if e[1]) > len(mine) // 2          # the player's calls come from its playbook
-    style = D.STYLE_BY_KEY[book]
-    assert all(e[1] in {i for i, _w in style.offense} for e in mine if e[1])
+    assert " 1. Line Plunge " in said and any(t.strip().endswith(". Back") for t in said)
+    # SX.10c: the player's offense calls the catalog's plays through its menus, the defense the style's (SX.7, until SX.10d)
+    calls = rules.offense.events
+    assert len(calls) > 10 and all(play.startswith("O") for play, _call, _kind, _yards, _branch in calls)
+    defended = [e for e in rules.books.events if e[0] == 2 and e[2]]
+    assert defended
     rules.state.extras.check()

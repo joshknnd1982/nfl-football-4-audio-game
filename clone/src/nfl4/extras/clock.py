@@ -31,6 +31,7 @@ from . import timeouts
 from . import tuning as T
 
 HURRY, MILK, NORMAL = "hurry-up", "milk", "normal"
+NO_HUDDLE = "no huddle"             # the player's Tempo setting (SX.10c): quicker than normal, slower than the hurry-up
 
 
 # ----- the rules of time, as plain functions (design 4 and 5) -----
@@ -79,7 +80,8 @@ def tempo(quarter: int, left: int, lead: int) -> str:
     return NORMAL
 
 
-RUNOFF = {NORMAL: T.RUNOFF_NORMAL, HURRY: T.RUNOFF_HURRY, MILK: T.RUNOFF_MILK}
+RUNOFF = {NORMAL: T.RUNOFF_NORMAL, HURRY: T.RUNOFF_HURRY, MILK: T.RUNOFF_MILK, NO_HUDDLE: T.RUNOFF_NO_HUDDLE}
+PLAYER_TEMPO = {"no_huddle": NO_HUDDLE, "hurry_up": HURRY}   # the Tempo setting of Formation and Tempo (catalog.SETTINGS)
 
 # the clock keeps running after these plays when they end in bounds and the same side keeps the ball (design 5.2 list A)
 RUNNING_KINDS = (O.RUN, O.PASS_COMPLETE, O.SACK)
@@ -87,6 +89,9 @@ LIVE_TIMES = {O.RUN: T.LIVE_RUN, O.PASS_COMPLETE: T.LIVE_PASS_COMPLETE, O.PASS_I
               O.SACK: T.LIVE_SACK, O.INTERCEPTION: T.LIVE_TURNOVER, O.FUMBLE: T.LIVE_TURNOVER, O.PUNT: T.LIVE_PUNT,
               O.FIELD_GOAL_GOOD: T.LIVE_FIELD_GOAL, O.FIELD_GOAL_MISSED: T.LIVE_FIELD_GOAL,
               O.FIELD_GOAL_SHORT: T.LIVE_FIELD_GOAL, O.ONSIDE_KICK: T.LIVE_ONSIDE}
+
+
+KNEEL_PLAY, SPIKE_PLAY = "O152", "O153"     # the catalog's Kneel Down and Spike the Ball (extras/plays/catalog.py)
 
 
 def draw_between(rnd, low_high: tuple[int, int]) -> int:
@@ -118,6 +123,11 @@ def live_time(outcome, state, rnd) -> int:
     if kind == O.TWO_POINT_TRY:
         return 0
     span = LIVE_TIMES.get(kind)
+    catalog = getattr(outcome, "catalog", "")
+    if catalog == KNEEL_PLAY:                                           # SX.10c: the kneel and the spike take a second or two
+        span = T.LIVE_KNEEL
+    elif catalog == SPIKE_PLAY:
+        span = T.LIVE_SPIKE
     if outcome.qb_run == "scramble" and kind == O.RUN:
         span = T.LIVE_SCRAMBLE                                           # SX.5: a pass play that became a run (design 5.1)
     if span is None:
@@ -269,6 +279,8 @@ class NflPeriodClock:
             x.pending, x.running = 0, False
             return 0
         pace = tempo(s.quarter, x.left, lead)
+        if s.wisoff == 1 and pace != HURRY:          # SX.10c: the player's own Tempo setting for the player's offense
+            pace = PLAYER_TEMPO.get(x.play_settings.get("tempo", ""), pace)
         seconds = draw_between(rnd, RUNOFF[pace])
         if ready_signal:
             seconds = max(0, seconds - draw_between(rnd, T.READY_SIGNAL_CUT))

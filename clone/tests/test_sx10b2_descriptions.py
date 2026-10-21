@@ -130,10 +130,11 @@ def test_a_football_word_in_a_description_is_explained_by_f7(nfl):
     assert checked > (8 if not nfl else 300)           # the check looks at something
 
 
-def test_the_words_the_n_f_l_rules_f7_adds_are_four_short_help_rows():
+def test_the_words_the_n_f_l_rules_f7_adds_are_eight_short_help_rows():
     for row in DS.F7_WORD_ROWS:
         assert X.KINDS[row] == "help" and len(X.TEXTS[row]) <= 200
-    assert [X.text(r).split(":")[0].strip() for r in DS.F7_WORD_ROWS] == ["Deep defenders", "Run blitz", "Draw", "Touchback"]
+    assert [X.text(r).split(":")[0].strip() for r in DS.F7_WORD_ROWS] == ["Deep defenders", "Run blitz", "Draw", "Touchback",
+                                                                         "Shotgun", "Personnel", "Motion", "Kneel down"]   # SX.10c
 
 
 def test_classic_f7_describes_the_original_items_after_its_own_words_and_the_n_f_l_rules_f7_has_the_added_words():
@@ -145,7 +146,7 @@ def test_classic_f7_describes_the_original_items_after_its_own_words_and_the_n_f
         assert ("%s: %s" % (DEFENSE_ITEMS[n - 1].strip()[3:], DS.text(DS.DEFENSE_ITEM_ROWS[n]))) in lines[1]
     assert lines[0].startswith(" The offense plays. ") and lines[0].rstrip().endswith("Saves the game so you can finish it later.")
     nfl = NflRules(playbooks_on=True).extra_help("118")
-    assert [X.text(r) for r in DS.F7_WORD_ROWS] == nfl[-4:]
+    assert [X.text(r) for r in DS.F7_WORD_ROWS] == nfl[-len(DS.F7_WORD_ROWS):]
 
 
 # ----- the menus of the file play_menus.py -----
@@ -256,7 +257,8 @@ def test_every_item_of_every_style_and_the_classic_book_can_be_described(tmp_pat
     for n, style in enumerate(s_styles):
         rig = rig_for(tmp_path / str(n), offense=style, defense=style, qb_on=True, timeouts_on=True, player_defends=defense)
         for item in open_groups(rig, defense):
-            row = DS.action_row(not defense, item.action)
+            flow = rig.rules.offense                        # SX.10c: the offense's items are the catalog's menus
+            row = flow.describe_row(item.action) if flow.owns(item.action) else DS.action_row(not defense, item.action)
             assert row in X.TEXTS, (style, item)
             assert rig.rules.menu_key(rig.engine.s, "d", item) is True
             assert item.letter != "d"
@@ -274,15 +276,15 @@ def test_the_letter_d_describes_the_current_item_and_the_menu_stays_on_it(tmp_pa
     rig = rig_for(tmp_path, answers=["d", ESCAPE])
     mark = len(rig.said)
     assert the_menu(rig) == "concede"
-    assert texts(rig, mark) == [SELECT, " 1. Inside Runs ", DS.text("NXB-E27"), " 1. Inside Runs "]
+    assert texts(rig, mark) == [SELECT, " 1. Line Plunge ", DS.text("NXB-E01"), " 1. Line Plunge "]   # SX.10c's top
 
 
 def test_d_describes_the_item_that_is_current_after_a_digit_and_a_play_of_a_group(tmp_path):
     rig = rig_for(tmp_path, answers=["2", "d", ESCAPE])
     mark = len(rig.said)
     the_menu(rig)
-    assert texts(rig, mark)[-3:] == [" 2. Outside Runs ", DS.text("NXB-E28"), " 2. Outside Runs "]
-    rig = rig_for(tmp_path / "play", answers=[ENTER, "d", ESCAPE])
+    assert texts(rig, mark)[-3:] == [" 2. End Run ", DS.text("NXB-E02"), " 2. End Run "]
+    rig = rig_for(tmp_path / "play", answers=[39, "d", ESCAPE])        # Right opens the first list (SX.10c)
     mark = len(rig.said)
     the_menu(rig)
     first = rig.rules.books.table.name("O001")
@@ -305,8 +307,8 @@ def test_d_is_not_logged_in_the_game_speech_log_and_is_said_once_per_press(tmp_p
     mark = len(rig.said)
     the_menu(rig)
     spoken = texts(rig, mark)
-    assert spoken.count(DS.text("NXB-E27")) == 2
-    assert [t for t, _role, _w in rig.said[mark:] if t == DS.text("NXB-E27")] == [DS.text("NXB-E27")] * 2
+    assert spoken.count(DS.text("NXB-E01")) == 2
+    assert [t for t, _role, _w in rig.said[mark:] if t == DS.text("NXB-E01")] == [DS.text("NXB-E01")] * 2
 
 
 def test_classic_keeps_the_original_keys_d_is_an_unknown_key_and_no_item_has_a_letter(tmp_path):

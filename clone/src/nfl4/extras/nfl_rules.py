@@ -65,6 +65,15 @@ The order of the new draws inside a play (design 15, as built): out of bounds (a
 narration end point), then between plays R, the ready-signal cut, and for each side in turn (the side with the ball first)
 rule 6's draw and a timeout's u, its remark chance, its remark line, a name and the line's choices.
 
+SX.10c, the catalog's offense (NFL_PLAYS_DESIGN 7, D-093; extras/offense_flow.py), when the player's offense playbook is not Classic:
+    H3  offense_menu      the catalog's menus (play_menus.PlayMenus): the original's items first, Right to a family's lists,
+                          F favourites, A again, M more plays, K kneel and P spike when they help, O formation and tempo
+        menu_action, menu_right, menu_back, menu_key, menu_heading   Enter, Right, Left and Backspace, plus and minus, the heading
+    H19 model_play        after the snap sentence: the called play's result from the outcome models (game/pag_catalog.py tells it)
+        turnover_return   an interception or a lost fumble of that play is returned (G26-8), a fumble may be kept (G26-9)
+    H2  after_tackle      the model's own out-of-bounds flag (no draw); after_outcome: the record names the play (the kneel's
+                          and the spike's live time), Again remembers it
+
 One NflRules object is made per game (`for_game`); the program keeps a configured one as Game.rules.
 """
 from __future__ import annotations
@@ -85,6 +94,7 @@ from . import rules_2026 as R
 from . import timeouts
 from . import tuning as T
 from .clock import RUNNING_KINDS, NflPeriodClock, late_window
+from .offense_flow import OffenseFlow, text_for
 from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
 from .playbook_flow import PlaybookFlow
@@ -138,6 +148,7 @@ class NflRules(ClassicRules):
         self.qb = QbFlow(self)
         self.review = ReviewFlow(self)
         self.books = PlaybookFlow(self)
+        self.offense = OffenseFlow(self)           # SX.10c: the catalog's offense of the player (D-093)
         self.modifiers = self.books.modifiers      # H8: the playbooks' rows (unchanged while no play of a playbook is called)
 
     def for_game(self) -> "NflRules":
@@ -156,6 +167,7 @@ class NflRules(ClassicRules):
         self.clock = NflPeriodClock(game, state)
         self.modifiers.bind(state)                 # SX.8b: the ratings of the players in the play (a Franchise game's rosters)
         self.books.resolve(game, state)            # SX.7: the playbook of each side's offense and defense
+        self.offense.resolve(game, state)          # SX.10c: the player's favourites, the menu at its top
         return self.clock
 
     @property
@@ -167,11 +179,13 @@ class NflRules(ClassicRules):
     def before_snap(self, state, offense_play: int, defense_play: int) -> str:
         """Step 2: a foul before or at the snap (design 9.1)."""
         self.after_play = False
+        self.offense.result = None                 # SX.10c: a new play: no catalog result of an earlier play is read again
         self.review.replaying = self.review.clock_held = False    # SX.6: a new play: no corrected end point is still waited for
         if state.extras.penalties_on:
             self.penalty.take_snap(state)
             if self.penalty.at_snap(state, offense_play, defense_play):
                 self.books.clear()                  # SX.7: the play is not run, the plays are called again
+                self.offense.clear()                # SX.10c: the catalog's call too
                 return FOUL_BEFORE_SNAP
         self.books.arm(state, offense_play, defense_play)      # SX.7: the plays that were called move the rows (H8)
         return GO_ON
@@ -183,14 +197,19 @@ class NflRules(ClassicRules):
         """In place of the sack the original drew: a scramble (design 7.1, SX.5), else intentional grounding (design 9.2 P15,
         the sentence of the throw), else None and the sack stands."""
         if self.qb.scramble_from_sack(state):
+            self.offense.drop_result()        # SX.10c: the model's sack is not the play
             return SCRAMBLE
         if not state.extras.penalties_on or not self.penalty.grounding(state):
             return None
+        self.offense.drop_result()
         return X.text("NXP-21", quarterback=state.quarterbacks.get(state.wisoff, ""))
 
     def instead_of_incompletion(self, state) -> bool:
         """The original's draw gave an incompletion, before the throw sentence: a scramble with 6 percent (design 7.1)."""
-        return self.qb.scramble_from_incomplete(state)
+        if self.qb.scramble_from_incomplete(state):
+            self.offense.drop_result()        # SX.10c: the model's incompletion is not the play
+            return True
+        return False
 
     def computer_offense(self, state) -> None:
         playbooks = self.books.in_use(state.extras)
@@ -219,6 +238,12 @@ class NflRules(ClassicRules):
         x.out_of_bounds = False
         if state.two_point or state.result_kind not in (O.RUN, O.PASS_COMPLETE):
             return
+        model = self.offense.out_of_bounds(state)    # SX.10c: a catalog play's own flag (its route's or its gap's share), no draw
+        if model is not None:
+            if model and not state.slid:
+                x.out_of_bounds = True
+                self.game.say2(X.text("NXC-04"))
+            return
         rate = T.OUT_OF_BOUNDS_RUN if state.result_kind == O.RUN else T.OUT_OF_BOUNDS_PASS_COMPLETE
         if state.qb_run:                           # the quarterback's own chances (design 7.1); a slider is down in bounds
             rate = 0 if state.slid else T.QB_OUT_OF_BOUNDS[state.qb_run]
@@ -233,6 +258,7 @@ class NflRules(ClassicRules):
         replaying, redo = self.review.take_replay() if x.challenges_on else (False, [])   # a play a review corrected (SX.6)
         if not replaying:                          # SX.7: what was called and what came of it (a corrected play is the same call)
             self.books.record(state, outcome)
+        self.offense.finish(state, outcome)        # SX.10c: the record names the catalog play, Again, the menu at its top
         self.books.forget_calls()                  # then nothing is called and the menu starts at its top (the rows stay armed
         #                                            until the ruling below has read the row the play used)
         board = None
@@ -310,11 +336,14 @@ class NflRules(ClassicRules):
             if self.penalty.try_from_the_one:                  # a personal foul on the touchdown, enforced on the try
                 self.penalty.try_from_the_one = False          # (14-2-3): half the distance from the 2
                 state.yard_line = 1
+            if self.offense.active(state):                     # SX.10c (design 2.6): items 1 to 5 and More Plays, no tail
+                self.offense.clear()
+                return self.offense.items(state)
             return menus.offense_menu(True)                    # the try is untimed: the original's items 1 to 5
         self.books.offense_id = ""                 # SX.7: a play that was called and not run (the period ended at the snap)
-        items = self.books.offense_items(state)    # SX.7: the player's playbook (groups, then plays), None for Classic
-        if items is not None:
-            return self._tail(state, items)
+        self.offense.clear()                       # SX.10c: the same for the catalog's call
+        if self.offense.active(state):             # SX.10c: the catalog's menus (design 2.2)
+            return self._tail(state, self.offense.items(state))
         items = [menu_item(n, text.strip()[3:], (menus.PLAY, n)) for n, text in enumerate(OFFENSE_ITEMS[:7], start=1)]
         if state.extras.qb_on:                     # design 10.4: 8 sneak, 9 keeper, 0 draw (item 10, digit 0)
             for play, text_id in ((QB_SNEAK, "NXM-01"), (QB_KEEPER, "NXM-02"), (QB_DRAW, "NXM-03")):
@@ -342,6 +371,8 @@ class NflRules(ClassicRules):
     def menu_action(self, state, action: tuple[str, int]):
         """An added item was taken with Enter. True: done, the menu starts again; False: refused, the menu stays; a
         continuation (a challenge that changed a ruling, SX.6): the menu is left for the step it names."""
+        if self.offense.owns(action):              # SX.10c: an item of the catalog's menus
+            return self.offense.action(state, action)
         if self.books.owns(action):                # SX.7: a group of the playbook, Back, or a play of it
             return self.books.action(state, action)
         if action[0] == CHALLENGE:
@@ -352,10 +383,20 @@ class NflRules(ClassicRules):
         return self.player_timeout(state)
 
     def menu_back(self, state) -> bool:
-        """Backspace or Left: from a group of the playbook back to the groups (SX.7)."""
+        """Backspace or Left: from a group of the playbook back to the groups (SX.7); in the catalog's menus one level up (SX.10c)."""
+        if self.offense.active(state):
+            return self.offense.back(state)
         return self.books.back(state)
 
-    def menu_key(self, state, letter: str, item=None) -> bool:
+    def menu_right(self, state, item) -> bool:
+        """Right: a family's lists of plays, and the family's next list (SX.10c, design 2.3)."""
+        return self.offense.active(state) and self.offense.right(state, item)
+
+    def menu_heading(self, state) -> str:
+        """The name of the open list of the catalog's menus, said in place of the prompt (SX.10c)."""
+        return self.offense.heading(state) if self.offense.active(state) else ""
+
+    def menu_key(self, state, letter: str, item=None, code: str = ""):
         """The letter C when the menu has no Challenge the Ruling item: the reason why (NXR-10 to NXR-15), the menu goes on. The letter D
         (NX-P8, D-091): the plain description of the current item, in the voice that spoke last, once per press, not written to the
         game's speech log; the menu stays on the item. No menu of the N. F. L. rules gives the letter D to an item (a test)."""
@@ -363,11 +404,16 @@ class NflRules(ClassicRules):
             return self.describe_item(state, item)
         if letter == "c" and state.extras.challenges_on:
             return self.review.say_refusal(state, 1)
+        if item is not None and self.offense.owns(item.action):     # SX.10c: plus, minus and a lone Shift in the catalog's menus
+            return self.offense.key(state, code, item)
         return False
 
     def describe_item(self, state, item) -> bool:
         """Say the description of a live play menu item; False (the key falls through to the key echo) when the item has none."""
-        row = descriptions.action_row(state.wisoff == 1, item.action)
+        if self.offense.owns(item.action):         # SX.10c: an item of the catalog's menus (play_menus.PlayMenus.describe)
+            row = self.offense.describe_row(item.action)
+        else:
+            row = descriptions.action_row(state.wisoff == 1, item.action)
         if row is None:
             log.warning("no description for the menu item %r", item.action)
             return False
@@ -382,6 +428,7 @@ class NflRules(ClassicRules):
         x.out_of_bounds = False
         self.after_play = False
         self.books.clear()                         # SX.7: a kick-off is a new play: nothing is called
+        self.offense.clear()                       # SX.10c: nor a catalog play
         self.review.clock_held = False             # SX.6: a kick-off is a new dead-ball period
         if x.left <= 0 and state.quarter in (2, 4):
             # no kick-off is made: nothing of the kick that was to come is left over (a safety kick on the last play of a half,
@@ -528,6 +575,8 @@ class NflRules(ClassicRules):
     def withdraw_play(self, state) -> None:
         """A timeout was called before the snap: the plays that were called are withdrawn (nothing of them is run)."""
         self.books.clear()
+        self.offense.clear()
+        self.offense.reset()
 
     @staticmethod
     def live_timeout_sentence() -> str:
@@ -536,6 +585,7 @@ class NflRules(ClassicRules):
     def grant(self, state, side: int) -> None:
         """A timeout: charged, the clock stopped after u seconds, the whistle (foot11), the announcer, a remark 1 in 3."""
         g, x = self.game, state.extras
+        self.offense.reset()                      # SX.10c: the player's menu starts at its top again
         timeouts.charge(x, side)
         self.clock.stop_for_timeout(self.rnd)
         g.sounds.play_tackle(8)                   # foot11, as the original's whistles of the period ends
@@ -551,6 +601,17 @@ class NflRules(ClassicRules):
             values = {"<team>": state.teams.get(side, ""), "<coach>": g.season.coach,
                       "<quarterback>": state.quarterbacks.get(side, "")}
             remarks.say_remark(g, state, x, "TO", values)
+
+    # ----- H19 (SX.10c): the catalog's plays -----
+
+    def model_play(self, state):
+        return self.offense.model_play(state)
+
+    def turnover_return(self, state):
+        return self.offense.turnover_return(state)
+
+    def play_text(self, key: str, **values) -> str:
+        return text_for(key, **values)
 
     # ----- H11, H12, H13 -----
 

@@ -45,7 +45,8 @@ def write(folder, kind, body):
 # ----- the defaults -----
 
 def test_the_defaults_are_the_catalogs_names_the_styles_and_the_team_assignment():
-    assert PL.default_plays() == [(p.id, X.text(p.name_id)) for p in D.CATALOG] and len(PL.default_plays()) == 82
+    plays = dict(PL.default_plays())                         # SX.10c: every play of the catalog (282), SX.7's 82 among them
+    assert all(plays[p.id] == X.text(p.name_id) for p in D.CATALOG) and len(plays) == 282
     assert PB.DEFAULT_TABLE.name("O017") == "Running Back Screen" and PB.DEFAULT_TABLE.name("D011") == "Cover Zero Blitz"
     teams = dict(PL.default_teams())
     assert len(teams) == 32 and teams["T01"] == "Air Raid; defense Pro Style" and teams["T02"] == "Pressure"
@@ -82,7 +83,7 @@ def test_a_switched_off_play_leaves_the_computers_choice_and_the_menus():
 
 
 def test_bad_play_lines_are_problems_and_keep_the_originals():
-    table, problems = table_of("plays", "O099 = Nothing\nX001 = No\nO001 = a, b\nO002 = one two three four five six seven\n"
+    table, problems = table_of("plays", "O400 = Nothing\nX001 = No\nO001 = a, b\nO002 = one two three four five six seven\n"
                                         "O003 = Counter; sometimes\nO003 = again\nO004 = ; off\nO006 =\n")
     assert table.name("O001") == X.text("NXY-01") and table.name("O002") == X.text("NXY-02")
     assert table.name("O003") == "Counter" and "O004" in table.disabled and table.name("O006") == X.text("NXY-06")
@@ -183,7 +184,7 @@ def test_the_three_files_are_made_in_the_playbooks_folder_only_with_the_nfl_rule
     assert not os.path.exists(os.path.join(folder, "playbooks")) and classic.snapshot.playbooks is None
     assert [spec.file_name for spec in classic.specs] == ["teams.txt", "divisions.txt", "surnames.txt", "banter.txt"]
     custom = Customization(folder, extras=True)
-    assert [spec.file_name for spec in custom.specs][-5:-2] == ["plays.txt", "styles.txt", "team_styles.txt"]       # news.txt (SX.8e) and injuries.txt (SX.8k) follow
+    assert [spec.file_name for spec in custom.specs][-6:-3] == ["plays.txt", "styles.txt", "team_styles.txt"]       # news.txt (SX.8e), injuries.txt (SX.8k), favourites.txt (SX.10c) follow
     for name in FILES.values():
         assert os.path.isfile(os.path.join(folder, "playbooks", name)), name
     assert custom.snapshot.playbooks == PB.DEFAULT_TABLE and custom.take_notices() == []

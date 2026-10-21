@@ -59,7 +59,8 @@ class Table:
     teams: tuple           # 32 pairs (offense, defense): a style key or "classic" (team_styles.txt)
 
     def name(self, play_id: str) -> str:
-        return self.names.get(play_id) or X.text(D.PLAYS[play_id].name_id)
+        from .plays import catalog as C                # every play of the catalog has a name (SX.10c: plays.txt has them all)
+        return self.names.get(play_id) or X.text(C.BY_ID[play_id].text_id)
 
     def style_name(self, key: str) -> str:
         if key == CLASSIC:
@@ -84,7 +85,8 @@ class Table:
 
 def default_table() -> Table:
     styles = {s.key: style_book(s) for s in D.STYLES}
-    return Table({pid: X.text(play.name_id) for pid, play in D.PLAYS.items()}, frozenset(), styles, tuple(D.TEAM_STYLES))
+    from .plays import catalog as C
+    return Table({c.id: X.text(c.text_id) for c in C.CATALOG}, frozenset(), styles, tuple(D.TEAM_STYLES))
 
 
 DEFAULT_TABLE = default_table()

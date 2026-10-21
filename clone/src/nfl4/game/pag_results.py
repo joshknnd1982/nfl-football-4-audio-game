@@ -181,14 +181,47 @@ class ResultSteps:
         """L_44df65: an interception or a fumble puts the ball at a random yard line 5 to 44 in the same half (Q31).
         Q23 not reproduced (D-027): during a two-point try the turnover ends the try with no points."""
         s = self.s
+        back = self.rules.turnover_return(s)          # H19 (SX.10c, G26-8): a catalog play's return; Classic and the original's plays: None
         if s.two_point:
             s.two_point = False
             s.try_good = False
             s.interception_flag = s.fumble_flag = False
             s.points = 0
+            if back is not None and back[2]:          # the defense ran the try back: two points for it (RB26 11-3-2, G26-10)
+                self.g.say4(back[3])
+                self.g.say4(self.rules.play_text("try_scored"))
+                s.stats[s.defense].score += 2
             return self.score
-        s.yard_line = self.rnd.below(TURNOVER_SPOT_ODDS) + TURNOVER_SPOT_SHORTEST
+        if back is None:
+            s.yard_line = self.rnd.below(TURNOVER_SPOT_ODDS) + TURNOVER_SPOT_SHORTEST
+            return self.possession
+        half, line, touchdown, sentence = back
+        if sentence:
+            self.g.say4(sentence)
+        if touchdown:
+            return self.return_touchdown()
+        s.half, s.yard_line = half, line
         return self.possession
+
+    def return_touchdown(self):
+        """N. F. L. rules (SX.10c, G26-8; never in Classic): the defense ran an interception or a fumble of a catalog play back to the end
+        zone. The ball is the scorers' and the original's steps after " TOUCH DOWN" follow (the log, the sounds, six points, the try)."""
+        g, s, snd = self.g, self.s, self.snd
+        s.interception_flag = s.fumble_flag = False
+        s.wisoff, s.defense = s.defense, s.wisoff
+        s.half, s.yard_line = own_half(s.defense), 0       # at the goal line the scorers attack (the try's spot is set by its choice)
+        if self.last_outcome is not None:
+            self.last_outcome.score = "return touchdown"
+        g.say4(P.TOUCH_DOWN)
+        self.log_replay_list()
+        snd.play_tackle(8)
+        snd.playcel()
+        s.stats[s.wisoff].score += 6
+        if s.wisoff == 2:                                 # the computer always kicks
+            self.rady(0x44fcee)
+            return self.extra_point
+        self.rady(0x44f6ae)
+        return self.extra_point_choice
 
     def possession(self):
         """L_44dfda: the other side gets the ball; the sentence prefix is in L4f4."""

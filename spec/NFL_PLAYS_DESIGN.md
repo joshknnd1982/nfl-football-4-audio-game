@@ -1,6 +1,6 @@
 # NFL_PLAYS_DESIGN (nfl4 only): the menus, the catalog and the outcome models of every real NFL play and every Madden NFL concept
 
-Status: DESIGN, version 1.1 (2026-10-20, PX session SX.10b; decisions D-090 and D-091). nfl4 only (CLAUDE.md rules 0.13 and 0.20 as amended (c); requirements NX-P1 to NX-P7 and NX-R7 in `spec\NFL_EXTRA_FEATURES.md` section 18; decisions D-082 to D-089; research `spec\NFL_PLAYS_RESEARCH.md` 1.0). Built in SX.10b, as pure modules NOT yet connected to the engine: the catalog, the outcome models, the menus, the favourites file, their text rows and 365 tests (section 9: 292 catalog, 50 model, 18 menu, 5 favourites). SX.10c, SX.10d and SX.10e connect them (section 10). Classic is untouched: no file of the classic engine changed in SX.10b and the golden Classic transcript passes.
+Status: DESIGN, version 1.3 (2026-10-21, PX session SX.10c; decisions D-090 to D-093). SX.10c BUILT the offense in the game (section 7.1, D-093); the defense calls and the kicks (SX.10d) and the computer's calling and the bands (SX.10e) follow. nfl4 only (CLAUDE.md rules 0.13 and 0.20 as amended (c); requirements NX-P1 to NX-P7 and NX-R7 in `spec\NFL_EXTRA_FEATURES.md` section 18; decisions D-082 to D-089; research `spec\NFL_PLAYS_RESEARCH.md` 1.0). Built in SX.10b, as pure modules NOT yet connected to the engine: the catalog, the outcome models, the menus, the favourites file, their text rows and 365 tests (section 9: 292 catalog, 50 model, 18 menu, 5 favourites). SX.10c, SX.10d and SX.10e connect them (section 10). Classic is untouched: no file of the classic engine changed in SX.10b and the golden Classic transcript passes.
 
 How to read it: section 0 is every decision in one line; sections 2 to 4 say how the menus, the catalog and the models work and why; section 6 says how each place where the N. F. L. mode does not yet follow the 2026 rules (G26-1 to G26-14) closes; section 7 is the engine work SX.10c to SX.10e must do. Every fact keeps the research's tag (SRC-OFFICIAL, SRC-SECONDARY, UNVERIFIED); COMPUTED means computed in SX.10b from public data (section 5). Madden NFL is a trademark of Electronic Arts; nothing of EA's text, play names, lists, art or ratings is used, only football concepts in plain words.
 
@@ -205,6 +205,13 @@ The owner's yes (2026-10-20). Downloaded with `work\sx10b\fetch_data.py` into th
 - The player's files: plays.txt grows to the new IDs and the K plays (names and off switches), favourites.txt; their healing.
 - The bands of SX.2 to SX.9 and the 20-season Franchise test run again (NX-P5); the conformance map gets rows NX-P1 to NX-P7 and NX-R7.
 
+### 7.1 As built in SX.10c (D-093)
+
+- The menus: `extras\offense_flow.py` (OffenseFlow, owned by NflRules) gives PlayMenus' items in the original's form through H3 `offense_menu` whenever the player's offense playbook is not Classic; the actions are `pm:<kind>`; new hooks `menu_right`, `menu_heading`, `menu_key(state, letter, item, code)` (a letter only from a letter key), `MENU_REFRESH`, `MENU_QUIET`. SX.7's offense group menu is removed. The try uses the same menus (items 1 to 5, More Plays, Formation and Tempo, no tail).
+- The play: H19 `model_play` after the snap sentence (`pag_scrimmage.snap_phrase`); `game\pag_catalog.py` tells the result with the original's pools; `turnover_return` in `pag_results.turnover_spot`; `return_touchdown` for the defense's score.
+- The computer's offense still plays the original's tables (SX.10e); the defense call is the style's or a stand-in per family.
+- Not built yet: the defense menus, the kick-offs, punts, field goals, the extra point and the fakes of the catalog (SX.10d), the personnel matching of the defense (SX.10d), the playbook's pick and the computer's calling (SX.10e), SACK_SCALE (SX.10e).
+
 ## 8. The computer's mixes to reach (SX.10e)
 
 Drop-backs over plays by down and distance (data 2024 to 2025): 1st 49.8; 2nd and 1 to 3 36.2, 4 to 7 55.7, 8 or more 74.9; 3rd and 1 to 2 38.7, 3 to 6 87.2, 7 or more 92.2; 4th 66.3. Play action 22.9 percent of drop-backs, screens 8.4, run-pass options 4.7 percent of plays, motion 51.6, no huddle 11.0. Defense: Cover 1 29.5, Cover 3 22.7, Cover 2 21.8, Cover 4 8.0, two-man 6.1, Cover 6 4.4, Cover 0 4.0, Cover 9 2.1; a blitzer on 29.1 percent of drop-backs; four rushers 69.1 percent, five 19.9, six or more 6.6; boxes on runs 5 or fewer 4.0, 6 52.5, 7 34.7, 8 or more 8.7; defensive backs 4: 26.3, 5: 62.6, 6: 9.4. Kneels 1.54 a game, spikes 0.29.
@@ -216,7 +223,7 @@ Built: `test_sx10b_catalog.py` (IDs, names, text rows, lists, models' inputs, ca
 ## 10. The sessions
 
 - SX.10b2 (BUILT 2026-10-20, D-092) The play descriptions and every key in three places (D-091; NX-P8, NX-H1): the descriptions of section 3, the D key in today's play menus and in `play_menus.py`, F7's descriptions of the original's items in Classic, `game\key_list.py`, F5's and F6's added lines, `clone\README_keys.md` and `clone\PLAYS_GUIDE.md`, the tests. Sonnet 5.5 at high. Before SX.10c.
-- SX.10c The offense in the game: the hook, the narration, the menus with Right, plus and minus, favourites and settings saved, kneel and spike, turnovers returned (G26-8, G26-9, G26-12), the ratings door, plays.txt and favourites.txt, F5 and F7 rows. Sonnet 5.5 at high (Opus 5.5 if the narration of the reads needs new engine steps).
+- SX.10c (BUILT 2026-10-21, D-093) The offense in the game: the hook, the narration, the menus with Right, plus and minus, favourites and settings saved, kneel and spike, turnovers returned (G26-8, G26-9, G26-12), the ratings door, plays.txt and favourites.txt, F5 and F7 rows. Ran on Opus 5.5.
 - SX.10d The defense calls and special teams in the game: the defense menus, the 2026 kick-off menu and model, punts, field goals, the extra point, the fair catch kick, the safety kick, the kick defense, the kick fouls (G26-1, G26-4 to G26-7, G26-11, G26-13, G26-14). Sonnet 5.5 at high.
 - SX.10e The computer's calling over the catalog, the playbook's pick, the two-point chart (G26-10), SACK_SCALE, the bands of SX.2 to SX.9, 10,000 games, the 20-season Franchise test, the conformance rows, the owner's listening list. Opus 5.5 at high (calibration).
 
@@ -224,4 +231,5 @@ Built: `test_sx10b_catalog.py` (IDs, names, text rows, lists, models' inputs, ca
 
 - 1.0 (2026-10-20, PX SX.10b, D-090): written with the build of the pure modules and their tests; the owner answered Q-P15 (download the data).
 - 1.1 (2026-10-20, end of PX SX.10b, D-091): the owner's two rules: every key in the special keys, the help and the GitHub README (for every game, CLAUDE.md 0.24) and a plain description of every play (first nfl4's, then widened by the owner to every sports game, CLAUDE.md 0.25); the D key reserved in `play_menus.py`; session SX.10b2 added before SX.10c.
+- 1.3 (2026-10-21, PX SX.10c, D-093): the offense of the catalog is in the game (section 7.1): the menus through the H3 hooks, the models through H19, the turnovers returned, kneel and spike, the saved settings, the ratings door, plays.txt and favourites.txt.
 - 1.2 (2026-10-20, PX SX.10b2, D-092): the descriptions are written and built as rows with the final id scheme (358 rows), the D key works in the live menus and in `play_menus.py` (`PlayMenus.describe`), the master key list, the generated F5, F6, README draft and plays guide, the tests.

@@ -115,6 +115,17 @@ class FranchiseModifiers(PlaybookModifiers):
         total = clamp((armed or PD.ZERO).plus(rating_mod(gap)))
         return total if any(total) else None
 
+    def ratings_mod(self, kind: str) -> PD.Mod | None:
+        """The ratings' Mod ALONE (no playbook Mod) for a catalog play of the N. F. L. rules (SX.10c, NFL_PLAYS_DESIGN 7): the outcome
+        models replace SX.7's bounded table changes, the ratings still count, clamped to the same bounds. None without ratings."""
+        if self.state is None:
+            return None
+        gap = self.gap(kind)
+        if gap is None:
+            return None
+        mod = clamp(rating_mod(gap))
+        return mod if any(mod) else None
+
     # ----- the kicks -----
 
     def _kicker(self, side: int, number: int) -> int | None:

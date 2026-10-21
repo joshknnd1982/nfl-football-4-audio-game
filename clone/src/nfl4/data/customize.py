@@ -56,6 +56,7 @@ PENALTIES = "penalties"     # nfl4 only (rule 0.13): the fouls' names, switches 
 PLAYS, STYLES, TEAMSTYLES = "plays", "styles", "teamstyles"     # nfl4 only: the playbooks' files in `playbooks` (SX.7)
 NEWS = "news"               # nfl4 only (rule 0.13): the Franchise's news lines, read only with the N. F. L. rules (SX.8e)
 INJURIES = "injuries"       # nfl4 only (rule 0.13): the Franchise's injury words, read only with the N. F. L. rules (SX.8k)
+FAVOURITES = "favourite plays"   # the header word of favourites.txt; nfl4 only (rule 0.13): the player's favourite plays in `playbooks` (SX.10c, extras/plays/favourites.py)
 PLAYBOOKS_FOLDER = "playbooks"
 
 
@@ -84,6 +85,7 @@ EXTRA_SPECS: tuple[ListSpec, ...] = (
     ListSpec(TEAMSTYLES, "team_styles.txt", "team styles", "the original team styles", PLAYBOOKS_FOLDER),
     ListSpec(NEWS, "news.txt", "news lines", "the original news lines"),
     ListSpec(INJURIES, "injuries.txt", "injury words", "the original injury words"),
+    ListSpec(FAVOURITES, "favourites.txt", "favourite plays", "no favourite plays", PLAYBOOKS_FOLDER),
 )
 SPEC_BY_KEY = {spec.key: spec for spec in SPECS + EXTRA_SPECS}
 
@@ -226,6 +228,7 @@ class Snapshot:
     playbooks: object = None            # extras.playbooks.Table with the N. F. L. rules; None while not used (SX.7)
     news: object = None                 # extras.franchise.news_pools.NewsPools with the N. F. L. rules; None while not used (SX.8e)
     injuries: object = None             # extras.franchise.injury_pools.InjuryPools with the N. F. L. rules; None while not used (SX.8k)
+    favourites: object = None           # (offense IDs, defense IDs) of favourites.txt with the N. F. L. rules; None while not used (SX.10c)
 
     def problem_count(self, key: str) -> int:
         problems = self.problems.get(key)
@@ -253,6 +256,7 @@ class Customization:
         self._parked_playbooks = None     # and the playbooks (SX.7)
         self._parked_news = None          # and the Franchise's news lines (SX.8e)
         self._parked_injuries = None      # and its injury words (SX.8k)
+        self._parked_favourites = None    # and the favourite plays (SX.10c)
         self.files: dict[str, cl.ListFile] = {
             spec.key: cl.ListFile(os.path.join(folder, spec.folder) if spec.folder else folder, spec.file_name, GAME, spec.key,
                                   lambda key=spec.key: self.default_text(key))
@@ -280,11 +284,13 @@ class Customization:
             self._parked_playbooks = self.snapshot.playbooks
             self._parked_news = self.snapshot.news
             self._parked_injuries = self.snapshot.injuries
+            self._parked_favourites = self.snapshot.favourites
             self.snapshot.remarks = None
             self.snapshot.fouls = None
             self.snapshot.playbooks = None
             self.snapshot.news = None
             self.snapshot.injuries = None
+            self.snapshot.favourites = None
             for spec in EXTRA_SPECS:
                 self.snapshot.statuses.pop(spec.key, None)
                 self.snapshot.problems.pop(spec.key, None)
@@ -296,12 +302,14 @@ class Customization:
         from ..extras.franchise.news_pools import DEFAULT_POOLS as DEFAULT_NEWS
         from ..extras.franchise.injury_pools import DEFAULT_POOLS as DEFAULT_INJURIES
         previous = dataclasses.replace(self.snapshot, remarks=self._parked_remarks, fouls=self._parked_fouls,
-                                       playbooks=self._parked_playbooks, news=self._parked_news, injuries=self._parked_injuries)
+                                       playbooks=self._parked_playbooks, news=self._parked_news, injuries=self._parked_injuries,
+                                       favourites=self._parked_favourites)
         self.snapshot.remarks = DEFAULT_POOLS
         self.snapshot.fouls = DEFAULT_TABLE
         self.snapshot.playbooks = DEFAULT_PLAYBOOKS
         self.snapshot.news = DEFAULT_NEWS
         self.snapshot.injuries = DEFAULT_INJURIES
+        self.snapshot.favourites = ((), ())
         for spec in EXTRA_SPECS:
             self.snapshot.kept.discard(spec.key)
         before = len(self.snapshot.notices)
@@ -352,6 +360,9 @@ class Customization:
         if key == INJURIES:
             from ..extras.franchise import injury_pools
             return cl.render_list(GAME, INJURIES, injury_pools.NOTES, injury_pools.default_entries())
+        if key == FAVOURITES:
+            from ..extras.plays import favourites
+            return favourites.text_of()
         raise KeyError(key)
 
     # ----- loading -----
@@ -373,6 +384,7 @@ class Customization:
             snapshot.playbooks = DEFAULT_PLAYBOOKS
             snapshot.news = DEFAULT_NEWS
             snapshot.injuries = DEFAULT_INJURIES
+            snapshot.favourites = ((), ())
         self._load_into(snapshot, self.specs, previous)
         self._notices_of(snapshot, self.specs)
         return snapshot
@@ -425,6 +437,10 @@ class Customization:
             if previous.injuries is None:
                 return
             snapshot.injuries = previous.injuries
+        elif key == FAVOURITES:
+            if previous.favourites is None:
+                return
+            snapshot.favourites = previous.favourites
         elif key in (PLAYS, STYLES, TEAMSTYLES):
             if previous.playbooks is None:
                 return
@@ -486,6 +502,9 @@ class Customization:
         elif key == INJURIES:
             from ..extras.franchise import injury_pools
             snapshot.injuries = injury_pools.build_pools(injury_pools.overrides_of(entries, problems), problems)
+        elif key == FAVOURITES:
+            from ..extras.plays import favourites
+            snapshot.favourites = favourites.parse(entries, problems)
 
     def _notices_of(self, snapshot: Snapshot, specs) -> None:
         unwritable = [spec for spec in specs if snapshot.statuses[spec.key] == cl.UNWRITABLE]

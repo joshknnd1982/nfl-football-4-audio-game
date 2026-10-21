@@ -93,6 +93,20 @@ Added in PX SX.2b (the T key, owner rule 0.22, D-084), never taken in Classic:
                                            at the next dead-ball moment
     H18 withdraw_play(state)               a timeout granted before the snap: the plays that   nothing
                                            were called are withdrawn
+
+Added in PX SX.10c (the catalog's offense in the game, D-093), each never taken in Classic:
+    H3 menu_right(state, item)             the Right key in a play menu: a family's lists     False (the key is the original's)
+    H3 menu_heading(state)                 what the menu says first instead of the coach's    "" (the coach and the prompt)
+                                           prompt (the name of an open list)
+    H3 menu_key(state, letter, item, code) a key no item has; `letter` is "" for a key that    False
+                                           is not a letter; MENU_REFRESH: the items again,
+                                           MENU_QUIET: nothing said (a lone Shift)
+    H3 menu_action -> MENU_REFRESH         a setting changed: the items again, the same item  never called
+    H19 model_play(state)                  after the snap sentence: the result of a catalog   None (the original's tables)
+                                           play from the outcome models; the engine narrates
+                                           it (game/pag_catalog.py)
+    H19 turnover_return(state)             the turnover's spot: the catalog play's return      None (the original's random spot)
+    H19 play_text(key, **values)           a sentence of the catalog's plays                   never called
 """
 from __future__ import annotations
 
@@ -131,6 +145,9 @@ SAVE_PENDING = "save with the choice pending"
 # What the T key (H18, SX.2b) did: the request is kept for the end of the live play, a timeout was called, or it was refused (none left,
 # one already called in this dead-ball period, the period over)
 TIMEOUT_KEPT, TIMEOUT_GRANTED, TIMEOUT_REFUSED = "kept", "granted", "refused"
+# What a play menu does after an added key or item (N. F. L. rules mode only, SX.10c): the items are made again and the menu stays at its
+# place (a setting changed, a favourite was added or taken off), or nothing is said and the next key is waited for (a lone Shift)
+MENU_REFRESH, MENU_QUIET = "menu refresh", "menu quiet"
 
 
 class ClassicRules:
@@ -197,8 +214,24 @@ class ClassicRules:
     def menu_action(self, state, action: tuple[str, int]):
         return False
 
-    def menu_key(self, state, letter: str, item=None) -> bool:
+    def menu_key(self, state, letter: str, item=None, code: str = ""):
         return False
+
+    def menu_right(self, state, item) -> bool:
+        return False
+
+    def menu_heading(self, state) -> str:
+        return ""
+
+    # H19 (SX.10c): the catalog's plays. Classic plays the original's tables: no result, no draw, no word
+    def model_play(self, state):
+        return None
+
+    def turnover_return(self, state):
+        return None
+
+    def play_text(self, key: str, **values) -> str:
+        raise RuntimeError("Classic has no catalog plays: model_play never answers a result")
 
     def before_kickoff(self, state, kicking_side: int) -> str:
         return NORMAL_KICKOFF

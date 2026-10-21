@@ -43,36 +43,44 @@ def list_file(customize_folder: str) -> cl.ListFile:
     return cl.ListFile(os.path.join(customize_folder, PLAYBOOKS_FOLDER), FILE_NAME, GAME, KIND, text_of)
 
 
+def parse(entries, problems: cl.Problems) -> tuple[tuple, tuple]:
+    """(offense favourites, defense favourites) of the file's entries; what is wrong goes to `problems` and is left out. The Customize
+    layer (data/customize.py, SX.10c) and `read` both use it."""
+    places: dict[str, dict[int, str]] = {"O": {}, "D": {}}
+    seen: set[str] = set()
+    for entry in entries:
+        match = PLACE.match(entry.id)
+        if match is None:
+            problems.add(entry.id, "the ID is not OF01 to OF10 or DF01 to DF10")
+            continue
+        side, number = match.group(1), int(match.group(2))
+        play_id = entry.value.strip().upper()
+        concept = C.BY_ID.get(play_id)
+        if not 1 <= number <= FAVOURITES_MAX:
+            problems.add(entry.id, "there are ten places on each side")
+        elif concept is None or concept.side != side:
+            problems.add(entry.id, "%s is not a play of the %s" % (entry.value, "offense" if side == "O" else "defense"))
+        elif number in places[side]:
+            problems.add(entry.id, "the place is written twice; the first line counts")
+        elif play_id in seen:
+            problems.add(entry.id, "%s is a favourite already" % play_id)
+        else:
+            places[side][number] = play_id
+            seen.add(play_id)
+    offense = tuple(places["O"][n] for n in sorted(places["O"]))
+    defense = tuple(places["D"][n] for n in sorted(places["D"]))
+    return offense, defense
+
+
 def read(customize_folder: str) -> tuple[tuple, tuple, cl.ListLoad, cl.Problems]:
     """(offense favourites, defense favourites, how the file loaded, its problems); never raises."""
     load = list_file(customize_folder).load()
     problems = cl.Problems(FILE_NAME)
-    places: dict[str, dict[int, str]] = {"O": {}, "D": {}}
+    offense = defense = ()
     if load.parsed is not None:
         for line, why in load.parsed.bad_lines:
             problems.add("line %d" % line, why)
-        seen: set[str] = set()
-        for entry in load.parsed.entries:
-            match = PLACE.match(entry.id)
-            if match is None:
-                problems.add(entry.id, "the ID is not OF01 to OF10 or DF01 to DF10")
-                continue
-            side, number = match.group(1), int(match.group(2))
-            play_id = entry.value.strip().upper()
-            concept = C.BY_ID.get(play_id)
-            if not 1 <= number <= FAVOURITES_MAX:
-                problems.add(entry.id, "there are ten places on each side")
-            elif concept is None or concept.side != side:
-                problems.add(entry.id, "%s is not a play of the %s" % (entry.value, "offense" if side == "O" else "defense"))
-            elif number in places[side]:
-                problems.add(entry.id, "the place is written twice; the first line counts")
-            elif play_id in seen:
-                problems.add(entry.id, "%s is a favourite already" % play_id)
-            else:
-                places[side][number] = play_id
-                seen.add(play_id)
-    offense = tuple(places["O"][n] for n in sorted(places["O"]))
-    defense = tuple(places["D"][n] for n in sorted(places["D"]))
+        offense, defense = parse(load.parsed.entries, problems)
     return offense, defense, load, problems
 
 

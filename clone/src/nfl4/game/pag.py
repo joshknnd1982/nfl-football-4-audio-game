@@ -10,6 +10,7 @@ lifted line is next to each step, each draw and each pause (the pause sites are 
 The parts:
     pag.py            start-up, coin toss, the play menus and the computer's choice, the GoSub helpers, the result
     pag_scrimmage.py  the snap and the snap count, runs, passes, sacks, fumbles (5.8, 5.9)
+    pag_catalog.py    N. F. L. rules only (SX.10c): a catalog play's result told with the original's sentence pools
     pag_kicks.py      kicksnap, field goals, punts, kick-offs and returns, the extra point and the two-point try (5.10)
     pag_results.py    the end of a play: the ball, touchdowns, safeties, possession, position and down, scores (5.11, 5.12)
     pag_breaks.py     the next-play step, quarters, warnings, statistics, key waits, the end, Save Game, conceding (5.6)
@@ -40,10 +41,11 @@ from .pag_breaks import BreakSteps
 from .pag_keepers import KeeperSteps
 from .pag_kicks import KickSteps
 from .pag_results import ResultSteps
+from .pag_catalog import CatalogSteps
 from .pag_scrimmage import ScrimmageSteps
 from .playtables import DEFENSE_MATCH
-from .rules import (CLASSIC, KICK_AGAIN, NEXT_DOWN, ON_DOWNS, PERIOD_END, REVIEWED_FIELD, REVIEWED_FUMBLE,
-                    REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, SAVE_PENDING, TIMEOUT_GRANTED, TRY_AGAIN, TRY_FAILS)
+from .rules import (CLASSIC, KICK_AGAIN, MENU_QUIET, MENU_REFRESH, NEXT_DOWN, ON_DOWNS, PERIOD_END, REVIEWED_FIELD,
+                    REVIEWED_FUMBLE, REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, SAVE_PENDING, TIMEOUT_GRANTED, TRY_AGAIN, TRY_FAILS)
 from .setup import Roster
 
 log = logging.getLogger("nfl4.game")
@@ -60,7 +62,8 @@ class PlayWithdrawn(BaseException):
 
 KEY_F1, KEY_F2, KEY_F3, KEY_F4 = "112", "113", "114", "115"
 KEY_ENTER, KEY_ESCAPE, KEY_UP, KEY_DOWN, KEY_TAB = "13", "27", "38", "40", "9"
-KEY_BACKSPACE, KEY_LEFT = "8", "37"
+KEY_BACKSPACE, KEY_LEFT, KEY_RIGHT = "8", "37", "39"
+KEY_LETTERS = (65, 90)                     # the codes of the letter keys A to Z
 
 
 @dataclass
@@ -72,7 +75,7 @@ class GameResult:
     conceded: bool = False
 
 
-class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps):
+class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, ResultSteps, BreakSteps):
     def __init__(self, game, rules=CLASSIC, own_names: Roster | None = None, saved: SavedGame | None = None,
                  quarterback_names: Callable[[GameState], tuple[str, str]] | None = None,
                  save_sink: Callable[[SavedGame], None] | None = None,
@@ -518,12 +521,16 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
         g, s = self.g, self.s
         current = 1
         speak_prompt = True
+        say_item = True
         self.dead_ball()                                   # H18: the ball is dead; a time out kept from the last play is granted first
         while True:
             if speak_prompt:
-                g.say5(" " + self.coach + prompt)
+                heading = self.rules.menu_heading(s)       # SX.10c: the name of an open list of plays (Classic: "", the prompt)
+                g.say5(heading or " " + self.coach + prompt)
                 speak_prompt = False
-            g.say5(items[current - 1].text)
+            if say_item:
+                g.say5(items[current - 1].text)
+            say_item = True
             self.getkey2()
             code = self.g_code
             if code == KEY_ENTER:
@@ -531,6 +538,11 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                 if action[0] in (PLAY, SAVE):
                     return "chosen", action
                 done = self.rules.menu_action(s, action)
+                if done == MENU_REFRESH:                   # SX.10c: a setting changed: the items again, the menu stays at its place
+                    if rebuild is not None:
+                        items = rebuild()
+                    current = min(current, len(items))
+                    continue
                 if isinstance(done, str):                  # a continuation of the extras (SX.6): the menu is left
                     return "step", self.continuation(done)
                 if isinstance(done, tuple):                # a play of a playbook was chosen (SX.7): (PLAY, the original's family)
@@ -549,6 +561,11 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                 current = current + 1 if current < len(items) else 1
                 continue
             if code in (KEY_BACKSPACE, KEY_LEFT) and self.rules.menu_back(s):    # SX.7: out of a group of plays (Classic: no)
+                current, speak_prompt = 1, True
+                if rebuild is not None:
+                    items = rebuild()
+                continue
+            if code == KEY_RIGHT and self.rules.menu_right(s, items[current - 1]):   # SX.10c: a family's lists (Classic: no)
                 current, speak_prompt = 1, True
                 if rebuild is not None:
                     items = rebuild()
@@ -577,14 +594,27 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
             # the key 0 is item 10 of the N. F. L. rules offense menu (digit 0); no Classic item has the digit 0
             chosen = (next((n for n, item in enumerate(items, start=1) if item.digit == digit), 0)
                       if digit or self.menu_zero() else 0)
-            if not chosen:                                 # the extras' letters (T, S); Classic's items have none
-                char = self.g_char.lower()
-                chosen = next((n for n, item in enumerate(items, start=1) if item.letter and item.letter == char), 0)
+            # the extras' letters (S, C, and the catalog's F, A, M, K, P, O, N, B); Classic's items have none. Only a letter key types a
+            # letter here: the keypad's digits and the function keys have letters as their g2 too (B-W6: F5 is "t", keypad 4 is "d")
+            letter = self.g_char.lower() if code.isdigit() and KEY_LETTERS[0] <= int(code) <= KEY_LETTERS[1] else ""
+            if not chosen and letter:
+                chosen = next((n for n, item in enumerate(items, start=1) if item.letter and item.letter == letter), 0)
             if chosen:
                 current = chosen
                 speak_prompt = False
                 continue
-            if self.rules.menu_key(s, self.g_char.lower(), items[current - 1]):    # a letter no item has (SX.6: C says why; SX.10b2: D describes the item)
+            # a key no item has (SX.6: C says why; SX.10b2: D describes the item; SX.10c: plus and minus, a lone Shift)
+            done = self.rules.menu_key(s, letter, items[current - 1], code)
+            if done == MENU_REFRESH:                       # a favourite was added or taken off: the items again, the same place
+                if rebuild is not None:
+                    items = rebuild()
+                current = min(current, len(items))
+                speak_prompt = False
+                continue
+            if done == MENU_QUIET:                         # nothing is said: the next key
+                speak_prompt = say_item = False
+                continue
+            if done:
                 speak_prompt = False
                 continue
             g.saykey()

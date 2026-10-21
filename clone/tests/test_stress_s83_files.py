@@ -112,7 +112,7 @@ def targets():
     """The files of the template, named here because the parameters are made before any program runs (the names are the program's own:
     data/files/store.py, data/customize.py, data/settingsfile.py, audio/soundsconfig.py). test_the_template_has_the_files lists them."""
     customize = ["customize/" + name + ".txt" for name in ("banter", "divisions", "injuries", "news", "penalties", "remarks", "surnames", "teams")]
-    playbooks = ["customize/playbooks/" + name + ".txt" for name in ("plays", "styles", "team_styles")]
+    playbooks = ["customize/playbooks/" + name + ".txt" for name in ("plays", "styles", "team_styles", "favourites")]   # SX.10c
     return (["settings.txt", "sounds/sounds.txt", "sounds/foot0.wav", "footbal1.dat", "footbal2.dat", "footbal3.dat", "football.gtp",
              "footballlog.txt", "commercials/About commercials.txt", "football.sav"] + customize + playbooks)
 

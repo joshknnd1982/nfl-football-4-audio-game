@@ -89,6 +89,11 @@ class ExtrasRecord:
     # per side (side 1 first): the style each side's offense and defense play (a loaded game keeps the books it was saved with)
     offense_book: list = field(default_factory=lambda: ["classic", "classic"])
     defense_book: list = field(default_factory=lambda: ["classic", "classic"])
+    # the catalog's plays (SX.10c, NFL_PLAYS_DESIGN 2.5): the player's last call on offense and on defense (the Again item; "" none) and
+    # the values of Formation and Tempo the player set ({setting: value}, catalog.SETTINGS; a setting left out is its first value).
+    # A record saved before SX.10c has none of them and loads with none
+    again: list = field(default_factory=lambda: ["", ""])
+    play_settings: dict = field(default_factory=dict)
     # the Franchise (SX.8a, design 10.2): the league, season and week a franchise game was saved in; None (and left out of the
     # saved text) in every other game, so a record without it loads as before
     franchise: dict | None = None
@@ -225,6 +230,17 @@ class ExtrasRecord:
             if (not isinstance(books, list) or len(books) != 2
                     or any(not isinstance(b, str) or b not in D.BOOK_KEYS for b in books)):
                 raise ValueError("%s is %r" % (name, books))
+        from .plays import catalog as C
+        if not isinstance(self.again, list) or len(self.again) != 2:
+            raise ValueError("the last calls are %r" % (self.again,))
+        for side, call in zip(("O", "D"), self.again):
+            if call != "" and (not isinstance(call, str) or call not in C.BY_ID or C.BY_ID[call].side != side):
+                raise ValueError("the last %s call is %r" % (side, call))
+        if not isinstance(self.play_settings, dict) or len(self.play_settings) > len(C.SETTINGS):
+            raise ValueError("the play settings are %r" % (self.play_settings,))
+        for name, value in self.play_settings.items():
+            if name not in C.SETTINGS or value not in C.SETTINGS[name]:
+                raise ValueError("the play setting %r is %r" % (name, value))
         if self.franchise is not None:
             if (not isinstance(self.franchise, dict) or set(self.franchise) != {"league", "season", "week"}
                     or not isinstance(self.franchise["league"], str) or len(self.franchise["league"]) > 40):

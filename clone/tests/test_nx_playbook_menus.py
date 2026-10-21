@@ -73,48 +73,10 @@ def test_the_computers_team_may_be_set_to_classic_in_team_styles_txt(tmp_path):
 
 # ----- the menus as data -----
 
-def test_a_styles_offense_menu_is_the_groups_then_field_goal_punt_and_the_tail(tmp_path):
-    rig = rig_for(tmp_path)
-    assert items_of(rig) == [" 1. Inside Runs ", " 2. Outside Runs ", " 3. Screens ", " 4. Short Passes ", " 5. Deep Passes ",
-                             " 6. Play Action ", " 7. Field Goal ", " 8. Punt ", " 9. Save Game "]
-    items = rig.rules.offense_menu(rig.engine.s, False)
-    assert [i.action for i in items][:6] == [("ogroup", g) for g in range(1, 7)]
-    assert items[6].action == (menus.PLAY, 6) and items[7].action == (menus.PLAY, 7) and items[8].letter == "s"
-    assert [i.digit for i in items] == list(range(1, 10))
-
-
-def test_with_the_quarterback_runs_on_the_group_comes_after_play_action_and_the_menu_stays_within_twelve_items(tmp_path):
-    rig = rig_for(tmp_path, qb_on=True, timeouts_on=True)
-    assert items_of(rig) == [" 1. Inside Runs ", " 2. Outside Runs ", " 3. Screens ", " 4. Short Passes ", " 5. Deep Passes ",
-                             " 6. Play Action ", " 7. Quarterback Runs ", " 8. Field Goal ", " 9. Punt ", " 10. Time Out ",
-                             " 11. Save Game "]
-    assert len(items_of(rig)) <= 12
-    items = rig.rules.offense_menu(rig.engine.s, False)
-    assert [i.letter for i in items if i.letter] == ["s"]               # no item has the letter T (rule 0.22)
-    assert [i.digit for i in items[:9]] == list(range(1, 10))              # the groups and the kicks have digits
-    assert all(i.letter or i.digit == 0 or i.text.endswith("Time Out ") for i in items[9:])   # past the ninth: a letter, the key 0, or Time Out (the T key)
-
-
-def test_a_group_lists_its_plays_by_id_then_back_and_the_tail(tmp_path):
-    rig = rig_for(tmp_path, timeouts_on=True)
-    rig.rules.books.group = 1
-    assert items_of(rig) == [" 1. Inside Zone ", " 2. Power Left ", " 3. Counter ", " 4. Dive ", " 5. Iso ", " 6. Back ",
-                             " 7. Time Out ", " 8. Save Game "]
-    items = rig.rules.offense_menu(rig.engine.s, False)
-    assert items[0].action == ("obook", 1) and items[4].action == ("obook", 6) and items[5].action == ("back", 0)
-    assert items[5].letter == "b" and items[6].letter == "" and items[7].letter == "s"
-    rig.rules.books.group = 7                                           # the quarterback group is not there with the switch off
-    assert items_of(rig)[0] == " 1. Inside Runs "
-    assert rig.rules.books.group is None
-
-
-def test_every_group_of_every_style_fits_a_menu_of_twelve(tmp_path):
+def test_every_defense_group_of_every_style_fits_a_menu_of_twelve(tmp_path):
+    # the offense's lists are the catalog's since SX.10c (at most ten plays and Back: test_sx10c_offense_menus.py)
     for key in D.STYLE_BY_KEY:
         rig = rig_for(tmp_path / key, offense=key, defense=key, qb_on=True, timeouts_on=True, extras={"challenges_on": True})
-        for group in D.OFFENSE_GROUPS:
-            rig.rules.books.group = group
-            items = items_of(rig)
-            assert 3 <= len(items) <= 12, (key, group, items)
         for call in D.DEFENSE_FAMILIES:
             rig.rules.books.group = call
             items = items_of(rig, defense=True)
@@ -137,9 +99,9 @@ def test_classic_keeps_the_originals_menus_in_both_rules_and_a_style_with_every_
                              " 6. Field Goal ", " 7. Punt ", " 8. Quarterback Sneak ", " 9. Quarterback Keeper ",
                              " 10. Quarterback Draw ", " 11. Save Game "]
     assert items_of(rig, defense=True)[0] == " 1. Goal Line " and len(items_of(rig, defense=True)) == 7
-    rig = rig_for(tmp_path / "off")
+    rig = rig_for(tmp_path / "off")                     # SX.10c: every play of SX.7 off leaves the catalog's other plays
     rig.game.playbook_table = PB.Table(TABLE.names, frozenset(D.PLAYS), TABLE.styles, TABLE.teams)
-    assert items_of(rig)[0] == " 1. Line Plunge " and len(items_of(rig)) == 8
+    assert items_of(rig)[0] == " 1. Line Plunge " and items_of(rig)[7] == " 8. More Plays "
 
 
 def test_a_group_with_no_play_on_is_the_originals_play_and_a_call_with_none_is_the_originals_call(tmp_path):
@@ -147,58 +109,22 @@ def test_a_group_with_no_play_on_is_the_originals_play_and_a_call_with_none_is_t
     off = {p.id for p in D.CATALOG if p.group == 3 and p.side == "O"} | {p.id for p in D.CATALOG if p.id.startswith("D")
                                                                             and p.family == 2}
     rig.game.playbook_table = PB.Table(TABLE.names, frozenset(off), TABLE.styles, TABLE.teams)
-    items = rig.rules.offense_menu(rig.engine.s, False)
-    assert items[2].text == " 3. Screen Pass " and items[2].action == (menus.PLAY, 3)      # the screens are all off
-    assert items[3].text == " 4. Short Passes "
     defense = rig.rules.defense_menu(rig.engine.s)
     assert defense[1].text == " 2. Short Run " and defense[1].action == (menus.PLAY, 2) and defense[3].action == ("dgroup", 4)
 
 
-def test_the_two_point_try_menu_is_the_originals_five_items_with_a_playbook(tmp_path):
-    rig = rig_for(tmp_path)
+def test_the_two_point_try_menu_is_the_originals_five_items_with_classic_and_the_catalogs_with_a_playbook(tmp_path):
+    rig = rig_for(tmp_path, offense="classic")
     assert rig.rules.offense_menu(rig.engine.s, True) == menus.offense_menu(True)
+    rig = rig_for(tmp_path / "book")                        # SX.10c (design 2.6): the families, More Plays, Formation
+    assert [i.text for i in rig.rules.offense_menu(rig.engine.s, True)][:5] == [i.text for i in menus.offense_menu(True)]
 
 
 # ----- the menu loop -----
 
-def test_enter_opens_a_group_and_enter_again_calls_a_play_that_the_engine_gets_as_its_family(tmp_path):
-    rig = rig_for(tmp_path, answers=[ENTER, DOWN, ENTER])
-    assert the_menu(rig) == "offense_chosen"
-    s = rig.engine.s
-    assert s.offense_play == 1 and rig.rules.books.offense_id == "O002"          # power left: the original's Line Plunge
-    assert texts(rig) == [SELECT, " 1. Inside Runs ", SELECT, " 1. Inside Zone ", " 2. Power Left "]
-    assert rig.rules.books.group is None
-
-
-def test_the_quarterback_group_calls_a_keeper_as_play_9(tmp_path):
-    rig = rig_for(tmp_path, qb_on=True, answers=[DOWN] * 6 + [ENTER, DOWN, ENTER])
-    assert the_menu(rig) == "offense_chosen"
-    assert rig.engine.s.offense_play == 9 and rig.rules.books.offense_id == "O047"
-
-
-def test_a_digit_goes_to_an_item_and_the_letter_b_is_back(tmp_path):
-    rig = rig_for(tmp_path, answers=["4", ENTER, "b", ENTER, ESCAPE])
-    assert the_menu(rig) == "concede"
-    plays = sum(1 for i, _w in D.STYLE_BY_KEY["west"].offense if D.PLAYS[i].group == 4)         # Back comes after the plays
-    assert texts(rig) == [SELECT, " 1. Inside Runs ", " 4. Short Passes ", SELECT, " 1. Hitch Routes ",
-                          " %d. Back " % (plays + 1), SELECT, " 1. Inside Runs "]
-
-
 def without_items(spoken):
     """The spoken texts without the menu items (" 3. Counter "), which differ between a playbook and Classic."""
     return [t for t in spoken if not (t.startswith(" ") and t[1:2].isdigit() and ". " in t[:5])]
-
-
-@pytest.mark.parametrize("key", [BACKSPACE, LEFT])
-def test_backspace_and_left_go_back_to_the_groups_from_a_group_and_are_the_originals_at_the_top(tmp_path, key):
-    rig = rig_for(tmp_path, answers=[ENTER, key, key, ESCAPE])
-    assert the_menu(rig) == "concede"
-    spoken = texts(rig)
-    assert spoken[:6] == [SELECT, " 1. Inside Runs ", SELECT, " 1. Inside Zone ", SELECT, " 1. Inside Runs "]
-    # at the top the key is the original's: what a Classic menu says to the same key, and the menu goes on
-    classic = rig_for(tmp_path / "classic", offense="classic", answers=[key, ESCAPE])
-    assert the_menu(classic) == "concede"
-    assert without_items(spoken[6:]) == without_items(texts(classic)[2:])      # (Left says its name first, Backspace nothing)
 
 
 def test_a_classic_menu_treats_backspace_and_left_as_it_always_did(tmp_path):
@@ -209,10 +135,10 @@ def test_a_classic_menu_treats_backspace_and_left_as_it_always_did(tmp_path):
 
 
 def test_field_goal_and_punt_are_the_originals_plays_from_the_top_menu(tmp_path):
-    rig = rig_for(tmp_path, answers=["7", ENTER])
+    rig = rig_for(tmp_path, answers=["6", ENTER])          # SX.10c: the original's digits 6 and 7
     assert the_menu(rig) == "offense_chosen"
     assert rig.engine.s.offense_play == 6 and rig.rules.books.offense_id == ""
-    rig = rig_for(tmp_path / "punt", answers=["8", ENTER])
+    rig = rig_for(tmp_path / "punt", answers=["7", ENTER])
     the_menu(rig)
     assert rig.engine.s.offense_play == 7
 
@@ -242,8 +168,8 @@ def test_an_item_of_a_group_is_spoken_in_six_words_or_fewer_and_says_its_name_as
     names = dict(TABLE.names)
     names["O002"] = "Power Sweep"
     rig.game.playbook_table = PB.Table(names, TABLE.disabled, TABLE.styles, TABLE.teams)
-    rig.rules.books.group = 1
-    assert " 2. Power Sweep " in items_of(rig)
+    rig.rules.offense.menus._open("og02", "top")          # SX.10c: Power Left is the first play of Power and Gap Runs
+    assert " 1. Power Sweep " in items_of(rig)
     for item in rig.rules.offense_menu(rig.engine.s, False):
         assert len(item.text.split()) <= 8                              # " 3. " and six words
 
@@ -490,7 +416,8 @@ def test_on_fourth_down_the_style_only_draws_among_the_families_the_originals_go
 def test_the_key_0_is_the_tenth_item_and_an_item_past_the_tenth_has_no_digit(tmp_path):
     rig = rig_for(tmp_path, offense="power", qb_on=True, timeouts_on=True, answers=["0", ESCAPE])
     items = rig.rules.offense_menu(rig.engine.s, False)
-    assert [i.text for i in items][9:] == [" 10. Time Out ", " 11. Save Game "]
-    assert [i.digit for i in items][9:] == [0, -1] and items[9].letter == ""
+    assert [i.text for i in items][9:] == [" 10. Quarterback Draw ", " 11. More Plays ", " 12. Formation and Tempo ",
+                                           " 13. Time Out ", " 14. Save Game "]                  # SX.10c's menus
+    assert [i.digit for i in items][9:] == [0, -1, -1, -1, -1] and items[12].letter == ""
     assert the_menu(rig) == "concede"
-    assert texts(rig) == [SELECT, " 1. Inside Runs ", " 10. Time Out "]
+    assert texts(rig) == [SELECT, " 1. Line Plunge ", " 10. Quarterback Draw "]

@@ -34,7 +34,7 @@ def every_field(tmp_path):
         extension_snap=True, no_snap=True, onside_on=True, onside_always=True, onside_tried=[1, 2], onside_recovered=[0, 1],
         kick_kind="onside", kick_again=True, rekick=True, kick_back=10, kick_from=25, safety_kick=True, qb_on=True, qb_runs=[4, 9],
         qb_yards=[-3, 51], challenges_on=True, chal_used=[3, 1], chal_won=[2, 0], offense_book=["air", "option"],
-        defense_book=["pressure", "zone"], franchise={"league": "20261019-120000", "season": 4, "week": 18},
+        defense_book=["pressure", "zone"], again=["O027", "D017"], play_settings={"formation": "shotgun"}, franchise={"league": "20261019-120000", "season": 4, "week": 18},
         injuries={"hurt": [[1012, "IJE", 3, 1]], "stand_ins": [[4, "QB", "Smith", 55]], "carries": {"1013": 77}},
         pending_choice=pending)
 

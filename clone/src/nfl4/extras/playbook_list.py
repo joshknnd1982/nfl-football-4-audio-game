@@ -3,8 +3,9 @@
 CUSTOMIZABLE_CONTENT 13 (L15), CLAUDE.md 0.12, playbook 7.9, design 10 (N5.7). Three lists of data/customlists.py (the same format
 and healing), in the folder `playbooks` of the customize folder, read only while the Rules setting is the N. F. L. rules:
 
-    plays.txt        `O001 = Inside Zone` the spoken name of each play of the catalog (O001 to O052 offense, D001 to D030
-                     defense), at most 30 characters and six words; `; off` switches the play off in every style
+    plays.txt        `O001 = Inside Zone` the spoken name of each play of the catalog (extras/plays/catalog.py: O001 to O167
+                     offense, D001 to D092 defense, K001 to K036 special teams; SX.10c, the first 82 are SX.7's), at most 30
+                     characters and six words; `; off` switches the play off in every style and in every play menu
     styles.txt       the seven styles (S1 Pro Style, S2 West Coast, S3 Air Raid, S4 Power Run, S5 Zone Run, S6 Option, S7 Pressure):
                      `S2O017 = weight 7` a play and the computer's weight for it in that style (`off` or weight 0 removes it, a
                      play that is not in the style is added with a weight), `S2OB1 = families 3 4; vs 1 2 3; sack -2; comp 3` a
@@ -29,7 +30,7 @@ from . import playbooks as P
 
 WHOLE = re.compile(r"[+-]?[0-9]+")                # a whole number as the files write it (str.isdigit also takes superscripts)
 UNSIGNED = re.compile(r"[0-9]+")
-PLAY_ID = re.compile(r"([OD])(\d{1,3})", re.IGNORECASE)
+PLAY_ID = re.compile(r"([ODK])(\d{1,3})", re.IGNORECASE)
 MEMBER_ID = re.compile(r"S([1-7])([OD])(\d{3})", re.IGNORECASE)
 TILT_ID = re.compile(r"S([1-7])([OD])([BP])([1-3])", re.IGNORECASE)
 QB_ID = re.compile(r"S([1-7])QB", re.IGNORECASE)
@@ -44,12 +45,12 @@ DEFENSE_FAMILIES = D.DEFENSE_FAMILIES
 PLAYS_NOTES = (
     "These are the plays of the playbooks of the N. F. L. rules. The game reads this file only when the Rules setting of the F9 "
     "menu is N. F. L. rules.",
-    "Each line is an ID, an equals sign and the name the voice speaks. O001 to O052 are offense plays and D001 to D030 are "
-    "defense plays. Change a name to have it said your way.",
+    "Each line is an ID, an equals sign and the name the voice speaks. O001 to O167 are offense plays, D001 to D092 defense "
+    "plays and K001 to K036 special teams plays. Change a name to have it said your way.",
     "After the name a semicolon and off switch the play off in every style: O004 = Draw Play; off. Delete a line to get the "
     "original back.",
-    "A name has 1 to 30 characters and six words at most, with no comma and no semicolon. A menu shows at most eight plays "
-    "in a group.",
+    "A name has 1 to 30 characters and six words at most, with no comma and no semicolon. A list of plays has at most ten "
+    "plays.",
 )
 STYLES_NOTES = (
     "These are the styles of the playbooks of the N. F. L. rules: S1 Pro Style, S2 West Coast, S3 Air Raid, S4 Power Run, "
@@ -90,7 +91,10 @@ def tilt_text(tilt: D.Tilt) -> str:
 
 
 def default_plays() -> list[tuple[str, str]]:
-    return [(play.id, X.text(play.name_id)) for play in D.CATALOG]
+    """Every play of the catalog, offense, defense and special teams, each by its number (SX.10c)."""
+    from .plays import catalog as C
+    ordered = sorted(C.CATALOG, key=lambda c: ("ODK".index(c.side), int(c.id[1:])))
+    return [(c.id, X.text(c.text_id)) for c in ordered]
 
 
 def default_styles() -> list[tuple[str, str]]:
@@ -134,15 +138,17 @@ def _name_problem(name: str) -> str | None:
 def apply_plays(table: P.Table, entries, problems) -> P.Table:
     """plays.txt: the names and the switches. An ID that is not a play, a second line for an ID and a name the limits refuse
     (the original name is used) are problems; an option that is not `off` or `on` is ignored."""
-    names = {pid: X.text(play.name_id) for pid, play in D.PLAYS.items()}
+    from .plays import catalog as C
+    names = {c.id: X.text(c.text_id) for c in C.CATALOG}
     disabled: set[str] = set()
     seen: set[str] = set()
     for entry in entries:
         match = PLAY_ID.fullmatch(entry.id)
         key = "%s%03d" % (match.group(1).upper(), int(match.group(2))) if match else ""
-        if key not in D.PLAYS:
+        if key not in C.BY_ID:
             problems.add("line %d" % entry.line,
-                         "the ID %s is not a play of this game (O001 to O052, D001 to D030), the line is ignored" % entry.id)
+                         "the ID %s is not a play of this game (O001 to O167, D001 to D092, K001 to K036), the line is ignored"
+                         % entry.id)
             continue
         if key in seen:
             problems.add(key, "this ID is there twice, the first line is used")

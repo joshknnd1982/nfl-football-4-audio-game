@@ -928,3 +928,13 @@ FR_FIT_STYLES = {"pass": "air", "run": "power", "rush": "pressure", "cover": "we
 # show what it costs: the staff signs again 16.7 and 8.8 percent of the contracts that run out (48 percent at 0.62), the market grows to 211 and 232 free
 # agents a league-offseason, and the league's mean cap use falls to 0.658 and 0.640 (CP4's band starts at 0.65: 0.45 FAILS it). It stays 0.62, the market
 # SX.8i calibrated (Q-031); it is the knob the owner's playtest may turn if the teams sound too close together in the middle seasons.
+
+
+# ----- SX.10c, the catalog's offense in the game (NFL_PLAYS_DESIGN 7, D-093). UNVERIFIED start values; SX.10e measures them -----
+LIVE_KNEEL = (1, 2)                    # a kneel: the quarterback goes down at once (the clock then runs on, 7-2-1)
+LIVE_SPIKE = (1, 1)                    # a spike: the ball hits the ground at once and the clock stops (an incompletion)
+RUNOFF_NO_HUDDLE = (20, 28)            # the player's Tempo "no huddle" between plays (normal 30 to 40, hurry up 12 to 20); wrong if
+                                       # SX.10e's band of seconds per counted play moves out of 26 to 30 with it set
+FR_MODEL_SACK = 40                     # the ratings door: the catalog's sack rate (per 10,000) moves 40 for each point of the ratings'
+                                       # sack percent (the original's sack percents are about 2.5 times the league's 6.5 percent)
+FR_MODEL_FUMBLE_BASE = 50              # the ratings' fumble steps are steps of the original's 1 in 50 (playtables.FUMBLE_ODDS)

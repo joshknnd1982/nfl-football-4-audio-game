@@ -1548,3 +1548,22 @@ NXH-48	playbooks	help	say5	 Deep defenders: players who stay far from the line t
 NXH-49	playbooks	help	say5	 Run blitz: extra defenders rushing the runner. Slant: a quick cut across the field, or a lineman moving sideways at the snap. Counter: a run that starts one way, then goes the other. 	F7 addition (H12, NX-P8): the football words the play descriptions use
 NXH-50	playbooks	help	say5	 Draw: a run that looks like a pass first. Option: the quarterback chooses at the last moment to keep the ball or give it away. Pitch: a short toss backward to a runner. 	F7 addition (H12, NX-P8): the football words the play descriptions use
 NXH-51	playbooks	help	say5	 Touchback: a kick that goes into the end zone, so the other team starts at its twenty. 	F7 addition (H12, NX-P8): the football words the play descriptions use
+NXB-H01	playbooks	sentence	say4	 <quarterback> takes a knee 	the kneel's tackle sentence (O152, SX.10c)
+NXB-H02	playbooks	sentence	say2	 <quarterback> spikes the ball to stop the clock 	the spike's sentence (O153, SX.10c)
+NXB-H03	playbooks	sentence	say2	 <quarterback> throws the ball away 	a legal throw-away (RB26 8-2-1 Item 1, SX.10c)
+NXB-H04	playbooks	sentence	say4	 <quarterback> pitches it to <player> 	an option's pitch, in place of the hand-off (SX.10c)
+NXB-H05	playbooks	sentence	say4	 <quarterback> keeps it 	an option's keep, before the quarterback's run (SX.10c)
+NXB-H06	playbooks	sentence	say4	 the ball is thrown back and forth across the field 	the last play's laterals (O156, SX.10c)
+NXB-H07	playbooks	sentence	say4	 and the <team> fall on it 	a fumble the offense keeps (G26-9, SX.10c)
+NXB-H08	playbooks	sentence	say4	 <player> runs it back <n> yards 	an interception's return (G26-8, SX.10c)
+NXB-H09	playbooks	sentence	say4	 <player> runs it all the way back 	a return for a touchdown (G26-8, SX.10c)
+NXB-H10	playbooks	sentence	say4	 the defense scores two points 	a try returned by the defense (RB26 11-3-2, G26-10, SX.10c)
+NXB-H11	playbooks	sentence	say4	 <player> goes down in the end zone for a touch back 	an interception in the end zone (SX.10c)
+NXB-H12	playbooks	sentence	say4	 <player> runs it back one yard 	an interception's return of one yard (SX.10c)
+NXB-H13	playbooks	sentence	say5	 <list>, list <n> of <m>. 	the heading of a family's list (design 2.3, SX.10c)
+NXB-H14	playbooks	sentence	say5	 <list>. 	the heading of a list under More Plays, Favourites or a search (SX.10c)
+NXB-H15	playbooks	sentence	say5	 the call is <name>. 	Enter on a family: the playbook's pick, said before the snap (SX.10c)
+NXH-52	playbooks	help	say5	 Shotgun: the quarterback stands a few steps behind the center. Under center: he stands right behind him. Pistol: in between. Empty backfield: no running back behind him. 	F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
+NXH-53	playbooks	help	say5	 Personnel: which players are on the field. One back, two tight ends means one running back and two tight ends; the rest are receivers. 	F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
+NXH-54	playbooks	help	say5	 Motion: a receiver moves sideways before the snap. No huddle and hurry up: the offense lines up quickly to save time. Max protect: extra blockers stay back. 	F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
+NXH-55	playbooks	help	say5	 Kneel down: the quarterback kneels to let the clock run. Spike: he throws the ball at the ground to stop the clock. 	F7 addition (H12, SX.10c): the words of the offense's settings and clock plays

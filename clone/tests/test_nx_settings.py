@@ -170,9 +170,10 @@ def test_a_customization_made_with_the_nfl_rules_reads_remarks_txt_at_once(tmp_p
     folder = str(tmp_path / "customize")
     custom = Customization(folder, extras=True)
     assert os.path.isfile(os.path.join(folder, "remarks.txt"))
-    assert [spec.file_name for spec in custom.specs][-7:-5] == ["remarks.txt", "penalties.txt"]     # SX.3
+    assert [spec.file_name for spec in custom.specs][-8:-6] == ["remarks.txt", "penalties.txt"]     # SX.3
     assert os.path.isfile(os.path.join(folder, "penalties.txt"))
-    assert [spec.file_name for spec in custom.specs][-5:] == ["plays.txt", "styles.txt", "team_styles.txt", "news.txt", "injuries.txt"]    # SX.7, SX.8e, SX.8k
+    assert [spec.file_name for spec in custom.specs][-6:] == ["plays.txt", "styles.txt", "team_styles.txt", "news.txt", "injuries.txt",
+                                                             "favourites.txt"]    # SX.7, SX.8e, SX.8k, SX.10c
     assert os.path.isfile(os.path.join(folder, "playbooks", "plays.txt"))
     assert custom.take_notices() == []
     assert "remarks.txt: no problems." in custom.check()
