@@ -31,6 +31,11 @@ default for a new player, the game adds seven features that follow the rules of 
   Up and Down change the answer, Enter takes it, F1 says the flag again. S saves the game with the question kept, when it can be kept (not on a score, a turnover, a try or
   the last second of a quarter); when you load that game, the question is asked again first. Where it cannot be kept the game says so.
 - F1 in a play menu also says whether the clock is running and how many time outs each team has. F4 says the time left.
+- Overtime follows the 2026 rules: a new coin toss (the visitors call it, H or T, then R receives or K kicks off), and each team gets the
+  ball once unless the first drive ends in a safety; after that the next score wins. In the regular season (and in a single game) there is
+  one period of 10 minutes, and a game still tied at its end is a tie: the standings and the season files count ties, and the Franchise
+  too. Play-off overtime has periods of 15 minutes until there is a winner. Coaches cannot challenge in overtime. With Classic rules the
+  original's sudden death stays.
 - F5, F6 and F7 have added lines that explain the new keys, the rules and the words.
 
 ### The Franchise

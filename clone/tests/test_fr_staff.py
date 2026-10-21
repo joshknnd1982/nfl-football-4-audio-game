@@ -336,7 +336,7 @@ def test_format_7_round_trips_with_a_stage_in_progress():
     judged(league, TEAM, 20, 4)
     S.begin(league)
     text = league.to_json()
-    assert json.loads(text)["format"] == D.FORMAT == 10          # (10 since SX.8o)
+    assert json.loads(text)["format"] == D.FORMAT == 11          # (11 since SX.12)
     again = LeagueRecord.from_json(text)
     assert again.staff == league.staff and again.to_json() == text
 
@@ -348,7 +348,7 @@ def test_a_format_6_file_gets_a_new_leagues_staff_by_the_migration_with_no_draw(
     data["format"] = 6
     loaded = LeagueRecord.from_json(json.dumps(data))
     fresh = league_of()
-    assert loaded.staff == fresh.staff and json.loads(loaded.to_json())["format"] == D.FORMAT == 10
+    assert loaded.staff == fresh.staff and json.loads(loaded.to_json())["format"] == D.FORMAT == 11
 
 
 def test_a_format_7_file_without_its_staff_is_damage():

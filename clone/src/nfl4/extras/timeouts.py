@@ -1,8 +1,8 @@
 """Timeouts of the N. F. L. rules mode: how many, when they renew, and when the computer calls one (nfl4 only, rule 0.13). This is inspired by Jim Kitchen.
 
 NFL_EXTRAS_DESIGN 6.3 (NX1, built in SX.2), the rules table extras/rules_2026.py and the start values of extras/tuning.py.
-A team has three charged timeouts in each half (4-5-1 Item 1, no carry-over); in overtime two in every regular-season
-period (16-3-e; the clone's sudden death repeats the period) and three for each pair of play-off periods (16-4-g). A team
+A team has three charged timeouts in each half (4-5-1 Item 1, no carry-over); in overtime two in the one regular-season
+period (16-1-3 (e); SX.12) and three for each pair of play-off periods (16-1-4 (g)). A team
 calls at most one in a dead-ball period (4-5-1 Item 3). The menus refuse a request with none left, so it is never a foul.
 
 The computer's rules (design 6.3, checked in H10 after every play in this order; the first that applies decides):

@@ -102,6 +102,16 @@ class ExtrasRecord:
     kick_call: str = ""
     kick_defense: str = ""
     fair_catch_kick: bool = False
+    # the 2026 overtime (SX.12, Rule 16, extras/overtime.py): the phase of the possession rule, the side that received the first kick-off,
+    # the tied score when overtime began, A's kick after its score, the "next score wins" sentence said, the receiver of the last tossed
+    # play-off period and a toss due. A record saved before SX.12 has none of them: an overtime it holds goes on as sudden death
+    ot_phase: str = ""
+    ot_first: int = 0
+    ot_base: int = 0
+    ot_kicked: bool = False
+    ot_told: bool = False
+    ot_receiver: int = 0
+    ot_toss: bool = False
     # the Franchise (SX.8a, design 10.2): the league, season and week a franchise game was saved in; None (and left out of the
     # saved text) in every other game, so a record without it loads as before
     franchise: dict | None = None
@@ -253,6 +263,8 @@ class ExtrasRecord:
             raise ValueError("the kick-off called is %r" % (self.kick_call,))
         if self.kick_defense not in KICK_DEFENSES:
             raise ValueError("the kick defense is %r" % (self.kick_defense,))
+        from . import overtime
+        overtime.check(self, whole)
         if self.franchise is not None:
             if (not isinstance(self.franchise, dict) or set(self.franchise) != {"league", "season", "week"}
                     or not isinstance(self.franchise["league"], str) or len(self.franchise["league"]) > 40):

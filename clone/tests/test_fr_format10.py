@@ -48,7 +48,7 @@ def test_format_10_round_trips_the_honors_and_the_counts_through_the_real_store(
     league.season = 3
     honored(league)
     loaded, files = through_store(league)
-    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 10
+    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 11
     assert loaded.honors == league.honors and loaded.usage == league.usage and loaded.to_json() == league.to_json()
 
 

@@ -275,7 +275,7 @@ def test_an_unknown_stage_number_is_damage_and_a_newer_format_is_not():
     league.stage_no = 0
     with pytest.raises(LeagueError):
         LeagueRecord.from_json(league.to_json())                      # and no stage 0 in an offseason
-    text = season_league().to_json().replace('"format":10', '"format":11', 1)
+    text = season_league().to_json().replace('"format":%d' % D.FORMAT, '"format":%d' % (D.FORMAT + 1), 1)
     with pytest.raises(NewerFormat):
         LeagueRecord.from_json(text)
 

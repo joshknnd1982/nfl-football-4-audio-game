@@ -20,7 +20,7 @@ Every key the game handles, where it works and what it does. This list is made f
 - **Digits 1 to 9 and 0**: In the play menus and the kick off menu. Make the item with that number the current item; 0 is the tenth. (original game)
 - **Enter**: In every menu and question. Takes the current item or the answer. (original game)
 - **Y, N, Tab**: In a yes or no question. Y says yes and N says no at once; Up, Down or Tab change the answer and Enter takes it. (original game)
-- **H, T, R, K**: At the coin toss. H is heads and T is tails; then R receives the kick off and K kicks off. (original game)
+- **H, T, R, K**: At the coin toss, and at the coin toss before over time in the N. F. L. rules. H is heads and T is tails; then R receives the kick off and K kicks off. (original game)
 - **Letters, digits, Backspace**: When you type a name. Letters and digits type, Backspace deletes the last one and Enter finishes. (original game)
 - **Left, Right, Page Up, Page Down, Home, End, Space, letters**: In the F9 menus and lists. Left and Right change a value, Page Up and Page Down move ten items, Home and End go to the ends, Space chooses where that fits, and typing letters jumps to a name. (added)
 - **Page Up and Page Down**: In the saved game, franchise and season questions. Turn to the previous or the next page of a long list; F1 says the question again and F2 plays the replay. (added)

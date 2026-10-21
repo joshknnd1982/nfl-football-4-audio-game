@@ -33,7 +33,7 @@ from typing import Protocol
 from . import season_texts as T
 from .league import DIVISIONS, PLACES, League
 from .playoffs import (ComputerGame, Pairing, Qualifier, TeamRef, computer_game, end_of_regular_season, score_of)
-from .standings import Records
+from .standings import Records, ties_words
 from .vbnum import rtrim, str_, trim
 
 log = logging.getLogger("nfl4.game")
@@ -119,9 +119,16 @@ def playoff_result(winner: str, loser: str, winner_score: int, loser_score: int)
     return rtrim(text) + T.END
 
 
-def qualifier_line(team: str, wins: int, losses: int) -> str:
-    """"<team>. at <wins> and <losses>. " (Trim$ numbers): a division winner or a wild card."""
-    return team + T.DOT_AT + trim(str_(wins)) + T.AND + trim(str_(losses)) + T.END
+def qualifier_line(team: str, wins: int, losses: int, ties: int = 0) -> str:
+    """"<team>. at <wins> and <losses>. " (Trim$ numbers): a division winner or a wild card. A team with a tie (nfl4 only, SX.12) adds
+    " and 1 tie" before the full stop."""
+    return team + T.DOT_AT + trim(str_(wins)) + T.AND + trim(str_(losses)) + (" " + ties_words(ties) if ties else "") + T.END
+
+
+def tie_result(team_a: str, team_b: str, score: int) -> str:
+    """A regular week's tie (nfl4 only, SX.12: NXC-12): "<team> and the <other> tied at <score>. "."""
+    from ..extras import nx_texts as X
+    return X.text("NXC-12", team=team_a, other=team_b, score=trim(str_(score)))
 
 
 def out_of_the_playoffs(team: str, wins: int, losses: int) -> str:
@@ -183,6 +190,16 @@ class SeasonEngine:
 
     def _loss(self, team: TeamRef) -> None:
         self.g.season.records.loss(team.division, team.place)
+
+    def _tie(self, team: TeamRef) -> None:
+        self.g.season.records.tie(team.division, team.place)
+
+    @property
+    def ties_allowed(self) -> bool:
+        """A regular week's game can be tied (nfl4 only, SX.12): the program plays the N. F. L. rules, whose regular-season overtime ends
+        tied after its one period. In Classic the game never ends tied, and a tied score would still go to the opponent (Q41)."""
+        from ..extras.nfl_rules import is_nfl
+        return is_nfl(getattr(self.g, "rules", None))
 
     def _round_wait(self, clk_first: bool = False) -> None:
         """The wait after a round (the original's `norep = 1`, getkey, F1 or F2: inrep and wait again, any other key:
@@ -263,14 +280,20 @@ class SeasonEngine:
         g.keys.clk()                                              # 0x462eb4
         lines = [T.GAMES_OF_WEEK + trim(str_(season.gtp)) + T.END]   # " Games of week number 5. "
         g.say2(lines[0])
-        if own_score <= opponent_score:                           # If Me.m414(1) <= Me.m414(2): the opponent wins (Q41)
-            winner, loser, winner_score, loser_score = opponent, own, opponent_score, own_score
+        if own_score == opponent_score and self.ties_allowed:     # SX.12: the N. F. L. rules' overtime ended tied (16-1-3 (d)); a
+            self._tie(own)                                        # Classic game is never tied here (its overtime ends on a score)
+            self._tie(opponent)
+            self.hooks.game_played(REGULAR, season.gtp, own, opponent, own_score, opponent_score)    # H14: equal scores are a tie
+            lines.append(tie_result(self.name(own), self.name(opponent), own_score))
         else:
-            winner, loser, winner_score, loser_score = own, opponent, own_score, opponent_score
-        self._win(winner)
-        self._loss(loser)
-        self.hooks.game_played(REGULAR, season.gtp, winner, loser, winner_score, loser_score)
-        lines.append(week_result(self.name(winner), self.name(loser), winner_score, loser_score))
+            if own_score <= opponent_score:                       # If Me.m414(1) <= Me.m414(2): the opponent wins (Q41)
+                winner, loser, winner_score, loser_score = opponent, own, opponent_score, own_score
+            else:
+                winner, loser, winner_score, loser_score = own, opponent, own_score, opponent_score
+            self._win(winner)
+            self._loss(loser)
+            self.hooks.game_played(REGULAR, season.gtp, winner, loser, winner_score, loser_score)
+            lines.append(week_result(self.name(winner), self.name(loser), winner_score, loser_score))
         g.say2(lines[1])
         for _ in range(WEEK_COMPUTER_GAMES):                      # For Lb0 = 1 To 15
             team_a = self._free_team(played)
@@ -316,7 +339,7 @@ class SeasonEngine:
     # ----- the end of the regular season (5.15) -----
 
     def _qualifier_line(self, q: Qualifier) -> str:
-        return qualifier_line(self.name(q.team), q.wins, q.losses)
+        return qualifier_line(self.name(q.team), q.wins, q.losses, q.ties)
 
     def _end_of_regular_season(self) -> None:
         g, season, league = self.g, self.g.season, self.g.league

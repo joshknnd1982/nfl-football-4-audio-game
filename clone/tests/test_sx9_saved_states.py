@@ -37,7 +37,8 @@ def every_field(tmp_path):
         defense_book=["pressure", "zone"], again=["O027", "D017"], play_settings={"formation": "shotgun"},
         kick_call="K002", kick_defense="K033", fair_catch_kick=True, franchise={"league": "20261019-120000", "season": 4, "week": 18},
         injuries={"hurt": [[1012, "IJE", 3, 1]], "stand_ins": [[4, "QB", "Smith", 55]], "carries": {"1013": 77}},
-        pending_choice=pending)
+        pending_choice=pending, ot_phase="second", ot_first=2, ot_base=17, ot_kicked=True, ot_told=True, ot_receiver=2,   # SX.12
+        ot_toss=True)
 
 
 def test_a_record_with_every_field_away_from_its_start_goes_through_the_file_and_into_a_game(tmp_path):

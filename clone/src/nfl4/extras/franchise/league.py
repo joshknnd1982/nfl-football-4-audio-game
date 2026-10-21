@@ -85,6 +85,7 @@ class LeagueRecord:
     gtp: int = 1
     schedule: list = field(default_factory=list)       # [division, team, flag] per week
     records: list = field(default_factory=lambda: [0] * 64)   # footbal3.dat's 64 values
+    ties: list = field(default_factory=lambda: [0] * D.TEAMS)  # footbal6.dat's 32 values: the season's ties (SX.12, format 11)
     pairings: list = field(default_factory=list)       # footbal4.dat's values
     byes: list = field(default_factory=list)           # footbal5.dat's values
     results: list = field(default_factory=list)        # [stage code, week, winner team, loser team, winner score, loser score]
@@ -206,7 +207,7 @@ class LeagueRecord:
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
                 "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
                 "injuries": self.injuries, "staff": self.staff, "comp": self.comp, "future_picks": self.future_picks, "tags": self.tags,
-                "people": self.people, "honors": self.honors, "usage": self.usage}
+                "people": self.people, "honors": self.honors, "usage": self.usage, "ties": self.ties}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -263,6 +264,8 @@ class LeagueRecord:
             if version >= 10:
                 record.honors, record.usage = data["honors"], data["usage"]     # SX.8o; a file of format 9 or older: no award and nobody in the hall yet,
                 #                                                                   no game or carry counted this season (the defaults: a migration with no draw)
+            if version >= 11:
+                record.ties = data["ties"]                          # SX.12; a file of format 10 or older: no team has a tie (the default)
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -441,6 +444,8 @@ class LeagueRecord:
             whole(row[5], 0, 200, "a result's score")
             if row[2] == row[3]:
                 raise LeagueError("a team played itself: %r" % (row,))
+            if row[4] == row[5] and row[0] != 0:                   # SX.12: equal scores are a tie, only in a regular week (16-1-4 (d))
+                raise LeagueError("a tied play-off game: %r" % (row,))
 
     def _check_season(self, whole, ints) -> None:
         in_season = self.stage == SEASON
@@ -460,11 +465,12 @@ class LeagueRecord:
         elif in_season and self.gtp != 1:
             raise LeagueError("the season has no schedule")          # week 1 may be written before makes has made one
         ints(self.records, 64, 0, 20, "the records")
+        ints(self.ties, D.TEAMS, 0, 16, "the ties")
         weeks = 16 if self.gtp == 0 or self.gtp > 16 else self.gtp - 1
         for team in range(D.TEAMS):
-            if self.records[2 * team] + self.records[2 * team + 1] != weeks:
-                raise LeagueError("team %d has %d wins and %d losses after %d weeks" %
-                                  (team + 1, self.records[2 * team], self.records[2 * team + 1], weeks))
+            if self.records[2 * team] + self.records[2 * team + 1] + self.ties[team] != weeks:
+                raise LeagueError("team %d has %d wins and %d losses and %d ties after %d weeks" %
+                                  (team + 1, self.records[2 * team], self.records[2 * team + 1], self.ties[team], weeks))
         if not isinstance(self.pairings, list) or len(self.pairings) > 16 or len(self.pairings) % 4:
             raise LeagueError("the pairings hold %r values" % (len(self.pairings) if isinstance(self.pairings, list) else None))
         for index, value in enumerate(self.pairings):

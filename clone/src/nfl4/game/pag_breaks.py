@@ -10,6 +10,7 @@ from __future__ import annotations
 from . import phrases as P
 from . import program_texts, save_texts
 from .gamestate import other, own_half
+from .rules import OT_COIN_TOSS, OT_KICK_OFF
 from .vbnum import trim
 
 KEY_F1, KEY_F2, KEY_F3, KEY_F4 = "112", "113", "114", "115"
@@ -70,8 +71,32 @@ class BreakSteps:
             return self.play_menu
         self._two_minute_warning()                                   # overtime
         if clock.period_over():
+            following = self.rules.period_end_step(s)                # H22 (SX.12): a play-off overtime period goes on (Classic: None)
+            if following is not None:
+                return self.next_overtime_period(following)
             snd.play(2, 0)                                           # foot2 once, waited (0x43dd2a)
             return self.game_end
+        return self.play_menu
+
+    def next_overtime_period(self, following: str):
+        """N. F. L. rules (SX.12, 16-1-4; never in Classic): a play-off overtime period ended with no winner. The next one begins as the
+        original's overtime does (the sentence, the key wait, the statistics) and starts with the ball where it was, a kick-off by the side
+        that received the last tossed period's (16-1-4 (e)), or a new coin toss (16-1-4 (i))."""
+        g, s = self.g, self.s
+        s.overtime += 1
+        g.ptf = 1
+        g.say4(P.OVERTIME_NUMBER + self.str_(s.overtime))
+        g.ptf = 0
+        self.clock.start_period(0)
+        self.key_wait()
+        self.quarter_stats()
+        if following == OT_COIN_TOSS:
+            return self.overtime_coin_toss
+        if following == OT_KICK_OFF:
+            s.wisoff = self.rules.third_period_receiver(s)
+            s.defense = other(s.wisoff)
+            s.half = own_half(s.wisoff)
+            return self.kick_off
         return self.play_menu
 
     def _end_of_quarter(self, quarter: int) -> None:
@@ -181,21 +206,27 @@ class BreakSteps:
             g.log_print("")
             g.say4(P.END_OF_QUARTER[4])
             g.ptf = 0
-        if s.score(1) == s.score(2):
+        if s.score(1) == s.score(2) and self.rules.overtime_follows(s):     # H22 (SX.12): the regular season's one period may end tied
             s.overtime += 1
             g.ptf = 1
             g.say4(P.OVERTIME_NUMBER + self.str_(s.overtime))
+            for line in self.rules.overtime_lines(s):                # H22: the N. F. L. rules' overtime in two sentences (Classic: none)
+                g.say4(line)
             g.ptf = 0
             s.quarter = 5
             self.clock.start_period(0)
             self.key_wait()
             self.quarter_stats()
+            if self.rules.overtime_toss(s):                          # H22 (SX.12, 16-1-2): a new toss, called by the visitors
+                return self.overtime_coin_toss
             s.defense = other(s.wisoff)                              # the side with the ball at the end receives
             s.half = own_half(s.wisoff)                              # Q25 not reproduced: the half is set (D-027)
             return self.kick_off
         self.game_on = False                                        # H18: the final whistle: T calls nothing any more
         g.ptf = 1
         g.say4(P.GAME_IS_OVER)
+        for line in self.rules.game_over_lines(s):                  # H22 (SX.12): " The game ends in a tie. " (Classic: none)
+            g.say4(line)
         g.log_print("")
         g.ptf = 0
         s.final_scores = (s.score(1), s.score(2))

@@ -9,7 +9,7 @@ Numbers marked "start value" are design values that a build session calibrates a
 ## 1. Owner decisions taken in this session (2026-10-14, D-041)
 
 Asked once, one at a time, each with a recommended answer; the owner took all three recommendations.
-- Overtime in N. F. L. rules mode: the original's sudden death stays in both modes (NQ4 confirmed). The 2026 NFL overtime (both teams get a possession, a regular-season tie) is not built; it stays on the list of optional companions (section 14). What N. F. L. rules mode takes from Rule 16 is only the period length, the timeout counts and "no coach's challenge in overtime" (section 4.6).
+- Overtime in N. F. L. rules mode: the original's sudden death stays in both modes (NQ4 confirmed). The 2026 NFL overtime (both teams get a possession, a regular-season tie) is not built; it stays on the list of optional companions (section 14). What N. F. L. rules mode takes from Rule 16 is only the period length, the timeout counts and "no coach's challenge in overtime" (section 4.6). SUPERSEDED 2026-10-21 by SX.12 (D-085 (3), D-096): the N. F. L. rules mode plays the whole of Rule 16 (`extras\overtime.py`: the overtime's coin toss, both teams possess unless the first drive ends in a safety, then the next score wins, one 10-minute regular-season period that can end tied, play-off periods of 15 minutes until a winner, the timeouts, no coach's challenge; ties in the standings, the season files and the Franchise); Classic keeps sudden death.
 - The onside kick question: asked only when it makes sense (the player's team trails in the second half, or leads by one score late in the fourth quarter), with a setting "Onside question: always" that is off by default (section 8.2).
 - Franchise before the first Windows release: the core only (a league that lasts, history, ratings, aging and retirement, the draft, the to-do list and the news). Contracts with the salary cap and free agency, trades, injuries, coordinators and the job rating come after the release as updates (NQ6 answered; section 11; the release gate in section 13). CHANGED BY THE OWNER ON 2026-10-16 (D-062): this split is withdrawn. The WHOLE Franchise, contracts, cap, free agency, trades, injuries, coordinators, job rating, goals and the LATER items, is in the first release, built by SX.8g to SX.8p before SX.9 (`NFL_EXTRA_FEATURES.md` N6.11 and section 14). Every "after the release", "as an update" or "version two" below in this file reads "in the first release, in the session named". Injuries exist only inside a Franchise, never in a quick game (INJ-1 to INJ-6 in N6.8).
 
@@ -49,7 +49,7 @@ One module, read-only data, a citation per value (all SRC-OFFICIAL from the 2026
 Clock and periods
 - quarter_seconds 900 (4-1). halftime: not simulated (the original's half time presentation stays).
 - warning_seconds 120; warning_periods 2 and 4 (3-41); the warning is an automatic timeout charged to nobody (3-41, 4-4(h)).
-- ot_regular_period_seconds 600 (16-3); ot_post_period_seconds 900 (16-4). The clone plays sudden death periods until a score (D-041); every new period repeats the same length.
+- ot_regular_period_seconds 600 (16-3); ot_post_period_seconds 900 (16-4). The clone plays sudden death periods until a score (D-041); every new period repeats the same length. SX.12 (D-096): one regular-season period that may end tied; play-off periods until a winner, the ball kept from one period to the next (16-1-4).
 - ot_warning: regular season at 2:00 of every overtime period; play-offs at 2:00 of overtime periods 2 and 4 (SRC-SECONDARY practice, Part 1.2 default).
 - play_clock 40, after administrative stoppages 25 (4-6); used only to bound the runoff ranges of section 5.
 - runoff_seconds 10, only after the two-minute warning of either half (4-7-1, 4-7-2, 4-7-4, 15-5-2).
@@ -58,7 +58,7 @@ Clock and periods
 
 Timeouts
 - timeouts_per_half 3, no carry-over (4-5-1 Item 1).
-- ot_regular_timeouts 2 per team; the clone gives 2 again at every new sudden-death period (a clone rule: the NFL has one regular-season period). ot_post_timeouts 3 per pair of overtime periods (16-4-g; periods 1 and 2 share three, 3 and 4 get three again, SRC-SECONDARY reading).
+- ot_regular_timeouts 2 per team; the clone gives 2 again at every new sudden-death period (a clone rule: the NFL has one regular-season period; SX.12, D-096: now one period, 16-1-3 (e)). ot_post_timeouts 3 per pair of overtime periods (16-4-g; periods 1 and 2 share three, 3 and 4 get three again, SRC-SECONDARY reading).
 - one_charged_timeout_per_dead_ball true (4-5-1 Item 3). A request with no timeout left is ignored (4-5-1 Item 3); the clone's menu refuses it with a sentence and never grants it, so the delay-of-game foul for a granted excess timeout and the unsportsmanlike foul of 4-5-1 Item 4 cannot arise (recorded, not simulated).
 - timeout_restored_after_warning_reversal true (15-6-2).
 

@@ -57,7 +57,7 @@ class ResultSteps:
         g.say4(P.SAFETY)
         g.ptf = 0
         s.stats[s.defense].score += 2
-        if s.quarter == 5:
+        if self.rules.points_end_game(s):             # H22: Classic, every overtime score; the N. F. L. rules, Rule 16 (SX.12)
             return self.game_end
         return self.after_score
 
@@ -104,6 +104,8 @@ class ResultSteps:
         snd.play_tackle(8)
         snd.playcel()
         s.stats[s.wisoff].score += 6
+        if self.rules.points_end_game(s, s.wisoff):       # H22 (SX.12): a touchdown that decides the overtime has no try (4-8-2 (c));
+            return self.game_end                          # Classic: never (its overtime ends after the try)
         if s.wisoff == 2:                                 # the computer always kicks
             self.rady(0x44fcee)
             return self.computer_try_choice()
@@ -183,7 +185,7 @@ class ResultSteps:
         g.say4(P.SAFETY)
         g.ptf = 0
         s.stats[s.defense].score += 2
-        if s.quarter == 5:
+        if self.rules.points_end_game(s):             # H22 (SX.12)
             return self.game_end
         return self.after_score
 
@@ -229,6 +231,8 @@ class ResultSteps:
         snd.play_tackle(8)
         snd.playcel()
         s.stats[s.wisoff].score += 6
+        if self.rules.points_end_game(s, s.wisoff):       # H22 (SX.12): a return touchdown that decides the overtime has no try
+            return self.game_end
         if s.wisoff == 2:                                 # the computer always kicks
             self.rady(0x44fcee)
             return self.computer_try_choice()
@@ -246,6 +250,10 @@ class ResultSteps:
             s.text += P.MINE
         s.text += P.ON + self._half_word() + self.str_(s.yard_line) + P.YARD_LINE_SPACED
         g.say2(s.text)
+        if self.rules.possession_ends_game(s):            # H22 (SX.12): the second team's possession in overtime ended (Classic: never)
+            s.downs_flag = s.interception_flag = s.fumble_flag = False
+            s.punt_flag = 0
+            return self.game_end
         if s.downs_flag:
             s.downs_flag = False
         elif s.interception_flag:
@@ -321,7 +329,7 @@ class ResultSteps:
         """L_444146: the points go to the side with the ball; in overtime the game ends at once."""
         s = self.s
         s.stats[s.wisoff].score += s.points
-        if s.quarter == 5:
+        if self.rules.points_end_game(s):             # H22: Classic, every overtime score; the N. F. L. rules, Rule 16 (SX.12)
             return self.game_end
         return self.after_score
 

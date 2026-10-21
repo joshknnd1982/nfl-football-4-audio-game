@@ -183,16 +183,19 @@ def after_week(league, week: int, results: list, staff: bool = True) -> dict:
     met by FR_GOAL_MORALE up (missed down), a week he did not play his own place by his word's weight down. `results` are rows [stage code, week, winner, loser, winner score, loser score] (league.results, the fast run's
     week); `staff`: the player's team's lineup by the staff's rule. Returns team -> (won, goal met). Weeks after FR_MORALE_LAST_WEEK move nothing."""
     out = {}
+    tied = set()                                                       # SX.12: a tie moves no morale by its result (neither a win nor a loss)
     if not 1 <= week <= T.FR_MORALE_LAST_WEEK:
         return out
     for row in results:
         if row[0] != 0 or row[1] != week:
             continue
         winner, loser, ws, ls = row[2], row[3], row[4], row[5]
+        if ws == ls:
+            tied |= {winner, loser}
         for team, other, own, theirs in ((winner, loser, ws, ls), (loser, winner, ls, ws)):
             played = league.team in (winner, loser)                    # the player's game: the engine's margins (both of its teams)
             kind, n = told_goal(league, week) if team == league.team and told_goal(league, week) else goal_for(league.sums, team, other, played)
-            out[team] = (team == winner, goal_met(kind, n, own, theirs))
+            out[team] = (team == winner and ws != ls, goal_met(kind, n, own, theirs))
     for team in sorted(out):
         won, met = out[team]
         playing = played_ids(league, team, week, staff or team != league.team)
@@ -200,7 +203,8 @@ def after_week(league, week: int, results: list, staff: bool = True) -> dict:
             if not pid:
                 continue
             up, down, sat = T.FR_PERSON_MORALE[personality(pid)]
-            change = (up if won else -down) + (T.FR_GOAL_MORALE if met else -T.FR_GOAL_MORALE)
+            result = 0 if team in tied else (up if won else -down)
+            change = result + (T.FR_GOAL_MORALE if met else -T.FR_GOAL_MORALE)
             if pid not in playing:
                 change -= sat
             set_morale(league, pid, toward_zero(morale(league, pid)) + change)

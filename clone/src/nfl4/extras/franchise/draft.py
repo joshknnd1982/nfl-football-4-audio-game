@@ -108,10 +108,11 @@ def order_of(league: LeagueRecord) -> list:
     veterans picks as the stronger team it became."""
     entry = league.history[-1] if league.history and league.history[-1]["season"] == league.season else None
     if entry is not None:
-        wins, finish = entry["wins"], entry["finish"]
+        wins, finish, ties = entry["wins"], entry["finish"], entry.get("ties") or [0] * D.TEAMS
     else:                                                      # no entry (a record made by hand): the records, nobody in the play-offs
-        wins, finish = [league.records[2 * t] for t in range(D.TEAMS)], [D.FINISH_MISSED] * D.TEAMS
-    return draft_order(league.sums, wins, finish)
+        wins, finish, ties = [league.records[2 * t] for t in range(D.TEAMS)], [D.FINISH_MISSED] * D.TEAMS, list(league.ties)
+    # SX.12: a tie is half a win (twice the wins plus the ties orders the teams as the wins do when nobody has a tie)
+    return draft_order(league.sums, [2 * w + t for w, t in zip(wins, ties)], finish)
 
 
 # ----- the prospects still to be taken, by position -----

@@ -46,7 +46,7 @@ from ...game.standings import Records
 from ..healing import (read_bytes, read_player_text, save_damaged_copy, write_bytes_atomic,
                        write_text_atomic)
 from . import (byesfile, coachteam, pairingsfile, playernames, recordsfile, savedgame, schedulefile, speechlog,
-               weekfile)
+               tiesfile, weekfile)
 from . import shelf as shelf_module
 from .shelf import ORPHAN, OK, STALE, SaveShelf
 from .variant import FileDamaged
@@ -54,7 +54,7 @@ from .variant import FileDamaged
 log = logging.getLogger("nfl4.data")
 
 SEASON_FILES = (coachteam.FILE_NAME, schedulefile.FILE_NAME, weekfile.FILE_NAME, recordsfile.FILE_NAME,
-                pairingsfile.FILE_NAME, byesfile.FILE_NAME)
+                pairingsfile.FILE_NAME, byesfile.FILE_NAME, tiesfile.FILE_NAME)      # footbal6.dat: the ties (SX.12; only with a tie)
 SEASON_BACKUP = os.path.join(shelf_module.BACKUP_FOLDER, "season")      # SX.14: the season the player deleted last
 SAVED_NAME = savedgame.FILE_NAME
 LOG_NAME = speechlog.FILE_NAME
@@ -206,6 +206,8 @@ class FileProgramStore:
                 records = recordsfile.decode(self._read_required(recordsfile.FILE_NAME))
             elif gtp >= 2:
                 raise FileDamaged("%s is missing in week %d" % (recordsfile.FILE_NAME, gtp))
+            if os.path.exists(self.path(tiesfile.FILE_NAME)):      # SX.12: the ties of the N. F. L. rules (no file: none)
+                records.set_tie_values(tiesfile.decode(self._read_required(tiesfile.FILE_NAME)))
             loaded = LoadedSeason(team, schedule, gtp, records)
             if gtp >= 17:
                 self._read_playoffs(loaded)
@@ -353,9 +355,7 @@ class FileProgramStore:
         season.tn1, season.tn2 = loaded.team.tn1, loaded.team.tn2
         season.schedule = list(loaded.schedule)
         season.gtp = loaded.gtp
-        for d in range(len(season.records.wins)):
-            season.records.wins[d][:] = loaded.records.wins[d]
-            season.records.losses[d][:] = loaded.records.losses[d]
+        loaded.records.copy_into(season.records)            # wins, losses and (SX.12) ties
         season.playoffs.pairings[:] = loaded.pairings
         season.playoffs.byes[:] = loaded.byes
         return True
@@ -472,6 +472,10 @@ class FileProgramStore:
 
     def write_records(self, records: Records) -> None:
         self._write(self.path(recordsfile.FILE_NAME), lambda: recordsfile.encode(records))
+        if records.any_ties():                              # SX.12: footbal6.dat only while a team has a tie (Classic never)
+            self._write(self.path(tiesfile.FILE_NAME), lambda: tiesfile.encode(records))
+        elif os.path.exists(self.path(tiesfile.FILE_NAME)):
+            self._remove(self.path(tiesfile.FILE_NAME))
 
     def write_gtp(self, gtp: int) -> None:
         self._week = gtp if gtp else None                      # SX.14: the week the saved games are judged by

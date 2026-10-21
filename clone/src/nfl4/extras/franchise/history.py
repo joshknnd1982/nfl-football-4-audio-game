@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from ...game.standings import half_wins, ties_words
 from .. import nx_texts as X
 from .. import tuning as T
 from . import contracts
@@ -26,6 +27,7 @@ def build_entry(league: LeagueRecord) -> dict:
     results are dropped)."""
     wins = [league.records[2 * t] for t in range(D.TEAMS)]
     losses = [league.records[2 * t + 1] for t in range(D.TEAMS)]
+    ties = list(league.ties)                                   # SX.12: the regular season's ties (format 11)
     finish = [D.FINISH_MISSED] * D.TEAMS
     champion = runner_up = 0
     playoff = [[0, 0] for _ in range(D.TEAMS)]
@@ -35,6 +37,9 @@ def build_entry(league: LeagueRecord) -> dict:
     big_win: list | None = None
     for code, _, winner, loser, ws, ls in league.results:
         stage = D.CODE_STAGE[code]
+        if ws == ls:                                           # SX.12: a tie (a regular week only) ends both teams' streaks and is
+            streak_now[winner - 1] = streak_now[loser - 1] = 0     # neither a win nor a loss
+            continue
         if stage != D.REGULAR:
             playoff[winner - 1][0] += 1
             playoff[loser - 1][1] += 1
@@ -53,13 +58,21 @@ def build_entry(league: LeagueRecord) -> dict:
         if big_win is None or ws - ls > big_win[2] - big_win[3]:
             big_win = [winner, loser, ws, ls]
     if champion == 0:                                          # a season whose Super Bowl was not recorded: the best record
-        ranked = sorted(range(1, D.TEAMS + 1), key=lambda t: (-wins[t - 1], t))
+        ranked = sorted(range(1, D.TEAMS + 1), key=lambda t: (-half_wins(wins[t - 1], ties[t - 1]), t))
         champion, runner_up = ranked[0], ranked[1]
-    best = max(range(1, D.TEAMS + 1), key=lambda t: (wins[t - 1], -t))
-    worst = min(range(1, D.TEAMS + 1), key=lambda t: (wins[t - 1], t))
-    return {"season": league.season, "team": league.team, "coach": league.coach, "champion": champion, "runner_up": runner_up,
-            "wins": wins, "losses": losses, "finish": finish, "playoff": playoff[league.team - 1], "best": best, "worst": worst,
-            "top_points": top_points, "big_win": big_win, "streak": streak_best}
+    best = max(range(1, D.TEAMS + 1), key=lambda t: (half_wins(wins[t - 1], ties[t - 1]), -t))     # a tie is half a win (SX.12)
+    worst = min(range(1, D.TEAMS + 1), key=lambda t: (half_wins(wins[t - 1], ties[t - 1]), t))
+    entry = {"season": league.season, "team": league.team, "coach": league.coach, "champion": champion, "runner_up": runner_up,
+             "wins": wins, "losses": losses, "finish": finish, "playoff": playoff[league.team - 1], "best": best, "worst": worst,
+             "top_points": top_points, "big_win": big_win, "streak": streak_best}
+    if any(ties):
+        entry["ties"] = ties                                   # SX.12: only a season with a tie has the key (older entries have none)
+    return entry
+
+
+def ties_of(entry: dict) -> list:
+    """The 32 ties of a history entry (an entry of a season without a tie, or written before SX.12, has none)."""
+    return entry.get("ties") or [0] * D.TEAMS
 
 
 def check_entry(entry, whole) -> None:
@@ -78,7 +91,8 @@ def check_entry(entry, whole) -> None:
     whole(entry["worst"], 1, D.TEAMS, "the worst record")
     if not isinstance(entry["coach"], str) or not 1 <= len(entry["coach"]) <= 60:
         raise LeagueError("a history coach is %r" % (entry["coach"],))
-    for key, high in (("wins", 20), ("losses", 20), ("finish", D.FINISH_CHAMPION)):
+    keys = (("wins", 20), ("losses", 20), ("finish", D.FINISH_CHAMPION)) + ((("ties", 16),) if "ties" in entry else ())
+    for key, high in keys:
         values = entry[key]
         if not isinstance(values, list) or len(values) != D.TEAMS:
             raise LeagueError("a history %s is %r" % (key, values))
@@ -112,22 +126,24 @@ class Career:
     playoff_losses: int
     playoff_seasons: int
     super_bowls: int
+    ties: int = 0                                  # SX.12: the regular season's ties of the 2026 overtime
 
 
 def career(league: LeagueRecord) -> Career:
-    seasons = wins = losses = pw = pl = playoffs = titles = 0
+    seasons = wins = losses = pw = pl = playoffs = titles = tied = 0
     for entry in league.history:
         t = entry["team"] - 1
         seasons += 1
         wins += entry["wins"][t]
         losses += entry["losses"][t]
+        tied += ties_of(entry)[t]
         pw += entry["playoff"][0]
         pl += entry["playoff"][1]
         if entry["finish"][t] > D.FINISH_MISSED:
             playoffs += 1
         if entry["finish"][t] == D.FINISH_CHAMPION:
             titles += 1
-    return Career(seasons, wins, losses, pw, pl, playoffs, titles)
+    return Career(seasons, wins, losses, pw, pl, playoffs, titles, tied)
 
 
 @dataclass(frozen=True)
@@ -282,9 +298,15 @@ def champions_lines(league: LeagueRecord, words: Words) -> list:
             for e in _top_to_bottom(league.history)]
 
 
+def losses_and_ties(losses: int, ties: int) -> str:
+    """The losses as the lines say them, with " and 1 tie" after them when the team has ties (SX.12; NXC-13, NXC-14); the number alone
+    otherwise, so every line of a season without a tie is the same as before."""
+    return "%d" % losses if not ties else "%d %s" % (losses, ties_words(ties))
+
+
 def record_line(league: LeagueRecord) -> str:
     c = career(league)
-    return X.text("NXG-11", n=c.seasons, w=c.wins, l=c.losses, p=c.playoff_seasons, s=c.super_bowls)
+    return X.text("NXG-11", n=c.seasons, w=c.wins, l=losses_and_ties(c.losses, c.ties), p=c.playoff_seasons, s=c.super_bowls)
 
 
 def season_lines(league: LeagueRecord, words: Words) -> list:
@@ -292,7 +314,8 @@ def season_lines(league: LeagueRecord, words: Words) -> list:
     lines = []
     for e in _top_to_bottom(league.history):
         t = e["team"] - 1
-        lines.append(X.text("NXG-12", n=e["season"], w=e["wins"][t], l=e["losses"][t], finish=words.finish(e["finish"][t]),
+        lines.append(X.text("NXG-12", n=e["season"], w=e["wins"][t], l=losses_and_ties(e["losses"][t], ties_of(e)[t]),
+                            finish=words.finish(e["finish"][t]),
                             champion=words.team_name(e["champion"]), best=words.team_name(e["best"]),
                             worst=words.team_name(e["worst"])))
     return lines
@@ -329,16 +352,18 @@ def history_text(league: LeagueRecord, words: Words) -> str:
            ("Written by NFL Football 4 after season %d." % league.history[-1]["season"] if league.history
             else "Written by NFL Football 4 before the first season."), "",
            "Your record",
-           "%d seasons, %d wins and %d losses. Play-offs %d times. Super Bowls won: %d." %
-           (c.seasons, c.wins, c.losses, c.playoff_seasons, c.super_bowls)]
+           "%d seasons, %d wins and %s losses. Play-offs %d times. Super Bowls won: %d." %
+           (c.seasons, c.wins, losses_and_ties(c.losses, c.ties), c.playoff_seasons, c.super_bowls)]
     for e in _top_to_bottom(league.history):
         t = e["team"] - 1
+        tied = ties_of(e)
         out += ["", "Season %d" % e["season"],
                 "Champion: %s. Runner-up: %s." % (words.team_name(e["champion"]), words.team_name(e["runner_up"])),
-                "Your team: %d and %d, %s." % (e["wins"][t], e["losses"][t], words.finish(e["finish"][t])),
-                "Best record: %s, %d and %d. Worst record: %s, %d and %d." %
-                (words.team_name(e["best"]), e["wins"][e["best"] - 1], e["losses"][e["best"] - 1],
-                 words.team_name(e["worst"]), e["wins"][e["worst"] - 1], e["losses"][e["worst"] - 1])]
+                "Your team: %d and %s, %s." % (e["wins"][t], losses_and_ties(e["losses"][t], tied[t]), words.finish(e["finish"][t])),
+                "Best record: %s, %d and %s. Worst record: %s, %d and %s." %
+                (words.team_name(e["best"]), e["wins"][e["best"] - 1], losses_and_ties(e["losses"][e["best"] - 1], tied[e["best"] - 1]),
+                 words.team_name(e["worst"]), e["wins"][e["worst"] - 1],
+                 losses_and_ties(e["losses"][e["worst"] - 1], tied[e["worst"] - 1]))]
     r = league_records(league)
     if any(value is not None for value in (r.most_wins, r.most_points, r.biggest_win, r.longest_streak)):
         out += ["", "League records"]

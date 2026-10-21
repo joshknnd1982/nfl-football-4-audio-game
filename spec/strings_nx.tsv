@@ -1603,3 +1603,14 @@ NXH-60	playbooks	help	say5	 Pin punt: a short high punt meant to stop near the g
 NXH-61	playbooks	help	say5	 Nickel: five defensive backs on the field. Dime: six. The defense brings them on to match the offense's receivers. 	F7 addition (H12, SX.10d): the defense's personnel
 NXB-H16	playbooks	sentence	say4	 the <team> will try for two points 	the computer goes for two after its touchdown (G26-10, SX.10e)
 NXH-62	playbooks	help	say5	 The computer's teams call every play of the game by their playbook, and after a touch down they may try for two points. 	F6 addition (H12, SX.10e): the computer's calling and its two-point tries
+NXC-06	clock	sentence	say4	 In over time each team gets the ball once, unless the first drive ends in a safety. After that the next score wins. 	the start of overtime (16-1-3 (a) to (c), 16-1-4 (a) to (c); SX.12)
+NXC-07	clock	sentence	say4	 There is one period of 10 minutes. If the score is still tied at its end, the game is a tie. 	the start of a regular-season overtime (16-1-3 (d); SX.12)
+NXC-08	clock	sentence	say4	 Periods of 15 minutes are played until there is a winner. 	the start of a play-off overtime (16-1-4 (d); SX.12)
+NXC-09	clock	sentence	say4	 the <team> choose to kick off 	the computer won the overtime toss and kicks off (16-1-2; SX.12; the original's ' choose to receive ' is the other choice)
+NXC-10	clock	sentence	say4	 both teams have had the ball. the next score wins. 	overtime turns into sudden death (16-1-3 (c); SX.12), once, before the next kick-off or play
+NXC-11	clock	sentence	say4	 The game ends in a tie. 	after ' THE GAME IS OVER' when the regular season's overtime ended tied (16-1-3 (d); SX.12)
+NXH-63	clock	help	say5	 Over time in the N. F. L. rules: each team gets the ball once, unless the first drive ends in a safety; after that the next score wins. Coaches cannot challenge in over time. 	F6 addition (H12, SX.12): the overtime of Rule 16
+NXH-64	clock	help	say5	 A regular season over time is one 10 minute period and may end in a tie. A play off over time has 15 minute periods until there is a winner. 	F6 addition (H12, SX.12): the overtime's periods and the tie
+NXC-12	clock	sentence	say2	<team> and the <other> tied at <score>. 	a regular week's result when the player's game ended tied (season engine, SX.12), in the place of '<winner> over the <loser> ...'
+NXC-13	clock	piece	piece	and <n> tie	after a team's losses in the standings, the qualifiers and the Franchise's records, when it has one tie (SX.12)
+NXC-14	clock	piece	piece	and <n> ties	the same with two or more ties (SX.12)

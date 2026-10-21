@@ -193,9 +193,7 @@ def restore_state(dst: SeasonState, src: SeasonState) -> None:
     dst.coach, dst.tn1, dst.tn2, dst.tn3, dst.tn4 = src.coach, src.tn1, src.tn2, src.tn3, src.tn4
     dst.vtrnt, dst.gtp = src.vtrnt, src.gtp
     dst.schedule = list(src.schedule)
-    for d in range(len(dst.records.wins)):
-        dst.records.wins[d][:] = src.records.wins[d]
-        dst.records.losses[d][:] = src.records.losses[d]
+    src.records.copy_into(dst.records)                 # wins, losses and (SX.12) ties
     dst.playoffs.pairings[:] = src.playoffs.pairings
     dst.playoffs.byes[:] = src.playoffs.byes
 

@@ -139,6 +139,9 @@ class SimEngine(PlayEngine):
 
     def _receive_or_kick(self):
         s = self.s
+        if s.quarter >= 5 and self.rules.overtime_toss(s) and self.rules.overtime_kicks_first(s):    # SX.12: side 1 chooses as the
+            s.wisoff, s.defense, s.half = 2, 1, 1                                                     # computer does in overtime
+            return self.kick_off
         s.wisoff, s.defense, s.half = 1, 2, 2
         return self.kick_off
 
@@ -162,7 +165,12 @@ class SimEngine(PlayEngine):
             s.offense_play = 6
         elif s.down >= 4:
             s.offense_play = 6 if s.half == 1 and s.yard_line < 41 else 7
-            if self.rnd(9) == 7:
+            choice = self.rules.overtime_fourth_down(s) if s.quarter >= 5 else None     # SX.12: as the computer's rule (pag.py)
+            if choice == "go":
+                s.offense_play = self.rnd(4)
+            elif choice == "kick":
+                s.offense_play = 6
+            elif self.rnd(9) == 7:
                 s.offense_play = self.rnd(4)
         self.rules.computer_offense(s)             # SX.5: the computer's sneaks, keepers and draws (no draw in Classic)
         return self.offense_chosen

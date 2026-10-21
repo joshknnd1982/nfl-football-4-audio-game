@@ -1612,6 +1612,17 @@ TEXTS: dict[str, str] = {
     'NXH-61': " Nickel: five defensive backs on the field. Dime: six. The defense brings them on to match the offense's receivers. ",
     'NXB-H16': ' the <team> will try for two points ',
     'NXH-62': " The computer's teams call every play of the game by their playbook, and after a touch down they may try for two points. ",
+    'NXC-06': ' In over time each team gets the ball once, unless the first drive ends in a safety. After that the next score wins. ',
+    'NXC-07': ' There is one period of 10 minutes. If the score is still tied at its end, the game is a tie. ',
+    'NXC-08': ' Periods of 15 minutes are played until there is a winner. ',
+    'NXC-09': ' the <team> choose to kick off ',
+    'NXC-10': ' both teams have had the ball. the next score wins. ',
+    'NXC-11': ' The game ends in a tie. ',
+    'NXH-63': ' Over time in the N. F. L. rules: each team gets the ball once, unless the first drive ends in a safety; after that the next score wins. Coaches cannot challenge in over time. ',
+    'NXH-64': ' A regular season over time is one 10 minute period and may end in a tie. A play off over time has 15 minute periods until there is a winner. ',
+    'NXC-12': '<team> and the <other> tied at <score>. ',
+    'NXC-13': 'and <n> tie',
+    'NXC-14': 'and <n> ties',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -3219,6 +3230,17 @@ SPEAKERS: dict[str, str] = {
     'NXH-61': 'say5',
     'NXB-H16': 'say4',
     'NXH-62': 'say5',
+    'NXC-06': 'say4',
+    'NXC-07': 'say4',
+    'NXC-08': 'say4',
+    'NXC-09': 'say4',
+    'NXC-10': 'say4',
+    'NXC-11': 'say4',
+    'NXH-63': 'say5',
+    'NXH-64': 'say5',
+    'NXC-12': 'say2',
+    'NXC-13': 'piece',
+    'NXC-14': 'piece',
 }
 
 KINDS: dict[str, str] = {
@@ -4826,6 +4848,17 @@ KINDS: dict[str, str] = {
     'NXH-61': 'help',
     'NXB-H16': 'sentence',
     'NXH-62': 'help',
+    'NXC-06': 'sentence',
+    'NXC-07': 'sentence',
+    'NXC-08': 'sentence',
+    'NXC-09': 'sentence',
+    'NXC-10': 'sentence',
+    'NXC-11': 'sentence',
+    'NXH-63': 'help',
+    'NXH-64': 'help',
+    'NXC-12': 'sentence',
+    'NXC-13': 'piece',
+    'NXC-14': 'piece',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

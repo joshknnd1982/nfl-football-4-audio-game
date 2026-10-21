@@ -39,15 +39,19 @@ class Event:
 
 
 def week_games(league: LeagueRecord, week: int) -> list:
-    """The regular games of the week as (winner, loser, winner score, loser score), in the order the engine decided them."""
-    return [(row[2], row[3], row[4], row[5]) for row in league.results if row[0] == 0 and row[1] == week]
+    """The regular games of the week that had a winner as (winner, loser, winner score, loser score), in the order the engine decided them.
+    A tie (equal scores, SX.12) is no game for the news: it has no winner, no margin and no upset."""
+    return [(row[2], row[3], row[4], row[5]) for row in league.results if row[0] == 0 and row[1] == week and row[4] != row[5]]
 
 
 def streaks(league: LeagueRecord, week: int) -> dict:
-    """team -> (+1 for wins or -1 for losses, games in a row) after the games of weeks 1 to `week`."""
+    """team -> (+1 for wins or -1 for losses, games in a row) after the games of weeks 1 to `week`. A tie ends both teams' streaks (SX.12)."""
     table = {team: (0, 0) for team in range(1, D.TEAMS + 1)}
     for row in league.results:
         if row[0] != 0 or row[1] > week:
+            continue
+        if row[4] == row[5]:
+            table[row[2]] = table[row[3]] = (0, 0)
             continue
         for team, sign in ((row[2], 1), (row[3], -1)):
             kind, length = table[team]
@@ -57,7 +61,7 @@ def streaks(league: LeagueRecord, week: int) -> dict:
 
 def coach_wins(league: LeagueRecord, week: int) -> int:
     """The coach's regular-season wins through `week` of this season and every season before."""
-    own = sum(1 for row in league.results if row[0] == 0 and row[1] <= week and row[2] == league.team)
+    own = sum(1 for row in league.results if row[0] == 0 and row[1] <= week and row[2] == league.team and row[4] != row[5])
     return history.career(league).wins + own
 
 

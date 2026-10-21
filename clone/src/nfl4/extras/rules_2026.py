@@ -16,7 +16,7 @@ WARNING_QUARTERS = (2, 4)              # 3-41: the second and fourth periods; an
 OT_REGULAR_PERIOD_SECONDS = 600        # 16-3: one period of 10 minutes in the regular season
 OT_POST_PERIOD_SECONDS = 900           # 16-4: periods of 15 minutes in the play-offs
 # overtime warnings (SRC-SECONDARY practice, Part 1.2 default): at 2:00 of every regular-season overtime period, and of
-# play-off overtime periods 2 and 4 (the clone's sudden-death periods go on: every second one)
+# play-off overtime periods 2 and 4 (and every second one after them)
 OT_POST_WARNING_EVERY = 2
 LATE_FIRST_HALF_SECONDS = 120          # 4-3-2: in the last 2:00 of the first half a runner out of bounds stops the clock
 FIVE_MINUTE_RULE_SECONDS = 300         # 4-3-2(a)(3), 4-3-2(e)(2): the last 5:00 of the second half; overtime alike (Part 1.5)
@@ -24,9 +24,26 @@ PLAY_CLOCK = 40                        # 4-6: bounds the runoff ranges only
 FIELD_GOAL_MAX_CLOCK = 5               # 11-4-2 Note 5: a field goal attempt runs at most 5 seconds off
 TRY_UNTIMED = True                     # 4-3-2(h), 11-3-1: the extra point and the two-point try take no time
 
+# ----- overtime (SX.12, Rule 16 of the 2026 book, printed pages 64 to 66; NFL_RULES_RESEARCH Part 7) -----
+OT_TOSS_VISITOR_CALLS = True           # 16-1-2: at the end of regulation a new toss, the visiting team's captain calls it (4-2-2)
+OT_TOSS_NO_DEFER = True                # 4-2-2's deferral is "to the second half"; overtime has none: the winner receives or kicks (reading)
+OT_BOTH_POSSESS = True                 # 16-1-3 (a), 16-1-4 (a): both teams must have the opportunity to possess the ball once ...
+OT_SAFETY_WINS = True                  # ... unless the kicking team scores a safety on the receivers' initial possession: it wins
+OT_NEXT_SCORE_WINS = True              # 16-1-3 (b), (c): then the side ahead wins; a first possession without a score, or a tie after
+#                                        both, makes the next score by any method the winner
+OT_REGULAR_PERIODS = 1                 # 16-1-3 (d): at most one 10-minute period in the regular season, even when the second team has
+OT_REGULAR_TIE = True                  # not had its possession; tied at its end, the game is a tie
+OT_POST_UNTIL_WINNER = True            # 16-1-4 (d): play-off periods of 15 minutes, as many as needed; a period also follows when the
+#                                        second team's initial possession has not ended
+OT_POST_LOSER_CHOOSES_PERIOD = 3       # 16-1-4 (e): the captain who lost the toss has the first choice at the third period
+OT_POST_NEW_TOSS_AFTER = 4             # 16-1-4 (i): after the fourth period another toss (the clone repeats the pattern: periods 5, 9, ...)
+OT_KICK_IS_OPPORTUNITY = True          # 16-1-5 (c): a kick-off is the receivers' opportunity to possess, even when the kickers recover it
+OT_NO_COACH_CHALLENGES = True          # 16-1-5 (d): the replay official starts every review (15-1-2 (b); NO_COACH_CHALLENGE_IN_OVERTIME)
+OT_TRY_NOT_IN_SUDDEN_DEATH = True      # 4-8-2 (c): no try after a touchdown that ends a sudden-death overtime (the game is decided)
+
 # ----- timeouts -----
-TIMEOUTS_PER_HALF = 3                  # 4-5-1 Item 1: three charged timeouts each half, no carry-over
-OT_REGULAR_TIMEOUTS = 2                # 16-3-e: two in the regular-season period (the clone: again at every new period)
+TIMEOUTS_PER_HALF = 3                 # 4-5-1 Item 1: three charged timeouts each half, no carry-over
+OT_REGULAR_TIMEOUTS = 2                # 16-1-3 (e): two in the one regular-season period
 OT_POST_TIMEOUTS = 3                   # 16-4-g: three per pair of play-off overtime periods (SRC-SECONDARY reading)
 ONE_CHARGED_TIMEOUT_PER_DEAD_BALL = True   # 4-5-1 Item 3
 # A request with no timeout left is ignored (4-5-1 Item 3): the clone's menu refuses it with a sentence and never grants

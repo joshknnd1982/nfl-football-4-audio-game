@@ -37,11 +37,17 @@ def feature_lines(rules, state):
             "qb": rules.qb.stats_lines(state) if x.qb_on else []}
 
 
+def legal_tie(state) -> bool:
+    """SX.12 (Rule 16, 16-1-3 (d)): a game may end tied only when the regular season's one overtime period ran out."""
+    x = state.extras
+    return state.quarter >= 5 and state.overtime == 1 and x.left == 0 and not x.postseason
+
+
 def check_game(engine, rules, on, said, quick=True):
     """The properties of one finished game with the switches `on` (a dict of SWITCHES)."""
     s, x = engine.s, engine.s.extras
     x.check()
-    assert engine.result.scores is not None and engine.result.scores[0] != engine.result.scores[1]
+    assert engine.result.scores is not None and (engine.result.scores[0] != engine.result.scores[1] or legal_tie(s))   # SX.12
     assert (x.timeouts_on, x.penalties_on, x.onside_on, x.qb_on, x.challenges_on) == \
         (on["timeouts"], on["penalties"], on["onside"], on["qb"], on["challenges"])
     lines = rules.extra_stats_lines(s)
@@ -220,7 +226,8 @@ def test_the_switches_with_the_player_answering_his_own_prompts_questions_and_me
     result = play(rig, rules=program)
     rules = program.used
     said = [t for t, _, _ in rig.said]
-    assert result.scores is not None and result.scores[0] != result.scores[1] and rig.rnd.fallbacks == 0
+    assert result.scores is not None and rig.rnd.fallbacks == 0
+    assert result.scores[0] != result.scores[1] or legal_tie(rules.state)       # SX.12: Rule 16's tie
     x = rules.state.extras
     x.check()
     question = X.text("NXO-01", coach=rig.game.season.coach)

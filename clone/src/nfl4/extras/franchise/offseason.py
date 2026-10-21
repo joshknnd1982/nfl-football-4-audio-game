@@ -71,7 +71,9 @@ def stage_review(p, n: int, m: int, short: bool) -> None:
     told, recent = news.render(league, [news.champion_event(entry["season"], entry["champion"])], pools, words, g.rnd)
     lines = [] if short else [_stage_line(n, m, "NXE-11")]
     lines.append(X.text("NXE-20", champion=words.team_name(entry["champion"]), n=entry["season"]))
-    lines.append(X.text("NXE-21", w=entry["wins"][team], l=entry["losses"][team], finish=words.finish(entry["finish"][team])))
+    tied = history.ties_of(entry)                        # SX.12: the ties of the 2026 overtime (said only when a team has one)
+    lines.append(X.text("NXE-21", w=entry["wins"][team], l=history.losses_and_ties(entry["losses"][team], tied[team]),
+                        finish=words.finish(entry["finish"][team])))
     lines += staff_flow.verdict_lines(league, entry["wins"], entry["finish"])     # SX.8l: the owner's goal and the job rating (kept after the wait)
     awards, inducted = honors.stage_one(league, entry["wins"], entry["finish"])    # SX.8o: the season's awards and the hall's class (kept after the wait)
     honor_lines = honors_flow.stage_lines(league, words, awards, inducted)
@@ -80,10 +82,12 @@ def stage_review(p, n: int, m: int, short: bool) -> None:
             g.say2(line)
     else:
         best, worst = entry["best"], entry["worst"]
-        lines.append(X.text("NXE-28", best=words.team_name(best), best_w=entry["wins"][best - 1], best_l=entry["losses"][best - 1],
-                            worst=words.team_name(worst), worst_w=entry["wins"][worst - 1], worst_l=entry["losses"][worst - 1]))
+        lines.append(X.text("NXE-28", best=words.team_name(best), best_w=entry["wins"][best - 1],
+                            best_l=history.losses_and_ties(entry["losses"][best - 1], tied[best - 1]),
+                            worst=words.team_name(worst), worst_w=entry["wins"][worst - 1],
+                            worst_l=history.losses_and_ties(entry["losses"][worst - 1], tied[worst - 1])))
         career = history.career(history_with(league, entry))
-        lines.append(X.text("NXE-29", n=career.seasons, w=career.wins, l=career.losses))
+        lines.append(X.text("NXE-29", n=career.seasons, w=career.wins, l=history.losses_and_ties(career.losses, career.ties)))
         lines += _news_texts(told)
         lines += honor_lines
         lines.append(X.text("NXE-03"))

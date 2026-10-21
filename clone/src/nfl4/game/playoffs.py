@@ -16,7 +16,7 @@ from typing import Callable, NamedTuple, Sequence
 
 from .league import DIVISIONS, PLACES
 from .rnd import GameRandom
-from .standings import Records
+from .standings import Records, half_losses, half_wins
 
 # The 32-entry score table of pog (L1c8) and finplay17 (Ld4), 0x4619e7 to 0x46250b and 0x47da77 to 0x47df39: scores 0, 3, 6,
 # 7, 9, 10, 12 and 14 have two entries, 20 two, 21 three, so a draw of an index is not a draw of a score.
@@ -147,33 +147,39 @@ class Qualifier:
     team: TeamRef
     wins: int
     losses: int
+    ties: int = 0               # nfl4 only (SX.12): the N. F. L. rules mode's regular-season ties; always 0 in Classic
+
+
+def _own_wins(records: Records, own: TeamRef) -> int:
+    return half_wins(records.record(own.division, own.place)[0], records.ties_of(own.division, own.place))
 
 
 def division_winners(records: Records, own: TeamRef) -> tuple[list[Qualifier], bool]:
     """Divisions 1 to 8: the four teams ordered by LOSSES, fewest first (the wins are not looked at); the first is the
     winner, its record the one spoken. In the player's division, when the player's team is not first but has as many WINS
     as the first, the player's team is the winner instead (Q43; the record spoken stays the first team's). Returns the
-    winners in division order and the flag L180: the player's team is a division winner."""
+    winners in division order and the flag L180: the player's team is a division winner. A tie counts half a loss and half a win
+    (SX.12; no team of a Classic season has one, so the order is the original's)."""
     winners: list[Qualifier] = []
     in_playoffs = False
     for division in range(1, DIVISIONS + 1):
-        teams = [(place,) + records.record(division, place) for place in range(1, PLACES + 1)]
-        ordered = original_sort(teams, key=lambda t: t[2])
-        place, wins, losses = ordered[0]
+        teams = [(place,) + records.record(division, place) + (records.ties_of(division, place),) for place in range(1, PLACES + 1)]
+        ordered = original_sort(teams, key=lambda t: half_losses(t[2], t[3]))
+        place, wins, losses, ties = ordered[0]
         if division == own.division:
             if place == own.place:
                 in_playoffs = True
-            elif records.record(own.division, own.place)[0] == wins:
+            elif _own_wins(records, own) == half_wins(wins, ties):
                 place = own.place
                 in_playoffs = True
-        winners.append(Qualifier(TeamRef(division, place), wins, losses))
+        winners.append(Qualifier(TeamRef(division, place), wins, losses, ties))
     return winners, in_playoffs
 
 
 def seeds(winners: Sequence[Qualifier], conference: Sequence[int]) -> list[Qualifier]:
     """The conference's four division winners ordered by WINS, fewest first (an equal number keeps the division order
-    North, East, West, South): D1 (the fewest wins, hosts the first wild card) to D4 (the most wins, a bye)."""
-    return original_sort([winners[d - 1] for d in conference], key=lambda q: q.wins)
+    North, East, West, South): D1 (the fewest wins, hosts the first wild card) to D4 (the most wins, a bye). A tie is half a win."""
+    return original_sort([winners[d - 1] for d in conference], key=lambda q: half_wins(q.wins, q.ties))
 
 
 def wild_cards(records: Records, conference: Sequence[int], winners: Sequence[Qualifier], own: TeamRef,
@@ -186,17 +192,18 @@ def wild_cards(records: Records, conference: Sequence[int], winners: Sequence[Qu
     for division in conference:
         for place in range(1, PLACES + 1):
             wins, losses = records.record(division, place)
+            ties = records.ties_of(division, place)
             if winners[division - 1].team.place == place:
-                wins, losses = 0, 20
-            candidates.append(Qualifier(TeamRef(division, place), wins, losses))
-    ordered = original_sort(candidates, key=lambda q: q.losses)
+                wins, losses, ties = 0, 20, 0
+            candidates.append(Qualifier(TeamRef(division, place), wins, losses, ties))
+    ordered = original_sort(candidates, key=lambda q: half_losses(q.losses, q.ties))
     first, second = ordered[0], ordered[1]
     if first.team == own:
         in_playoffs = True
     if second.team == own:
         in_playoffs = True
-    if not in_playoffs and own.division in conference and records.record(own.division, own.place)[0] == second.wins:
-        second = Qualifier(own, second.wins, second.losses)
+    if not in_playoffs and own.division in conference and _own_wins(records, own) == half_wins(second.wins, second.ties):
+        second = Qualifier(own, second.wins, second.losses, second.ties)
         in_playoffs = True
     return [first, second], in_playoffs
 

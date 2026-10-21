@@ -101,13 +101,14 @@ import logging
 from ..data import debuglog
 from ..game import key_list, menus
 from ..game import outcome as O
-from ..game.gamestate import other
+from ..game.gamestate import other, own_half
 from ..game.playtables import QB_DRAW, QB_KEEPER, QB_SNEAK
-from ..game.rules import (FAIR_CATCH_KICK, FOUL_BEFORE_SNAP, GO_ON, NORMAL_KICKOFF, PERIOD_OVER, SCRAMBLE, TIMEOUT_GRANTED,
-                          TIMEOUT_KEPT, TIMEOUT_REFUSED, ClassicRules)
+from ..game.rules import (FAIR_CATCH_KICK, FOUL_BEFORE_SNAP, GO_ON, NORMAL_KICKOFF, OT_COIN_TOSS, OT_KICK_OFF, OT_SAME_BALL, OVERTIME_OVER,
+                          PERIOD_OVER, SCRAMBLE, TIMEOUT_GRANTED, TIMEOUT_KEPT, TIMEOUT_REFUSED, ClassicRules)
 from ..game.setup import DEFENSE_ITEMS, OFFENSE_ITEMS
 from . import kick_flow
 from . import nx_texts as X
+from . import overtime as OT
 from . import remarks
 from . import rules_2026 as R
 from . import timeouts
@@ -327,6 +328,8 @@ class NflRules(ClassicRules):
                 # applies the corrected result and offers the declined flags again
                 outcome.then = self.review.rule(state, outcome, board, left_before, flags)
         self.modifiers.arm(None)                   # SX.7: the play's rows are done
+        if state.quarter >= 5 and outcome.kind == O.PUNT and not outcome.turnover and outcome.then is None:
+            OT.kickers_kept_punt(x, state, outcome.offense)     # SX.12: a muffed punt the kickers kept was the receivers' chance (16-1-5 (c))
         injuries = self.game_injuries()
         if injuries is not None:                   # SX.8k (a Franchise game only): the draws of a play that can hurt a player
             injuries.after_play(state, outcome)
@@ -480,12 +483,16 @@ class NflRules(ClassicRules):
         self.defense.clear()                       # SX.10d: nor a defense call
         self.kicks.fair_catch_armed = False        # SX.10d: nor a fair catch kick
         self.review.clock_held = False             # SX.6: a kick-off is a new dead-ball period
-        if x.left <= 0 and state.quarter in (2, 4):
+        if x.left <= 0 and (state.quarter in (2, 4) or (state.quarter >= 5 and not x.postseason)):
+            # SX.12: a score as the regular season's one overtime period ran out ends it too (16-1-3 (d)); a play-off period's kick-off
+            # opens the next period, as a kick-off after a score as the first or third quarter ran out
             # no kick-off is made: nothing of the kick that was to come is left over (a safety kick on the last play of a half,
             # a kick to be made again): the next half starts with a kick-off from the 35
             x.safety_kick = x.kick_again = x.rekick = False
             x.kick_back = 0
             return PERIOD_OVER          # a score as time ran out: the half or the game ends after the try, no kick-off
+        OT.at_kickoff(x, state, kicking_side)      # SX.12: the overtime's possession rule (nothing before overtime)
+        self._overtime_news(state)
         if x.timeouts_on and x.announced != x.unit:
             x.announced = x.unit
             text_id = "NXT-06" if x.unit.startswith("H") else ("NXT-14" if x.unit.startswith("OTP") else "NXT-07")
@@ -518,6 +525,9 @@ class NflRules(ClassicRules):
             return None
         x.handled = x.plays
         self.after_play = False
+        if self.possession_ends_game(state):      # SX.12: the overtime decided between two plays (the kickers kept their kick
+            return OVERTIME_OVER                  # after their score, 16-1-5 (c)); the possession step catches the other changes
+        self._overtime_news(state)
         if x.challenges_on:                       # SX.6: the computer's flag on the last play, before the clock goes on
             then = self.review.computer_challenge(state)
             if then is not None:                  # the ruling was reversed: the engine goes on at the step that applies it
@@ -683,7 +693,72 @@ class NflRules(ClassicRules):
         return self.offense.turnover_return(state)
 
     def play_text(self, key: str, **values) -> str:
+        if key in OVERTIME_SENTENCES:
+            return X.text(OVERTIME_SENTENCES[key], **values)
         return text_for(key, **values)
+
+    # ----- H22 (SX.12): the 2026 overtime, Rule 16 (extras/overtime.py) -----
+
+    def overtime_follows(self, state) -> bool:
+        """A tie at the end of the fourth quarter begins overtime; a tie at the end of the regular season's one period is the game's result
+        (16-1-3 (d)). A play-off period never reaches the game's end tied (period_end_step goes on)."""
+        return state.quarter <= 4
+
+    def overtime_lines(self, state) -> list[str]:
+        return [X.text("NXC-06"), X.text("NXC-08" if state.extras.postseason else "NXC-07")]
+
+    def overtime_toss(self, state) -> bool:
+        return True
+
+    def overtime_kicks_first(self, state) -> bool:
+        """The computer won the overtime toss: it kicks off with the league's share of toss winners (one draw, tuning)."""
+        kicks = self.rnd.below(1000) < T.OT_KICK_FIRST_PER_MILLE
+        debuglog.event("extras", "overtime_toss", kicks=kicks)
+        return kicks
+
+    def points_end_game(self, state, touchdown_by: int | None = None) -> bool:
+        x = state.extras
+        over = OT.after_points(x, state, touchdown_by)
+        if state.quarter >= 5:
+            debuglog.event("extras", "overtime_points", phase=x.ot_phase, first=x.ot_first, scores=[state.score(1), state.score(2)],
+                           touchdown_by=touchdown_by or 0, over=over)
+        return over
+
+    def possession_ends_game(self, state) -> bool:
+        x = state.extras
+        before = x.ot_phase
+        over = OT.at_possession(x, state)
+        if state.quarter >= 5 and x.ot_phase != before:
+            debuglog.event("extras", "overtime_phase", phase=x.ot_phase, was=before, ball=state.wisoff)
+        return over
+
+    def period_end_step(self, state) -> str | None:
+        step = OT.period_end(state.extras, state)
+        if step is not None:
+            debuglog.event("extras", "overtime_period", next=step, period=state.overtime + 1)
+        return {OT.SAME_BALL: OT_SAME_BALL, OT.KICK_OFF: OT_KICK_OFF, OT.COIN_TOSS: OT_COIN_TOSS}.get(step)
+
+    def third_period_receiver(self, state) -> int:
+        return OT.third_period_receiver(state.extras)
+
+    def overtime_fourth_down(self, state) -> str | None:
+        """The second team behind on its initial possession (16-1-3 (b)): a punt or a missed chance ends the game, so it goes for it, and kicks
+        a field goal only when the kick ties the game and is in the original's range (its own fourth-down rule: the other half, inside the 41)."""
+        behind = OT.second_possession_trailing(state.extras, state, state.wisoff)
+        if behind == 0:
+            return None
+        if behind <= 3 and state.half != own_half(state.wisoff) and state.yard_line < 41:
+            return "kick"
+        return "go"
+
+    def game_over_lines(self, state) -> list[str]:
+        if state.quarter >= 5 and state.score(1) == state.score(2):
+            return [X.text("NXC-11")]
+        return []
+
+    def _overtime_news(self, state) -> None:
+        if OT.sudden_news(state.extras, state):
+            self.game.say4(X.text("NXC-10"))
 
     # ----- H20 (SX.10d): the kicks of 2026 -----
 
@@ -747,8 +822,8 @@ class NflRules(ClassicRules):
 
     def extra_help(self, key: str) -> list[str]:
         ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-47", "NXH-14", "NXH-18", "NXH-27"),
-               KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15", "NXH-16",
-                        "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30") + MENU_HELP_F6,
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
+                        "NXH-16", "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30") + MENU_HELP_F6,     # SX.12: overtime after the clock
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
                         "NXH-33") + descriptions.F7_WORD_ROWS}.get(key, ())
         timeout_lines = ("NXH-01", "NXH-05", "NXH-07")
@@ -779,6 +854,9 @@ class NflRules(ClassicRules):
                                       ("qb", qb_on), ("playbooks", menus_used)) if flag}
         self.help_features = on                              # the tests read which features the lines were made for
         return lines + key_list.help_lines(key, "nfl", on)   # CLAUDE.md 0.24: every key, from the master list (game/key_list.py)
+
+
+OVERTIME_SENTENCES = {"overtime_kicks": "NXC-09"}      # SX.12: the computer won the overtime toss and kicks off
 
 
 def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):

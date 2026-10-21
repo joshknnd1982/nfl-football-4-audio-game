@@ -126,6 +126,26 @@ Added in PX SX.10d (the defense calls and the kicks of 2026, D-094), each never 
 Added in PX SX.10e (the computer's calling over the catalog, D-095), never taken in Classic:
     H21 computer_goes_for_two(state)       after the computer's touchdown: its two-point       False (the computer always
                                            chart (G26-10)                                     kicks, no draw)
+
+Added in PX SX.12 (the 2026 overtime, Rule 16, D-096), each the original's answer in Classic:
+    H22 overtime_follows(state)            a tied game at the end of a period that could end   True (sudden death until
+                                           the game: another overtime period begins            a score)
+    H22 overtime_lines(state)              said after " We are going into over time number "  no lines
+    H22 overtime_toss(state)               the overtime begins with a coin toss                False (the side with the ball
+                                                                                              at the end receives)
+    H22 overtime_kicks_first(state)        the computer won the overtime toss: it kicks off    never called
+    H22 points_end_game(state, td_by)      points were scored (a touchdown's six before its    quarter 5 and not a touchdown
+                                           try: td_by its side): the game is decided now      before its try (every score
+                                                                                              ends it after the try)
+    H22 possession_ends_game(state)        after the possession sentence: the game is decided  False
+    H22 period_end_step(state)             an overtime period ended: what the next one starts  None (the game's end decides)
+                                           with (the play-offs: OT_SAME_BALL, OT_KICK_OFF,
+                                           OT_COIN_TOSS)
+    H22 overtime_fourth_down(state)        the computer's fourth down in overtime: "go",       None (the original's rule)
+                                           "kick" (a field goal) or None
+    H22 game_over_lines(state)             said after " THE GAME IS OVER" (the tie)            no lines
+    H10 between_plays -> OVERTIME_OVER     the game was decided between two plays (the kickers  never returned
+                                           kept their kick after their score, 16-1-5 (c))
 """
 from __future__ import annotations
 
@@ -171,6 +191,10 @@ TIMEOUT_KEPT, TIMEOUT_GRANTED, TIMEOUT_REFUSED = "kept", "granted", "refused"
 # What a play menu does after an added key or item (N. F. L. rules mode only, SX.10c): the items are made again and the menu stays at its
 # place (a setting changed, a favourite was added or taken off), or nothing is said and the next key is waited for (a lone Shift)
 MENU_REFRESH, MENU_QUIET = "menu refresh", "menu quiet"
+# The 2026 overtime (N. F. L. rules mode only, SX.12): the game was decided between plays (H10), and what a play-off overtime period that ended
+# without a winner starts the next one with (the same ball, down and distance; a kick-off; a coin toss and its kick-off)
+OVERTIME_OVER = "overtime over"
+OT_SAME_BALL, OT_KICK_OFF, OT_COIN_TOSS = "same ball", "kick off", "coin toss"
 
 
 class ClassicRules:
@@ -312,6 +336,36 @@ class ClassicRules:
 
     def withdraw_play(self, state) -> None:
         return None
+
+    # H22 (SX.12): the overtime. Classic answers every call with the original's sudden death (GAME_SPEC 5.6 item 6, 5.12): a tie at the
+    # end of the fourth quarter or of an overtime period begins another period, received by the side that had the ball, and every score
+    # ends the game (a touchdown after its try).
+    def overtime_follows(self, state) -> bool:
+        return True
+
+    def overtime_lines(self, state) -> list[str]:
+        return []
+
+    def overtime_toss(self, state) -> bool:
+        return False
+
+    def overtime_kicks_first(self, state) -> bool:
+        raise RuntimeError("Classic has no overtime toss: overtime_toss is always False")
+
+    def points_end_game(self, state, touchdown_by: int | None = None) -> bool:
+        return state.quarter == 5 and touchdown_by is None
+
+    def possession_ends_game(self, state) -> bool:
+        return False
+
+    def period_end_step(self, state) -> str | None:
+        return None
+
+    def overtime_fourth_down(self, state) -> str | None:
+        return None
+
+    def game_over_lines(self, state) -> list[str]:
+        return []
 
     def extra_stats_lines(self, state) -> list[str]:
         return []

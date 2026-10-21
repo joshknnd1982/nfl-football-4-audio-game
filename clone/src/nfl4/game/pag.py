@@ -46,7 +46,7 @@ from .pag_results import ResultSteps
 from .pag_catalog import CatalogSteps
 from .pag_scrimmage import ScrimmageSteps
 from .playtables import DEFENSE_MATCH
-from .rules import (CLASSIC, FAIR_CATCH_KICK, KICK_AGAIN, MENU_QUIET, MENU_REFRESH, NEXT_DOWN, ON_DOWNS, PERIOD_END,
+from .rules import (CLASSIC, FAIR_CATCH_KICK, KICK_AGAIN, MENU_QUIET, MENU_REFRESH, NEXT_DOWN, ON_DOWNS, OVERTIME_OVER, PERIOD_END,
                     REVIEWED_FIELD, REVIEWED_FUMBLE, REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, SAVE_PENDING, TIMEOUT_GRANTED, TRY_AGAIN,
                     TRY_FAILS)
 from .setup import Roster
@@ -318,6 +318,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
             return self.save_game
         if then == FAIR_CATCH_KICK:               # N. F. L. rules with a playbook (SX.10d): the player chose the fair catch kick
             return self.fair_catch_kick
+        if then == OVERTIME_OVER:                 # N. F. L. rules (SX.12): the overtime was decided between two plays (16-1-5 (c))
+            return self.game_end
         raise ValueError("unknown continuation %r" % (then,))
 
     def ran(self) -> bool:
@@ -398,7 +400,15 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
 
     # ----- the coin toss and the opening choice (4.14; 0x43bb4c to 0x43cc63) -----
 
-    def coin_toss(self):
+    def overtime_coin_toss(self):
+        """N. F. L. rules (SX.12, 16-1-2; never in Classic): the overtime's toss, as the opening one (the visitors call it, the winner
+        receives or kicks off; no deferral). The computer that wins kicks off with the share of the league's toss winners (one draw). Between
+        the end of regulation and the overtime's kick-off no timeout can be called, so H and T are heads and tails here, as at the opening
+        toss (the timeouts of overtime begin with its kick-off)."""
+        self.game_on = False
+        return self.coin_toss(overtime=True)
+
+    def coin_toss(self, overtime: bool = False):
         g, s = self.g, self.s
         own_call = 0                                       # Ldc = 0 (0x43aea1)
         computer_call = 0                                  # L428 = 0
@@ -419,6 +429,10 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         g.ptf = 0
         if coin == own_call or (computer_call != 0 and computer_call != coin):
             return self._receive_or_kick()
+        if overtime and self.rules.overtime_kicks_first(s):    # H22 (SX.12): the computer's choice in overtime (Classic: never asked)
+            g.say4(self.rules.play_text("overtime_kicks", team=s.teams[2]))
+            s.wisoff, s.defense, s.half = 1, 2, 2
+            return self.kick_off
         g.say4(P.THE_TEAM + s.teams[2] + P.CHOOSE_TO_RECEIVE)
         s.wisoff, s.defense, s.half = 2, 1, 1
         return self.kick_off
@@ -733,6 +747,12 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
                 return self._go_for_it()
             return self._one_in_nine()
         if s.quarter == 5:
+            choice = self.rules.overtime_fourth_down(s)    # H22 (SX.12): the second team behind in overtime never punts (Classic: None)
+            if choice == "go":
+                return self._go_for_it()
+            if choice == "kick":
+                s.offense_play = 6
+                return self.snap
             if s.to_go > 2 and s.half == 1:
                 return self.snap
             if s.half == 2 and s.yard_line < 25:

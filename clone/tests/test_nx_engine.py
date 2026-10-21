@@ -275,7 +275,7 @@ def test_f5_f6_f7_add_their_lines_after_the_original_text_during_an_nfl_game(tmp
         lead = [original] + ([words.KEYS_ADDED_F9] if menu == hot.speckeys else [])      # S8.2: F9 is in the key list, in every mode
         assert said[:len(lead)] == lead and said[len(lead):len(lead) + len(ids)] == [X.text(i) for i in ids]     # then SX.10b2's lines
     rig.rules.state.extras.timeouts_on = False
-    assert feature_help(rig.rules, "117") == [X.text("NXH-03"), X.text("NXH-04"), X.text("NXH-06")]
+    assert feature_help(rig.rules, "117") == [X.text(i) for i in ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-06")]   # SX.12: overtime
 
 
 def test_the_help_of_a_classic_program_has_no_feature_lines_only_the_keys(tmp_path):

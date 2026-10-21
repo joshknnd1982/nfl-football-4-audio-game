@@ -6,8 +6,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 1604.
-- The clock (design section 5): 10.
+- Texts: 1615.
+- The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
@@ -31,6 +31,17 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXH-06 (help, say5): " The two minute warning stops the clock at two minutes left in the second and the fourth quarter. ". F6 addition (H12, C6)
 - NXH-08 (help, say5): " Two minute warning: The automatic stop of the clock at two minutes left in each half. Out of bounds: A runner or receiver stopped outside the side line. ". F7 addition (H12, C6)
 - NXC-05 (sentence, say5): " the clock is running with 1 second left. ". NXC-03 with one second left
+- NXC-06 (sentence, say4): " In over time each team gets the ball once, unless the first drive ends in a safety. After that the next score wins. ". the start of overtime (16-1-3 (a) to (c), 16-1-4 (a) to (c); SX.12)
+- NXC-07 (sentence, say4): " There is one period of 10 minutes. If the score is still tied at its end, the game is a tie. ". the start of a regular-season overtime (16-1-3 (d); SX.12)
+- NXC-08 (sentence, say4): " Periods of 15 minutes are played until there is a winner. ". the start of a play-off overtime (16-1-4 (d); SX.12)
+- NXC-09 (sentence, say4): " the <team> choose to kick off ". the computer won the overtime toss and kicks off (16-1-2; SX.12; the original's ' choose to receive ' is the other choice)
+- NXC-10 (sentence, say4): " both teams have had the ball. the next score wins. ". overtime turns into sudden death (16-1-3 (c); SX.12), once, before the next kick-off or play
+- NXC-11 (sentence, say4): " The game ends in a tie. ". after ' THE GAME IS OVER' when the regular season's overtime ended tied (16-1-3 (d); SX.12)
+- NXH-63 (help, say5): " Over time in the N. F. L. rules: each team gets the ball once, unless the first drive ends in a safety; after that the next score wins. Coaches cannot challenge in over time. ". F6 addition (H12, SX.12): the overtime of Rule 16
+- NXH-64 (help, say5): " A regular season over time is one 10 minute period and may end in a tie. A play off over time has 15 minute periods until there is a winner. ". F6 addition (H12, SX.12): the overtime's periods and the tie
+- NXC-12 (sentence, say2): "<team> and the <other> tied at <score>. ". a regular week's result when the player's game ended tied (season engine, SX.12), in the place of '<winner> over the <loser> ...'
+- NXC-13 (piece, piece): "and <n> tie". after a team's losses in the standings, the qualifiers and the Franchise's records, when it has one tie (SX.12)
+- NXC-14 (piece, piece): "and <n> ties". the same with two or more ties (SX.12)
 
 ## Timeouts (design 6.3)
 

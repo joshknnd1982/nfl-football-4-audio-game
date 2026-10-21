@@ -154,6 +154,7 @@ class FranchiseStore:
         league.gtp = season.gtp
         league.schedule = [[e.division, e.team, e.flag] for e in season.schedule]
         league.records = season.records.as_file_values()
+        league.ties = season.records.tie_values()          # SX.12: the ties of the 2026 overtime
         league.pairings = season.playoffs.pairing_values()
         league.byes = season.playoffs.bye_values()
 
@@ -378,9 +379,8 @@ class FranchiseStore:
         season.schedule = [ScheduleEntry(*entry) for entry in league.schedule]
         season.gtp = league.gtp
         loaded = Records.from_file_values(league.records)
-        for d in range(len(season.records.wins)):
-            season.records.wins[d][:] = loaded.wins[d]
-            season.records.losses[d][:] = loaded.losses[d]
+        loaded.set_tie_values(league.ties)                 # SX.12
+        loaded.copy_into(season.records)
         season.playoffs.pairings[:] = PlayoffState.pairings_from_values(league.pairings)
         season.playoffs.byes[:] = PlayoffState.byes_from_values(league.byes)
         return True

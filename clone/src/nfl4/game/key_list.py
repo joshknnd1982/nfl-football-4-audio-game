@@ -68,7 +68,8 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("yes_no", "Y, N, Tab", "In a yes or no question", "Y says yes and N says no at once; Up, Down or Tab change the answer and "
            "Enter takes it", "all", True, "", " Y and N. answer a yes or no question, and Up, Down or Tab change the answer. ",
            consts=("KEY_TAB",), letters="yn"),
-    KeyRow("coin", "H, T, R, K", "At the coin toss", "H is heads and T is tails; then R receives the kick off and K kicks off", "all", True,
+    KeyRow("coin", "H, T, R, K", "At the coin toss, and at the coin toss before over time in the N. F. L. rules",
+           "H is heads and T is tails; then R receives the kick off and K kicks off", "all", True,
            "", " H and T. at the coin toss, heads and tails. R and K. receive or kick off. ", letters="htrk"),
     KeyRow("name", "Letters, digits, Backspace", "When you type a name", "letters and digits type, Backspace deletes the last one and "
            "Enter finishes", "all", True, "", " Typing a name. letters and digits type, Backspace deletes, and Enter finishes. ",

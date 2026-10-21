@@ -59,6 +59,12 @@ RULE4_LAST = 120                      # rule 4: overtime, like rule 2 in the las
 RULE6_CHANCE = 140                    # rule 6: quarters 1 and 3, a side with three timeouts calls one with chance 1 in 140
 #                                       (start value 80; SX.2: 0.32 per team in quarters 1 and 3, target 0.2)
 
+# ----- overtime, SX.12 (Rule 16, extras/overtime.py) -----
+OT_KICK_FIRST_PER_MILLE = 700         # the computer that wins the overtime toss kicks off with this chance (one draw): under the format in
+#                                       which both teams possess (play-offs since 2022, the regular season since 2025) toss winners chose to
+#                                       kick in 14 of 20 games (Yahoo Sports, 2026-09-25; SRC-SECONDARY, a small sample). Classic never draws
+#                                       it: the original's computer always receives
+
 # ----- penalties, design 9 (SX.3) -----
 PENALTY_RATE_SCALE = 1.2              # every rate of extras/fouls_2026.py is multiplied by this (the calibration of SX.3;
 #                                       start value 1.0: 11.15 accepted fouls per game in 40 games; 1.24: 13.28 in 1,000;
