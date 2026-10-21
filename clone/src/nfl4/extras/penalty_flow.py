@@ -47,7 +47,7 @@ from . import penalties as PEN
 from . import remarks
 from . import rules_2026 as R
 from . import tuning as T
-from .clock import is_warning_period
+from .clock import is_warning_period, late_window
 from .kick_flow import kicks_on
 from .penalty_list import DEFAULT_TABLE
 
@@ -74,24 +74,24 @@ def place(state, side: int, los: int) -> None:
         state.half, state.yard_line = own_half(2 if side == 1 else 1), 100 - los
 
 
-def late_for_fouls(quarter: int, left: int) -> bool:
-    """4-3-2 (e) 1 and 2: after the two-minute warning of the first half, in the last five minutes of the second half
-    (overtime treated like it, Part 1.5) the clock starts on the snap after a penalty."""
-    return (quarter == 2 and left <= R.WARNING_SECONDS) or (quarter == 4 and left <= R.FIVE_MINUTE_RULE_SECONDS) \
-        or quarter >= 5
+def late_for_fouls(quarter: int, left: int, period: int = 0, postseason: bool = False) -> bool:
+    """4-3-2 (e) 1 and 2: after the two-minute warning of the first half, in the last five minutes of the second half the clock
+    starts on the snap after a penalty; overtime as its timing rules say (SX.13: the windows of clock.late_window, 16-1-3 (e),
+    16-1-4 (h))."""
+    return late_window(quarter, left, period, postseason)
 
 
 def clock_after_foul(record, quarter: int, keeps: bool) -> tuple[bool, bool]:
     """(the clock runs to the next snap, it restarts on the ready signal) after a foul (design 5.2, 4-3-2 (e) and (g)):
     as if the foul had not happened (a foul before the snap: as it was), restarting on the ready signal; on the snap in the
-    late windows and after an offense foul before the snap in the fourth quarter or overtime (3); after a ten-second run
-    off on the ready signal (g)."""
+    late windows and after an offense foul before the snap in the fourth quarter or the regular season's overtime (3); after
+    a ten-second run off on the ready signal (g)."""
     if record.foul_clock == "runoff":
         return record.left > 0, True
     base = record.was_running if record.foul_clock == "pre" else keeps
-    if late_for_fouls(quarter, record.left):
+    if late_for_fouls(quarter, record.left, record.period, record.postseason):
         return False, False
-    if record.foul_clock == "pre" and record.foul_by_offense and quarter >= 4:
+    if record.foul_clock == "pre" and record.foul_by_offense and (quarter == 4 or (quarter >= 5 and not record.postseason)):
         return False, False
     return base, base
 

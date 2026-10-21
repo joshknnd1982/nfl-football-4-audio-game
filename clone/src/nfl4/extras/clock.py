@@ -44,8 +44,8 @@ def period_seconds(period: int, postseason: bool) -> int:
 
 
 def is_warning_period(period: int, postseason: bool) -> bool:
-    """3-41: the second and fourth quarters; overtime by practice: every regular-season period, every second play-off
-    period."""
+    """3-41: the second and fourth quarters; overtime: the regular season's period (16-1-3 (e)), every second play-off period
+    (16-1-4 (h): periods 2 and 4; the clone repeats the pattern after the fourth)."""
     if period <= 4:
         return period in R.WARNING_QUARTERS
     if not postseason:
@@ -53,11 +53,21 @@ def is_warning_period(period: int, postseason: bool) -> bool:
     return (period - 4) % R.OT_POST_WARNING_EVERY == 0
 
 
-def late_window(quarter: int, left: int) -> bool:
+def late_window(quarter: int, left: int, period: int = 0, postseason: bool = False) -> bool:
     """A runner or receiver out of bounds stops the clock until the snap: the last 2:00 of the first half, the last 5:00 of
-    the second half, all of overtime (4-3-2); before them the clock restarts on the ready signal."""
+    the second half (4-3-2 (a)); before them the clock restarts on the ready signal. Overtime (SX.13): the regular season's
+    period has the fourth period's timing (16-1-3 (e)), its last 5:00; in the play-offs the end of the second overtime
+    period is timed as the end of the first half and the end of the fourth as the end of the fourth period (16-1-4 (h)),
+    the clone repeating the pattern after it (periods 6 and 8, ...), the first and third periods have no late window."""
     if quarter >= 5:
-        return True
+        if not postseason:
+            return left <= R.FIVE_MINUTE_RULE_SECONDS
+        number = period - 4 if period > 4 else 1
+        if number % 4 == 2:
+            return left <= R.LATE_FIRST_HALF_SECONDS
+        if number % 4 == 0:
+            return left <= R.FIVE_MINUTE_RULE_SECONDS
+        return False
     if quarter == 2:
         return left <= R.LATE_FIRST_HALF_SECONDS
     if quarter == 4:

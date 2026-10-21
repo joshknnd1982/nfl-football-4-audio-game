@@ -101,6 +101,72 @@ def test_the_rule_reads_the_margin_after_the_six_points():
     assert OT.last_try_cannot_matter(x, s, 1) is False
 
 
+# ----- 16-1-4 (e): the captain who lost the overtime toss has the first choice at the third play-off period -----
+
+def third_period_rig(tmp_path, answers, loser):
+    rules = NflRules(timeouts_on=True)
+    rig = nfl_engine_rig(tmp_path, answers=answers, rules=rules, quarter=5, overtime=2, wisoff=1, defense=2, half=2, yard_line=40,
+                         extras=dict(period=6, postseason=True, left=0, ot_phase=OT.SUDDEN, ot_first=2, ot_receiver=2,
+                                     ot_toss_loser=loser))
+    rig.rnd.source = random.Random(4)
+    return rig
+
+
+@pytest.mark.parametrize("answers, receiver", [([13, 13, 13], 1), ([13, 13, 40, 13], 2)])
+def test_the_player_who_lost_the_toss_chooses_to_receive_or_kick_at_the_third_period(tmp_path, answers, receiver):
+    from nfl4.game.rules import OT_KICK_OFF
+    rig = third_period_rig(tmp_path, answers, loser=1)
+    step = rig.engine.next_overtime_period(OT_KICK_OFF)
+    s = rig.engine.s
+    assert step.__name__ == "kick_off" and s.wisoff == receiver and s.defense == 3 - receiver and s.overtime == 3
+    assert any(rig.engine.coach + " " in t or "receive" in t.lower() for t, _, _ in rig.said)
+
+
+def test_the_computer_that_lost_the_toss_chooses_with_its_toss_share(tmp_path):
+    from nfl4.game.rules import OT_KICK_OFF
+    rig = third_period_rig(tmp_path, [13, 13], loser=2)
+    rig.rules.overtime_kicks_first = lambda state: True              # its one draw said "kick"
+    assert rig.engine.next_overtime_period(OT_KICK_OFF).__name__ == "kick_off" and rig.engine.s.wisoff == 1
+    rig = third_period_rig(tmp_path / "r", [13, 13], loser=2)
+    rig.rules.overtime_kicks_first = lambda state: False
+    assert rig.engine.next_overtime_period(OT_KICK_OFF).__name__ == "kick_off" and rig.engine.s.wisoff == 2
+
+
+def test_the_overtime_toss_records_its_loser_and_the_save_keeps_it(tmp_path):
+    from nfl4.extras.state import ExtrasRecord
+    rules = NflRules(timeouts_on=True)
+    rig = nfl_engine_rig(tmp_path, rules=rules, quarter=5, overtime=1)
+    rig.engine.g.season.vtrnt = 1                                    # the computer calls: heads (1); the coin: heads (1): it wins
+    from randsources import ScriptedRandom
+    rig.rnd.source = ScriptedRandom([0.0, 0.0, 0.0], strict=False)
+    rig.engine.overtime_coin_toss()
+    x = rig.engine.s.extras
+    assert x.ot_toss_loser == 1
+    assert ExtrasRecord.from_json(x.to_json()).ot_toss_loser == 1
+
+
+# ----- 16-1-3 (e), 16-1-4 (h), 4-3-2 (a), (e): the clock's late windows in overtime -----
+
+@pytest.mark.parametrize("period, postseason, left, late", [
+    (5, False, 400, False), (5, False, 301, False), (5, False, 300, True), (5, False, 10, True),     # the fourth period's timing
+    (5, True, 100, False), (6, True, 121, False), (6, True, 120, True), (7, True, 30, False),        # play-offs: OT2 as a first half
+    (8, True, 301, False), (8, True, 300, True), (10, True, 120, True), (12, True, 300, True)])       # OT4 as the fourth period
+def test_the_late_windows_of_overtime(period, postseason, left, late):
+    from nfl4.extras import clock as CL
+    from nfl4.extras import penalty_flow as PF
+    assert CL.late_window(5, left, period, postseason) is late
+    assert PF.late_for_fouls(5, left, period, postseason) is late
+
+
+@pytest.mark.parametrize("postseason, expected", [(False, (False, False)), (True, (True, True))])
+def test_an_offense_foul_before_the_snap_stops_the_clock_to_the_snap_only_in_the_regular_seasons_overtime(postseason, expected):
+    """4-3-2 (e)(3) names the fourth period and the regular season's overtime; a play-off period 1 at 10:00 is as if no foul."""
+    from nfl4.extras import penalty_flow as PF
+    from nfl4.extras.state import ExtrasRecord
+    record = ExtrasRecord(left=600, foul_clock="pre", foul_by_offense=True, was_running=True, period=5, postseason=postseason)
+    assert PF.clock_after_foul(record, 5, False) == expected
+
+
 # ----- 6-1-2 (e), 6-1-4 (d)(3), 6-2-4, 6-1-5: free kicks that are not made from the 35 -----
 
 class Seeded:

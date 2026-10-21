@@ -93,7 +93,18 @@ class BreakSteps:
         if following == OT_COIN_TOSS:
             return self.overtime_coin_toss
         if following == OT_KICK_OFF:
-            s.wisoff = self.rules.third_period_receiver(s)
+            chooser = self.rules.third_period_chooser(s)            # SX.13 (16-1-4 (e)): the toss's loser has the first choice
+            if chooser == 1:
+                return self._receive_or_kick()
+            if chooser == 2:
+                if self.rules.overtime_kicks_first(s):              # the computer chooses as it does after winning a toss
+                    g.say4(self.rules.play_text("overtime_kicks", team=s.teams[2]))
+                    s.wisoff, s.defense, s.half = 1, 2, 2
+                else:
+                    g.say4(P.THE_TEAM + s.teams[2] + P.CHOOSE_TO_RECEIVE)
+                    s.wisoff, s.defense, s.half = 2, 1, 1
+                return self.kick_off
+            s.wisoff = self.rules.third_period_receiver(s)          # a game saved before SX.13 knows no toss loser: SX.12's reading
             s.defense = other(s.wisoff)
             s.half = own_half(s.wisoff)
             return self.kick_off

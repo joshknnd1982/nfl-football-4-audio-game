@@ -427,7 +427,10 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         g.ptf = 1
         g.say4(P.COIN_COMES_UP + (P.HEADS_WORD if coin == 1 else P.TAILS_WORD))
         g.ptf = 0
-        if coin == own_call or (computer_call != 0 and computer_call != coin):
+        player_won = coin == own_call or (computer_call != 0 and computer_call != coin)
+        if overtime:                                       # H22 (SX.13, 16-1-4 (e)): the toss's loser chooses first at the third play-off
+            self.rules.overtime_toss_won(s, 1 if player_won else 2)     # period (Classic never tosses in overtime)
+        if player_won:
             return self._receive_or_kick()
         if overtime and self.rules.overtime_kicks_first(s):    # H22 (SX.12): the computer's choice in overtime (Classic: never asked)
             g.say4(self.rules.play_text("overtime_kicks", team=s.teams[2]))

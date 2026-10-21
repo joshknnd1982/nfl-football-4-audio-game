@@ -114,6 +114,8 @@ class ExtrasRecord:
     ot_told: bool = False
     ot_receiver: int = 0
     ot_toss: bool = False
+    ot_toss_loser: int = 0            # SX.13: the side that lost the last overtime toss; it chooses first at the third play-off period
+    #                                   (16-1-4 (e)); 0 in a record saved before SX.13 (then SX.12's reading: the other side receives)
     # the Franchise (SX.8a, design 10.2): the league, season and week a franchise game was saved in; None (and left out of the
     # saved text) in every other game, so a record without it loads as before
     franchise: dict | None = None

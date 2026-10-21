@@ -536,7 +536,7 @@ class NflRules(ClassicRules):
         keeps = x.last_kind in RUNNING_KINDS and state.wisoff == x.last_offense and not x.last_two_point
         ready = False
         if keeps and x.out_of_bounds:
-            if late_window(state.quarter, x.left):
+            if late_window(state.quarter, x.left, x.period, x.postseason):
                 keeps = False                     # stopped until the snap
             else:
                 ready = True                      # stopped, restarted on the ready signal: a shorter runoff
@@ -749,6 +749,13 @@ class NflRules(ClassicRules):
 
     def third_period_receiver(self, state) -> int:
         return OT.third_period_receiver(state.extras)
+
+    def overtime_toss_won(self, state, winner: int) -> None:
+        state.extras.ot_toss_loser = other(winner)
+        debuglog.event("extras", "overtime_toss_won", winner=winner)
+
+    def third_period_chooser(self, state) -> int:
+        return state.extras.ot_toss_loser
 
     def overtime_fourth_down(self, state) -> str | None:
         """The second team behind on its initial possession (16-1-3 (b)): a punt or a missed chance ends the game, so it goes for it, and kicks

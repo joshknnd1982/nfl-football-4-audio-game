@@ -352,6 +352,9 @@ class ClassicRules:
     def overtime_kicks_first(self, state) -> bool:
         raise RuntimeError("Classic has no overtime toss: overtime_toss is always False")
 
+    def overtime_toss_won(self, state, winner: int) -> None:
+        raise RuntimeError("Classic has no overtime toss: overtime_toss is always False")
+
     def points_end_game(self, state, touchdown_by: int | None = None) -> bool:
         return state.quarter == 5 and touchdown_by is None
 

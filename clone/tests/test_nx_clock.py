@@ -86,7 +86,7 @@ def test_warning_periods(period, postseason, warned):
 
 
 @pytest.mark.parametrize("quarter, left, late", [(1, 30, False), (2, 121, False), (2, 120, True), (3, 10, False),
-                                                  (4, 301, False), (4, 300, True), (5, 599, True)])
+                                                  (4, 301, False), (4, 300, True), (5, 599, False), (5, 300, True)])
 def test_the_late_windows_where_out_of_bounds_stops_the_clock_until_the_snap(quarter, left, late):
     assert C.late_window(quarter, left) is late
 

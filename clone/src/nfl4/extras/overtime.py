@@ -140,13 +140,19 @@ def at_possession(x, state) -> bool:
 
 def kickers_kept_punt(x, state, kicking_side: int) -> None:
     """A punt the receivers muffed and the kickers recovered (16-1-5 (c)): it was the receivers' opportunity to possess. When the first team
-    punted on its initial possession without points, both teams have now had theirs: the next score wins. (The second team keeping its own
-    muffed punt goes on as its possession: a reading, Q-038.)"""
+    punted on its initial possession without points, both teams have now had theirs: the next score wins. When the second team punted on
+    its initial possession (SX.13, Q-038), that possession ended with the kick and the first team's muff was its opportunity: both teams
+    have had theirs, the side ahead wins (16-1-3 (b)), and level scores make the next score win (16-1-3 (c))."""
     if not in_overtime(state):
         return
     _settle(x)
     if x.ot_phase == FIRST and kicking_side == x.ot_first and points(x, state, x.ot_first) == 0:
         _sudden(x)
+    elif x.ot_phase == SECOND and kicking_side == other(x.ot_first):
+        if points(x, state, x.ot_first) != points(x, state, kicking_side):
+            x.ot_phase = OVER
+        else:
+            _sudden(x)
 
 
 def decided(x, state) -> bool:
@@ -187,8 +193,8 @@ def period_end(x, state) -> str | None:
 
 
 def third_period_receiver(x) -> int:
-    """16-1-4 (e): at the third period the captain who lost the toss has the first choice; the clone gives it as its second half does:
-    the side that kicked off at the start of the last tossed period receives."""
+    """SX.12's reading, kept for a game saved before SX.13 (no toss loser in its record): the side that kicked off at the start of the last
+    tossed period receives. Since SX.13 the toss's loser chooses (16-1-4 (e), `ot_toss_loser`, the engine's next_overtime_period)."""
     return other(x.ot_receiver)
 
 
@@ -199,6 +205,7 @@ def check(x, whole) -> None:
     whole(x.ot_first, 0 if x.ot_phase == NONE else 1, 2, "the overtime's first team")
     whole(x.ot_receiver, 0 if x.ot_phase == NONE else 1, 2, "the overtime's receiver")
     whole(x.ot_base, 0, 9999, "the score when overtime began")
+    whole(x.ot_toss_loser, 0, 2, "the side that lost the overtime toss")
     for name in ("ot_kicked", "ot_told", "ot_toss"):
         if not isinstance(getattr(x, name), bool):
             raise ValueError("%s is %r" % (name, getattr(x, name)))

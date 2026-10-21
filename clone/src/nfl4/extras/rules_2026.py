@@ -15,8 +15,10 @@ WARNING_SECONDS = 120                  # 3-41: the two-minute warning
 WARNING_QUARTERS = (2, 4)              # 3-41: the second and fourth periods; an automatic timeout charged to nobody, 4-4(h)
 OT_REGULAR_PERIOD_SECONDS = 600        # 16-3: one period of 10 minutes in the regular season
 OT_POST_PERIOD_SECONDS = 900           # 16-4: periods of 15 minutes in the play-offs
-# overtime warnings (SRC-SECONDARY practice, Part 1.2 default): at 2:00 of every regular-season overtime period, and of
-# play-off overtime periods 2 and 4 (and every second one after them)
+# overtime warnings (SRC-OFFICIAL, SX.13: 16-1-3 (e) gives the regular season's period the fourth period's timing, 16-1-4 (h) times the
+# end of play-off period 2 as the end of the first half and of period 4 as the end of the fourth; 15-3-9 (b), (c) speak of the
+# "overtime half in the postseason"): at 2:00 of the regular season's period and of play-off periods 2 and 4 (every second one after
+# them: the clone's reading where the book stops at the fourth)
 OT_POST_WARNING_EVERY = 2
 LATE_FIRST_HALF_SECONDS = 120          # 4-3-2: in the last 2:00 of the first half a runner out of bounds stops the clock
 FIVE_MINUTE_RULE_SECONDS = 300         # 4-3-2(a)(3), 4-3-2(e)(2): the last 5:00 of the second half; overtime alike (Part 1.5)
@@ -46,7 +48,7 @@ OT_TRY_NOT_IN_SUDDEN_DEATH = True      # 4-8-2 (c): no try after a touchdown tha
 # ----- timeouts -----
 TIMEOUTS_PER_HALF = 3                 # 4-5-1 Item 1: three charged timeouts each half, no carry-over
 OT_REGULAR_TIMEOUTS = 2                # 16-1-3 (e): two in the one regular-season period
-OT_POST_TIMEOUTS = 3                   # 16-4-g: three per pair of play-off overtime periods (SRC-SECONDARY reading)
+OT_POST_TIMEOUTS = 3                   # 16-1-4 (g): "three timeouts during a half", a pair of play-off overtime periods (SRC-OFFICIAL)
 ONE_CHARGED_TIMEOUT_PER_DEAD_BALL = True   # 4-5-1 Item 3
 # A request with no timeout left is ignored (4-5-1 Item 3): the clone's menu refuses it with a sentence and never grants
 # it, so the delay-of-game foul for a granted excess timeout and the foul of 4-5-1 Item 4 cannot arise (design 4).
@@ -99,7 +101,7 @@ CLEAR_AND_OBVIOUS = True               # 15-2-1: a ruling is changed only on cle
 
 # ----- free kicks and the onside kick (SX.4; NFL_RULES_RESEARCH Part 5) -----
 KICKOFF_SPOT = 35                      # 6-1-2: a kick-off is made from the kicking team's own 35
-EXTRA_POINT_DISTANCE = 33              # 11-3-2: the try kick is snapped from the 15 (a kick of about 33 yards; SX.10d, G26-4)
+EXTRA_POINT_DISTANCE = 33              # 11-3-1 (b): the try kick is snapped from the 15 (a kick of about 33 yards; SX.10d, G26-4)
 KICKOFF_TOUCHBACK = 35                 # 6-2: a 2026 kick-off touchback (one into the landing zone that goes into the end zone: the 20)
 KICK_OUT_OF_BOUNDS = 40                # 6-2-1: a free kick out of bounds, and a kick short of the landing zone, at the receivers' 40
 PUNT_TOUCHBACK = 20                    # 11-6: a punt's touchback

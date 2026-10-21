@@ -147,8 +147,9 @@ def test_a_muffed_punt_the_kickers_keep_was_the_receivers_chance():
     score(x, board, A, 3)
     OT.at_kickoff(x, board, A)
     board.wisoff = B
-    OT.kickers_kept_punt(x, board, B)                               # the second team's own muff: its possession goes on (Q-038)
-    assert x.ot_phase == OT.SECOND
+    OT.kickers_kept_punt(x, board, B)                               # SX.13 (Q-038): the second team's punt ended its possession and the
+    assert x.ot_phase == OT.OVER                                    # first team's muff was its chance: the side ahead (A) wins
+    assert OT.at_possession(x, board) is True
 
 
 def test_the_defense_running_back_the_first_teams_try_does_not_end_the_game():
@@ -217,8 +218,10 @@ def test_the_regular_season_has_one_period():
     assert OT.period_end(x, board) is None
 
 
-def test_the_third_period_is_received_by_the_side_that_kicked_the_last_tossed_period():
+def test_a_save_without_a_toss_loser_gives_the_third_period_as_sx12_did():
+    """SX.13: the toss's loser chooses (test_sx13_rules_audit); a record saved before SX.13 has none and keeps SX.12's reading."""
     x, board = started(receiver=B, postseason=True)
+    assert x.ot_toss_loser == 0
     assert OT.third_period_receiver(x) == A
     x.ot_toss = True                                                  # the fifth period's toss: A receives its kick-off
     board.quarter = 5
@@ -227,7 +230,7 @@ def test_the_third_period_is_received_by_the_side_that_kicked_the_last_tossed_pe
 
 
 @pytest.mark.parametrize("name, value", [("ot_phase", "late"), ("ot_first", 3), ("ot_receiver", -1), ("ot_base", -1),
-                                         ("ot_kicked", 1), ("ot_told", "yes"), ("ot_toss", None)])
+                                         ("ot_kicked", 1), ("ot_told", "yes"), ("ot_toss", None), ("ot_toss_loser", 3)])
 def test_a_saved_overtime_value_out_of_range_refuses_the_record(name, value):
     x, _ = started()
     x.check()
