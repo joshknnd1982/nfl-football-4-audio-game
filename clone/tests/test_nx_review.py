@@ -44,7 +44,7 @@ def run_until(engine, step, names):
 @pytest.mark.parametrize("quarter, ends_with", [(1, "kick_off"), (2, "next_play"), (4, "next_play")])
 def test_a_two_point_try_after_a_last_second_touchdown_is_played_then_the_period_ends(tmp_path, quarter, ends_with):
     rig = nfl_engine_rig(tmp_path, answers=[DOWN, ENTER, ENTER, ENTER], quarter=quarter, wisoff=1, defense=2, half=1,
-                         yard_line=0, stats={1: SideStats(score=6), 2: SideStats(score=0)},
+                         yard_line=0, stats={1: SideStats(score=6), 2: SideStats(score=6)},    # SX.13: tied, so the try matters (4-8-2 (c))
                          extras=dict(left=0, period=quarter, unit="H1" if quarter < 3 else "H2",
                                      announced="H1" if quarter < 3 else "H2"))
     rig.rnd.source = random.Random(quarter)

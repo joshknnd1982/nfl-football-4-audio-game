@@ -137,6 +137,8 @@ class KickFlow:
         """The computer: an onside kick by SX.4's rules (design 8.4), else one draw over its mix (tuning.COMPUTER_KICKOFF_MIX)."""
         if state.extras.onside_on and self.rules.onside.computer_declares(state, kicking_side, lead):
             return ONSIDE
+        if safety:                   # SX.13: from the 20 a short or squib kick almost always lands short of the landing zone, a foul that
+            return DEEP              # gives the receivers their 50 (6-2-4); the computer kicks deep, no draw
         mix = T.COMPUTER_KICKOFF_MIX
         roll = self.rnd.below(sum(w for _c, w in mix))
         for call, weight in mix:
@@ -204,20 +206,34 @@ class KickFlow:
         the deep, short or squib kick, or the safety punt (a free kick nobody can block, its receivers' call the remembered one)."""
         x = state.extras
         call = self.kickoff_call(state)
+        safety = x.free_after_safety
         if call == SAFETY_PUNT:
             defense = self.receiving_call(state, PUNT, receivers=state.wisoff)
-            result = M.punt("spread", 100 - x.kick_from, defense, self.rnd, free_kick=True)
-            if result.kind == "touchback":           # a punt's touch back: the 20 (RB26 11-6)
-                result = result._replace(kind="punt_touchback", start=R.PUNT_TOUCHBACK)
-            elif result.kind == "out_of_bounds":     # a free kick out of bounds: the receivers' 40 (RB26 6-2-1)
-                result = result._replace(start=R.KICK_OUT_OF_BOUNDS)
-            elif result.kind == "muffed":            # the receivers fall on their own muff (a recorded simplification)
-                result = result._replace(kind="returned", returned=0, defense_recovers=False)
+            result = self.safety_punt(M.punt("spread", 100 - x.kick_from, defense, self.rnd, free_kick=True), x.kick_from, safety)
         else:
             pct = T.SAFETY_KICK_TOUCHBACK if x.kick_from < R.KICKOFF_SPOT else 100
-            result = M.kickoff(C.BY_ID[call].params[0], self.rnd, spot=x.kick_from, touchback_pct=pct)
+            result = M.kickoff(C.BY_ID[call].params[0], self.rnd, spot=x.kick_from, touchback_pct=pct, safety=safety)
             result = self.returner_door(state, result)
         self.note("kickoff", state.defense, call, result.kind, result.start)
+        return result
+
+    @staticmethod
+    def safety_punt(result: M.KickResult, kick_from: int, safety: bool) -> M.KickResult:
+        """The punt model's result read as the free kick it is (RB26 6-1-4, 6-1-5, 6-2-4; SX.13): one that comes down in the end zone untouched
+        is a touch back at the 35; one that first touches the ground or a receiver short of the landing zone (beyond the receivers' 20), or goes
+        out of bounds, is the receivers' ball 30 yards from the kick (25 for a kick made again that is no safety kick) or where it came down if
+        that is nearer the kick; the punt's "downed" (the coverage stops the ball) is a ball at rest that nobody tried to possess, the receivers'
+        at the spot (6-1-4 (e); a recovery by the kicking team is not modeled); the receivers fall on their own muff (a recorded simplification)."""
+        if result.kind == "touchback":
+            return result._replace(kind="punt_touchback", start=R.KICKOFF_TOUCHBACK)
+        landed = result.start - result.returned if result.kind == "returned" else result.start
+        if result.kind == "out_of_bounds" or landed > M.LANDING_ZONE_FRONT:
+            return M.KickResult("landed_short" if result.kind != "out_of_bounds" else "out_of_bounds",
+                                M.short_kick_spot(kick_from, safety, landed), gross=result.gross)
+        if result.kind == "downed":
+            return result._replace(kind="dead")
+        if result.kind == "muffed":
+            return result._replace(kind="returned", returned=0, defense_recovers=False)
         return result
 
     def returner_door(self, state, result: M.KickResult) -> M.KickResult:

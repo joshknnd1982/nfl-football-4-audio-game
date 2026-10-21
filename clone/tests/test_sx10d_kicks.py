@@ -181,14 +181,15 @@ def test_a_kick_caught_in_the_end_zone_asks_the_player_to_run_it_out(tmp_path, a
     assert (rig.engine.s.half, rig.engine.s.yard_line) == (2, line)
 
 
-def test_the_safety_punt_ends_as_a_punt_and_its_touch_back_is_at_the_20(tmp_path):
+def test_the_safety_punt_ends_as_a_punt_and_its_touch_back_is_at_the_35(tmp_path):
+    """SX.13: the safety punt is a free kick, its touch back the 35 (RB26 6-1-5 (d)), not a punt's 20."""
     rig = receiving(tmp_path)
     rig.engine.s.extras.kick_call = "K027"
-    given(rig, kickoff_result=M.KickResult("punt_touchback", 20))
+    given(rig, kickoff_result=KF.KickFlow.safety_punt(M.KickResult("touchback", 20, gross=85), 20, True))
     mark = len(rig.said)
     assert run(rig, rig.engine.kickoff_2026) == "down_sentence"
     assert any("punts it from the 20" in t for t in texts(rig, mark)) and P.IT_IS_A_TOUCH_BACK in texts(rig, mark)
-    assert rig.engine.s.yard_line == 20
+    assert rig.engine.s.yard_line == 35
 
 
 def test_the_safety_punts_model_has_no_block_and_its_kick_offs_from_the_20_start_the_receivers_farther_up():

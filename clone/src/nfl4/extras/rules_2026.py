@@ -23,6 +23,8 @@ FIVE_MINUTE_RULE_SECONDS = 300         # 4-3-2(a)(3), 4-3-2(e)(2): the last 5:00
 PLAY_CLOCK = 40                        # 4-6: bounds the runoff ranges only
 FIELD_GOAL_MAX_CLOCK = 5               # 11-4-2 Note 5: a field goal attempt runs at most 5 seconds off
 TRY_UNTIMED = True                     # 4-3-2(h), 11-3-1: the extra point and the two-point try take no time
+NO_TRY_THAT_CANNOT_MATTER = True       # 4-8-2 (c): no try after a touchdown during the down in which the fourth period expired, when a
+#                                        good try would not affect the outcome (SX.13; also the regular season's overtime, 16-1-3 (e))
 
 # ----- overtime (SX.12, Rule 16 of the 2026 book, printed pages 64 to 66; NFL_RULES_RESEARCH Part 7) -----
 OT_TOSS_VISITOR_CALLS = True           # 16-1-2: at the end of regulation a new toss, the visiting team's captain calls it (4-2-2)

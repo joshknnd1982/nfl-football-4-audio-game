@@ -488,7 +488,7 @@ class NflRules(ClassicRules):
             # opens the next period, as a kick-off after a score as the first or third quarter ran out
             # no kick-off is made: nothing of the kick that was to come is left over (a safety kick on the last play of a half,
             # a kick to be made again): the next half starts with a kick-off from the 35
-            x.safety_kick = x.kick_again = x.rekick = False
+            x.safety_kick = x.kick_again = x.rekick = x.free_after_safety = False
             x.kick_back = 0
             return PERIOD_OVER          # a score as time ran out: the half or the game ends after the try, no kick-off
         OT.at_kickoff(x, state, kicking_side)      # SX.12: the overtime's possession rule (nothing before overtime)
@@ -507,6 +507,7 @@ class NflRules(ClassicRules):
             spot = x.kick_from - min(x.kick_back, x.kick_from // 2)      # line (14-2-1), so never to or past it
         else:
             spot = R.SAFETY_KICK_SPOT if x.safety_kick else R.KICKOFF_SPOT
+        x.free_after_safety = safety or (again and x.free_after_safety)       # SX.13: a safety kick made again is still one (6-2-4)
         x.kick_from, x.kick_back, x.safety_kick = spot, 0, False
         if self.kicks.on(state):                   # SX.10d: the 2026 kick-off menu (it replaces the onside question, design 2.6)
             return self.kicks.decide(state, kicking_side, again, safety)
@@ -722,6 +723,14 @@ class NflRules(ClassicRules):
         if state.quarter >= 5:
             debuglog.event("extras", "overtime_points", phase=x.ot_phase, first=x.ot_first, scores=[state.score(1), state.score(2)],
                            touchdown_by=touchdown_by or 0, over=over)
+        if not over and touchdown_by is not None and OT.last_try_cannot_matter(x, state, touchdown_by):
+            # SX.13 (4-8-2 (c)): a touchdown on the down in which the game's time ran out (the fourth period, and the regular season's
+            # overtime period, which has the fourth period's provisions, 16-1-3 (e)) has no try when a good try cannot change the result
+            if state.quarter >= 5:
+                x.ot_phase = OT.OVER
+            debuglog.event("extras", "no_last_try", quarter=state.quarter, scorer=touchdown_by,
+                           scores=[state.score(1), state.score(2)])
+            return True
         return over
 
     def possession_ends_game(self, state) -> bool:

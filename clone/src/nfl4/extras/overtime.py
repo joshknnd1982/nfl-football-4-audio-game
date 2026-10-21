@@ -106,6 +106,19 @@ def after_points(x, state, touchdown_by: int | None = None) -> bool:
     return False
 
 
+def last_try_cannot_matter(x, state, scorer: int) -> bool:
+    """4-8-2 (c) (SX.13): a touchdown scored during the down in which the fourth period's time expired has no try when a good try (one or
+    two points) cannot change the result; the regular season's overtime period has the fourth period's provisions (16-1-3 (e)). The
+    scorer's margin after the six points: ahead by 1 or more, or behind by 3 or more. A play-off overtime period never ends a game by
+    its clock, and the first, second and third periods keep their try."""
+    if not R.NO_TRY_THAT_CANNOT_MATTER or x.left > 0:
+        return False
+    if not (state.quarter == 4 or (in_overtime(state) and not x.postseason)):
+        return False
+    margin = state.score(scorer) - state.score(other(scorer))
+    return margin >= 1 or margin <= -3
+
+
 def at_possession(x, state) -> bool:
     """A change of possession, or a new drive after a kick (the ball is `state.wisoff`'s). True when the game is decided."""
     if not in_overtime(state) or x.ot_phase in (NONE, SUDDEN, OVER):

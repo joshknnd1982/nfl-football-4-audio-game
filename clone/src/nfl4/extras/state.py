@@ -78,6 +78,8 @@ class ExtrasRecord:
     kick_back: int = 0                # yards an accepted foul moved the next kick back (6-3-1)
     kick_from: int = R.KICKOFF_SPOT   # the kicking team's own yard line the next kick is made from
     safety_kick: bool = False         # the next kick-off follows a safety: it is made from the 20 (11-5-2)
+    free_after_safety: bool = False   # the kick being made is the safety kick (also when made again after a foul): a kick out of bounds
+    #                                   or short of the landing zone is the receivers' 30 yards from the kick, not 25 (6-2-4; SX.13)
     # quarterback runs (design 7, SX.5); a record saved before SX.5 has none of them (quarterback runs off)
     qb_on: bool = False               # the Quarterback runs switch of the game (design 12.1)
     qb_runs: list = field(default_factory=lambda: [0, 0])      # runs by each side's quarterback: sneaks, keepers, draws and
@@ -219,7 +221,7 @@ class ExtrasRecord:
         whole(self.last_offense, 0, 2, "the last offense")
         for name in ("timeouts_on", "postseason", "running", "warning_due", "warning_given", "last_two_point",
                      "out_of_bounds", "penalties_on", "foul_by_offense", "was_running", "extension", "extension_snap",
-                     "no_snap", "onside_on", "onside_always", "kick_again", "rekick", "safety_kick", "qb_on",
+                     "no_snap", "onside_on", "onside_always", "kick_again", "rekick", "safety_kick", "free_after_safety", "qb_on",
                      "challenges_on", "fair_catch_kick"):
             flag(getattr(self, name), name)
         whole(self.kick_back, 0, 50, "the yards the kick moved back")

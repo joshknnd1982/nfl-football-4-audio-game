@@ -654,21 +654,40 @@ class KickResult(NamedTuple):
     defense_recovers: bool = False
 
 
-def kickoff(kind: str, rnd, spot: int = 35, touchback_pct: int = 100) -> KickResult:
+LANDING_ZONE_FRONT = 20       # RB26 6-1-2 (e): the landing zone is the receivers' 20 to their goal line, wherever the kick is made from
+
+
+def short_kick_spot(spot: int, safety: bool = False, landed: int = 0) -> int:
+    """RB26 6-2-4 penalty (SX.13): a free kick out of bounds, or one that first touches the ground or a player short of the landing zone,
+    is the receivers' ball 25 yards from the spot of the kick (30 after a safety), or where it landed or went out when that is nearer
+    the kick (`landed`, the receivers' yard line). From the 35: their 40; a safety kick from the 20: their 50."""
+    return max(100 - spot - (30 if safety else 25), landed)
+
+
+def kickoff(kind: str, rnd, spot: int = 35, touchback_pct: int = 100, safety: bool = False) -> KickResult:
     """A free kick of 2026 from the kicking team's 35 (RB26 6-1, 6-2): deep, short into the landing zone, squib. `spot` is the
     kicking team's yard line (the 20 after a safety, farther back after a foul, SX.10d): the catch moves as many yards nearer the
-    kicking team; `touchback_pct` scales the touchbacks (a kick from the 20 reaches the end zone less). The defaults are SX.10b's."""
+    kicking team; `touchback_pct` scales the touchbacks (a kick from the 20 reaches the end zone less); `safety`: the safety kick
+    (6-2-4's 30 yards). A kick from anywhere but the 35 that comes down short of the landing zone is the 6-2-4 foul (SX.13): the draw of
+    its catch comes before the return touchdown's, so a kick from the 35 draws exactly what it drew before. The defaults are SX.10b's."""
     if kind == "onside":
         return KickResult("onside")
     if chance(rnd, M.KICKOFF_2026["out_of_bounds"]):
-        return KickResult("out_of_bounds", 40)
+        return KickResult("out_of_bounds", short_kick_spot(spot, safety))
     if kind == "squib" and chance(rnd, SQUIB_SHORT):
-        return KickResult("landed_short", 40)
+        return KickResult("landed_short", short_kick_spot(spot, safety))
     if chance(rnd, KICK_TOUCHBACK.get(kind, 0) * touchback_pct // 100):
         return KickResult("touchback", 35)
-    if chance(rnd, M.KICKOFF_2025["return_td"]):
-        return KickResult("returned", 100, 100, True)
-    catch = between(rnd, *KICK_CATCH[kind]) + (35 - spot)
+    if spot != 35:
+        catch = between(rnd, *KICK_CATCH[kind]) + (35 - spot)
+        if catch > LANDING_ZONE_FRONT:
+            return KickResult("landed_short", short_kick_spot(spot, safety, catch))
+        if chance(rnd, M.KICKOFF_2025["return_td"]):
+            return KickResult("returned", 100, 100, True)
+    else:
+        if chance(rnd, M.KICKOFF_2025["return_td"]):
+            return KickResult("returned", 100, 100, True)
+        catch = between(rnd, *KICK_CATCH[kind])
     low, high = M.KICKOFF_RETURN[pick(rnd, [w for _r, w in M.KICKOFF_RETURN])][0]
     back = between(rnd, low, high) * KICK_RETURN_SCALE[kind] // 100
     start = catch + back
