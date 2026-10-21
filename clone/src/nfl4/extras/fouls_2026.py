@@ -38,6 +38,7 @@ DEAD_BALL = "dead ball"             # where the ball became dead (personal fouls
 THREE_AND_ONE = "three and one"     # runs (14-3-6)
 BETTER_OF = "previous or dead ball, the better for the offense"   # personal fouls by the defense on a pass (14-4-5 (d))
 PASS_SPOT = "spot of the pass"      # intentional grounding (8-2-1): the worse of 10 from the previous spot and the spot
+CATCH_SPOT = "where the receivers got the ball"   # kick catch interference (10-1-1, SX.10d): the receivers' ball, 15 yards on
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,7 @@ class Foul:
     personal: bool = False        # a personal or unsportsmanlike foul (14-2-3, 14-2-4)
     team_foul: bool = False       # announced with no player's name
     note: str = ""
+    kicks2026: bool = False       # drawn only with the kicks of 2026 (a game where the player uses a playbook, SX.10d, D-094)
 
     @property
     def automatic_first_down(self) -> bool:
@@ -117,6 +119,16 @@ FOULS: tuple[Foul, ...] = (
     Foul("P33", "ITK", "NXP-F33", KICKING, (ONSIDE,), 5, SPOT_OF_FOUL, 4.0, "6-2-5",
          note="the onside kick (SX.4): five yards when the receivers have the ball, or the receivers' ball at the spot when "
               "the kicking team recovered it (6-2-5 Item 1)"),
+    # the 2026 kick fouls (G26-14, SX.10d; NFL_RULES_RESEARCH Part 7: 6-1-3, 6-2-1, 6-2-2, 10-1-1, 12-3-1). The rates are UNVERIFIED start
+    # values (no published per-kick rate); SX.10e measures the fouls a game with them
+    Foul("P34", "WED", "NXP-F34", RECEIVING, (O.KICKOFF_RETURN,), 15, SPOT_OF_FOUL, 0.3, "6-2-1, 6-2-2, 14-4-7",
+         note="an illegal wedge or double team on the return", kicks2026=True),
+    Foul("P35", "IFK", "NXP-F35", KICKING, KICKOFFS, 5, DEAD_BALL, 0.6, "6-1-3, 14-4-7",
+         note="the 2026 setup: a player outside his zone or moving before the kick; the receivers keep the ball", kicks2026=True),
+    Foul("P36", "LEA", "NXP-F36", DEFENSE, (FIELD_GOAL,), 15, PREVIOUS, 0.2, "12-3-1 (p), (r)", personal=True,
+         note="leaping or leverage to block the kick; the down again from 15 yards on, an automatic first down", kicks2026=True),
+    Foul("P37", "KCI", "NXP-F37", OFFENSE, (O.PUNT,), 15, CATCH_SPOT, 0.5, "10-1-1, 14-4-7",
+         note="the kicking team hinders the catch: the receivers' ball 15 yards beyond where they got it", kicks2026=True),
 )
 
 IDS: tuple[str, ...] = tuple(dict.fromkeys(f.id for f in FOULS))     # P01 ... P33 in order, each once

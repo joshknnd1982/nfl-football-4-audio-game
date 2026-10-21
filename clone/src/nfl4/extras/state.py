@@ -26,6 +26,8 @@ RECENT_REMARKS = 3             # a remark is never one of the last three spoken 
 MAX_TIMEOUTS = max(R.TIMEOUTS_PER_HALF, R.OT_REGULAR_TIMEOUTS, R.OT_POST_TIMEOUTS)
 FOUL_CLOCKS = ("", "pre", "live", "runoff")
 KICK_KINDS = ("", "normal", "onside")
+KICK_CALLS = ("", "K001", "K002", "K003", "K004", "K027")               # SX.10d: the 2026 kick-off menu (design 2.6)
+KICK_DEFENSES = ("", "K031", "K032", "K033", "K034", "K035", "K036")    # SX.10d: the receiving team's remembered call
 
 
 @dataclass
@@ -94,6 +96,12 @@ class ExtrasRecord:
     # A record saved before SX.10c has none of them and loads with none
     again: list = field(default_factory=lambda: ["", ""])
     play_settings: dict = field(default_factory=dict)
+    # the kicks of 2026 (SX.10d, NFL_PLAYS_DESIGN 2.6 and 4.9): the kick-off called last (K001 to K004, K027; a kick made again after a foul
+    # keeps it; "" none), the player's remembered kick defense (K031 to K036; "" is the return, K031) and a fair catch kick that is due (the
+    # player's fair catch in the last seconds of a half, G26-13). A record saved before SX.10d has none of them and loads with none
+    kick_call: str = ""
+    kick_defense: str = ""
+    fair_catch_kick: bool = False
     # the Franchise (SX.8a, design 10.2): the league, season and week a franchise game was saved in; None (and left out of the
     # saved text) in every other game, so a record without it loads as before
     franchise: dict | None = None
@@ -202,7 +210,7 @@ class ExtrasRecord:
         for name in ("timeouts_on", "postseason", "running", "warning_due", "warning_given", "last_two_point",
                      "out_of_bounds", "penalties_on", "foul_by_offense", "was_running", "extension", "extension_snap",
                      "no_snap", "onside_on", "onside_always", "kick_again", "rekick", "safety_kick", "qb_on",
-                     "challenges_on"):
+                     "challenges_on", "fair_catch_kick"):
             flag(getattr(self, name), name)
         whole(self.kick_back, 0, 50, "the yards the kick moved back")
         whole(self.kick_from, 1, R.KICKOFF_SPOT, "the yard line of the kick")
@@ -241,6 +249,10 @@ class ExtrasRecord:
         for name, value in self.play_settings.items():
             if name not in C.SETTINGS or value not in C.SETTINGS[name]:
                 raise ValueError("the play setting %r is %r" % (name, value))
+        if self.kick_call not in KICK_CALLS:
+            raise ValueError("the kick-off called is %r" % (self.kick_call,))
+        if self.kick_defense not in KICK_DEFENSES:
+            raise ValueError("the kick defense is %r" % (self.kick_defense,))
         if self.franchise is not None:
             if (not isinstance(self.franchise, dict) or set(self.franchise) != {"league", "season", "week"}
                     or not isinstance(self.franchise["league"], str) or len(self.franchise["league"]) > 40):

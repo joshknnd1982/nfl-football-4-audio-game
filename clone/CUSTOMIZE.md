@@ -100,7 +100,7 @@ A remark is never one of the last three said. F8 switches the remarks off with t
 
 ## The penalties of the N. F. L. rules
 
-With the N. F. L. rules the game also has penalties.txt. It lists the fouls the officials call, one line each, P01 to P26 and P33, with the name the announcer says:
+With the N. F. L. rules the game also has penalties.txt. It lists the fouls the officials call, one line each, P01 to P26 and P33 to P37, with the name the announcer says (P34 to P37 are the fouls of the 2026 kicks: the illegal wedge, the kick off formation, leaping, and kick catch interference; they are called only when you play with a playbook, as the 2026 kicks are):
 
     P08 = holding
 
@@ -121,7 +121,7 @@ With the N. F. L. rules some rulings on the field are wrong, and nobody is told.
 
 ## The onside kicks of the N. F. L. rules
 
-With the N. F. L. rules your team may try an onside kick instead of the normal kick off. The game asks you only when it makes sense: your team is behind in the third or fourth quarter, or ahead by one score (1 to 8 points) with five minutes or less left in the fourth. The answer starts at no. In the Rules item of the F9 menu, Onside kicks switches the whole feature on or off, and Onside question can be set to always, so that you are asked at every kick off and every kick after a safety. The computer tries an onside kick only in the fourth quarter, when it is behind and the game is nearly over. The remarks it says are the ON lines of remarks.txt; the fouls on the kick, offside and illegal touching, are P24 and P33 of penalties.txt.
+With the N. F. L. rules your team may try an onside kick instead of the normal kick off. The game asks you only when it makes sense: your team is behind in the third or fourth quarter, or ahead by one score (1 to 8 points) with five minutes or less left in the fourth. The answer starts at no. In the Rules item of the F9 menu, Onside kicks switches the whole feature on or off, and Onside question can be set to always, so that you are asked at every kick off and every kick after a safety. The computer tries an onside kick only in the fourth quarter, when it is behind and the game is nearly over. The remarks it says are the ON lines of remarks.txt; the fouls on the kick, offside and illegal touching, are P24 and P33 of penalties.txt. When you play with a playbook (F9, Rules), every kick off of your team is a short menu instead of the question: the deep kick, a short kick into the landing zone, a squib kick and the onside kick, and after a safety a punt from the 20; the kinds of kicks can be renamed or switched off in plays.txt like any play (K001 to K036), except the deep kick, which is always there.
 
 ## The playbooks of the N. F. L. rules
 

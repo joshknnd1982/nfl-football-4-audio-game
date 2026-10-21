@@ -145,6 +145,10 @@ class SimEngine(PlayEngine):
     def run_it_out(self):
         return self.kick_return if self.rnd(2) == 1 else self.touch_back
 
+    def ask_run_it_out(self) -> bool:
+        """SX.10d: the 2026 kick-off's question for side 1's returner, answered as run_it_out answers it."""
+        return self.rnd(2) == 1
+
     def extra_point_choice(self):
         return self.extra_point
 

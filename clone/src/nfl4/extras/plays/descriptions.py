@@ -25,9 +25,10 @@ PLAYBOOK_GROUP_ROWS = {n: "NXB-E%02d" % (26 + n) for n in range(1, 8)}        # 
 SETTING_NAMES = ("formation", "personnel", "motion", "side", "tempo", "protection", "defense_personnel", "coverage_shade")
 SETTING_ROWS = {name: "NXB-G%02d" % n for n, name in enumerate(SETTING_NAMES, start=1)}
 LIST_ROWS = {group.key: "NXB-F%02d" % n for n, group in enumerate(C.GROUPS, start=1)}
-# the F7 words the descriptions use (rows NXH-48 to NXH-51) and the words of the offense's settings and clock plays (NXH-52 to NXH-55,
-# SX.10c), said after the football words in the N. F. L. rules mode
-F7_WORD_ROWS = ("NXH-48", "NXH-49", "NXH-50", "NXH-51", "NXH-52", "NXH-53", "NXH-54", "NXH-55")
+# the F7 words the descriptions use (rows NXH-48 to NXH-51), the words of the offense's settings and clock plays (NXH-52 to NXH-55,
+# SX.10c) and of the kicks of 2026 and the defense's personnel (NXH-59 to NXH-61, SX.10d), said after the football words in the N. F. L.
+# rules mode
+F7_WORD_ROWS = ("NXH-48", "NXH-49", "NXH-50", "NXH-51", "NXH-52", "NXH-53", "NXH-54", "NXH-55", "NXH-59", "NXH-60", "NXH-61")
 
 
 def play_row(play_id: str) -> str:

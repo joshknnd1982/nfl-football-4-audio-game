@@ -6,14 +6,14 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 1568.
+- Texts: 1602.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
-- Penalties (design section 9): 80.
-- Playbooks (design section 10): 778.
+- Penalties (design section 9): 84.
+- Playbooks (design section 10): 808.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 552.
@@ -229,6 +229,10 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXP-22 (sentence, say5): " the game can be saved after this choice. ". S at the accept-or-decline prompt when the choice cannot be kept in a saved game (a score, a turnover, a try, a kept choice that would change sides, the last second of a quarter or a half; SX.9)
 - NXP-23 (sentence, say5): " a penalty is waiting for your choice. ". a loaded game with a pending accept-or-decline choice, before the flag is told again (C10, SX.9)
 - NXH-47 (help, say5): " At the question about a penalty, S. saves the game with the question kept, when it can be kept. The loaded game asks it again. ". F5 addition (H12, C6), when penalties are on (SX.9)
+- NXP-F34 (foul, piece): "illegal wedge". P34 (SX.10d, G26-14)
+- NXP-F35 (foul, piece): "illegal kick off formation". P35 (SX.10d, G26-14)
+- NXP-F36 (foul, piece): "leaping". P36 (SX.10d, G26-14)
+- NXP-F37 (foul, piece): "kick catch interference". P37 (SX.10d, G26-14)
 
 ## Playbooks (design section 10)
 
@@ -324,7 +328,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXZ-29 (menu, say5): "Dime Deep Coverage". defense play D029 of the catalog (plays.txt)
 - NXZ-30 (menu, say5): "Man Press". defense play D030 of the catalog (plays.txt)
 - NXB-10 (menu, say5): "Back". the last play item of a group: back to the groups (letter B)
-- NXH-27 (help, say5): " With a playbook, a group in the play menu opens a short list of plays. Enter opens it. Backspace or Left goes back to the groups, and so does the last item, Back, which the letter B. selects. ". F5 addition (H12, C6), when a playbook is in use
+- NXH-27 (help, say5): " With a playbook, the play menus start with the original's items. Right opens a list of plays, and Backspace or Left goes back, and so does the last item, Back, which the letter B. selects. ". F5 addition (H12, SX.7; reworded in SX.10d: the play menus have lists, not groups)
 - NXH-28 (help, say5): " With the N. F. L. rules you may choose an offense playbook and a defense playbook in the F9 menu, under Rules. Classic is the original's plays. ". F6 addition (H12, C6), when a playbook is in use
 - NXH-29 (help, say5): " The others are styles: Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option and Pressure. A play changes an original play a little: strong against some calls, weak against others. ". F6 addition (H12, C6), when a playbook is in use, after NXH-28
 - NXH-30 (help, say5): " The computer's teams call the plays of their own style, which the file team styles in the customize folder sets. ". F6 addition (H12, C6), when a playbook is in use, after NXH-29
@@ -990,7 +994,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXH-48 (help, say5): " Deep defenders: players who stay far from the line to stop long passes. Guarding areas: each defender covers a part of the field instead of one player. ". F7 addition (H12, NX-P8): the football words the play descriptions use
 - NXH-49 (help, say5): " Run blitz: extra defenders rushing the runner. Slant: a quick cut across the field, or a lineman moving sideways at the snap. Counter: a run that starts one way, then goes the other. ". F7 addition (H12, NX-P8): the football words the play descriptions use
 - NXH-50 (help, say5): " Draw: a run that looks like a pass first. Option: the quarterback chooses at the last moment to keep the ball or give it away. Pitch: a short toss backward to a runner. ". F7 addition (H12, NX-P8): the football words the play descriptions use
-- NXH-51 (help, say5): " Touchback: a kick that goes into the end zone, so the other team starts at its twenty. ". F7 addition (H12, NX-P8): the football words the play descriptions use
+- NXH-51 (help, say5): " Touchback: a kick that goes into the end zone and is not run out, so the other team starts at its twenty, or at its thirty five after a kick off.". F7 addition (H12, NX-P8): the football words the play descriptions use
 - NXB-H01 (sentence, say4): " <quarterback> takes a knee ". the kneel's tackle sentence (O152, SX.10c)
 - NXB-H02 (sentence, say2): " <quarterback> spikes the ball to stop the clock ". the spike's sentence (O153, SX.10c)
 - NXB-H03 (sentence, say2): " <quarterback> throws the ball away ". a legal throw-away (RB26 8-2-1 Item 1, SX.10c)
@@ -1010,6 +1014,36 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXH-53 (help, say5): " Personnel: which players are on the field. One back, two tight ends means one running back and two tight ends; the rest are receivers. ". F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
 - NXH-54 (help, say5): " Motion: a receiver moves sideways before the snap. No huddle and hurry up: the offense lines up quickly to save time. Max protect: extra blockers stay back. ". F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
 - NXH-55 (help, say5): " Kneel down: the quarterback kneels to let the clock run. Spike: he throws the ball at the ground to stop the clock. ". F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
+- NXB-J01 (prompt, say5): " <coach> choose your kick off. ". the 2026 kick-off menu (design 2.6, G26-1, SX.10d)
+- NXB-J02 (sentence, say4): " the kick goes out of bounds, and the ball is placed at the 40 ". a free kick out of bounds (RB26 6-2-1)
+- NXB-J03 (sentence, say4): " the squib kick lands short of the landing zone, and the ball is placed at the 40 ". a squib kick short of the landing zone (RB26 6-2-4)
+- NXB-J04 (sentence, say4): " the kick sails through the end zone for a touch back at the 35 ". a 2026 kick-off touch back (RB26 6-2)
+- NXB-J05 (sentence, say4): " <returner> catches the ball at the <n> ". a kick-off caught in the field of play (SX.10d)
+- NXB-J06 (sentence, say4): " <kicker> kicks it short into the landing zone ". the short kick (K002, SX.10d)
+- NXB-J07 (sentence, say4): " <kicker> squibs it along the ground ". the squib kick (K003, SX.10d)
+- NXB-J08 (sentence, say4): " the punt is blocked ". a blocked punt (G26-5, SX.10d)
+- NXB-J09 (sentence, say4): " <returner> fields the punt and runs it back <n> yards ". a punt return (G26-5, SX.10d)
+- NXB-J10 (sentence, say4): " <returner> fields the punt and is hit at once ". a punt return of no gain (SX.10d)
+- NXB-J11 (sentence, say4): " the ball rolls dead ". a punt nobody touches (SX.10d)
+- NXB-J12 (sentence, say4): " <returner> muffs the punt and the <team> fall on it ". a muffed punt the kicking team keeps (SX.10d)
+- NXB-J13 (sentence, say4): " the kick is blocked ". a blocked field goal or extra point (G26-4, G26-6, SX.10d)
+- NXB-J14 (sentence, say4): " <player> picks it up and runs it all the way back ". a blocked kick returned for a score (SX.10d)
+- NXB-J15 (sentence, say4): " the extra point is no good ". a missed extra point (G26-4, SX.10d)
+- NXB-J16 (sentence, say4): " <player> runs the blocked kick back for two points ". a blocked try returned by the defense (RB26 11-3-2, SX.10d)
+- NXB-J17 (sentence, say4): " it's a fake ". a fake punt or field goal (K015, K016, K022, K023, SX.10d)
+- NXB-J18 (sentence, say4): " <player> takes the ball and runs ". a fake kick's run (SX.10d)
+- NXB-J19 (sentence, say4): " <player> throws the ball ". a fake kick's pass (SX.10d)
+- NXB-J20 (prompt, say5): " <coach> do you wish to try a fair catch kick ". the fair catch kick's question (Q-P18, G26-13, SX.10d)
+- NXB-J21 (sentence, say4): " <kicker> lines up for a fair catch kick ". the fair catch kick (RB26 10-2-4, SX.10d)
+- NXB-J22 (sentence, say5): " your kick defense is <name>. ". the kick defense the player chose (design 2.6, SX.10d)
+- NXB-J23 (sentence, say4): " <kicker> punts it from the 20 ". the safety punt (K027, RB26 11-5-2, SX.10d)
+- NXB-J24 (sentence, say4): " <player> brings him down ". the tackle of a punt return or a fake kick (SX.10d)
+- NXH-56 (help, say5): " With a playbook, your kick off is a menu: the deep kick, a short kick into the landing zone, a squib kick, an onside kick, and after a safety a punt. Enter takes the deep kick. ". F6 addition (H12, SX.10d): the 2026 kick-off menu
+- NXH-57 (help, say5): " With a playbook, your defense menu starts with the original's six calls. On fourth down the letter P. opens the kick defense: return, fair catch, block or safe. ". F6 addition (H12, SX.10d): the defense menu and the kick defense
+- NXH-58 (help, say5): " With a playbook, Right on Punt opens the kinds of punts and the fake punts, and Right on Field Goal the fake field goals. A field goal may be tried from anywhere, and the extra point can miss. ". F6 addition (H12, SX.10d): the kicks of 2026
+- NXH-59 (help, say5): " Landing zone: the part of the field between the receivers' 20 and their goal line where a kick off must come down. Squib kick: a low kick that bounces along the ground. ". F7 addition (H12, SX.10d): the words of the 2026 kick-off
+- NXH-60 (help, say5): " Pin punt: a short high punt meant to stop near the goal line. Rugby punt: the punter runs sideways before he kicks. Fair catch kick: after a fair catch, a free try at a field goal with no rush. ". F7 addition (H12, SX.10d): the words of the punts and the fair catch kick
+- NXH-61 (help, say5): " Nickel: five defensive backs on the field. Dime: six. The defense brings them on to match the offense's receivers. ". F7 addition (H12, SX.10d): the defense's personnel
 
 ## Menus and settings (design 10.4, 12)
 

@@ -1692,7 +1692,7 @@ Tests:
 Requirement: Menus. No menu longer than 12 items; a two-level menu (a group such as "runs", "short passes", "deep passes", "play action", "special", then the play) is used when a p...
 
 Tests:
-- test_nx_playbook_menus.py: test_every_defense_group_of_every_style_fits_a_menu_of_twelve
+- test_nx_playbook_menus.py: test_every_defense_list_of_every_style_fits_a_menu_of_twelve
 - test_nx_playbook_data.py: test_every_play_has_a_spoken_name_of_at_most_six_words_and_thirty_characters
 - test_sx10c_offense_menus.py: test_right_opens_a_familys_lists_with_their_heading_and_left_goes_back
 

@@ -135,10 +135,11 @@ def test_a_whole_game_through_the_two_level_menus(tmp_path, seed):
     assert rules is not None and result.scores is not None and result.scores[0] != result.scores[1]
     assert rig.rnd.fallbacks == 0
     said = [t for t, _, _ in rig.said]
-    assert " 1. Line Plunge " in said and any(t.strip().endswith(". Back") for t in said)
+    # a list of plays was opened at least once (its heading, SX.10c, or its Back item); SX.10d's defense has lists, not SX.7's groups
+    assert " 1. Line Plunge " in said and any(t.strip().endswith(". Back") or ", list " in t for t in said)
     # SX.10c: the player's offense calls the catalog's plays through its menus, the defense the style's (SX.7, until SX.10d)
     calls = rules.offense.events
     assert len(calls) > 10 and all(play.startswith("O") for play, _call, _kind, _yards, _branch in calls)
-    defended = [e for e in rules.books.events if e[0] == 2 and e[2]]
-    assert defended
+    defended = rules.defense.events                                 # SX.10d: the player's defense calls the catalog's calls
+    assert defended and all(call.startswith("D") and play.startswith("O") for play, call, _k, _y, _b, _x in defended)
     rules.state.extras.check()

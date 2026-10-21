@@ -107,15 +107,16 @@ class OnsideFlow:
         chance, out_of = rule
         return self.rnd(out_of) <= chance           # the sentence that says so comes with the kick (it is replayed by F2)
 
-    def ask(self, state) -> bool:
+    def ask(self, state, prompt: str | None = None) -> bool:
         """The player's question (design 8.2, C9): the question, then the answer, "no" first; Up, Down or Tab change it, Y
         says yes and N says no, Enter takes it, F1 asks again, F2 to F4 as in a play menu, any other key is echoed and the
-        question is asked again (the keypad digits type letters in this key model, B-W6)."""
+        question is asked again (the keypad digits type letters in this key model, B-W6). `prompt`: another yes or no question
+        asked the same way (SX.10d: the fair catch kick); the onside question by default."""
         g, keys = self.game, self.game.keys
         answer = False
         while True:
             keys.clk()
-            g.say5(X.text("NXO-01", coach=g.season.coach))
+            g.say5(prompt if prompt is not None else X.text("NXO-01", coach=g.season.coach))
             while True:
                 g.say5(X.text("NXO-A02") if answer else X.text("NXO-A01"))
                 if g.sounds.play_noise_running():            # G-A2: no key wait with the play noise looping

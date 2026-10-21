@@ -130,6 +130,7 @@ class PenaltyFlow:
         self.forced: Flag | None = None       # intentional grounding drawn in place of a sack
         self.flags: list[Flag] = []           # the fouls of the play just ended
         self.try_from_the_one = False         # a personal foul on a touchdown, enforced on the try (14-2-3)
+        self.kicks26 = False                  # SX.10d: the kicks of 2026 are played, so their fouls (P34 to P37) can be drawn
         self.events: list[tuple] = []         # (quarter, what, foul ID, side, yards, before the snap): the tests and the
         #                                       calibration count them (what: accepted, declined, offset, major, on the try,
         #                                       not offered)
@@ -207,6 +208,7 @@ class PenaltyFlow:
     def take_snap(self, state) -> None:
         offense = state.wisoff
         self.down = PEN.Down(offense, position(state, offense), state.down, state.to_go, bool(state.two_point))
+        self.kicks26 = self.rules.kicks.on(state)
         self.stats = copy.deepcopy(state.stats)
         self.qb_stats = self._qb_stats(state)
         self.waiting = self.dead = self.forced = self.late = None
@@ -220,6 +222,7 @@ class PenaltyFlow:
     def take_kickoff(self, state) -> None:
         """A kick-off: the receivers (wisoff) are the offense, the return starts at their goal line (5.10)."""
         self.down = PEN.Down(state.wisoff, 0)
+        self.kicks26 = self.rules.kicks.on(state)
         self.stats = copy.deepcopy(state.stats)
         self.qb_stats = self._qb_stats(state)
         self.waiting = self.dead = self.forced = self.late = None
@@ -278,6 +281,9 @@ class PenaltyFlow:
         offense = down.offense
         if kind == O.FIELD_GOAL_SHORT:
             return None
+        kicks = self.rules.kicks
+        if self.kicks26 and kind == O.PUNT and kicks.muffed:
+            return None                            # SX.10d: a muffed punt the kicking team kept: no foul is drawn (a recorded simplification)
         if kind in (O.TOUCHDOWN, O.SAFETY_KIND, O.TWO_POINT_TRY, O.FUMBLE):
             under = O.KICKOFF_RETURN if (kind == O.TOUCHDOWN and outcome.offense_play == 0) else base
         else:
@@ -288,14 +294,15 @@ class PenaltyFlow:
         elif kind == O.SAFETY_KIND:
             end = 0
         elif kind == O.KICKOFF_TOUCH_BACK:
-            end = TOUCH_BACK_SPOT
+            end = position(state, offense) if self.kicks26 else TOUCH_BACK_SPOT     # SX.10d: the engine put the ball at the 35, the 40, ...
         elif kind in (O.PUNT, O.FIELD_GOAL_GOOD, O.FIELD_GOAL_MISSED, O.INTERCEPTION, O.FUMBLE):
             end = down.los
         elif kind == O.TWO_POINT_TRY:
             end = 100 if score else position(state, offense)
         else:
             end = position(state, offense)
-        receivers = position(state, 2 if offense == 1 else 1) if kind == O.PUNT else 0
+        missed26 = kind == O.FIELD_GOAL_MISSED and self.kicks26          # SX.10d (G26-7): the engine put the ball at the kick's spot
+        receivers = position(state, 2 if offense == 1 else 1) if kind == O.PUNT or missed26 else 0
         return PEN.PlayFacts(under, end, score, bool(outcome.turnover and kind != O.PUNT
                                                      and kind != O.FIELD_GOAL_MISSED), receivers,
                              outcome.offense_play, outcome.defense_play)
@@ -307,7 +314,9 @@ class PenaltyFlow:
             key = facts.kind                       # a fumble: the fouls of the play it ended
         else:
             key = facts.kind
-        rows = [f for f in F.FOULS if key in f.phases]
+        caught = self.rules.kicks.caught               # SX.10d: kick catch interference only on a punt the receivers caught
+        rows = [f for f in F.FOULS if key in f.phases and (self.kicks26 or not f.kicks2026)
+                and (f.spot != F.CATCH_SPOT or caught)]
         if after:
             rows += [f for f in F.FOULS if F.AFTER in f.phases]
         if self.down.two_point:                    # personal fouls on a try go to the kick-off: not drawn (D-050)

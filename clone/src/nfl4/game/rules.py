@@ -107,6 +107,21 @@ Added in PX SX.10c (the catalog's offense in the game, D-093), each never taken 
                                            it (game/pag_catalog.py)
     H19 turnover_return(state)             the turnover's spot: the catalog play's return      None (the original's random spot)
     H19 play_text(key, **values)           a sentence of the catalog's plays                   never called
+
+Added in PX SX.10d (the defense calls and the kicks of 2026, D-094), each never taken in Classic:
+    H4 before_kickoff -> KICKOFF_2026      the 2026 kick-off (the kick called is the extras':  never returned
+                                           deep, short, squib, the safety punt); the engine's
+                                           step kickoff_2026 tells it
+    H20 special_kick(state, what)          the punt, the field goal or the extra point to come None (the original's kick)
+                                           is a 2026 kick: its plan (the kind, a fake, the
+                                           receivers' call, the distance)
+    H20 kickoff_call / kickoff_result / kickoff_touchback / kick_result / fake_yards
+                                           the kick-off called and the model's draws of a      never called
+                                           2026 kick
+    H20 kick_text(key, **values)           a sentence of the 2026 kicks                        never called
+    H20 fair_catch(state, receivers, start)  a fair catch of a punt (the fair catch kick)      never called
+    H10 between_plays -> FAIR_CATCH_KICK   the player chose the fair catch kick: the engine    never returned
+                                           plays it as the next snap (a field goal, no rush)
 """
 from __future__ import annotations
 
@@ -119,6 +134,7 @@ GO_ON = "go on"
 NORMAL_KICKOFF = "normal"
 ONSIDE_KICKOFF = "onside"       # H4: the kick-off is an onside kick (N. F. L. rules mode only, SX.4)
 PERIOD_OVER = "period over"     # H4: no kick-off, the period ends first (N. F. L. rules mode only, SX.2)
+KICKOFF_2026 = "2026 kick-off"  # H4: the kick-off of 2026 (N. F. L. rules mode with a playbook only, SX.10d)
 # What the extras' onside kick leaves for the engine (SX.4): the kicking team recovered it, the receivers fell on it, or the
 # receivers picked it up and the engine runs the return (the state is set like a kick-off return)
 ONSIDE_KEPT, ONSIDE_LOST, ONSIDE_RUN = "kept", "lost", "run"
@@ -142,6 +158,9 @@ REVIEWED_FUMBLE = "reviewed fumble"         # the fumble the ruling had called d
 # Save Game at the accept-or-decline prompt (N. F. L. rules mode only, SX.9, C10): the extras have put the board as if the penalty
 # were declined and kept the choice in the extras record; the engine saves the game (save_game) and the loaded game asks it again
 SAVE_PENDING = "save with the choice pending"
+# The player chose the fair catch kick after a fair catch (N. F. L. rules mode with a playbook only, SX.10d): the engine plays it as its next
+# snap, a field goal the extras tell as the fair catch kick
+FAIR_CATCH_KICK = "fair catch kick"
 # What the T key (H18, SX.2b) did: the request is kept for the end of the live play, a timeout was called, or it was refused (none left,
 # one already called in this dead-ball period, the period over)
 TIMEOUT_KEPT, TIMEOUT_GRANTED, TIMEOUT_REFUSED = "kept", "granted", "refused"
@@ -232,6 +251,31 @@ class ClassicRules:
 
     def play_text(self, key: str, **values) -> str:
         raise RuntimeError("Classic has no catalog plays: model_play never answers a result")
+
+    # H20 (SX.10d): the kicks of 2026. Classic kicks as the original: no plan, no draw, no word
+    def special_kick(self, state, what: str):
+        return None
+
+    def kickoff_call(self, state) -> str:
+        raise RuntimeError("Classic has no 2026 kick-off: before_kickoff never answers KICKOFF_2026")
+
+    def kickoff_result(self, state):
+        raise RuntimeError("Classic has no 2026 kick-off: before_kickoff never answers KICKOFF_2026")
+
+    def kickoff_touchback(self) -> int:
+        raise RuntimeError("Classic has no 2026 kick-off: before_kickoff never answers KICKOFF_2026")
+
+    def kick_result(self, state, plan):
+        raise RuntimeError("Classic has no 2026 kicks: special_kick never answers a plan")
+
+    def fake_yards(self, state, plan) -> int:
+        raise RuntimeError("Classic has no 2026 kicks: special_kick never answers a plan")
+
+    def kick_text(self, key: str, **values) -> str:
+        raise RuntimeError("Classic has no 2026 kicks")
+
+    def fair_catch(self, state, receivers: int, start: int) -> None:
+        raise RuntimeError("Classic has no 2026 kicks")
 
     def before_kickoff(self, state, kicking_side: int) -> str:
         return NORMAL_KICKOFF

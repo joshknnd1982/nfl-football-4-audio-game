@@ -130,11 +130,12 @@ def test_a_football_word_in_a_description_is_explained_by_f7(nfl):
     assert checked > (8 if not nfl else 300)           # the check looks at something
 
 
-def test_the_words_the_n_f_l_rules_f7_adds_are_eight_short_help_rows():
+def test_the_words_the_n_f_l_rules_f7_adds_are_eleven_short_help_rows():
     for row in DS.F7_WORD_ROWS:
         assert X.KINDS[row] == "help" and len(X.TEXTS[row]) <= 200
     assert [X.text(r).split(":")[0].strip() for r in DS.F7_WORD_ROWS] == ["Deep defenders", "Run blitz", "Draw", "Touchback",
-                                                                         "Shotgun", "Personnel", "Motion", "Kneel down"]   # SX.10c
+                                                                         "Shotgun", "Personnel", "Motion", "Kneel down",  # SX.10c
+                                                                         "Landing zone", "Pin punt", "Nickel"]           # SX.10d
 
 
 def test_classic_f7_describes_the_original_items_after_its_own_words_and_the_n_f_l_rules_f7_has_the_added_words():
@@ -239,14 +240,14 @@ def live_items(rig, defense):
 
 
 def open_groups(rig, defense):
-    """Every menu a player of the playbook meets: the top, then each group's plays."""
+    """Every menu a player of the playbook meets: the top, then (SX.10c, SX.10d: the catalog's menus) each family's lists."""
     s = rig.engine.s
     out = list(live_items(rig, defense))
+    flow = rig.rules.defense if defense else rig.rules.offense
     for item in list(out):
-        if item.action[0] in ("ogroup", "dgroup"):
-            rig.rules.books.action(s, item.action)
+        if flow.owns(item.action) and rig.rules.menu_right(s, item):
             out += live_items(rig, defense)
-            rig.rules.books.group = None
+            flow.reset()
     return out
 
 
@@ -257,7 +258,7 @@ def test_every_item_of_every_style_and_the_classic_book_can_be_described(tmp_pat
     for n, style in enumerate(s_styles):
         rig = rig_for(tmp_path / str(n), offense=style, defense=style, qb_on=True, timeouts_on=True, player_defends=defense)
         for item in open_groups(rig, defense):
-            flow = rig.rules.offense                        # SX.10c: the offense's items are the catalog's menus
+            flow = rig.rules.defense if defense else rig.rules.offense      # SX.10c, SX.10d: the catalog's menus
             row = flow.describe_row(item.action) if flow.owns(item.action) else DS.action_row(not defense, item.action)
             assert row in X.TEXTS, (style, item)
             assert rig.rules.menu_key(rig.engine.s, "d", item) is True

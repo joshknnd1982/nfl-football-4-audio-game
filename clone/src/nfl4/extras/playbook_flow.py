@@ -1,30 +1,23 @@
-"""The playbooks in a game: the two-level menus, the computer's weighted choice and the arming of the modifiers (nfl4 only,
+"""The playbooks in a game: the books of the two sides, the computer's weighted choice and the arming of the modifiers (nfl4 only,
 rule 0.13; NX5, design 10.4, built in SX.7). This is inspired by Jim Kitchen.
 
 NflRules (extras/nfl_rules.py) owns one `PlaybookFlow` per game and calls it from the hooks:
 
     resolve(game, state)                  the playbooks of the two sides, once per game (period_clock): the player's from the
                                           F9 settings (Classic, the team's style or a style), the computer's team style
-    defense_items(state)                  H3: the defense menu of the player's playbook (None while it is Classic): the groups, then the
-                                          plays of the open group and Back; Field Goal and Punt stay in the top menu
-    action(state, action)                 H3 menu_action: a group opens, Back goes up, a play is chosen (answers (PLAY, family))
-    back(state)                           H3 menu_back: Backspace or Left in a group
+    (the player's menus were SX.7's two-level groups; the catalog's menus replaced them, extras/offense_flow.py in SX.10c and
+    extras/defense_flow.py in SX.10d)
     computer_offense / computer_defense   N5.6: the computer's weighted draw over the plays of its style by down, distance,
                                           field position and score (one `below(total)`), the family is the play's
     arm(state, offense_play, defense_play)  before the snap: the H8 modifiers for the two plays that were called
-    clear()                               at every play's end: nothing is called, the menu is at the top
+    clear()                               a play withdrawn or a kick-off: nothing is called, no modifier is armed
 
 Classic is never touched: a side whose book is Classic has no menu of plays, no draw and no modifier. Every number is data
 (playbook_data.py, the player's styles.txt; tuning.py for the situation percents); this file holds only rules.
 """
 from __future__ import annotations
 
-import logging
-
-from ..game import menus
 from ..game.gamestate import other
-from ..game.setup import DEFENSE_ITEMS, OFFENSE_ITEMS
-from . import nx_texts as X
 from . import playbook_data as D
 from . import playbooks as P
 from . import tuning as T
@@ -32,28 +25,10 @@ from .franchise.ratings import FranchiseModifiers
 from .franchise.staff import game_team_styles
 from .qb_runs import to_goal
 
-log = logging.getLogger("nfl4.extras")
-
-OFFENSE_BOOK, DEFENSE_BOOK = "obook", "dbook"          # an item that calls a play of the catalog
-OFFENSE_GROUP, DEFENSE_GROUP, BACK = "ogroup", "dgroup", "back"
-ACTIONS = (OFFENSE_BOOK, DEFENSE_BOOK, OFFENSE_GROUP, DEFENSE_GROUP, BACK)
-GROUP_TEXT = {1: "NXB-01", 2: "NXB-02", 3: "NXB-03", 4: "NXB-04", 5: "NXB-05", 6: "NXB-06", 7: "NXB-07"}
-KEY_BACKSPACE, KEY_LEFT = "8", "37"
-
-
-def item(position: int, text: str, action: tuple[str, int], letter: str = "") -> menus.MenuItem:
-    """An item in the original's spoken form (" 3. Screens "); the digit is its place (an item past the ninth has a letter)."""
-    return menus.MenuItem(" %d. %s " % (position, text), position % 10 if position <= 10 else -1, action, letter)
-
 
 def team_index(division: int, place: int) -> int:
     """0 to 31: T01 to T32, as league.team_id counts."""
     return (division - 1) * 4 + (place - 1)
-
-
-def classic_text(items: tuple[str, ...], number: int) -> str:
-    """The original's item text without its number (" 3. Screen Pass " is "Screen Pass")."""
-    return items[number - 1].strip()[3:]
 
 
 class PlaybookFlow:
@@ -62,7 +37,6 @@ class PlaybookFlow:
         # H8: the playbooks' Mod, and (SX.8b, nfl4's Franchise) the ratings' Mod of rosters that carry ratings: the same object as
         # PlaybookModifiers while no roster has any, which is every game that is not a Franchise game
         self.modifiers = FranchiseModifiers()
-        self.group: int | None = None           # the open group of the player's menu (never saved: a menu is at its top after a play)
         self.offense_id = ""                    # the catalog play called for the offense of this play ("O017") or none
         self.defense_id = ""
         # every play that was run: (offense side, offense play ID, defense play ID, offense family, defense family, the kind
@@ -115,73 +89,6 @@ class PlaybookFlow:
         books = x.offense_book if role == "O" else x.defense_book
         key = books[side - 1]
         return key if key in self.table.styles else P.CLASSIC
-
-    # ----- the player's menus (design 10.4) -----
-
-    def _plays(self, state, role: str) -> dict[int, list[D.Play]]:
-        """The player's usable plays by group (an offense group 1 to 7, a defense call 1 to 6), at most MAX_PER_GROUP each."""
-        style = self.style(state, 1, role)
-        usable = self.table.usable(style, role) if style != P.CLASSIC else []
-        groups: dict[int, list[D.Play]] = {}
-        for play, _weight in usable:
-            if role == "O" and play.family > 5 and not state.extras.qb_on:
-                continue
-            groups.setdefault(play.group, [])
-            if len(groups[play.group]) < D.MAX_PER_GROUP:
-                groups[play.group].append(play)
-        return groups
-
-    def defense_items(self, state) -> list[menus.MenuItem] | None:
-        if self.style(state, 1, "D") == P.CLASSIC or state.two_point:      # the try is the original's, on both sides of the ball
-            self.group = None
-            return None
-        groups = self._plays(state, "D")
-        if not groups:
-            return None
-        if self.group in groups:
-            items = [item(n, self.table.name(p.id), (DEFENSE_BOOK, p.number)) for n, p in enumerate(groups[self.group], 1)]
-            items.append(item(len(items) + 1, X.text("NXB-10"), (BACK, 0), "b"))
-            return items
-        self.group = None
-        items = []
-        for call in D.DEFENSE_FAMILIES:
-            text = classic_text(DEFENSE_ITEMS, call)
-            action = (DEFENSE_GROUP, call) if call in groups else (menus.PLAY, call)
-            items.append(item(len(items) + 1, text, action))
-        return items
-
-    def owns(self, action: tuple[str, int]) -> bool:
-        return action[0] in ACTIONS
-
-    def action(self, state, action: tuple[str, int]):
-        """True: the menu starts again from its top item (a group opened or closed); a (PLAY, family) tuple: the play is chosen."""
-        kind, number = action
-        if kind in (OFFENSE_GROUP, DEFENSE_GROUP):
-            self.group = number
-            return True
-        if kind == BACK:
-            self.group = None
-            return True
-        if kind == OFFENSE_BOOK:
-            play = D.PLAYS.get("O%03d" % number)
-            if play is None:
-                return False
-            self.offense_id, self.group = play.id, None
-            return (menus.PLAY, play.family)
-        if kind == DEFENSE_BOOK:
-            play = D.PLAYS.get("D%03d" % number)
-            if play is None:
-                return False
-            self.defense_id, self.group = play.id, None
-            return (menus.PLAY, play.family)
-        return False
-
-    def back(self, state) -> bool:
-        """Backspace or Left in a group menu: back to the groups (H3 menu_back); nothing at the top."""
-        if self.group is None:
-            return False
-        self.group = None
-        return True
 
     # ----- the computer's choice (N5.6) -----
 
@@ -278,10 +185,9 @@ class PlaybookFlow:
                             outcome.kind, outcome.yards))
 
     def forget_calls(self) -> None:
-        """The play is over: nothing is called and the menu starts at its top. The modifiers stay armed until the ruling of the
-        play was made (the review reads the row the play used)."""
+        """The play is over: nothing is called. The modifiers stay armed until the ruling of the play was made (the review reads the
+        row the play used)."""
         self.offense_id = self.defense_id = ""
-        self.group = None
 
     def clear(self) -> None:
         self.forget_calls()

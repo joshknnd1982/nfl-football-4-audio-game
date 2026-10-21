@@ -126,8 +126,8 @@ def play_result(down: Down, play: PlayFacts) -> Result:
         return Result(SAFETY, defense, points=_points(defense, 2))
     if play.turnover:
         return Result(TURNOVER, defense, pieces=(turnover_piece(play.kind),))
-    if play.kind == O.FIELD_GOAL_MISSED:
-        return Result(NEW_DOWN, defense, 100 - down.los, new_series=True)
+    if play.kind == O.FIELD_GOAL_MISSED:             # SX.10d (G26-7): the kicks of 2026 give the spot of the kick or the 20
+        return Result(NEW_DOWN, defense, play.receivers_spot or 100 - down.los, new_series=True)
     if play.kind == O.PUNT:
         return Result(NEW_DOWN, defense, play.receivers_spot, new_series=True)
     if play.kind in (O.KICKOFF_RETURN, O.KICKOFF_TOUCH_BACK):
@@ -169,6 +169,8 @@ def accept(foul: F.Foul, down: Down, play: PlayFacts | None, foul_spot: int | No
         return _accept_on_onside(foul, down, play)
     if play is not None and play.kind in (O.KICKOFF_RETURN, O.KICKOFF_TOUCH_BACK):
         return _accept_on_kickoff(foul, down, play, foul_spot)
+    if foul.spot == F.CATCH_SPOT and play is not None:
+        return _accept_catch_interference(foul, down, play)
     if F.AFTER in foul.phases:
         return _accept_after(foul, down, play)
     if foul.spot == F.PASS_SPOT:
@@ -268,6 +270,15 @@ def _accept_after(foul: F.Foul, down: Down, play: PlayFacts) -> Result:
         return Result(NEW_DOWN, first.ball, new, new_series=True, yards=moved, notes=notes, keeps_play=True,
                       play_first_down=first.play_first_down)
     return Result(NEW_DOWN, first.ball, new, first.down, first.to_go + moved, yards=moved, notes=notes, keeps_play=True)
+
+
+def _accept_catch_interference(foul: F.Foul, down: Down, play: PlayFacts) -> Result:
+    """Kick catch interference on a punt (10-1-1, SX.10d): the kicking team hindered the catch. The receivers get the ball 15 yards beyond
+    where they got it (their view; half the distance near the goal line, 14-2-1) with a first down; the punt itself stands."""
+    spot = min(99, max(1, play.receivers_spot))
+    new, moved, halved = move(spot, foul.yards, False)
+    return Result(NEW_DOWN, other(down.offense), new, new_series=True, yards=moved, keeps_play=True,
+                  notes=(X.text("NXP-11"),) if halved else ())
 
 
 def _accept_on_kickoff(foul: F.Foul, down: Down, play: PlayFacts, foul_spot: int | None) -> Result:

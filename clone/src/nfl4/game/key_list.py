@@ -61,8 +61,8 @@ ROWS: tuple[KeyRow, ...] = (
            " Alt, or F10. the same as the escape key. ", consts=("KEY_ALT", "KEY_F10")),
     KeyRow("updown", "Up and Down", "In every menu", "move to the previous or the next item; they go around from the last item to "
            "the first", "all", True, "", " Up and Down. in a menu, move to the previous or the next item. ", consts=("KEY_UP", "KEY_DOWN")),
-    KeyRow("digits", "Digits 1 to 9 and 0", "In the play menus", "make the item with that number the current item; 0 is the tenth",
-           "all", True, "", " Digits. in a menu, a number makes that item the current item. "),
+    KeyRow("digits", "Digits 1 to 9 and 0", "In the play menus and the kick off menu", "make the item with that number the current "
+           "item; 0 is the tenth", "all", True, "", " Digits. in a menu, a number makes that item the current item. "),
     KeyRow("enter", "Enter", "In every menu and question", "takes the current item or the answer", "all", True, "",
            " Enter. takes the current item or answer. ", consts=("KEY_ENTER",)),
     KeyRow("yes_no", "Y, N, Tab", "In a yes or no question", "Y says yes and N says no at once; Up, Down or Tab change the answer and "
@@ -86,19 +86,22 @@ ROWS: tuple[KeyRow, ...] = (
            "running play is granted when the play ends", "nfl", False, " T. calls a time out", consts=("KEY_T",), feature="timeouts"),
     KeyRow("back", "Backspace or Left, B", "In a list of plays or a playbook group", "go back one level, from a list of plays to the "
            "menu it came from; B chooses the Back item", "nfl", False, "Backspace or Left goes back", letters="b", feature="playbooks"),
-    KeyRow("right", "Right", "In the offense menu of the N. F. L. rules with a playbook", "on a play family opens its lists of plays, "
-           "and in a list goes to the family's next list", "nfl", False, "",
-           " Right. in the offense menu, opens the lists of plays of a family, and then the next list. ", consts=("KEY_RIGHT",),
-           feature="playbooks"),
+    KeyRow("right", "Right", "In the offense and defense menus of the N. F. L. rules with a playbook", "on a play family opens its "
+           "lists of plays, and in a list goes to the family's next list; on Punt it opens the kinds of punts and the fake punts, and on "
+           "Field Goal the fake field goals", "nfl", False, "",
+           " Right. in the offense and defense menus, opens the lists of plays of a family, and then the next list; on Punt and Field "
+           "Goal, their kinds and fakes. ", consts=("KEY_RIGHT",), feature="playbooks"),
     KeyRow("plus_minus", "Plus and Minus", "In a list of plays", "plus adds the current play to your favourites and minus takes it "
            "off; the main row's plus and the keypad's plus both work", "nfl", False, "",
            " Plus and Minus. in a list of plays, add the play to your favourites or take it off. ",
            consts=("KEY_PLUS_PAD", "KEY_PLUS_MAIN", "KEY_MINUS_PAD", "KEY_MINUS_MAIN"), feature="playbooks"),
-    KeyRow("play_letters", "F, A, M, K, P, O, N", "In the offense menu of the N. F. L. rules with a playbook", "F opens your "
-           "favourites, A calls your last play again, M opens more plays, K kneels down and P spikes the ball when they help, O opens "
-           "formation and tempo, and N in more plays finds a play by its name", "nfl", False, "",
+    KeyRow("play_letters", "F, A, M, K, P, O, N", "In the offense and defense menus of the N. F. L. rules with a playbook", "F opens "
+           "your favourites, A calls your last play again, M opens more plays, K kneels down and P spikes the ball when they help, O "
+           "opens formation and tempo, and N in more plays finds a play by its name; in the defense menu on fourth down P opens the "
+           "kick defense", "nfl", False, "",
            " F, A, M, K, P, O and N. in the offense menu: favourites, again, more plays, kneel down, spike the ball, formation and "
-           "tempo, and find a play by name. ", letters="famkpon", feature="playbooks"),
+           "tempo, and find a play by name; in the defense menu on fourth down, P. is the kick defense. ", letters="famkpon",
+           feature="playbooks"),
     KeyRow("find", "Letters, Backspace, Enter", "In Find a Play by Name", "type the first letters of a word of the play's name, here "
            "T is a letter too; Backspace deletes the last one and Enter finds the plays", "nfl", False, "",
            " Find a Play by Name. type the first letters of the name, then Enter. ", feature="playbooks"),
@@ -106,9 +109,9 @@ ROWS: tuple[KeyRow, ...] = (
            "the question kept", "nfl", False, "", " S. in a play menu, chooses Save Game. ", letters="s"),
     KeyRow("challenge", "C", "In a play menu", "chooses Challenge the Ruling, or says why you cannot challenge", "nfl", False,
            "C. in a play menu", letters="c", feature="challenges"),
-    KeyRow("describe", "D", "In a play menu", "says a plain description of the current item for a person who knows nothing of "
-           "football; the menu stays on the item", "nfl", False, "", " D. in a play menu, describes the current item in plain words. ",
-           letters="d"),
+    KeyRow("describe", "D", "In a play menu and the kick off menu", "says a plain description of the current item for a person who "
+           "knows nothing of football; the menu stays on the item", "nfl", False, "",
+           " D. in a play menu and the kick off menu, describes the current item in plain words. ", letters="d"),
     KeyRow("penalty", "A and D", "At a penalty question", "A accepts the penalty and D declines it; Up and Down change the answer and "
            "Enter takes it", "nfl", False, "A. accepts it and D. declines it", letters="ad", feature="penalties"),
     KeyRow("qb_items", "8, 9 and 0", "In the offense menu with quarterback runs", "8 is the quarterback sneak, 9 the keeper and 0 the "

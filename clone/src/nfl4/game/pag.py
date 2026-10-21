@@ -12,6 +12,7 @@ The parts:
     pag_scrimmage.py  the snap and the snap count, runs, passes, sacks, fumbles (5.8, 5.9)
     pag_catalog.py    N. F. L. rules only (SX.10c): a catalog play's result told with the original's sentence pools
     pag_kicks.py      kicksnap, field goals, punts, kick-offs and returns, the extra point and the two-point try (5.10)
+    pag_kicks26.py    N. F. L. rules with a playbook only (SX.10d): the kicks of 2026 told with the original's set-ups and endings
     pag_results.py    the end of a play: the ball, touchdowns, safeties, possession, position and down, scores (5.11, 5.12)
     pag_breaks.py     the next-play step, quarters, warnings, statistics, key waits, the end, Save Game, conceding (5.6)
 
@@ -40,12 +41,14 @@ from .outcome import PlayOutcome
 from .pag_breaks import BreakSteps
 from .pag_keepers import KeeperSteps
 from .pag_kicks import KickSteps
+from .pag_kicks26 import Kick26Steps
 from .pag_results import ResultSteps
 from .pag_catalog import CatalogSteps
 from .pag_scrimmage import ScrimmageSteps
 from .playtables import DEFENSE_MATCH
-from .rules import (CLASSIC, KICK_AGAIN, MENU_QUIET, MENU_REFRESH, NEXT_DOWN, ON_DOWNS, PERIOD_END, REVIEWED_FIELD,
-                    REVIEWED_FUMBLE, REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, SAVE_PENDING, TIMEOUT_GRANTED, TRY_AGAIN, TRY_FAILS)
+from .rules import (CLASSIC, FAIR_CATCH_KICK, KICK_AGAIN, MENU_QUIET, MENU_REFRESH, NEXT_DOWN, ON_DOWNS, PERIOD_END,
+                    REVIEWED_FIELD, REVIEWED_FUMBLE, REVIEWED_TOUCHDOWN, SAFETY_BY_PENALTY, SAVE_PENDING, TIMEOUT_GRANTED, TRY_AGAIN,
+                    TRY_FAILS)
 from .setup import Roster
 
 log = logging.getLogger("nfl4.game")
@@ -75,7 +78,7 @@ class GameResult:
     conceded: bool = False
 
 
-class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, ResultSteps, BreakSteps):
+class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Steps, ResultSteps, BreakSteps):
     def __init__(self, game, rules=CLASSIC, own_names: Roster | None = None, saved: SavedGame | None = None,
                  quarterback_names: Callable[[GameState], tuple[str, str]] | None = None,
                  save_sink: Callable[[SavedGame], None] | None = None,
@@ -313,6 +316,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, ResultSte
             return self.reviewed_fumble
         if then == SAVE_PENDING:                  # N. F. L. rules (SX.9, C10): S at the accept-or-decline prompt
             return self.save_game
+        if then == FAIR_CATCH_KICK:               # N. F. L. rules with a playbook (SX.10d): the player chose the fair catch kick
+            return self.fair_catch_kick
         raise ValueError("unknown continuation %r" % (then,))
 
     def ran(self) -> bool:

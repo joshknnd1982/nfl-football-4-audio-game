@@ -938,3 +938,18 @@ RUNOFF_NO_HUDDLE = (20, 28)            # the player's Tempo "no huddle" between 
 FR_MODEL_SACK = 40                     # the ratings door: the catalog's sack rate (per 10,000) moves 40 for each point of the ratings'
                                        # sack percent (the original's sack percents are about 2.5 times the league's 6.5 percent)
 FR_MODEL_FUMBLE_BASE = 50              # the ratings' fumble steps are steps of the original's 1 in 50 (playtables.FUMBLE_ODDS)
+
+
+# ----- SX.10d, the defense calls and the kicks of 2026 in the game (NFL_PLAYS_DESIGN 2.6, 4.9, 6, D-094). UNVERIFIED start values;
+# SX.10e measures them with the bands -----
+COMPUTER_KICKOFF_MIX = (("K001", 55), ("K002", 42), ("K003", 3))   # the computer's kick-off when it does not kick onside: deep 55, short 42
+                                       # (2026 about 55 and 45, design 4.9), squib 3; wrong if SX.10e's touchbacks leave 12 to 20 percent
+PIN_PUNT_TO_GOAL = 55                  # the computer punts a pin punt when its line is this close to the other goal, else a spread punt
+FG_KICK_SPOT = 7                       # the holder's spot: 7 yards behind the line (a field goal of to_goal + 17 yards, RB26 11-4-2)
+MISSED_FG_LEAST = 20                   # a missed field goal from inside the 20: the defense's ball at its 20 (RB26 11-4-2, G26-7)
+FAIR_CATCH_KICK_SECONDS = 30           # the fair catch kick is offered after a fair catch with at most this many seconds left in a half
+FAIR_CATCH_KICK_LONGEST = 65           # and a kick of at most this many yards (the field goal curve is under 30 percent beyond)
+FAKE_GAIN_EXTRA = (0, 8)               # a fake kick that works gains the yards to go and 0 to 8 more
+FAKE_SHORT_LOSS = 2                    # a fake run that fails ends 2 yards behind the line to a yard short of the line to gain
+FR_KICK_MODEL_POINTS = 100             # the ratings door: the field goal's made rate moves 1 point for each step of the original's odds
+SAFETY_KICK_TOUCHBACK = 25             # percent of the deep kick's touchbacks a kick from the 20 keeps (it reaches the end zone less)

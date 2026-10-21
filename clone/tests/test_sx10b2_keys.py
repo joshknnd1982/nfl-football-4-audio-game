@@ -100,7 +100,7 @@ def test_the_d_key_is_in_f5_and_f6_of_the_n_f_l_rules_and_not_in_classic():
     row = K.BY_ID["describe"]
     assert row.f5.strip() in f5_text(all_on_rules(), "nfl")
     assert not [line for line in CLASSIC.extra_help(K.KEY_F5) + CLASSIC.extra_help(K.KEY_F6) if "describes the current item" in line]
-    assert any("D. In a play menu." in line for line in all_on_rules().extra_help(K.KEY_F6))
+    assert any("D. In a play menu and the kick off menu." in line for line in all_on_rules().extra_help(K.KEY_F6))   # SX.10d
 
 
 # ----- the README draft -----

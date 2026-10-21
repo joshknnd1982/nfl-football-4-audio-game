@@ -15,8 +15,11 @@ NflRules (extras/nfl_rules.py) owns one OffenseFlow per game and calls it from i
 
 The playbook's pick behind Enter on a family (design 2.2) is SX.7's style draw over that family until SX.10e builds the real pick. The
 defense call the model plays against is the computer's style call (SX.7's D001 to D030 are the catalog's) or, with no style, the stand-in
-call of its family (DEFAULT_CALLS), with no draw. Kicks and fake kicks stay the original's until SX.10d: Right on Field Goal and Punt
-opens nothing and no list offers a special-teams play.
+call of its family (DEFAULT_CALLS), with no draw; its personnel is matched to the player's (SX.10d, extras/plays/personnel.py, Q-P13).
+SX.10d: Right on Field Goal and Punt opens their kinds and fakes (the punts K011 to K016, the fake field goals K022 and K023); calling one
+gives the engine the original's Field Goal or Punt and the kick flow (extras/kick_flow.py) reads the call; the try's list offers the
+swinging gate (K026), played here as a run of the end that works when the fake kick's model says so. `run_model` plays any offense play
+against any call and is the defense flow's too (extras/defense_flow.py: the computer's offense against the player's call).
 """
 from __future__ import annotations
 
@@ -34,6 +37,7 @@ from .plays import catalog as C
 from .plays import favourites as F
 from .plays import model as M
 from .plays import model_data as MD
+from .plays import personnel
 from .plays import play_menus as PM
 from .qb_runs import to_goal
 
@@ -50,13 +54,16 @@ QB_KIND_KEYS = {"O048": "draw"}                              # the designed quar
 QB_PLAYS = {8: "O046", 9: "O047", 10: "O048"}                # the offense items 8, 9 and 0 (descriptions.QB_PLAYS)
 PASS_KINDS = ("pass", "screen", "play_action", "boot", "trick_pass", "max_protect", "hail_mary")
 RUN_KINDS = ("run", "draw", "trick_run", "laterals")
-KICK_ACTIONS = (PREFIX + PM.KICK,)                            # Right on Field Goal and Punt: their kinds and fakes come in SX.10d
 SETTING_BOOK = "book"               # a setting's "the playbook's choice": the concept's own formation, personnel, motion, side
+KICK_FAMILIES = {"kg02": 7, "kg03": 6}       # SX.10d: the kinds of punt and the fakes are the original's Punt, the fake field goals its Field Goal
+GATE = "K026"                       # the swinging gate try (design 2.6, Q-P5)
 
 
 def engine_family(concept: C.Concept) -> int:
     """The original's offense play number the engine uses for the call before the snap (the computer's defense draw, its match of a
     repeated call, the snap's route): the concept's family, a quarterback run's 8 to 10, or the family its kind is like."""
+    if concept.side == "K":
+        return KICK_FAMILIES.get(concept.group, 2)          # the swinging gate: a run of the end
     if concept.kind in ("sneak", "qb_run"):
         return QB_FAMILY[qb_key(concept)]
     if concept.kind == "kneel":
@@ -112,6 +119,8 @@ class OffenseFlow:
         self.called = ""                   # the concept the player called for this play ("O027"), "" none
         self.result: M.Result | None = None     # the model's result of the play being told (its out of bounds, its turnover's return)
         self.favourites: tuple[tuple, tuple] = ((), ())
+        self.played = ""                   # the offense play the model played this play (the player's, or the computer's against the
+        #                                    player's defense call, SX.10d); "" none
         self.events: list[tuple] = []      # (concept, call, result kind, yards, branch): the tests and the calibration count them
 
     @property
@@ -140,16 +149,21 @@ class OffenseFlow:
 
     def clear(self) -> None:
         """Nothing is called (a play withdrawn by a timeout, a foul before the snap, a kick-off)."""
-        self.called = ""
+        self.called = self.played = ""
         self.result = None
 
     # ----- the context and the items -----
 
     def usable(self, state) -> frozenset:
-        """The offense concepts the player may call: on in plays.txt, and the quarterback's runs only while that switch is on."""
+        """The offense concepts the player may call: on in plays.txt, and the quarterback's runs only while that switch is on; the kinds of
+        punt, the fakes and the swinging gate with the kicks of 2026 (SX.10d)."""
         disabled = self.table.disabled
-        qb_on = state.extras.qb_on
-        return frozenset(c.id for c in C.OFFENSE if c.id not in disabled and (qb_on or c.kind not in ("sneak", "qb_run")))
+        x = state.extras
+        qb_on = x.qb_on
+        plays = {c.id for c in C.OFFENSE if c.id not in disabled and (qb_on or c.kind not in ("sneak", "qb_run"))}
+        if self.rules.kicks.on(state):
+            plays |= {c.id for c in C.KICKS if (c.group in KICK_FAMILIES or c.id == GATE) and c.id not in disabled}
+        return frozenset(plays)
 
     def context(self, state) -> PM.Context:
         x = state.extras
@@ -207,7 +221,11 @@ class OffenseFlow:
 
     def heading(self, state) -> str:
         """The name of the open list, said in place of the coach's prompt (design 2.3); "" at the top."""
-        menus_ = self.menus
+        return self.heading_of(self.menus)
+
+    @staticmethod
+    def heading_of(menus_: PM.PlayMenus) -> str:
+        """The heading of either side's menus (the defense flow's too)."""
         if menus_.level == PM.TOP:
             return ""
         if menus_.level == PM.LIST:
@@ -239,9 +257,13 @@ class OffenseFlow:
             return self.call(state, value)
         if kind == PM.PICK:
             pick = self.pick(state, value)
+            if not pick:                    # SX.10d: every play of the family is off in plays.txt: the original's play, as SX.7 did
+                self.clear()
+                self.reset()
+                return (menus.PLAY, value)
             self.game.say5(X.text("NXB-H15", name=self.name(pick)))
             return self.call(state, pick)
-        if kind == PM.KICK:                 # the original's Field Goal and Punt (their kinds and fakes: SX.10d)
+        if kind == PM.KICK:                 # the original's Field Goal and Punt (the kick flow plays its usual kind, SX.10d)
             self.clear()
             self.reset()
             return (menus.PLAY, value)
@@ -275,7 +297,7 @@ class OffenseFlow:
         for group in PM.family_groups("O", family):
             for concept in PM.concepts_of(group, self.context(state)):
                 return concept.id
-        return next(c.id for c in C.OFFENSE if c.family == family)
+        return ""                           # every play of the family is off (SX.10d: the original's play, not an off play)
 
     def change_setting(self, state, name: str) -> None:
         """Enter on a setting of Formation and Tempo: its next value (the values go around); kept with the game (extras.play_settings)."""
@@ -299,7 +321,8 @@ class OffenseFlow:
         return False
 
     def right(self, state, item) -> bool:
-        if not self.owns(item.action) or item.action[0] in KICK_ACTIONS:
+        """Right: a family's lists; on Field Goal and Punt their kinds and fakes, with the kicks of 2026 (SX.10d)."""
+        if not self.owns(item.action) or (item.action[0] == PREFIX + PM.KICK and not self.rules.kicks.on(state)):
             return False
         self.menus.set_context(self.context(state))
         return self.menus.right(self.item_of(item.action))
@@ -345,17 +368,22 @@ class OffenseFlow:
 
     # ----- the play -----
 
-    def defense_call(self, state) -> tuple[str, C.Call]:
-        """The call the model plays against: the computer's style call (SX.7), else its family's stand-in (no draw)."""
+    def defense_call(self, state, concept: C.Concept | None = None) -> tuple[str, C.Call]:
+        """The call the model plays against: the computer's style call (SX.7), else its family's stand-in (no draw); its personnel matched
+        to the player's play (SX.10d, Q-P13: the computer matches the offense's personnel)."""
         call_id = self.rules.books.defense_id
-        concept = C.BY_ID.get(call_id)
-        if concept is None or concept.side != "D":
+        call = C.BY_ID.get(call_id)
+        if call is None or call.side != "D":
             call_id = DEFAULT_CALLS.get(state.defense_play, DEFAULT_CALLS[5])
-            concept = C.BY_ID[call_id]
-        return call_id, concept.params
+            call = C.BY_ID[call_id]
+        if concept is None:
+            return call_id, call.params
+        offense = personnel.offense_personnel(concept, state.extras.play_settings)
+        return call_id, personnel.adjust(call.params, offense, to_goal(state))
 
-    def situation(self, state, concept: C.Concept) -> M.Situation:
-        settings = state.extras.play_settings
+    def situation(self, state, concept: C.Concept, own: bool = True) -> M.Situation:
+        """The model's situation; `own`: the player's play, with his Formation and Tempo settings (the computer's play has none)."""
+        settings = state.extras.play_settings if own else {}
         formation = settings.get("formation", SETTING_BOOK)
         motion = settings.get("motion", SETTING_BOOK)
         values = dict(to_goal=to_goal(state), down=state.down, distance=state.to_go,
@@ -385,10 +413,19 @@ class OffenseFlow:
         number for the telling (narration_family) and gives a quarterback run its key as the branch."""
         self.result = None
         concept = C.BY_ID.get(self.called) if state.wisoff == 1 else None
-        if concept is None or concept.side != "O":
+        if concept is None or (concept.side != "O" and concept.id != GATE):
             return None
-        call_id, call = self.defense_call(state)
-        result = M.play(concept, call, self.situation(state, concept), self.rules.rnd)
+        call_id, call = self.defense_call(state, concept if concept.side == "O" else None)
+        return self.run_model(state, concept, call_id, call)
+
+    def run_model(self, state, concept: C.Concept, call_id: str, call: C.Call):
+        """Any offense play against any call (the player's play here, the computer's against the player's call from the defense flow): the
+        model's result, the engine's play number for the telling, the events and the log; the result is kept for the end of the play."""
+        own = state.wisoff == 1
+        if concept.id == GATE:
+            result = self.gate(state, call)
+        else:
+            result = M.play(concept, call, self.situation(state, concept, own), self.rules.rnd)
         if result.kind == "kneel":                  # never into the own end zone: a kneel on the own 1 loses nothing
             own = 100 - to_goal(state)
             result = result._replace(yards=max(result.yards, -(own - 1)))
@@ -396,10 +433,19 @@ class OffenseFlow:
             result = result._replace(branch=qb_key(concept))
         state.offense_play = narration_family(concept, result)
         self.result = result
+        self.played = concept.id
         self.events.append((concept.id, call_id, result.kind, result.yards, result.branch))
         debuglog.event("extras", "catalog_play", play=concept.id, call=call_id, kind=result.kind, yards=result.yards,
-                       branch=result.branch or None, route=result.route or None, gap=result.gap or None)
+                       branch=result.branch or None, route=result.route or None, gap=result.gap or None, side=state.wisoff)
         return result
+
+    def gate(self, state, call: C.Call) -> M.Result:
+        """The swinging gate try (K026, design 2.6): the kicking unit shifts and the snap goes to a runner; it scores when the fake kick's
+        model says so (design 4.9, its distance the yards to the goal), else it is stopped short. Told as a run of the end."""
+        rnd, to = self.rules.rnd, to_goal(state)
+        if M.fake_kick(to, "return", rnd):
+            return M.Result("run", to, gap="end")
+        return M.Result("run", M.between(rnd, -2, max(-2, to - 1)), gap="end")
 
     def drop_result(self) -> None:
         """The engine left the model's result (a scramble, a throw-away by the grounding rule): nothing of it is used any more."""
@@ -440,10 +486,13 @@ class OffenseFlow:
         the call, the menu is at its top for the next play."""
         if self.called and outcome.offense == 1 and outcome.offense_play not in (0,):
             outcome.catalog = self.called
-            state.extras.again[0] = self.called
+            if C.BY_ID[self.called].side == "O":     # a kind of punt, a fake or the gate is not Again's (SX.10d)
+                state.extras.again[0] = self.called
+        elif self.played and outcome.offense == 2:   # SX.10d: the computer's play the model played against the player's call
+            outcome.catalog = self.played
         if not (outcome.catalog and outcome.turnover):  # only the play's own turnover reads its result again (turnover_return), B-X40
             self.result = None
-        self.called = ""
+        self.called = self.played = ""
         self.reset()
 
 

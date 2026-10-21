@@ -80,6 +80,10 @@ CLEAR_AND_OBVIOUS = True               # 15-2-1: a ruling is changed only on cle
 
 # ----- free kicks and the onside kick (SX.4; NFL_RULES_RESEARCH Part 5) -----
 KICKOFF_SPOT = 35                      # 6-1-2: a kick-off is made from the kicking team's own 35
+EXTRA_POINT_DISTANCE = 33              # 11-3-2: the try kick is snapped from the 15 (a kick of about 33 yards; SX.10d, G26-4)
+KICKOFF_TOUCHBACK = 35                 # 6-2: a 2026 kick-off touchback (one into the landing zone that goes into the end zone: the 20)
+KICK_OUT_OF_BOUNDS = 40                # 6-2-1: a free kick out of bounds, and a kick short of the landing zone, at the receivers' 40
+PUNT_TOUCHBACK = 20                    # 11-6: a punt's touchback
 SAFETY_KICK_SPOT = 20                  # 11-5-2, 6-1-6 (b): the team scored upon kicks from its own 20; an onside kick too
 ONSIDE_ANY_TIME = True                 # 6-1-6 (2026): the kicking team may declare an onside kick at any time of the game,
 #                                        whatever the score and the period; the declaration is told to the receivers, so

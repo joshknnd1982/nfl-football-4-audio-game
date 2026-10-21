@@ -351,6 +351,11 @@ Each row: ID, code, spoken name, offender (offense, defense, kicking, receiving,
 - P25 holding (on a return), receiving team, kick-off return, 10, spot of the foul, rate 2.0 per return.
 - P26 too many men on the field (DTM), defense, at snap, 5, previous, no automatic first down, rate 0.12.
 - P33 illegal touching of the kick, kicking team, onside kick, 5 or the receivers' ball at the spot, rate 4.0 per onside kick.
+- P34 illegal wedge or double team (WED, IDT; 6-2-1, 6-2-2), receiving team, a 2026 kick-off return, 15, spot of the foul, rate 0.3 per return (UNVERIFIED; SX.10d, G26-14).
+- P35 illegal formation on the kick off (the setup and landing zones, 6-1-3), kicking team, a 2026 kick-off, 5 from the dead ball spot, rate 0.6 per kick (UNVERIFIED; SX.10d).
+- P36 leaping or leverage (12-3-1 (p), (r)), defense, a 2026 field goal, 15, previous spot, automatic first down, rate 0.2 per kick (UNVERIFIED; SX.10d).
+- P37 kick catch interference (10-1-1), kicking team, a 2026 punt that is caught or fair-caught, 15 from where the receivers got the ball, the receivers' ball, rate 0.5 per such punt (UNVERIFIED; SX.10d).
+The rows P34 to P37 are drawn only with the kicks of 2026 (a game where the player uses a playbook, D-094).
 (IDs P27 to P32 are reserved for the suggested later rows of Part 7 section 0; a new row is one data line.)
 
 ### 9.3 The choice (N7.3, C9)

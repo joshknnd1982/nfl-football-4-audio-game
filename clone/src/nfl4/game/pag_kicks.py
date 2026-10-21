@@ -9,7 +9,7 @@ from . import outcome as O
 from . import phrases as P
 from .gamestate import other
 from .playtables import FIELD_GOAL_DRAWS, FIELD_GOAL_NEEDED, RETURN_KIND_ODDS, RETURN_RANGE, RETURN_RANGES
-from .rules import NORMAL_KICKOFF, ONSIDE_KEPT, ONSIDE_KICKOFF, ONSIDE_RUN, PERIOD_OVER
+from .rules import KICKOFF_2026, NORMAL_KICKOFF, ONSIDE_KEPT, ONSIDE_KICKOFF, ONSIDE_RUN, PERIOD_OVER
 
 KEY_F1, KEY_F2, KEY_F3, KEY_F4 = "112", "113", "114", "115"
 KEY_ENTER, KEY_UP, KEY_DOWN = "13", "38", "40"
@@ -43,6 +43,9 @@ class KickSteps:
 
     def field_goal(self):
         g, s, snd = self.g, self.s, self.snd
+        plan = self.rules.special_kick(s, "field goal")       # H20 (SX.10d): a 2026 kick; Classic: None, no draw, no word
+        if plan is not None:
+            return self.field_goal_2026(plan)
         g.empty_replay()
         g.log_print("")
         g.ptf = 1
@@ -103,6 +106,9 @@ class KickSteps:
 
     def punt(self):
         g, s, snd, rnd = self.g, self.s, self.snd, self.rnd
+        plan = self.rules.special_kick(s, "punt")             # H20 (SX.10d): a 2026 kick; Classic: None, no draw, no word
+        if plan is not None:
+            return self.punt_2026(plan)
         g.empty_replay()
         snd.c2uh()
         g.say4(" " + self.returner(s.defense, 1) + P.AND + self.returner(s.defense, 2) + P.PUNT_BACK_DEEP)
@@ -149,7 +155,7 @@ class KickSteps:
         kind = self.rules.before_kickoff(s, s.defense)       # H4: the kind (Classic: "normal", no question)
         if kind == PERIOD_OVER:                              # N. F. L. rules (SX.2): a score as time ran out in the
             return self.next_play                            # second or fourth quarter: the period ends, no kick-off
-        if kind not in (NORMAL_KICKOFF, ONSIDE_KICKOFF):
+        if kind not in (NORMAL_KICKOFF, ONSIDE_KICKOFF, KICKOFF_2026):
             raise ValueError("unknown kick-off kind %r" % (kind,))
         if s.first_kickoff:                                  # L8a8 = 1: the first kick-off records its receiver
             s.opening_receiver = s.wisoff
@@ -159,6 +165,8 @@ class KickSteps:
         self.mark_spot()
         if kind == ONSIDE_KICKOFF:                           # N. F. L. rules (SX.4): never in Classic
             return self.onside_kick
+        if kind == KICKOFF_2026:                             # N. F. L. rules with a playbook (SX.10d): never in Classic
+            return self.kickoff_2026
         snd.c2uh()
         g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)
         self.dy(0.2, 0x444949)
@@ -206,8 +214,12 @@ class KickSteps:
         return self.position
 
     def run_it_out(self):
-        """4.16: the player's returner, run it out or not (Q17: every key but Enter, F1, y and n toggles). The play
-        noise of the kick-off still loops here, as in the original (no PlayTackle before this question)."""
+        """4.16: the player's returner, run it out or not."""
+        return self.kick_return if self.ask_run_it_out() else self.touch_back
+
+    def ask_run_it_out(self) -> bool:
+        """4.16's question (Q17: every key but Enter, F1, y and n toggles); True: run it out. The play noise of the kick-off still loops
+        here, as in the original (no PlayTackle before this question). Also the 2026 kick-off's question (SX.10d)."""
         g, s = self.g, self.s
         while True:                                          # L_4452a1
             if self.keys.take_resumed() == "kept":           # H18: T in this question, the ball is live: said once, then asked again
@@ -219,7 +231,7 @@ class KickSteps:
                 self.getkey2(net=False)
                 code = self.g_code
                 if code == KEY_ENTER:
-                    return self.touch_back if answer == 2 else self.kick_return
+                    return answer != 2
                 if code == KEY_F1:
                     break
                 if code not in (KEY_UP, KEY_DOWN):
@@ -324,6 +336,9 @@ class KickSteps:
     def extra_point(self):
         """L_44fd30: it never fails (Q21)."""
         g, s, snd = self.g, self.s, self.snd
+        plan = self.rules.special_kick(s, "extra point")      # H20 (SX.10d): the 2026 try kick; Classic: None, no draw, no word
+        if plan is not None:
+            return self.extra_point_2026(plan)
         text = " " + self.kicker(s.wisoff, 1) + P.XP_IN
         g.ptf = 1
         g.say4(text)

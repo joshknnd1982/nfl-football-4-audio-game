@@ -223,7 +223,12 @@ def test_the_switches_with_the_player_answering_his_own_prompts_questions_and_me
     x = rules.state.extras
     x.check()
     question = X.text("NXO-01", coach=rig.game.season.coach)
-    assert (question in said) == on["onside"]                     # "always": the player is asked at his kick-offs
+    menu = X.text("NXB-J01", coach=rig.game.season.coach)
+    # "always": the player is asked at his kick-offs; with a playbook (SX.10d) the 2026 kick-off menu is asked instead, at every kick-off,
+    # its fourth item the onside kick only with the switch on
+    assert (question in said) == (on["onside"] and not on["playbooks"])
+    assert (menu in said) == on["playbooks"]
+    assert (" 4. Onside Kick " in said) <= on["onside"]
     if not on["penalties"]:
         assert X.text("NXP-01") not in said and rules.penalty.events == []
     if not on["challenges"]:

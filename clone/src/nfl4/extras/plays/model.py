@@ -653,19 +653,21 @@ class KickResult(NamedTuple):
     defense_recovers: bool = False
 
 
-def kickoff(kind: str, rnd) -> KickResult:
-    """A free kick of 2026 from the kicking team's 35 (RB26 6-1, 6-2): deep, short into the landing zone, squib."""
+def kickoff(kind: str, rnd, spot: int = 35, touchback_pct: int = 100) -> KickResult:
+    """A free kick of 2026 from the kicking team's 35 (RB26 6-1, 6-2): deep, short into the landing zone, squib. `spot` is the
+    kicking team's yard line (the 20 after a safety, farther back after a foul, SX.10d): the catch moves as many yards nearer the
+    kicking team; `touchback_pct` scales the touchbacks (a kick from the 20 reaches the end zone less). The defaults are SX.10b's."""
     if kind == "onside":
         return KickResult("onside")
     if chance(rnd, M.KICKOFF_2026["out_of_bounds"]):
         return KickResult("out_of_bounds", 40)
     if kind == "squib" and chance(rnd, SQUIB_SHORT):
         return KickResult("landed_short", 40)
-    if chance(rnd, KICK_TOUCHBACK.get(kind, 0)):
+    if chance(rnd, KICK_TOUCHBACK.get(kind, 0) * touchback_pct // 100):
         return KickResult("touchback", 35)
     if chance(rnd, M.KICKOFF_2025["return_td"]):
         return KickResult("returned", 100, 100, True)
-    catch = between(rnd, *KICK_CATCH[kind])
+    catch = between(rnd, *KICK_CATCH[kind]) + (35 - spot)
     low, high = M.KICKOFF_RETURN[pick(rnd, [w for _r, w in M.KICKOFF_RETURN])][0]
     back = between(rnd, low, high) * KICK_RETURN_SCALE[kind] // 100
     start = catch + back
@@ -686,16 +688,17 @@ def punt_return_yards(rnd) -> int:
     return between(rnd, low, high)
 
 
-def punt(kind: str, to_goal: int, defense: str, rnd) -> KickResult:
+def punt(kind: str, to_goal: int, defense: str, rnd, free_kick: bool = False, gross_shift: int = 0) -> KickResult:
     """A punt from `to_goal` yards from the receiving team's goal (design 4.9); `defense` is the receiving call (return,
-    fair_catch, block, safe). The start is the receiving team's yard line from its own goal."""
+    fair_catch, block, safe). The start is the receiving team's yard line from its own goal. `free_kick`: the safety punt from the
+    20 (RB26 11-5-2), which nobody can block; `gross_shift`: the ratings door's yards (SX.10d). The defaults are SX.10b's."""
     k = PUNT_KIND.get(kind, PUNT_KIND["spread"])
     d = KICK_DEFENSE.get(defense, KICK_DEFENSE["return"])
-    if chance(rnd, M.PUNT["blocked"] * k["block"] * d["block"] // 10000):
+    if not free_kick and chance(rnd, M.PUNT["blocked"] * k["block"] * d["block"] // 10000):
         # the ball comes down behind the line, 5 to 12 yards nearer the kicking team's goal: the receivers' yard line is beyond
         # the line of scrimmage (to_goal from their goal)
         return KickResult("blocked", min(99, to_goal + between(rnd, 5, 12)), defense_recovers=True)
-    gross = punt_gross(rnd) + k["gross"]
+    gross = punt_gross(rnd) + k["gross"] + gross_shift
     if kind == "pin":
         gross = min(gross, max(20, to_goal - 10 + between(rnd, -4, 4)))
     land = to_goal - gross                                       # the receiving team's yard line where it comes down
@@ -736,8 +739,11 @@ def field_goal_rate(distance: int) -> tuple[int, int]:
     return max(0, int(last[1] - (distance - last[0]) * 700)), last[2]
 
 
-def field_goal(distance: int, defense: str, rnd, fair_catch_kick: bool = False) -> KickResult:
+def field_goal(distance: int, defense: str, rnd, fair_catch_kick: bool = False, made_shift: int = 0) -> KickResult:
+    """`made_shift`: the ratings door's points of the made rate (SX.10d); 0 is SX.10b's model."""
     made, blocked = field_goal_rate(distance)
+    if made_shift:
+        made = max(0, min(9900, made + made_shift))
     if fair_catch_kick:
         made, blocked = min(9900, made + FAIR_CATCH_KICK_BONUS), 0
     if defense == "fg_block":

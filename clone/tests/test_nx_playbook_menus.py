@@ -73,24 +73,34 @@ def test_the_computers_team_may_be_set_to_classic_in_team_styles_txt(tmp_path):
 
 # ----- the menus as data -----
 
-def test_every_defense_group_of_every_style_fits_a_menu_of_twelve(tmp_path):
-    # the offense's lists are the catalog's since SX.10c (at most ten plays and Back: test_sx10c_offense_menus.py)
+def defense_rig(tmp_path, answers=(), defense="pressure", **state):
+    fields = dict(START, wisoff=2, defense=1)
+    fields.update(state)
+    return nfl_engine_rig(tmp_path, answers=list(answers), rules=NflRules(timeouts_on=False, defense_book=defense), **fields)
+
+
+def test_every_defense_list_of_every_style_fits_a_menu_of_twelve(tmp_path):
+    # the offense's lists are the catalog's since SX.10c and the defense's since SX.10d (at most ten calls, Back, Save Game)
     for key in D.STYLE_BY_KEY:
-        rig = rig_for(tmp_path / key, offense=key, defense=key, qb_on=True, timeouts_on=True, extras={"challenges_on": True})
-        for call in D.DEFENSE_FAMILIES:
-            rig.rules.books.group = call
+        rig = defense_rig(tmp_path / key, defense=key, extras={"challenges_on": True})
+        s = rig.engine.s
+        for item in rig.rules.defense_menu(s)[:6]:
+            rig.rules.defense.reset()
+            assert rig.rules.menu_right(s, item) is True
             items = items_of(rig, defense=True)
-            assert 4 <= len(items) <= 12, (key, call, items)
+            assert 3 <= len(items) <= 12, (key, item, items)
 
 
-def test_a_styles_defense_menu_is_the_six_calls_and_each_opens_its_plays(tmp_path):
-    rig = rig_for(tmp_path, defense="pressure")
+def test_a_styles_defense_menu_is_the_six_calls_and_right_opens_their_lists(tmp_path):
+    rig = defense_rig(tmp_path)
     assert items_of(rig, defense=True) == [" 1. Goal Line ", " 2. Short Run ", " 3. Long Run ", " 4. Blitz ", " 5. Short Pass ",
-                                           " 6. Long Pass ", " 7. Save Game "]
-    rig.rules.books.group = 4
-    assert items_of(rig, defense=True) == [" 1. Zone Blitz ", " 2. Cover Zero Blitz ", " 3. Safety Blitz ",
-                                           " 4. Linebacker Blitz ", " 5. A Gap Blitz ", " 6. Back ", " 7. Save Game "]
-    assert rig.rules.defense_menu(rig.engine.s)[0].action == ("dbook", 10)
+                                           " 6. Long Pass ", " 7. More Plays ", " 8. Formation and Tempo ", " 9. Save Game "]
+    s = rig.engine.s
+    assert rig.rules.menu_right(s, rig.rules.defense_menu(s)[3]) is True        # SX.10d: Right on Blitz opens the Blitzes
+    items = items_of(rig, defense=True)
+    assert items[:3] == [" 1. Zone Blitz ", " 2. Cover Zero Blitz ", " 3. Safety Blitz "] and items[-2:] == [" 11. Back ",
+                                                                                                         " 12. Save Game "]
+    assert rig.rules.defense_menu(s)[0].action == ("pd:call", "D010")
 
 
 def test_classic_keeps_the_originals_menus_in_both_rules_and_a_style_with_every_play_off_does_too(tmp_path):
@@ -104,13 +114,15 @@ def test_classic_keeps_the_originals_menus_in_both_rules_and_a_style_with_every_
     assert items_of(rig)[0] == " 1. Line Plunge " and items_of(rig)[7] == " 8. More Plays "
 
 
-def test_a_group_with_no_play_on_is_the_originals_play_and_a_call_with_none_is_the_originals_call(tmp_path):
-    rig = rig_for(tmp_path, defense="pressure")
-    off = {p.id for p in D.CATALOG if p.group == 3 and p.side == "O"} | {p.id for p in D.CATALOG if p.id.startswith("D")
-                                                                            and p.family == 2}
-    rig.game.playbook_table = PB.Table(TABLE.names, frozenset(off), TABLE.styles, TABLE.teams)
+def test_a_call_whose_plays_are_all_off_is_the_originals_call(tmp_path):
+    from nfl4.extras.plays import catalog as C
+    rig = defense_rig(tmp_path, answers=["2", ENTER])
+    off = frozenset(c.id for c in C.DEFENSE if c.family == 2)          # every call of Short Run off in plays.txt (SX.10d)
+    rig.game.playbook_table = PB.Table(TABLE.names, off, TABLE.styles, TABLE.teams)
     defense = rig.rules.defense_menu(rig.engine.s)
-    assert defense[1].text == " 2. Short Run " and defense[1].action == (menus.PLAY, 2) and defense[3].action == ("dgroup", 4)
+    assert defense[1].text == " 2. Short Run " and defense[1].action == ("pd:pick", 2)
+    assert the_menu(rig, defense=True) == "defense_chosen"
+    assert rig.engine.s.defense_play == 2 and rig.rules.defense.called == ""
 
 
 def test_the_two_point_try_menu_is_the_originals_five_items_with_classic_and_the_catalogs_with_a_playbook(tmp_path):
@@ -143,24 +155,22 @@ def test_field_goal_and_punt_are_the_originals_plays_from_the_top_menu(tmp_path)
     assert rig.engine.s.offense_play == 7
 
 
-def test_the_defense_menu_opens_a_call_and_calls_one_of_its_plays(tmp_path):
-    rig = nfl_engine_rig(tmp_path, answers=["4", ENTER, DOWN, ENTER],
-                         rules=NflRules(timeouts_on=False, defense_book="pressure"), wisoff=2, defense=1, half=2,
-                         yard_line=30, down=1, to_go=10, quarter=1)
+def test_the_defense_menu_opens_a_list_and_calls_one_of_its_calls(tmp_path):
+    rig = defense_rig(tmp_path, answers=["4", 39, DOWN, ENTER])                         # 39: Right (SX.10d)
     assert the_menu(rig, defense=True) == "defense_chosen"
-    assert rig.engine.s.defense_play == 4 and rig.rules.books.defense_id == "D011"        # cover zero blitz: a Blitz
-    assert texts(rig) == [SELECT_D, " 1. Goal Line ", " 4. Blitz ", SELECT_D, " 1. Zone Blitz ", " 2. Cover Zero Blitz "]
+    assert rig.engine.s.defense_play == 4 and rig.rules.defense.called == "D011"        # cover zero blitz: a Blitz
+    assert texts(rig) == [SELECT_D, " 1. Goal Line ", " 4. Blitz ", X.text("NXB-H13", list="Blitzes", n=1, m=2), " 1. Zone Blitz ",
+                          " 2. Cover Zero Blitz "]
 
 
-def test_a_time_out_inside_a_group_leaves_the_group_open_and_a_play_ends_the_group(tmp_path):
-    rig = rig_for(tmp_path, answers=[ENTER], timeouts_on=True)
+def test_a_time_out_or_a_withdrawn_play_puts_both_menus_at_their_top(tmp_path):
+    rig = rig_for(tmp_path, timeouts_on=True)
     s = rig.engine.s
-    rig.rules.books.group = 1
-    assert rig.rules.menu_action(s, ("back", 0)) is True and rig.rules.books.group is None
-    assert rig.rules.menu_action(s, ("ogroup", 3)) is True and rig.rules.books.group == 3
-    answer = rig.rules.menu_action(s, ("obook", 17))
-    assert answer == (menus.PLAY, 3) and rig.rules.books.offense_id == "O017" and rig.rules.books.group is None
-    assert rig.rules.menu_action(s, ("obook", 99)) is False and rig.rules.menu_action(s, ("dbook", 99)) is False
+    rig.rules.offense.menus._open("og02", "top")
+    rig.rules.defense.menus._open("dg05", "top")
+    rig.rules.withdraw_play(s)
+    assert rig.rules.offense.menus.level == "top" and rig.rules.defense.menus.level == "top"
+    assert rig.rules.menu_action(s, ("obook", 17)) is False and rig.rules.menu_action(s, ("dgroup", 3)) is False
 
 
 def test_an_item_of_a_group_is_spoken_in_six_words_or_fewer_and_says_its_name_as_the_player_set_it(tmp_path):

@@ -323,6 +323,7 @@ def test_a_withdrawn_play_and_a_kick_off_leave_nothing_called(tmp_path):
     rig.rules.withdraw_play(rig.engine.s)
     assert flow.called == "" and flow.result is None
     flow.called = "O027"
+    rig.keys.answers = [ENTER]                       # SX.10d: the player's 2026 kick-off menu, Enter takes the deep kick
     rig.rules.before_kickoff(rig.engine.s, 1)
     assert flow.called == ""
 

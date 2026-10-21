@@ -25,6 +25,8 @@ EXPECTED = {
     "P16": ("offense", 5), "P17": ("either", 15), "P18": ("either", 15), "P19": ("offense or receiving", 10),
     "P20": ("defense", 15), "P21": ("either", 15), "P22": ("defense", 5), "P23": ("defense", 15), "P24": ("kicking", 5),
     "P25": ("receiving", 10), "P26": ("defense", 5), "P33": ("kicking", 5),
+    # the 2026 kick fouls (SX.10d, G26-14): drawn only with the kicks of 2026
+    "P34": ("receiving", 15), "P35": ("kicking", 5), "P36": ("defense", 15), "P37": ("offense", 15),
 }
 
 
@@ -60,7 +62,8 @@ def test_the_spots_loss_of_down_and_personal_fouls():
     spot = {f.id: f.spot for f in F.FOULS}
     assert spot["P12"] == F.SPOT_OF_FOUL and spot["P15"] == F.PASS_SPOT and spot["P14"] == F.BETTER_OF
     assert {f.id for f in F.FOULS if f.loss_of_down} == {"P15"}
-    assert {f.id for f in F.FOULS if f.personal} == {"P14", "P17", "P18", "P20", "P21", "P23"}
+    assert {f.id for f in F.FOULS if f.personal} == {"P14", "P17", "P18", "P20", "P21", "P23", "P36"}    # P36 leaping: SX.10d
+    assert spot["P37"] == F.CATCH_SPOT and {f.id for f in F.FOULS if f.kicks2026} == {"P34", "P35", "P36", "P37"}
     assert {f.id for f in F.FOULS if F.DEAD in f.phases} == {"P01", "P02", "P04", "P05"}
     assert {f.id for f in F.FOULS if F.SNAP in f.phases} == {"P03", "P06", "P07", "P26"}
     assert {f.id for f in F.FOULS if F.AFTER in f.phases} == {"P18", "P21"}
