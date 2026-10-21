@@ -58,6 +58,7 @@ from . import remarks
 from . import rules_2026 as R
 from . import tuning as T
 from .clock import period_seconds
+from .kick_flow import kicks_on
 from .qb_runs import KINDS, SCRAMBLE_KEY, make_entry
 from .timeouts import challenges_left
 
@@ -128,9 +129,17 @@ def is_throw_away(state, outcome) -> bool:
     return state.tackle_sentence == X.text("NXP-21", quarterback=state.quarterbacks.get(outcome.offense, ""))
 
 
-def _make(category: str, ruled: str, corrected: str, against: int, how: str) -> Candidate:
-    wrong, close = T.RULING_RATES[category]
+def _make(category: str, ruled: str, corrected: str, against: int, how: str, rates=None) -> Candidate:
+    wrong, close = (rates or T.RULING_RATES)[category]
     return Candidate(category, ruled, corrected, against, how, wrong, close)
+
+
+def ruling_rates(state) -> dict:
+    """SX.6's rates; SX.10e: in a game that plays the catalog the goal line's own (the outcome models end the league's many goal line
+    plays a yard or two short or over, three times the original's, D-095)."""
+    if kicks_on(state.extras):
+        return dict(T.RULING_RATES, **T.RULING_RATES_CATALOG)
+    return T.RULING_RATES
 
 
 def candidates(state, outcome, record) -> list[Candidate]:
@@ -144,33 +153,34 @@ def candidates(state, outcome, record) -> list[Candidate]:
     offense, defense = outcome.offense, other(outcome.offense)
     d, y, to_go = goal_distance(outcome), outcome.yards, state.to_go
     found: list[Candidate] = []
+    rates = ruling_rates(state)
     if outcome.kind == O.TOUCHDOWN:
         if base != O.PASS_INCOMPLETE and 0 <= y - d <= T.GOAL_REACH:
-            found.append(_make(GOAL, CROSSED_GOAL, SHORT_OF_GOAL, defense, "short"))
+            found.append(_make(GOAL, CROSSED_GOAL, SHORT_OF_GOAL, defense, "short", rates))
     elif outcome.kind == O.FUMBLE:
-        found.append(_make(FUMBLE, FUMBLED, DOWN_BEFORE, offense, "down"))
+        found.append(_make(FUMBLE, FUMBLED, DOWN_BEFORE, offense, "down", rates))
     elif outcome.kind in (O.RUN, O.PASS_COMPLETE):
         short = d - y
         if 1 <= short <= T.GOAL_REACH:
-            found.append(_make(GOAL, SHORT_OF_GOAL, CROSSED_GOAL, offense, "touchdown"))
+            found.append(_make(GOAL, SHORT_OF_GOAL, CROSSED_GOAL, offense, "touchdown", rates))
         if to_go < d:                                           # the line to gain is not the goal line
             if y >= to_go and y - to_go <= T.LINE_REACH:
-                found.append(_make(LINE, MADE_THE_LINE, SHORT_OF_LINE, defense, "line_short"))
+                found.append(_make(LINE, MADE_THE_LINE, SHORT_OF_LINE, defense, "line_short", rates))
             elif 0 < to_go - y <= T.LINE_REACH:
-                found.append(_make(LINE, SHORT_OF_LINE, MADE_THE_LINE, offense, "line_made"))
-        found.append(_make(DOWN, DOWN_BEFORE, FUMBLED, defense, "fumble"))
+                found.append(_make(LINE, SHORT_OF_LINE, MADE_THE_LINE, offense, "line_made", rates))
+        found.append(_make(DOWN, DOWN_BEFORE, FUMBLED, defense, "fumble", rates))
         if outcome.kind == O.PASS_COMPLETE:
             if record.out_of_bounds:                            # the receiver ended the play out of bounds: was he in?
-                found.append(_make(BOUNDARY, IN_BOUNDS, OUT_OF_BOUNDS, defense, "incomplete"))
+                found.append(_make(BOUNDARY, IN_BOUNDS, OUT_OF_BOUNDS, defense, "incomplete", rates))
             else:
-                found.append(_make(CATCH, COMPLETE, INCOMPLETE, defense, "incomplete"))
+                found.append(_make(CATCH, COMPLETE, INCOMPLETE, defense, "incomplete", rates))
     elif outcome.kind == O.PASS_INCOMPLETE:
         if is_throw_away(state, outcome):                       # no receiver was ever near it: there is no catch to rule on
             return []
         if state.tackle_sentence.endswith(P.OUT_OF_BOUNDS):     # the incompletion "catches it out of bounds"
-            found.append(_make(BOUNDARY, OUT_OF_BOUNDS, IN_BOUNDS, offense, "complete"))
+            found.append(_make(BOUNDARY, OUT_OF_BOUNDS, IN_BOUNDS, offense, "complete", rates))
         else:
-            found.append(_make(CATCH, INCOMPLETE, COMPLETE, offense, "complete"))
+            found.append(_make(CATCH, INCOMPLETE, COMPLETE, offense, "complete", rates))
     return sorted(found, key=lambda c: PRIORITY.index(c.category))
 
 

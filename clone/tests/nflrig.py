@@ -150,7 +150,8 @@ class SimEngine(PlayEngine):
         return self.rnd(2) == 1
 
     def extra_point_choice(self):
-        return self.extra_point
+        """Side 1's try as the computer's (SX.10e: its two-point chart in a game that plays the catalog; the kick otherwise)."""
+        return self.computer_try_choice()
 
     def offense_menu(self):
         s = self.s

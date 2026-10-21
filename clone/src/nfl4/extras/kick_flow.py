@@ -26,7 +26,7 @@ import logging
 from typing import NamedTuple
 
 from ..data import debuglog
-from ..game.playtables import FIELD_GOAL_ODDS, PUNT_SHORTEST
+from ..game.playtables import FIELD_GOAL_ODDS, PUNT_SHORTEST, RETURN_SHORTEST
 from ..game.rules import KICKOFF_2026, NORMAL_KICKOFF, ONSIDE_KICKOFF
 from . import nx_texts as X
 from . import playbooks as PB
@@ -216,8 +216,24 @@ class KickFlow:
         else:
             pct = T.SAFETY_KICK_TOUCHBACK if x.kick_from < R.KICKOFF_SPOT else 100
             result = M.kickoff(C.BY_ID[call].params[0], self.rnd, spot=x.kick_from, touchback_pct=pct)
+            result = self.returner_door(state, result)
         self.note("kickoff", state.defense, call, result.kind, result.start)
         return result
+
+    def returner_door(self, state, result: M.KickResult) -> M.KickResult:
+        """The ratings door of a kick-off return (H8, SX.8o's FR_RETURN_STEP; SX.10e: the 2026 kick-off asked it nowhere): a returned kick
+        that is not already a touchdown moves by the returner's step of the original's shortest return (none outside a Franchise, no
+        draw); one carried past the goal line is a touchdown."""
+        if result.kind != "returned" or result.touchdown:
+            return result
+        shift = self.rules.modifiers.return_shortest(state.wisoff, state.returner) - RETURN_SHORTEST
+        if not shift:
+            return result
+        back = max(0, result.returned + shift)
+        start = result.start - result.returned + back
+        if start >= 100:
+            return result._replace(start=100, returned=back, touchdown=True)
+        return result._replace(start=max(1, start), returned=back)
 
     @staticmethod
     def kickoff_call(state) -> str:
@@ -247,6 +263,11 @@ class KickFlow:
         family = KICK_FAMILY.get(C.BY_ID[called].group) if called in C.BY_ID else None
         if what in (FIELD_GOAL, PUNT) and family == (6 if what == FIELD_GOAL else 7):
             concept = called                          # the player's list: a kind of punt, a fake
+        elif what in (FIELD_GOAL, PUNT) and state.wisoff in self.rules.auto_sides and self.computer_fakes(state, what):
+            concept = "K015" if what == PUNT else "K022"      # SX.10e: the computer's rare fake on a short fourth down
+            if self.rnd.below(2):                             # half of them a pass
+                concept = "K016" if what == PUNT else "K023"
+            concept = concept if concept not in self.table.disabled else DEFAULT_KICK[what]
         elif what == PUNT and state.wisoff == 2 and to_goal(state) <= T.PIN_PUNT_TO_GOAL:
             concept = "K012"                          # the computer's pin punt near the other goal
         defense = self.receiving_call(state, PUNT if what == PUNT else FIELD_GOAL, 3 - state.wisoff)
@@ -260,6 +281,14 @@ class KickFlow:
         plan = Plan(what, concept, defense, distance, kick_spot, miss_spot)
         debuglog.event("extras", "kick_planned", what=what, side=state.wisoff, concept=concept, defense=defense, distance=distance)
         return plan
+
+    def computer_fakes(self, state, what: str) -> bool:
+        """SX.10e: the computer fakes a punt or a field goal only on a fourth down of FAKE_TO_GO yards or fewer, with one draw then
+        (tuning.COMPUTER_FAKE_PUNT, COMPUTER_FAKE_FIELD_GOAL; the league fakes 0.8 percent of its punts, model_data.FAKE_PUNT)."""
+        if state.down != 4 or state.to_go > T.FAKE_TO_GO or (state.quarter == 5 and what == FIELD_GOAL):
+            return False
+        rate = T.COMPUTER_FAKE_PUNT if what == PUNT else T.COMPUTER_FAKE_FIELD_GOAL
+        return self.rnd.below(10000) < rate
 
     def ratings_points(self, side: int) -> int:
         """The ratings door (H8): the kicker's step of the original's field goal odds as points of the made rate (none outside a Franchise)."""

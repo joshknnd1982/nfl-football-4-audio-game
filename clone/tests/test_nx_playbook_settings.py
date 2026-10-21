@@ -23,26 +23,39 @@ RIGHT = 39
 
 # ----- the settings -----
 
-def test_classic_is_the_default_playbook_and_both_lines_are_in_the_file_and_its_header():
+def test_the_teams_playbook_is_the_default_and_the_lines_are_in_the_file_and_its_header():
+    # SX.10e (D-095, Q-035): a new player plays the team's playbook, every play of the catalog (D-083); Classic is one setting away
     game = Settings.defaults().game
-    assert (game.nx_offense_playbook, game.nx_defense_playbook) == ("classic", "classic")
+    assert (game.nx_offense_playbook, game.nx_defense_playbook, game.nx_playbook_chosen) == ("team", "team", False)
     lines = settingsfile.render(Settings.defaults()).splitlines()
-    assert "nx_offense_playbook = classic" in lines and "nx_defense_playbook = classic" in lines
-    assert "nx_offense_playbook" in settingsfile.HEADER and "nx_defense_playbook" in settingsfile.HEADER
+    assert "nx_offense_playbook = team" in lines and "nx_defense_playbook = team" in lines and "nx_playbook_chosen = no" in lines
+    for name in ("nx_offense_playbook", "nx_defense_playbook", "nx_playbook_chosen"):
+        assert name in settingsfile.HEADER
 
 
 @pytest.mark.parametrize("choice", D.PLAYBOOK_CHOICES)
 def test_every_choice_is_read_and_written_back(choice):
     settings, problems = settingsfile.parse(settingsfile.HEADER + "nx_offense_playbook = %s\nnx_defense_playbook = %s\n"
-                                            % (choice.upper(), choice))
+                                            "nx_playbook_chosen = yes\n" % (choice.upper(), choice))
     assert problems == [] and settings.game.nx_offense_playbook == choice == settings.game.nx_defense_playbook
     again, problems = settingsfile.parse(settingsfile.render(settings))
     assert problems == [] and again.game == settings.game
 
 
+def test_a_classic_the_player_never_chose_becomes_the_teams_playbook_once_and_a_chosen_one_stays():
+    # SX.10e: a file from before SX.10e says classic (the old default) and has no nx_playbook_chosen: read as team, once; the next file
+    # written says team; a style the player chose stays whatever the line says
+    old = settingsfile.HEADER + "nx_offense_playbook = classic\nnx_defense_playbook = air\n"
+    settings, problems = settingsfile.parse(old)
+    assert problems == [] and (settings.game.nx_offense_playbook, settings.game.nx_defense_playbook) == ("team", "air")
+    assert "nx_offense_playbook = team" in settingsfile.render(settings).splitlines()
+    kept, _ = settingsfile.parse(old + "nx_playbook_chosen = yes\n")
+    assert (kept.game.nx_offense_playbook, kept.game.nx_defense_playbook) == ("classic", "air")
+
+
 def test_a_playbook_value_that_is_not_a_choice_is_a_problem_and_keeps_the_default():
     settings, problems = settingsfile.parse(settingsfile.HEADER + "nx_offense_playbook = wing t\nnx_defense_playbook =\n")
-    assert len(problems) == 2 and settings.game.nx_offense_playbook == "classic" == settings.game.nx_defense_playbook
+    assert len(problems) == 2 and settings.game.nx_offense_playbook == "team" == settings.game.nx_defense_playbook
 
 
 def test_the_programs_rules_carry_the_players_books_and_the_computers_team_style(tmp_path):
@@ -69,26 +82,26 @@ def rig(tmp_path):
 
 def test_the_playbook_items_say_their_value_and_that_it_is_used_with_the_nfl_rules_while_rules_is_classic(rig):
     spoken = rules_menu(rig, ["8", "9"])
-    assert spoken[1] == "Offense playbook: Classic used with the N. F. L. rules "
-    assert spoken[2] == "Defense playbook: Classic used with the N. F. L. rules "
+    assert spoken[1] == "Offense playbook: Team playbook used with the N. F. L. rules "         # SX.10e: the default
+    assert spoken[2] == "Defense playbook: Team playbook used with the N. F. L. rules "
 
 
 def test_enter_and_right_go_forward_through_the_playbooks_and_left_goes_back(rig):
     spoken = rules_menu(rig, ["8", RIGHT, RIGHT, LEFT, LEFT, LEFT])
-    assert spoken[2] == "Offense playbook: Team playbook used with the N. F. L. rules "
-    assert spoken[3] == "Offense playbook: Pro Style used with the N. F. L. rules "
-    assert spoken[4] == "Offense playbook: Team playbook used with the N. F. L. rules "
-    assert spoken[5] == "Offense playbook: Classic used with the N. F. L. rules "
-    assert spoken[6] == "Offense playbook: Pressure used with the N. F. L. rules "              # round: Classic, then the last
+    assert spoken[2] == "Offense playbook: Pro Style used with the N. F. L. rules "
+    assert spoken[3] == "Offense playbook: West Coast used with the N. F. L. rules "
+    assert spoken[4] == "Offense playbook: Pro Style used with the N. F. L. rules "
+    assert spoken[5] == "Offense playbook: Team playbook used with the N. F. L. rules "
+    assert spoken[6] == "Offense playbook: Classic used with the N. F. L. rules "
     game = rig.game.options.settings.game
-    assert game.nx_offense_playbook == "pressure" and rig.saves.count == 5
+    assert game.nx_offense_playbook == "classic" and game.nx_playbook_chosen and rig.saves.count == 5
 
 
 def test_a_change_says_it_applies_from_the_next_game_and_is_saved_at_once(rig):
     spoken = rules_menu(rig, ["9", 13])
-    assert spoken[2] == "Defense playbook: Team playbook used with the N. F. L. rules " + NEXT_GAME
+    assert spoken[2] == "Defense playbook: Pro Style used with the N. F. L. rules " + NEXT_GAME
     game = rig.game.options.settings.game
-    assert game.nx_defense_playbook == "team" and rig.saves.count == 1
+    assert game.nx_defense_playbook == "pro" and game.nx_playbook_chosen and rig.saves.count == 1
 
 
 def test_every_value_of_the_menu_has_a_name_in_the_order_of_the_choices():
@@ -99,10 +112,10 @@ def test_every_value_of_the_menu_has_a_name_in_the_order_of_the_choices():
     assert RM.next_playbook("nonesuch", 1) == "team"                  # a value that is not a choice counts as the first
 
 
-def test_reset_brings_the_playbooks_back_to_classic(rig):
+def test_reset_brings_the_playbooks_back_to_the_teams(rig):
     rules_menu(rig, ["8", 13, "9", 13, "0", 13])
     game = rig.game.options.settings.game
-    assert (game.nx_offense_playbook, game.nx_defense_playbook) == ("classic", "classic")
+    assert (game.nx_offense_playbook, game.nx_defense_playbook, game.nx_playbook_chosen) == ("team", "team", False)
 
 
 # ----- the saved game -----

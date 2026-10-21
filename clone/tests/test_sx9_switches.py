@@ -171,7 +171,8 @@ def test_a_new_players_settings_say_the_nfl_rules_with_every_switch_on_and_class
     assert is_nfl(rules)
     assert (rules.timeouts_on, rules.penalties_on, rules.onside_on, rules.qb_on, rules.challenges_on, rules.onside_always) == \
         (True, True, True, True, True, True)         # SX.2b, D-085: the onside question is asked at every kick
-    assert rules_menu.DEFAULTS["rules"] == "nfl" and rules_menu.DEFAULTS["nx_offense_playbook"] == "classic"
+    assert rules_menu.DEFAULTS["rules"] == "nfl" and rules_menu.DEFAULTS["nx_offense_playbook"] == "team"     # SX.10e (D-095)
+    assert (rules.offense_book, rules.defense_book) == ("team", "team")
     settings.rules = "classic"
     assert rules_from_settings(settings) is CLASSIC
 

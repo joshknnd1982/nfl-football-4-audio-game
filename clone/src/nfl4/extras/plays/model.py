@@ -39,7 +39,8 @@ TRICK_INT = 120                # percent: a trick play's thrower is not the quar
 TRICK_COMP = 600               # completion points: the fake leaves a receiver open (data: trick passes 61.5 percent at 9.2 air)
 HAIL_MARY = {"touchdown": 830, "interception": 2590, "caught_short": 140}   # ESPN 16 and 50 in 193; FiveThirtyEight 9.7
 LATERALS = {"touchdown": 300, "lost": 2500}    # the last play's laterals: no published rate
-SACK_SCALE = 100               # percent: SX.10e sets it so the engine's sacks, after the scrambles and throw-aways, are 6.5
+SACK_SCALE = 170               # percent: the engine's sacks, after the scrambles and the grounding, are the league's 6.5 percent of the
+#                                drop-backs (SX.10e, D-095: 100 gave 3.7, 170 gave 6.4 over 60 games, work/sx10e/probe_calling.py)
 CALL_PASS_TAGS = {             # a call's tags on a pass: (short bands' completion, deep bands' completion, interception %, sack %)
     "press": (-250, 150, 100, 100), "off": (200, -150, 100, 100), "robber": (-150, 0, 120, 100),
     "bracket": (0, -400, 110, 100), "deep_help": (0, -250, 105, 100), "drop": (-150, -100, 100, 90),

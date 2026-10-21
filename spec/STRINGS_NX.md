@@ -6,14 +6,14 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 1602.
+- Texts: 1604.
 - The clock (design section 5): 10.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 84.
-- Playbooks (design section 10): 808.
+- Playbooks (design section 10): 810.
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 552.
@@ -329,7 +329,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXZ-30 (menu, say5): "Man Press". defense play D030 of the catalog (plays.txt)
 - NXB-10 (menu, say5): "Back". the last play item of a group: back to the groups (letter B)
 - NXH-27 (help, say5): " With a playbook, the play menus start with the original's items. Right opens a list of plays, and Backspace or Left goes back, and so does the last item, Back, which the letter B. selects. ". F5 addition (H12, SX.7; reworded in SX.10d: the play menus have lists, not groups)
-- NXH-28 (help, say5): " With the N. F. L. rules you may choose an offense playbook and a defense playbook in the F9 menu, under Rules. Classic is the original's plays. ". F6 addition (H12, C6), when a playbook is in use
+- NXH-28 (help, say5): " Choose your offense and defense playbooks in the F9 menu, under Rules. Your team's playbook, with every play of the game, is the default. Classic is the original's plays and kicks. ". F6 addition (H12, C6), when a playbook is in use (reworded in SX.10e: the team's playbook is the default)
 - NXH-29 (help, say5): " The others are styles: Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option and Pressure. A play changes an original play a little: strong against some calls, weak against others. ". F6 addition (H12, C6), when a playbook is in use, after NXH-28
 - NXH-30 (help, say5): " The computer's teams call the plays of their own style, which the file team styles in the customize folder sets. ". F6 addition (H12, C6), when a playbook is in use, after NXH-29
 - NXH-31 (help, say5): " Playbook: The plays a team may call. Style: The kind of football a playbook is built for, such as West Coast or Air Raid. Group: A kind of play, such as inside runs, that opens a short list. ". F7 addition (H12, C6), when a playbook is in use
@@ -1044,6 +1044,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXH-59 (help, say5): " Landing zone: the part of the field between the receivers' 20 and their goal line where a kick off must come down. Squib kick: a low kick that bounces along the ground. ". F7 addition (H12, SX.10d): the words of the 2026 kick-off
 - NXH-60 (help, say5): " Pin punt: a short high punt meant to stop near the goal line. Rugby punt: the punter runs sideways before he kicks. Fair catch kick: after a fair catch, a free try at a field goal with no rush. ". F7 addition (H12, SX.10d): the words of the punts and the fair catch kick
 - NXH-61 (help, say5): " Nickel: five defensive backs on the field. Dime: six. The defense brings them on to match the offense's receivers. ". F7 addition (H12, SX.10d): the defense's personnel
+- NXB-H16 (sentence, say4): " the <team> will try for two points ". the computer goes for two after its touchdown (G26-10, SX.10e)
+- NXH-62 (help, say5): " The computer's teams call every play of the game by their playbook, and after a touch down they may try for two points. ". F6 addition (H12, SX.10e): the computer's calling and its two-point tries
 
 ## Menus and settings (design 10.4, 12)
 

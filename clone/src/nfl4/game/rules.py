@@ -122,6 +122,10 @@ Added in PX SX.10d (the defense calls and the kicks of 2026, D-094), each never 
     H20 fair_catch(state, receivers, start)  a fair catch of a punt (the fair catch kick)      never called
     H10 between_plays -> FAIR_CATCH_KICK   the player chose the fair catch kick: the engine    never returned
                                            plays it as the next snap (a field goal, no rush)
+
+Added in PX SX.10e (the computer's calling over the catalog, D-095), never taken in Classic:
+    H21 computer_goes_for_two(state)       after the computer's touchdown: its two-point       False (the computer always
+                                           chart (G26-10)                                     kicks, no draw)
 """
 from __future__ import annotations
 
@@ -255,6 +259,10 @@ class ClassicRules:
     # H20 (SX.10d): the kicks of 2026. Classic kicks as the original: no plan, no draw, no word
     def special_kick(self, state, what: str):
         return None
+
+    # H21 (SX.10e): the computer's two-point chart. Classic: the computer always kicks (no draw)
+    def computer_goes_for_two(self, state) -> bool:
+        return False
 
     def kickoff_call(self, state) -> str:
         raise RuntimeError("Classic has no 2026 kick-off: before_kickoff never answers KICKOFF_2026")

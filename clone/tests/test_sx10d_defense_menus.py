@@ -14,6 +14,7 @@ from nfl4.extras import defense_flow as DF
 from nfl4.extras import nx_texts as X
 from nfl4.extras import playbooks as PB
 from nfl4.extras.nfl_rules import NflRules
+from nfl4.extras.plays import calling as K
 from nfl4.extras.plays import catalog as C
 from nfl4.extras.plays import descriptions as DS
 from nfl4.extras.plays import personnel
@@ -117,11 +118,14 @@ def test_enter_on_a_call_of_a_list_calls_it_and_the_engine_gets_the_originals_ca
 
 
 def test_enter_on_one_of_the_six_calls_is_the_styles_pick_said_before_the_snap(tmp_path):
+    # SX.10e (D-095): the pick is the calling's weights over the family's calls for the style and the offense's situation, one draw
     rig = rig_for(tmp_path, answers=["4", ENTER])
-    usable = rig.rules.defense.usable(rig.engine.s)
-    candidates = [(p, w) for p, w in PB.DEFAULT_TABLE.usable("pressure", "D") if p.family == 4 and p.id in usable]
-    assert the_menu(rig, Draws().below(sum(w for _p, w in candidates), 0)) == "defense_chosen"
-    pick = candidates[0][0].id
+    s, books = rig.engine.s, rig.rules.books
+    family = [c for g in PM.family_groups("D", 4) for c in PM.concepts_of(g, rig.rules.defense.context(s)) if c.side == "D"]
+    weights = K.defense_weights(family, "pressure", books.own_plays("pressure", "D"), books.call_situation(s))
+    assert {i for i, _w in weights} <= {c.id for c in family} and len(weights) > 5
+    assert the_menu(rig, Draws().below(sum(w for _i, w in weights), 0)) == "defense_chosen"
+    pick = weights[0][0]
     assert rig.rules.defense.called == pick and rig.engine.s.defense_play == 4
     assert X.text("NXB-H15", name=PB.DEFAULT_TABLE.name(pick)) in texts(rig)
 

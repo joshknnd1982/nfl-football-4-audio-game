@@ -80,5 +80,5 @@ def rules_for_saved_game(game, saved):
                     onside_always=getattr(settings, "nx_onside_question", "always") == "always",
                     qb_on=getattr(settings, "nx_qb_runs", True),
                     challenges_on=getattr(settings, "nx_challenges", True),
-                    offense_book=getattr(settings, "nx_offense_playbook", "classic"),
-                    defense_book=getattr(settings, "nx_defense_playbook", "classic"), playbooks_on=True)
+                    offense_book=getattr(settings, "nx_offense_playbook", "team"),
+                    defense_book=getattr(settings, "nx_defense_playbook", "team"), playbooks_on=True)

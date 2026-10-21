@@ -83,6 +83,15 @@ when the player uses a playbook:
     H20 special_kick ...  the punts, field goals, extra points, fakes and the fair catch kick of 2026 (game/pag_kicks26.py)
     H10 between_plays     the fair catch kick's question after the player's fair catch late in a half (FAIR_CATCH_KICK)
 
+SX.10e, the computer's calling over the catalog (NFL_PLAYS_DESIGN 7 and 8, D-095; extras/plays/calling.py, extras/playbook_flow.py), in a
+game that plays the catalog (the player uses a playbook; the team's playbook is a new player's default since SX.10e):
+    H2  computer_offense  a side with a style calls over the whole catalog (no separate quarterback-run draw: the catalog holds them):
+                          the try's play, a kneel, a spike, the Hail Mary or the laterals on a last play, or one weighted draw
+        computer_defense  the same side's defense call over the whole catalog against a play the models play
+    H19 model_play        then the computer's own call against the other side's call (`OffenseFlow.computer_play`)
+    H21 computer_goes_for_two   after the computer's touchdown its two-point chart (G26-10); the engine's `computer_try_choice`
+    H3  menu_action       Enter on a family of the player's menus is the playbook's pick with the same weights (`PlaybookFlow.pick`)
+
 One NflRules object is made per game (`for_game`); the program keeps a configured one as Game.rules.
 """
 from __future__ import annotations
@@ -110,7 +119,7 @@ from .offense_flow import OffenseFlow, text_for
 from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
 from .playbook_flow import PlaybookFlow
-from .plays import descriptions
+from .plays import calling, descriptions
 from .qb_runs import QbFlow
 from .review import CHALLENGE, CHALLENGE_ACTION, ReviewFlow, capture
 from .state import ExtrasRecord
@@ -123,7 +132,7 @@ NAME = "N. F. L. rules"
 KEY_F5, KEY_F6, KEY_F7 = "116", "117", "118"
 # SX.10d: the help of the defense menus and the kicks of 2026 (F6), for a player who uses a playbook (their words are F7's,
 # descriptions.F7_WORD_ROWS)
-MENU_HELP_F6 = ("NXH-56", "NXH-57", "NXH-58")
+MENU_HELP_F6 = ("NXH-56", "NXH-57", "NXH-58", "NXH-62")     # SX.10e: NXH-62, the computer's calling and its tries for two
 
 
 def menu_item(position: int, text: str, action: tuple[str, int], letter: str = "") -> menus.MenuItem:
@@ -232,6 +241,9 @@ class NflRules(ClassicRules):
 
     def computer_offense(self, state) -> None:
         playbooks = self.books.in_use(state.extras)
+        if self.books.catalog_side(state, state.wisoff, "O"):     # SX.10e: the catalog's calling holds the quarterback's runs too
+            self.books.computer_offense(state)
+            return
         self.qb.computer_offense(state, self.books.qb_percent(state) if playbooks else 100)
         if playbooks:                              # SX.7: the style's play of the family that was drawn
             self.books.computer_offense(state)
@@ -651,7 +663,21 @@ class NflRules(ClassicRules):
 
     def model_play(self, state):
         result = self.offense.model_play(state)
-        return result if result is not None else self.defense.model_play(state)     # SX.10d: the computer's play against the call
+        if result is None:
+            result = self.defense.model_play(state)     # SX.10d: the computer's play against the player's call
+        if result is None:
+            result = self.offense.computer_play(state)  # SX.10e: the computer's call over the catalog against any defense
+        return result
+
+    def computer_goes_for_two(self, state) -> bool:
+        """H21 (SX.10e, G26-10): after the computer's touchdown, in a game that plays the catalog, its two-point chart; Classic and every
+        game that plays the original's plays: never (the computer always kicks, no draw)."""
+        if not self.books.catalog_side(state, state.wisoff, "O"):
+            return False
+        margin = state.score(state.wisoff) - state.score(other(state.wisoff))
+        yes = calling.goes_for_two(state.quarter, margin, self.rnd, state.extras.left)
+        debuglog.event("extras", "computer_try", side=state.wisoff, margin=margin, quarter=state.quarter, two=yes)
+        return yes
 
     def turnover_return(self, state):
         return self.offense.turnover_return(state)
@@ -766,8 +792,8 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
                     onside_always=getattr(game_settings, "nx_onside_question", "always") == "always",
                     qb_on=getattr(game_settings, "nx_qb_runs", True),
                     challenges_on=getattr(game_settings, "nx_challenges", True),
-                    offense_book=getattr(game_settings, "nx_offense_playbook", "classic"),
-                    defense_book=getattr(game_settings, "nx_defense_playbook", "classic"),
+                    offense_book=getattr(game_settings, "nx_offense_playbook", "team"),
+                    defense_book=getattr(game_settings, "nx_defense_playbook", "team"),
                     playbooks_on=True)
 
 

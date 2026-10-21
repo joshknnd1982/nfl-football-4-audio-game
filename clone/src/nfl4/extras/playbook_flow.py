@@ -8,7 +8,12 @@ NflRules (extras/nfl_rules.py) owns one `PlaybookFlow` per game and calls it fro
     (the player's menus were SX.7's two-level groups; the catalog's menus replaced them, extras/offense_flow.py in SX.10c and
     extras/defense_flow.py in SX.10d)
     computer_offense / computer_defense   N5.6: the computer's weighted draw over the plays of its style by down, distance,
-                                          field position and score (one `below(total)`), the family is the play's
+                                          field position and score (one `below(total)`), the family is the play's. SX.10e (D-095):
+                                          in a game that plays the catalog (the player uses a playbook, kick_flow.kicks_on) a side with
+                                          a style calls over the WHOLE catalog (extras/plays/calling.py: the style's lean, the data's
+                                          mix by down and distance, the defense's coverage, rusher and box shares, trick plays rare,
+                                          kneel, spike, the Hail Mary, the try); the model plays the call (H19, offense_flow.computer_play)
+    pick(state, side, role, family)       the playbook's pick behind Enter on a family of the player's catalog menus (the same weights)
     arm(state, offense_play, defense_play)  before the snap: the H8 modifiers for the two plays that were called
     clear()                               a play withdrawn or a kick-off: nothing is called, no modifier is armed
 
@@ -17,12 +22,17 @@ Classic is never touched: a side whose book is Classic has no menu of plays, no 
 """
 from __future__ import annotations
 
+from ..data import debuglog
 from ..game.gamestate import other
 from . import playbook_data as D
 from . import playbooks as P
 from . import tuning as T
 from .franchise.ratings import FranchiseModifiers
 from .franchise.staff import game_team_styles
+from .kick_flow import kicks_on
+from .offense_flow import engine_family
+from .plays import calling as K
+from .plays import catalog as C
 from .qb_runs import to_goal
 
 
@@ -39,6 +49,10 @@ class PlaybookFlow:
         self.modifiers = FranchiseModifiers()
         self.offense_id = ""                    # the catalog play called for the offense of this play ("O017") or none
         self.defense_id = ""
+        self.catalog = False                    # SX.10e: offense_id is the computer's call over the whole catalog: the model plays it
+        # SX.10e: every call the computer made over the catalog: (side, "O" or "D", the play, down, to go, yards to the goal, quarter):
+        # the tests and the calibration count them
+        self.calls: list[tuple] = []
         # every play that was run: (offense side, offense play ID, defense play ID, offense family, defense family, the kind
         # of the result, its yards): the tests and the calibration count them (a play a penalty took away still counts)
         self.events: list[tuple] = []
@@ -128,13 +142,118 @@ class PlaybookFlow:
         book = self.table.styles.get(style)
         return book.qb_percent if book is not None and style != P.CLASSIC else 100
 
+    # ----- SX.10e: the calling over the whole catalog (extras/plays/calling.py, D-095) -----
+
+    def catalog_side(self, state, side: int, role: str) -> bool:
+        """Side `side` calls over the catalog in this game: the game plays the catalog (the player uses a playbook) and the side's book
+        for `role` is a style."""
+        return kicks_on(state.extras) and self.style(state, side, role) != P.CLASSIC
+
+    def own_plays(self, style: str, role: str) -> frozenset:
+        """A style's own SX.7 plays (playbook_data), which count double in its calling."""
+        book = D.STYLE_BY_KEY.get(style)
+        if book is None:
+            return frozenset()
+        return frozenset(i for i, _w in (book.offense if role == "O" else book.defense))
+
+    def call_situation(self, state, last_play: bool = False) -> K.Situation:
+        x = state.extras
+        return K.Situation(state.down, state.to_go, to_goal(state), state.quarter, x.left,
+                           state.score(state.wisoff) - state.score(other(state.wisoff)), bool(state.two_point), last_play)
+
+    def usable_ids(self, role: str) -> frozenset:
+        disabled = self.table.disabled
+        side = "O" if role == "O" else "D"
+        return frozenset(c.id for c in C.CATALOG if c.side == side and c.id not in disabled)
+
+    def pick(self, state, side: int, role: str, candidates) -> str:
+        """The playbook's pick behind Enter on a family of the player's catalog menus (design 2.2): the calling's weights over the family's
+        usable plays for the side's style and the situation, one draw; "" when none has a weight (the caller takes the first play)."""
+        style = self.style(state, side, role)
+        own = self.own_plays(style, role)
+        sit = self.call_situation(state)
+        weights = (K.offense_weights(candidates, style, own, sit) if role == "O"
+                   else K.defense_weights(candidates, style, own, sit))
+        return K.draw(weights, self.rnd)
+
+    def catalog_offense(self, state) -> None:
+        """The computer's call over the catalog, after the original's rules chose the kind of play (a scrimmage play, the field goal or the
+        punt on fourth down or the last play): the try's play, a kneel, a spike, the Hail Mary or the laterals on the last play, or one
+        draw over the whole catalog by the style and the situation. The engine's play number becomes the call's family."""
+        x = state.extras
+        side, family = state.wisoff, state.offense_play
+        style = self.style(state, side, "O")
+        usable = self.usable_ids("O") | ({"K026"} if "K026" not in self.table.disabled else frozenset())
+        lead = state.score(side) - state.score(other(side))
+        their = x.timeouts_of(other(side)) if x.timeouts_on else 0
+        own = x.timeouts_of(side) if x.timeouts_on else 0
+        clock = self.rules.clock
+        last = clock is not None and clock.is_last_play()
+        call = ""
+        if state.two_point:
+            call = K.draw(K.try_weights(usable), self.rnd)
+        elif K.kneel_helps(state.quarter, x.left, state.down, lead, their) and (
+                state.quarter == 4 or (x.left <= K.COMPUTER_KNEEL_HALF[0] and to_goal(state) >= K.COMPUTER_KNEEL_HALF[1])):
+            call = K.KNEEL if K.KNEEL in usable else ""
+        elif family in (6, 7):
+            if last:
+                call = K.last_play_call(state.quarter, lead, to_goal(state), family == 6)
+                call = call if call in usable else ""
+        elif (K.spike_wanted(state.quarter, x.left, x.running, state.down, lead, own, to_goal(state)) and K.SPIKE in usable
+              and self.rnd(K.SPIKE_CHANCE) == 1):
+            call = K.SPIKE
+        else:
+            candidates = [c for c in C.OFFENSE if c.id in usable and (x.qb_on or c.kind not in ("sneak", "qb_run"))]
+            call = K.draw(K.offense_weights(candidates, style, self.own_plays(style, "O"), self.call_situation(state),
+                                            self.qb_percent(state)), self.rnd)
+        if not call:
+            return
+        concept = C.BY_ID[call]
+        self.offense_id, self.catalog = call, True
+        state.offense_play = engine_family(concept)
+        self.note(state, side, "O", call)
+
+    def catalog_defense(self, state) -> None:
+        """The computer's defense call over the catalog against a play the model plays: one draw over every usable call by the style and
+        the offense's situation (the try's calls on a try, the goal line calls near the goal, prevent to keep a late lead, the Hail Mary
+        defense against a last play from far away)."""
+        side = state.defense
+        style = self.style(state, side, "D")
+        clock = self.rules.clock
+        last = clock is not None and clock.is_last_play()
+        usable = self.usable_ids("D")
+        candidates = [c for c in C.DEFENSE if c.id in usable]
+        call = K.draw(K.defense_weights(candidates, style, self.own_plays(style, "D"), self.call_situation(state, last)), self.rnd)
+        if call:
+            self.defense_id = call
+            self.note(state, side, "D", call)
+
+    def note(self, state, side: int, role: str, call: str) -> None:
+        self.calls.append((side, role, call, state.down, state.to_go, to_goal(state), state.quarter))
+        debuglog.event("extras", "computer_call", side=side, role=role, play=call, down=state.down, to_go=state.to_go,
+                       to_goal=to_goal(state))
+
+    def model_plays(self, state) -> bool:
+        """The play to come is one the model plays: the player's own catalog call or the computer's."""
+        if self.catalog:
+            return True
+        offense = self.rules.offense
+        return state.wisoff == 1 and offense.called in C.BY_ID
+
+    # ----- SX.7's draw over a style's own plays (a game that does not play the catalog) -----
+
     def computer_offense(self, state) -> None:
         """After the original's choice and the quarterback runs' draws: the style's play of the family the drawn play has (a
-        quarterback run keeps its family) or of the five families by weight and situation. Kicks and tries are left alone."""
+        quarterback run keeps its family) or of the five families by weight and situation. Kicks and tries are left alone.
+        SX.10e: a side that calls over the catalog calls there (catalog_offense)."""
         self.offense_id = ""
+        self.catalog = False
         x = state.extras
         style = self.style(state, state.wisoff, "O")
         family = state.offense_play
+        if self.catalog_side(state, state.wisoff, "O"):
+            self.catalog_offense(state)
+            return
         if style == P.CLASSIC or state.two_point or family in (6, 7):
             return
         usable = self.table.usable(style, "O")
@@ -154,6 +273,9 @@ class PlaybookFlow:
         style = self.style(state, state.defense, "D")
         if style == P.CLASSIC:
             return
+        if state.offense_play not in (6, 7) and self.catalog_side(state, state.defense, "D") and self.model_plays(state):
+            self.catalog_defense(state)                          # SX.10e: the call over the catalog against a model play
+            return
         if state.two_point or state.offense_play in (6, 7):      # a try and a kick are the original's, no draw
             return
         candidates = [(p, w) for p, w in self.table.usable(style, "D") if p.family == state.defense_play]
@@ -165,6 +287,8 @@ class PlaybookFlow:
     def arm(self, state, offense_play: int, defense_play: int) -> None:
         """H8: the rows move by the two plays that were called; nothing called, nothing moves."""
         offense, defense = D.PLAYS.get(self.offense_id), D.PLAYS.get(self.defense_id)
+        if self.model_plays(state):                # SX.10e: the outcome models play it; SX.7's table rows have nothing to move
+            offense = defense = None
         if (offense is None and defense is None) or state.two_point:
             self.modifiers.arm(None)
             return
@@ -188,6 +312,7 @@ class PlaybookFlow:
         """The play is over: nothing is called. The modifiers stay armed until the ruling of the play was made (the review reads the
         row the play used)."""
         self.offense_id = self.defense_id = ""
+        self.catalog = False
 
     def clear(self) -> None:
         self.forget_calls()

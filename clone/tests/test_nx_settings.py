@@ -114,20 +114,20 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert spoken[11] == "Onside question: when it makes sense" + NEXT_GAME
     assert spoken[12] == "Penalties on "
     assert spoken[13] == "Penalties off " + NEXT_GAME
-    assert spoken[14] == "Offense playbook: Classic"                    # Rules is on N. F. L. rules now: nothing "used with"
-    assert spoken[15] == "Offense playbook: Team playbook" + NEXT_GAME
-    assert spoken[16] == "Defense playbook: Classic"
-    assert spoken[17] == "Defense playbook: Team playbook" + NEXT_GAME
+    assert spoken[14] == "Offense playbook: Team playbook"              # Rules is on N. F. L. rules now: nothing "used with"
+    assert spoken[15] == "Offense playbook: Pro Style" + NEXT_GAME     # SX.10e (D-095): the team's playbook is the default
+    assert spoken[16] == "Defense playbook: Team playbook"
+    assert spoken[17] == "Defense playbook: Pro Style" + NEXT_GAME
     assert spoken[18] == X.text("NXM-19")
     defaults = ("Rules: N. F. L. rules. Time outs on. Replay challenges on. Quarterback runs on. Onside kicks on."   # SX.9: the default is
-                " Onside question: always. Penalties on. Offense playbook: Classic. Defense playbook: Classic")  # the N. F. L. rules
+                " Onside question: always. Penalties on. Offense playbook: Team playbook. Defense playbook: Team playbook")
     assert spoken[19] == defaults + NEXT_GAME
     assert spoken[20] == defaults                                       # nothing changed now
     assert spoken[21] == "Rules: N. F. L. rules"
     game = rig.game.options.settings.game
     assert (game.rules, game.nx_timeouts, game.nx_penalties) == ("nfl", True, True) and is_nfl(rig.game.rules)
     assert (game.nx_onside, game.nx_onside_question, game.nx_qb_runs) == (True, "always", True)
-    assert (game.nx_offense_playbook, game.nx_defense_playbook) == ("classic", "classic")      # Classic is the default playbook
+    assert (game.nx_offense_playbook, game.nx_defense_playbook) == ("team", "team")      # SX.10e (D-095): the team's is the default
     assert game.nx_challenges is True
 
 

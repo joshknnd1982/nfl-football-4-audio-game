@@ -11,6 +11,7 @@ import pytest
 
 from nfl4.extras import playbook_data as D
 from nfl4.extras import playbooks as PB
+from nfl4.extras.plays import catalog as C
 from nflrig import RecordingRules, sim_game
 from pagrig import make_rig, play
 
@@ -39,27 +40,43 @@ def test_a_game_of_a_style_against_classic_ends_with_a_winner_and_calls_only_its
         defense = {i for i, _w in style.defense}
         calls = rules.books.events
         assert len(calls) > 100
+        # SX.10e (D-095): side 1 uses a playbook, so the game plays the catalog and side 1 calls over the WHOLE catalog (calling.py), not
+        # only its style's SX.7 plays; side 2's Classic book calls nothing, and side 1's defense against side 2's original plays is SX.7's
+        fakes = sum(1 for what, side, *_x in rules.kicks.events if what == "fake" and side == 1)   # a fake kick runs with no call
+        empty = 0
         for side, off_id, def_id, family, d_family, kind, yards in calls:
             if side == 1:
-                assert off_id in offense and D.PLAYS[off_id].family == family or (off_id == "" and family > 5), (off_id, family)
+                if off_id == "" and family <= 5:
+                    empty += 1
+                    continue
+                assert (off_id == "" and family > 5) or (off_id in C.BY_ID and (C.BY_ID[off_id].side == "O" or off_id == "K026")), \
+                    (off_id, family)
             else:
                 assert off_id == ""                                    # Classic calls no play of a playbook
+        assert empty <= fakes, (empty, fakes)
+        assert any(off_id not in offense for side, off_id, *_x in calls if side == 1 and off_id)
         by_defender = [(c[0], c[2], c[4]) for c in calls]
         assert all(d == "" or d in defense and D.PLAYS[d].family == fam for side, d, fam in by_defender if side == 2)
         assert all(d == "" for side, d, fam in by_defender if side == 1)
         assert rules.modifiers.mod is None                              # no play's modifiers stay armed after its end
 
 
-def test_a_game_of_two_styles_calls_each_sides_own_plays(tmp_path):
+def test_a_game_of_two_styles_calls_over_the_whole_catalog_on_both_sides(tmp_path):
+    # SX.10e (D-095): both sides call over the catalog (extras/plays/calling.py) and the outcome models play every call
     forced = (("air", "pressure"), ("power", "west"))
     for rig, engine, rules, result in games_of(tmp_path, forced, range(310, 313)):
         assert result.scores[0] != result.scores[1] and rig.rnd.fallbacks == 0
-        for side, off_id, def_id, family, d_family, kind, yards in rules.books.events:
-            offense_key = forced[side - 1][0]
-            defense_key = forced[2 - side][1]
-            assert off_id in {i for i, _w in D.STYLE_BY_KEY[offense_key].offense} or (off_id == "" and family > 5), (side, off_id)
-            assert def_id in {i for i, _w in D.STYLE_BY_KEY[defense_key].defense}, (side, def_id)
-            assert D.PLAYS[def_id].family == d_family and (off_id == "" or D.PLAYS[off_id].family == family)
+        fakes = sum(1 for what, *_x in rules.kicks.events if what == "fake")      # a fake kick runs with no call
+        events = rules.books.events
+        empty = [e for e in events if e[1] == ""]
+        assert len(empty) <= fakes, (empty, fakes)
+        for side, off_id, def_id, family, d_family, kind, yards in events:
+            if off_id == "":
+                continue
+            assert off_id in C.BY_ID and (C.BY_ID[off_id].side == "O" or off_id == "K026"), (side, off_id)
+            assert def_id in C.BY_ID and C.BY_ID[def_id].side == "D", (side, def_id)
+        played = rules.offense.events
+        assert len(played) > 100 and {p for p, *_x in played} - {i for s in D.STYLES for i, _w in s.offense}
 
 
 def test_the_same_seed_is_the_same_game_with_a_style_on_each_side(tmp_path):

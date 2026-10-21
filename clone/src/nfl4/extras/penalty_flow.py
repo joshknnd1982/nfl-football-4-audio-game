@@ -48,6 +48,7 @@ from . import remarks
 from . import rules_2026 as R
 from . import tuning as T
 from .clock import is_warning_period
+from .kick_flow import kicks_on
 from .penalty_list import DEFAULT_TABLE
 
 log = logging.getLogger("nfl4.extras")
@@ -160,7 +161,15 @@ class PenaltyFlow:
             factor = T.IDP_SCREEN_FACTOR
         elif foul.id == "P14" and defense_play == 4:
             factor = T.RPS_BLITZ_FACTOR
-        return int(round(foul.rate * 100 * T.PENALTY_RATE_SCALE * factor * self.table().percent(foul.id) / 100))
+        return int(round(foul.rate * 100 * self.rate_scale() * factor * self.table().percent(foul.id) / 100))
+
+    def rate_scale(self) -> float:
+        """SX.3's calibration scale; SX.10e: in a game that plays the catalog its own (the league's play mix has more passes than the
+        original's, so the same rates gave more fouls, D-095)."""
+        state = getattr(self.rules, "state", None)
+        if state is not None and kicks_on(state.extras):
+            return T.PENALTY_RATE_SCALE_CATALOG
+        return T.PENALTY_RATE_SCALE
 
     def _weighted(self, rows, offense_play: int, defense_play: int) -> list[tuple[F.Foul, int]]:
         return [(foul, w) for foul in rows if (w := self.weight(foul, offense_play, defense_play)) > 0]
@@ -264,7 +273,7 @@ class PenaltyFlow:
     def grounding(self, state) -> bool:
         """In place of a sack: intentional grounding with chance 1 in 12 (times the scale and the player's weight)."""
         foul = F.GROUNDING
-        chance = int(round(T.GROUNDING_PER_10000_SACKS * T.PENALTY_RATE_SCALE * self.table().percent(foul.id) / 100))
+        chance = int(round(T.GROUNDING_PER_10000_SACKS * self.rate_scale() * self.table().percent(foul.id) / 100))
         if chance <= 0 or self.rnd.below(10000) >= chance:
             return False
         self.forced = Flag(foul, state.wisoff)

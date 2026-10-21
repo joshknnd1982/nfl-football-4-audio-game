@@ -38,8 +38,11 @@ class GameSettings:
     nx_onside_question_chosen: bool = False   # the player chose "sensible" or "always" himself (a file from before SX.2b never did)
     nx_qb_runs: bool = True      # the quarterback sneak, keeper, draw and scramble of the N. F. L. rules mode (SX.5)
     nx_challenges: bool = True   # the ruling model, booth reviews and replay challenges of the N. F. L. rules mode (SX.6)
-    nx_offense_playbook: str = "classic"   # the player's offense playbook (SX.7): classic, team (the team's style) or a style key
-    nx_defense_playbook: str = "classic"   # and the defense playbook
+    nx_offense_playbook: str = "team"      # the player's offense playbook (SX.7): classic, team (the team's style) or a style key;
+    #                                        the team's since SX.10e (D-095): every play of the catalog by default (D-083)
+    nx_defense_playbook: str = "team"      # and the defense playbook
+    nx_playbook_chosen: bool = False       # the player chose a playbook himself (a file from before SX.10e never did: its Classic, the old
+    #                                        default, becomes the team's once)
     # the Franchise (SX.8a, NFL_FRANCHISE_DESIGN 10.5): nfl4 only; the Rules menu's reset leaves them alone
     nx_season_kind: str = "classic"        # "classic" or "franchise": which kind of season the player is in
     nx_fr_auto: bool = False               # the staff handles the to-do list and the roster cut (SX.8e)

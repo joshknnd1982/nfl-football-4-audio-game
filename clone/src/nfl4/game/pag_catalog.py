@@ -131,7 +131,8 @@ class CatalogSteps:
         if result.kind == "fumble":
             return self.catalog_fumble(result)
         s.yards = result.yards
-        self.rules.qb_slide(s)                     # a gain of 8 or more that did not score may end in a slide
+        if s.qb_run != "sneak":                    # a gain of 8 or more that did not score may end in a slide; a sneak never slides
+            self.rules.qb_slide(s)                 # (SX.5 design 7.3; the original's sneak never gains 8, the model's can, SX.10e)
         stats = s.stats[s.wisoff]
         stats.running_plays += 1
         stats.running_yards += s.yards

@@ -55,12 +55,15 @@ def market_aware(policy, holder):
 
 
 def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=None, scores=odd_week_wins, seed=1, nfl=True,
-                  preset=None, classic_names=None, **kwargs):
+                  preset=None, classic_names=None, books=("classic", "classic"), **kwargs):
     holder = []
     rig = program_rig(tmp_path, answers, market_aware(policy, holder), fast=True, seed=seed, preset=preset, pog=None, **kwargs)
     holder.append(rig)
     game = rig.game
     settings = game.options.settings.game
+    # SX.10e (D-095): a new player's playbooks are the team's, which brings the weekly game plan item; these tests script the weeks of a
+    # player whose books are Classic (the default when they were written); the game plan's own tests set "team" themselves
+    settings.nx_offense_playbook, settings.nx_defense_playbook = books
     if nfl:
         settings.rules = "nfl"
         game.apply_rules_setting()

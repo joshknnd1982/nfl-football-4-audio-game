@@ -129,6 +129,9 @@ QB_OUT_OF_BOUNDS = {"sneak": 0, "keeper": 12, "draw": 5, "scramble": 34}       #
 QB_SOUND = {"sneak": 1, "keeper": 3, "draw": 3, "scramble": 2}                 # the original's PlayTackle numbers (foot4 to foot6)
 QB_SCRAMBLE_FROM_SACK = 22            # percent: the original's sack becomes a scramble (design 7.1; one draw below(100) < this)
 QB_SCRAMBLE_FROM_INCOMPLETE = 6       # percent: the original's incompletion (before the throw sentence) becomes a scramble
+QB_SCRAMBLE_FROM_INCOMPLETE_MODEL = 12   # SX.10e (D-095): the same for an incompletion of the outcome models (a catalog play): their sacks
+#                                        are the league's (SACK_SCALE), so the scrambles the sacks gave the original's engine come from here
+#                                        (6 gave 3.6 percent of the drop-backs, band 4.5 to 6.5; measured in work/sx10e)
 LIVE_SCRAMBLE = (5, 9)                # the live time of a scramble (design 5.1); a sneak, keeper or draw takes a run's LIVE_RUN
 QB_SLIDE_MIN_YARDS = 8                # a keeper, draw or scramble that gained this many yards and did not score may slide ...
 QB_SLIDE_ONE_IN = 2                   # ... with this chance (1 in 2, one draw rnd(2) = 1)
@@ -953,3 +956,25 @@ FAKE_GAIN_EXTRA = (0, 8)               # a fake kick that works gains the yards 
 FAKE_SHORT_LOSS = 2                    # a fake run that fails ends 2 yards behind the line to a yard short of the line to gain
 FR_KICK_MODEL_POINTS = 100             # the ratings door: the field goal's made rate moves 1 point for each step of the original's odds
 SAFETY_KICK_TOUCHBACK = 25             # percent of the deep kick's touchbacks a kick from the 20 keeps (it reaches the end zone less)
+
+
+# ----- SX.10e, the computer's calling over the catalog (NFL_PLAYS_DESIGN 7 and 8, D-095). The calling's own shares are in
+# extras/plays/calling.py and calling_data.py; these are the kicks' (UNVERIFIED start values, measured in SX.10e) -----
+FAKE_TO_GO = 4                         # the computer fakes a kick only on fourth and this many or fewer
+COMPUTER_FAKE_PUNT = 300               # per 10,000 punts with FAKE_TO_GO or fewer to go (league: 0.8 percent of all punt formations)
+COMPUTER_FAKE_FIELD_GOAL = 150         # per 10,000 such field goals (no published rate; rarer than the fake punt)
+# The bands of SX.3 and SX.6 in a game that plays the catalog (both teams their team playbook, a new player's game): SX.3's foul scale and
+# SX.6's goal line rates were calibrated on the original's plays, whose mix has fewer passes and fewer plays ending at the goal line.
+# Measured in 10,000 games with the SX.3 and SX.6 values (work/sx10e/integration_bands_sx10e_teams_10000.txt, first run): 14.42 accepted
+# fouls a game (band 12.0 to 13.6), 6.28 goal line rulings a game (the original's 1.88), 0.351 coach challenges a team-game (band 0.20 to
+# 0.32) and 1.023 booth reviews a game (band 0.5 to 0.8). The values below are set by the sweep of work/sx10e/sweep_bands_sx10e.py
+# (3,000 games a setting, reports integration_bands_sx10e_teams_3000_sweep_<a to i>.txt): the foul scale 1.07 gives 12.82 fouls (1.04:
+# 12.53, 1.10: 13.15); the goal line rates alone moved the booth (18, 40): 0.549, (25, 55): 0.628) but not the coach challenges (0.343),
+# which follow the catch and line rulings the catalog's passes and plays add (42.2 and 10.6 a game against 37.7 and 9.4), so those are
+# scaled too, and the wrong windows lowered against the close ones as SX.6 did (53.3 percent of the challenges changed the ruling with
+# (5, 13) and (24, 78), band 38 to 52). Setting h, with calling.LATE_PASS_FLOOR 7000 (8000 gave quarters 2 and 4 7.02 more plays than 1
+# and 3, band 2 to 7): 12.73 fouls, 0.274 coach challenges a team-game changing 47.4 percent, 0.610 booth reviews changing 72.4, 6.82 more
+# plays late; 10,000 games in work/sx10e/integration_bands_sx10e_teams_10000.txt (the chain's second run).
+PENALTY_RATE_SCALE_CATALOG = 1.07      # the foul scale of a game that plays the catalog (SX.3's 1.2 for the original's plays)
+RULING_RATES_CATALOG = {"goal": (28, 62), "catch": (4, 15), "line": (20, 86)}    # (wrong, close) per 1000 in such a game (SX.6's:
+#                                        goal (60, 135), catch (6, 17), line (30, 100); the others as SX.6)

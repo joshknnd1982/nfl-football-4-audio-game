@@ -337,7 +337,7 @@ TEXTS: dict[str, str] = {
     'NXZ-30': 'Man Press',
     'NXB-10': 'Back',
     'NXH-27': " With a playbook, the play menus start with the original's items. Right opens a list of plays, and Backspace or Left goes back, and so does the last item, Back, which the letter B. selects. ",
-    'NXH-28': " With the N. F. L. rules you may choose an offense playbook and a defense playbook in the F9 menu, under Rules. Classic is the original's plays. ",
+    'NXH-28': " Choose your offense and defense playbooks in the F9 menu, under Rules. Your team's playbook, with every play of the game, is the default. Classic is the original's plays and kicks. ",
     'NXH-29': ' The others are styles: Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option and Pressure. A play changes an original play a little: strong against some calls, weak against others. ',
     'NXH-30': " The computer's teams call the plays of their own style, which the file team styles in the customize folder sets. ",
     'NXH-31': ' Playbook: The plays a team may call. Style: The kind of football a playbook is built for, such as West Coast or Air Raid. Group: A kind of play, such as inside runs, that opens a short list. ',
@@ -1610,6 +1610,8 @@ TEXTS: dict[str, str] = {
     'NXH-59': " Landing zone: the part of the field between the receivers' 20 and their goal line where a kick off must come down. Squib kick: a low kick that bounces along the ground. ",
     'NXH-60': ' Pin punt: a short high punt meant to stop near the goal line. Rugby punt: the punter runs sideways before he kicks. Fair catch kick: after a fair catch, a free try at a field goal with no rush. ',
     'NXH-61': " Nickel: five defensive backs on the field. Dime: six. The defense brings them on to match the offense's receivers. ",
+    'NXB-H16': ' the <team> will try for two points ',
+    'NXH-62': " The computer's teams call every play of the game by their playbook, and after a touch down they may try for two points. ",
 }
 
 SPEAKERS: dict[str, str] = {
@@ -3215,6 +3217,8 @@ SPEAKERS: dict[str, str] = {
     'NXH-59': 'say5',
     'NXH-60': 'say5',
     'NXH-61': 'say5',
+    'NXB-H16': 'say4',
+    'NXH-62': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -4820,6 +4824,8 @@ KINDS: dict[str, str] = {
     'NXH-59': 'help',
     'NXH-60': 'help',
     'NXH-61': 'help',
+    'NXB-H16': 'sentence',
+    'NXH-62': 'help',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

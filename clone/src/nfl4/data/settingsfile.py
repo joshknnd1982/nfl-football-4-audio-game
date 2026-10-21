@@ -67,9 +67,10 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # nx_penalties        on or off: the penalties of the N. F. L. rules, with accept or decline (default on)
 # nx_qb_runs          on or off: the quarterback sneak, keeper, draw and scramble of the N. F. L. rules (default on)
 # nx_onside           on or off: the onside kicks of the N. F. L. rules (default on)
-# nx_offense_playbook classic = the original's plays (default), team = the style of your team, or pro, west, air, power, zone,
-#                     option, pressure: the plays your offense calls with the N. F. L. rules
+# nx_offense_playbook team = the style of your team with every play of the game (default), classic = the original's plays and
+#                     kicks, or pro, west, air, power, zone, option, pressure: the plays your offense calls with the N. F. L. rules
 # nx_defense_playbook the same for your defense
+# nx_playbook_chosen  yes when you chose a playbook yourself; a file without it that says classic is read as team, once
 # nx_onside_question  always = you are asked about an onside kick at every kick off and safety kick (default, the 2026 rule),
 #                     sensible = only when it makes sense (the late game of a team that trails or leads by one score)
 # nx_onside_question_chosen  yes when you chose the line above yourself; a file without it is read as always, once
@@ -124,6 +125,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_onside_question_chosen = {'yes' if game.nx_onside_question_chosen else 'no'}",
         f"nx_offense_playbook = {game.nx_offense_playbook}",
         f"nx_defense_playbook = {game.nx_defense_playbook}",
+        f"nx_playbook_chosen = {'yes' if game.nx_playbook_chosen else 'no'}",
         f"nx_season_kind = {game.nx_season_kind}",
         f"nx_fr_auto = {'on' if game.nx_fr_auto else 'off'}",
         f"nx_fr_offseason = {game.nx_fr_offseason}",
@@ -189,6 +191,10 @@ def parse(text: str) -> tuple[Settings, list[str]]:
     game = settings.game
     if not game.nx_onside_question_chosen and game.nx_onside_question != "always":
         game.nx_onside_question = "always"       # SX.2b, D-085: a "sensible" the player never chose (the old default) becomes the 2026 rule, once
+    if not game.nx_playbook_chosen:              # SX.10e, D-095: a Classic the player never chose (the old default) becomes the team's, once
+        for name in ("nx_offense_playbook", "nx_defense_playbook"):
+            if getattr(game, name) == "classic":
+                setattr(game, name, "team")
     return settings, problems
 
 
@@ -263,6 +269,11 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if word is None:
             raise ValueError(f"'{value[:20]}' is not yes or no")
         game.nx_onside_question_chosen = word
+    elif name == "nx_playbook_chosen":
+        word = _ON_WORDS.get(value.lower())
+        if word is None:
+            raise ValueError(f"'{value[:20]}' is not yes or no")
+        game.nx_playbook_chosen = word
     elif name in ("nx_offense_playbook", "nx_defense_playbook"):
         from ..extras.playbook_data import PLAYBOOK_CHOICES
         choice = value.lower().strip()

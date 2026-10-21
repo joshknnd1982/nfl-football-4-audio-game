@@ -112,7 +112,9 @@ class QbFlow:
     def scramble_from_incomplete(self, state) -> bool:
         if not state.extras.qb_on:
             return False
-        return self.rnd.below(100) < T.QB_SCRAMBLE_FROM_INCOMPLETE
+        offense = getattr(self.rules, "offense", None)
+        model = offense is not None and offense.result is not None       # SX.10e: an incompletion of the outcome models (a catalog play)
+        return self.rnd.below(100) < (T.QB_SCRAMBLE_FROM_INCOMPLETE_MODEL if model else T.QB_SCRAMBLE_FROM_INCOMPLETE)
 
     # ----- the slide (design 7.3) -----
 

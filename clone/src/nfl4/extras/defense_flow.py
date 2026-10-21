@@ -149,19 +149,15 @@ class DefenseFlow:
         return (menus.PLAY, concept.family)
 
     def pick(self, state, family: int) -> str:
-        """Enter on one of the original's six calls (design 2.2): until SX.10e, SX.7's draw over the style's calls of that family (one
-        draw), else the first usable call of the family's lists (no draw); "" when every call of the family is off."""
-        usable = self.usable(state)
-        books = self.rules.books
-        style = books.style(state, 1, "D")
-        if style != PB.CLASSIC:
-            candidates = [(p, w) for p, w in self.table.usable(style, "D") if p.family == family and p.id in usable]
-            if candidates:
-                return books.draw(candidates).id
-        for group in PM.family_groups("D", family):
-            for concept in PM.concepts_of(group, self.context(state)):
-                return concept.id
-        return ""
+        """Enter on one of the original's six calls (design 2.2, SX.10e): the playbook's pick, the computer's calling weights over the
+        family's usable calls for the player's style and the offense's situation (one draw); the first usable call of the family's lists
+        when none has a weight (no draw); "" when every call of the family is off."""
+        context = self.context(state)
+        family_calls = [c for group in PM.family_groups("D", family) for c in PM.concepts_of(group, context) if c.side == "D"]
+        if not family_calls:
+            return ""
+        picked = self.rules.books.pick(state, 1, "D", family_calls)
+        return picked or family_calls[0].id
 
     def find(self, state):
         self.menus.set_context(self.context(state))

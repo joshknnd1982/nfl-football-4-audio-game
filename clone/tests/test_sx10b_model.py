@@ -73,7 +73,10 @@ def stats(results):
 OPEN = X.Situation(to_goal=99)
 
 
-def test_league_passing_matches_2024_and_2025():
+def test_league_passing_matches_2024_and_2025(monkeypatch):
+    # the model alone at SACK_SCALE 100 (its own calibration, design 4.11); SX.10e set the game's scale so the ENGINE's sacks, after the
+    # scrambles and the grounding and with the in-game mix of plays, are 6.5 percent (test_sx10e_games.py)
+    monkeypatch.setattr(X, "SACK_SCALE", 100)
     rnd = Rnd(1)
     routes = list(M.ROUTE_SHARE)
     weights = [M.ROUTE_SHARE[r] for r in routes]

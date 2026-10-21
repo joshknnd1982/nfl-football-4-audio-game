@@ -106,9 +106,21 @@ class ResultSteps:
         s.stats[s.wisoff].score += 6
         if s.wisoff == 2:                                 # the computer always kicks
             self.rady(0x44fcee)
-            return self.extra_point
+            return self.computer_try_choice()
         self.rady(0x44f6ae)
         return self.extra_point_choice
+
+    def computer_try_choice(self):
+        """The computer's try after its touchdown: the extra point, or (N. F. L. rules, a game that plays the catalog, SX.10e G26-10) the
+        two-point try of its chart, said in one sentence; its defense is the player's menu as on any of its plays. Classic: the kick."""
+        s = self.s
+        if not self.rules.computer_goes_for_two(s):     # H21: Classic answers no, with no draw
+            return self.extra_point
+        self.g.say4(self.rules.play_text("computer_try", team=s.teams.get(s.wisoff, "")))
+        self.g.log_print("")
+        s.two_point = True
+        s.yard_line = 2
+        return self.defense_menu if s.wisoff == 2 else self.offense_menu
 
     def field_play_end(self):
         """L_4506ef: the pause, the tackle sound and sentence, the gain or loss, the downs."""
@@ -219,7 +231,7 @@ class ResultSteps:
         s.stats[s.wisoff].score += 6
         if s.wisoff == 2:                                 # the computer always kicks
             self.rady(0x44fcee)
-            return self.extra_point
+            return self.computer_try_choice()
         self.rady(0x44f6ae)
         return self.extra_point_choice
 

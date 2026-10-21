@@ -13,9 +13,11 @@ NflRules (extras/nfl_rules.py) owns one OffenseFlow per game and calls it from i
     turnover_return(state)      H19 the spot of an interception or a lost fumble of that play, or its touchdown (G26-8)
     finish(state, outcome)      H2 at the narration end point: the record names the play, Again remembers it, the menu goes to its top
 
-The playbook's pick behind Enter on a family (design 2.2) is SX.7's style draw over that family until SX.10e builds the real pick. The
-defense call the model plays against is the computer's style call (SX.7's D001 to D030 are the catalog's) or, with no style, the stand-in
-call of its family (DEFAULT_CALLS), with no draw; its personnel is matched to the player's (SX.10d, extras/plays/personnel.py, Q-P13).
+The playbook's pick behind Enter on a family (design 2.2, SX.10e) is the computer's calling weights over that family's plays
+(extras/plays/calling.py through PlaybookFlow.pick). The defense call the model plays against is the computer's call over the whole
+catalog (SX.10e, PlaybookFlow.catalog_defense) or, with no style, the stand-in call of its family (DEFAULT_CALLS), with no draw; its
+personnel is matched to the player's (SX.10d, extras/plays/personnel.py, Q-P13). `computer_play` (SX.10e) plays the computer's own call
+over the catalog against the other side's call, so two computer sides (the calibration) play the catalog too.
 SX.10d: Right on Field Goal and Punt opens their kinds and fakes (the punts K011 to K016, the fake field goals K022 and K023); calling one
 gives the engine the original's Field Goal or Punt and the kick flow (extras/kick_flow.py) reads the call; the try's list offers the
 swinging gate (K026), played here as a run of the end that works when the fake kick's model says so. `run_model` plays any offense play
@@ -33,6 +35,7 @@ from ..game.rules import MENU_QUIET, MENU_REFRESH
 from . import nx_texts as X
 from . import playbooks as PB
 from . import tuning as T
+from .plays import calling as K
 from .plays import catalog as C
 from .plays import favourites as F
 from .plays import model as M
@@ -62,8 +65,10 @@ GATE = "K026"                       # the swinging gate try (design 2.6, Q-P5)
 def engine_family(concept: C.Concept) -> int:
     """The original's offense play number the engine uses for the call before the snap (the computer's defense draw, its match of a
     repeated call, the snap's route): the concept's family, a quarterback run's 8 to 10, or the family its kind is like."""
+    if concept.id == GATE:
+        return 2                                            # the swinging gate: a run of the end (it is listed with the field goals)
     if concept.side == "K":
-        return KICK_FAMILIES.get(concept.group, 2)          # the swinging gate: a run of the end
+        return KICK_FAMILIES.get(concept.group, 2)
     if concept.kind in ("sneak", "qb_run"):
         return QB_FAMILY[qb_key(concept)]
     if concept.kind == "kneel":
@@ -176,18 +181,11 @@ class OffenseFlow:
     @staticmethod
     def kneel_helps(state) -> bool:
         """Design 2.7: the offense leads in the fourth quarter and kneels can run the clock out (the time left at most the downs left times
-        40 seconds, less 40 for each timeout the defense has), or the first half is in its last seconds."""
+        40 seconds, less 40 for each timeout the defense has), or the first half is in its last seconds (the rule is calling.kneel_helps,
+        which the computer's calling reads too, SX.10e)."""
         x = state.extras
-        if state.two_point or x.left <= 0:
-            return False
-        downs = 5 - state.down
         theirs = x.timeouts_of(2) if x.timeouts_on else 0
-        lead = state.score(1) - state.score(2)
-        if state.quarter == 4 and lead > 0:
-            return x.left <= max(0, downs - theirs) * 40
-        if state.quarter == 2:
-            return x.left <= 40
-        return False
+        return K.kneel_helps(state.quarter, x.left, state.down, state.score(1) - state.score(2), theirs, bool(state.two_point))
 
     @staticmethod
     def spike_helps(state) -> bool:
@@ -283,21 +281,18 @@ class OffenseFlow:
         return (menus.PLAY, engine_family(concept))
 
     def pick(self, state, family: int) -> str:
-        """Enter on a family (design 2.2): until SX.10e, SX.7's draw over the style's plays of that family (one draw), else the first
-        usable play of the family's first list (no draw)."""
+        """Enter on a family (design 2.2, SX.10e): the playbook's pick, the computer's calling weights (extras/plays/calling.py) over the
+        family's usable plays for the player's style, down, distance, field and score (one draw); the first usable play of the family's
+        first list when none has a weight (no draw); "" when every play of the family is off."""
         usable = self.usable(state)
         if family in QB_PLAYS and QB_PLAYS[family] in usable:
             return QB_PLAYS[family]
-        books = self.rules.books
-        style = books.style(state, 1, "O")
-        if style != PB.CLASSIC:
-            candidates = [(p, w) for p, w in self.table.usable(style, "O") if p.family == family and p.id in usable]
-            if candidates:
-                return books.draw(candidates).id
-        for group in PM.family_groups("O", family):
-            for concept in PM.concepts_of(group, self.context(state)):
-                return concept.id
-        return ""                           # every play of the family is off (SX.10d: the original's play, not an off play)
+        context = self.context(state)
+        family_plays = [c for group in PM.family_groups("O", family) for c in PM.concepts_of(group, context)]
+        if not family_plays:
+            return ""                       # every play of the family is off (SX.10d: the original's play, not an off play)
+        picked = self.rules.books.pick(state, 1, "O", family_plays)
+        return picked or family_plays[0].id
 
     def change_setting(self, state, name: str) -> None:
         """Enter on a setting of Formation and Tempo: its next value (the values go around); kept with the game (extras.play_settings)."""
@@ -418,6 +413,19 @@ class OffenseFlow:
         call_id, call = self.defense_call(state, concept if concept.side == "O" else None)
         return self.run_model(state, concept, call_id, call)
 
+    def computer_play(self, state):
+        """SX.10e: the computer's call over the catalog (PlaybookFlow.catalog_offense) against the other side's call: the computer's own
+        call over the catalog, the player's catalog call (played by the defense flow first), or the stand-in of the family the other side
+        chose (no draw); its personnel matched to the play's (Q-P13). None: no such call (the original's tables)."""
+        books = self.rules.books
+        concept = C.BY_ID.get(books.offense_id) if books.catalog else None
+        if concept is None or engine_family(concept) != state.offense_play:
+            return None
+        call = C.BY_ID.get(books.defense_id)
+        call_id = call.id if call is not None and call.side == "D" else DEFAULT_CALLS.get(state.defense_play, DEFAULT_CALLS[5])
+        played = personnel.adjust(C.BY_ID[call_id].params, concept.personnel, to_goal(state))
+        return self.run_model(state, concept, call_id, played)
+
     def run_model(self, state, concept: C.Concept, call_id: str, call: C.Call):
         """Any offense play against any call (the player's play here, the computer's against the player's call from the defense flow): the
         model's result, the engine's play number for the telling, the events and the log; the result is kept for the end of the play."""
@@ -488,7 +496,7 @@ class OffenseFlow:
             outcome.catalog = self.called
             if C.BY_ID[self.called].side == "O":     # a kind of punt, a fake or the gate is not Again's (SX.10d)
                 state.extras.again[0] = self.called
-        elif self.played and outcome.offense == 2:   # SX.10d: the computer's play the model played against the player's call
+        elif self.played:                             # SX.10d, SX.10e: the computer's play the model played
             outcome.catalog = self.played
         if not (outcome.catalog and outcome.turnover):  # only the play's own turnover reads its result again (turnover_return), B-X40
             self.result = None
@@ -502,4 +510,4 @@ def text_for(key: str, **values) -> str:
 
 
 SENTENCES = {"kneel": "NXB-H01", "spike": "NXB-H02", "throw_away": "NXB-H03", "pitch": "NXB-H04", "keep": "NXB-H05",
-             "laterals": "NXB-H06", "recovered": "NXB-H07", "try_scored": "NXB-H10"}
+             "laterals": "NXB-H06", "recovered": "NXB-H07", "try_scored": "NXB-H10", "computer_try": "NXB-H16"}

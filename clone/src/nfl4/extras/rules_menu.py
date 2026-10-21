@@ -20,9 +20,10 @@ from .playbook_data import CLASSIC_KEY, PLAYBOOK_CHOICES, STYLE_BY_KEY, TEAM_KEY
 CLASSIC, NFL = "classic", "nfl"
 DEFAULTS = {"rules": NFL, "nx_timeouts": True, "nx_penalties": True, "nx_onside": True,
             "nx_onside_question": "always", "nx_onside_question_chosen": False, "nx_qb_runs": True, "nx_challenges": True,    # design 12.1 (NQ2: the N. F. L. rules since SX.9)
-            "nx_offense_playbook": CLASSIC_KEY, "nx_defense_playbook": CLASSIC_KEY}         # NX5: Classic is the default playbook
+            "nx_offense_playbook": TEAM_KEY, "nx_defense_playbook": TEAM_KEY,      # SX.10e (D-095, Q-035): the team's playbook is the default
+            "nx_playbook_chosen": False}
 SWITCHES = ("rules", "nx_timeouts", "nx_challenges", "nx_qb_runs", "nx_penalties", "nx_onside", "nx_onside_question", "nx_onside_question_chosen",
-            "nx_offense_playbook", "nx_defense_playbook")
+            "nx_offense_playbook", "nx_defense_playbook", "nx_playbook_chosen")
 
 
 def rules_label(game_settings) -> str:
@@ -98,10 +99,12 @@ def rules_menu(game, speech, keys) -> None:
 
     def change_offense_playbook(step: int = 1) -> None:
         settings.nx_offense_playbook = next_playbook(settings.nx_offense_playbook, step)
+        settings.nx_playbook_chosen = True              # SX.10e: the player's own choice, Classic too: a later read keeps it (D-095)
         apply()
 
     def change_defense_playbook(step: int = 1) -> None:
         settings.nx_defense_playbook = next_playbook(settings.nx_defense_playbook, step)
+        settings.nx_playbook_chosen = True
         apply()
 
     def changed(label) -> str:
