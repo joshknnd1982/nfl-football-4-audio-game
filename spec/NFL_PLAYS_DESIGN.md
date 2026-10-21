@@ -27,7 +27,7 @@ How to read it: section 0 is every decision in one line; sections 2 to 4 say how
 - Q-P19 The Franchise: the styles' weights over the whole catalog are set in SX.10e and the 20-season test runs again (NX-P5).
 - Q-P20 Fouls by the call (start values, SX.10e measures the fouls a game): press man illegal contact and defensive holding 1.3 times; six or more rushers roughing the passer 1.2 times; a run-pass option's throw ineligible downfield (a new row at its 2026 rate); the kicks the 2026 kick fouls (SX.10d).
 - Q-032 is answered by these decisions; the owner's listening round confirms the menus (PLAYTEST_LIST).
-- OWNER RULES at the end of SX.10b (D-091, version 1.1 of this design): every key in three places, the special keys (F5), the help (F6) and the GitHub README (NX-H1, for every game CLAUDE.md 0.24); and a short plain description of every play for people who know nothing of football (NX-P8, nfl4 only), heard with the letter D in any play menu (the function keys are all taken: F8 is the original's comments switch), in F7 for the original's items in Classic, and in a plays guide for GitHub. Session SX.10b2 builds both, before SX.10c.
+- OWNER RULES at the end of SX.10b (D-091, version 1.1 of this design): every key in three places, the special keys (F5), the help (F6) and the GitHub README (NX-H1, for every game CLAUDE.md 0.24); and a short plain description of every play for people who know nothing of football (NX-P8; for every sports game CLAUDE.md 0.25), heard with the letter D in any play menu (the function keys are all taken: F8 is the original's comments switch), in F7 for the original's items in Classic, and in a plays guide for GitHub. Session SX.10b2 builds both, before SX.10c.
 
 ## 1. What SX.10b built and what it did not
 
@@ -223,4 +223,4 @@ Built: `test_sx10b_catalog.py` (IDs, names, text rows, lists, models' inputs, ca
 ## 11. History
 
 - 1.0 (2026-10-20, PX SX.10b, D-090): written with the build of the pure modules and their tests; the owner answered Q-P15 (download the data).
-- 1.1 (2026-10-20, end of PX SX.10b, D-091): the owner's two rules: every key in the special keys, the help and the GitHub README (for every game, CLAUDE.md 0.24) and a plain description of every play (nfl4); the D key reserved in `play_menus.py`; session SX.10b2 added before SX.10c.
+- 1.1 (2026-10-20, end of PX SX.10b, D-091): the owner's two rules: every key in the special keys, the help and the GitHub README (for every game, CLAUDE.md 0.24) and a plain description of every play (first nfl4's, then widened by the owner to every sports game, CLAUDE.md 0.25); the D key reserved in `play_menus.py`; session SX.10b2 added before SX.10c.
