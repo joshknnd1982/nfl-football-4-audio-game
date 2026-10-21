@@ -1,6 +1,6 @@
 # NFL_PLAYS_DESIGN (nfl4 only): the menus, the catalog and the outcome models of every real NFL play and every Madden NFL concept
 
-Status: DESIGN, version 1.0 (2026-10-20, PX session SX.10b; decision D-090). nfl4 only (CLAUDE.md rules 0.13 and 0.20 as amended (c); requirements NX-P1 to NX-P7 and NX-R7 in `spec\NFL_EXTRA_FEATURES.md` section 18; decisions D-082 to D-089; research `spec\NFL_PLAYS_RESEARCH.md` 1.0). Built in SX.10b, as pure modules NOT yet connected to the engine: the catalog, the outcome models, the menus, the favourites file, their text rows and 365 tests (section 9: 292 catalog, 50 model, 18 menu, 5 favourites). SX.10c, SX.10d and SX.10e connect them (section 10). Classic is untouched: no file of the classic engine changed in SX.10b and the golden Classic transcript passes.
+Status: DESIGN, version 1.1 (2026-10-20, PX session SX.10b; decisions D-090 and D-091). nfl4 only (CLAUDE.md rules 0.13 and 0.20 as amended (c); requirements NX-P1 to NX-P7 and NX-R7 in `spec\NFL_EXTRA_FEATURES.md` section 18; decisions D-082 to D-089; research `spec\NFL_PLAYS_RESEARCH.md` 1.0). Built in SX.10b, as pure modules NOT yet connected to the engine: the catalog, the outcome models, the menus, the favourites file, their text rows and 365 tests (section 9: 292 catalog, 50 model, 18 menu, 5 favourites). SX.10c, SX.10d and SX.10e connect them (section 10). Classic is untouched: no file of the classic engine changed in SX.10b and the golden Classic transcript passes.
 
 How to read it: section 0 is every decision in one line; sections 2 to 4 say how the menus, the catalog and the models work and why; section 6 says how each place where the N. F. L. mode does not yet follow the 2026 rules (G26-1 to G26-14) closes; section 7 is the engine work SX.10c to SX.10e must do. Every fact keeps the research's tag (SRC-OFFICIAL, SRC-SECONDARY, UNVERIFIED); COMPUTED means computed in SX.10b from public data (section 5). Madden NFL is a trademark of Electronic Arts; nothing of EA's text, play names, lists, art or ratings is used, only football concepts in plain words.
 
@@ -27,6 +27,7 @@ How to read it: section 0 is every decision in one line; sections 2 to 4 say how
 - Q-P19 The Franchise: the styles' weights over the whole catalog are set in SX.10e and the 20-season test runs again (NX-P5).
 - Q-P20 Fouls by the call (start values, SX.10e measures the fouls a game): press man illegal contact and defensive holding 1.3 times; six or more rushers roughing the passer 1.2 times; a run-pass option's throw ineligible downfield (a new row at its 2026 rate); the kicks the 2026 kick fouls (SX.10d).
 - Q-032 is answered by these decisions; the owner's listening round confirms the menus (PLAYTEST_LIST).
+- OWNER RULES at the end of SX.10b (D-091, version 1.1 of this design): every key in three places, the special keys (F5), the help (F6) and the GitHub README (NX-H1, for every game CLAUDE.md 0.24); and a short plain description of every play for people who know nothing of football (NX-P8, nfl4 only), heard with the letter D in any play menu (the function keys are all taken: F8 is the original's comments switch), in F7 for the original's items in Classic, and in a plays guide for GitHub. Session SX.10b2 builds both, before SX.10c.
 
 ## 1. What SX.10b built and what it did not
 
@@ -94,8 +95,9 @@ Kneel (K) appears when the offense leads in the fourth quarter and the clock can
 
 ### 2.8 Keys, T and the help
 
-- T is never an item's letter (tests); S and C stay NflRules'; the letters F, A, M, K, P, O, N and B are unique in each level (tests).
-- SX.10c adds to F5's key list (rule 0.17, KEYS_ADDED_F9 style): Right and Left in the play menus, plus and minus for favourites, and the letters; F7 gets the new football words (personnel, formations, coverages, fronts, the reads).
+- T is never an item's letter (tests); S and C stay NflRules'; D is reserved for the description of the current item (D-091); the letters F, A, M, K, P, O, N and B are unique in each level (tests).
+- Every key in three places (NX-H1, CLAUDE.md 0.24, D-091): SX.10b2 makes the master key list `game\key_list.py` with every key that exists then, and generates from it the added lines of F5 (the special keys) and F6 (the help) in every mode and the draft `clone\README_keys.md` for the GitHub README; SX.10c adds the play menus' keys to the list (Right, Left, Backspace, plus, minus, F, A, M, K, P, O, N, B, D) the same session it wires them; F7 gets the new football words (personnel, formations, coverages, fronts, the reads).
+- The description of the current item (NX-P8, D-091): D in any play menu of the N. F. L. mode says the item's description (a play's, a family item's, a list's, a setting's) and the menu stays on the item; it is heard once per press, in the menu's voice, and not written to the game's speech log.
 
 ## 3. The catalog (NX-P2)
 
@@ -104,6 +106,7 @@ Kneel (K) appears when the offense leads in the fourth quarter and the clock can
 - Every name the research's sections 2 to 6 gives is a play, MERGED into a named play (for example Texas into Angle Route, slip screen into Running Back Screen, dollar into Dime Short Coverage) or LEFT_OUT with its reason (the fumblerooski, the drop kick, the quick kick, the sky kick, a surprise onside kick, a fair catch of a kick-off, follow and hank, the audible, the hot route, the kick-off return choices, the punt return direction); a test checks the list of 230 research names.
 - No EA name (MADDEN_PLAYBOOK_RESEARCH List B and NFL_PLAYS_RESEARCH 6.4); "Roll Coverage" is on that list, so the concept is "Safety Rotation".
 - The pre-snap tools of Madden's playbooks are settings, not plays: formation, personnel, motion, the side (flip), tempo, protection, the defense's personnel and press or off.
+- Descriptions (NX-P8, D-091, written in SX.10b2): every play, every original item, every list and every setting has one or two plain sentences, at most 35 words, saying what it tries to do and when it works or is risky, for a person who has never watched football (the play's stated strength and weakness, section 4.8, in everyday words: "good when the defense sends extra players after the quarterback, risky when ..."). They are rows of `spec\strings_nx.tsv`: the description rows follow a fixed scheme so a test can find each (offense O001 to O099 NXY-R01 to NXY-R99 and O100 on NXY-S00 on; defense D001 on NXZ-R01 on; kicks K001 to K036 NXB-D01 to NXB-D36; the original's items, the lists and the settings NXB-E and NXB-F rows; SX.10b2 writes the exact rows). A football word (from a glossary in the test) used in a description is explained in it or in F7. `clone\PLAYS_GUIDE.md` (for GitHub) is generated from the rows, list by list.
 
 ## 4. The outcome models (NX-P3)
 
@@ -212,6 +215,7 @@ Built: `test_sx10b_catalog.py` (IDs, names, text rows, lists, models' inputs, ca
 
 ## 10. The sessions
 
+- SX.10b2 The play descriptions and every key in three places (D-091; NX-P8, NX-H1): the descriptions of section 3, the D key in today's play menus and in `play_menus.py`, F7's descriptions of the original's items in Classic, `game\key_list.py`, F5's and F6's added lines, `clone\README_keys.md` and `clone\PLAYS_GUIDE.md`, the tests. Sonnet 5.5 at high. Before SX.10c.
 - SX.10c The offense in the game: the hook, the narration, the menus with Right, plus and minus, favourites and settings saved, kneel and spike, turnovers returned (G26-8, G26-9, G26-12), the ratings door, plays.txt and favourites.txt, F5 and F7 rows. Sonnet 5.5 at high (Opus 5.5 if the narration of the reads needs new engine steps).
 - SX.10d The defense calls and special teams in the game: the defense menus, the 2026 kick-off menu and model, punts, field goals, the extra point, the fair catch kick, the safety kick, the kick defense, the kick fouls (G26-1, G26-4 to G26-7, G26-11, G26-13, G26-14). Sonnet 5.5 at high.
 - SX.10e The computer's calling over the catalog, the playbook's pick, the two-point chart (G26-10), SACK_SCALE, the bands of SX.2 to SX.9, 10,000 games, the 20-season Franchise test, the conformance rows, the owner's listening list. Opus 5.5 at high (calibration).
@@ -219,3 +223,4 @@ Built: `test_sx10b_catalog.py` (IDs, names, text rows, lists, models' inputs, ca
 ## 11. History
 
 - 1.0 (2026-10-20, PX SX.10b, D-090): written with the build of the pure modules and their tests; the owner answered Q-P15 (download the data).
+- 1.1 (2026-10-20, end of PX SX.10b, D-091): the owner's two rules: every key in the special keys, the help and the GitHub README (for every game, CLAUDE.md 0.24) and a plain description of every play (nfl4); the D key reserved in `play_menus.py`; session SX.10b2 added before SX.10c.

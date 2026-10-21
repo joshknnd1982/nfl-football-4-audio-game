@@ -26,7 +26,8 @@ FAVOURITES_MAX = 10
 TOP, LIST, MORE_LEVEL, FAV_LEVEL, FOUND, SETTINGS_LEVEL = "top", "list", "more", "favourites", "found", "settings"
 LETTERS = {MORE: "m", FAVOURITES: "f", AGAIN: "a", SETTINGS: "o", FIND: "n", BACK: "b", "kneel": "k", "spike": "p",
            "kick_defense": "p"}
-RESERVED = ("t", "s", "c")          # T calls a time out anywhere; S Save Game and C Challenge are NflRules' tail
+RESERVED = ("t", "s", "c", "d")     # T calls a time out anywhere; S Save Game and C Challenge are NflRules' tail; D describes the
+                                    # current item (NX-P8, D-091; built in SX.10b2)
 # the menu words of spec/strings_nx.tsv (added in SX.10b)
 TEXT = {MORE: "NXB-50", FAVOURITES: "NXB-51", AGAIN: "NXB-52", FIND: "NXB-53", SETTINGS: "NXB-54", "find_prompt": "NXB-56",
         "no_match": "NXB-57", "fav_added": "NXB-58", "fav_removed": "NXB-59", "fav_full": "NXB-60", "list_of": "NXB-61",
