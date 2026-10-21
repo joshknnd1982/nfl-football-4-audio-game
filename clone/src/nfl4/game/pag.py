@@ -584,7 +584,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, KickSteps, ResultSteps, BreakSteps
                 current = chosen
                 speak_prompt = False
                 continue
-            if self.rules.menu_key(s, self.g_char.lower()):    # a letter the menu has no item for (SX.6: C): it said why
+            if self.rules.menu_key(s, self.g_char.lower(), items[current - 1]):    # a letter no item has (SX.6: C says why; SX.10b2: D describes the item)
                 speak_prompt = False
                 continue
             g.saykey()

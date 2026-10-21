@@ -215,7 +215,7 @@ Built: `test_sx10b_catalog.py` (IDs, names, text rows, lists, models' inputs, ca
 
 ## 10. The sessions
 
-- SX.10b2 The play descriptions and every key in three places (D-091; NX-P8, NX-H1): the descriptions of section 3, the D key in today's play menus and in `play_menus.py`, F7's descriptions of the original's items in Classic, `game\key_list.py`, F5's and F6's added lines, `clone\README_keys.md` and `clone\PLAYS_GUIDE.md`, the tests. Sonnet 5.5 at high. Before SX.10c.
+- SX.10b2 (BUILT 2026-10-20, D-092) The play descriptions and every key in three places (D-091; NX-P8, NX-H1): the descriptions of section 3, the D key in today's play menus and in `play_menus.py`, F7's descriptions of the original's items in Classic, `game\key_list.py`, F5's and F6's added lines, `clone\README_keys.md` and `clone\PLAYS_GUIDE.md`, the tests. Sonnet 5.5 at high. Before SX.10c.
 - SX.10c The offense in the game: the hook, the narration, the menus with Right, plus and minus, favourites and settings saved, kneel and spike, turnovers returned (G26-8, G26-9, G26-12), the ratings door, plays.txt and favourites.txt, F5 and F7 rows. Sonnet 5.5 at high (Opus 5.5 if the narration of the reads needs new engine steps).
 - SX.10d The defense calls and special teams in the game: the defense menus, the 2026 kick-off menu and model, punts, field goals, the extra point, the fair catch kick, the safety kick, the kick defense, the kick fouls (G26-1, G26-4 to G26-7, G26-11, G26-13, G26-14). Sonnet 5.5 at high.
 - SX.10e The computer's calling over the catalog, the playbook's pick, the two-point chart (G26-10), SACK_SCALE, the bands of SX.2 to SX.9, 10,000 games, the 20-season Franchise test, the conformance rows, the owner's listening list. Opus 5.5 at high (calibration).
@@ -224,3 +224,4 @@ Built: `test_sx10b_catalog.py` (IDs, names, text rows, lists, models' inputs, ca
 
 - 1.0 (2026-10-20, PX SX.10b, D-090): written with the build of the pure modules and their tests; the owner answered Q-P15 (download the data).
 - 1.1 (2026-10-20, end of PX SX.10b, D-091): the owner's two rules: every key in the special keys, the help and the GitHub README (for every game, CLAUDE.md 0.24) and a plain description of every play (first nfl4's, then widened by the owner to every sports game, CLAUDE.md 0.25); the D key reserved in `play_menus.py`; session SX.10b2 added before SX.10c.
+- 1.2 (2026-10-20, PX SX.10b2, D-092): the descriptions are written and built as rows with the final id scheme (358 rows), the D key works in the live menus and in `play_menus.py` (`PlayMenus.describe`), the master key list, the generated F5, F6, README draft and plays guide, the tests.

@@ -72,7 +72,7 @@ from __future__ import annotations
 import logging
 
 from ..data import debuglog
-from ..game import menus
+from ..game import key_list, menus
 from ..game import outcome as O
 from ..game.gamestate import other
 from ..game.playtables import QB_DRAW, QB_KEEPER, QB_SNEAK
@@ -88,6 +88,7 @@ from .clock import RUNNING_KINDS, NflPeriodClock, late_window
 from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
 from .playbook_flow import PlaybookFlow
+from .plays import descriptions
 from .qb_runs import QbFlow
 from .review import CHALLENGE, CHALLENGE_ACTION, ReviewFlow, capture
 from .state import ExtrasRecord
@@ -354,11 +355,25 @@ class NflRules(ClassicRules):
         """Backspace or Left: from a group of the playbook back to the groups (SX.7)."""
         return self.books.back(state)
 
-    def menu_key(self, state, letter: str) -> bool:
-        """The letter C when the menu has no Challenge the Ruling item: the reason why (NXR-10 to NXR-15), the menu goes on."""
+    def menu_key(self, state, letter: str, item=None) -> bool:
+        """The letter C when the menu has no Challenge the Ruling item: the reason why (NXR-10 to NXR-15), the menu goes on. The letter D
+        (NX-P8, D-091): the plain description of the current item, in the voice that spoke last, once per press, not written to the
+        game's speech log; the menu stays on the item. No menu of the N. F. L. rules gives the letter D to an item (a test)."""
+        if letter == "d" and item is not None:
+            return self.describe_item(state, item)
         if letter == "c" and state.extras.challenges_on:
             return self.review.say_refusal(state, 1)
         return False
+
+    def describe_item(self, state, item) -> bool:
+        """Say the description of a live play menu item; False (the key falls through to the key echo) when the item has none."""
+        row = descriptions.action_row(state.wisoff == 1, item.action)
+        if row is None:
+            log.warning("no description for the menu item %r", item.action)
+            return False
+        debuglog.event("key", "describe", item=item.action, row=row)
+        self.game.voice_speak(descriptions.text(row), wait=False)
+        return True
 
     # ----- H4 -----
 
@@ -571,7 +586,7 @@ class NflRules(ClassicRules):
                KEY_F6: ("NXH-03", "NXH-04", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15", "NXH-16",
                         "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30"),
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
-                        "NXH-33")}.get(key, ())
+                        "NXH-33") + descriptions.F7_WORD_ROWS}.get(key, ())
         timeout_lines = ("NXH-01", "NXH-05", "NXH-07")
         challenge_lines = ("NXH-23", "NXH-24", "NXH-25", "NXH-26")
         penalty_lines = ("NXH-09", "NXH-47", "NXH-10", "NXH-11", "NXH-12", "NXH-13", "NXH-22")
@@ -591,11 +606,15 @@ class NflRules(ClassicRules):
             playbooks = self.playbooks_on or "classic" not in (self.offense_book, self.defense_book)
             menus_used = "classic" != self.offense_book or "classic" != self.defense_book
         # the lines about the menus are for a player whose own books are playbooks; the others for anyone who meets a style
-        return [X.text(i) for i in ids if (timeouts_on or i not in timeout_lines)
-                and (playbooks or i not in playbook_lines) and (menus_used or i != "NXH-27")
-                and (challenges_on or i not in challenge_lines)
-                and (penalties_on or i not in penalty_lines) and (onside_on or i not in onside_lines)
-                and (qb_on or i not in qb_lines)]
+        lines = [X.text(i) for i in ids if (timeouts_on or i not in timeout_lines)
+                 and (playbooks or i not in playbook_lines) and (menus_used or i != "NXH-27")
+                 and (challenges_on or i not in challenge_lines)
+                 and (penalties_on or i not in penalty_lines) and (onside_on or i not in onside_lines)
+                 and (qb_on or i not in qb_lines)]
+        on = {name for name, flag in (("timeouts", timeouts_on), ("challenges", challenges_on), ("penalties", penalties_on),
+                                      ("qb", qb_on), ("playbooks", menus_used)) if flag}
+        self.help_features = on                              # the tests read which features the lines were made for
+        return lines + key_list.help_lines(key, "nfl", on)   # CLAUDE.md 0.24: every key, from the master list (game/key_list.py)
 
 
 def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):

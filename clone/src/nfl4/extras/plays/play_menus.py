@@ -19,6 +19,7 @@ from typing import NamedTuple
 
 from ...game.setup import DEFENSE_ITEMS, OFFENSE_ITEMS
 from . import catalog as C
+from . import descriptions as D
 
 PICK, KICK, OPEN, CALL, MORE, FAVOURITES, AGAIN, FIND, BACK, SETTINGS, SETTING = (
     "pick", "kick", "open", "call", "more", "favourites", "again", "find", "back", "settings", "setting")
@@ -283,6 +284,11 @@ class PlayMenus:
         if self.found:
             self.level, self.parent = FOUND, TOP
         return len(hits)
+
+    def describe(self, item: Item) -> str:
+        """The row of the plain description of an item (NX-P8, D-091): what the D key says, once per press, with the menu staying on
+        the item. Every item of every level has one (a test)."""
+        return D.menu_item_row(self.context.side, item.action) or ""
 
     def heading(self) -> tuple[str, int, int]:
         """The open list's name and its place among its family's lists (said before the first item): (text id, n, m)."""

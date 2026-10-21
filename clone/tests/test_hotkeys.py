@@ -26,6 +26,11 @@ ENTER, ESC, UP, DOWN, HOME, A_KEY = 13, 27, 38, 40, 36, 65
 SPEECH = 0.01                     # seconds per character of the fake speech
 
 
+def added(key):
+    """Classic's added help after the original's text (SX.10b2: every key from game/key_list.py; F7: the original items' descriptions)."""
+    return [("speak", line) for line in ClassicRules().extra_help(str(key))]
+
+
 def events(rig, kinds=("speak", "stop", "wait")):
     return [(kind, text) for kind, text in rig.sapi.events if kind in kinds]
 
@@ -109,9 +114,10 @@ def test_f5_speaks_the_key_list_waits_for_its_end_and_hands_f1_back():
     rig = Rig([F5], speech_per_char=SPEECH)
     start = rig.clock.now
     assert run_key(rig) == "112"
-    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("speak", words.KEYS_ADDED_F9), ("stop", "")]   # the last stop is getkey's
+    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("speak", words.KEYS_ADDED_F9), *added(F5), ("stop", "")]   # the last stop is getkey's
     assert rig.said[0] == (H.SPECIAL_KEYS, ANNOUNCER, 0)                         # say5: the announcer
-    assert rig.clock.now - start == pytest.approx((len(H.SPECIAL_KEYS) + len(words.KEYS_ADDED_F9)) * SPEECH, abs=0.01)
+    spoken_length = len(H.SPECIAL_KEYS) + len(words.KEYS_ADDED_F9) + sum(len(text) for _kind, text in added(F5))
+    assert rig.clock.now - start == pytest.approx(spoken_length * SPEECH, abs=0.01)
     assert rig.game.hotkeys.runs == ["116"]
 
 
@@ -124,7 +130,7 @@ def test_the_key_list_is_the_original_text():
 def test_a_key_during_the_key_list_stops_it_and_still_hands_f1_back():
     rig = Rig([F5, ("cut", 1.0, A_KEY)], speech_per_char=SPEECH)
     assert run_key(rig) == "112"
-    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("speak", words.KEYS_ADDED_F9), ("stop", ""), ("stop", "")]
+    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("speak", words.KEYS_ADDED_F9), *added(F5), ("stop", ""), ("stop", "")]
 
 
 def test_a_global_key_inside_a_menu_nests_a_second_menu():
@@ -133,8 +139,8 @@ def test_a_global_key_inside_a_menu_nests_a_second_menu():
     rig = Rig([F5, ("cut", 0.5, F6)], speech_per_char=SPEECH)
     rig.game.pause_log = []
     assert run_key(rig) == "112"
-    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("speak", words.KEYS_ADDED_F9), ("stop", ""), ("speak", H.GAME_INSTRUCTIONS),
-                           ("speak", H.FOOTBALL_INSTRUCTIONS), ("stop", ""), ("stop", "")]
+    assert events(rig) == [("stop", ""), ("speak", H.SPECIAL_KEYS), ("speak", words.KEYS_ADDED_F9), *added(F5), ("stop", ""),
+                           ("speak", H.GAME_INSTRUCTIONS), ("speak", H.FOOTBALL_INSTRUCTIONS), *added(F6), ("stop", ""), ("stop", "")]
     assert rig.game.hotkeys.runs == ["116", "117"]
     assert rig.game.pause_log == [(0x42028d, 0.3)]
 
@@ -145,7 +151,7 @@ def test_f6_reads_both_parts_with_the_pause_between_them():
     rig = Rig([F6], speech_per_char=SPEECH)
     rig.game.pause_log = []
     assert run_key(rig) == "112"
-    assert events(rig) == [("stop", ""), ("speak", H.GAME_INSTRUCTIONS), ("speak", H.FOOTBALL_INSTRUCTIONS),
+    assert events(rig) == [("stop", ""), ("speak", H.GAME_INSTRUCTIONS), ("speak", H.FOOTBALL_INSTRUCTIONS), *added(F6),
                            ("stop", "")]
     assert rig.game.pause_log == [(0x42028d, 0.3)]
     assert H.GAME_INSTRUCTIONS.startswith("Game instructions. You will first be asked to choose the voices")
@@ -156,7 +162,7 @@ def test_f1_during_part_one_starts_it_again():
     rig = Rig([F6, ("cut", 0.5, F1)], speech_per_char=SPEECH)
     assert run_key(rig) == "112"
     assert events(rig) == [("stop", ""), ("speak", H.GAME_INSTRUCTIONS), ("stop", ""), ("stop", ""),
-                           ("speak", H.GAME_INSTRUCTIONS), ("speak", H.FOOTBALL_INSTRUCTIONS), ("stop", "")]
+                           ("speak", H.GAME_INSTRUCTIONS), ("speak", H.FOOTBALL_INSTRUCTIONS), *added(F6), ("stop", "")]
 
 
 def test_escape_during_part_one_ends_the_menu():
@@ -172,16 +178,16 @@ def test_another_key_during_part_one_goes_to_part_two_without_the_pause():
     rig.game.pause_log = []
     assert run_key(rig) == "112"
     assert events(rig) == [("stop", ""), ("speak", H.GAME_INSTRUCTIONS), ("stop", ""),
-                           ("speak", H.FOOTBALL_INSTRUCTIONS), ("stop", "")]
+                           ("speak", H.FOOTBALL_INSTRUCTIONS), *added(F6), ("stop", "")]
     assert rig.game.pause_log == []
 
 
 def test_f1_during_part_two_starts_again_at_part_one_and_another_key_ends():
     rig = Rig([F6, ("end",), ("cut", 2.0, F1), ("end",), ("cut", 2.0, A_KEY)], speech_per_char=SPEECH)
     assert run_key(rig) == "112"
-    assert events(rig) == [("stop", ""), ("speak", H.GAME_INSTRUCTIONS), ("speak", H.FOOTBALL_INSTRUCTIONS),
+    assert events(rig) == [("stop", ""), ("speak", H.GAME_INSTRUCTIONS), ("speak", H.FOOTBALL_INSTRUCTIONS), *added(F6),
                            ("stop", ""), ("stop", ""), ("speak", H.GAME_INSTRUCTIONS),
-                           ("speak", H.FOOTBALL_INSTRUCTIONS), ("stop", ""), ("stop", "")]
+                           ("speak", H.FOOTBALL_INSTRUCTIONS), *added(F6), ("stop", ""), ("stop", "")]
 
 
 # ----- F7, SayHints -----
@@ -190,7 +196,7 @@ def test_f7_reads_the_terms_and_ends_the_blitz_text_with_play_d014():
     rig = Rig([F7], speech_per_char=SPEECH)
     assert run_key(rig) == "112"
     text = H.TERMINOLOGY + "play."
-    assert events(rig) == [("stop", ""), ("speak", text), ("stop", "")]
+    assert events(rig) == [("stop", ""), ("speak", text), *added(F7), ("stop", "")]
     assert text.startswith("football terminology. Backfield: The area behind the line of scrimmage.")
     assert text.endswith("the offence may end up with a very long gain on the play.")
     assert len(H.TERMINOLOGY_PIECES) == 63                 # the title, 56 terms, "In Jim's NFL football game.", 5 plays
@@ -199,7 +205,7 @@ def test_f7_reads_the_terms_and_ends_the_blitz_text_with_play_d014():
 def test_any_key_during_the_terms_ends_the_menu_f1_too():
     rig = Rig([F7, ("cut", 3.0, F1)], speech_per_char=SPEECH)
     assert run_key(rig) == "112"
-    assert events(rig) == [("stop", ""), ("speak", H.TERMINOLOGY + "play."), ("stop", ""), ("stop", "")]
+    assert events(rig) == [("stop", ""), ("speak", H.TERMINOLOGY + "play."), *added(F7), ("stop", ""), ("stop", "")]
 
 
 # ----- H12 (nfl4 only): the added help of the extras -----
@@ -212,7 +218,7 @@ class HelpRules(ClassicRules):
 @pytest.mark.parametrize("key, last_original", [(F5, words.KEYS_ADDED_F9), (F6, H.FOOTBALL_INSTRUCTIONS),
                                                 (F7, H.TERMINOLOGY + "play.")])
 def test_h12_lines_follow_the_original_text_and_classic_has_none(key, last_original):
-    assert ClassicRules().extra_help(str(key)) == []
+    assert ClassicRules().extra_help(str(key))          # SX.10b2: Classic names every key (F5, F6) and describes the original's plays (F7)
     rig = Rig([key], speech_per_char=SPEECH)
     rig.game.rules = HelpRules()
     run_key(rig)

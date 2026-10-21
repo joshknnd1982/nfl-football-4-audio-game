@@ -178,9 +178,10 @@ def test_without_the_switch_the_statistics_and_the_help_say_nothing_of_onside_ki
 
 def test_the_help_of_f5_f6_and_f7_names_the_onside_kick_when_it_is_on(tmp_path):
     rig = game(tmp_path)
+    from nflrig import feature_help
     assert X.text("NXH-14") in rig.rules.extra_help("116")
-    assert rig.rules.extra_help("117")[-2:] == [X.text("NXH-15"), X.text("NXH-16")]
-    assert rig.rules.extra_help("118")[-1] == X.text("NXH-17")
+    assert feature_help(rig.rules, "117")[-2:] == [X.text("NXH-15"), X.text("NXH-16")]
+    assert feature_help(rig.rules, "118")[-1] == X.text("NXH-17")
 
 
 def test_the_remark_is_one_in_three_and_comes_after_the_hands_team(tmp_path):

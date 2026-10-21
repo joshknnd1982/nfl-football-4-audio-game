@@ -19,6 +19,17 @@ from randsources import ScriptedRandom
 QUARTERBACKS = ("Starr", "Unitas")
 
 
+def feature_help(rules, key):
+    """Rules.extra_help(key) without the lines SX.10b2 generates from the master key list (and without F7's added football words): the
+    lines of the features themselves, as the tests of each feature read them."""
+    from nfl4.extras.plays import descriptions
+    from nfl4.game import key_list
+    lines = rules.extra_help(key)
+    generated = key_list.help_lines(key, "nfl", rules.help_features)
+    cut = len(generated) if key != "118" else len(descriptions.F7_WORD_ROWS)
+    return lines[:len(lines) - cut] if cut else lines
+
+
 def nfl_engine_rig(tmp_path, answers=(), comments=False, rules=None, extras=None, gtp=1, **state):
     """engine_rig (tests/pagrig.py) with the N. F. L. rules: Bengals (side 1, coach Kim, Starr) against the Jets (Unitas),
     named rosters, comments off unless asked, a strict scripted source with no draws. `extras` sets fields of the extras

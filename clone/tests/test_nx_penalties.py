@@ -413,8 +413,9 @@ def test_the_statistics_add_the_penalties_and_their_yards(tmp_path):
 def test_the_help_of_f5_f6_and_f7_names_the_penalties_when_they_are_on(tmp_path):
     rig = game(tmp_path)
     assert X.text("NXH-09") in rig.rules.extra_help("116")
-    assert [X.text("NXH-10"), X.text("NXH-11")] == rig.rules.extra_help("117")[-2:]
-    assert [X.text("NXH-12"), X.text("NXH-13")] == rig.rules.extra_help("118")[-2:]
+    from nflrig import feature_help
+    assert [X.text("NXH-10"), X.text("NXH-11")] == feature_help(rig.rules, "117")[-2:]
+    assert [X.text("NXH-12"), X.text("NXH-13")] == feature_help(rig.rules, "118")[-2:]
 
 
 @pytest.mark.parametrize("clock, quarter, left, offense, keeps, expected", [

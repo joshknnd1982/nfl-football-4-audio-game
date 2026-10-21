@@ -10,7 +10,7 @@ from nfl4.game import menus
 from nfl4.game import outcome as O
 from nfl4.game import phrases as P
 from nfl4.game.rules import NORMAL_KICKOFF
-from nflrig import nfl_engine_rig
+from nflrig import feature_help, nfl_engine_rig
 from pagrig import Draws
 from randsources import ScriptedRandom
 
@@ -273,16 +273,18 @@ def test_f5_f6_f7_add_their_lines_after_the_original_text_during_an_nfl_game(tmp
         menu()
         said = texts(rig, start)
         lead = [original] + ([words.KEYS_ADDED_F9] if menu == hot.speckeys else [])      # S8.2: F9 is in the key list, in every mode
-        assert said[:len(lead)] == lead and said[len(lead):] == [X.text(i) for i in ids]
+        assert said[:len(lead)] == lead and said[len(lead):len(lead) + len(ids)] == [X.text(i) for i in ids]     # then SX.10b2's lines
     rig.rules.state.extras.timeouts_on = False
-    assert rig.rules.extra_help("117") == [X.text("NXH-03"), X.text("NXH-04"), X.text("NXH-06")]
+    assert feature_help(rig.rules, "117") == [X.text("NXH-03"), X.text("NXH-04"), X.text("NXH-06")]
 
 
-def test_the_help_of_a_classic_program_has_no_added_lines(tmp_path):
+def test_the_help_of_a_classic_program_has_no_feature_lines_only_the_keys(tmp_path):
     rig = nfl_engine_rig(tmp_path)
     rig.game.play_engine = None                                      # no game: the program's rules, Classic
     start = len(rig.said)
     rig.game.hotkeys.speckeys()
     from nfl4.game import extra_texts as words
     from nfl4.game import help_texts as H
-    assert texts(rig, start) == [H.SPECIAL_KEYS, words.KEYS_ADDED_F9]
+    from nfl4.game.rules import CLASSIC
+    assert texts(rig, start) == [H.SPECIAL_KEYS, words.KEYS_ADDED_F9] + CLASSIC.extra_help("116")     # SX.10b2: every key, no feature line
+    assert not [t for t in texts(rig, start) if t.strip() in {X.text(i).strip() for i in ("NXH-01", "NXH-02", "NXH-09", "NXH-18")}]

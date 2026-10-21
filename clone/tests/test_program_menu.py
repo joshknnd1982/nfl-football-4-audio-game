@@ -177,7 +177,9 @@ def test_a_hot_key_menu_in_the_menu_repeats_from_the_top_with_the_choice_kept(tm
     speech = menu_speech(rig)
     today = speech[0]
     after_f5 = speech.index(H.SPECIAL_KEYS)
-    assert speech[after_f5 + 2:after_f5 + 6] == [" This is week  2 of Josh Kennedy's N. F. L. football ", today, SELECT, CHOICE[2]]   # F1 is handed back (Q5)
+    from nfl4.game.rules import CLASSIC
+    skip = len(CLASSIC.extra_help("116"))                                    # SX.10b2: Classic's F5 names every key
+    assert speech[after_f5 + 2 + skip:after_f5 + 6 + skip] == [" This is week  2 of Josh Kennedy's N. F. L. football ", today, SELECT, CHOICE[2]]   # F1 is handed back (Q5)
 
 
 # ----- choices 2 and 3 return to the week line (0x48a8df, 0x48a930) -----

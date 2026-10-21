@@ -168,7 +168,8 @@ def test_the_help_speaks_of_time_outs_only_when_they_are_on_and_says_the_overtim
         assert not any("time out" in line.lower() for line in rig.rules.extra_help(key))
     assert "two in an over time period" in X.text("NXH-05") and "more in over time" not in X.text("NXH-05")
     rig = nfl_engine_rig(tmp_path / "on")
-    assert rig.rules.extra_help("116") == [X.text("NXH-02"), X.text("NXH-01")]
+    from nflrig import feature_help
+    assert feature_help(rig.rules, "116") == [X.text("NXH-02"), X.text("NXH-01")]
 
 
 def test_one_time_out_and_one_second_are_said_in_the_singular(tmp_path):

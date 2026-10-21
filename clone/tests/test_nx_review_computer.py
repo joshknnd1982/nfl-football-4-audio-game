@@ -247,11 +247,12 @@ def test_the_quarter_statistics_say_the_challenges_won_and_lost_of_each_side(tmp
 
 def test_the_help_of_f5_f6_and_f7_has_the_challenge_lines_only_when_challenges_are_on(tmp_path):
     rig, record = scene(tmp_path, RUN, yards=4, down=3, to_go=5)
-    on = {key: rig.rules.extra_help(key) for key in ("116", "117", "118")}
+    from nflrig import feature_help
+    on = {key: feature_help(rig.rules, key) for key in ("116", "117", "118")}
     assert X.text("NXH-23") in on["116"] and X.text("NXH-24") in on["117"] and X.text("NXH-25") in on["117"]
     assert X.text("NXH-26") in on["118"]
     rig.engine.s.extras.challenges_on = False
-    off = {key: rig.rules.extra_help(key) for key in ("116", "117", "118")}
+    off = {key: feature_help(rig.rules, key) for key in ("116", "117", "118")}
     added = {"116": ("NXH-23",), "117": ("NXH-24", "NXH-25"), "118": ("NXH-26",)}
     for key in on:
         assert [t for t in on[key] if t not in off[key]] == [X.text(i) for i in added[key]]

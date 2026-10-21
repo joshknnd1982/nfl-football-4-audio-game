@@ -1410,7 +1410,7 @@ Requirement: Help. F5, F6 and F7 (special keys, game instructions, football term
 
 Tests:
 - test_nx_engine.py: test_f5_f6_f7_add_their_lines_after_the_original_text_during_an_nfl_game
-- test_nx_engine.py: test_the_help_of_a_classic_program_has_no_added_lines
+- test_nx_engine.py: test_the_help_of_a_classic_program_has_no_feature_lines_only_the_keys
 - test_nx_penalties.py: test_the_help_of_f5_f6_and_f7_names_the_penalties_when_they_are_on
 - test_nx_qb.py: test_the_help_of_f5_f6_and_f7_names_the_quarterback_runs_when_they_are_on
 

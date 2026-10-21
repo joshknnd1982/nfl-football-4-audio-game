@@ -61,7 +61,8 @@ Added in PX SX.6 (replay challenges, booth reviews and the ruling model, D-053),
                                            point with the corrected result set (REVIEWED_FIELD, REVIEWED_TOUCHDOWN,
                                            REVIEWED_FUMBLE: the engine's steps gain_and_end, touchdown_reached, reviewed_fumble)
     H3 menu_action -> a continuation       the player's challenge reversed a ruling: the menu is left for the step it names
-    H3 menu_key(state, letter)             a letter that no item of the menu has (C when no challenge is allowed): it says why
+    H3 menu_key(state, letter, item)       a letter that no item of the menu has (C when no challenge is allowed: it says why; D: the plain
+                                           description of the current item, SX.10b2)  Classic: False, the key is the original's
     H10 between_plays -> a continuation    the computer's challenge reversed a ruling: the engine goes on at the step it names
 
 Added in PX SX.7 (playbooks, D-054), each never taken in Classic:
@@ -196,7 +197,7 @@ class ClassicRules:
     def menu_action(self, state, action: tuple[str, int]):
         return False
 
-    def menu_key(self, state, letter: str) -> bool:
+    def menu_key(self, state, letter: str, item=None) -> bool:
         return False
 
     def before_kickoff(self, state, kicking_side: int) -> str:
@@ -234,7 +235,15 @@ class ClassicRules:
         return []
 
     def extra_help(self, key: str) -> list[str]:
-        return []
+        """F5 and F6 name every key of the game, the original's own and the clone's added ones (CLAUDE.md 0.24: the master list
+        game/key_list.py), and F7 adds the plain description of each of the original's plays after the original's football words
+        (NX-P8): all after the original's text, which stays word for word. The original's keys themselves do not change."""
+        from . import key_list
+        lines = key_list.help_lines(key, "classic")
+        if key == key_list.KEY_F7:
+            from ..extras.plays import descriptions
+            lines = descriptions.classic_f7_lines()
+        return lines
 
 
 CLASSIC = ClassicRules()

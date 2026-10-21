@@ -279,9 +279,10 @@ def test_without_the_switch_the_statistics_and_the_help_say_nothing_of_quarterba
 
 def test_the_help_of_f5_f6_and_f7_names_the_quarterback_runs_when_they_are_on(tmp_path):
     rig = rig_for(tmp_path, timeouts_on=False)
-    assert rig.rules.extra_help("116")[-1] == X.text("NXH-18")
-    assert rig.rules.extra_help("117")[-2:] == [X.text("NXH-19"), X.text("NXH-20")]
-    assert rig.rules.extra_help("118")[-1] == X.text("NXH-21")
+    from nflrig import feature_help
+    assert feature_help(rig.rules, "116")[-1] == X.text("NXH-18")
+    assert feature_help(rig.rules, "117")[-2:] == [X.text("NXH-19"), X.text("NXH-20")]
+    assert feature_help(rig.rules, "118")[-1] == X.text("NXH-21")
     assert "8 is the quarterback sneak" in X.text("NXH-18") and "0 the draw" in X.text("NXH-18")
 
 
