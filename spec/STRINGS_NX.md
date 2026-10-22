@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 1942.
+- Texts: 1945.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -18,7 +18,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 552.
 - The real coaches and players (NX-N, SX.11): 7.
-- The radio broadcast: banter and Ghip (SY.1, rule 0.27): 316.
+- The radio broadcast: banter and Ghip (SY.1, rule 0.27): 319.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
 
 ## The clock (design section 5)
@@ -1998,4 +1998,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXH-65 (help, say5): " The broadcast: with the N. F. L. rules and the comments on, the announcer chats like a radio broadcast, and Ghip, the color commentator, adds his thoughts in a voice of his own. ". F6 addition (SY.1, rule 0.27)
 - NXH-66 (help, say5): " F8 switches all the comments off. F9, Rules, Broadcast switches Ghip off. ". F6 addition (SY.1, rule 0.27)
 - NXB-B01 (sentence, say5): " Ghip, the color commentator, is in the booth with me. F12 chooses his voice, and F9, Rules, Broadcast sends him home. ". said once per program run before the opening kick-off, in the N. F. L. rules with the broadcast on (SY.1)
+- NXM-38 (menu, say5): "Stadium sounds". F9 Rules item 11: the crowd, the hits and the chain, followed by on or off (SY.2)
+- NXH-67 (help, say5): " The stadium sounds: the crowd cheers, groans and boos, hits sound, and the chain clanks at a first down. F9, Rules, Stadium sounds switches them off. ". F6 addition (SY.2)
+- NXH-68 (help, say5): " The referee announces the flags and the reviews over a microphone, in a voice of his own. F12 and F11 ask for his voice and volume, and F9, Rules, Broadcast switches him off. ". F6 addition (SY.3)
 

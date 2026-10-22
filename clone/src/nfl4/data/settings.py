@@ -41,6 +41,7 @@ class GameSettings:
     nx_offense_playbook: str = "team"      # the player's offense playbook (SX.7): classic, team (the team's style) or a style key;
     #                                        the team's since SX.10e (D-095): every play of the catalog by default (D-083)
     nx_defense_playbook: str = "team"      # and the defense playbook
+    nx_stadium: bool = True      # the stadium sounds of the N. F. L. rules: the crowd, the hits, the chain (SY.2)
     nx_broadcast: bool = True    # the radio broadcast of the N. F. L. rules: the announcer's radio banter and Ghip, the color commentator (SY.1, rule 0.27)
     nx_playbook_chosen: bool = False       # the player chose a playbook himself (a file from before SX.10e never did: its Classic, the old
     #                                        default, becomes the team's once)

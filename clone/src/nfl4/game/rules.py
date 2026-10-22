@@ -132,8 +132,9 @@ Added in PX SX.12 (the 2026 overtime, Rule 16, D-096), each the original's answe
                                            the game: another overtime period begins            a score)
     H23 banter_lines(game)                 the announcer's banter draws its lines from these      None (the original's 142 lines
                                            (the radio banter of the N. F. L. rules, rule 0.27)    and the player's banter.txt)
-    H23 broadcast_moment(state, what)      a moment of the broadcast: a score (after the banter), the end of a quarter, the    nothing
-                                           two-minute warning, half time, the end of the game (Ghip speaks, extras/broadcast.py)
+    H23 broadcast_moment(state, what)      a moment of the broadcast: a touchdown (after its six points), a score (after the   nothing
+                                           banter), the end of a quarter, the two-minute warning, half time, the end of the game
+                                           (the crowd and Ghip, extras/stadium.py and broadcast.py)
     H22 overtime_lines(state)              said after " We are going into over time number "  no lines
     H22 overtime_toss(state)               the overtime begins with a coin toss                False (the side with the ball
                                                                                               at the end receives)

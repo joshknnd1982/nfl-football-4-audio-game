@@ -153,6 +153,8 @@ def test_ghip_speaks_in_his_own_voice_after_the_opening_and_the_lines_are_those_
         body = text.strip()
         assert not re.search(r"<[^<>]+>", body), body                       # every placeholder is filled
         assert any(re.fullmatch(pattern, body) for pattern in patterns), body
+    touchdown = [re.sub(r"<[a-z ]+>", ".+", re.escape(X.TEXTS[r.id].strip())) for r in RM.DEFAULT_POOLS.lines("CTD")]
+    assert any(re.fullmatch(pattern, text.strip()) for _role, text in said for pattern in touchdown)        # a game has touchdowns: Ghip is there
 
 
 def test_the_same_seed_gives_the_same_commentary_and_another_seed_another(tmp_path):
@@ -211,7 +213,7 @@ def test_a_players_own_line_and_off_for_ghips_pools(tmp_path):
 # ----- the voice and the settings -----
 
 def test_ghip_is_a_sixth_speaker_outside_the_five_of_the_original():
-    assert COLOR == "color" and COLOR not in ROLES and ALL_ROLES == ROLES + (COLOR,)
+    assert COLOR == "color" and COLOR not in ROLES and ALL_ROLES == ROLES + (COLOR, "referee")           # SY.3 added the referee
     settings = Settings.defaults()
     assert set(settings.speech.voices) == set(ALL_ROLES) and settings.speech.volumes[COLOR] == 95
     assert settings.game.nx_broadcast is True
@@ -265,19 +267,21 @@ def test_ghip_gets_a_voice_of_his_own_when_the_player_has_not_chosen_one(tmp_pat
     from nfl4.game.options import Options
     from nfl4.speech.voices import VoiceInfo
     rig = Rig([], sounds_dir=tmp_path)
-    voices = [VoiceInfo(0, "id0", "Alpha", "EngA"), VoiceInfo(1, "id1", "Beta", "EngB"), VoiceInfo(2, "id2", "Gamma", "EngA")]
+    voices = [VoiceInfo(0, "id0", "Alpha", "EngA"), VoiceInfo(1, "id1", "Beta", "EngB"), VoiceInfo(2, "id2", "Gamma", "EngA"),
+              VoiceInfo(3, "id3", "Delta", "EngA")]
     saves = []
     options = Options(Settings.defaults(), rig.speech, save=lambda: saves.append(1), base_rate=lambda: 0, voice_catalog=Catalog(voices))
     rig.game.options = options
     b = BC.Broadcast(NflRules(), ghip=True)
     b.game = rig.game
     b._own_voice()
-    assert options.voice(COLOR) == "id2" and saves == [1]              # the announcer's engine, the next voice
+    assert options.voice(COLOR) == "id2" and options.voice("referee") == "id3" and saves == [1]     # the announcer's engine, the next voices
     assert ("role_voice", "color=id2") in rig.sapi.events
     options.set_voice(COLOR, "id1")
     b._own_voice()
     assert options.voice(COLOR) == "id1"                               # the player's own choice stays
     options.set_voice(COLOR, None)
+    options.set_voice("referee", "id3")
     options.voice_catalog = Catalog(voices[:1])
     b._own_voice()
     assert options.voice(COLOR) is None                                # one voice only: Ghip shares it
@@ -308,7 +312,7 @@ F11, F12, ENTER = 122, 123, 13
 
 def f11_roles(tmp_path, rules, broadcast_on):
     from nfl4.game.options import Options
-    rig = Rig([F11] + [ENTER] * 8, sounds_dir=tmp_path)
+    rig = Rig([F11] + [ENTER] * 10, sounds_dir=tmp_path)
     settings = Settings.defaults()
     settings.audio = rig.sounds.settings
     settings.game.nx_broadcast = broadcast_on
@@ -329,5 +333,5 @@ def test_f11_asks_for_ghip_after_the_five_speakers_only_with_the_nfl_rules_and_t
 
 def test_ghips_name_and_the_originals_names_stay_apart():
     from nfl4.speech.roles import EXTRA_NAMES, F11_NAMES, F12_NAMES, spoken_name
-    assert set(F11_NAMES) == set(F12_NAMES) == set(ROLES) and EXTRA_NAMES == {COLOR: "Ghip, the color commentator"}
+    assert set(F11_NAMES) == set(F12_NAMES) == set(ROLES) and EXTRA_NAMES == {COLOR: "Ghip, the color commentator", "referee": "the referee"}
     assert spoken_name(COLOR) == "Ghip, the color commentator" and spoken_name(ANNOUNCER) == F11_NAMES[ANNOUNCER]

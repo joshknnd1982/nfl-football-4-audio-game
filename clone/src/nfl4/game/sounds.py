@@ -19,7 +19,7 @@ from typing import Callable
 from ..audio.engine import Audio
 from ..audio.ids import foot_id
 from ..audio.pools import POOLS, Member
-from ..audio.output import (SLOT_AMBIENT, SLOT_CROWD1, SLOT_CROWD2, SLOT_HIKE, SLOT_NOISE, SLOT_ONESHOT,
+from ..audio.output import (EXTRA_SLOT, SLOT_AMBIENT, SLOT_CROWD1, SLOT_CROWD2, SLOT_HIKE, SLOT_NOISE, SLOT_ONESHOT,
                             SLOT_TACKLE)
 from ..data.settings import AudioSettings
 from . import extra_texts as words
@@ -186,10 +186,26 @@ class GameSounds:
             self.celebration_sound()
         self.play(0, 0)
 
+    # SY.3: the N. F. L. rules' whistles. The stadium (extras/stadium.py) installs `whistle_hook` while a game with its sounds is played: asked at
+    # every whistle (PlayTackle(8)) with the context the caller named (`whistle_context`: "quarter", "final", "twominute", "timeout", "penalty",
+    # "review", or None), it answers the path of a pea whistle, or None for the original's foot11. The wait of 2.5 s is the original's either way.
+    whistle_hook = None
+    whistle_context = None
+
     def play_tackle(self, n: int) -> None:
         """PlayTackle(n), n = 1, 2, 3 or 8: foot(n + 3) once at -1500 + wavol (a second tackle within the first one's
         length cuts it), the play noise stops, then 2.5 s pass whatever the sound's length (keys do not shorten it)."""
-        self.audio.play(SLOT_TACKLE, foot_id(int(n) + 3), -1500 + self.wavol)
+        alternative = None
+        if n == 8 and self.whistle_hook is not None:
+            try:
+                alternative = self.whistle_hook(self.whistle_context)
+            except Exception as exc:
+                log.warning("the whistle could not be chosen: %s", exc)
+            self.whistle_context = None
+        if alternative:
+            self.audio.play_file(SLOT_TACKLE, alternative, -1500 + self.wavol)
+        else:
+            self.audio.play(SLOT_TACKLE, foot_id(int(n) + 3), -1500 + self.wavol)
         self.audio.stop(SLOT_NOISE)
         self.keys.dy(TACKLE_WAIT)
 
@@ -212,6 +228,15 @@ class GameSounds:
         end = None if limit is None else self.clock() + limit
         self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT) and (end is None or self.clock() < end))
         self.audio.stop(SLOT_ONESHOT)
+
+    def play_effect(self, path: str, level: int = 0) -> None:
+        """A stadium sound of the N. F. L. rules (SY.2, extras/stadium.py): the file once on the extra channel, `level` hundredths of a
+        decibel under the sound volume. Nothing waits for it, no key stops it, no random number is drawn; a file that cannot be used plays
+        nothing (the library logs it)."""
+        try:
+            self.audio.play_file(EXTRA_SLOT, path, int(level) + self.wavol)
+        except Exception as exc:
+            log.warning("a stadium sound could not be played: %s", exc)
 
     def play2(self, stem: str) -> None:
         """play2(stem): clk, <stem>.wav once at wavol and the file's own rate, until it ends or a key comes (the key is

@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 
 from ..data import debuglog
-from ..speech.roles import COLOR, ROLES, VOLUME_ORDER, spoken_name
+from ..speech.roles import EXTRA_ROLES, ROLES, VOLUME_ORDER, spoken_name
 from . import extra_texts as words
 from . import help_texts as H
 from . import prompt_texts as T
@@ -245,12 +245,13 @@ class HotKeys:
                 g.voice_speak(str(options.vr), wait=False)   # 0x42387b
 
     def _extra_roles(self) -> tuple:
-        """Ghip, the color commentator, is asked for by F11 and F12 only while the N. F. L. rules and the broadcast are on (SY.1, rule 0.27);
+        """Ghip, the color commentator, and the referee are asked for by F11 and F12 only while the N. F. L. rules and the broadcast are on
+        (SY.1 and SY.3, rule 0.27);
         the original's loops, and Classic, ask for the five speakers only."""
         try:
             from ..extras.nfl_rules import is_nfl
             if is_nfl(self.g.rules) and self.options.settings.game.nx_broadcast:
-                return (COLOR,)
+                return EXTRA_ROLES
         except Exception as exc:
             log.debug("the extra speakers of F11 and F12 are not known: %s", exc)
         return ()

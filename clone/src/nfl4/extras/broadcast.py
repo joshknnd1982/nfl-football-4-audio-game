@@ -25,7 +25,7 @@ from ..game import outcome as O
 from ..game.banter_pool import Line
 from ..game.gamestate import other
 from ..game.rnd import GameRandom
-from ..speech.roles import ANNOUNCER, COLOR
+from ..speech.roles import ANNOUNCER, COLOR, EXTRA_ROLES
 from . import nx_texts as X
 from . import remarks
 
@@ -124,12 +124,13 @@ class Broadcast:
         self._say(state, "CKO", self._values(state, 1), ask=False)
 
     def _own_voice(self) -> None:
-        """Ghip gets a voice of his own the first time the game opens, when the player has not chosen one (F12): the next voice of the
-        announcer's engine, else the next voice of the list. Done once the voice list is read (the program starts the reading in the
-        background); until then he shares the announcer's voice. The choice is saved like the player's own, so F12 shows it."""
+        """Ghip and the referee get a voice of their own the first time a game opens, when the player has not chosen one (F12): the next
+        voice of the announcer's engine that nobody uses, else the next voice of the list. Done once the voice list is read (the game
+        starts the reading in the background); until then they share the announcer's voice. The choice is saved like the player's own,
+        so F12 shows it."""
         try:
             options = getattr(self.game, "options", None)
-            if options is None or options.voice(COLOR):
+            if options is None or all(options.voice(role) for role in EXTRA_ROLES):
                 return
             catalog = getattr(options, "voice_catalog", None)
             if catalog is None:
@@ -142,13 +143,22 @@ class Broadcast:
                 return
             current_id = options.voice(ANNOUNCER) or voices[0].voice_id
             current = next((v for v in voices if v.voice_id == current_id), voices[0])
-            others = [v for v in voices if v.voice_id != current.voice_id]
-            pick = next((v for v in others if v.engine == current.engine), others[0])
-            options.set_voice(COLOR, pick.voice_id)
-            options.save()
-            log.info("broadcast: Ghip gets his own voice %r (the announcer has %r)", pick.name, current.name)
+            changed = False
+            for role in EXTRA_ROLES:
+                if options.voice(role):
+                    continue
+                used = {current.voice_id} | {options.voice(r) for r in EXTRA_ROLES if options.voice(r)}
+                others = [v for v in voices if v.voice_id not in used]
+                if not others:
+                    continue
+                pick = next((v for v in others if v.engine == current.engine), others[0])
+                options.set_voice(role, pick.voice_id)
+                changed = True
+                log.info("broadcast: %s gets his own voice %r (the announcer has %r)", role, pick.name, current.name)
+            if changed:
+                options.save()
         except Exception as exc:
-            log.warning("broadcast: Ghip's voice could not be chosen: %s", exc)
+            log.warning("broadcast: the voices of Ghip and the referee could not be chosen: %s", exc)
 
     def before_snap(self, state, offense_play: int) -> None:
         if not self.active() or state.down != 4 or state.two_point or offense_play in KICK_PLAYS or offense_play == 0:
@@ -189,13 +199,13 @@ class Broadcast:
         if not self.active():
             return
         f = self.facts
-        if what == "score":
-            points = state.points
+        if what == "touchdown":                           # right after the six points: the scorer has the ball (state.wisoff)
+            self._try(state, "CTD", self._values(state, state.wisoff))
+        elif what == "score":                             # after_score: a field goal (a try's point has its own after_score, said nothing about)
             if f is not None:
                 f.consumed = True
-            pool = "CTD" if points == 6 else "CFG" if points == 3 else None
-            if pool is not None:
-                self._try(state, pool, self._values(state, state.wisoff))
+            if state.points == 3:
+                self._try(state, "CFG", self._values(state, state.wisoff))
         elif what == "two_minute":
             self._try(state, "CTM", self._values(state, state.wisoff))
         elif what == "quarter_end":

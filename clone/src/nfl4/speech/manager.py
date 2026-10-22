@@ -191,6 +191,9 @@ class SpeechManager:
     def set_role_volume(self, role: str, volume: int) -> None:
         self._on_sapi("set_role_volume", lambda s: s.set_role_volume(role, volume))
 
+    def set_role_effect(self, role: str, effect: str | None) -> None:
+        self._on_sapi("set_role_effect", lambda s: s.set_role_effect(role, effect))
+
     def role_details(self, role: str):
         """The id, name and Gender attribute of a speaker's SAPI voice (None when SAPI 5 is not running)."""
         return self._on_sapi("role_details", lambda s: s.role_details(role))

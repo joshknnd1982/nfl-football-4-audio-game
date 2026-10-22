@@ -104,6 +104,7 @@ class ResultSteps:
         snd.play_tackle(8)
         snd.playcel()
         s.stats[s.wisoff].score += 6
+        self.rules.broadcast_moment(s, "touchdown")       # H23: the crowd and Ghip (the N. F. L. rules; Classic: nothing)
         if self.rules.points_end_game(s, s.wisoff):       # H22 (SX.12): a touchdown that decides the overtime has no try (4-8-2 (c));
             return self.game_end                          # Classic: never (its overtime ends after the try)
         if s.wisoff == 2:                                 # the computer always kicks
@@ -231,6 +232,7 @@ class ResultSteps:
         snd.play_tackle(8)
         snd.playcel()
         s.stats[s.wisoff].score += 6
+        self.rules.broadcast_moment(s, "touchdown")       # H23
         if self.rules.points_end_game(s, s.wisoff):       # H22 (SX.12): a return touchdown that decides the overtime has no try
             return self.game_end
         if s.wisoff == 2:                                 # the computer always kicks
@@ -341,7 +343,7 @@ class ResultSteps:
         g.voice_speak(" ", wait=True)
         self.rady(0x4443cb)
         self.banter()
-        self.rules.broadcast_moment(s, "score")                     # H23: Ghip after a touchdown or a field goal (the N. F. L. rules)
+        self.rules.broadcast_moment(s, "score")                     # H23: Ghip after a field goal (the N. F. L. rules)
         self.key_wait()
         s.wisoff = other(s.wisoff)
         s.defense = other(s.wisoff)

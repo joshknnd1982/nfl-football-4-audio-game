@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from ..speech.roles import ANNOUNCER, player_role
+from ..speech.roles import ANNOUNCER, REFEREE, player_role
 from .keys import KeyInput
 from .rnd import GameRandom
 
@@ -149,6 +149,12 @@ class Speakers:
         """A speaker of the extras (Ghip, SY.1), asynchronous; logged, not kept for the replay (the pools of the broadcast)."""
         self._logged(text)
         self._speak(text, role, False)
+
+    def say_referee(self, text: str) -> None:
+        """The referee over the microphone (SY.3): like say4, waits; logged, kept for the replay (F2 speaks it in the announcer's voice)."""
+        self._remember(text)
+        self._logged(text)
+        self._speak(text, REFEREE, True)
 
     def say6(self, text: str, role: str | None = None) -> None:
         """The voice that spoke last, asynchronous; logged. role: the speaker whose voice the original had just loaded

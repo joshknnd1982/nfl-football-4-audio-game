@@ -46,6 +46,7 @@ import unicodedata
 from dataclasses import dataclass
 from xml.sax.saxutils import escape
 
+from . import pa_effect
 from .backend import SpeechBackend
 from .waveout import trim_silence
 
@@ -219,6 +220,7 @@ class RoleVoice:
     """The voice and the volume of one speaker."""
     voice_id: str | None = None      # None or "" = the first voice in SAPI's list (the original's voice 0)
     volume: int = ORIGINAL_VOLUME
+    effect: str | None = None        # SY.3: "pa" gives a rendered voice the sound of a public-address system (speech/pa_effect.py)
 
 
 @dataclass(frozen=True)
@@ -275,7 +277,7 @@ class SapiBackend(SpeechBackend):
                  stream_factory=default_stream_factory, roles: dict[str, RoleVoice] | None = None,
                  default_role: str | None = None):
         if roles:
-            self._roles = {name: RoleVoice(r.voice_id or None, clamp(r.volume, VOLUME_MIN, VOLUME_MAX))
+            self._roles = {name: RoleVoice(r.voice_id or None, clamp(r.volume, VOLUME_MIN, VOLUME_MAX), r.effect)
                            for name, r in roles.items()}
             self._default_role = default_role if default_role in self._roles else next(iter(self._roles))
         else:
@@ -380,7 +382,7 @@ class SapiBackend(SpeechBackend):
         """The voice and volume wanted for a speaker (a copy)."""
         with self._role_lock:
             wanted = self._roles.get(role) or self._roles[self._default_role]
-            return RoleVoice(wanted.voice_id, wanted.volume)
+            return RoleVoice(wanted.voice_id, wanted.volume, wanted.effect)
 
     def set_role_voice(self, role: str, voice_id: str | None) -> None:
         """Choose a speaker's voice (None: the first voice). The voice is opened and probed by the speech thread."""
@@ -389,6 +391,13 @@ class SapiBackend(SpeechBackend):
         with self._role_lock:
             self._roles[role].voice_id = voice_id or None
         self._commands.put(("role_voice", role))
+
+    def set_role_effect(self, role: str, effect: str | None) -> None:
+        """SY.3: the effect of a speaker's rendered speech ("pa", or None for none). A voice that is played directly is not touched."""
+        if role not in self._roles:
+            return
+        with self._role_lock:
+            self._roles[role].effect = effect or None
 
     def set_role_volume(self, role: str, volume: int) -> None:
         if role not in self._roles:
@@ -799,7 +808,7 @@ class SapiBackend(SpeechBackend):
                 done = True
             if not done:
                 return False
-            if self._play_chunk(work.stream):
+            if self._play_chunk(work.stream, work.entry.role):
                 self._prove(work.voice)
             else:
                 # the voice made no sound for this text: try the next way of writing it
@@ -848,12 +857,14 @@ class SapiBackend(SpeechBackend):
         log.debug("purge")
         return None
 
-    def _play_chunk(self, stream) -> bool:
+    def _play_chunk(self, stream, role: str | None = None) -> bool:
         """Give the finished audio to the player. False when the voice made none."""
         try:
             data = bytes(stream.GetData())
             if data:
                 data = trim_silence(data, RENDER_RATE)     # voices end with silence that would delay the sounds
+                if data and role is not None and self.role_voice(role).effect == "pa":
+                    data = pa_effect.apply(data, RENDER_RATE)      # SY.3: the referee's microphone
             if data and not self._player.write(data):
                 log.warning("the audio device refused speech")
             self.last_start_at = time.monotonic()

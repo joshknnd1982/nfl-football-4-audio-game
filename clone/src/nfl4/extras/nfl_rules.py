@@ -118,6 +118,7 @@ from .defense_flow import DefenseFlow
 from .kick_flow import KickFlow
 from .offense_flow import OffenseFlow, text_for
 from .broadcast import Broadcast
+from .stadium import Stadium
 from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
 from .playbook_flow import PlaybookFlow
@@ -148,7 +149,7 @@ class NflRules(ClassicRules):
     def __init__(self, timeouts_on: bool = True, auto_sides: tuple[int, ...] = (2,), penalties_on: bool = False,
                  onside_on: bool = False, onside_always: bool = False, qb_on: bool = False, challenges_on: bool = False,
                  offense_book: str = "classic", defense_book: str = "classic", playbooks_on: bool = False,
-                 broadcast_on: bool = False, radio_banter: bool = False):
+                 broadcast_on: bool = False, radio_banter: bool = False, stadium_on: bool = False):
         # the switches for a new game; a game reads its own from state.extras (a loaded game keeps the switches it was saved
         # with, C1). penalties_on and onside_on are off unless given: the program's rules come from the settings
         # (rules_from_settings, nx_penalties and nx_onside on by default), and a rules object made by hand (the clock's
@@ -170,6 +171,7 @@ class NflRules(ClassicRules):
         self.playbooks_on = bool(playbooks_on)
         # SY.1 (the radio broadcast, rule 0.27): the radio banter instead of the original's jokes, and Ghip; a hand-made object has neither
         self.broadcast = Broadcast(self, radio_banter=radio_banter, ghip=broadcast_on)
+        self.stadium = Stadium(self, on=stadium_on)      # SY.2: the crowd, the hits and the chain; a hand-made object has none
         self.game = None
         self.state = None
         self.clock: NflPeriodClock | None = None
@@ -187,7 +189,7 @@ class NflRules(ClassicRules):
         """A fresh object for one game, with the same switches (Game.play_game)."""
         return type(self)(self.timeouts_on, self.auto_sides, self.penalties_on, self.onside_on, self.onside_always,
                           self.qb_on, self.challenges_on, self.offense_book, self.defense_book, self.playbooks_on,
-                          self.broadcast.ghip, self.broadcast.radio_banter)
+                          self.broadcast.ghip, self.broadcast.radio_banter, self.stadium.on)
 
     # ----- H1 -----
 
@@ -199,6 +201,7 @@ class NflRules(ClassicRules):
                                     challenges_on=self.challenges_on)
         self.clock = NflPeriodClock(game, state)
         self.broadcast.attach(game, state)         # SY.1: this game's own generator for the broadcast
+        self.stadium.attach(game, state)           # SY.2: and for the stadium sounds
         self.modifiers.bind(state)                 # SX.8b: the ratings of the players in the play (a Franchise game's rosters)
         self.books.resolve(game, state)            # SX.7: the playbook of each side's offense and defense
         self.offense.resolve(game, state)          # SX.10c: the player's favourites, the menu at its top
@@ -313,6 +316,7 @@ class NflRules(ClassicRules):
         x.pending = 0
         x.last_kind = outcome.kind
         self.broadcast.note_outcome(state, outcome)    # SY.1: what the play was, for Ghip after the down sentence
+        self.stadium.note_outcome(state, outcome)      # SY.2: the hit and the catch
         x.last_offense = outcome.offense
         x.last_two_point = bool(outcome.two_point_try)
         self.qb.count(state, outcome)              # before the penalty flow can take the play away (it restores the count)
@@ -346,11 +350,24 @@ class NflRules(ClassicRules):
 
     # ----- H23 (SY.1, the radio broadcast, rule 0.27) -----
 
+    def ref_says(self, text: str, last: bool = True) -> None:
+        """A sentence of the referee (SY.3): over the microphone in a voice of his own when the broadcast is on (the click of the microphone
+        before the first sentence and after the last), else the announcer's say4, as before. Waited, logged and kept for F2 like say4."""
+        g = self.game
+        if self.broadcast.ghip and hasattr(g, "say_referee"):
+            self.stadium.mic(True)
+            g.say_referee(text)
+            if last:
+                self.stadium.mic(False)
+        else:
+            g.say4(text)
+
     def banter_lines(self, game):
         return self.broadcast.banter_lines(game)
 
     def broadcast_moment(self, state, what: str, quarter: int = 0) -> None:
         self.broadcast.moment(state, what, quarter)
+        self.stadium.moment(state, what, quarter)
 
     def game_injuries(self):
         """The Franchise's injuries of the game in progress (extras/franchise/injury_flow.GameInjuries), or None: every game that is not a game of a
@@ -548,6 +565,7 @@ class NflRules(ClassicRules):
         if self.possession_ends_game(state):      # SX.12: the overtime decided between two plays (the kickers kept their kick
             return OVERTIME_OVER                  # after their score, 16-1-5 (c)); the possession step catches the other changes
         self._overtime_news(state)
+        self.stadium.between(state, self.broadcast.facts)     # SY.2: the crowd's answer to the last play and the chain (before Ghip consumes the facts)
         self.broadcast.between(state)             # SY.1: Ghip's line about the last play, after the down sentence
         if x.challenges_on:                       # SX.6: the computer's flag on the last play, before the clock goes on
             then = self.review.computer_challenge(state)
@@ -695,10 +713,11 @@ class NflRules(ClassicRules):
         self.defense.reset()                      # SX.10d: the defense's too
         timeouts.charge(x, side)
         self.clock.stop_for_timeout(self.rnd)
+        g.sounds.whistle_context = "timeout"
         g.sounds.play_tackle(8)                   # foot11, as the original's whistles of the period ends
         left = x.timeouts_of(side)
         g.ptf = 1
-        g.say4(X.text("NXT-01", team=state.teams.get(side, "")))
+        self.ref_says(X.text("NXT-01", team=state.teams.get(side, "")))      # SY.3: the referee, over the microphone
         if side == 1:
             g.say4({0: X.text("NXT-10"), 1: X.text("NXT-12")}.get(left) or X.text("NXT-03", n=left))
         else:
@@ -879,7 +898,7 @@ class NflRules(ClassicRules):
 
     def extra_help(self, key: str) -> list[str]:
         ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-47", "NXH-14", "NXH-18", "NXH-27"),
-               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-67", "NXH-68", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
                         "NXH-16", "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30") + MENU_HELP_F6,     # SX.12: overtime after the clock
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
                         "NXH-33") + descriptions.F7_WORD_ROWS}.get(key, ())
@@ -929,7 +948,8 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
                     challenges_on=getattr(game_settings, "nx_challenges", True),
                     offense_book=getattr(game_settings, "nx_offense_playbook", "team"),
                     defense_book=getattr(game_settings, "nx_defense_playbook", "team"),
-                    playbooks_on=True, broadcast_on=getattr(game_settings, "nx_broadcast", True), radio_banter=True)
+                    playbooks_on=True, broadcast_on=getattr(game_settings, "nx_broadcast", True), radio_banter=True,
+                    stadium_on=getattr(game_settings, "nx_stadium", True))
 
 
 def is_nfl(rules) -> bool:

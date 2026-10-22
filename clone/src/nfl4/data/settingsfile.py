@@ -73,6 +73,7 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     kicks, or pro, west, air, power, zone, option, pressure: the plays your offense calls with the N. F. L. rules
 # nx_defense_playbook the same for your defense
 # nx_playbook_chosen  yes when you chose a playbook yourself; a file without it that says classic is read as team, once
+# nx_stadium          on or off: the stadium sounds of the N. F. L. rules, the crowd, the hits, the first down chain (default on)
 # nx_broadcast        on or off: Ghip, the color commentator of the radio broadcast of the N. F. L. rules, and the announcer's
 #                     questions to him (default on; F8 switches all comments off, this switches only Ghip)
 # nx_onside_question  always = you are asked about an onside kick at every kick off and safety kick (default, the 2026 rule),
@@ -130,6 +131,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_offense_playbook = {game.nx_offense_playbook}",
         f"nx_defense_playbook = {game.nx_defense_playbook}",
         f"nx_playbook_chosen = {'yes' if game.nx_playbook_chosen else 'no'}",
+        f"nx_stadium = {'on' if game.nx_stadium else 'off'}",
         f"nx_broadcast = {'on' if game.nx_broadcast else 'off'}",
         f"nx_season_kind = {game.nx_season_kind}",
         f"nx_fr_auto = {'on' if game.nx_fr_auto else 'off'}",
@@ -260,6 +262,11 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if word is None:
             raise ValueError(f"'{value[:20]}' is not on or off")
         game.nx_qb_runs = word
+    elif name == "nx_stadium":
+        word = _ON_WORDS.get(value.lower())
+        if word is None:
+            raise ValueError(f"'{value[:20]}' is not on or off")
+        game.nx_stadium = word
     elif name == "nx_broadcast":
         word = _ON_WORDS.get(value.lower())
         if word is None:

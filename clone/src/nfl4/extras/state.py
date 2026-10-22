@@ -285,7 +285,7 @@ class ExtrasRecord:
         pair(self.flag_yards, lambda v, w: whole(v, 0, 999999, w), "the penalty yards")
         if self.foul_clock not in FOUL_CLOCKS:
             raise ValueError("the clock after a foul is %r" % (self.foul_clock,))
-        if not isinstance(self.recent, dict) or len(self.recent) > 20:
+        if not isinstance(self.recent, dict) or len(self.recent) > 60:      # SY.1: 29 pools of remarks and banter
             raise ValueError("the recent remarks are %r" % (self.recent,))
         for pool, ids in self.recent.items():
             if not isinstance(pool, str) or not isinstance(ids, list) or len(ids) > RECENT_REMARKS:

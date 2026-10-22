@@ -69,6 +69,8 @@ foreach ($b in ($Bits -split ",")) {
     Copy-Item (Join-Path $clone "assets\sounds\*") $sounds
     # The names data (rosters, coaches, surnames, respellings) beside the exe: the program reads assets\data (paths.program_dir).
     Copy-Item -Recurse (Join-Path $clone "assets\data") (Join-Path $out "assets")
+    # The stadium sounds of the N. F. L. rules (generated, SY.2): assets\sounds_nx beside assets\sounds.
+    Copy-Item -Recurse (Join-Path $clone "assets\sounds_nx") (Join-Path $out "assets")
     # README.txt is the installer's information page; the guides go to a docs folder (a README.md of the repository comes at P11).
     Copy-Item (Join-Path $game "release\installer_info.txt") (Join-Path $out "README.txt")
     $docs = Join-Path $out "docs"

@@ -437,6 +437,7 @@ class ReviewFlow:
         """The referee goes under the hood (the replay official stopped the game when `side` is 0): the whistle, the pause, the
         verdict. No game time passes. Returns REVERSED, STANDS (wrong, but not clear and obvious) or CONFIRMED (right)."""
         g = self.game
+        g.sounds.whistle_context = "review"
         g.sounds.play_tackle(8)                                  # foot11, the referee's whistle
         if side == 0:
             self.announce(X.text("NXR-08"))
@@ -462,7 +463,7 @@ class ReviewFlow:
         g = self.game
         logged, kept = g.ptf, len(g.replay)                      # the log flag: on for the review's sentences, as it was after
         g.ptf = 1
-        g.say4(text)
+        self.rules.ref_says(text)                                # SY.3: the referee's microphone (say4 when the broadcast is off)
         del g.replay[kept:]
         g.ptf = logged
 

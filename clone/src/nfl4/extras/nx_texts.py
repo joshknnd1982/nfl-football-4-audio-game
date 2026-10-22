@@ -1950,6 +1950,9 @@ TEXTS: dict[str, str] = {
     'NXH-65': ' The broadcast: with the N. F. L. rules and the comments on, the announcer chats like a radio broadcast, and Ghip, the color commentator, adds his thoughts in a voice of his own. ',
     'NXH-66': ' F8 switches all the comments off. F9, Rules, Broadcast switches Ghip off. ',
     'NXB-B01': ' Ghip, the color commentator, is in the booth with me. F12 chooses his voice, and F9, Rules, Broadcast sends him home. ',
+    'NXM-38': 'Stadium sounds',
+    'NXH-67': ' The stadium sounds: the crowd cheers, groans and boos, hits sound, and the chain clanks at a first down. F9, Rules, Stadium sounds switches them off. ',
+    'NXH-68': ' The referee announces the flags and the reviews over a microphone, in a voice of his own. F12 and F11 ask for his voice and volume, and F9, Rules, Broadcast switches him off. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -3895,6 +3898,9 @@ SPEAKERS: dict[str, str] = {
     'NXH-65': 'say5',
     'NXH-66': 'say5',
     'NXB-B01': 'say5',
+    'NXM-38': 'say5',
+    'NXH-67': 'say5',
+    'NXH-68': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -5840,6 +5846,9 @@ KINDS: dict[str, str] = {
     'NXH-65': 'help',
     'NXH-66': 'help',
     'NXB-B01': 'sentence',
+    'NXM-38': 'menu',
+    'NXH-67': 'help',
+    'NXH-68': 'help',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

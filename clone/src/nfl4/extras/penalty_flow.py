@@ -422,17 +422,19 @@ class PenaltyFlow:
     def announce(self, state, flags: list[Flag], dead: bool) -> None:
         g = self.game
         g.ptf = 1
+        say = self.rules.ref_says                    # SY.3: the referee's microphone (the announcer's say4 when the broadcast is off)
         if dead:
-            g.say4(X.text("NXP-02"))
-        g.say4(X.text("NXP-01"))
-        for flag in flags:
+            say(X.text("NXP-02"), last=False)
+        say(X.text("NXP-01"), last=False)
+        for index, flag in enumerate(flags):
             name = self.table().name(flag.foul.id)
             team = state.teams.get(flag.side, "")
             surname = self.surname(state, flag)
+            last = index == len(flags) - 1
             if surname:
-                g.say4(X.text("NXP-03", foul_name=name, team=team, surname=surname))
+                say(X.text("NXP-03", foul_name=name, team=team, surname=surname), last=last)
             else:
-                g.say4(X.text("NXP-15", foul_name=name, team=team))
+                say(X.text("NXP-15", foul_name=name, team=team), last=last)
         g.ptf = 0
 
     # ----- the choice -----
@@ -450,7 +452,7 @@ class PenaltyFlow:
         if offended in self.rules.auto_sides:
             g = self.game
             team = state.teams.get(offended, "")
-            g.say4(X.text("NXP-07" if best == DECLINE else "NXP-06", team=team))
+            self.rules.ref_says(X.text("NXP-07" if best == DECLINE else "NXP-06", team=team))
             return best
         return self.ask(state, flag, accepted, declined, runoff, best, can_save)
 
@@ -574,6 +576,7 @@ class PenaltyFlow:
                       "<quarterback>": state.quarterbacks.get(flag.side, ""), "<surname>": self.surname(state, flag)}
             remarks.say_remark(g, state, state.extras, "PN", values)
         self.rules.broadcast.penalty(state, flag.side)          # SY.1: Ghip's own line after an accepted penalty (his own draws)
+        self.rules.stadium.penalty(state, flag.side)            # SY.2: the flag and the crowd
 
     @staticmethod
     def half_over(state) -> bool:
@@ -610,6 +613,7 @@ class PenaltyFlow:
         x, g = state.extras, self.game
         x.foul_clock = "live"
         x.foul_by_offense = flags[0].side == self.down.offense
+        self.rules.game.sounds.whistle_context = "penalty"
         self.rules.game.sounds.play_tackle(8)                    # the whistle (foot11)
         self.announce(state, flags, False)
         if len(flags) == 2:
@@ -617,13 +621,13 @@ class PenaltyFlow:
             if self.double_extends(state, flags, result, enforced):
                 result = replace(result, untimed=True, notes=result.notes + (X.text("NXP-14"),))
             if enforced is None:
-                g.say4(X.text("NXP-08"))
+                self.rules.ref_says(X.text("NXP-08"))
                 self.note(state, "offset", flags[0])
                 self.note(state, "offset", flags[1])
                 if result.kind == PEN.PLAY_STANDS:
                     return None
                 return self.apply(state, None, result)
-            g.say4(X.text("NXP-20"))
+            self.rules.ref_says(X.text("NXP-20"))
             flag = flags[0] if flags[0].foul is enforced else flags[1]
             self.note(state, "major", flag, result.yards)
             return self.apply(state, flag, result)
@@ -634,11 +638,11 @@ class PenaltyFlow:
             #                                            team does not extend a period (4-8-2 (a) is for the defense)
         if how == PEN.AUTO_DECLINE:                    # no real choice: said as the officials say it
             self.note(state, "not offered", flag)
-            g.say4(X.text("NXP-07", team=state.teams.get(2 if flag.side == 1 else 1, "")))
+            self.rules.ref_says(X.text("NXP-07", team=state.teams.get(2 if flag.side == 1 else 1, "")))
             return None
         if how == PEN.ON_THE_TRY:
             self.note(state, "on the try", flag)
-            g.say4(X.text("NXP-16"))
+            self.rules.ref_says(X.text("NXP-16"))
             x.flags[flag.side - 1] += 1
             self.try_from_the_one = True
             self.remark(state, flag)
@@ -739,6 +743,7 @@ class PenaltyFlow:
         x.foul_by_offense = flag.foul.offense_side
         if x.extension_snap:                           # the untimed down was not played: still due
             x.extension = True
+        g.sounds.whistle_context = "penalty"
         g.sounds.play_tackle(8)
         g.sounds.c2df()
         self.announce(state, [flag], True)
@@ -756,7 +761,7 @@ class PenaltyFlow:
                 x.left = max(0, x.left - R.RUNOFF_SECONDS)
                 x.foul_clock = "runoff"
                 then = self.apply(state, flag, accepted)
-                g.say4(X.text("NXP-12"))
+                self.rules.ref_says(X.text("NXP-12"))
                 self.remark(state, flag)
                 if x.left <= 0:
                     x.no_snap = False

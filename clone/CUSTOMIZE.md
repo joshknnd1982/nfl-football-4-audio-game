@@ -123,6 +123,12 @@ In Ghip's lines `<team>` is the team the line is about, `<opponent>` the other t
 
 Ghip speaks with his own voice: F12 asks for him after the five speakers and F11 for his volume (only with the N. F. L. rules and the broadcast on). The first time, the game gives him the next voice of the announcer's engine. F9, Rules, Broadcast switches Ghip and the questions to him off; the radio banter stays, it is the banter of the N. F. L. rules. With NVDA or JAWS the screen reader speaks Ghip too, in its one voice. The first key you press cuts the line that is being said.
 
+## The stadium sounds of the N. F. L. rules
+
+With the N. F. L. rules the game plays about 20 short sounds of its own beside the original's: the crowd (crowd_cheer, crowd_roar, crowd_groan, crowd_boo, crowd_gasp, crowd_applause, crowd_oh), the hits (hit_helmet, hit_pads, ball_catch), flag_throw, first_down_chain, goal_post_hit, the clicks of the referee's microphone (mic_on, mic_off) and the referee's whistles (whistle_short, whistle_long, whistle_double, whistle_triple). They are generated sounds, in the folder assets\sounds_nx of the program folder. They are quiet (15 to 26 decibels under the sound volume of F11) and never wait. F9, Rules, Stadium sounds switches them off.
+
+To use your own sound, put a wav file with the same name in the sounds folder of your NFL Football 4 folder (the folder that holds your own foot7.wav files): it replaces the sound. To add a second sound to a family, give it a number: crowd_cheer2.wav, crowd_cheer3.wav; the game draws one of them each time. Delete your file to get the original back.
+
 ## The penalties of the N. F. L. rules
 
 With the N. F. L. rules the game also has penalties.txt. It lists the fouls the officials call, one line each, P01 to P26 and P33 to P37, with the name the announcer says (P34 to P37 are the fouls of the 2026 kicks: the illegal wedge, the kick off formation, leaping, and kick catch interference; they are called only when you play with a playbook, as the 2026 kicks are):

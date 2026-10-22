@@ -67,6 +67,7 @@ class BreakSteps:
         if s.quarter <= 4:
             self._two_minute_warning()
             if clock.period_over():
+                snd.whistle_context = "final"
                 snd.play_tackle(8)
                 return self.game_end
             return self.play_menu
@@ -115,6 +116,7 @@ class BreakSteps:
         g = self.g
         g.ptf = 1
         g.log_print("")
+        self.snd.whistle_context = "quarter"
         self.snd.play_tackle(8)
         g.say4(P.END_OF_QUARTER[quarter])
         g.ptf = 0
@@ -132,6 +134,7 @@ class BreakSteps:
         if clock.warning_due():
             g.log_print("")
             g.say4(P.TWO_MINUTE_WARNING)
+            self.snd.whistle_context = "twominute"
             self.snd.play_tackle(8)
             self.snd.commercial("two-minute-warning")                # owner rule 0.14
             self.rules.broadcast_moment(self.s, "two_minute")        # H23

@@ -82,6 +82,9 @@ class FakeBackend(SpeechBackend):
     def set_role_volume(self, role, volume):
         self.events.append(("role_volume", f"{role}={volume}"))
 
+    def set_role_effect(self, role, effect):
+        self.events.append(("role_effect", f"{role}={effect or ''}"))
+
     def role_details(self, role, timeout=3.0):
         from .sapi5 import VoiceDetails
         voice_id = self.role_voices.get(role, f"token-{role}")
