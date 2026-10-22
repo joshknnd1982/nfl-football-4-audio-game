@@ -353,8 +353,8 @@ OFFENSE: tuple[Concept, ...] = (
        tag=SRC_OFFICIAL, sit=("clock",)),
     passes("O154", "Fake Spike", "og18", "slant 50 go 50", kind="trick_pass", form="under_center", sack=80, comp=200,
            strong=("two_high",), weak=("man",), sit=("clock", "rare")),
-    passes("O155", "Fake Kneel", "og18", "go 100", kind="trick_pass", form="victory", sack=120, strong=("box8",),
-           weak=("two_high",), sit=("clock", "rare")),
+    passes("O155", "Victory Formation Pass", "og18", "go 100", kind="trick_pass", form="victory", sack=120, strong=("box8",),
+           weak=("two_high",), sit=("clock", "rare")),        # SX.13: no simulated kneel (RB26 7-2-1 (c)); "fake kneel" is LEFT_OUT
     _o("O038", "Hail Mary", "og18", "hail_mary", (), form="shotgun", strong=("one_high",), weak=("prevent",),
        sit=("clock", "late")),
     _o("O156", "Laterals at the End", "og18", "laterals", (), form="shotgun", strong=("prevent",), weak=("man",),
@@ -607,6 +607,8 @@ BY_ID: dict[str, Concept] = {c.id: c for c in CATALOG}
 LEFT_OUT = {
     "fumblerooski": "a ball left on the ground on purpose is a forward pass or a fumble the defense may take (RB26 7-6-4, 8-1-1(c)); "
                     "its usual form is not legal",
+    "fake kneel": "the ball is dead when the quarterback drops to a knee or simulates it (RB26 7-2-1 (c), SX.13); O155 Victory Formation "
+                  "Pass is the legal form: the victory formation and a pass at once, with no kneel shown",
     "drop kick": "legal, last used in 2006; the research recommends not offering it",
     "quick kick": "legal from a scrimmage formation, no recent use; not offered (research 4.2)",
     "sky kick": "the 2026 kick-off's coverage may not move until the ball lands, so height gains nothing (RB26 6-1-3)",

@@ -10,6 +10,8 @@ import pytest
 
 from nfl4.extras import offense_flow as OF
 from nfl4.extras import overtime as OT
+from nfl4.extras import nx_texts as X
+from nfl4.extras import rules_2026 as R
 from nfl4.extras import tuning as T
 from nfl4.extras.nfl_rules import NflRules
 from nfl4.extras.plays import catalog as C
@@ -242,6 +244,325 @@ def test_a_free_kick_from_another_spot_is_never_returned_from_short_of_the_landi
 def test_the_safety_punt_is_read_as_the_free_kick_it_is(given, expected):
     from nfl4.extras.kick_flow import KickFlow
     assert KickFlow.safety_punt(given, 20, True) == expected
+
+
+def test_a_safety_kick_out_of_bounds_or_short_is_said_with_its_spot(tmp_path):
+    from test_sx10d_kicks import given, rig_for as kicks_rig, run as run_from, texts
+    for kind, row in (("out_of_bounds", "NXB-J25"), ("landed_short", "NXB-J26")):
+        rig = kicks_rig(tmp_path / kind, wisoff=1, defense=2, half=2, yard_line=0)
+        rig.engine.s.extras.kick_call = "K001"
+        given(rig, kickoff_result=M.KickResult(kind, 50))
+        mark = len(rig.said)
+        assert run_from(rig, rig.engine.kickoff_2026) == "down_sentence"
+        assert X.text(row, n=50) in texts(rig, mark) and rig.engine.s.yard_line == 50
+
+
+# ----- 9-3, 11-5-1, 11-2: a punt blocked behind the kicking team's own goal line -----
+
+def test_a_punt_blocked_behind_the_own_goal_line_is_a_safety_or_the_receivers_touchdown():
+    rnd = Seeded(9)
+    seen = set()
+    for _ in range(60000):
+        r = M.punt("spread", 95, "block", rnd)
+        if r.kind == "blocked":
+            assert r.start == 100, r                        # 95 yards from the receivers' goal plus 5 to 12 behind: the end zone
+            seen.add(r.touchdown)
+    assert seen == {True, False}
+    for _ in range(20000):
+        r = M.punt("spread", 60, "block", rnd)
+        assert r.kind != "blocked" or r.start < 100
+
+
+@pytest.mark.parametrize("touchdown, receivers_points", [(False, 2), (True, 6)])
+def test_the_engine_tells_the_end_zone_block(tmp_path, touchdown, receivers_points):
+    from test_sx10d_kicks import given, punting, run as run_from, texts
+    rig = punting(tmp_path, wisoff=1, defense=2, half=2, yard_line=5)
+    given(rig, kick_result=M.KickResult("blocked", 100, touchdown=touchdown, defense_recovers=touchdown))
+    mark = len(rig.said)
+    run_from(rig, rig.engine.punt)
+    s = rig.engine.s
+    assert s.score(2) == receivers_points and s.score(1) == 0
+    said = texts(rig, mark)
+    if touchdown:
+        assert any("falls on it in the end zone" in t for t in said)
+    else:
+        assert X.text("NXB-J28") in said and s.extras.safety_kick is True
+
+
+# ----- 3-36-2, 4-5-1 Item 3: the T key's timeout and the dead-ball period -----
+
+def clock_rig(tmp_path, **extras):
+    values = dict(timeouts_on=True, period=4, unit="H2", announced="H2", plays=1, handled=0, last_kind="run", last_offense=1)
+    values.update(extras)
+    rules = NflRules(timeouts_on=True)
+    rig = nfl_engine_rig(tmp_path, rules=rules, quarter=4, wisoff=1, defense=2, half=2, yard_line=40, extras=values)
+    rig.rnd.source = random.Random(2)
+    return rig, rules
+
+
+def test_a_t_kept_during_the_play_stops_the_clock_when_the_play_ends(tmp_path):
+    from nfl4.game import outcome as O
+    rig, rules = clock_rig(tmp_path, left=12, last_kind=O.RUN)
+    rules.timeout_kept = True
+    rules.between_plays(rig.engine.s)
+    x = rig.engine.s.extras
+    assert x.left == 12 and x.pending == 0 and x.running is False and x.used[0] == 1
+
+
+def test_a_snap_or_a_kick_ends_the_dead_ball_period(tmp_path):
+    rig, rules = clock_rig(tmp_path, left=300)
+    x = rig.engine.s.extras
+    x.called = [True, True]
+    rig.engine.go_live()                                     # the kick-off, a punt, a kicked try: the ball is live
+    assert x.called == [False, False]
+
+
+def test_a_timeout_may_be_called_before_a_try_at_0_00_and_not_after_it(tmp_path):
+    from nfl4.game.rules import TIMEOUT_GRANTED, TIMEOUT_REFUSED
+    rig, rules = clock_rig(tmp_path, left=0, period=2, unit="H1", announced="H1")
+    rig.engine.s.quarter = 2
+    rules.try_due = True
+    assert rules.timeout_key(rig.engine.s, False) == TIMEOUT_GRANTED
+    rules.try_due = False
+    rig.engine.s.extras.called = [False, False]
+    assert rules.timeout_key(rig.engine.s, False) == TIMEOUT_REFUSED
+
+
+def test_a_touchdown_makes_the_try_due_and_the_kick_ends_it(tmp_path):
+    rig, rules = clock_rig(tmp_path, left=0, period=2, unit="H1", announced="H1")
+    s = rig.engine.s
+    s.quarter = 2                                            # the second quarter keeps its try (4-8-2 (c) is the fourth's)
+    s.stats[1].score = 6
+    assert rules.points_end_game(s, 1) is False and rules.try_due is True
+    rules.ball_live(s)
+    assert rules.try_due is False
+
+
+# ----- 4-3-1 (b): an onside kick the kicking team recovers starts no clock -----
+
+def test_an_onside_kick_the_kickers_keep_takes_no_time():
+    from nfl4.extras import clock as CL
+    from nfl4.game import outcome as O
+    from nfl4.game.gamestate import GameState
+    rnd = Seeded(1)
+    kept = O.PlayOutcome(O.ONSIDE_KICK, 1, 0, 0, turnover=True)
+    lost = O.PlayOutcome(O.ONSIDE_KICK, 1, 0, 0, turnover=False)
+    assert CL.live_time(kept, GameState(), rnd) == 0
+    assert CL.live_time(lost, GameState(), rnd) >= T.LIVE_ONSIDE[0]
+
+
+# ----- 15-5-2, 4-7-4: the ten seconds after a reversal of a play that began after the warning -----
+
+@pytest.mark.parametrize("left, after", [(40, 30), (11, 1), (8, 0)])
+def test_a_reversal_after_the_warning_to_a_running_clock_runs_ten_seconds_off(tmp_path, left, after):
+    from nfl4.game import outcome as O
+    rig, rules = clock_rig(tmp_path, left=left, warning_given=True, last_kind=O.RUN)
+    rules.review.runoff_due = True
+    mark = len(rig.said)
+    rules.between_plays(rig.engine.s)
+    x = rig.engine.s.extras
+    assert x.left == after and X.text("NXP-12") in [t for t, _, _ in rig.said[mark:]]
+    assert x.pending <= R.RUNOFF_PLAY_CLOCK
+    if after == 0:
+        assert x.pending == 0 and rig.engine.clock.period_over()
+
+
+def test_a_timeout_avoids_the_ten_seconds_and_a_stopped_clock_has_none(tmp_path):
+    from nfl4.game import outcome as O
+    rig, rules = clock_rig(tmp_path, left=40, warning_given=True, last_kind=O.RUN)
+    rules.review.runoff_due = True
+    rules.timeout_kept = True
+    rules.between_plays(rig.engine.s)
+    assert rig.engine.s.extras.left == 40 and rig.engine.s.extras.used[0] == 1
+    rig, rules = clock_rig(tmp_path / "inc", left=40, warning_given=True, last_kind=O.PASS_INCOMPLETE)
+    rules.review.runoff_due = True
+    mark = len(rig.said)
+    rules.between_plays(rig.engine.s)
+    assert rig.engine.s.extras.left == 40 and X.text("NXP-12") not in [t for t, _, _ in rig.said[mark:]]
+    assert rules.review.runoff_due is False
+
+
+def test_a_play_across_the_two_minutes_is_still_a_coachs():
+    """15-1-2 (a): only a play that BEGINS after the warning is the replay official's (the warning is due, not yet given)."""
+    from nfl4.extras import review as RV
+    from nfl4.extras.state import ExtrasRecord
+    from nfl4.game import outcome as O
+    from test_nx_review_rules import outcome, state_of
+    record = ExtrasRecord()
+    record.warning_due, record.warning_given = True, False
+    assert RV.booth_reason(state_of(quarter=4, down=2, to_go=5), outcome(O.RUN, yards=4), record) == ""
+    record.warning_due, record.warning_given = False, True
+    assert RV.booth_reason(state_of(quarter=4, down=2, to_go=5), outcome(O.RUN, yards=4), record) == "warning"
+
+
+def test_a_timeout_and_a_lost_challenge_cost_two_timeouts(tmp_path):
+    """15-6-1: a team that takes a timeout and then challenges unsuccessfully is charged a second one."""
+    from pagrig import Draws
+    from test_nx_review_fixes import timeout_scene
+    from test_nx_review_flows import CLOSE, ENTER, ESCAPE, the_menu
+    rig = timeout_scene(tmp_path, ["t", "c", ENTER, "y", ENTER, ESCAPE], ruling=CLOSE())
+    the_menu(rig, Draws().below(6, 1).rady().rady())
+    x = rig.engine.s.extras
+    assert x.timeouts == [1, 3] and x.used == [2, 0]
+
+
+# ----- 4-7-1 (a) and Item 2: the runoff for delay of game, and a defense foul's ready signal -----
+
+def test_delay_of_game_after_the_warning_offers_the_ten_second_runoff():
+    from nfl4.extras import fouls_2026 as F
+    delay = F.BY_ID["P02"][0]
+    assert delay.code == "DOG" and delay.code not in R.NO_RUNOFF_FOULS and delay.offense_side and F.DEAD in delay.phases
+
+
+@pytest.mark.parametrize("leads, expected", [(True, (True, True)), (False, (False, False)), (None, (False, False))])
+def test_a_defense_foul_after_the_warning_lets_a_leading_offense_run_the_clock(leads, expected):
+    from nfl4.extras import penalty_flow as PF
+    from nfl4.extras.state import ExtrasRecord
+    record = ExtrasRecord(left=100, foul_clock="pre", foul_by_offense=False, was_running=True, warning_given=True, period=4)
+    assert PF.clock_after_foul(record, 4, False, leads) == expected      # None (not asked): the late window, on the snap
+    before = ExtrasRecord(left=400, foul_clock="pre", foul_by_offense=False, was_running=True, warning_given=False, period=4)
+    assert PF.clock_after_foul(before, 4, False, leads) == (True, True)   # before the warning: as if no foul
+
+
+# ----- 4-8-2 (a), (e), (h): the untimed down in overtime, after offsetting fouls and for the fair catch kick -----
+
+def penalty_state(quarter, postseason=False):
+    from nfl4.extras.state import ExtrasRecord
+    from nfl4.game.gamestate import GameState
+    s = GameState(quarter=quarter, wisoff=1, defense=2)
+    s.extras = ExtrasRecord(left=0, postseason=postseason, period=quarter if quarter <= 4 else 5)
+    return s
+
+
+def test_an_accepted_defense_foul_extends_the_regular_seasons_overtime_period():
+    from nfl4.extras import fouls_2026 as F
+    from nfl4.extras import penalties as PEN
+    from nfl4.extras.penalty_flow import Flag, PenaltyFlow
+    flow = PenaltyFlow(NflRules())
+    flow.down = PEN.Down(1, 30)
+    holding = Flag(F.BY_ID["P09"][0], 2)
+    assert flow.extends(penalty_state(5), holding) is True
+    assert flow.extends(penalty_state(5, postseason=True), holding) is False     # a play-off period goes on into the next one
+    assert flow.extends(penalty_state(2), holding) is True and flow.extends(penalty_state(1), holding) is False
+
+
+def test_offsetting_fouls_on_the_last_down_of_a_half_give_an_untimed_down():
+    from nfl4.extras import fouls_2026 as F
+    from nfl4.extras import penalties as PEN
+    from nfl4.extras.penalty_flow import Flag, PenaltyFlow
+    flow = PenaltyFlow(NflRules())
+    flow.down = PEN.Down(1, 30)
+    replay = PEN.replay_down(flow.down, PEN.PlayFacts("run", 34))
+    live = [Flag(F.BY_ID["P08"][0], 1), Flag(F.BY_ID["P09"][0], 2)]
+    assert flow.double_extends(penalty_state(2), live, replay, None) is True
+    assert flow.double_extends(penalty_state(4), live, replay, None) is True
+    assert flow.double_extends(penalty_state(3), live, replay, None) is False
+    after = [f for f in F.BY_ID["P18"]]
+    both_after = [Flag(after[0], 2), Flag(after[1], 1)]
+    assert flow.double_extends(penalty_state(2), both_after, replay, None) is False             # exception (1)
+    dead_defense = [Flag(F.BY_ID["P08"][0], 1), Flag(after[0], 2)]
+    assert flow.double_extends(penalty_state(2), dead_defense, replay, None) is False           # exception (3)
+    major_offense = [Flag(F.BY_ID["P16"][0], 1), Flag(F.BY_ID["P03"][0], 2)]
+    assert flow.double_extends(penalty_state(2), major_offense, replay, F.BY_ID["P16"][0]) is False
+    assert flow.double_extends(penalty_state(2), live, PEN.Result(PEN.PLAY_STANDS), None) is False   # exception (4)
+
+
+def test_a_fair_catch_as_time_runs_out_offers_the_untimed_fair_catch_kick(tmp_path):
+    from test_sx10d_kicks import punting
+    rig = punting(tmp_path, wisoff=2, defense=1, half=1, yard_line=30, quarter=2)
+    s, x = rig.engine.s, rig.engine.s.extras
+    s.wisoff, s.defense = 1, 2
+    rig.rules.kicks.fair_catch(s, 1, 52)
+    x.left = 0
+    rig.keys.answers = [40, 13]                              # "no" first; Down makes it yes
+    assert rig.rules.kicks.fair_catch_question(s) is True and x.extension is True
+    assert rig.engine.clock.period_over() is False
+
+
+# ----- 14-5-2, 14-3-6, 14-4-5, 14-4-8: the penalty enforcement -----
+
+def test_double_fouls_with_a_change_of_possession_are_played_again():
+    from nfl4.extras import fouls_2026 as F
+    from nfl4.extras import penalties as PEN
+    from nfl4.game import outcome as O
+    result, enforced = PEN.double_foul(F.BY_ID["P34"][0], F.BY_ID["P24"][0], PEN.Down(1, 0), PEN.PlayFacts(O.KICKOFF_RETURN, 30))
+    assert enforced is None and result.kind == PEN.REPLAY_KICK
+    result, enforced = PEN.double_foul(F.BY_ID["P37"][0], F.BY_ID["P22"][0], PEN.Down(1, 40, 4, 8),
+                                       PEN.PlayFacts(O.PUNT, 40, receivers_spot=30))
+    assert enforced is None and (result.kind, result.ball, result.los, result.down, result.to_go) == (PEN.NEW_DOWN, 1, 40, 4, 8)
+    result, enforced = PEN.double_foul(F.BY_ID["P14"][0], F.BY_ID["P16"][0], PEN.Down(1, 30, 2, 6),
+                                       PEN.PlayFacts(O.INTERCEPTION, 30, turnover=True))
+    assert enforced is None and (result.kind, result.los, result.down, result.to_go) == (PEN.NEW_DOWN, 30, 2, 6)
+    result, enforced = PEN.double_foul(F.BY_ID["P14"][0], F.BY_ID["P16"][0], PEN.Down(1, 30), PEN.PlayFacts(O.PASS_INCOMPLETE, 30))
+    assert enforced is F.BY_ID["P14"][0]                     # no change of possession: 15 against 5 (14-5-1 Exception 1)
+
+
+def test_the_ball_carriers_face_mask_after_the_catch_is_enforced_three_and_one():
+    from nfl4.extras import fouls_2026 as F
+    from nfl4.extras import penalties as PEN
+    from nfl4.game import outcome as O
+    mask = [f for f in F.BY_ID["P17"] if f.offender == F.OFFENSE][0]
+    _how, accepted, _declined = PEN.answers(mask, PEN.Down(1, 30), PEN.PlayFacts(O.PASS_COMPLETE, 50))
+    assert (accepted.kind, accepted.los, accepted.down, accepted.to_go) == (PEN.NEW_DOWN, 35, 1, 5)
+
+
+def test_an_offense_foul_behind_its_own_goal_line_and_a_run_that_ends_there_are_safeties():
+    from nfl4.extras import fouls_2026 as F
+    from nfl4.extras import penalties as PEN
+    from nfl4.game import outcome as O
+    holding = F.BY_ID["P08"][0]
+    _how, accepted, _declined = PEN.answers(holding, PEN.Down(1, 1), PEN.PlayFacts(O.RUN, 5), foul_spot=-1)
+    assert accepted.kind == PEN.SAFETY and accepted.ball == 2 and accepted.points == (0, 2)       # 14-3-6 Exception 2
+    how, _accepted, declined = PEN.answers(holding, PEN.Down(1, 3), PEN.PlayFacts(O.RUN, 0, score="safety"), foul_spot=2)
+    assert how == PEN.AUTO_DECLINE and declined.kind == PEN.SAFETY                                 # 14-3-6 Exception 3
+
+
+def test_kick_catch_interference_never_takes_a_punt_return_touchdown_away():
+    from nfl4.extras import fouls_2026 as F
+    from nfl4.extras import penalties as PEN
+    from nfl4.game import outcome as O
+    how, _a, _d = PEN.answers(F.BY_ID["P37"][0], PEN.Down(1, 40, 4, 8),
+                              PEN.PlayFacts(O.PUNT, 40, score="return touchdown", receivers_spot=100))
+    assert how == PEN.AUTO_DECLINE
+
+
+# ----- 7-2-1, 11-2, 8-7-1, 7-2-1 (c), 8-2-1 Item 3: the plays -----
+
+def defense_call():
+    return next(c for c in C.CATALOG if c.side == "D").params
+
+
+@pytest.mark.parametrize("play", ["O001", "O017", "O051"])
+def test_no_fumble_is_drawn_once_the_ball_carrier_reached_the_goal_line(play):
+    rnd = Seeded(13)
+    for to_goal in (1, 2, 3):
+        situation = M.Situation(to_goal=to_goal, down=1, distance=to_goal)
+        for _ in range(6000):
+            r = M.play(C.BY_ID[play], defense_call(), situation, rnd)
+            assert not (r.kind == "fumble" and r.yards >= to_goal), (play, to_goal, r)
+
+
+def test_a_fumbled_lateral_is_the_laterals_run_never_a_sack(tmp_path, monkeypatch):
+    rnd = Seeded(21)
+    situation = M.Situation(to_goal=70, down=1, distance=10)
+    laterals = [r for r in (M.play(C.BY_ID["O138"], defense_call(), situation, rnd) for _ in range(40000))
+                if r.kind == "fumble" and r.gap == "laterals"]
+    assert laterals and all(-12 <= r.yards <= -5 for r in laterals)
+    rig = rig_for(tmp_path, "O138", laterals[0]._replace(fumble_lost=False), monkeypatch)
+    sacked = rig.engine.s.stats[1].sacked
+    run_play(rig)
+    assert rig.engine.s.stats[1].sacked == sacked and rig.engine.outcomes[-1].kind != "sack"
+
+
+def test_no_play_simulates_a_kneel_and_the_clock_plays_keep_their_formation(tmp_path):
+    assert C.BY_ID["O155"].name == "Victory Formation Pass" and "fake kneel" in C.LEFT_OUT
+    assert not any("pretend" in X.text(row).lower() and "kneel" in X.text(row).lower() for row in ("NXY-S55",))
+    rules = NflRules(timeouts_on=True, offense_book="west", defense_book="classic")
+    rig = nfl_engine_rig(tmp_path, rules=rules)
+    rig.engine.s.extras.play_settings = {"formation": "shotgun"}
+    for play in ("O152", "O153", "O141"):
+        assert rules.offense.situation(rig.engine.s, C.BY_ID[play]).formation == ""
+    assert rules.offense.situation(rig.engine.s, C.BY_ID["O017"]).formation == "shotgun"
 
 
 def test_after_a_safety_the_computer_kicks_deep_with_no_draw_and_a_safety_kick_made_again_stays_one(tmp_path):

@@ -74,7 +74,7 @@ def test_the_computers_kick_is_recovered_with_an_offside_and_the_player_chooses_
     rig = computer_kicks(tmp_path, answers=[ENTER])
     s = rig.engine.s
     value = value_of(rig, rows(rig, O.ONSIDE_KICK, after=False), "P24")
-    draws = kick_draws(distance=10).below(10000, value).rnd(17, 3).rnd(40, 2).below(3, 0)
+    draws = kick_draws(distance=10).below(10000, value).rnd(17, 3).rnd(40, 2)
     step = kick_off_and_kick(rig, draws)
     said = texts(rig)
     assert said[:2] == [" the Jets will try an onside kick. ", " the Jets line up for an onside kick. "]
@@ -104,7 +104,7 @@ def test_illegal_touching_on_a_recovered_kick_gives_the_receivers_the_ball_at_th
     s = rig.engine.s
     value = value_of(rig, rows(rig, O.ONSIDE_KICK, after=False), "P33")
     assert value == 120                                                 # P24's slice is 1.0 * 100 * 1.2 = 120 of 10,000
-    draws = kick_draws(distance=10).below(10000, value).rnd(17, 4).rnd(40, 2).below(3, 2)
+    draws = kick_draws(distance=10).below(10000, value).rnd(17, 4).rnd(40, 2)
     step = kick_off_and_kick(rig, draws)
     said = texts(rig)
     i = said.index(" and the Jets recover it. ")
@@ -120,7 +120,7 @@ def test_the_player_may_decline_and_the_kickers_keep_a_recovery(tmp_path):
     rig = computer_kicks(tmp_path, answers=[DOWN, ENTER])
     s = rig.engine.s
     value = value_of(rig, rows(rig, O.ONSIDE_KICK, after=False), "P33")
-    draws = kick_draws(distance=10).below(10000, value).rnd(17, 4).rnd(40, 2).below(3, 2)
+    draws = kick_draws(distance=10).below(10000, value).rnd(17, 4).rnd(40, 2)
     step = kick_off_and_kick(rig, draws)
     assert texts(rig)[-2:] == [" accept ", " decline "] and step == rig.engine.possession
     assert s.extras.onside_recovered == [0, 1] and s.extras.flags == [0, 0]              # counted: no penalty took it away
@@ -188,7 +188,7 @@ def test_the_remark_is_one_in_three_and_comes_after_the_hands_team(tmp_path):
     rig = game(tmp_path, answers=["y", ENTER], comments=True)
     step = rig.engine.kick_off()
     # comments on: the chance 1 in 3 hits, the third line of the pool (ON03), the kick (recovered), L = 3
-    draws = Draws().rnd(3, 1).rnd(3, 3).extend(kick_draws(distance=9)).below(3, 0)
+    draws = Draws().rnd(3, 1).rnd(3, 3).extend(kick_draws(distance=9))
     script(rig, draws)
     step()
     check(rig, draws)
@@ -200,7 +200,7 @@ def test_the_remark_is_one_in_three_and_comes_after_the_hands_team(tmp_path):
 def test_the_remark_chance_missing_says_nothing_and_comments_off_draws_nothing(tmp_path):
     rig = game(tmp_path, answers=["y", ENTER], comments=True)
     step = rig.engine.kick_off()
-    draws = Draws().rnd(3, 2).extend(kick_draws(distance=9)).below(3, 0)           # 2: no remark
+    draws = Draws().rnd(3, 2).extend(kick_draws(distance=9))           # 2: no remark
     script(rig, draws)
     step()
     check(rig, draws)
@@ -214,7 +214,7 @@ def test_the_player_can_change_switch_off_and_add_remarks_of_the_pool(tmp_path):
     assert [r.id for r in pools.lines("ON")] == ["ON02", "ON03", "ON04"] and problems.count == 0
     rig.game.remark_pools = pools
     step = rig.engine.kick_off()
-    draws = Draws().rnd(3, 1).rnd(3, 3).extend(kick_draws(distance=9)).below(3, 0)         # the third line on: ON04
+    draws = Draws().rnd(3, 1).rnd(3, 3).extend(kick_draws(distance=9))         # the third line on: ON04
     script(rig, draws)
     step()
     check(rig, draws)
@@ -357,28 +357,21 @@ def test_whole_games_through_the_menus_ask_the_player_at_every_kick_off_and_keep
     assert tried > 0                                                      # the keys said yes at least once
 
 
-def test_a_recovered_kick_with_an_offside_on_the_last_play_of_a_half_is_not_made_again(tmp_path):
-    """4-8-2 (a) extends a period for a foul by the defense only: with 0:00 on the clock the half is over, so there is no
-    choice (the prompt would promise a kick that is never made) and the recovery stands (found by the review)."""
-    rig = computer_kicks(tmp_path, answers=[], left=3)
+def test_a_recovered_kick_takes_no_time_so_its_offside_with_3_seconds_left_still_asks_the_player(tmp_path):
+    """SX.13 (RB26 4-3-1 (b)): the clock does not start when the kicking team recovers its free kick, so a recovered onside kick never
+    runs out a half (SX.4's case of 0:00 after the kick, where the choice was not offered, cannot arise any more): the player is asked."""
+    rig = computer_kicks(tmp_path, answers=[ENTER], left=3)
     s = rig.engine.s
     value = value_of(rig, rows(rig, O.ONSIDE_KICK, after=False), "P24")
-    draws = kick_draws(distance=10).below(10000, value).rnd(17, 3).rnd(40, 2).below(3, 2)     # L = 5 takes the last 3 seconds
+    draws = kick_draws(distance=10).below(10000, value).rnd(17, 3).rnd(40, 2)
     step = kick_off_and_kick(rig, draws)
-    said = texts(rig)
-    i = said.index(" and the Jets recover it. ")
-    assert said[i + 1:i + 4] == [X.text("NXP-01"), " off sides on the kick off, on the Jets, ODef3. ",
-                                 " the Bengals decline the penalty. "]
-    assert " accept " not in said and X.text("NXP-13") not in said              # no question, no kick made again
-    assert s.extras.left == 0 and s.extras.kick_again is False and step == rig.engine.possession
-    assert s.extras.onside_recovered == [0, 1] and s.extras.flags == [0, 0]
-    assert rig.rules.penalty.events[-1][1] == "not offered"
+    assert " accept " in texts(rig) and step.__name__ == "kick_off" and s.extras.left == 3
 
 
 def test_the_same_foul_with_time_left_still_asks_the_player(tmp_path):
     rig = computer_kicks(tmp_path, answers=[ENTER], left=100)
     value = value_of(rig, rows(rig, O.ONSIDE_KICK, after=False), "P24")
-    draws = kick_draws(distance=10).below(10000, value).rnd(17, 3).rnd(40, 2).below(3, 2)
+    draws = kick_draws(distance=10).below(10000, value).rnd(17, 3).rnd(40, 2)
     step = kick_off_and_kick(rig, draws)
     assert " accept " in texts(rig) and step.__name__ == "kick_off"
 

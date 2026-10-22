@@ -56,6 +56,7 @@ QB_FAMILY = {"sneak": 8, "keeper": 9, "draw": 10}            # playtables QB_SNE
 QB_KIND_KEYS = {"O048": "draw"}                              # the designed quarterback runs that are told as a draw; a sneak is a sneak
 QB_PLAYS = {8: "O046", 9: "O047", 10: "O048"}                # the offense items 8, 9 and 0 (descriptions.QB_PLAYS)
 PASS_KINDS = ("pass", "screen", "play_action", "boot", "trick_pass", "max_protect", "hail_mary")
+OWN_FORMATION_PLAYS = ("O141", "O152", "O153")     # SX.13: the Formation setting never changes these (the throwback, the kneel, the spike)
 RUN_KINDS = ("run", "draw", "trick_run", "laterals")
 SETTING_BOOK = "book"               # a setting's "the playbook's choice": the concept's own formation, personnel, motion, side
 KICK_FAMILIES = {"kg02": 7, "kg03": 6}       # SX.10d: the kinds of punt and the fakes are the original's Punt, the fake field goals its Field Goal
@@ -380,7 +381,9 @@ class OffenseFlow:
         """The model's situation; `own`: the player's play, with his Formation and Tempo settings (the computer's play has none)."""
         settings = state.extras.play_settings if own else {}
         formation = settings.get("formation", SETTING_BOOK)
-        motion = settings.get("motion", SETTING_BOOK)
+        if concept.id in OWN_FORMATION_PLAYS:
+            formation = SETTING_BOOK              # SX.13: the kneel, the spike (only from under center, RB26 8-2-1 Item 3) and the throwback
+        motion = settings.get("motion", SETTING_BOOK)    # (an eligible quarterback, 8-1-6) keep their own formation
         values = dict(to_goal=to_goal(state), down=state.down, distance=state.to_go,
                       formation="" if formation == SETTING_BOOK else formation,
                       motion="" if motion == SETTING_BOOK else motion,

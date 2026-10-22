@@ -56,15 +56,17 @@ def test_6_off_wins_over_a_weight_in_penalties_txt():
     assert PL.parse_value("holding; on; weight 50")[1] == 50
 
 
-def test_7_delay_of_game_after_the_warning_gets_no_run_off(tmp_path):
-    assert "DOG" in R.NO_RUNOFF_FOULS
-    rig = game(tmp_path, quarter=4, wisoff=2, defense=1, half=1, yard_line=40, offense_play=1, defense_play=2,
+def test_7_delay_of_game_after_the_warning_gets_the_run_off(tmp_path):
+    """SX.13 (RB26 4-7-1 (a): a foul that stops the clock during any dead ball period): the player's defense is offered the run off
+    (Enter takes it: 70 left after the pending 30, 60 after the run off). Before SX.13 delay of game was excepted (Part 1.5)."""
+    assert "DOG" not in R.NO_RUNOFF_FOULS
+    rig = game(tmp_path, answers=[ENTER], quarter=4, wisoff=2, defense=1, half=1, yard_line=40, offense_play=1, defense_play=2,
                extras=dict(left=100, period=4, warning_given=True, running=True, pending=30))
     draws = Draws().below(10000, value_of(rig, DEAD, "P02")).rnd(4, 1).rnd(10, 1)
     script(rig, draws)
     rig.engine.snap()
     check(rig, draws)
-    assert X.text("NXP-A03") not in texts(rig) and rig.engine.s.extras.left == 70
+    assert X.text("NXP-A03") in texts(rig) and rig.engine.s.extras.left == 60
 
 
 def test_8_after_a_penalty_the_runoff_is_bounded_by_the_play_clock_of_25(tmp_path):

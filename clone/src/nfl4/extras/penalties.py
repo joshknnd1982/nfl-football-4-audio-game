@@ -149,6 +149,10 @@ def _points(side: int, value: int) -> tuple:
 
 def enforcement_spot(foul: F.Foul, down: Down, play: PlayFacts, foul_spot: int | None) -> int:
     """Where a foul that erases the play is enforced from (offense's view)."""
+    if foul.spot == F.THREE_AND_ONE and foul.id == "P17" and play.kind == O.PASS_COMPLETE and not play.turnover:
+        # SX.13 (14-3-6, 14-4-5): the ball carrier's face mask comes after the catch, during his run: three and one from the end of the
+        # run (the basic spot), never behind the line of scrimmage
+        return max(down.los, play.end if foul_spot is None else min(foul_spot, play.end))
     if foul.spot == F.THREE_AND_ONE and play.kind == O.RUN and not play.turnover:
         # 14-3-6: a foul by the offense behind the end of the run is enforced from its spot; behind the line of
         # scrimmage, or when the run ended behind it, from the previous spot
@@ -177,6 +181,11 @@ def accept(foul: F.Foul, down: Down, play: PlayFacts | None, foul_spot: int | No
         return _accept_grounding(foul, down, foul_spot)
     if foul.spot == F.SPOT_OF_FOUL and foul.yards == 0:
         return _accept_pass_interference(foul, down, foul_spot)
+    if (by_offense and play is not None and foul.spot == F.THREE_AND_ONE and play.kind == O.RUN and not play.turnover
+            and foul_spot is not None and foul_spot < 0 and not down.two_point):
+        # SX.13 (14-3-6 Exception 2, 14-2-2 (b)): a foul by the offense behind its own goal line is a safety when it is enforced
+        defense = other(down.offense)
+        return Result(SAFETY, defense, points=_points(defense, 2))
     spot = down.los if play is None else enforcement_spot(foul, down, play, foul_spot)
     new, moved, halved = move(spot, foul.yards, by_offense)
     keeps = play is not None and spot != down.los and not by_offense and not play.turnover and play.score is None
@@ -321,6 +330,10 @@ def replay_down(down: Down, play: PlayFacts | None) -> Result:
     return Result(NEW_DOWN, down.offense, down.los, down.down, down.to_go, erased_score=_erased_score(play))
 
 
+CHANGE_OF_POSSESSION_KICKS = (O.KICKOFF_RETURN, O.KICKOFF_TOUCH_BACK, O.PUNT, O.FIELD_GOAL_MISSED)   # (no row of the table gives both
+#                                                                                                    teams a foul on an onside kick)
+
+
 def is_minor(foul: F.Foul) -> bool:
     """14-5-1 Exception 1: a five-yard foul with no automatic first down, no loss of down, no run off and not a spot foul."""
     return foul.yards == 5 and not foul.automatic_first_down and not foul.loss_of_down and foul.spot != F.SPOT_OF_FOUL
@@ -331,6 +344,12 @@ def double_foul(first: F.Foul, second: F.Foul, down: Down, play: PlayFacts | Non
     team (14-5-1). Both after the play: they offset and the play's result stands (14-4-9 Item 2)."""
     if F.AFTER in first.phases and F.AFTER in second.phases:
         return Result(PLAY_STANDS), None
+    if play is not None and (play.turnover or play.kind in CHANGE_OF_POSSESSION_KICKS):
+        # SX.13 (14-5-2): a down with a change of possession (a kick, a turnover) is not 14-5-1's: the team that gained the ball fouled
+        # before it had it ("no clean hands", the clone's fouls on these plays all come before or during the kick), so the fouls offset
+        # and the down is played again (a kick-off is made again); the receivers' option to keep the ball after a foul of theirs made
+        # with clean hands is not modeled (a recorded simplification, D-097)
+        return replay_down(down, play), None
     for major, minor in ((first, second), (second, first)):
         if major.yards == R.MAJOR_AGAINST_MINOR and is_minor(minor):
             new, moved, halved = move(down.los, major.yards, major.offense_side)
@@ -350,6 +369,11 @@ def answers(foul: F.Foul, down: Down, play: PlayFacts | None, foul_spot: int | N
         return AUTO_ACCEPT, accept(foul, down, None), same
     declined = play_result(down, play)
     accepted = accept(foul, down, play, foul_spot)
+    if play.score == "return touchdown" and foul.offense_side:
+        return AUTO_DECLINE, accepted, declined   # SX.13: a foul by the team that lost the ball (kick catch interference on a punt run back):
+        #                                           the scorers keep their touchdown, no choice to make
+    if declined.kind == SAFETY and foul.offense_side and F.AFTER not in foul.phases and not down.two_point:
+        return AUTO_DECLINE, accepted, declined   # SX.13 (14-3-6 Exception 3): the play ended in the offense's own end zone: a safety
     if down.two_point and ((declined.kind == TRY_GOOD and not foul.offense_side)
                            or (declined.kind == TRY_FAILS and foul.offense_side and accepted.kind != TRY_FAILS)):
         return AUTO_DECLINE, accepted, declined   # 11-3-3 Items 3 and 4: no try again for the team that fouled

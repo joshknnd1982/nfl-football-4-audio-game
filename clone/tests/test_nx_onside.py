@@ -263,7 +263,7 @@ def test_the_kicking_team_recovers_it(tmp_path):
     s = rig.engine.s
     step = rig.engine.kick_off()
     start = len(texts(rig))
-    draws = kick_draws(distance=10).below(3, 1)                        # 10 yards, recovered, L = 3 + 1
+    draws = kick_draws(distance=10)                                    # 10 yards, recovered: no clock (4-3-1 (b), SX.13)
     script(rig, draws)
     step = step()
     check(rig, draws)
@@ -274,7 +274,7 @@ def test_the_kicking_team_recovers_it(tmp_path):
     assert step == rig.engine.possession and s.text == P.ITS
     assert (s.half, s.yard_line, s.wisoff) == (2, 45, 2)               # the Bengals' own 35 + 10, flipped by possession
     assert s.extras.onside_tried == [1, 0] and s.extras.onside_recovered == [1, 0]
-    assert s.extras.left == 396 and not rig.sounds.play_noise_running()      # L = 4 seconds; the whistle stopped the noise
+    assert s.extras.left == 400 and not rig.sounds.play_noise_running()      # no live time; the whistle stopped the noise
     script(rig, Draws())
     assert step() == rig.engine.down_sentence
     assert texts(rig)[-1] == P.ITS + P.YOUR_BALL + P.ON + P.YOUR + " 45" + P.YARD_LINE_SPACED

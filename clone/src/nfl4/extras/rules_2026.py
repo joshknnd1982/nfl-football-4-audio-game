@@ -73,7 +73,9 @@ GROUNDING_YARDS = 10                   # 8-2-1: loss of down and 10 from the pre
 RUNOFF_SECONDS = 10                    # 4-7-1: an offense foul that stops a running clock after the two-minute warning of
 #                                        either half: ten seconds off, the defense may take the yards only; never against
 #                                        the defense (4-5-4 Note 9); the clock then starts on the ready signal (4-3-2 (g))
-NO_RUNOFF_FOULS = ("DOG",)             # 4-7-1 does not list delay of game (Part 6 5.3, Part 1.5 default: no run off)
+NO_RUNOFF_FOULS = ()                   # SX.13: 4-7-1 (a) names "a foul by either team that stops the clock during any dead ball
+#                                        period", so delay of game after the warning has the run off too (was ("DOG",), Part 1.5's
+#                                        default)
 PLAY_CLOCK_AFTER_PENALTY = 25          # 4-6-2 (e), 4-6-3: after a penalty the play clock is 25; it bounds the runoff
 RUNOFF_PLAY_CLOCK = 30                 # 4-6-3 (c): after a ten-second run off the play clock is 30
 UNTIMED_DOWN = True                   # 4-8-2 (a): an accepted foul by the defense on the last play of a half gives the

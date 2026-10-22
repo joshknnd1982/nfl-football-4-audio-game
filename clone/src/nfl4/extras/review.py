@@ -302,6 +302,8 @@ class ReviewFlow:
         self.clock_held = False        # a time out was called in this dead-ball period before the reversal: the corrected play's
         #                                runoff is not drawn, the clock stays stopped to the snap (nfl_rules.between_plays)
         self.redo: list = []           # the flags of that play, to be offered again against the corrected result (15-7-3 Item 3)
+        self.runoff_due = False        # SX.13 (15-5-2, 4-7-4): a reversal of a play that began after the two-minute warning: when the
+        #                                corrected play keeps the clock running, ten seconds run off (nfl_rules.between_plays)
         self.corrected = 0                 # the corrected end points that passed the hook: one for every reversal (the tests)
         self.rulings: list[tuple] = []     # (quarter, category, wrong, close, hint, booth reason): the tests and the calibration
         self.events: list[tuple] = []      # (quarter, "coach" or "booth", side, category, wrong, result, ruled piece, booth reason,
@@ -519,7 +521,13 @@ class ReviewFlow:
             x.warning_due = False
         self.pending = None
         self.replaying, self.redo = True, list(ruling.flags)    # the flags of the play are offered again (15-7-3 Item 3)
+        self.runoff_due = bool(x.warning_given)                 # the play began after the two-minute warning (15-5-2)
         return {"field": REVIEWED_FIELD, "touchdown": REVIEWED_TOUCHDOWN, "fumble": REVIEWED_FUMBLE}[t.kind]
+
+    def take_runoff(self) -> bool:
+        """True once after a reversal of a play that began after the two-minute warning (15-5-2)."""
+        due, self.runoff_due = self.runoff_due, False
+        return due
 
     # ----- the coaches' challenges (design 6.4) -----
 

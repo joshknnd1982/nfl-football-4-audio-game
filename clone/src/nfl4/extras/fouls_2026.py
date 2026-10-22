@@ -81,7 +81,7 @@ FOULS: tuple[Foul, ...] = (
     Foul("P04", "NZI", "NXP-F04", DEFENSE, (DEAD,), 5, SUCCEEDING, 0.23, "7-4-4, 14-1-2 Item 5"),
     Foul("P05", "ENC", "NXP-F05", DEFENSE, (DEAD,), 5, SUCCEEDING, 0.08, "7-4-3, 14-1-2 Item 5"),
     Foul("P06", "ILF", "NXP-F06", OFFENSE, (SNAP,), 5, PREVIOUS, 0.33, "7-5-1, 14-4-1 Item 2"),
-    Foul("P07", "ISH", "NXP-F07", OFFENSE, (SNAP,), 5, PREVIOUS, 0.15, "7-4-8, 14-4-1 Item 2"),
+    Foul("P07", "ISH", "NXP-F07", OFFENSE, (SNAP,), 5, PREVIOUS, 0.15, "7-4-7, 14-4-1 Item 2"),
     Foul("P08", "OH", "NXP-F08", OFFENSE, RUN_PASS_SACK, 10, THREE_AND_ONE, 2.0, "12-1-3 (c), 14-3-6, 14-4-5",
          note="three and one on a run, the previous spot on a pass or a sack"),
     Foul("P09", "DH", "NXP-F09", DEFENSE, PASS_SACK, 5, PREVIOUS, 0.9, "12-1-6, 14-4-5"),
@@ -125,13 +125,13 @@ FOULS: tuple[Foul, ...] = (
          note="an illegal wedge or double team on the return", kicks2026=True),
     Foul("P35", "IFK", "NXP-F35", KICKING, KICKOFFS, 5, DEAD_BALL, 0.6, "6-1-3, 14-4-7",
          note="the 2026 setup: a player outside his zone or moving before the kick; the receivers keep the ball", kicks2026=True),
-    Foul("P36", "LEA", "NXP-F36", DEFENSE, (FIELD_GOAL,), 15, PREVIOUS, 0.2, "12-3-1 (p), (r)", personal=True,
+    Foul("P36", "LEA", "NXP-F36", DEFENSE, (FIELD_GOAL,), 15, PREVIOUS, 0.2, "12-3-1 (o), (p), (r)", personal=True,
          note="leaping or leverage to block the kick; the down again from 15 yards on, an automatic first down", kicks2026=True),
-    Foul("P37", "KCI", "NXP-F37", OFFENSE, (O.PUNT,), 15, CATCH_SPOT, 0.5, "10-1-1, 14-4-7",
+    Foul("P37", "KCI", "NXP-F37", OFFENSE, (O.PUNT,), 15, CATCH_SPOT, 0.5, "10-1-1, 14-4-8 Exc. (3)",
          note="the kicking team hinders the catch: the receivers' ball 15 yards beyond where they got it", kicks2026=True),
 )
 
-IDS: tuple[str, ...] = tuple(dict.fromkeys(f.id for f in FOULS))     # P01 ... P33 in order, each once
+IDS: tuple[str, ...] = tuple(dict.fromkeys(f.id for f in FOULS))     # P01 ... P37 in order, each once
 BY_ID: dict[str, tuple[Foul, ...]] = {i: tuple(f for f in FOULS if f.id == i) for i in IDS}
 GROUNDING = BY_ID["P15"][0]
 

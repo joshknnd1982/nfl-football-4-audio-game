@@ -40,7 +40,7 @@ SNEAK_PERCENT = 300                 # a sneak counts three times in its list: sn
 # drop-backs: screens 8.4 percent, play action 22.9 (play action 17, the moving pocket 6), trick plays 0.4, the rest by the route mix
 PASS_GROUP_MASS = {"og05": 84, "og11": 170, "og12": 60, "og06": 230, "og07": 160, "og08": 160, "og09": 70, "og10": 40, "og16": 4,
                    "og20": 22, "og18": 2}
-# og18's fake spike and fake kneel: only in the last two minutes of a half (CLOCK_SECONDS); the kneel, the spike, the Hail Mary and the
+# og18's fake spike and victory formation pass: only in the last two minutes of a half (CLOCK_SECONDS); the kneel, the spike, the Hail Mary and the
 # laterals are rules, never drawn
 GOAL_LINE_GROUP_MASS = 150          # og17 inside the 10 (per 1,000 of its class); nothing outside it (UNVERIFIED)
 OWN_PLAY_PERCENT = 200              # a style's own SX.7 plays (playbook_data) count double within their list

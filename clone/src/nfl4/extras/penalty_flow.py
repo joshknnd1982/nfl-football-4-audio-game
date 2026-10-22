@@ -81,13 +81,18 @@ def late_for_fouls(quarter: int, left: int, period: int = 0, postseason: bool = 
     return late_window(quarter, left, period, postseason)
 
 
-def clock_after_foul(record, quarter: int, keeps: bool) -> tuple[bool, bool]:
+def clock_after_foul(record, quarter: int, keeps: bool, offense_leads: bool | None = None) -> tuple[bool, bool]:
     """(the clock runs to the next snap, it restarts on the ready signal) after a foul (design 5.2, 4-3-2 (e) and (g)):
     as if the foul had not happened (a foul before the snap: as it was), restarting on the ready signal; on the snap in the
     late windows and after an offense foul before the snap in the fourth quarter or the regular season's overtime (3); after
-    a ten-second run off on the ready signal (g)."""
+    a ten-second run off on the ready signal (g). SX.13 (4-7-1 Item 2, a specific rule of 4-3-2 (e)(5)): a defense foul before
+    the snap that stopped a running clock after the two-minute warning restarts it on the ready signal unless the offense
+    chooses the snap: an offense ahead lets it run, one level or behind takes the snap (`offense_leads`; None: not asked)."""
     if record.foul_clock == "runoff":
         return record.left > 0, True
+    if (offense_leads is not None and record.foul_clock == "pre" and not record.foul_by_offense and record.was_running
+            and record.warning_given and record.left > 0):
+        return (True, True) if offense_leads else (False, False)
     base = record.was_running if record.foul_clock == "pre" else keeps
     if late_for_fouls(quarter, record.left, record.period, record.postseason):
         return False, False
@@ -569,10 +574,32 @@ class PenaltyFlow:
                       "<quarterback>": state.quarterbacks.get(flag.side, ""), "<surname>": self.surname(state, flag)}
             remarks.say_remark(g, state, state.extras, "PN", values)
 
+    @staticmethod
+    def half_over(state) -> bool:
+        """The play used the last second of a half: the second or fourth quarter, or the regular season's one overtime period, which ends
+        the game by its clock (SX.13: 16-1-3 (d), (e); a play-off overtime period goes on into the next with the ball, 16-1-4 (d))."""
+        return state.extras.left <= 0 and (state.quarter in (2, 4) or (state.quarter >= 5 and not state.extras.postseason))
+
     def extends(self, state, flag: Flag) -> bool:
         """4-8-2 (a): an accepted live foul by the defense on the last play of a half gives one untimed down."""
-        return (not flag.foul.offense_side and F.AFTER not in flag.foul.phases and state.quarter in (2, 4)
-                and state.extras.left <= 0 and not self.down.two_point)
+        return (not flag.foul.offense_side and F.AFTER not in flag.foul.phases and self.half_over(state)
+                and not self.down.two_point)
+
+    def double_extends(self, state, flags: list, result: PEN.Result, enforced) -> bool:
+        """4-8-2 (h) (SX.13): a double foul on the last down of a half extends it by an untimed down, except when both fouls are dead-ball
+        fouls (1), a major foul enforced against a minor one is the offense's or a dead-ball foul (2), the defense's only foul is a
+        dead-ball foul (3), or the down is not played again after a change of possession (4: the play stands)."""
+        if not self.half_over(state) or self.down.two_point or result.kind != PEN.NEW_DOWN:
+            return False
+        if all(F.AFTER in f.foul.phases for f in flags):
+            return False
+        defense = [f for f in flags if f.side != self.down.offense]
+        if defense and all(F.AFTER in f.foul.phases for f in defense):
+            return False
+        if enforced is not None:
+            major = flags[0] if flags[0].foul is enforced else flags[1]
+            return major.side != self.down.offense and F.AFTER not in major.foul.phases
+        return True
 
     def settle(self, state, outcome, facts: PEN.PlayFacts | None) -> str | None:
         """After L: the fouls of the play announced, chosen and enforced. Returns the engine's next step or None."""
@@ -586,6 +613,8 @@ class PenaltyFlow:
         self.announce(state, flags, False)
         if len(flags) == 2:
             result, enforced = PEN.double_foul(flags[0].foul, flags[1].foul, self.down, facts)
+            if self.double_extends(state, flags, result, enforced):
+                result = replace(result, untimed=True, notes=result.notes + (X.text("NXP-14"),))
             if enforced is None:
                 g.say4(X.text("NXP-08"))
                 self.note(state, "offset", flags[0])
@@ -599,7 +628,7 @@ class PenaltyFlow:
             return self.apply(state, flag, result)
         flag = flags[0]
         how, accepted, declined = PEN.answers(flag.foul, self.down, facts, flag.spot)
-        if accepted.kind == PEN.REPLAY_KICK and state.quarter in (2, 4) and x.left <= 0:
+        if accepted.kind == PEN.REPLAY_KICK and self.half_over(state):
             how = PEN.AUTO_DECLINE                     # no kick is made again when the half is over: a foul by the kicking
             #                                            team does not extend a period (4-8-2 (a) is for the defense)
         if how == PEN.AUTO_DECLINE:                    # no real choice: said as the officials say it
@@ -615,7 +644,7 @@ class PenaltyFlow:
             return None
         if self.extends(state, flag) and accepted.kind == PEN.NEW_DOWN:
             accepted = replace(accepted, untimed=True, notes=accepted.notes + (X.text("NXP-14"),))
-        if state.quarter in (2, 4) and x.left <= 0:   # the play used the last second: the half ends after it
+        if self.half_over(state):                      # the play used the last second: the half ends after it
             if declined.kind == PEN.NEW_DOWN:
                 declined = replace(declined, pieces=declined.pieces + (X.text("NXP-S08"),))
             if accepted.kind == PEN.NEW_DOWN and not accepted.untimed:

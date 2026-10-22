@@ -72,6 +72,8 @@ class Kick26Steps:
         result = self.rules.kickoff_result(s)
         returner = self.returner(s.wisoff, s.returner)
         if result.kind in NOT_RETURNED:
+            if result.kind != "touchback" and result.start != 40:   # SX.13: a safety kick or a kick made again (RB26 6-2-4: 30 or 25
+                return self.kick_not_returned(self.text26(result.kind + "_at", n=result.start), result.start)   # yards from the kick)
             return self.kick_not_returned(self.text26(NOT_RETURNED[result.kind]), result.start)
         # the safety punt (a free kick from the 20) may also end as a punt does: a touch back at the 20, a fair catch, downed, dead
         if result.kind == "punt_touchback":
@@ -176,6 +178,15 @@ class Kick26Steps:
             g.say4(self.text26("punt_blocked"))
             snd.play_tackle(8)
             snd.c2df()
+            if result.start >= 100:                          # SX.13: blocked behind the kicking team's own goal line
+                if result.touchdown:                         # the receivers fall on it in the end zone (RB26 11-2)
+                    g.say4(self.text26("blocked_end_zone_td", player=self.defender(s.defense, rnd(17))))
+                    step = self.end_point(O.PUNT, turnover=True, score="return touchdown")
+                    return step if step is not None else self.return_touchdown()
+                s.result_kind = O.PUNT                       # it goes out of the end zone: a safety (RB26 11-5-1)
+                s.half, s.yard_line = own_half(s.wisoff), 0
+                s.tackle_sentence = self.text26("blocked_out_of_end_zone")
+                return self.safety
             return self.punt_over(result.start, 0)
         g.say4(s.he_she[s.wisoff + 2] + P.KICK_OFF_GETS)
         self.rady(0x443631)
@@ -206,7 +217,7 @@ class Kick26Steps:
         elif result.touchdown:
             g.say4(self.text26("return_td", player=returner))
             snd.play_tackle(8)
-            step = self.end_point(O.PUNT, turnover=True)
+            step = self.end_point(O.PUNT, turnover=True, score="return touchdown")    # SX.13: the penalty flow sees the score
             return step if step is not None else self.return_touchdown()
         else:
             back = result.returned

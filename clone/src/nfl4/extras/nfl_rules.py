@@ -159,6 +159,7 @@ class NflRules(ClassicRules):
         self.challenges_on = bool(challenges_on)  # the ruling model, booth reviews and challenges (SX.6, off unless given)
         self.auto_sides = tuple(auto_sides)       # the sides whose timeouts, penalty choices and onside kicks the computer decides
         self.timeout_kept = False                 # H18: the T key was pressed while a play was live: granted at the next dead-ball moment
+        self.try_due = False                      # SX.13: a touchdown's try is still to be played (a timeout may come before it at 0:00)
         self.after_play = False                   # H18: a play just ended and H10 has not run yet (a timeout then stops the whole runoff)
         # SX.7, the playbooks: the player's choice for a new game (classic, team or a style key, design 12.1: the F9 items 8 and
         # 9) and whether the computer's side plays the style of its team; a hand-made object has neither (Classic plays)
@@ -482,6 +483,7 @@ class NflRules(ClassicRules):
         self.offense.clear()                       # SX.10c: nor a catalog play
         self.defense.clear()                       # SX.10d: nor a defense call
         self.kicks.fair_catch_armed = False        # SX.10d: nor a fair catch kick
+        self.try_due = False                       # SX.13: the try is over
         self.review.clock_held = False             # SX.6: a kick-off is a new dead-ball period
         if x.left <= 0 and (state.quarter in (2, 4) or (state.quarter >= 5 and not x.postseason)):
             # SX.12: a score as the regular season's one overtime period ran out ends it too (16-1-3 (d)); a play-off period's kick-off
@@ -542,16 +544,27 @@ class NflRules(ClassicRules):
                 ready = True                      # stopped, restarted on the ready signal: a shorter runoff
         cap = None
         if x.foul_clock:                          # SX.3: after a foul, as if it had not happened, except 4-3-2 (e), (g)
-            keeps, ready = clock_after_foul(x, state.quarter, keeps)
+            keeps, ready = clock_after_foul(x, state.quarter, keeps,
+                                            state.score(state.wisoff) > state.score(other(state.wisoff)))
             cap = R.RUNOFF_PLAY_CLOCK if x.foul_clock == "runoff" else R.PLAY_CLOCK_AFTER_PENALTY
             x.foul_clock = ""
         if self.review.clock_held:                # SX.6: a time out was called in this dead-ball period before a challenge that
             keeps = ready = False                 # changed the play: the clock stays stopped to the snap
             self.review.clock_held = False
+        if self.timeout_kept:                     # H18: the T key pressed during the play: granted now, before the runoff is drawn, so
+            if self.grant_kept_timeout(state) == TIMEOUT_GRANTED:     # the clock stops when the play ends (SX.13: 3-36-2; it cost
+                keeps = ready = False                                 # the runoff's seconds before)
+        if self.review.take_runoff() and (keeps or ready):
+            # SX.13 (15-5-2, 4-7-4): the reversed play began after the two-minute warning and its corrected result keeps the clock
+            # running: ten seconds run off, then both clocks start on the ready signal with a play clock of 30; under ten seconds the
+            # half or the game is over. A timeout taken in this dead ball (the T key during the play) avoided it (it is charged)
+            x.left = max(0, x.left - R.RUNOFF_SECONDS)
+            self.game.say4(X.text("NXP-12"))
+            debuglog.event("extras", "review_runoff", left=x.left)
+            keeps = ready = x.left > 0
+            cap = R.RUNOFF_PLAY_CLOCK
         lead = state.score(state.wisoff) - state.score(other(state.wisoff))
         self.clock.runoff(self.rnd, keeps, ready, lead, cap)
-        if self.timeout_kept:                     # H18: the T key pressed during the play: granted now, before the next prompt
-            self.grant_kept_timeout(state)
         if x.timeouts_on and x.left > 0:          # at 0:00 the period is over: no timeout can be granted
             for side in (state.wisoff, other(state.wisoff)):
                 if side not in self.auto_sides or timeouts.refusal(x, side) is not None:
@@ -602,19 +615,27 @@ class NflRules(ClassicRules):
         self.game.stopspeech()
         return self._call_timeout(state, "before the snap" if undo is not None else "dead ball", undo, called)
 
-    def grant_kept_timeout(self, state) -> None:
+    def grant_kept_timeout(self, state) -> str | None:
         """A request kept during the live play is granted (or refused with its sentence) at the first dead-ball moment."""
         if not self.timeout_kept:
-            return
+            return None
         self.timeout_kept = False
         if state.extras is None or not state.extras.timeouts_on:
-            return
-        self._call_timeout(state, "after the play", None)
+            return None
+        return self._call_timeout(state, "after the play", None)
+
+    def ball_live(self, state) -> None:
+        """SX.13 (4-5-1 Item 3, 3-8-1): a snap or a kick ends the dead-ball period, so a timeout called before a kick-off, a punt, a
+        field goal or a kicked try no longer counts at the next dead ball (the scrimmage snap also clears it in the clock's before_snap)."""
+        x = state.extras
+        self.try_due = False
+        if x is not None:
+            x.called = [False, False]
 
     def _call_timeout(self, state, where: str, undo=None, called=None) -> str:
         x, g = state.extras, self.game
         why = None
-        if x.left <= 0 and not x.extension:
+        if x.left <= 0 and not x.extension and not (self.try_due or state.two_point):    # SX.13: the try is a down still to come
             why, sentence = "no time", X.text("NXT-16")
         else:
             reason = timeouts.refusal(x, 1, called)
@@ -731,6 +752,8 @@ class NflRules(ClassicRules):
             debuglog.event("extras", "no_last_try", quarter=state.quarter, scorer=touchdown_by,
                            scores=[state.score(1), state.score(2)])
             return True
+        if not over and touchdown_by is not None:
+            self.try_due = True                    # SX.13: the try's down is still to come (a timeout may be called at 0:00 before it)
         return over
 
     def possession_ends_game(self, state) -> bool:

@@ -355,21 +355,25 @@ class KickFlow:
         """The punt was fair-caught at the receivers' yard line `start`: the player's fair catch in the second or fourth quarter, with the
         kick in range, makes the fair catch kick due; the question waits for the clock after the punt (H10)."""
         x = state.extras
-        if (receivers == 1 and 1 not in self.rules.auto_sides and state.quarter in (2, 4)
+        half_end = state.quarter in (2, 4) or (state.quarter >= 5 and not x.postseason)    # SX.13: the regular season's overtime too
+        if (receivers == 1 and 1 not in self.rules.auto_sides and half_end
                 and (100 - start) + 10 <= T.FAIR_CATCH_KICK_LONGEST):
             x.fair_catch_kick = True
 
     def fair_catch_question(self, state) -> bool:
         """H10 after the punt: the question, when the fair catch kick is due and at most FAIR_CATCH_KICK_SECONDS are left; a yes arms the
-        next field goal as the fair catch kick. The computer never tries one (a recorded simplification)."""
+        next field goal as the fair catch kick. When the punt used the last second (SX.13: 4-8-2 (e), 10-2-5 (a)) the receivers may extend
+        the period by the fair catch kick only: a yes gives the untimed down. The computer never tries one (a recorded simplification)."""
         x = state.extras
         due, x.fair_catch_kick = x.fair_catch_kick, False
-        if not due or state.wisoff != 1 or not 0 < x.left <= T.FAIR_CATCH_KICK_SECONDS:
+        if not due or state.wisoff != 1 or not 0 <= x.left <= T.FAIR_CATCH_KICK_SECONDS:
             return False
         g = self.game
         yes = self.rules.onside.ask(state, X.text("NXB-J20", coach=g.season.coach))
         debuglog.event("extras", "fair_catch_kick", asked=True, yes=yes, left=x.left)
         self.fair_catch_armed = yes
+        if yes and x.left <= 0:
+            x.extension = True                     # the untimed down is the fair catch kick (no snap from scrimmage, 10-2-5 (a))
         return yes
 
     # ----- the kick defense (design 2.6) -----
@@ -390,4 +394,6 @@ SENTENCES = {"out_of_bounds": "NXB-J02", "landed_short": "NXB-J03", "touchback_3
              "punt_return_none": "NXB-J10", "rolls_dead": "NXB-J11", "muffed": "NXB-J12", "kick_blocked": "NXB-J13",
              "blocked_return_td": "NXB-J14", "extra_point_missed": "NXB-J15", "blocked_try_two": "NXB-J16", "fake": "NXB-J17",
              "fake_run": "NXB-J18", "fake_pass": "NXB-J19", "fair_catch_kick": "NXB-J21", "safety_punt": "NXB-J23",
-             "brought_down": "NXB-J24", "return_td": "NXB-H09"}
+             "brought_down": "NXB-J24", "return_td": "NXB-H09",
+             "out_of_bounds_at": "NXB-J25", "landed_short_at": "NXB-J26", "blocked_end_zone_td": "NXB-J27",
+             "blocked_out_of_end_zone": "NXB-J28"}

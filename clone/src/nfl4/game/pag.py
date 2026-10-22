@@ -149,6 +149,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         """The snap or the kick: a T key already waiting is taken first (it may still withdraw the play), then the play is live."""
         self.keys.service_timeout()
         self.t_live, self.t_back = True, None
+        self.rules.ball_live(self.s)                     # H18 (SX.13): the dead-ball period ends at the snap or the kick (Classic: nothing)
 
     def dead_ball(self, back=None) -> None:
         """A dead-ball moment begins (a menu, a question, a kick-off, the try's choice): a request kept during the live play is granted

@@ -334,6 +334,9 @@ class ClassicRules:
     def grant_kept_timeout(self, state) -> None:
         return None
 
+    def ball_live(self, state) -> None:
+        return None
+
     def withdraw_play(self, state) -> None:
         return None
 

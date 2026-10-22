@@ -128,6 +128,8 @@ def live_time(outcome, state, rnd) -> int:
     kind = underlying_kind(outcome, state)
     if kind == O.KICKOFF_TOUCH_BACK:
         return 0                                                         # 4-3-1: the clock starts when the ball is touched
+    if kind == O.ONSIDE_KICK and outcome.turnover:
+        return 0                                                         # 4-3-1 (b) (SX.13): the kicking team recovered it: no start
     if kind == O.KICKOFF_RETURN:
         return T.KICKOFF_RETURN_BASE + max(0, outcome.yards) // 10 + draw_between(rnd, T.KICKOFF_RETURN_EXTRA)
     if kind == O.TWO_POINT_TRY:

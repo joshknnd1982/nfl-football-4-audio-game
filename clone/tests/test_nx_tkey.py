@@ -331,14 +331,14 @@ def test_a_refused_t_says_one_sentence_and_the_snap_count_goes_on(tmp_path, extr
     assert called(rig) == [0, 0] and engine.t_live
 
 
-def test_t_with_no_time_left_says_so_and_the_menu_goes_on(tmp_path):
-    """The two-point try is untimed: at 0:00 it is still played, but no timeout can be granted then."""
+def test_t_before_a_try_at_0_00_calls_the_timeout(tmp_path):
+    """The two-point try is untimed: at 0:00 it is still played, and its down is still to come, so a timeout may be called before it
+    (SX.13, 4-5-1; the refusal at 0:00 with no down to come is test_sx13_rules_audit's)."""
     rig = scene(tmp_path, answers=["t", ENTER], two_point=True, yard_line=2, extras=dict(left=0, pending=0, running=False))
     script(rig, Draws())
     rig.engine.offense_menu()
     said = texts(rig)
-    assert said[:4] == [" Kim" + P.SELECT_OFFENSE, " 1. Line Plunge ", X.text("NXT-16"), " Kim" + P.SELECT_OFFENSE]
-    assert called(rig) == [0, 0]
+    assert X.text("NXT-16") not in said and any("time out called by the Bengals" in t for t in said)
 
 
 def test_t_is_never_the_letter_of_an_item_in_any_play_menu(tmp_path):

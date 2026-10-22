@@ -998,7 +998,7 @@ TEXTS: dict[str, str] = {
     'NXY-A52': 'Kneel Down',
     'NXY-A53': 'Spike the Ball',
     'NXY-A54': 'Fake Spike',
-    'NXY-A55': 'Fake Kneel',
+    'NXY-A55': 'Victory Formation Pass',
     'NXY-A56': 'Laterals at the End',
     'NXY-A57': 'Wishbone Dive',
     'NXY-A58': 'Flexbone Option',
@@ -1351,7 +1351,7 @@ TEXTS: dict[str, str] = {
     'NXY-S52': ' The quarterback takes the snap and kneels to end the play safely. Used to run out the clock when winning; loses about a yard. ',
     'NXY-S53': ' The quarterback throws the ball into the ground to stop the clock. It uses a down, but saves time when you are behind. ',
     'NXY-S54': ' The quarterback pretends to spike the ball, then throws a real pass. Works if the defense relaxes; rarely used. ',
-    'NXY-S55': ' The quarterback pretends to kneel, then throws deep. Works if the defense relaxes; rarely used and risky. ',
+    'NXY-S55': ' The team lines up as if to run out the clock, then the quarterback throws deep at once, without faking a kneel, which would end the play. A rare surprise, and risky. ',
     'NXY-R38': ' A very long, high throw into a crowd of players in the end zone, tried when time is almost out. It rarely works, but it is the last chance. ',
     'NXY-S56': ' Players keep tossing the ball backward to gain yards when time is almost out. Very risky, since one fumble loses the ball, so a last chance only. ',
     'NXY-S57': ' An old formation with three running backs; one runs straight ahead through the middle. Strong against two deep defenders; weak when the line is crowded; rarely used. ',
@@ -1623,6 +1623,10 @@ TEXTS: dict[str, str] = {
     'NXC-12': '<team> and the <other> tied at <score>. ',
     'NXC-13': 'and <n> tie',
     'NXC-14': 'and <n> ties',
+    'NXB-J25': ' the kick goes out of bounds, and the ball is placed at the <n> ',
+    'NXB-J26': ' the kick lands short of the landing zone, and the ball is placed at the <n> ',
+    'NXB-J27': ' <player> falls on it in the end zone ',
+    'NXB-J28': ' the ball rolls out of the end zone ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -3241,6 +3245,10 @@ SPEAKERS: dict[str, str] = {
     'NXC-12': 'say2',
     'NXC-13': 'piece',
     'NXC-14': 'piece',
+    'NXB-J25': 'say4',
+    'NXB-J26': 'say4',
+    'NXB-J27': 'say4',
+    'NXB-J28': 'say4',
 }
 
 KINDS: dict[str, str] = {
@@ -4859,6 +4867,10 @@ KINDS: dict[str, str] = {
     'NXC-12': 'sentence',
     'NXC-13': 'piece',
     'NXC-14': 'piece',
+    'NXB-J25': 'sentence',
+    'NXB-J26': 'sentence',
+    'NXB-J27': 'sentence',
+    'NXB-J28': 'sentence',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

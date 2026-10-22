@@ -63,6 +63,8 @@ FAIR_CATCH_KICK_BONUS = 300    # no rush on a fair catch kick (RB26 10-2-4)
 PUNT_INSIDE_20 = {"returned": 3000, "fair_catch": 3500, "downed": 1800, "out_of_bounds": 1700, "dead": 0}
 PUNT_FIELD = {"returned": 5700, "fair_catch": 2700, "downed": 250, "out_of_bounds": 550, "dead": 800}
 PUNT_END_ZONE_SAVED = 2500     # a spread punt bound for the end zone that the coverage downs short of the goal line
+BLOCKED_PUNT_END_ZONE_TD = 5000    # SX.13 (UNVERIFIED: no published share found): a punt blocked behind the kicking team's goal line that the
+#                                    receivers recover there for a touchdown; the rest leave the end zone (a safety)
 PUNT_KIND = {"spread": {"block": 100, "gross": 0, "return": 100}, "tight": {"block": 30, "gross": -1, "return": 115},
              "rugby": {"block": 30, "gross": -3, "return": 85}, "pin": {"block": 100, "gross": 0, "return": 70}}
 KICK_DEFENSE = {"return": {"block": 100, "return": 100, "fake": 100}, "fair_catch": {"block": 100, "return": 0, "fake": 100},
@@ -384,8 +386,8 @@ def pass_play(concept: C.Concept, call: C.Call, situation: Situation, rnd) -> Re
     if concept.kind not in ("screen", "rpo") and chance(rnd, throw_away_rate(call, situation)):
         return Result("incomplete", 0, branch="thrown_away")
     if concept.kind == "trick_pass" and concept.id in ("O138", "O140") and chance(rnd, LATERAL_FUMBLE[0]):
-        lost = chance(rnd, LATERAL_FUMBLE[1])
-        return Result("fumble", -between(rnd, 5, 12), fumble_lost=lost)
+        lost = chance(rnd, LATERAL_FUMBLE[1])           # SX.13 (RB26 8-7-1): a fumbled backward pass, told and counted as the laterals'
+        return Result("fumble", -between(rnd, 5, 12), gap="laterals", fumble_lost=lost)    # run, never as a sack
     routes = concept.params[0]
     route_name = routes[pick(rnd, [w for _r, w in routes])][0]
     route = ROUTE[route_name]
@@ -410,6 +412,8 @@ def pass_play(concept: C.Concept, call: C.Call, situation: Situation, rnd) -> Re
             return Result("fumble", yards, route_name, band, air, fumble_lost=chance(rnd, LATERAL_FUMBLE[1]))
         yards += between(rnd, 3, 12)
     yards = min(yards + situation.catch_yards, situation.to_goal)
+    if yards >= situation.to_goal:                       # SX.13 (RB26 11-2-1, 7-2-1): the ball crossed the goal line in his hands: a
+        return Result("complete", yards, route_name, band, air)    # touchdown, the ball dead there, no fumble can follow
     fumbled, lost, td = fumble(rnd, "completion", situation.fumble_pct)
     if fumbled:
         return Result("fumble", yards, route_name, band, air, fumble_lost=lost, return_touchdown=td)
@@ -515,7 +519,7 @@ def run_play(concept: C.Concept, call: C.Call, situation: Situation, rnd, gap: s
         bins = run_bins(gap, call, tags, shift, situation.to_goal)
     yards = min(bin_yards(rnd, pick(rnd, bins)), situation.to_goal)
     rate = (170, SCALE) if table == "trick" else M.FUMBLE["run"]
-    if chance(rnd, rate[0] * situation.fumble_pct // 100):
+    if yards < situation.to_goal and chance(rnd, rate[0] * situation.fumble_pct // 100):    # SX.13: none once he scored
         lost = chance(rnd, rate[1])
         return Result("fumble", yards, gap=gap, fumble_lost=lost,
                       return_touchdown=lost and chance(rnd, M.FUMBLE_RETURN_TD["run"]))
@@ -538,7 +542,7 @@ def qb_play(concept: C.Concept, call: C.Call, situation: Situation, rnd, table: 
         bins = goal_line(bins, situation.to_goal)
     yards = min(bin_yards(rnd, pick(rnd, bins), qb=table != "sneak"), situation.to_goal)
     rate = M.FUMBLE["run"] if table == "sneak" else M.QB_RUN_FUMBLE
-    if chance(rnd, rate[0] * situation.fumble_pct // 100):
+    if yards < situation.to_goal and chance(rnd, rate[0] * situation.fumble_pct // 100):    # SX.13: none once he scored
         return Result("fumble", yards, gap="qb", fumble_lost=chance(rnd, rate[1]))
     oob = table != "sneak" and 0 < yards < situation.to_goal and chance(rnd, 1800)
     return Result("run", yards, gap="qb", out_of_bounds=oob)
@@ -717,7 +721,12 @@ def punt(kind: str, to_goal: int, defense: str, rnd, free_kick: bool = False, gr
     if not free_kick and chance(rnd, M.PUNT["blocked"] * k["block"] * d["block"] // 10000):
         # the ball comes down behind the line, 5 to 12 yards nearer the kicking team's goal: the receivers' yard line is beyond
         # the line of scrimmage (to_goal from their goal)
-        return KickResult("blocked", min(99, to_goal + between(rnd, 5, 12)), defense_recovers=True)
+        spot = to_goal + between(rnd, 5, 12)
+        if spot >= 100:          # SX.13: behind the kicking team's goal line (RB26 11-2, 11-5-1): the receivers fall on it for a touchdown,
+            if chance(rnd, BLOCKED_PUNT_END_ZONE_TD):           # or it goes out of the end zone, a safety (start 100, no touchdown)
+                return KickResult("blocked", 100, touchdown=True, defense_recovers=True)
+            return KickResult("blocked", 100)
+        return KickResult("blocked", spot, defense_recovers=True)
     gross = punt_gross(rnd) + k["gross"] + gross_shift
     if kind == "pin":
         gross = min(gross, max(20, to_goal - 10 + between(rnd, -4, 4)))

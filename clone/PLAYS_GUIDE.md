@@ -290,7 +290,7 @@ Plays that stop or run the clock, and last chance throws.
 - **Kneel Down**: The quarterback takes the snap and kneels to end the play safely. Used to run out the clock when winning; loses about a yard.
 - **Spike the Ball**: The quarterback throws the ball into the ground to stop the clock. It uses a down, but saves time when you are behind.
 - **Fake Spike**: The quarterback pretends to spike the ball, then throws a real pass. Works if the defense relaxes; rarely used.
-- **Fake Kneel**: The quarterback pretends to kneel, then throws deep. Works if the defense relaxes; rarely used and risky.
+- **Victory Formation Pass**: The team lines up as if to run out the clock, then the quarterback throws deep at once, without faking a kneel, which would end the play. A rare surprise, and risky.
 - **Hail Mary**: A very long, high throw into a crowd of players in the end zone, tried when time is almost out. It rarely works, but it is the last chance.
 - **Laterals at the End**: Players keep tossing the ball backward to gain yards when time is almost out. Very risky, since one fumble loses the ball, so a last chance only.
 

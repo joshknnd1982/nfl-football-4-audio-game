@@ -97,7 +97,7 @@ def table_of(entries, problems) -> FoulTable:
     for entry in entries:
         key = canonical(entry.id)
         if key is None:
-            problems.add("line %d" % entry.line, "the ID %s is not a foul of this game (P01 to P33), the line is ignored"
+            problems.add("line %d" % entry.line, "the ID %s is not a foul of this game (P01 to P37), the line is ignored"
                          % entry.id)
             continue
         if key in seen:
