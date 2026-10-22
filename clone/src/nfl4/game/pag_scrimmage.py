@@ -231,12 +231,13 @@ class ScrimmageSteps:
         s.stats[s.wisoff].sacked += 1
         number = s.sack_history.draw(self.rnd, SACK_PHRASES, "sack phrase")
         qb = self.qb(s.wisoff)
-        d1 = self.defender(s.defense, s.defender1)
+        first, second = self.rules.sack_defenders(s)              # H24: the draws' two defenders; the player's blitzer in the N. F. L. rules
+        d1 = self.defender(s.defense, first)
         texts = {1: " " + d1 + P.SACKS + qb + " ", 2: " " + qb + P.IS_SACKED_BY + d1 + " ",
                  3: " " + d1 + P.SLAMS + qb + P.TO_THE_GROUND, 4: " " + qb + P.IS_SLAMMED_BY + d1 + " ",
                  5: " " + qb + P.IS_CHASED_DOWN_BY + d1 + " "}
         if number == 6:
-            s.tackle_sentence = " " + d1 + P.AND + self.defender(s.defense, s.defender2) + P.SMOTHER + qb + " "
+            s.tackle_sentence = " " + d1 + P.AND + self.defender(s.defense, second) + P.SMOTHER + qb + " "
         else:
             s.tackle_sentence = texts[number]
         s.tackle_sound = 2 if number == 6 else 3

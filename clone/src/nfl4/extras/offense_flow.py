@@ -389,6 +389,7 @@ class OffenseFlow:
                       motion="" if motion == SETTING_BOOK else motion,
                       protection=settings.get("protection", "normal"))
         values.update(self.ratings_door(concept))
+        values.update(self.rules.choices.situation_values(state, own))      # SY.4, SY.5: the player's target and blitzer (nothing unless he chose)
         return M.Situation(**values)
 
     def ratings_door(self, concept: C.Concept) -> dict:

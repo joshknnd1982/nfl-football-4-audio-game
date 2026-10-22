@@ -103,6 +103,12 @@ ROWS: tuple[KeyRow, ...] = (
            " F, A, M, K, P, O and N. in the offense menu: favourites, again, more plays, kneel down, spike the ball, formation and "
            "tempo, and find a play by name; in the defense menu on fourth down, P. is the kick defense. ", letters="famkpon",
            feature="playbooks"),
+    KeyRow("target", "R", "In the offense menu of the N. F. L. rules with a playbook", "chooses who your next pass goes to: the first item "
+           "keeps the play's own pick, then the receivers, and the first two running backs when the play can throw to one", "nfl", False, "",
+           " R. in the offense menu, chooses the receiver of your next pass. ", letters="r", feature="playbooks"),
+    KeyRow("blitzer", "L", "In the defense menu of the N. F. L. rules with a playbook", "chooses who blitzes on your next blitz call: the "
+           "first item picks a player by chance", "nfl", False, "", " L. in the defense menu, chooses the player who blitzes. ", letters="l",
+           feature="playbooks"),
     KeyRow("find", "Letters, Backspace, Enter", "In Find a Play by Name", "type the first letters of a word of the play's name, here "
            "T is a letter too; Backspace deletes the last one and Enter finds the plays", "nfl", False, "",
            " Find a Play by Name. type the first letters of the name, then Enter. ", feature="playbooks"),

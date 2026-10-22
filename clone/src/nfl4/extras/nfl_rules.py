@@ -118,6 +118,7 @@ from .defense_flow import DefenseFlow
 from .kick_flow import KickFlow
 from .offense_flow import OffenseFlow, text_for
 from .broadcast import Broadcast
+from .choices import Choices
 from .stadium import Stadium
 from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
@@ -135,7 +136,7 @@ NAME = "N. F. L. rules"
 KEY_F5, KEY_F6, KEY_F7 = "116", "117", "118"
 # SX.10d: the help of the defense menus and the kicks of 2026 (F6), for a player who uses a playbook (their words are F7's,
 # descriptions.F7_WORD_ROWS)
-MENU_HELP_F6 = ("NXH-56", "NXH-57", "NXH-58", "NXH-62")     # SX.10e: NXH-62, the computer's calling and its tries for two
+MENU_HELP_F6 = ("NXH-56", "NXH-57", "NXH-58", "NXH-62", "NXH-69")     # SX.10e: NXH-62, the computer's calling and its tries for two
 
 
 def menu_item(position: int, text: str, action: tuple[str, int], letter: str = "") -> menus.MenuItem:
@@ -172,6 +173,7 @@ class NflRules(ClassicRules):
         # SY.1 (the radio broadcast, rule 0.27): the radio banter instead of the original's jokes, and Ghip; a hand-made object has neither
         self.broadcast = Broadcast(self, radio_banter=radio_banter, ghip=broadcast_on)
         self.stadium = Stadium(self, on=stadium_on)      # SY.2: the crowd, the hits and the chain; a hand-made object has none
+        self.choices = Choices(self)                     # SY.4, SY.5: the player's target and blitzer (nothing until he chooses)
         self.game = None
         self.state = None
         self.clock: NflPeriodClock | None = None
@@ -303,6 +305,7 @@ class NflRules(ClassicRules):
             self.books.record(state, outcome)
         self.offense.finish(state, outcome)        # SX.10c: the record names the catalog play, Again, the menu at its top
         self.defense.finish(state, outcome)        # SX.10d: the defense's Again, its menu at its top
+        self.choices.clear()                       # SY.4, SY.5: the target and the blitzer were for this play only
         self.books.forget_calls()                  # then nothing is called and the menu starts at its top (the rows stay armed
         #                                            until the ruling below has read the row the play used)
         board = None
@@ -383,9 +386,14 @@ class NflRules(ClassicRules):
         """H17 (SX.8o): the ball carrier; a Franchise game weighs the places by the players' ratings (equal weights, and every other game: rnd(6))."""
         values = self.modifiers.carrier_weights(state) if hasattr(self.modifiers, "carrier_weights") else None
         if values is None:
-            return rnd(6)
-        from .franchise import workload
-        return workload.draw(rnd, values)
+            drawn = rnd(6)
+        else:
+            from .franchise import workload
+            drawn = workload.draw(rnd, values)
+        return self.choices.carrier(state, drawn)        # SY.4: the receiver the player chose takes the drawn one's place (the draw is made)
+
+    def sack_defenders(self, state) -> tuple[int, int]:
+        return self.choices.sack_defenders(state)        # H24 (SY.5)
 
     def after_draws(self, state) -> None:
         """H16 (SX.8k): the snap's draws are made; a Franchise game keeps its two tacklers two men."""
@@ -485,6 +493,10 @@ class NflRules(ClassicRules):
             return self.describe_item(state, item)
         if letter == "c" and state.extras.challenges_on:
             return self.review.say_refusal(state, 1)
+        if letter == "r" and item is not None and state.wisoff == 1 and self.offense.owns(item.action):
+            return self.choices.receiver_menu(state, item)               # SY.4: who the next pass goes to
+        if letter == "l" and item is not None and state.wisoff == 2 and self.defense.owns(item.action):
+            return self.choices.blitzer_menu(state)                      # SY.5: who blitzes
         if item is not None and self.offense.owns(item.action):     # SX.10c: plus, minus and a lone Shift in the catalog's menus
             return self.offense.key(state, code, item)
         if item is not None and self.defense.owns(item.action):     # SX.10d: the same in the defense's

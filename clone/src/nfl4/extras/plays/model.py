@@ -87,6 +87,10 @@ class Situation(NamedTuple):
     sack_shift: int = 0             # added to the sack rate per 10,000 drop-backs
     fumble_pct: int = 100           # percent of the fumble rates
     catch_yards: int = 0            # added to a completion's yards
+    # the player's own choices (SY.4, SY.5; empty unless he chose): the kind of the receiver the pass is thrown to ("WR", "TE", "RB") and
+    # the kind of the player who blitzes ("DL", "LB", "DB")
+    target: str = ""
+    blitzer: str = ""
 
 
 class Result(NamedTuple):
@@ -238,6 +242,20 @@ def motion_on(concept: C.Concept, situation: Situation) -> bool:
     return bool(situation.motion or concept.motion)
 
 
+# SY.4: the routes that suit a kind of receiver (a back runs the swing, the angle, the screen and the drag; a tight end the short and middle
+# routes; a wide receiver the rest). A pass whose routes have none of them is thrown as it was (the target is then only named).
+ROUTE_TARGETS = {"RB": ("swing", "angle", "screen", "drag"),
+                 "TE": ("hitch", "drag", "dig", "slant", "quick_out", "deep_out", "angle"),
+                 "WR": ("quick_out", "hitch", "dig", "go", "deep_out", "drag", "slant", "post", "corner", "wheel", "screen")}
+BLITZER_SACK = {"DL": 100, "LB": 108, "DB": 112}      # SY.5: percent of the sack rate when the player named who blitzes on a blitz call
+
+
+def targeted_routes(routes: tuple, kind: str) -> tuple:
+    if not kind or kind not in ROUTE_TARGETS:
+        return routes
+    return tuple(r for r in routes if r[0] in ROUTE_TARGETS[kind]) or routes
+
+
 def sack_rate(concept: C.Concept, call: C.Call, situation: Situation, tags: frozenset) -> int:
     rushers = max(3, min(6, call.rushers))
     rate = M.SACK_BY_RUSHERS[rushers][1 if "two_high" in tags else 0]
@@ -263,6 +281,8 @@ def sack_rate(concept: C.Concept, call: C.Call, situation: Situation, tags: froz
             rate = rate * CALL_PASS_TAGS[tag][3] // 100
     if "delayed" in tags:
         rate = rate * (90 if concept.params[1] <= 70 else 110) // 100
+    if situation.blitzer and call.blitz:
+        rate = rate * BLITZER_SACK.get(situation.blitzer, 100) // 100
     return max(0, min(3000, rate * SACK_SCALE // 100 + situation.sack_shift))
 
 
@@ -388,7 +408,7 @@ def pass_play(concept: C.Concept, call: C.Call, situation: Situation, rnd) -> Re
     if concept.kind == "trick_pass" and concept.id in ("O138", "O140") and chance(rnd, LATERAL_FUMBLE[0]):
         lost = chance(rnd, LATERAL_FUMBLE[1])           # SX.13 (RB26 8-7-1): a fumbled backward pass, told and counted as the laterals'
         return Result("fumble", -between(rnd, 5, 12), gap="laterals", fumble_lost=lost)    # run, never as a sack
-    routes = concept.params[0]
+    routes = targeted_routes(concept.params[0], situation.target)
     route_name = routes[pick(rnd, [w for _r, w in routes])][0]
     route = ROUTE[route_name]
     weights = band_weights(route, call, tags, concept.params[3], situation.to_goal)

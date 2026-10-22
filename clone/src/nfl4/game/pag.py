@@ -248,7 +248,10 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         return self.s.rosters[side].running_backs[n - 1]
 
     def receiver(self, side: int, n: int) -> str:
-        return self.s.rosters[side].receivers[n - 1]
+        roster = self.s.rosters[side]
+        if n > len(roster.receivers):               # a running back the player chose as the target (N. F. L. rules, SY.4)
+            return roster.running_backs[n - len(roster.receivers) - 1]
+        return roster.receivers[n - 1]
 
     def defender(self, side: int, n: int) -> str:
         return self.s.rosters[side].defense[n - 1]

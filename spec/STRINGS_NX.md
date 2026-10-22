@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 1945.
+- Texts: 1965.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -14,7 +14,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 84.
 - Playbooks (design section 10): 814.
-- Menus and settings (design 10.4, 12): 36.
+- Menus and settings (design 10.4, 12): 56.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 552.
 - The real coaches and players (NX-N, SX.11): 7.
@@ -1102,6 +1102,26 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXM-34 (menu, say5): "Pressure". playbook name
 - NXM-35 (menu, say5): "Team playbook". playbook choice: the team's assigned style
 - NXM-36 (help, say5): "Up and Down move through the items. Enter or Space changes the current item, and the digits go to an item. Escape goes back. The new rules apply from the next game.". F1 in the F9 Rules menu (design 12.2)
+- NXB-T01 (prompt, say5): " <coach> choose the receiver of your next pass ". R in the offense menu: the list's prompt (SY.4)
+- NXB-T02 (menu, say5): "The play picks the receiver". the list's first item: no choice, Enter keeps the original's pace (SY.4)
+- NXB-T03 (sentence, say5): " <player> is your target. ". said after a receiver was chosen (SY.4)
+- NXB-T04 (sentence, say5): " the play picks the receiver. ". said after the first item was chosen (SY.4)
+- NXB-T05 (menu, say5): "<player>, <position>". an item of the receiver list and of the blitzer list (SY.4, SY.5)
+- NXB-T06 (piece, piece): "wide receiver". a position word (SY.4)
+- NXB-T07 (piece, piece): "tight end". a position word (SY.4)
+- NXB-T08 (piece, piece): "running back". a position word (SY.4)
+- NXB-T09 (piece, piece): "receiver". the word where the position is not known: no real names, or a Franchise game (SY.4)
+- NXB-T11 (prompt, say5): " <coach> choose the player who blitzes ". L in the defense menu: the list's prompt (SY.5)
+- NXB-T12 (menu, say5): "A player picked by chance". the list's first item: no choice, as it was before (SY.5)
+- NXB-T13 (sentence, say5): " <player> will blitz when you call a blitz. ". said after a blitzer was chosen (SY.5)
+- NXB-T14 (sentence, say5): " a player is picked by chance. ". said after the first item was chosen (SY.5)
+- NXB-T15 (piece, piece): "defensive lineman". a position word (SY.5)
+- NXB-T16 (piece, piece): "linebacker". a position word (SY.5)
+- NXB-T17 (piece, piece): "cornerback". a position word (SY.5)
+- NXB-T18 (piece, piece): "safety". a position word (SY.5)
+- NXB-T19 (piece, piece): "defender". the word where the position is not known (SY.5)
+- NXB-T21 (sentence, say5): " that play is not a pass. ". R on a play that is not a pass (SY.4)
+- NXH-69 (help, say5): " R in the offense menu chooses who your next pass goes to, a running back too when the play can throw to one. L in the defense menu chooses who blitzes. Enter keeps the play's own pick. ". F6 addition (SY.4, SY.5)
 
 ## Statistics lines (C7, H11)
 
