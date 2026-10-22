@@ -1,0 +1,288 @@
+"""The radio-style broadcast of the N. F. L. rules mode: the announcer's radio banter and Ghip, the color commentator (nfl4 only, rule 0.13).
+This is inspired by Jim Kitchen.
+
+CLAUDE.md 0.27 (the owner, 2026-10-22: when comments are on, the original's comments are replaced by standard sports banter as from a radio
+broadcast), playbook 7.19, D-101. Two parts:
+
+* The banter. In the N. F. L. rules the announcer's banter (game/banter.py: after a score, after a change of possession, one play in four)
+  draws its lines from the pool BN of remarks.txt instead of the 142 jokes of the original. The pool has the original's size and is drawn by the
+  original's rule (the same draws), so nothing in the game's random sequence moves; the player's banter.txt belongs to the Classic rules.
+* Ghip. After some plays and at some moments (the opening kick-off, a touchdown, a turnover, a big gain, a sack, a missed kick, a third down, a
+  fourth-down gamble, the red zone, a penalty, the two-minute warning, the end of the first and third quarters, half time, a close or a decided
+  game, the final whistle) the color commentator adds one line from his pool in a voice of his own (speech/roles.COLOR), and the announcer
+  sometimes turns to him first (pool ASK). A line is said asynchronously, never replayed by F2, and the first key (or T) cuts it.
+
+The broadcast never changes the game: it draws only from its OWN random generator (seeded from the game's seed, so a session can be replayed),
+never from the game's, it changes no state and no sound, and the Classic rules never call it (the hooks H23 answer nothing there). F8 (comments
+off) silences it; F9, Rules, Broadcast switches Ghip and the ASK lines off (the radio banter stays: it is the N. F. L. rules' banter).
+"""
+from __future__ import annotations
+
+import logging
+import random
+
+from ..game import outcome as O
+from ..game.banter_pool import Line
+from ..game.gamestate import other
+from ..game.rnd import GameRandom
+from ..speech.roles import ANNOUNCER, COLOR
+from . import nx_texts as X
+from . import remarks
+
+log = logging.getLogger("nfl4.extras")
+
+# The chance in percent of Ghip at each kind of moment (his pool), and how often the announcer turns to him first.
+CHANCE = {"CKO": 100, "CTD": 85, "CFG": 55, "CFM": 70, "CTV": 80, "CBG": 60, "CSK": 40, "CTC": 15, "CTS": 15, "CFD": 70, "CRZ": 35, "CPN": 30,
+          "CTM": 75, "CQE": 60, "CHT": 100, "CFN": 100, "CFT": 100, "CTT": 60, "CBO": 50}
+ASK_CHANCE = 40
+MAJOR = frozenset(("CKO", "CTD", "CHT", "CFN", "CFT"))        # these never wait for the gap below
+MIN_GAP = 2                                                    # plays between two ordinary lines of Ghip
+BIG_GAIN = 20                                                  # yards: CBG
+CLOSE_MARGIN, DECIDED_MARGIN = 3, 21                           # CTT in the fourth quarter, CBO in the second half
+SEED_MIX = 0x6B1B_0C0F                                         # the broadcast's seed is the game's seed mixed with this
+QUARTER_WORDS = {1: "first quarter", 2: "second quarter", 3: "third quarter", 4: "fourth quarter"}
+THIRD_DOWN_KINDS = (O.RUN, O.PASS_COMPLETE, O.PASS_INCOMPLETE, O.SACK)
+KICK_PLAYS = (6, 7)                                            # the engine's Field Goal and Punt, not a gamble on fourth down
+
+
+class Facts:
+    """What the last play was, kept from the end of its narration until the next dead-ball moment."""
+
+    def __init__(self, state, outcome):
+        self.kind = outcome.kind
+        self.offense = outcome.offense
+        self.yards = outcome.yards
+        self.turnover = bool(outcome.turnover)
+        self.score = outcome.score
+        self.two_point = bool(outcome.two_point_try)
+        self.taken_over = outcome.then is not None          # a penalty or a review took the play over: no line for it
+        self.down, self.to_go = state.down, state.to_go      # at the snap (the narration end point is before the downs)
+        self.consumed = False
+
+
+class Broadcast:
+    def __init__(self, rules, radio_banter: bool = False, ghip: bool = False):
+        self.rules = rules
+        self.radio_banter = bool(radio_banter)      # the pool BN replaces the original's banter (the N. F. L. rules from the settings)
+        self.ghip = bool(ghip)                      # Ghip and the announcer's questions (F9, Rules, Broadcast)
+        self.game = None
+        self.rnd: GameRandom | None = None
+        self.facts: Facts | None = None
+        self.since = MIN_GAP
+        self.opened = False
+        self.red_zone_side = 0
+        self.spoken = 0                              # how many lines of Ghip this game (the log says it at the end)
+        self._banter_source = None
+        self._banter_cache: tuple = ()
+
+    # ----- the game -----
+
+    def attach(self, game, state) -> None:
+        """A new game: its own generator, seeded from the game's seed (or a fixed one when the game's source was given, as in tests)."""
+        self.game = game
+        seed = getattr(getattr(game, "rnd", None), "seed", None)
+        self.rnd = GameRandom(random.Random((seed if seed is not None else 0x5EED) ^ SEED_MIX))
+        self.facts, self.since, self.opened, self.red_zone_side, self.spoken = None, MIN_GAP, False, 0, 0
+        self._banter_source = None
+        if self.ghip:
+            self._own_voice()                         # starts the reading of the voice list when it is needed; the opening takes the voice
+
+    def active(self) -> bool:
+        """Ghip may speak: the broadcast is on, the game has begun and the comments are on (F8)."""
+        return bool(self.ghip and self.game is not None and self.rnd is not None and self.game.comtog == 0)
+
+    # ----- the banter (the announcer's, H23 banter_lines) -----
+
+    def banter_lines(self, game):
+        """The pool BN as the engine's lines, or None when this game keeps the original's banter (a hand-made rules object)."""
+        if not self.radio_banter:
+            return None
+        pools = getattr(game, "remark_pools", None) or remarks.DEFAULT_POOLS
+        lines = pools.lines("BN")
+        if lines is not self._banter_source:
+            self._banter_source = lines
+            self._banter_cache = tuple(Line(r.number, r.pieces, r.markup, r.builtin) for r in lines)
+        return self._banter_cache
+
+    # ----- what the engine tells -----
+
+    def note_outcome(self, state, outcome) -> None:
+        self.facts = Facts(state, outcome)
+        self.since += 1
+
+    def opening(self, state) -> None:
+        """Before the opening kick-off of the game: the announcer says once per program run who is in the booth, then Ghip's opening line."""
+        x = state.extras
+        if self.opened or not self.active() or state.quarter != 1 or x is None or x.plays != 0:
+            return
+        self.opened = True
+        g = self.game
+        self._own_voice()
+        if not getattr(g, "ghip_introduced", False):
+            g.ghip_introduced = True
+            g.say5(X.text("NXB-B01"))
+        self._say(state, "CKO", self._values(state, 1), ask=False)
+
+    def _own_voice(self) -> None:
+        """Ghip gets a voice of his own the first time the game opens, when the player has not chosen one (F12): the next voice of the
+        announcer's engine, else the next voice of the list. Done once the voice list is read (the program starts the reading in the
+        background); until then he shares the announcer's voice. The choice is saved like the player's own, so F12 shows it."""
+        try:
+            options = getattr(self.game, "options", None)
+            if options is None or options.voice(COLOR):
+                return
+            catalog = getattr(options, "voice_catalog", None)
+            if catalog is None:
+                return
+            if not catalog.loaded:
+                catalog.load_async()
+                return
+            voices = list(catalog.voices(timeout=0.0))
+            if len(voices) < 2:
+                return
+            current_id = options.voice(ANNOUNCER) or voices[0].voice_id
+            current = next((v for v in voices if v.voice_id == current_id), voices[0])
+            others = [v for v in voices if v.voice_id != current.voice_id]
+            pick = next((v for v in others if v.engine == current.engine), others[0])
+            options.set_voice(COLOR, pick.voice_id)
+            options.save()
+            log.info("broadcast: Ghip gets his own voice %r (the announcer has %r)", pick.name, current.name)
+        except Exception as exc:
+            log.warning("broadcast: Ghip's voice could not be chosen: %s", exc)
+
+    def before_snap(self, state, offense_play: int) -> None:
+        if not self.active() or state.down != 4 or state.two_point or offense_play in KICK_PLAYS or offense_play == 0:
+            return
+        self._try(state, "CFD", self._values(state, state.wisoff))
+
+    def penalty(self, state, side: int) -> None:
+        if self.active():
+            self._try(state, "CPN", self._values(state, side))
+
+    def between(self, state) -> None:
+        """After the down sentence, before the next menu: the last play's line, in the order of what matters most."""
+        f = self.facts
+        if f is None or f.consumed:
+            return
+        f.consumed = True
+        if not self.active() or f.two_point or f.taken_over:
+            return
+        side = f.offense
+        if f.turnover and f.kind in (O.INTERCEPTION, O.FUMBLE):
+            pool = "CTV"
+        elif f.kind in (O.RUN, O.PASS_COMPLETE) and f.yards >= BIG_GAIN and not f.score:
+            pool, side = "CBG", f.offense
+        elif f.kind == O.SACK:
+            pool = "CSK"
+        elif f.kind in (O.FIELD_GOAL_MISSED, O.FIELD_GOAL_SHORT):
+            pool = "CFM"
+        elif f.down == 3 and f.kind in THIRD_DOWN_KINDS and not f.score:
+            pool = "CTC" if f.kind in (O.RUN, O.PASS_COMPLETE) and f.yards >= f.to_go else "CTS"
+        else:
+            pool = self._red_zone(state)
+            side = state.wisoff
+            if pool is None:
+                return
+        self._try(state, pool, self._values(state, side, yards=f.yards))
+
+    def moment(self, state, what: str, quarter: int = 0) -> None:
+        if not self.active():
+            return
+        f = self.facts
+        if what == "score":
+            points = state.points
+            if f is not None:
+                f.consumed = True
+            pool = "CTD" if points == 6 else "CFG" if points == 3 else None
+            if pool is not None:
+                self._try(state, pool, self._values(state, state.wisoff))
+        elif what == "two_minute":
+            self._try(state, "CTM", self._values(state, state.wisoff))
+        elif what == "quarter_end":
+            self._quarter_end(state, quarter)
+        elif what == "half_time":
+            self._try(state, "CHT", self._values(state, 1))
+        elif what == "game_end":
+            self._game_end(state)
+
+    # ----- the moments -----
+
+    def _quarter_end(self, state, quarter: int) -> None:
+        if quarter not in (1, 3):
+            return
+        margin = abs(state.score(1) - state.score(2))
+        pool = "CQE"
+        if quarter == 3 and margin <= CLOSE_MARGIN:
+            pool = "CTT"
+        elif quarter == 3 and margin >= DECIDED_MARGIN:
+            pool = "CBO"
+        self._try(state, pool, self._values(state, 1, quarter=quarter))
+
+    def _game_end(self, state) -> None:
+        a, b = state.score(1), state.score(2)
+        if a == b:
+            self._try(state, "CFT", self._values(state, 1))
+        else:
+            self._try(state, "CFN", self._values(state, 1 if a > b else 2))
+
+    def _red_zone(self, state) -> str | None:
+        """The offense is inside the opponent's twenty for the first time in this possession."""
+        side = state.wisoff
+        if not state.in_own_half() and 1 <= state.yard_line <= 20:
+            if self.red_zone_side == side:
+                return None
+            self.red_zone_side = side
+            return "CRZ"
+        if self.red_zone_side not in (0, side):        # the other team has the ball now: its next trip inside is a new one
+            self.red_zone_side = 0
+        return None
+
+    # ----- the line -----
+
+    def _values(self, state, side: int, yards: int = 0, quarter: int = 0) -> dict[str, str]:
+        g = self.game
+        values = {"<team>": state.teams.get(side, ""), "<opponent>": state.teams.get(other(side), ""), "<coach>": g.season.coach,
+                  "<quarterback>": state.quarterbacks.get(side, ""), "<yards>": str(abs(yards)),
+                  "<quarter>": QUARTER_WORDS.get(quarter or min(state.quarter, 4), "overtime"),
+                  "<situation>": self.situation(state)}
+        return values
+
+    @staticmethod
+    def situation(state) -> str:
+        """A clause with the score: the Bengals lead the Jets 17 to 10, the Bengals and the Jets are tied at 14."""
+        t1, t2 = state.teams.get(1, ""), state.teams.get(2, "")
+        a, b = state.score(1), state.score(2)
+        if a == b:
+            return "the %s and the %s are tied at %d" % (t1, t2, a)
+        (lead, trail, high, low) = (t1, t2, a, b) if a > b else (t2, t1, b, a)
+        return "the %s lead the %s %d to %d" % (lead, trail, high, low)
+
+    def _try(self, state, pool: str, values: dict[str, str]) -> bool:
+        if not self.active() or (pool not in MAJOR and self.since < MIN_GAP):
+            return False
+        if self.rnd(100) > CHANCE[pool]:
+            return False
+        self._say(state, pool, values)
+        return True
+
+    def _say(self, state, pool: str, values: dict[str, str], ask: bool = True) -> None:
+        g = self.game
+        x = state.extras
+        if pool in ("CFN", "CFT"):
+            values = dict(values, **{"<situation>": self._final_clause(state)})
+        if ask and self.rnd(100) <= ASK_CHANCE:
+            remarks.say_remark(g, state, x, "ASK", {}, say=g.say5, rnd=self.rnd)
+        said = remarks.say_remark(g, state, x, pool, values, say=lambda text: g.say_role(text, COLOR), rnd=self.rnd)
+        if said is not None:
+            self.since = 0
+            self.spoken += 1
+            log.info("broadcast: Ghip says %s (%s) after %d plays", said.id, pool, getattr(x, "plays", 0))
+
+    @staticmethod
+    def _final_clause(state) -> str:
+        t1, t2 = state.teams.get(1, ""), state.teams.get(2, "")
+        a, b = state.score(1), state.score(2)
+        if a == b:
+            return "the %s and the %s tied at %d" % (t1, t2, a)
+        winner, loser, high, low = (t1, t2, a, b) if a > b else (t2, t1, b, a)
+        return "the %s beat the %s %d to %d" % (winner, loser, high, low)

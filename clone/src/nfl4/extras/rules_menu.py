@@ -5,7 +5,8 @@ built (SX.2: 1 Rules, 2 Time outs, then Reset the rules to the defaults last; SX
 design's order), so the player never meets a switch that does nothing; SX.3 added Penalties, SX.4 added Onside kicks and
 Onside question before it, SX.5 added Quarterback runs after Time outs, SX.6 added Replay challenges after Time outs, SX.7
 added Offense playbook and Defense playbook before Reset (1 Rules, 2 Time outs, 3 Replay challenges, 4 Quarterback runs, 5 Onside
-kicks, 6 Onside question, 7 Penalties, 8 Offense playbook, 9 Defense playbook, 10 Reset: the design's ten items). Up and Down move, Enter or Space changes the current item and speaks its
+kicks, 6 Onside question, 7 Penalties, 8 Offense playbook, 9 Defense playbook, 10 Reset: the design's ten items; SY.1 added Broadcast, Ghip
+the color commentator, before Reset: 10 Broadcast, 11 Reset). Up and Down move, Enter or Space changes the current item and speaks its
 new value, Left and Right change it too, the digits go to an item, Escape leaves (game/spoken_menu.py). A switch says
 " used with the N. F. L. rules " after its value while Rules is Classic. Every change is saved in settings.txt at once and
 applies from the next game (" the new rules apply from the next game. "): a game in progress keeps the rules it began with.
@@ -21,9 +22,9 @@ CLASSIC, NFL = "classic", "nfl"
 DEFAULTS = {"rules": NFL, "nx_timeouts": True, "nx_penalties": True, "nx_onside": True,
             "nx_onside_question": "always", "nx_onside_question_chosen": False, "nx_qb_runs": True, "nx_challenges": True,    # design 12.1 (NQ2: the N. F. L. rules since SX.9)
             "nx_offense_playbook": TEAM_KEY, "nx_defense_playbook": TEAM_KEY,      # SX.10e (D-095, Q-035): the team's playbook is the default
-            "nx_playbook_chosen": False}
+            "nx_playbook_chosen": False, "nx_broadcast": True}
 SWITCHES = ("rules", "nx_timeouts", "nx_challenges", "nx_qb_runs", "nx_penalties", "nx_onside", "nx_onside_question", "nx_onside_question_chosen",
-            "nx_offense_playbook", "nx_defense_playbook", "nx_playbook_chosen")
+            "nx_offense_playbook", "nx_defense_playbook", "nx_playbook_chosen", "nx_broadcast")
 
 
 def rules_label(game_settings) -> str:
@@ -97,6 +98,10 @@ def rules_menu(game, speech, keys) -> None:
         settings.nx_onside_question_chosen = True       # the player's own choice: a later read keeps it (D-085)
         apply()
 
+    def toggle_broadcast(step: int = 1) -> None:
+        settings.nx_broadcast = not settings.nx_broadcast
+        apply()
+
     def change_offense_playbook(step: int = 1) -> None:
         settings.nx_offense_playbook = next_playbook(settings.nx_offense_playbook, step)
         settings.nx_playbook_chosen = True              # SX.10e: the player's own choice, Classic too: a later read keeps it (D-095)
@@ -140,6 +145,9 @@ def rules_menu(game, speech, keys) -> None:
             text += X.text("NXM-22")
         return text
 
+    def broadcast_item() -> str:
+        return switch_label(settings, "NXM-37", settings.nx_broadcast)
+
     def offense_playbook_item() -> str:
         return playbook_label(settings, "NXM-17", settings.nx_offense_playbook)
 
@@ -152,7 +160,8 @@ def rules_menu(game, speech, keys) -> None:
             setattr(settings, name, DEFAULTS[name])
         text = (rules_item() + ". " + timeouts_item().rstrip() + ". " + challenges_item().rstrip() + ". "
                 + qb_runs_item().rstrip() + ". " + onside_item().rstrip() + ". " + question_item().rstrip() + ". "
-                + penalties_item().rstrip() + ". " + offense_playbook_item().rstrip() + ". " + defense_playbook_item())
+                + penalties_item().rstrip() + ". " + offense_playbook_item().rstrip() + ". " + defense_playbook_item().rstrip()
+                + ". " + broadcast_item())
         if tuple(getattr(settings, name) for name in SWITCHES) == before:
             return text
         apply()
@@ -170,6 +179,7 @@ def rules_menu(game, speech, keys) -> None:
              change=change_offense_playbook),
         Item(defense_playbook_item, enter=lambda: (change_defense_playbook(), changed(defense_playbook_item))[1],
              change=change_defense_playbook),
+        Item(broadcast_item, enter=lambda: (toggle_broadcast(), changed(broadcast_item))[1], change=toggle_broadcast),
         Item(lambda: X.text("NXM-19"), enter=reset),
     ]
     SpokenMenu(speech, keys, X.text("NXM-07"), items, help_text=X.text("NXM-36"), space_enters=True,

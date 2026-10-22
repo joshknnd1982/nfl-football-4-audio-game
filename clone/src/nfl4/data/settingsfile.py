@@ -19,7 +19,7 @@ import os
 import re
 from typing import Callable
 
-from ..speech.roles import ROLES
+from ..speech.roles import ALL_ROLES
 from . import debuglog, paths
 from .healing import read_player_text, save_damaged_copy, write_text_atomic
 from .settings import AudioSettings, GameSettings, Settings, SpeechSettings
@@ -51,6 +51,8 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     list (original). Choose the voices with F12 rather than typing them here.
 # volume_announcer, volume_own_quarterback, volume_own_punter, volume_opponent_quarterback, volume_opponent_punter
 #                     0 to 100 for each speaker (original 95); F11 changes them
+# voice_color, volume_color   Ghip, the color commentator of the radio broadcast (the N. F. L. rules): his voice and volume, F12 and F11
+#                     ask for him when the Broadcast item of F9, Rules is on
 # speech_rate         -10 to 10, or original for the voice's own rate (original); the Ctrl key changes it
 # speech_pitch        -10 to 10 (original 0). Not every voice supports it.
 # list_letters        type = typing letters searches a list for a name (default), first = a letter jumps to the
@@ -71,6 +73,8 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     kicks, or pro, west, air, power, zone, option, pressure: the plays your offense calls with the N. F. L. rules
 # nx_defense_playbook the same for your defense
 # nx_playbook_chosen  yes when you chose a playbook yourself; a file without it that says classic is read as team, once
+# nx_broadcast        on or off: Ghip, the color commentator of the radio broadcast of the N. F. L. rules, and the announcer's
+#                     questions to him (default on; F8 switches all comments off, this switches only Ghip)
 # nx_onside_question  always = you are asked about an onside kick at every kick off and safety kick (default, the 2026 rule),
 #                     sensible = only when it makes sense (the late game of a team that trails or leads by one score)
 # nx_onside_question_chosen  yes when you chose the line above yourself; a file without it is read as always, once
@@ -95,7 +99,7 @@ class SettingsFormatError(ValueError):
 def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "") -> str:
     sp, au, game = settings.speech, settings.audio, settings.game
     lines = [HEADER.rstrip("\n"), f"speech_output = {sp.mode}"]
-    for role in ROLES:
+    for role in ALL_ROLES:
         voice_id = sp.voices.get(role)
         name = ""
         if voice_id:
@@ -106,7 +110,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         if name:
             lines.append(f"# The voice below is: {name.replace(chr(10), ' ').replace(chr(13), ' ')}")
         lines.append(f"voice_{role} = {voice_id or ''}")
-    for role in ROLES:
+    for role in ALL_ROLES:
         lines.append(f"volume_{role} = {sp.volumes.get(role, 95)}")
     lines += [
         f"speech_rate = {'original' if sp.rate is None else sp.rate}",
@@ -126,6 +130,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_offense_playbook = {game.nx_offense_playbook}",
         f"nx_defense_playbook = {game.nx_defense_playbook}",
         f"nx_playbook_chosen = {'yes' if game.nx_playbook_chosen else 'no'}",
+        f"nx_broadcast = {'on' if game.nx_broadcast else 'off'}",
         f"nx_season_kind = {game.nx_season_kind}",
         f"nx_fr_auto = {'on' if game.nx_fr_auto else 'off'}",
         f"nx_fr_offseason = {game.nx_fr_offseason}",
@@ -200,11 +205,11 @@ def parse(text: str) -> tuple[Settings, list[str]]:
 
 def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: GameSettings) -> None:
     """Set one value; KeyError for an unknown name, ValueError for a bad value (the setting keeps its old value)."""
-    if name.startswith("voice_") and name[6:] in ROLES:
+    if name.startswith("voice_") and name[6:] in ALL_ROLES:
         if len(value) > 400 or any(ord(c) < 32 for c in value):
             raise ValueError("not a voice identifier")
         sp.voices[name[6:]] = value or None
-    elif name.startswith("volume_") and name[7:] in ROLES:
+    elif name.startswith("volume_") and name[7:] in ALL_ROLES:
         sp.volumes[name[7:]] = _number(value, 0, 100)
     elif name == "speech_rate":
         sp.rate = None if value.lower() in ("original", "") else _number(value, -10, 10)
@@ -255,6 +260,11 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if word is None:
             raise ValueError(f"'{value[:20]}' is not on or off")
         game.nx_qb_runs = word
+    elif name == "nx_broadcast":
+        word = _ON_WORDS.get(value.lower())
+        if word is None:
+            raise ValueError(f"'{value[:20]}' is not on or off")
+        game.nx_broadcast = word
     elif name == "nx_onside":
         word = _ON_WORDS.get(value.lower())
         if word is None:

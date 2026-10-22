@@ -95,3 +95,7 @@ The playbooks and the franchise mode are inspired by the playbooks and franchise
 Electronic Arts. This project is not made, endorsed or supported by EA or the NFL. The plays are football concepts named in plain
 football words; many of them are also in the playbooks of Madden NFL. No text, play name, play list, ratings, art or sound of Madden
 NFL is copied.
+
+## The radio broadcast
+
+With the N. F. L. rules the game sounds like a radio broadcast. The announcer's banter is standard sports banter (the crowd, the weather, the band, the people listening in their cars, a little teasing of the color commentator) instead of the jokes of the original game, and Ghip, the color commentator, adds a line of his own in a voice of his own after some plays: a touchdown, a turnover, a big gain, a sack, a missed kick, a third down, a fourth-down gamble, the red zone, a penalty, the two-minute warning, the end of a quarter, half time, a close or a decided game and the final whistle. Every line is customizable (CUSTOMIZE.md), F8 switches all comments off, and F9, Rules, Broadcast switches Ghip off. The broadcast never changes how a game goes: it draws only its own random numbers. The Classic rules keep the original's banter exactly.

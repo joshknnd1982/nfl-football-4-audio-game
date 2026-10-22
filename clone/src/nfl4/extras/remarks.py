@@ -19,6 +19,11 @@ replays it, and never silenced by F8), CHS and CHC (SX.6, the hints after a wron
 (SX.6, after a review, design 6.4; RVC03 is drawn only after a lost challenge).
 Each later session adds its pool to POOLS_BUILT
 and its placeholders to PLACEHOLDERS.
+
+SY.1 (the radio-style broadcast, CLAUDE.md 0.27, playbook 7.19, D-101): BN is the announcer's radio banter, 142 lines that replace Jim Kitchen's
+jokes in the N. F. L. rules mode (game/banter.py draws them by the original's rule through the Rules hook `banter_lines`); ASK is the announcer
+turning to Ghip; CKO CBG CSK CTV CTD CFG CFM CTC CTS CFD CRZ CPN CTM CQE CHT CFN CFT CTT CBO are Ghip's lines, the color commentator, spoken
+in his own voice (extras/broadcast.py). They are drawn with the broadcast's OWN random generator, so the game's draws do not move.
 """
 from __future__ import annotations
 
@@ -34,10 +39,13 @@ from .state import RECENT_REMARKS
 
 log = logging.getLogger("nfl4.extras")
 
-POOLS_BUILT = ("TO", "CHS", "CHC", "RVR", "RVC", "ON", "QB", "PN")     # the pools whose feature exists (SX.2 timeouts, SX.6 replay
+BROADCAST_POOLS = ("BN", "ASK", "CKO", "CBG", "CSK", "CTV", "CTD", "CFG", "CFM", "CTC", "CTS", "CFD", "CRZ", "CPN", "CTM", "CQE", "CHT",
+                   "CFN", "CFT", "CTT", "CBO")      # SY.1: the radio banter, the announcer's question and Ghip's pools (rule 0.27)
+COLOR_POOLS = tuple(pool for pool in BROADCAST_POOLS if pool not in ("BN", "ASK"))      # said by Ghip's voice
+POOLS_BUILT = ("TO", "CHS", "CHC", "RVR", "RVC", "ON", "QB", "PN") + BROADCAST_POOLS     # the pools whose feature exists (SX.2 timeouts, SX.6 replay
 #                                                         challenges, SX.4 onside kicks, SX.5 quarterback runs, SX.3 penalties),
 #                                                         in the order of remarks.txt (design 13)
-COMMENTARY_POOLS = frozenset(("TO", "CHS", "CHC", "RVR", "RVC", "ON", "PN"))   # F8 silences these; QB is play-by-play
+COMMENTARY_POOLS = frozenset(("TO", "CHS", "CHC", "RVR", "RVC", "ON", "PN") + BROADCAST_POOLS)   # F8 silences these; QB is play-by-play
 PLAY_BY_PLAY_POOLS = frozenset(("QB",))      # never silenced: with every line switched off the default lines speak (design 13, L13)
 PLACEHOLDERS = {"TO": ("<team>", "<coach>", "<quarterback>"),
                 "CHS": ("<team>", "<coach>", "<quarterback>"),
@@ -46,7 +54,20 @@ PLACEHOLDERS = {"TO": ("<team>", "<coach>", "<quarterback>"),
                 "RVC": ("<team>", "<coach>", "<quarterback>"),
                 "ON": ("<team>", "<coach>", "<quarterback>"),
                 "QB": ("<team>", "<coach>", "<quarterback>"),
-                "PN": ("<team>", "<coach>", "<quarterback>", "<surname>")}
+                "PN": ("<team>", "<coach>", "<quarterback>", "<surname>"),
+                "BN": (), "ASK": ()}
+# SY.1: Ghip's pools. <team> the team the line is about, <opponent> the other one, <quarterback> that team's quarterback, <coach> the
+# player's name, <yards> a gain, <situation> a clause with the score, <quarter> "second quarter" and so on
+for _pool, _names in (("CKO", ("<team>", "<opponent>", "<coach>", "<quarterback>")), ("CBG", ("<team>", "<opponent>", "<yards>", "<quarterback>")),
+                      ("CSK", ("<team>", "<opponent>", "<quarterback>")), ("CTV", ("<team>", "<opponent>")),
+                      ("CTD", ("<team>", "<opponent>", "<situation>")), ("CFG", ("<team>", "<opponent>", "<situation>")),
+                      ("CFM", ("<team>", "<opponent>")), ("CTC", ("<team>", "<opponent>")), ("CTS", ("<team>", "<opponent>")),
+                      ("CFD", ("<team>", "<opponent>")), ("CRZ", ("<team>", "<opponent>")), ("CPN", ("<team>", "<opponent>")),
+                      ("CTM", ("<situation>", "<quarter>", "<team>", "<opponent>")), ("CQE", ("<situation>", "<quarter>", "<team>", "<opponent>")),
+                      ("CHT", ("<situation>", "<team>", "<opponent>")), ("CFN", ("<situation>", "<team>", "<opponent>")),
+                      ("CFT", ("<situation>", "<team>", "<opponent>")), ("CTT", ("<situation>", "<team>", "<opponent>")),
+                      ("CBO", ("<situation>", "<team>", "<opponent>"))):
+    PLACEHOLDERS[_pool] = _names
 ID_PATTERN = re.compile(r"([A-Z]{2,3})(\d{1,4})", re.IGNORECASE)
 MAX_NUMBER = 9999
 _PLACEHOLDER = re.compile(r"<[^<>]{1,30}>")
@@ -204,10 +225,12 @@ def pick(pool_lines: tuple[Remark, ...], recent: list[str], rnd) -> Remark | Non
     return pool_lines[index - 1]
 
 
-def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=None, exclude=()) -> Remark | None:
+def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=None, exclude=(), rnd=None) -> Remark | None:
     """Draw and say one remark of `pool` (F8 silences the commentary pools before any draw). Returns the line said. `say` is
     the speaker of its parts (None: the announcer's `say`; pool QB passes say4). `exclude`: IDs that may not be drawn this
-    time (RVC03 after a booth review, SX.6)."""
+    time (RVC03 after a booth review, SX.6). `rnd`: the generator of the draws (None: the game's; the broadcast gives its own, so the
+    game's draws do not move, SY.1)."""
+    rnd = rnd if rnd is not None else game.rnd
     if pool in COMMENTARY_POOLS and game.comtog == 1:
         return None
     pools = getattr(game, "remark_pools", None) or DEFAULT_POOLS
@@ -215,17 +238,17 @@ def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=No
     lines = tuple(line for line in pools.lines(pool) if line.id not in exclude)
     if not lines and pool in PLAY_BY_PLAY_POOLS:       # the play-by-play always has a sentence (CUSTOMIZABLE_CONTENT 13 L13)
         lines = DEFAULT_REMARKS[pool]
-    remark = pick(lines, recent, game.rnd)
+    remark = pick(lines, recent, rnd)
     if remark is None:
         return None
     record.recent[pool] = (recent + [remark.id])[-RECENT_REMARKS:]
     name = ""
     if _has_name(remark.pieces):
         names = state.banter_names
-        index = game.rnd(NAME_LIST_SIZE)
+        index = rnd(NAME_LIST_SIZE)
         name = names[index - 1] if index <= len(names) else ""
     pieces = _filled(remark.pieces, values)
-    choices = [game.rnd(size) for size in choice_sizes(pieces)]
+    choices = [rnd(size) for size in choice_sizes(pieces)]
     play_line(game, pieces, name, state.quarterbacks.get(2, ""), choices, say)
     return remark
 
@@ -250,6 +273,15 @@ NOTES = (
     "The words in square brackets of banter.txt work here too: [sound my laugh.wav], [pause], [bleep], [one of: a | b].",
     "A line has at most 500 characters and 20 parts. The F8 key switches all comments off, these too, except the QB lines:",
     "they are the play by play of a run and stay on; if you switch every QB line off, the original five are used.",
+    "BN are the announcer's radio banter, 142 lines that the N. F. L. rules use instead of the jokes of the original (banter.txt keeps the",
+    "original's lines for the Classic rules). They fit any moment, so they have no <...> words. ASK are the announcer's questions to Ghip.",
+    "The other new pools are Ghip's, the color commentator, said in his own voice: CKO before the opening kick off, CBG after a gain of 20",
+    "yards or more, CSK after a sack, CTV after a turn over, CTD after a touch down, CFG after a field goal, CFM after a missed kick, CTC and",
+    "CTS after a third down made or stopped, CFD when a team goes for it on fourth down, CRZ inside the twenty, CPN after a penalty, CTM at the",
+    "two minute warning, CQE at the end of the first and third quarter, CHT at half time, CFN and CFT at the end (a win, a tie), CTT in a",
+    "close fourth quarter and CBO in a game that is decided. In them <team> is the team the line is about, <opponent> the other team,",
+    "<quarterback> that team's quarterback, <yards> the gain, <situation> a whole clause with the score (the Bengals lead the Jets 17 to 10),",
+    "<quarter> the quarter and <coach> your name; each pool says which of them it has. F9, Rules, Broadcast switches Ghip off.",
 )
 
 

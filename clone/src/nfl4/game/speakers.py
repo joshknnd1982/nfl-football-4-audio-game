@@ -145,6 +145,11 @@ class Speakers:
         self._logged(text)
         self._speak(text, ANNOUNCER, False)
 
+    def say_role(self, text: str, role: str) -> None:
+        """A speaker of the extras (Ghip, SY.1), asynchronous; logged, not kept for the replay (the pools of the broadcast)."""
+        self._logged(text)
+        self._speak(text, role, False)
+
     def say6(self, text: str, role: str | None = None) -> None:
         """The voice that spoke last, asynchronous; logged. role: the speaker whose voice the original had just loaded
         (F11's adjvol loads each voice before its say6; the clone names it, D-022 item 5)."""

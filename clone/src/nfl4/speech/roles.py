@@ -15,6 +15,11 @@ OPPONENT_PUNTER = "opponent_punter"
 
 # The order ChangeVoice (F12) asks and footbal0.dat stores them (GAME_SPEC 4.7, 12)
 ROLES = (ANNOUNCER, OWN_QUARTERBACK, OPPONENT_QUARTERBACK, OWN_PUNTER, OPPONENT_PUNTER)
+# SY.1 (the radio broadcast, rule 0.27): Ghip, the color commentator, is a sixth speaker that only the N. F. L. rules use. He is NOT in ROLES:
+# the original's F11 and F12 loop over ROLES and Classic must stay exact; the extras' loops add him (game/hotkeys.py).
+COLOR = "color"
+EXTRA_ROLES = (COLOR,)
+ALL_ROLES = ROLES + EXTRA_ROLES
 # The order adjvol (F11) walks them = volumes 1 to 5 (GAME_SPEC 4.6, 9.1)
 VOLUME_ORDER = (ANNOUNCER, OWN_QUARTERBACK, OWN_PUNTER, OPPONENT_QUARTERBACK, OPPONENT_PUNTER)
 
@@ -25,6 +30,12 @@ F11_NAMES = {ANNOUNCER: "the announcer", OWN_QUARTERBACK: "your quarterback", OW
 F12_NAMES = {ANNOUNCER: "the announcer", OWN_QUARTERBACK: "your quarter back",
              OPPONENT_QUARTERBACK: "your opponent's quarter back", OWN_PUNTER: "your punter",
              OPPONENT_PUNTER: "your opponent's punter"}
+EXTRA_NAMES = {COLOR: "Ghip, the color commentator"}      # SY.1: the extras' speakers (F11 and F12 say these when they ask for them)
+
+
+def spoken_name(role: str) -> str:
+    """How F11 and F12 name a speaker: the original's words, or the extras' for Ghip."""
+    return F11_NAMES.get(role) or EXTRA_NAMES[role]
 
 
 def player_role(side: int, punter: bool = False) -> str:

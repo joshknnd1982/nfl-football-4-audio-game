@@ -50,9 +50,9 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("f8", "F8", "Anywhere", "switches the comments off and on", "all", True, "f8. comments toggle.", consts=("KEY_F8",)),
     KeyRow("f9", "F9", "Anywhere", "opens the added functions: the speech settings, the sounds, the names and the banter, the rules, "
            "the franchise and the about text", "all", False, "F9. added functions", consts=("KEY_F9",)),
-    KeyRow("f11", "F11", "Anywhere", "adjusts the volume of the voices and the sounds: Up and Down, Enter for the next", "all", True,
+    KeyRow("f11", "F11", "Anywhere", "adjusts the volume of the voices and the sounds: Up and Down, Enter for the next (with the N. F. L. rules and the broadcast on, Ghip's volume too)", "all", True,
            "F11. adjust volume of voices and sounds.", consts=("KEY_F11",)),
-    KeyRow("f12", "F12", "Anywhere", "changes the voices", "all", True, "F12. change voice.", consts=("KEY_F12",)),
+    KeyRow("f12", "F12", "Anywhere", "changes the voices (with the N. F. L. rules and the broadcast on, Ghip's voice too)", "all", True, "F12. change voice.", consts=("KEY_F12",)),
     KeyRow("ctrl", "Control", "Anywhere", "adjusts the rate of speech: Up and Down, Enter to keep it", "all", True,
            "Control key, adjust rate of speech.", consts=("KEY_CTRL",)),
     KeyRow("escape", "Escape", "Anywhere", "exits the game; in a play menu it asks whether you concede the game; in the F9 menus and "

@@ -6,17 +6,17 @@ import logging
 from .jaws import JawsBackend
 from .manager import SpeechManager
 from .nvda import NvdaBackend
-from .roles import ANNOUNCER, ROLES
+from .roles import ALL_ROLES, ANNOUNCER
 from .sapi5 import RoleVoice, SapiBackend, SapiStart
 
 log = logging.getLogger(__name__)
 
 
 def speaker_voices(settings, skip: frozenset[str] = frozenset()) -> dict[str, RoleVoice]:
-    """The five speakers from the speech settings. A voice in `skip` (one that crashed the program, data/voiceguard.py)
+    """The speakers from the speech settings (the five of the original and Ghip). A voice in `skip` (one that crashed the program, data/voiceguard.py)
     is not opened: that speaker uses the first voice until the player chooses it again."""
     voices = {}
-    for role in ROLES:
+    for role in ALL_ROLES:
         voice_id = settings.voices.get(role) or None
         if voice_id and voice_id.strip().lower() in skip:
             voice_id = None

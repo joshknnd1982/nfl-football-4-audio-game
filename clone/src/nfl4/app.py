@@ -37,7 +37,7 @@ from .game.rnd import GameRandom
 from .game.commercials import Commercials
 from .game.sounds import GameSounds
 from .speech import create_speech
-from .speech.roles import ROLES
+from .speech.roles import ALL_ROLES
 from .speech.voices import VoiceCatalog
 
 log = logging.getLogger("nfl4")
@@ -86,7 +86,7 @@ def main(argv=None) -> int:
     guard.recover()                         # a voice that took the last run down is set aside (data/voiceguard.py)
     crashed = {voice.strip().lower() for voice in guard.crashed()}
     skipped = {}                            # saved voice -> the speakers that use the first voice instead this run
-    for role in ROLES:
+    for role in ALL_ROLES:
         saved = settings.speech.voices.get(role)
         if saved and saved.strip().lower() in crashed:
             skipped.setdefault(saved, []).append(role)
@@ -204,7 +204,7 @@ def note_voices(store, speech, settings, skipped: dict) -> None:
     """One notice per voice that crashed the program last time, and one if a saved voice is not installed now."""
     for saved, roles in skipped.items():
         store.note_voice_crashed(voice_label(saved), _voice_name(speech, roles[0]))   # the first voice, used instead
-    for role in ROLES:
+    for role in ALL_ROLES:
         saved = settings.speech.voices.get(role)
         if not saved or saved in skipped:
             continue

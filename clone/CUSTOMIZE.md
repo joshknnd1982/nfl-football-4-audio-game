@@ -65,7 +65,7 @@ To put in a new season's names: replace the lines of the teams that changed in r
 
 ## The banter
 
-banter.txt has the 142 original lines, B001 to B142. Each time the announcer speaks, the game chooses one line that is on, by chance, and no line comes twice in a game. The F8 key switches all banter off, your lines too.
+banter.txt has the 142 original lines, B001 to B142. Each time the announcer speaks, the game chooses one line that is on, by chance, and no line comes twice in a game. The F8 key switches all banter off, your lines too. banter.txt is the banter of the Classic rules: with the N. F. L. rules the announcer says radio banter instead (see "The radio broadcast" below), and the 142 jokes of the original are not said.
 
 Change a line by changing the text after its ID. Switch a line off like this:
 
@@ -112,6 +112,16 @@ For example:
     PN05 = <surname> will hear about that one from the coach.
 
 A remark is never one of the last three said. F8 switches the remarks off with the banter, except the QB lines: they are the play by play of a run, so they stay on, and if you switch every QB line off the original five are used.
+
+## The radio broadcast of the N. F. L. rules
+
+With the N. F. L. rules the game is a radio broadcast, and its lines are in remarks.txt too. When the comments are on (F8), the announcer says a line of radio banter now and then, after a score, after a change of possession and after one play in four, exactly where the original said its jokes; the lines are BN01 to BN142 (generic remarks about the crowd, the weather, the band, the people listening at home, football sayings and a little teasing of Ghip). Ghip is the color commentator: after some plays and at some moments he adds one line in a voice of his own, and the announcer sometimes turns to him first with a line of ASK01 to ASK12. Ghip's pools are:
+
+- CKO before the opening kick off, CBG after a gain of 20 yards or more, CSK after a sack, CTV after a turn over, CTD after a touch down, CFG after a field goal, CFM after a missed kick, CTC after a third down made, CTS after a third down stopped, CFD when a team goes for it on fourth down, CRZ when a team gets inside the twenty, CPN after a penalty, CTM at the two minute warning, CQE at the end of the first and third quarter, CHT at half time, CFN at the end of a game that one team won, CFT at the end of a tie, CTT in a close fourth quarter and CBO in a game that is decided.
+
+In Ghip's lines `<team>` is the team the line is about, `<opponent>` the other team, `<quarterback>` that team's quarterback, `<yards>` the gain, `<situation>` a whole clause with the score (the Bengals lead the Jets 17 to 10) and `<quarter>` the quarter; `<coach>` is your name. Each pool takes only some of them: CKO `<team>`, `<opponent>`, `<coach>`, `<quarterback>`; CBG `<team>`, `<opponent>`, `<yards>`, `<quarterback>`; CSK `<team>`, `<opponent>`, `<quarterback>`; CTD, CFG, CHT, CFN, CFT, CTT and CBO `<situation>`, `<team>` and `<opponent>`; CTM and CQE also `<quarter>`; the others `<team>` and `<opponent>`. The BN lines and the ASK lines have none. The lines are changed, switched off and added like every other remark (BN143 and up, CTD11 and up), and may name your own sound files. Ghip's own random numbers are not the game's, so the broadcast never changes how a game goes.
+
+Ghip speaks with his own voice: F12 asks for him after the five speakers and F11 for his volume (only with the N. F. L. rules and the broadcast on). The first time, the game gives him the next voice of the announcer's engine. F9, Rules, Broadcast switches Ghip and the questions to him off; the radio banter stays, it is the banter of the N. F. L. rules. With NVDA or JAWS the screen reader speaks Ghip too, in its one voice. The first key you press cuts the line that is being said.
 
 ## The penalties of the N. F. L. rules
 

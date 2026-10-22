@@ -22,7 +22,7 @@ from programrig import DOWN, ENTER, ESC, F1, said
 from test_functions import TOP, rig_for
 
 SPACE, LEFT = 32, 37
-OPEN = "Rules. 10 items. Press F1 for help. "    # SX.7: Rules, Time outs, Replay challenges, Quarterback runs, Onside kicks,
+OPEN = "Rules. 11 items. Press F1 for help. "    # SX.7: Rules, Time outs, Replay challenges, Quarterback runs, Onside kicks,
 #                                                  Onside question, Penalties, Offense playbook, Defense playbook, Reset
 NEXT_GAME = X.text("NXM-23")
 
@@ -101,7 +101,7 @@ def test_a_switch_says_used_with_the_nfl_rules_while_rules_is_classic(rig):
 
 def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     spoken = rules_menu(rig, [ENTER, "2", ENTER, "3", ENTER, "4", ENTER, "5", ENTER, "6", ENTER, "7", ENTER, "8", ENTER,
-                              "9", ENTER, "0", ENTER, ENTER, "1"])
+                              "9", ENTER, "0", ENTER, DOWN, ENTER, ENTER, "1"])      # SY.1: "0" is Broadcast, Reset is reached with Down
     assert spoken[2] == "Time outs on "
     assert spoken[3] == "Time outs off " + NEXT_GAME
     assert spoken[4] == "Replay challenges on "
@@ -118,12 +118,14 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert spoken[15] == "Offense playbook: Pro Style" + NEXT_GAME     # SX.10e (D-095): the team's playbook is the default
     assert spoken[16] == "Defense playbook: Team playbook"
     assert spoken[17] == "Defense playbook: Pro Style" + NEXT_GAME
-    assert spoken[18] == X.text("NXM-19")
+    assert spoken[18] == "Broadcast on "                                  # SY.1: the tenth item
+    assert spoken[19] == "Broadcast off " + NEXT_GAME
+    assert spoken[20] == X.text("NXM-19")
     defaults = ("Rules: N. F. L. rules. Time outs on. Replay challenges on. Quarterback runs on. Onside kicks on."   # SX.9: the default is
-                " Onside question: always. Penalties on. Offense playbook: Team playbook. Defense playbook: Team playbook")
-    assert spoken[19] == defaults + NEXT_GAME
-    assert spoken[20] == defaults                                       # nothing changed now
-    assert spoken[21] == "Rules: N. F. L. rules"
+                " Onside question: always. Penalties on. Offense playbook: Team playbook. Defense playbook: Team playbook. Broadcast on ")
+    assert spoken[21] == defaults + NEXT_GAME
+    assert spoken[22] == defaults                                       # nothing changed now
+    assert spoken[23] == "Rules: N. F. L. rules"
     game = rig.game.options.settings.game
     assert (game.rules, game.nx_timeouts, game.nx_penalties) == ("nfl", True, True) and is_nfl(rig.game.rules)
     assert (game.nx_onside, game.nx_onside_question, game.nx_qb_runs) == (True, "always", True)

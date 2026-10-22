@@ -14,7 +14,7 @@ import logging
 import time
 from typing import Callable
 
-from ..speech.roles import F11_NAMES
+from ..speech.roles import spoken_name
 from ..speech.voices import ENGINE_FALLBACK, VoiceInfo, first_letter_index, group_by_engine
 from ..speech.voices import search as search_voices
 from . import extra_texts as words
@@ -26,7 +26,7 @@ log = logging.getLogger("nfl4.game")
 def role_title(role: str) -> str:
     """The clone's title of the engine list for one speaker (GAP_REGISTER 8 draft: " Choose the voice for the
     announcer. "): "Choose the voice for your punter"."""
-    return "Choose the voice for " + F11_NAMES[role]
+    return "Choose the voice for " + spoken_name(role)
 
 
 def voices_or_none(catalog) -> list[VoiceInfo] | None:

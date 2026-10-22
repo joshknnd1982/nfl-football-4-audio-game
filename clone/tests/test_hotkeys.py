@@ -371,7 +371,7 @@ def test_f12_asks_each_speaker_in_the_original_order_and_saves():
     rig.game.get_sex_of = lambda: sexes.append(1)
     assert run_key(rig) == "112"
     assert options.settings.speech.voices == {ANNOUNCER: "id2", OWN_QUARTERBACK: None, OPPONENT_QUARTERBACK: "id1",
-                                              OWN_PUNTER: None, OPPONENT_PUNTER: None}
+                                              OWN_PUNTER: None, OPPONENT_PUNTER: None, "color": None}     # SY.1: Ghip's voice is not asked in Classic
     assert [e for e in rig.sapi.events if e[0] == "role_voice"] == [
         ("role_voice", "announcer=id2"), ("role_voice", "opponent_quarterback=id1"), ("role_voice", "opponent_punter=")]
     samples = [(text, role) for text, role, _ in rig.said if "This is how this voice will speak" in text]

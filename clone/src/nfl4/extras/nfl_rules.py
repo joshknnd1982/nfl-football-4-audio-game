@@ -117,6 +117,7 @@ from .clock import RUNNING_KINDS, NflPeriodClock, late_window
 from .defense_flow import DefenseFlow
 from .kick_flow import KickFlow
 from .offense_flow import OffenseFlow, text_for
+from .broadcast import Broadcast
 from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
 from .playbook_flow import PlaybookFlow
@@ -146,7 +147,8 @@ class NflRules(ClassicRules):
 
     def __init__(self, timeouts_on: bool = True, auto_sides: tuple[int, ...] = (2,), penalties_on: bool = False,
                  onside_on: bool = False, onside_always: bool = False, qb_on: bool = False, challenges_on: bool = False,
-                 offense_book: str = "classic", defense_book: str = "classic", playbooks_on: bool = False):
+                 offense_book: str = "classic", defense_book: str = "classic", playbooks_on: bool = False,
+                 broadcast_on: bool = False, radio_banter: bool = False):
         # the switches for a new game; a game reads its own from state.extras (a loaded game keeps the switches it was saved
         # with, C1). penalties_on and onside_on are off unless given: the program's rules come from the settings
         # (rules_from_settings, nx_penalties and nx_onside on by default), and a rules object made by hand (the clock's
@@ -166,6 +168,8 @@ class NflRules(ClassicRules):
         self.offense_book = offense_book
         self.defense_book = defense_book
         self.playbooks_on = bool(playbooks_on)
+        # SY.1 (the radio broadcast, rule 0.27): the radio banter instead of the original's jokes, and Ghip; a hand-made object has neither
+        self.broadcast = Broadcast(self, radio_banter=radio_banter, ghip=broadcast_on)
         self.game = None
         self.state = None
         self.clock: NflPeriodClock | None = None
@@ -182,7 +186,8 @@ class NflRules(ClassicRules):
     def for_game(self) -> "NflRules":
         """A fresh object for one game, with the same switches (Game.play_game)."""
         return type(self)(self.timeouts_on, self.auto_sides, self.penalties_on, self.onside_on, self.onside_always,
-                          self.qb_on, self.challenges_on, self.offense_book, self.defense_book, self.playbooks_on)
+                          self.qb_on, self.challenges_on, self.offense_book, self.defense_book, self.playbooks_on,
+                          self.broadcast.ghip, self.broadcast.radio_banter)
 
     # ----- H1 -----
 
@@ -193,6 +198,7 @@ class NflRules(ClassicRules):
                                     onside_always=self.onside_always, qb_on=self.qb_on,
                                     challenges_on=self.challenges_on)
         self.clock = NflPeriodClock(game, state)
+        self.broadcast.attach(game, state)         # SY.1: this game's own generator for the broadcast
         self.modifiers.bind(state)                 # SX.8b: the ratings of the players in the play (a Franchise game's rosters)
         self.books.resolve(game, state)            # SX.7: the playbook of each side's offense and defense
         self.offense.resolve(game, state)          # SX.10c: the player's favourites, the menu at its top
@@ -217,6 +223,7 @@ class NflRules(ClassicRules):
                 self.offense.clear()                # SX.10c: the catalog's call too
                 self.defense.clear()                # SX.10d: and the defense's
                 return FOUL_BEFORE_SNAP
+        self.broadcast.before_snap(state, offense_play)        # SY.1: Ghip, when a team goes for it on fourth down (his own draws)
         self.books.arm(state, offense_play, defense_play)      # SX.7: the plays that were called move the rows (H8)
         return GO_ON
 
@@ -305,6 +312,7 @@ class NflRules(ClassicRules):
         x.running = False                          # the play is over: H10 decides whether the clock runs to the next snap
         x.pending = 0
         x.last_kind = outcome.kind
+        self.broadcast.note_outcome(state, outcome)    # SY.1: what the play was, for Ghip after the down sentence
         x.last_offense = outcome.offense
         x.last_two_point = bool(outcome.two_point_try)
         self.qb.count(state, outcome)              # before the penalty flow can take the play away (it restores the count)
@@ -335,6 +343,14 @@ class NflRules(ClassicRules):
         if injuries is not None:                   # SX.8k (a Franchise game only): the draws of a play that can hurt a player
             injuries.after_play(state, outcome)
         return outcome
+
+    # ----- H23 (SY.1, the radio broadcast, rule 0.27) -----
+
+    def banter_lines(self, game):
+        return self.broadcast.banter_lines(game)
+
+    def broadcast_moment(self, state, what: str, quarter: int = 0) -> None:
+        self.broadcast.moment(state, what, quarter)
 
     def game_injuries(self):
         """The Franchise's injuries of the game in progress (extras/franchise/injury_flow.GameInjuries), or None: every game that is not a game of a
@@ -477,6 +493,7 @@ class NflRules(ClassicRules):
 
     def before_kickoff(self, state, kicking_side: int) -> str:
         x = state.extras
+        self.broadcast.opening(state)              # SY.1: Ghip before the opening kick-off
         x.out_of_bounds = False
         self.after_play = False
         self.books.clear()                         # SX.7: a kick-off is a new play: nothing is called
@@ -531,6 +548,7 @@ class NflRules(ClassicRules):
         if self.possession_ends_game(state):      # SX.12: the overtime decided between two plays (the kickers kept their kick
             return OVERTIME_OVER                  # after their score, 16-1-5 (c)); the possession step catches the other changes
         self._overtime_news(state)
+        self.broadcast.between(state)             # SY.1: Ghip's line about the last play, after the down sentence
         if x.challenges_on:                       # SX.6: the computer's flag on the last play, before the clock goes on
             then = self.review.computer_challenge(state)
             if then is not None:                  # the ruling was reversed: the engine goes on at the step that applies it
@@ -861,7 +879,7 @@ class NflRules(ClassicRules):
 
     def extra_help(self, key: str) -> list[str]:
         ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-47", "NXH-14", "NXH-18", "NXH-27"),
-               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
                         "NXH-16", "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30") + MENU_HELP_F6,     # SX.12: overtime after the clock
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
                         "NXH-33") + descriptions.F7_WORD_ROWS}.get(key, ())
@@ -911,7 +929,7 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
                     challenges_on=getattr(game_settings, "nx_challenges", True),
                     offense_book=getattr(game_settings, "nx_offense_playbook", "team"),
                     defense_book=getattr(game_settings, "nx_defense_playbook", "team"),
-                    playbooks_on=True)
+                    playbooks_on=True, broadcast_on=getattr(game_settings, "nx_broadcast", True), radio_banter=True)
 
 
 def is_nfl(rules) -> bool:

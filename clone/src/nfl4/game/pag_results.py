@@ -341,6 +341,7 @@ class ResultSteps:
         g.voice_speak(" ", wait=True)
         self.rady(0x4443cb)
         self.banter()
+        self.rules.broadcast_moment(s, "score")                     # H23: Ghip after a touchdown or a field goal (the N. F. L. rules)
         self.key_wait()
         s.wisoff = other(s.wisoff)
         s.defense = other(s.wisoff)

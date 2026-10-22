@@ -113,7 +113,7 @@ def test_every_value_of_the_menu_has_a_name_in_the_order_of_the_choices():
 
 
 def test_reset_brings_the_playbooks_back_to_the_teams(rig):
-    rules_menu(rig, ["8", 13, "9", 13, "0", 13])
+    rules_menu(rig, ["8", 13, "9", 13, "0", 40, 13])          # SY.1: "0" is Broadcast now; Reset is the eleventh item, reached with Down
     game = rig.game.options.settings.game
     assert (game.nx_offense_playbook, game.nx_defense_playbook, game.nx_playbook_chosen) == ("team", "team", False)
 

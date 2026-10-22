@@ -573,6 +573,7 @@ class PenaltyFlow:
             values = {"<team>": state.teams.get(flag.side, ""), "<coach>": g.season.coach,
                       "<quarterback>": state.quarterbacks.get(flag.side, ""), "<surname>": self.surname(state, flag)}
             remarks.say_remark(g, state, state.extras, "PN", values)
+        self.rules.broadcast.penalty(state, flag.side)          # SY.1: Ghip's own line after an accepted penalty (his own draws)
 
     @staticmethod
     def half_over(state) -> bool:

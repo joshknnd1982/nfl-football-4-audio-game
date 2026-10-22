@@ -256,7 +256,8 @@ def test_the_ids_of_the_pool_are_remark_ids_and_the_notes_tell_the_player():
 def test_the_default_file_lists_the_pool_in_its_place_between_on_and_pn():
     pools = [e[0][:2] for e in RM.default_entries()]
     # the design's order (CUSTOMIZABLE_CONTENT 13): TO, the replay pools (SX.6: CH, CH, RV, RV), ON, QB, PN
-    assert pools == ["TO"] * 5 + ["CH"] * 7 + ["RV"] * 6 + ["ON"] * 3 + ["QB"] * 5 + ["PN"] * 4
+    base = ["TO"] * 5 + ["CH"] * 7 + ["RV"] * 6 + ["ON"] * 3 + ["QB"] * 5 + ["PN"] * 4
+    assert pools[:len(base)] == base and len(pools) == len(base) + 142 + 12 + 158        # SY.1: then BN, ASK and Ghip's pools
 
 
 # ----- the statistics and the help -----

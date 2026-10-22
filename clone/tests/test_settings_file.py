@@ -39,8 +39,8 @@ def same(a: Settings, b: Settings) -> bool:
 def test_defaults_are_the_originals_values_and_parse_back():
     s = Settings.defaults()
     assert s.speech.mode == "sapi"                                            # G-S7
-    assert s.speech.voices == {role: None for role in ROLES}                  # voice 0 for everybody (GAME_SPEC 3 step 4)
-    assert s.speech.volumes == {role: 95 for role in ROLES}                   # volumes 1 to 5 = 95
+    assert s.speech.voices == {role: None for role in ROLES + ("color",)}     # voice 0 for everybody (GAME_SPEC 3 step 4); Ghip too (SY.1)
+    assert s.speech.volumes == {role: 95 for role in ROLES + ("color",)}      # volumes 1 to 5 = 95
     assert s.speech.rate is None and s.audio.sound_level == 0 and s.game.comments is True
     settings, problems = parse(render(s))
     assert problems == [] and same(settings, s)

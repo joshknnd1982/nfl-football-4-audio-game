@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 
 from ..data import debuglog
-from ..speech.roles import F11_NAMES, ROLES, VOLUME_ORDER
+from ..speech.roles import COLOR, ROLES, VOLUME_ORDER, spoken_name
 from . import extra_texts as words
 from . import help_texts as H
 from . import prompt_texts as T
@@ -244,16 +244,27 @@ class HotKeys:
                 g.stopspeech()                           # L_423784: Rate = vr (set_vr), 0x42381c: purge
                 g.voice_speak(str(options.vr), wait=False)   # 0x42387b
 
+    def _extra_roles(self) -> tuple:
+        """Ghip, the color commentator, is asked for by F11 and F12 only while the N. F. L. rules and the broadcast are on (SY.1, rule 0.27);
+        the original's loops, and Classic, ask for the five speakers only."""
+        try:
+            from ..extras.nfl_rules import is_nfl
+            if is_nfl(self.g.rules) and self.options.settings.game.nx_broadcast:
+                return (COLOR,)
+        except Exception as exc:
+            log.debug("the extra speakers of F11 and F12 are not known: %s", exc)
+        return ()
+
     # ----- F11, adjvol (4.6) -----
 
     def adjvol(self) -> None:
         g, keys, options = self.g, self.keys, self.options
         g.stopspeech()                                   # 0x421a26
-        for role in VOLUME_ORDER:                        # For L88 = 1 To 5 (0x421aef)
+        for role in VOLUME_ORDER + self._extra_roles():  # For L88 = 1 To 5 (0x421aef); the N. F. L. rules' broadcast adds Ghip (SY.1)
             # 0x421b00 clk; the voice load 0x421b7a, Rate 0x422298 and Volume 0x422330 are the speaker's own voice,
             # rate and volume, which the clone applies at every text of that speaker (D-022 item 5)
             keys.clk()
-            prompt = T.VOLUME_PROMPT_START + F11_NAMES[role] + T.VOLUME_PROMPT_MIDDLE + T.VOLUME_PROMPT_END
+            prompt = T.VOLUME_PROMPT_START + spoken_name(role) + T.VOLUME_PROMPT_MIDDLE + T.VOLUME_PROMPT_END
             while True:                                  # L_4223c2
                 g.say6(prompt, role=role)                # 0x4223c9
                 while True:                              # L_4223e1
@@ -348,7 +359,7 @@ class HotKeys:
             self._hand_back()
             return
         g.stopspeech()                                   # 0x423a56
-        for role in ROLES:
+        for role in ROLES + self._extra_roles():
             chosen = choose_role_voice(g.speech, self.keys, voices, role, options.voice(role),
                                        letter_mode=lambda: options.settings.speech.list_letters, clock=g.clock)
             if chosen is None:

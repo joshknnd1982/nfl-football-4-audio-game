@@ -57,7 +57,8 @@ def speak_banter(game, state: GameState) -> None:
     """The GoSub at 0x45915e."""
     if game.comtog == 1:
         return
-    lines = game.banter_pool.lines
+    radio = getattr(game.rules, "banter_lines", lambda g: None)(game)       # H23: the N. F. L. rules' radio banter (rule 0.27); Classic: None
+    lines = radio if radio is not None else game.banter_pool.lines
     used = list(state.banter_used)
     if not lines or all(line.number in used for line in lines):
         return

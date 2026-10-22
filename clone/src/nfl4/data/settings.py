@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ..speech.roles import DEFAULT_VOLUME, ROLES
+from ..speech.roles import ALL_ROLES, DEFAULT_VOLUME
 
 SOUND_LEVEL_MIN, SOUND_LEVEL_MAX = -5000, 0     # wavol, hundredths of a decibel (F11 part 2, GAME_SPEC 4.6)
 
@@ -17,9 +17,9 @@ SOUND_LEVEL_MIN, SOUND_LEVEL_MAX = -5000, 0     # wavol, hundredths of a decibel
 @dataclass
 class SpeechSettings:
     mode: str = "sapi"           # "sapi" (G-S7: the five voices are part of the game), "nvda", "jaws", "auto"
-    voices: dict[str, str | None] = field(default_factory=lambda: {role: None for role in ROLES})
+    voices: dict[str, str | None] = field(default_factory=lambda: {role: None for role in ALL_ROLES})
     # None = the first voice in SAPI's list (the original's voice 0, GAME_SPEC 3 step 4)
-    volumes: dict[str, int] = field(default_factory=lambda: {role: DEFAULT_VOLUME for role in ROLES})
+    volumes: dict[str, int] = field(default_factory=lambda: {role: DEFAULT_VOLUME for role in ALL_ROLES})
     rate: int | None = None      # vr; None = the first voice's own rate, read and kept (GAME_SPEC 3 step 3)
     pitch: int = 0               # clone addition; 0 sends text exactly as the original did
     list_letters: str = "type"   # clone addition: letter keys in lists: "type" = type-ahead search, "first" = first-letter jump
@@ -41,6 +41,7 @@ class GameSettings:
     nx_offense_playbook: str = "team"      # the player's offense playbook (SX.7): classic, team (the team's style) or a style key;
     #                                        the team's since SX.10e (D-095): every play of the catalog by default (D-083)
     nx_defense_playbook: str = "team"      # and the defense playbook
+    nx_broadcast: bool = True    # the radio broadcast of the N. F. L. rules: the announcer's radio banter and Ghip, the color commentator (SY.1, rule 0.27)
     nx_playbook_chosen: bool = False       # the player chose a playbook himself (a file from before SX.10e never did: its Classic, the old
     #                                        default, becomes the team's once)
     # the Franchise (SX.8a, NFL_FRANCHISE_DESIGN 10.5): nfl4 only; the Rules menu's reset leaves them alone

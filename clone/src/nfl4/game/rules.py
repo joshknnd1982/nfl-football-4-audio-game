@@ -130,6 +130,10 @@ Added in PX SX.10e (the computer's calling over the catalog, D-095), never taken
 Added in PX SX.12 (the 2026 overtime, Rule 16, D-096), each the original's answer in Classic:
     H22 overtime_follows(state)            a tied game at the end of a period that could end   True (sudden death until
                                            the game: another overtime period begins            a score)
+    H23 banter_lines(game)                 the announcer's banter draws its lines from these      None (the original's 142 lines
+                                           (the radio banter of the N. F. L. rules, rule 0.27)    and the player's banter.txt)
+    H23 broadcast_moment(state, what)      a moment of the broadcast: a score (after the banter), the end of a quarter, the    nothing
+                                           two-minute warning, half time, the end of the game (Ghip speaks, extras/broadcast.py)
     H22 overtime_lines(state)              said after " We are going into over time number "  no lines
     H22 overtime_toss(state)               the overtime begins with a coin toss                False (the side with the ball
                                                                                               at the end receives)
@@ -316,6 +320,13 @@ class ClassicRules:
         raise RuntimeError("Classic has no onside kicks: before_kickoff never answers ONSIDE_KICKOFF")
 
     def between_plays(self, state) -> None:
+        return None
+
+    # H23 (SY.1, the radio broadcast, CLAUDE.md 0.27): Classic keeps the original's banter and has no commentator.
+    def banter_lines(self, game):
+        return None
+
+    def broadcast_moment(self, state, what: str, quarter: int = 0) -> None:
         return None
 
     def resume_choice(self, state) -> str | None:
