@@ -225,7 +225,7 @@ def main():
         shutil.rmtree(APP, ignore_errors=True)
         if os.path.isdir(DATA_BACKUP):
             shutil.rmtree(DATA, ignore_errors=True)
-            shutil.copytree(DATA_BACKUP, DATA)
+            shutil.copytree(DATA_BACKUP, DATA, dirs_exist_ok=True)       # the emptied folder itself may stay (B-U5): the copy fills it
         lines.append(f"real per-user folder restored from the copy ({count(DATA)} files)")
     open(out, "w", encoding="utf-8").write("\n".join(lines) + "\n")
     print("ALL PASS" if not failed else "FAILED: " + ", ".join(failed))
