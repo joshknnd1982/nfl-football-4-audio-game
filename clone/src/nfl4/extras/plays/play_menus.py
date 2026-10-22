@@ -113,7 +113,11 @@ def family_groups(side: str, family: int) -> list[str]:
 def more_groups(side: str) -> list[str]:
     if side == "O":
         return [g.key for g in C.GROUPS if g.side == "O" and g.family == 0]
-    return ["dg11", "kg04"]
+    # SZ.5 (D-110, a player's e-mail of 2026-10-22: "no other plays are listed on defense"): More Plays on defense lists EVERY list of calls so the
+    # 89 calls are found in one place: the situation defenses and the kick defense first, where they always were (keys 1 and 2), then the lists
+    # that Right opens from each of the six calls, in the order Right goes through them
+    groups = sorted((g for g in C.GROUPS if g.side == "D" and g.family), key=lambda g: (g.family, g.order))
+    return ["dg11", "kg04"] + [g.key for g in groups]
 
 
 class PlayMenus:

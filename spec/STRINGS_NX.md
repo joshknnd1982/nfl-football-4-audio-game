@@ -6,19 +6,19 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 1965.
+- Texts: 2009.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 84.
-- Playbooks (design section 10): 814.
+- Playbooks (design section 10): 818.
 - Menus and settings (design 10.4, 12): 56.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 552.
 - The real coaches and players (NX-N, SX.11): 7.
-- The radio broadcast: banter and Ghip (SY.1, rule 0.27): 319.
+- The radio broadcast: banter and Ghip (SY.1, rule 0.27): 359.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
 
 ## The clock (design section 5)
@@ -58,10 +58,10 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXT-09 (sentence, say4): " they have no time outs left. ". after NXT-01 when the computer used its last
 - NXT-10 (sentence, say4): " you have no time outs left. ". after NXT-01 when the player used the last
 - TO01 (remark, say): " smart move, they need to stop that clock. ". pool TO default (customizable, remarks.txt)
-- TO02 (remark, say): " Ghip, that time out could come in handy later. ". pool TO default
+- TO02 (remark, say): " <commentator>, that time out could come in handy later. ". pool TO default
 - TO03 (remark, say): " they had to use that one, the clock was really running. ". pool TO default
 - TO04 (remark, say): " a time out to talk things over on the side line. ". pool TO default
-- TO05 (remark, say): " I would have saved that one, Ghip. ". pool TO default
+- TO05 (remark, say): " I would have saved that one, <commentator>. ". pool TO default
 - NXH-01 (help, say5): " T. calls a time out at once, anywhere in a game, until the play is run. F1. also says the time outs left. ". F5 addition (H12, C6), when time outs are on
 - NXH-05 (help, say5): " Each team has three time outs in a half, two in an over time period, three for two over time periods of the play offs. T calls one until the play is run; it stops the clock. ". F6 addition (H12, C6), when time outs are on
 - NXH-07 (help, say5): " Time out: A stop of the game clock that a team asks for. ". F7 addition (H12, C6), when time outs are on
@@ -99,19 +99,19 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXR-R08 (ruling, piece): "the runner made the first down". inserted for <ruling>
 - NXR-R09 (ruling, piece): "the receiver was out of bounds". inserted for <ruling>
 - NXR-R10 (ruling, piece): "the receiver was in bounds". inserted for <ruling>
-- CHS01 (remark, say): " Ghip, I am not sure about that call. ". pool CHS default (strong hint)
+- CHS01 (remark, say): " <commentator>, I am not sure about that call. ". pool CHS default (strong hint)
 - CHS02 (remark, say): " that one looked different from up here. ". pool CHS default
 - CHS03 (remark, say): " the replay on the big screen does not agree with that call. ". pool CHS default
 - CHS04 (remark, say): " the crowd does not like that call at all. ". pool CHS default
 - CHC01 (remark, say): " that was a close one. ". pool CHC default (close call)
-- CHC02 (remark, say): " Ghip, that could have gone either way. ". pool CHC default
+- CHC02 (remark, say): " <commentator>, that could have gone either way. ". pool CHC default
 - CHC03 (remark, say): " a bang bang play there. ". pool CHC default
 - RVR01 (remark, say): " good challenge by the coach. ". pool RVR default (after a reversal)
-- RVR02 (remark, say): " the replay showed it clearly, Ghip. ". pool RVR default
+- RVR02 (remark, say): " the replay showed it clearly, <commentator>. ". pool RVR default
 - RVR03 (remark, say): " the officials had to change that one. ". pool RVR default
 - RVC01 (remark, say): " the officials got that one right. ". pool RVC default (after a ruling that stands or is confirmed)
 - RVC02 (remark, say): " not enough there to change the call. ". pool RVC default
-- RVC03 (remark, say): " that is a time out wasted, Ghip. ". pool RVC default (spoken only after a lost challenge, never after a booth review)
+- RVC03 (remark, say): " that is a time out wasted, <commentator>. ". pool RVC default (spoken only after a lost challenge, never after a booth review)
 - NXR-16 (sentence, say4): " <ruling>. ". the corrected ruling, said after NXR-05 (a reversal, design 6.4)
 - NXR-17 (prompt, say5): " you have 1 challenge and <m> time outs left. a time out is lost if the ruling stands. ". NXR-02 with one challenge left
 - NXR-18 (prompt, say5): " you have <n> challenges and 1 time out left. a time out is lost if the ruling stands. ". NXR-02 with one time out left
@@ -153,8 +153,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXO-A01 (answer, say5): " no ". answer (the original's word)
 - NXO-A02 (answer, say5): " yes ". answer (the original's word)
 - ON01 (remark, say): " everybody in the stadium knows it is coming. ". pool ON default
-- ON02 (remark, say): " this could be the ball game right here, Ghip. ". pool ON default
-- ON03 (remark, say): " the hands team is on the field. ". pool ON default
+- ON02 (remark, say): " this could be the ball game right here, <commentator>. ". pool ON default
+- ON03 (remark, say): " a short kick, a bold plan, and every fan in the park knows it. ". pool ON default
 - NXH-14 (help, say5): " When you are asked about an onside kick, Y. says yes and N. says no. Up and Down change the answer and Enter takes it. ". F5 addition (H12, C6), when onside kicks are on
 - NXH-15 (help, say5): " With the N. F. L. rules you may try an onside kick instead of the normal kick off. You are asked when your team is behind in the second half or ahead by one score late in the game. ". F6 addition (H12, C6), when onside kicks are on
 - NXH-16 (help, say5): " The onside kick is short and the other team may fall on the ball, so the chance to recover it is small. ". F6 addition (H12, C6), when onside kicks are on, after NXH-15
@@ -216,7 +216,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXP-F24 (foul, piece): "off sides on the kick off". P24 (spelled for speech)
 - NXP-F26 (foul, piece): "too many men on the field". P26
 - NXP-F33 (foul, piece): "illegal touching of the kick". P33
-- PN01 (remark, say): " another flag, Ghip. ". pool PN default
+- PN01 (remark, say): " another flag, <commentator>. ". pool PN default
 - PN02 (remark, say): " that is a drive killer. ". pool PN default
 - PN03 (remark, say): " the officials are busy today. ". pool PN default
 - PN04 (remark, say): " you cannot do that in this league. ". pool PN default
@@ -341,7 +341,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXZ-29 (menu, say5): "Dime Deep Coverage". defense play D029 of the catalog (plays.txt)
 - NXZ-30 (menu, say5): "Man Press". defense play D030 of the catalog (plays.txt)
 - NXB-10 (menu, say5): "Back". the last play item of a group: back to the groups (letter B)
-- NXH-27 (help, say5): " With a playbook, the play menus start with the original's items. Right opens a list of plays, and Backspace or Left goes back, and so does the last item, Back, which the letter B. selects. ". F5 addition (H12, SX.7; reworded in SX.10d: the play menus have lists, not groups)
+- NXH-27 (help, say5): " With a playbook, the play menus start with the original's items. Right opens the lists of the play you are on, M opens More Plays, and Backspace, Left or B. goes back. ". F5 addition (H12, SX.7; reworded in SX.10d: the play menus have lists, not groups)
 - NXH-28 (help, say5): " Choose your offense and defense playbooks in the F9 menu, under Rules. Your team's playbook, with every play of the game, is the default. Classic is the original's plays and kicks. ". F6 addition (H12, C6), when a playbook is in use (reworded in SX.10e: the team's playbook is the default)
 - NXH-29 (help, say5): " The others are styles: Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option and Pressure. A play changes an original play a little: strong against some calls, weak against others. ". F6 addition (H12, C6), when a playbook is in use, after NXH-28
 - NXH-30 (help, say5): " The computer's teams call the plays of their own style, which the file team styles in the customize folder sets. ". F6 addition (H12, C6), when a playbook is in use, after NXH-29
@@ -1052,7 +1052,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXB-J23 (sentence, say4): " <kicker> punts it from the 20 ". the safety punt (K027, RB26 11-5-2, SX.10d)
 - NXB-J24 (sentence, say4): " <player> brings him down ". the tackle of a punt return or a fake kick (SX.10d)
 - NXH-56 (help, say5): " With a playbook, your kick off is a menu: the deep kick, a short kick into the landing zone, a squib kick, an onside kick, and after a safety a punt. Enter takes the deep kick. ". F6 addition (H12, SX.10d): the 2026 kick-off menu
-- NXH-57 (help, say5): " With a playbook, your defense menu starts with the original's six calls. On fourth down the letter P. opens the kick defense: return, fair catch, block or safe. ". F6 addition (H12, SX.10d): the defense menu and the kick defense
+- NXH-57 (help, say5): " Your defense menu starts with the original's six calls. Right on a call opens its lists, and M opens every list. On fourth down P. opens the kick defense: return, fair catch, block or safe. ". F6 addition (H12, SX.10d): the defense menu and the kick defense
 - NXH-58 (help, say5): " With a playbook, Right on Punt opens the kinds of punts and the fake punts, and Right on Field Goal the fake field goals. A field goal may be tried from anywhere, and the extra point can miss. ". F6 addition (H12, SX.10d): the kicks of 2026
 - NXH-59 (help, say5): " Landing zone: the part of the field between the receivers' 20 and their goal line where a kick off must come down. Squib kick: a low kick that bounces along the ground. ". F7 addition (H12, SX.10d): the words of the 2026 kick-off
 - NXH-60 (help, say5): " Pin punt: a short high punt meant to stop near the goal line. Rugby punt: the punter runs sideways before he kicks. Fair catch kick: after a fair catch, a free try at a field goal with no rush. ". F7 addition (H12, SX.10d): the words of the punts and the fair catch kick
@@ -1063,6 +1063,10 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXB-J26 (sentence, say4): " the kick lands short of the landing zone, and the ball is placed at the <n> ". a free kick short of the landing zone that was not made from the 35 (RB26 6-1-4 (d)(3), 6-2-4; SX.13)
 - NXB-J27 (sentence, say4): " <player> falls on it in the end zone ". a punt blocked behind the kicking team's goal line, recovered there by the receivers: a touchdown (RB26 11-2; SX.13)
 - NXB-J28 (sentence, say4): " the ball rolls out of the end zone ". a punt blocked behind the kicking team's goal line that leaves the end zone, before ' SAFETY' (RB26 11-5-1; SX.13)
+- NXB-H17 (help, say5): " Right opens more plays: the lists of the play you are on. M opens More Plays, and D describes a play. Enter on a play type lets the playbook pick the play, and the call is told. ". once in a program run, three runs at most, after the first item of the offense menu (SZ.5, D-110)
+- NXB-H18 (help, say5): " Right opens more calls: the lists of the call you are on, such as blitzes and zone coverages. M opens More Plays, and D describes a call. Enter on a call lets the playbook pick. ". once in a program run, three runs at most, after the first item of the defense menu (SZ.5, D-110)
+- NXB-H19 (help, say5): " Each setting starts as the playbook's choice, which means the play you call sets it. The game recommends nothing here. Enter changes a setting, and it stays for the plays that follow. ". once in a program run, three runs at most, after the first item of Formation and Tempo (SZ.5, D-110)
+- NXB-G09 (help, say5): " Opens every list of defensive calls, such as blitzes and zone coverages, and the situation defenses. ". description of the defense's More Plays item (SZ.5)
 
 ## Menus and settings (design 10.4, 12)
 
@@ -1742,9 +1746,9 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - BN38 (remark, say): " A tip of the cap to everyone along the sideline carrying water, towels, and spare patience. Football runs on them. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN39 (remark, say): " Football has a lovely rhythm, a burst of action and then a breath. It gives all of us time for a sip of something. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN40 (remark, say): " Take your time and enjoy it, folks. This is a game that rewards patience and a snack within arm's reach. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN41 (remark, say): " Ghip, I notice your headphones are on crooked again. Please tell me it is a lucky charm and not a wardrobe choice. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN42 (remark, say): " Ghip is looking very thoughtful over there. Either he is studying the game or he is wondering what is in the lunch bag. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN43 (remark, say): " Ghip still gets that gleam in his eye when the crowd gets loud. Once a player, always a player. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN41 (remark, say): " <commentator>, I notice your headphones are on crooked again. Please tell me it is a lucky charm and not a wardrobe choice. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN42 (remark, say): " <commentator> is looking very thoughtful over there. Either the game has all the attention or the lunch bag does. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN43 (remark, say): " <commentator> perks up every time the crowd gets loud. Some of us just cannot hide how much we love this game. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN44 (remark, say): " A friendly reminder to the folks at home: stay for the whole game, because the best part always arrives the minute you leave the room. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN45 (remark, say): " Give your neighbors a wave today. Football is better when it is shared, even across a fence. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN46 (remark, say): " Every stadium has its own personality, and this one has a loud, cheerful, slightly creaky one that I would not trade. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
@@ -1782,9 +1786,9 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - BN78 (remark, say): " Out there a listener is shouting at a phone because a fantasy pick is sitting on a bench. Fantasy football is love and pain together. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN79 (remark, say): " To everyone in a friendly rivalry with a cousin, a coworker or the neighbor over the fence: may your picks be wise and your gloating gentle. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN80 (remark, say): " Fantasy football has turned a lot of quiet people into very loud experts. I say that with love, and a little fear. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN81 (remark, say): " Ghip, I peeked at your notes and I think the coffee stain is the most readable part. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN82 (remark, say): " Ghip is nodding over there like he has seen it all before. Of course he has, he is practically older than the goalposts. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN83 (remark, say): " Ghip, you used to play this game, and now you sit there making it look easy. I admire the nerve, my friend. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN81 (remark, say): " <commentator>, I peeked at your notes and I think the coffee stain is the most readable part. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN82 (remark, say): " <commentator> is nodding over there like every play has been seen a dozen times before. Maybe it has. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN83 (remark, say): " <commentator>, you make calling this game look so easy from up here. I admire the nerve, my friend. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN84 (remark, say): " The tricky thing about radio is that I paint the whole picture with words, and my paint box is mostly adjectives and enthusiasm. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN85 (remark, say): " Describing a football game on the radio is like telling a joke through a keyhole. You do your best and hope the punchline gets through. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN86 (remark, say): " If I ever go quiet for a second, it is not because I ran out of words. It is because I am hunting for a better one. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
@@ -1792,7 +1796,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - BN88 (remark, say): " A broadcaster's best friends are a sharp pencil, a steady voice and a stat sheet that somebody remembered to print. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN89 (remark, say): " What is in a broadcast booth? Mostly headsets, wires, snacks and one enormous pile of paper that nobody can ever find anything in. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN90 (remark, say): " Coffee is the quiet hero of every broadcast crew. It never complains, never talks back and never asks for a raise. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN91 (remark, say): " A big thank you to our engineers, who keep every sound sharp and every cable out of Ghip's reach. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN91 (remark, say): " A big thank you to our engineers, who keep every sound sharp and every cable out of <commentator>'s reach. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN92 (remark, say): " To every listener tuned in, whether you are in a kitchen, a car or a garden chair: thank you for letting us keep you company. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN93 (remark, say): " Somewhere behind a wall of switches sits an engineer who makes us sound good. We say thank you far too rarely, so, thank you. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN94 (remark, say): " Whether you listen by choice or because your cousin insisted, we are glad to have you along. We do all of this for you. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
@@ -1824,8 +1828,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - BN120 (remark, say): " The twelfth man is the crowd, and a loud one can make a visiting quarterback wish for earplugs. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN121 (remark, say): " To everyone in the stands, thank you for the noise. The players can hear you, even if they pretend they cannot. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN122 (remark, say): " Some fans have seen it all, and they will still jump out of their seats on the very next snap. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN123 (remark, say): " Ghip, you played this game once. Tell me honestly, did you ever really enjoy the film study? ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN124 (remark, say): " Ghip is sitting very quietly over there. Either he is thinking deeply, or he is hoping nobody asks him a question. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN123 (remark, say): " <commentator>, tell me honestly, is film study really as much fun as people say? ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN124 (remark, say): " <commentator> is sitting very quietly over there. Either thinking deeply, or hoping nobody asks a question. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN125 (remark, say): " Football teaches you that the work nobody sees is usually the work that matters most. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN126 (remark, say): " To everyone listening at home or out on the road, thanks for keeping us company on this broadcast. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN127 (remark, say): " If you are driving along right now, keep your eyes on the road and your ears right here with us. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
@@ -1838,24 +1842,24 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - BN134 (remark, say): " Is there a better sound in sports than a whole stadium holding its breath before the snap? ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN135 (remark, say): " They say football is a game of inches, but it is really a game of effort, repeated play after play. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN136 (remark, say): " Preparation, hustle, and a little luck. That is the formula, and two of those three are up to the players. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN137 (remark, say): " Ghip, I will let you have the next word if you promise to keep the jokes about my voice to a minimum. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN137 (remark, say): " <commentator>, I will let you have the next word if you promise to keep the jokes about my voice to a minimum. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN138 (remark, say): " Teamwork shows up in small ways: a block here, a call there, a pat on the back after a tough series. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN139 (remark, say): " Every young quarterback learns that the best throw is sometimes the one you do not make. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN140 (remark, say): " A good coach teaches the game, and a great one teaches the people playing it. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN141 (remark, say): " Sometimes the most exciting moment in football is the quiet before the snap, when everything is still possible. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN142 (remark, say): " Whatever happens next, football has already done its job. It has got us all sitting up and listening! ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- ASK01 (remark, say): " Ghip, what did you make of that one? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK02 (remark, say): " Over to you, Ghip. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK03 (remark, say): " Ghip, your thoughts on that play? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK04 (remark, say): " What stood out to you there, Ghip? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK05 (remark, say): " Ghip, break that one down for us. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK06 (remark, say): " Ghip, may I have your analysis of that? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK07 (remark, say): " Ghip, what was going on there? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK08 (remark, say): " Let us bring in Ghip for a quick word. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK09 (remark, say): " Your take on that, Ghip? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK10 (remark, say): " Ghip, give us the color on that one. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK11 (remark, say): " Anything you would add to that, Ghip? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK12 (remark, say): " Ghip, tell the folks at home what you saw. ". pool ASK default: the announcer turns to Ghip before his line
+- ASK01 (remark, say): " <commentator>, what did you make of that one? ". pool ASK default: the announcer turns to Ghip before his line
+- ASK02 (remark, say): " Over to you, <commentator>. ". pool ASK default: the announcer turns to Ghip before his line
+- ASK03 (remark, say): " <commentator>, your thoughts on that play? ". pool ASK default: the announcer turns to Ghip before his line
+- ASK04 (remark, say): " What stood out to you there, <commentator>? ". pool ASK default: the announcer turns to Ghip before his line
+- ASK05 (remark, say): " <commentator>, break that one down for us. ". pool ASK default: the announcer turns to Ghip before his line
+- ASK06 (remark, say): " <commentator>, may I have your analysis of that? ". pool ASK default: the announcer turns to Ghip before his line
+- ASK07 (remark, say): " <commentator>, what was going on there? ". pool ASK default: the announcer turns to Ghip before his line
+- ASK08 (remark, say): " Let us bring in <commentator> for a quick word. ". pool ASK default: the announcer turns to Ghip before his line
+- ASK09 (remark, say): " Your take on that, <commentator>? ". pool ASK default: the announcer turns to Ghip before his line
+- ASK10 (remark, say): " <commentator>, give us the color on that one. ". pool ASK default: the announcer turns to Ghip before his line
+- ASK11 (remark, say): " Anything you would add to that, <commentator>? ". pool ASK default: the announcer turns to Ghip before his line
+- ASK12 (remark, say): " <commentator>, tell the folks at home what you saw. ". pool ASK default: the announcer turns to Ghip before his line
 - CTC01 (remark, color): " Third down, and the <team> pick it up. Staying on the field is half the battle in this game. ". pool CTC default: Ghip, after a third down conversion
 - CTC02 (remark, color): " That is a big-time conversion. Every third down made leaves the <opponent> defense a little more tired. ". pool CTC default: Ghip, after a third down conversion
 - CTC03 (remark, color): " First down! A drive that was wobbling a second ago is standing tall again, and the <team> breathe easy. ". pool CTC default: Ghip, after a third down conversion
@@ -2015,10 +2019,50 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - CTV09 (remark, color): " Bad throw, bad bounce, or slippery hands, who knows. Either way, the <opponent> get a very welcome surprise. ". pool CTV default: Ghip, after a turnover
 - CTV10 (remark, color): " My old coach used to say the ball is the whole game. He would be saying it very loudly right about now. ". pool CTV default: Ghip, after a turnover
 - NXM-37 (menu, say5): "Broadcast". F9 Rules item 10: the radio broadcast (the announcer's banter and Ghip), followed by on or off (SY.1)
-- NXH-65 (help, say5): " The broadcast: with the N. F. L. rules and the comments on, the announcer chats like a radio broadcast, and Ghip, the color commentator, adds his thoughts in a voice of his own. ". F6 addition (SY.1, rule 0.27)
-- NXH-66 (help, say5): " F8 switches all the comments off. F9, Rules, Broadcast switches Ghip off. ". F6 addition (SY.1, rule 0.27)
-- NXB-B01 (sentence, say5): " Ghip, the color commentator, is in the booth with me. F12 chooses his voice, and F9, Rules, Broadcast sends him home. ". said once per program run before the opening kick-off, in the N. F. L. rules with the broadcast on (SY.1)
+- NXH-65 (help, say5): " The broadcast: with the N. F. L. rules and the comments on, the announcer chats like a radio broadcast, and a color commentator adds thoughts in a separate voice. ". F6 addition (SY.1, rule 0.27)
+- NXH-66 (help, say5): " F8 switches all the comments off. F9, Rules, Broadcast switches the commentator off. ". F6 addition (SY.1, rule 0.27)
+- NXB-B01 (sentence, say5): " <commentator>, the color commentator, is in the booth with me. F12 chooses the voice, and F9, Rules, Broadcast sends the commentator home. ". said once per program run before the opening kick-off, in the N. F. L. rules with the broadcast on (SY.1)
 - NXM-38 (menu, say5): "Stadium sounds". F9 Rules item 11: the crowd, the hits and the chain, followed by on or off (SY.2)
 - NXH-67 (help, say5): " The stadium sounds: the crowd cheers, groans and boos, hits sound, and the chain clanks at a first down. F9, Rules, Stadium sounds switches them off. ". F6 addition (SY.2)
-- NXH-68 (help, say5): " The referee announces the flags and the reviews over a microphone, in a voice of his own. F12 and F11 ask for his voice and volume, and F9, Rules, Broadcast switches him off. ". F6 addition (SY.3)
+- NXH-68 (help, say5): " The referee announces the flags and the reviews over a microphone, in a separate voice. F12 and F11 ask for that voice and its volume, and F9, Rules, Broadcast switches the referee off. ". F6 addition (SY.3)
+- NXH-70 (help, say5): " The commentator is called Ghip until you choose another name in F9, Rules, Commentator. The list has well known sports podcasters, and you can type a name of your own. ". F6 addition (SZ.1)
+- NXH-71 (help, say5): " The stadium and referee sounds can be replaced with your own sound files: F9, Sounds, Stadium and referee sounds lists them with the file name each one takes. ". F6 addition (SZ.2)
+- NXM-39 (menu, say5): "Commentator". F9 Rules item 12: the color commentator's name, followed by the name (SZ.1, D-106)
+- NXM-40 (menu, say5): "Choose the commentator". the title of the list of names (SZ.1)
+- NXM-41 (help, say5): " Up and Down move through the names. Typing letters jumps to a name. Enter chooses it, and Escape goes back without a change. The last item lets you type a name of your own. ". F1 in the list of names (SZ.1)
+- NXM-42 (menu, say5): "Type a name of your own". the last item of the list of names (SZ.1)
+- NXM-43 (prompt, say5): " Type the commentator's name, then press Enter. ". the typed prompt of the commentator's own name (SZ.1)
+- NXM-44 (sentence, say5): " no name was typed. ". said after an empty typed name (SZ.1)
+- NXM-45 (menu, say5): "<name>, the default". an item of the list of names: the default (SZ.1)
+- NXM-46 (menu, say5): "<name>, the name you typed". an item of the list of names: the player's own name (SZ.1)
+- NXM-47 (menu, say5): "Stadium and referee sounds". F9 Sounds item: the list of the N. F. L. rules' own sounds that the player can replace (SZ.2)
+- NXM-48 (menu, say5): "<label>. File name <file>. <count>". an item of that list (SZ.2)
+- NXM-49 (piece, piece): "the original sound". the count of a family with one shipped sound (SZ.2)
+- NXM-50 (piece, piece): "your sound". the count of a family whose one sound is the player's file (SZ.2)
+- NXM-51 (piece, piece): "<n> sounds, <m> of them yours". the count of a family with several sounds (SZ.2)
+- NXM-52 (help, say5): " Enter plays the sound, and again plays the next one of its family. To use your own sound, put a file with the same name in your sounds folder, and it replaces this one. ". F1 in that list (SZ.2)
+- NXM-53 (help, say5): " To add one more, give it a number, like crowd_cheer2. Delete your file to get the original back. The sounds folder is in the Sounds menu. These sounds play only with the N. F. L. rules. ". F1 in that list, second part (SZ.2)
+- NXM-54 (menu, say5): "Put the stadium sounds back". F9 Sounds item: the player's stadium and referee files are moved aside (SZ.2)
+- NXM-55 (prompt, say5): " this moves your own stadium and referee sound files to the removed sounds folder. Press Enter to do it, or any other key to cancel. ". the confirmation of that item (SZ.2)
+- NXM-56 (sentence, say5): " <n> of your files were moved. The original sounds are back. ". after that item (SZ.2)
+- NXM-57 (sentence, say5): " you have no stadium or referee sound files of your own. ". after that item when there is nothing to move (SZ.2)
+- NXB-S01 (menu, say5): "The crowd cheers". crowd_cheer (SZ.2)
+- NXB-S02 (menu, say5): "The crowd roars". crowd_roar (SZ.2)
+- NXB-S03 (menu, say5): "The crowd groans". crowd_groan (SZ.2)
+- NXB-S04 (menu, say5): "The crowd boos". crowd_boo (SZ.2)
+- NXB-S05 (menu, say5): "The crowd gasps". crowd_gasp (SZ.2)
+- NXB-S06 (menu, say5): "The crowd applauds". crowd_applause (SZ.2)
+- NXB-S07 (menu, say5): "The crowd sighs". crowd_oh (SZ.2)
+- NXB-S08 (menu, say5): "A helmet hit". hit_helmet (SZ.2)
+- NXB-S09 (menu, say5): "A hit in the pads". hit_pads (SZ.2)
+- NXB-S10 (menu, say5): "The pop of a catch". ball_catch (SZ.2)
+- NXB-S11 (menu, say5): "A flag is thrown". flag_throw (SZ.2)
+- NXB-S12 (menu, say5): "The first down chain". first_down_chain (SZ.2)
+- NXB-S13 (menu, say5): "The goal post is hit". goal_post_hit (SZ.2)
+- NXB-S14 (menu, say5): "The referee's microphone clicks on". mic_on (SZ.2)
+- NXB-S15 (menu, say5): "The referee's microphone clicks off". mic_off (SZ.2)
+- NXB-S16 (menu, say5): "A short whistle". whistle_short (SZ.2)
+- NXB-S17 (menu, say5): "A long whistle". whistle_long (SZ.2)
+- NXB-S18 (menu, say5): "A double whistle". whistle_double (SZ.2)
+- NXB-S19 (menu, say5): "A triple whistle". whistle_triple (SZ.2)
 

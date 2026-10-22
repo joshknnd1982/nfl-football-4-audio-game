@@ -77,7 +77,7 @@ def test_the_computers_kick_is_recovered_with_an_offside_and_the_player_chooses_
     draws = kick_draws(distance=10).below(10000, value).rnd(17, 3).rnd(40, 2)
     step = kick_off_and_kick(rig, draws)
     said = texts(rig)
-    assert said[:2] == [" the Jets will try an onside kick. ", " the Jets line up for an onside kick. "]
+    assert said[:2] == [" the Jets will try an onside kick. ", X.text("NXO-03", receiving_team="Bengals")]       # SZ.6: said once
     i = said.index(" and the Jets recover it. ")
     assert said[i + 1:i + 7] == [
         X.text("NXP-01"), " off sides on the kick off, on the Jets, ODef3. ",
@@ -194,7 +194,7 @@ def test_the_remark_is_one_in_three_and_comes_after_the_hands_team(tmp_path):
     check(rig, draws)
     said = texts(rig)
     i = said.index(HANDS)
-    assert said[i + 1] == " the hands team is on the field. " and said[i + 2] == " Kick1 bounces the ball along the ground. "
+    assert said[i + 1] == X.TEXTS["ON03"] and said[i + 2] == " Kick1 bounces the ball along the ground. "      # SZ.6: ON03 no longer repeats the hands team
 
 
 def test_the_remark_chance_missing_says_nothing_and_comments_off_draws_nothing(tmp_path):
@@ -204,7 +204,7 @@ def test_the_remark_chance_missing_says_nothing_and_comments_off_draws_nothing(t
     script(rig, draws)
     step()
     check(rig, draws)
-    assert " the hands team is on the field. " not in texts(rig)
+    assert X.TEXTS["ON03"] not in texts(rig)
 
 
 def test_the_player_can_change_switch_off_and_add_remarks_of_the_pool(tmp_path):

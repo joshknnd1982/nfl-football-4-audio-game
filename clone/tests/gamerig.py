@@ -222,6 +222,11 @@ class Rig:
         # SX.14 (rule 0.23): the start-up choice and the save questions are the program's; the rig leaves them OFF by default, so the many tests
         # that pin the original's start-up stay exact. Only the tests of the choice switch them on (`rig.game.startup_menu = True`).
         self.game.startup_menu = False
+        # SZ.4 (D-109): when a screen reader runs and the player has not said how the game speaks, the program asks once. The rig's player has
+        # said it (the manager's `mode` is what the rig's tests mean); only the tests of the question set `mode_chosen` to False.
+        self.game.options.settings.speech.mode_chosen = True
+        # SZ.5 (D-110): the play menus say where Right and M are in the first three program runs; the rig's player has heard it
+        self.game.options.settings.game.nx_menu_hints = 3
 
     def run(self):
         self.game.run()

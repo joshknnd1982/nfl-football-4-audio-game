@@ -44,8 +44,11 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # closed: one setting per line, name = value. A line that cannot be understood is skipped and that setting stays
 # original. If this file is damaged, the game saves a copy next to it (settings.txt.damaged1) and makes a new one.
 #
-# speech_output       sapi = the five SAPI 5 voices of the game (original), nvda = NVDA only, jaws = JAWS only,
-#                     auto = NVDA or JAWS when one of them runs, else the SAPI 5 voices
+# speech_output       auto = NVDA or JAWS when one of them runs, else the five SAPI 5 voices (default), sapi = the five SAPI 5
+#                     voices of the game always, nvda = NVDA only, jaws = JAWS only. When a screen reader runs the game asks
+#                     once whether it should speak through it
+# speech_output_chosen  yes when you said how the game speaks (the question at the start, or F9, Speech settings); a file
+#                     without it that says sapi is read as auto, once
 # voice_announcer, voice_own_quarterback, voice_opponent_quarterback, voice_own_punter, voice_opponent_punter
 #                     the voice of each speaker, as the voice's identifier. Empty means the first voice in Windows'
 #                     list (original). Choose the voices with F12 rather than typing them here.
@@ -76,6 +79,10 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # nx_stadium          on or off: the stadium sounds of the N. F. L. rules, the crowd, the hits, the first down chain (default on)
 # nx_broadcast        on or off: Ghip, the color commentator of the radio broadcast of the N. F. L. rules, and the announcer's
 #                     questions to him (default on; F8 switches all comments off, this switches only Ghip)
+# nx_menu_hints       0 to 99: in how many program runs the play menus said where Right and M are; at 3 the hints stop (set it to 3 to
+#                     stop them, to 0 to hear them again)
+# nx_commentator      the name of the color commentator of the radio broadcast (default Ghip): the Rules item of the F9 menu lists
+#                     well known sports podcasters and lets you type a name of your own; it is used from the next game
 # nx_onside_question  always = you are asked about an onside kick at every kick off and safety kick (default, the 2026 rule),
 #                     sensible = only when it makes sense (the late game of a team that trails or leads by one score)
 # nx_onside_question_chosen  yes when you chose the line above yourself; a file without it is read as always, once
@@ -99,7 +106,7 @@ class SettingsFormatError(ValueError):
 
 def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "") -> str:
     sp, au, game = settings.speech, settings.audio, settings.game
-    lines = [HEADER.rstrip("\n"), f"speech_output = {sp.mode}"]
+    lines = [HEADER.rstrip("\n"), f"speech_output = {sp.mode}", f"speech_output_chosen = {'yes' if sp.mode_chosen else 'no'}"]
     for role in ALL_ROLES:
         voice_id = sp.voices.get(role)
         name = ""
@@ -133,6 +140,8 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_playbook_chosen = {'yes' if game.nx_playbook_chosen else 'no'}",
         f"nx_stadium = {'on' if game.nx_stadium else 'off'}",
         f"nx_broadcast = {'on' if game.nx_broadcast else 'off'}",
+        f"nx_commentator = {game.nx_commentator}",
+        f"nx_menu_hints = {game.nx_menu_hints}",
         f"nx_season_kind = {game.nx_season_kind}",
         f"nx_fr_auto = {'on' if game.nx_fr_auto else 'off'}",
         f"nx_fr_offseason = {game.nx_fr_offseason}",
@@ -195,6 +204,8 @@ def parse(text: str) -> tuple[Settings, list[str]]:
         raise SettingsFormatError("the file is empty")
     if not header_seen and understood == 0 and problems:
         raise SettingsFormatError("no header and nothing understood")
+    if not settings.speech.mode_chosen and settings.speech.mode == "sapi":
+        settings.speech.mode = "auto"            # a player's e-mail, 2026-10-22 (D-109): the old default sapi, never chosen, becomes automatic, once
     game = settings.game
     if not game.nx_onside_question_chosen and game.nx_onside_question != "always":
         game.nx_onside_question = "always"       # SX.2b, D-085: a "sensible" the player never chose (the old default) becomes the 2026 rule, once
@@ -222,6 +233,11 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if mode is None:
             raise ValueError(f"'{value[:20]}' is not sapi, nvda, jaws or auto")
         sp.mode = mode
+    elif name == "speech_output_chosen":
+        word = _ON_WORDS.get(value.lower())
+        if word is None:
+            raise ValueError(f"'{value[:20]}' is not yes or no")
+        sp.mode_chosen = word
     elif name == "list_letters":
         if value.lower() not in ("type", "first"):
             raise ValueError(f"'{value[:20]}' is not type or first")
@@ -272,6 +288,13 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if word is None:
             raise ValueError(f"'{value[:20]}' is not on or off")
         game.nx_broadcast = word
+    elif name == "nx_menu_hints":
+        game.nx_menu_hints = _number(value, 0, 99)
+    elif name == "nx_commentator":
+        from ..extras.commentators import clean
+        if not clean(value):
+            raise ValueError("not a name (at least two letters or digits)")
+        game.nx_commentator = clean(value)
     elif name == "nx_onside":
         word = _ON_WORDS.get(value.lower())
         if word is None:

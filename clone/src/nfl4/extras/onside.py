@@ -172,9 +172,10 @@ class OnsideFlow:
             x.onside_tried[kicking - 1] += 1
         kicker = state.rosters[kicking].kickers[0]
         snd.c2uh()
-        if not rekick and kicking in self.rules.auto_sides:      # the computer declares first (design 8.4); the player's
-            g.say4(X.text("NXO-09", kicking_team=k_team))        # yes needs no sentence; said here so that F2 replays it
-        g.say4(X.text("NXO-02", kicking_team=k_team))
+        # SZ.6 (D-111, a player's e-mail: "it says onside kick twice"): the computer declares (design 8.4) and that sentence IS the line-up; the
+        # player's yes needs no sentence, and a kick made again after a foul says the line-up again (the fouls were spoken between)
+        declared = not rekick and kicking in self.rules.auto_sides
+        g.say4(X.text("NXO-09" if declared else "NXO-02", kicking_team=k_team))     # said here so that F2 replays it
         g.say4(X.text("NXO-03", receiving_team=r_team))
         self.remark(state, kicking)
         snd.play_tackle(8)                                   # foot11, the referee's whistle: the kick is on

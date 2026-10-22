@@ -43,12 +43,13 @@ def test_a_players_file_replaces_the_shipped_one_and_a_new_number_adds_to_the_fa
     (mine / "crowd_cheer.wav").write_bytes(b"y")             # replaces
     (mine / "crowd_cheer2.wav").write_bytes(b"y")            # adds
     (mine / "crowd_cheer15.wav").write_bytes(b"y")
-    (mine / "crowd_roar.mp3").write_bytes(b"y")              # not a wav: ignored
+    (mine / "crowd_roar.mp3").write_bytes(b"y")              # SZ.2: any format the sound layer reads replaces too (it was ignored before)
+    (mine / "crowd_roar.txt").write_bytes(b"y")              # not a sound: ignored
     files = ST.family("crowd_cheer", (str(mine), str(shipped)))
     assert [os.path.basename(f) for f in files] == ["crowd_cheer.wav", "crowd_cheer2.wav", "crowd_cheer15.wav"]
     assert files[0].startswith(str(mine))
-    assert [os.path.basename(f) for f in ST.family("crowd_roar", (str(mine), str(shipped)))] == ["crowd_roar.wav"]
-    assert ST.family("crowd_roar", (str(mine), str(shipped)))[0].startswith(str(shipped))
+    assert [os.path.basename(f) for f in ST.family("crowd_roar", (str(mine), str(shipped)))] == ["crowd_roar.mp3"]
+    assert ST.family("crowd_roar", (str(mine), str(shipped)))[0].startswith(str(mine))
     assert ST.family("nothing", (str(mine), str(shipped))) == []
 
 

@@ -50,9 +50,9 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("f8", "F8", "Anywhere", "switches the comments off and on", "all", True, "f8. comments toggle.", consts=("KEY_F8",)),
     KeyRow("f9", "F9", "Anywhere", "opens the added functions: the speech settings, the sounds, the names and the banter, the rules, "
            "the franchise and the about text", "all", False, "F9. added functions", consts=("KEY_F9",)),
-    KeyRow("f11", "F11", "Anywhere", "adjusts the volume of the voices and the sounds: Up and Down, Enter for the next (with the N. F. L. rules and the broadcast on, the volumes of Ghip and the referee too)", "all", True,
+    KeyRow("f11", "F11", "Anywhere", "adjusts the volume of the voices and the sounds: Up and Down, Enter for the next (with the N. F. L. rules and the broadcast on, the volumes of the color commentator and the referee too)", "all", True,
            "F11. adjust volume of voices and sounds.", consts=("KEY_F11",)),
-    KeyRow("f12", "F12", "Anywhere", "changes the voices (with the N. F. L. rules and the broadcast on, the voices of Ghip and the referee too)", "all", True, "F12. change voice.", consts=("KEY_F12",)),
+    KeyRow("f12", "F12", "Anywhere", "changes the voices (with the N. F. L. rules and the broadcast on, the voices of the color commentator and the referee too)", "all", True, "F12. change voice.", consts=("KEY_F12",)),
     KeyRow("ctrl", "Control", "Anywhere", "adjusts the rate of speech: Up and Down, Enter to keep it", "all", True,
            "Control key, adjust rate of speech.", consts=("KEY_CTRL",)),
     KeyRow("escape", "Escape", "Anywhere", "exits the game; in a play menu it asks whether you concede the game; in the F9 menus and "
@@ -86,7 +86,7 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("timeout", "T", "Anywhere in a game being played, until the play is run", "calls your time out at once; a call during a "
            "running play is granted when the play ends", "nfl", False, " T. calls a time out", consts=("KEY_T",), feature="timeouts"),
     KeyRow("back", "Backspace or Left, B", "In a list of plays or a playbook group", "go back one level, from a list of plays to the "
-           "menu it came from; B chooses the Back item", "nfl", False, "Backspace or Left goes back", letters="b", feature="playbooks"),
+           "menu it came from; B chooses the Back item", "nfl", False, "Backspace, Left or B. goes back", letters="b", feature="playbooks"),
     KeyRow("right", "Right", "In the offense and defense menus of the N. F. L. rules with a playbook", "on a play family opens its "
            "lists of plays, and in a list goes to the family's next list; on Punt it opens the kinds of punts and the fake punts, and on "
            "Field Goal the fake field goals", "nfl", False, "",
@@ -98,10 +98,11 @@ ROWS: tuple[KeyRow, ...] = (
            consts=("KEY_PLUS_PAD", "KEY_PLUS_MAIN", "KEY_MINUS_PAD", "KEY_MINUS_MAIN"), feature="playbooks"),
     KeyRow("play_letters", "F, A, M, K, P, O, N", "In the offense and defense menus of the N. F. L. rules with a playbook", "F opens "
            "your favourites, A calls your last play again, M opens more plays, K kneels down and P spikes the ball when they help, O "
-           "opens formation and tempo, and N in more plays finds a play by its name; in the defense menu on fourth down P opens the "
-           "kick defense", "nfl", False, "",
+           "opens formation and tempo, and N in more plays finds a play by its name; the defense menu has F, A, M, O and N as well "
+           "(M opens every list of defensive calls), and on fourth down P opens the kick defense", "nfl", False, "",
            " F, A, M, K, P, O and N. in the offense menu: favourites, again, more plays, kneel down, spike the ball, formation and "
-           "tempo, and find a play by name; in the defense menu on fourth down, P. is the kick defense. ", letters="famkpon",
+           "tempo, and find a play by name; the defense menu has F, A, M, O and N too, and on fourth down P. is the kick defense. ",
+           letters="famkpon",
            feature="playbooks"),
     KeyRow("target", "R", "In the offense menu of the N. F. L. rules with a playbook", "chooses who your next pass goes to: the first item "
            "keeps the play's own pick, then the receivers, and the first two running backs when the play can throw to one", "nfl", False, "",

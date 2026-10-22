@@ -17,6 +17,11 @@ Nothing here changes the game: every choice (which file of a family, whether the
 nothing waits for a sound, the sounds are quiet (they never cover speech: -17 to -24 dB under the sound volume), and the Classic rules never call
 it. A player's file with the same name in the sounds folder replaces the shipped one, and a family grows by numbers (crowd_cheer2.wav,
 crowd_cheer3.wav ...): the stadium draws among the files of a family (rule 0.14). F9, Rules, Stadium sounds switches all of it off.
+
+SZ.2 (D-107, the owner: "ensure the user can customize them by adding custom wav files"): F9, Sounds, Stadium and referee sounds
+(extras/stadium_menu.py) lists the nineteen sounds (ALL_NAMES: these, the referee's clicks and the whistles) with the file name each takes, the
+check reads the player's files (`check_files`), `put_back` moves them aside, a file may be a wav, ogg, flac or mp3, and a file that cannot be used
+is skipped for the shipped sound (`Stadium.files`).
 """
 from __future__ import annotations
 
@@ -41,13 +46,17 @@ LEVELS = {"crowd_cheer": -1900, "crowd_roar": -2100, "crowd_groan": -2100, "crow
 LEVELS.update({"mic_on": -2000, "mic_off": -2200})
 NAMES = tuple(LEVELS)
 WHISTLES = ("whistle_short", "whistle_long", "whistle_double", "whistle_triple")      # SY.3: the pea whistles, in the whistle hook of GameSounds
+ALL_NAMES = NAMES + WHISTLES                                      # the nineteen sounds a player can replace (SZ.2): the list in F9, Sounds
+LABEL_IDS = {name: "NXB-S%02d" % (n + 1) for n, name in enumerate(ALL_NAMES)}     # their plain-word names (strings_nx.tsv)
+WHISTLE_LEVEL = -1500                                             # the whistle's level in the game: the tackle's (GameSounds.play_tackle)
 CONTEXT_WHISTLES = {"final": "whistle_long", "quarter": "whistle_long", "twominute": "whistle_double", "timeout": "whistle_short",
                     "penalty": "whistle_long", "review": "whistle_double"}
 DEFAULT_WHISTLES = ("whistle_short",) * 5 + ("whistle_double",) * 2 + (None,) * 3        # no context: a pea whistle seven times in ten
 BIG_GAIN, HIT_GAIN = 20, 8
 POST_CHANCE = 25                                         # percent of the missed field goals that hit the post
 CATCH_CHANCE = 60                                        # percent of the completions that have the pop of the catch
-_FAMILY = re.compile(r"^(?P<name>[a-z_]+?)(?P<n>\d*)\.wav$", re.IGNORECASE)
+_FAMILY = re.compile(r"^(?P<name>[a-z_]+?)(?P<n>\d*)(?P<ext>\.(?:wav|ogg|flac|mp3))$", re.IGNORECASE)
+_EXTENSION_ORDER = {".wav": 0, ".ogg": 1, ".flac": 2, ".mp3": 3}      # the sound layer reads these (audio/wavdata.DECODER_EXTENSIONS)
 
 
 def shipped_folder() -> str:
@@ -60,18 +69,62 @@ def player_folder() -> str:
 
 def family(name: str, folders: tuple[str, ...]) -> list[str]:
     """The files of a sound family: name.wav and name2.wav, name3.wav ... in the folders, the player's folder first (a file of the same
-    name there replaces the shipped one, a new number adds one: rule 0.14)."""
+    number there replaces the shipped one, a new number adds one: rule 0.14). A player's file may be a wav, ogg, flac or mp3 (SZ.2, D-107);
+    two files of one number in a folder (crowd_cheer2.wav and crowd_cheer2.ogg) count once, the wav first."""
     found: dict[str, str] = {}
     for folder in reversed(folders):
         try:
             entries = sorted(os.listdir(folder))
         except OSError:
             continue
+        here: dict[str, tuple[int, str]] = {}
         for entry in entries:
             match = _FAMILY.match(entry)
             if match and match.group("name").lower() == name:
-                found[(match.group("n") or "1").lstrip("0") or "1"] = os.path.join(folder, entry)
+                key = (match.group("n") or "1").lstrip("0") or "1"
+                rank = _EXTENSION_ORDER[match.group("ext").lower()]
+                if key not in here or rank < here[key][0]:
+                    here[key] = (rank, os.path.join(folder, entry))
+        found.update({key: path for key, (rank, path) in here.items()})
     return [found[key] for key in sorted(found, key=int)]
+
+
+def mine(files: list[str], folder: str | None = None) -> list[str]:
+    """The files of a family that are the player's (in the player's sounds folder)."""
+    where = os.path.normcase(os.path.abspath(folder or player_folder()))
+    return [f for f in files if os.path.normcase(os.path.abspath(os.path.dirname(f))) == where]
+
+
+def put_back(player_dir: str | None = None):
+    """The player's stadium, referee and whistle files are moved (never deleted) to the removed sounds folder, so the shipped sounds play
+    again (F9, Sounds, Put the stadium sounds back). Returns audio.restore.RestoreResult."""
+    from ..audio import restore
+    folder = player_dir or player_folder()
+    result = restore.RestoreResult()
+    names = []
+    try:
+        entries = sorted(os.listdir(folder))
+    except OSError:
+        return result
+    for entry in entries:
+        match = _FAMILY.match(entry)
+        if match and match.group("name").lower() in ALL_NAMES and os.path.isfile(os.path.join(folder, entry)):
+            names.append(entry)
+    restore._move_aside(folder, names, result)
+    log.info("stadium: the player's sounds were put back: %s", result)
+    return result
+
+
+def check_files(library, player_dir: str | None = None) -> int:
+    """Read every file the player put in a family of the stadium, so a damaged one is reported (the library logs it and the Sounds menu's
+    check counts it). Returns how many cannot be used."""
+    folder = player_dir or player_folder()
+    bad = 0
+    for name in ALL_NAMES:
+        for path in family(name, (folder,)):              # only the player's folder: the shipped sounds are ours
+            if library.pick_file(path).sound is None:
+                bad += 1
+    return bad
 
 
 class Stadium:
@@ -103,11 +156,21 @@ class Stadium:
         return bool(self.on and self.rnd is not None and getattr(self.game, "sounds", None) is not None
                     and engine is not None and getattr(engine, "rules", None) is self.rules)
 
+    def files(self, name: str) -> list[str]:
+        """The sounds of a family that can be used: the player's files that the sound layer reads, else the shipped ones (a damaged file of the
+        player's never makes a silence where a sound belongs: it is skipped, the library logs it and says its one notice, SZ.2)."""
+        files = family(name, self.folders)
+        library = getattr(getattr(getattr(self.game, "sounds", None), "audio", None), "library", None)
+        if library is None:
+            return files
+        usable = [path for path in files if library.pick_file(path).sound is not None]
+        return usable or family(name, (self.folders[-1],))
+
     def play(self, name: str) -> None:
         """One sound of the family, on the extra channel, nothing waits for it."""
         if not self.active():
             return
-        files = family(name, self.folders)
+        files = self.files(name)
         if not files:
             log.debug("stadium: no file for %s", name)
             return
@@ -122,7 +185,7 @@ class Stadium:
         name = CONTEXT_WHISTLES.get(context) if context else DEFAULT_WHISTLES[self.rnd(len(DEFAULT_WHISTLES)) - 1]
         if name is None:
             return None
-        files = family(name, self.folders)
+        files = self.files(name)
         if not files:
             return None
         return files[self.rnd(len(files)) - 1] if len(files) > 1 else files[0]

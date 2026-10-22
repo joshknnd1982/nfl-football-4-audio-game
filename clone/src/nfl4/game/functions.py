@@ -180,11 +180,13 @@ class Functions:
 
         def change_mode(step: int) -> None:
             sp.mode = MODES[(MODES.index(sp.mode) + step) % len(MODES)]
+            sp.mode_chosen = True                       # the player's own choice: the question at the start is not asked (SZ.4, D-109)
             self.speech.mode = sp.mode
             options.save()
 
         def reset_mode() -> None:
             sp.mode = original.mode
+            sp.mode_chosen = True
             self.speech.mode = sp.mode
             options.save()
 
@@ -205,6 +207,8 @@ class Functions:
             return words.SPEECH_RESTORED
 
         def voices() -> str:
+            if getattr(self.speech, "screen_reader_speaks", lambda: False)():
+                return words.SCREEN_READER_VOICES.strip()      # SZ.4: a screen reader's one voice speaks the game, there is nothing to choose
             self.g.hotkeys.change_voice()             # the five pickers of F12 (G-S8), saved, the He and She words
             return words.VOICES_DONE
 
@@ -299,6 +303,8 @@ class Functions:
             return " ".join([words.reloaded(len(SOUND_IDS))] + notices)
 
         def check() -> str:
+            from ..extras import stadium
+            stadium.check_files(library, library.player_dir)       # SZ.2: the player's stadium, referee and whistle files are read too
             problems = library.check_all()
             library.take_notices()                     # the count says it; details are in the log
             for problem in problems:
@@ -347,6 +353,9 @@ class Functions:
                      enter=cycle_commercials, change=cycle_commercials),
                 Item(lambda: words.COMMERCIALS_FOLDER_ITEM, enter=open_commercials_folder),
             ]
+        from ..extras import nx_texts            # SZ.2 (nfl4 only): the N. F. L. rules' own sounds that the player can replace, last in the menu
+        items += [Item(lambda: nx_texts.text("NXM-47") + ".", enter=self._enter(self.stadium_sounds)),
+                  Item(lambda: nx_texts.text("NXM-54") + ".", enter=self.put_stadium_sounds_back)]
         SpokenMenu(self.speech, self.keys, words.SOUNDS_TITLE, items).run()
 
     # ----- customize (S7.7, G-K2, D-048) -----
@@ -486,6 +495,22 @@ class Functions:
                        close_on_enter=False, help_text=words.POOLS_HELP, clock=self.clock).run()
         finally:
             audio.stop_preview()
+
+    def stadium_sounds(self) -> None:
+        """The stadium, referee and whistle sounds with the file name each takes (nfl4 only, SZ.2): Enter plays one."""
+        from ..extras import stadium_menu
+        stadium_menu.sounds_list(self.speech, self.keys, self.audio, self.options.wavol, self.clock)
+
+    def put_stadium_sounds_back(self) -> str:
+        """The player's stadium, referee and whistle files are moved aside after one confirming Enter (nfl4 only, SZ.2)."""
+        from ..extras import nx_texts, stadium
+        self.speech.stop()
+        self.speech.say_async(nx_texts.text("NXM-55"))
+        if self.keys.read_key() != KEY_ENTER:
+            return words.NOTHING_CHANGED
+        result = stadium.put_back(self.audio.library.player_dir)
+        self.audio.library.refresh()
+        return nx_texts.text("NXM-56", n=len(result.moved)) if result.moved else nx_texts.text("NXM-57")
 
     def restore_one_sound(self) -> None:
         """A list of the sounds; Enter puts the chosen one back to the original (playbook 7.7, 7.10)."""

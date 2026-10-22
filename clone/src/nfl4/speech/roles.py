@@ -31,7 +31,7 @@ F11_NAMES = {ANNOUNCER: "the announcer", OWN_QUARTERBACK: "your quarterback", OW
 F12_NAMES = {ANNOUNCER: "the announcer", OWN_QUARTERBACK: "your quarter back",
              OPPONENT_QUARTERBACK: "your opponent's quarter back", OWN_PUNTER: "your punter",
              OPPONENT_PUNTER: "your opponent's punter"}
-EXTRA_NAMES = {COLOR: "Ghip, the color commentator", REFEREE: "the referee"}      # SY.1: the extras' speakers (F11 and F12 say these when they ask for them)
+EXTRA_NAMES = {COLOR: "the color commentator", REFEREE: "the referee"}      # SY.1: the extras' speakers (F11 and F12 say these when they ask for them)
 
 
 def spoken_name(role: str) -> str:

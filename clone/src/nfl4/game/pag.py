@@ -111,6 +111,24 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         self.t_back = None
         self.t_clock = None                          # the period clock as it was before the snap took the pending runoff
         self.t_choice: tuple[int, int] | None = None     # previous_play and repeats before the computer's choice
+        # SZ.6 (D-111, a player's e-mail: "it says he is on for the field goal twice"): a time out called after a kick's set-up was heard withdraws the
+        # kick; when the same kick is called again from the same spot the set-up is not said a second time
+        self.setup_key = None                        # the situation whose set-up was just said
+        self.setup_withdrawn = None                  # the situation whose set-up was heard and whose kick a time out withdrew
+
+    def setup_situation(self, kind: str) -> tuple:
+        s = self.s
+        return (kind, s.quarter, s.half, s.down, s.to_go, s.yard_line, s.wisoff)
+
+    def setup_told(self, kind: str) -> bool:
+        """True once: the kick of this spot was set up in words and withdrawn by a time out, and it is called again (the T key exists in the
+        N. F. L. rules only, so Classic never gets True and says the original's words every time)."""
+        told = self.setup_withdrawn is not None and self.setup_withdrawn == self.setup_situation(kind)
+        self.setup_withdrawn = None
+        return told
+
+    def setup_heard(self, kind: str) -> None:
+        self.setup_key = self.setup_situation(kind)
 
     # ----- the T key (H18) -----
 
@@ -171,6 +189,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
             self.t_choice = None
         self.rules.withdraw_play(s)
         self.g.qorp, self.g.ptf = 1, 0                 # a kick's set-up speaks as the punter and writes the speech log: neither goes on
+        self.setup_withdrawn, self.setup_key = self.setup_key, None     # SZ.6: the set-up that was heard is not said again for the same kick
         self.t_live, self.t_back = False, None
         debuglog.event("extras", "play_withdrawn", back=getattr(withdrawal.back, "__name__", "?"), quarter=s.quarter, down=s.down)
         return withdrawal.back
@@ -572,12 +591,17 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         say_item = True
         self.dead_ball()                                   # H18: the ball is dead; a time out kept from the last play is granted first
         while True:
+            spoke_prompt = speak_prompt
             if speak_prompt:
                 heading = self.rules.menu_heading(s)       # SX.10c: the name of an open list of plays (Classic: "", the prompt)
                 g.say5(heading or " " + self.coach + prompt)
                 speak_prompt = False
             if say_item:
                 g.say5(items[current - 1].text)
+                if spoke_prompt:                           # SZ.5: a few times only, one sentence on where more plays are (Classic: nothing)
+                    hint = self.rules.menu_hint(s) if hasattr(self.rules, "menu_hint") else ""
+                    if hint:
+                        g.voice_speak(hint, wait=False)    # not logged, not kept for the replay, like the F1 hint
             say_item = True
             self.getkey2()
             code = self.g_code

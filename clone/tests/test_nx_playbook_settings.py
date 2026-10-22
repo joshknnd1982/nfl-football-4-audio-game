@@ -113,7 +113,7 @@ def test_every_value_of_the_menu_has_a_name_in_the_order_of_the_choices():
 
 
 def test_reset_brings_the_playbooks_back_to_the_teams(rig):
-    rules_menu(rig, ["8", 13, "9", 13, "0", 40, 40, 13])      # SY.1: "0" is Broadcast now; SY.2: Reset is the twelfth item, reached with Down twice
+    rules_menu(rig, ["8", 13, "9", 13, "0", 40, 40, 40, 13])      # SY.1: "0" is Broadcast now; SY.2, SZ.1: Reset is the thirteenth item, reached with Down three times
     game = rig.game.options.settings.game
     assert (game.nx_offense_playbook, game.nx_defense_playbook, game.nx_playbook_chosen) == ("team", "team", False)
 
@@ -171,5 +171,5 @@ def test_f5_f6_and_f7_add_the_playbook_lines_only_when_a_playbook_is_in_use(tmp_
             for i in ids:
                 # the line about the menus is for a player whose own books are playbooks, not for one who only meets a style
                 assert (X.text(i) in help_) == (i != "NXH-27" or rig is used), (key, i)
-    assert X.text("NXH-27") == (" With a playbook, the play menus start with the original's items. Right opens a list of plays, and "
-                                "Backspace or Left goes back, and so does the last item, Back, which the letter B. selects. ")   # SX.10d
+    assert X.text("NXH-27") == (" With a playbook, the play menus start with the original's items. Right opens the lists of the play you are on, "
+                                "M opens More Plays, and Backspace, Left or B. goes back. ")   # SX.10d; SZ.5 added Right's lists and M

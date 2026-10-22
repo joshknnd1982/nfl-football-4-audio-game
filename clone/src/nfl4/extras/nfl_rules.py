@@ -124,6 +124,7 @@ from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
 from .playbook_flow import PlaybookFlow
 from .plays import calling, descriptions
+from .plays import play_menus as PM
 from .qb_runs import QbFlow
 from .review import CHALLENGE, CHALLENGE_ACTION, ReviewFlow, capture
 from .state import ExtrasRecord
@@ -150,7 +151,7 @@ class NflRules(ClassicRules):
     def __init__(self, timeouts_on: bool = True, auto_sides: tuple[int, ...] = (2,), penalties_on: bool = False,
                  onside_on: bool = False, onside_always: bool = False, qb_on: bool = False, challenges_on: bool = False,
                  offense_book: str = "classic", defense_book: str = "classic", playbooks_on: bool = False,
-                 broadcast_on: bool = False, radio_banter: bool = False, stadium_on: bool = False):
+                 broadcast_on: bool = False, radio_banter: bool = False, stadium_on: bool = False, commentator: str = "Ghip"):
         # the switches for a new game; a game reads its own from state.extras (a loaded game keeps the switches it was saved
         # with, C1). penalties_on and onside_on are off unless given: the program's rules come from the settings
         # (rules_from_settings, nx_penalties and nx_onside on by default), and a rules object made by hand (the clock's
@@ -171,7 +172,7 @@ class NflRules(ClassicRules):
         self.defense_book = defense_book
         self.playbooks_on = bool(playbooks_on)
         # SY.1 (the radio broadcast, rule 0.27): the radio banter instead of the original's jokes, and Ghip; a hand-made object has neither
-        self.broadcast = Broadcast(self, radio_banter=radio_banter, ghip=broadcast_on)
+        self.broadcast = Broadcast(self, radio_banter=radio_banter, ghip=broadcast_on, commentator=commentator)
         self.stadium = Stadium(self, on=stadium_on)      # SY.2: the crowd, the hits and the chain; a hand-made object has none
         self.choices = Choices(self)                     # SY.4, SY.5: the player's target and blitzer (nothing until he chooses)
         self.game = None
@@ -189,9 +190,11 @@ class NflRules(ClassicRules):
 
     def for_game(self) -> "NflRules":
         """A fresh object for one game, with the same switches (Game.play_game)."""
-        return type(self)(self.timeouts_on, self.auto_sides, self.penalties_on, self.onside_on, self.onside_always,
-                          self.qb_on, self.challenges_on, self.offense_book, self.defense_book, self.playbooks_on,
-                          self.broadcast.ghip, self.broadcast.radio_banter, self.stadium.on)
+        fresh = type(self)(self.timeouts_on, self.auto_sides, self.penalties_on, self.onside_on, self.onside_always,
+                           self.qb_on, self.challenges_on, self.offense_book, self.defense_book, self.playbooks_on,
+                           self.broadcast.ghip, self.broadcast.radio_banter, self.stadium.on)
+        fresh.broadcast.commentator = self.broadcast.commentator          # SZ.1: the name (set on the object, so a subclass's constructor stays as it is)
+        return fresh
 
     # ----- H1 -----
 
@@ -459,6 +462,8 @@ class NflRules(ClassicRules):
     def menu_action(self, state, action: tuple[str, int]):
         """An added item was taken with Enter. True: done, the menu starts again; False: refused, the menu stays; a
         continuation (a challenge that changed a ruling, SX.6): the menu is left for the step it names."""
+        if str(action[0]).split(":")[-1] in (PM.MORE, PM.OPEN) and (self.offense.owns(action) or self.defense.owns(action)):
+            self._hints_known()                    # SZ.5: More Plays or a list opened: the player has found the other plays
         if self.offense.owns(action):              # SX.10c: an item of the catalog's menus
             return self.offense.action(state, action)
         if self.defense.owns(action):              # SX.10d: an item of the catalog's defense menus
@@ -478,12 +483,60 @@ class NflRules(ClassicRules):
     def menu_right(self, state, item) -> bool:
         """Right: a family's lists of plays, and the family's next list (SX.10c, design 2.3)."""
         flow = self.flow(state)
-        return flow is not None and flow.right(state, item)
+        opened = flow is not None and flow.right(state, item)
+        if opened:
+            self._hints_known()                      # SZ.5
+        return opened
 
     def menu_heading(self, state) -> str:
         """The name of the open list of the catalog's menus, said in place of the prompt (SX.10c)."""
         flow = self.flow(state)
         return flow.heading(state) if flow is not None else ""
+
+    HINT_RUNS = 3          # the hints are given in the first three program runs that reach the menus; Right or M used for real ends them
+
+    def _hint_settings(self):
+        return getattr(getattr(getattr(self.game, "options", None), "settings", None), "game", None)
+
+    def menu_hint(self, state) -> str:
+        """SZ.5 (D-110; a player's e-mail of 2026-10-22: no other plays were found on defense, and "recommended formations" came with no recommended
+        play): one sentence after the first item of the catalog's top menu (where Right and M are, that Enter lets the playbook pick) and of its
+        settings list (that "the playbook's choice" is not a recommendation), once for each in a program run and in the first three runs only,
+        in the voice that spoke last. A player who opens a list with Right or More Plays is told no more. No draw, no state of the game."""
+        flow, game, settings = self.flow(state), self.game, self._hint_settings()
+        if flow is None or game is None or settings is None or state.two_point:
+            return ""
+        level, side = flow.menus.level, flow.menus.context.side
+        if level == PM.TOP:
+            key, text_id = ("top", side), ("NXB-H17" if side == "O" else "NXB-H18")
+        elif level == PM.SETTINGS_LEVEL:
+            key, text_id = ("settings", ""), "NXB-H19"
+        else:
+            return ""
+        told = getattr(game, "menu_hints_told", None)
+        if told is None:
+            told = game.menu_hints_told = set()
+        if key in told or settings.nx_menu_hints >= self.HINT_RUNS:
+            return ""
+        if not told:                                            # the first hint of this program run: one more run counted, saved
+            settings.nx_menu_hints += 1
+            self._save_settings()
+        told.add(key)
+        debuglog.event("menu", "hint", id=text_id, runs=settings.nx_menu_hints)
+        return X.text(text_id)
+
+    def _save_settings(self) -> None:
+        try:
+            self.game.options.save()
+        except Exception as exc:
+            log.debug("the menu hints could not be saved: %s", exc)
+
+    def _hints_known(self) -> None:
+        """The player opened a list with Right or More Plays: he knows where the plays are, the hints stop for good."""
+        settings = self._hint_settings()
+        if settings is not None and settings.nx_menu_hints < self.HINT_RUNS:
+            settings.nx_menu_hints = self.HINT_RUNS
+            self._save_settings()
 
     def menu_key(self, state, letter: str, item=None, code: str = ""):
         """The letter C when the menu has no Challenge the Ruling item: the reason why (NXR-10 to NXR-15), the menu goes on. The letter D
@@ -910,7 +963,7 @@ class NflRules(ClassicRules):
 
     def extra_help(self, key: str) -> list[str]:
         ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-47", "NXH-14", "NXH-18", "NXH-27"),
-               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-67", "NXH-68", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
                         "NXH-16", "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30") + MENU_HELP_F6,     # SX.12: overtime after the clock
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
                         "NXH-33") + descriptions.F7_WORD_ROWS}.get(key, ())
@@ -961,7 +1014,7 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
                     offense_book=getattr(game_settings, "nx_offense_playbook", "team"),
                     defense_book=getattr(game_settings, "nx_defense_playbook", "team"),
                     playbooks_on=True, broadcast_on=getattr(game_settings, "nx_broadcast", True), radio_banter=True,
-                    stadium_on=getattr(game_settings, "nx_stadium", True))
+                    stadium_on=getattr(game_settings, "nx_stadium", True), commentator=getattr(game_settings, "nx_commentator", "Ghip"))
 
 
 def is_nfl(rules) -> bool:

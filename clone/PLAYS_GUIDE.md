@@ -34,6 +34,7 @@ Defense menu:
 - **Time Out**: Stops the clock for a time out; you have three in each half. You can also press T at any time before the play starts.
 - **Challenge the Ruling**: Asks the referee to look at the video of the last play. A challenge that loses costs a time out.
 - **Save Game**: Saves the game so you can finish it later.
+- **More Plays (on defense)**: Opens every list of defensive calls, such as blitzes and zone coverages, and the situation defenses.
 
 ## The groups of a playbook menu
 

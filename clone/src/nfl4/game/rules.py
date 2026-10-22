@@ -98,6 +98,10 @@ Added in PX SX.10c (the catalog's offense in the game, D-093), each never taken 
     H3 menu_right(state, item)             the Right key in a play menu: a family's lists     False (the key is the original's)
     H3 menu_heading(state)                 what the menu says first instead of the coach's    "" (the coach and the prompt)
                                            prompt (the name of an open list)
+    H3 menu_hint(state)                    SZ.5: one sentence after the first item of the     "" (nothing: the original's menus say no hint)
+                                           catalog's top menu or its settings list, a few
+                                           times only (where Right and M are, what the
+                                           playbook's choice means)
     H3 menu_key(state, letter, item, code) a key no item has; `letter` is "" for a key that    False
                                            is not a letter; MENU_REFRESH: the items again,
                                            MENU_QUIET: nothing said (a lone Shift)
@@ -275,6 +279,9 @@ class ClassicRules:
         return False
 
     def menu_heading(self, state) -> str:
+        return ""
+
+    def menu_hint(self, state) -> str:
         return ""
 
     # H19 (SX.10c): the catalog's plays. Classic plays the original's tables: no result, no draw, no word

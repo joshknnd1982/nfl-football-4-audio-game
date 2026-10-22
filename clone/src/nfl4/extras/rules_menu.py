@@ -6,7 +6,8 @@ design's order), so the player never meets a switch that does nothing; SX.3 adde
 Onside question before it, SX.5 added Quarterback runs after Time outs, SX.6 added Replay challenges after Time outs, SX.7
 added Offense playbook and Defense playbook before Reset (1 Rules, 2 Time outs, 3 Replay challenges, 4 Quarterback runs, 5 Onside
 kicks, 6 Onside question, 7 Penalties, 8 Offense playbook, 9 Defense playbook, 10 Reset: the design's ten items; SY.1 added Broadcast, Ghip
-the color commentator, before Reset: 10 Broadcast; SY.2 added Stadium sounds: 11 Stadium sounds, 12 Reset). Up and Down move, Enter or Space changes the current item and speaks its
+the color commentator, before Reset: 10 Broadcast; SY.2 added Stadium sounds: 11 Stadium sounds; SZ.1 added Commentator, the name of the color
+commentator: 12 Commentator, 13 Reset). Up and Down move, Enter or Space changes the current item and speaks its
 new value, Left and Right change it too, the digits go to an item, Escape leaves (game/spoken_menu.py). A switch says
 " used with the N. F. L. rules " after its value while Rules is Classic. Every change is saved in settings.txt at once and
 applies from the next game (" the new rules apply from the next game. "): a game in progress keeps the rules it began with.
@@ -15,6 +16,7 @@ Rules = N. F. L. rules also makes the program read the extras' files (remarks.tx
 from __future__ import annotations
 
 from ..game.spoken_menu import Item, SpokenMenu
+from . import commentator_menu
 from . import nx_texts as X
 from .playbook_data import CLASSIC_KEY, PLAYBOOK_CHOICES, STYLE_BY_KEY, TEAM_KEY
 
@@ -152,6 +154,20 @@ def rules_menu(game, speech, keys) -> None:
     def stadium_item() -> str:
         return switch_label(settings, "NXM-38", settings.nx_stadium)
 
+    def commentator_item() -> str:
+        return commentator_menu.label(settings)
+
+    def choose_commentator() -> str:
+        """Enter: the list of names (SZ.1); the item is said again afterwards, with the sentence about the next game when the name changed."""
+        if commentator_menu.pick(game, speech, keys, settings):
+            apply()
+            return changed(commentator_item)
+        return commentator_item()
+
+    def step_commentator(step: int = 1) -> None:
+        commentator_menu.step(settings, step)
+        apply()
+
     def broadcast_item() -> str:
         return switch_label(settings, "NXM-37", settings.nx_broadcast)
 
@@ -188,6 +204,7 @@ def rules_menu(game, speech, keys) -> None:
              change=change_defense_playbook),
         Item(broadcast_item, enter=lambda: (toggle_broadcast(), changed(broadcast_item))[1], change=toggle_broadcast),
         Item(stadium_item, enter=lambda: (toggle_stadium(), changed(stadium_item))[1], change=toggle_stadium),
+        Item(commentator_item, enter=choose_commentator, change=step_commentator),
         Item(lambda: X.text("NXM-19"), enter=reset),
     ]
     SpokenMenu(speech, keys, X.text("NXM-07"), items, help_text=X.text("NXM-36"), space_enters=True,

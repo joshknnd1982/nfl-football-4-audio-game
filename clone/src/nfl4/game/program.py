@@ -22,6 +22,7 @@ from __future__ import annotations
 import logging
 
 from ..data import debuglog
+from . import extra_texts as words
 from . import program_texts as P
 from . import prompt_texts as T
 from . import save_texts, texts
@@ -98,6 +99,30 @@ class Program:
         engine = self.g.speech.active_engine()
         return engine is not None and getattr(engine, "takes_roles", False)
 
+    def screen_reader_choice(self) -> None:
+        """SZ.4 (D-109, a player's e-mail of 2026-10-22: the screen reader was not detected and the voices were asked for anyway). When NVDA or
+        JAWS runs and the player has not yet said how the game speaks, the game says which one it found and asks, in the original's yes or no
+        way (yes first, Y and N, Up and Down, Enter, F1), whether it should speak through it. Yes keeps the automatic mode and the game asks
+        for no voice; no switches to the five Windows voices. Asked once: the answer is saved (F9, Speech settings changes it)."""
+        g = self.g
+        options = getattr(g, "options", None)
+        speech = options.settings.speech if options is not None else None
+        if speech is None or speech.mode_chosen or speech.mode == "sapi":
+            return
+        engine = g.speech.active_engine()
+        if engine is None or getattr(engine, "takes_roles", False):
+            return                                              # SAPI speaks (no screen reader runs): nothing to ask, the five voices are the game's
+        name = getattr(engine, "name", "the screen reader")
+        debuglog.event("app", "screen_reader_found", logging.INFO, engine=name, mode=speech.mode)
+        no = g.prompts._confirm(words.SCREEN_READER_QUESTION % name, g.say5, g.say2)        # True: the answer was no
+        speech.mode_chosen = True
+        if no:
+            speech.mode = "sapi"
+            g.speech.mode = "sapi"
+        options.save()
+        debuglog.event("app", "screen_reader_answer", logging.INFO, engine=name, uses_screen_reader=not no)
+        g.say(words.SCREEN_READER_NO if no else words.SCREEN_READER_YES % name)
+
     # ----- the program -----
 
     def run(self) -> None:
@@ -138,6 +163,7 @@ class Program:
             g.say(texts.TITLE_SPOKEN)                           # 0x487d35: the welcome in place of " Jim's N. F. L. Football, version 4. "
             debuglog.event("app", "welcome_spoken", logging.INFO, first_start=True, text=texts.TITLE_SPOKEN)
             g.speak_notices()
+            self.screen_reader_choice()                         # SZ.4: NVDA or JAWS runs: speak through it? (asked once, before any voice is asked)
             g.dy(INTRO_PAUSE, 0x487d81)
             g.hotkeys.speckeys()                                # 0x487daa: the F5 key list
             # S8.2: where F9 is is now a line of the key list itself (hotkeys.speckeys), so the first start has no separate sentence
@@ -149,6 +175,7 @@ class Program:
             debuglog.event("app", "welcome_spoken", logging.INFO, first_start=False, text=texts.TITLE_SPOKEN)
             g.speak_notices()
             self._stop_intro(second_pump=False, reason="welcome_done")   # S8.2: the intro ends with the welcome, not at the week line
+            self.screen_reader_choice()                         # SZ.4: a player who has not said how the game speaks and runs a screen reader now
         if self.menu_on:                                        # SX.14: what to do with what is saved, before anything is loaded
             StartupMenu(self).run()
 

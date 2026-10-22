@@ -267,7 +267,7 @@ def test_jaws_output_is_saved_read_back_and_accepted_in_any_spelling():
     back, problems = parse("speech_output =  JAWS \n")
     assert back.speech.mode == "jaws" and problems == []
     back, problems = parse("sound_volume = -5\nspeech_output = jawz\n")
-    assert back.speech.mode == "sapi" and len(problems) == 1
+    assert back.speech.mode == "auto" and len(problems) == 1                 # a bad value keeps the default (automatic since SZ.4)
 
 
 # ----- no "sounds start right away" setting in nfl4 (GAP_REGISTER G-S11, D-031 item 1; Brain had one in F3) -----

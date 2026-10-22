@@ -38,7 +38,7 @@ def same(a: Settings, b: Settings) -> bool:
 
 def test_defaults_are_the_originals_values_and_parse_back():
     s = Settings.defaults()
-    assert s.speech.mode == "sapi"                                            # G-S7
+    assert s.speech.mode == "auto" and s.speech.mode_chosen is False           # G-S7 was sapi; SZ.4 (D-109): a screen reader is found and asked about once
     assert s.speech.voices == {role: None for role in ROLES + ("color", "referee")}     # voice 0 for everybody (GAME_SPEC 3 step 4); Ghip and the referee too (SY.1, SY.3)
     assert s.speech.volumes == {role: 95 for role in ROLES + ("color", "referee")}      # volumes 1 to 5 = 95
     assert s.speech.rate is None and s.audio.sound_level == 0 and s.game.comments is True
@@ -71,7 +71,7 @@ def test_every_value_is_checked_and_a_bad_one_keeps_the_original():
     settings, problems = parse(text)
     assert len(problems) == 11
     assert settings.speech.volumes[ANNOUNCER] == 55 and settings.speech.volumes[OWN_PUNTER] == 95
-    assert settings.speech.pitch == 0 and settings.speech.rate is None and settings.speech.mode == "sapi"
+    assert settings.speech.pitch == 0 and settings.speech.rate is None and settings.speech.mode == "auto"      # the default (SZ.4)
     assert settings.audio.sound_level == 0 and settings.game.comments is True
 
 

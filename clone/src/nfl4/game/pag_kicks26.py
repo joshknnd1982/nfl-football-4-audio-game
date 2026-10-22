@@ -262,11 +262,14 @@ class Kick26Steps:
         g.log_print("")
         g.ptf = 1
         fair_catch_kick = plan.what == FAIR_CATCH_KICK
-        if fair_catch_kick:
-            g.say4(self.text26("fair_catch_kick", kicker=self.kicker(s.wisoff, 1)))
-        else:
-            g.say4(" " + self.kicker(s.wisoff, 1) + P.FG_IN)
-        g.say4(" " + self.kicker(s.wisoff, 2) + P.WILL_HOLD)
+        kind = "fair catch kick" if fair_catch_kick else "field goal"
+        if not self.setup_told(kind):                            # SZ.6: a kick withdrawn by a time out and called again is not set up twice
+            if fair_catch_kick:
+                g.say4(self.text26("fair_catch_kick", kicker=self.kicker(s.wisoff, 1)))
+            else:
+                g.say4(" " + self.kicker(s.wisoff, 1) + P.FG_IN)
+            g.say4(" " + self.kicker(s.wisoff, 2) + P.WILL_HOLD)
+        self.setup_heard(kind)
         self.rady(0x442081)
         if fair_catch_kick:
             self.go_live()                                   # no snap: the kick is a free kick

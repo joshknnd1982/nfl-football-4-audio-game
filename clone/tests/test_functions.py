@@ -138,29 +138,31 @@ def speech_menu(rig, keys):
 def test_the_speech_menu_names_its_nine_items_and_starts_with_the_original_values(tmp_path):
     rig = rig_for(tmp_path, [])
     spoken = speech_menu(rig, [DOWN] * 9)
-    assert spoken[1:11] == ["Speech settings. 9 items. Press F1 for help. Speech output: SAPI 5 voice only, original.",
+    auto = "Speech output: automatic, original. " + words.NEITHER_RUNNING          # SZ.4 (D-109): automatic is the default
+    assert spoken[1:11] == ["Speech settings. 9 items. Press F1 for help. " + auto,
                             "Speech rate: 0, original.", "Speech pitch: 0, original.",
                             "Letter keys in lists: type letters to search for a name, original.",
                             words.CHOOSE_VOICES_ITEM, words.RESTORE_SPEECH, words.SETTINGS_FOLDER_ITEM,
                             words.debug_log_label("detailed"), words.PROBLEM_REPORT_ITEM,
-                            "Speech output: SAPI 5 voice only, original."]
+                            auto]
 
 
 def test_right_changes_the_speech_output_and_saves_it_enter_goes_back_to_the_original(tmp_path):
     rig = rig_for(tmp_path, [])
     spoken = speech_menu(rig, [RIGHT, RIGHT, RIGHT, RIGHT, LEFT, ENTER])
-    assert spoken[2:8] == ["Speech output: NVDA only. " + words.NVDA_NOT_RUNNING,
+    assert spoken[2:8] == ["Speech output: SAPI 5 voice only.",                     # SZ.4: the original (default) is automatic now
+                           "Speech output: NVDA only. " + words.NVDA_NOT_RUNNING,
                            "Speech output: JAWS only. " + words.JAWS_NOT_RUNNING,
-                           "Speech output: automatic. " + words.NEITHER_RUNNING,
-                           "Speech output: SAPI 5 voice only, original.",
-                           "Speech output: automatic. " + words.NEITHER_RUNNING,
-                           "Speech output: SAPI 5 voice only, original."]
-    assert rig.speech.mode == "sapi" and rig.game.options.settings.speech.mode == "sapi" and rig.saves.count == 6
+                           "Speech output: automatic, original. " + words.NEITHER_RUNNING,
+                           "Speech output: JAWS only. " + words.JAWS_NOT_RUNNING,
+                           "Speech output: automatic, original. " + words.NEITHER_RUNNING]
+    assert rig.speech.mode == "auto" and rig.game.options.settings.speech.mode == "auto" and rig.saves.count == 6
+    assert rig.game.options.settings.speech.mode_chosen is True                  # the player's own choice: the question at the start is not asked
 
 
 def test_the_speech_output_follows_the_running_screen_reader(tmp_path):
     rig = rig_for(tmp_path, [], nvda_running=True)
-    spoken = speech_menu(rig, [RIGHT])
+    spoken = speech_menu(rig, [RIGHT, RIGHT])                                    # automatic, SAPI 5 only, then NVDA only
     assert rig.nvda.spoken()[0] == "Speech output: NVDA only." and rig.speech.mode == "nvda"     # now NVDA speaks
 
 
@@ -197,11 +199,11 @@ def test_restore_puts_the_original_speech_settings_back(tmp_path):
     rig.game.options.set_vr(4)
     rig.game.options.settings.speech.pitch = 3
     rig.game.options.settings.speech.list_letters = "first"
-    rig.speech.mode = rig.game.options.settings.speech.mode = "auto"
+    rig.speech.mode = rig.game.options.settings.speech.mode = "jaws"
     spoken = speech_menu(rig, [DOWN] * 5 + [ENTER])
     assert spoken[-2] == words.SPEECH_RESTORED
     speech = rig.game.options.settings.speech
-    assert (speech.mode, speech.rate, speech.pitch, speech.list_letters) == ("sapi", None, 0, "type") and rig.speech.mode == "sapi"
+    assert (speech.mode, speech.rate, speech.pitch, speech.list_letters) == ("auto", None, 0, "type") and rig.speech.mode == "auto"     # SZ.4
 
 
 def test_the_voices_item_runs_the_five_pickers_of_f12_and_says_it_is_done(tmp_path):
@@ -250,10 +252,11 @@ def extra_plays(rig):
 
 def test_the_sounds_menu_lists_its_nine_items(tmp_path):
     rig = rig_for(tmp_path, [])
-    spoken = sounds_menu(rig, [DOWN] * 8)
-    assert spoken[2:11] == ["Sounds. 9 items. Press F1 for help. Sound volume: full, original.",
+    spoken = sounds_menu(rig, [DOWN] * 10)
+    assert spoken[2:13] == ["Sounds. 11 items. Press F1 for help. Sound volume: full, original.",
                             words.PREVIEW_ITEM, words.RELOAD_ITEM, words.CHECK_ITEM, words.FOLDER_ITEM,
-                            words.RESTORE_SOUNDS, words.RESTORE_ONE_ITEM, words.RESTORE_ALL_ITEM, words.POOLS_ITEM]
+                            words.RESTORE_SOUNDS, words.RESTORE_ONE_ITEM, words.RESTORE_ALL_ITEM, words.POOLS_ITEM,
+                            "Stadium and referee sounds.", "Put the stadium sounds back."]       # SZ.2: the last two items
 
 
 def test_with_the_players_commercials_folder_the_menu_has_the_commercials_items_and_the_setting_cycles_and_is_saved(tmp_path):
@@ -261,7 +264,7 @@ def test_with_the_players_commercials_folder_the_menu_has_the_commercials_items_
     rig = rig_for(tmp_path, [])
     rig.sounds.commercials = Commercials(str(tmp_path / "commercials"))
     spoken = sounds_menu(rig, [DOWN] * 9 + [ENTER, RIGHT, LEFT, LEFT, DOWN])
-    assert spoken[2].startswith("Sounds. 11 items.")
+    assert spoken[2].startswith("Sounds. 13 items.")                  # SZ.2: the two items of the stadium sounds come last
     assert spoken[10] == words.POOLS_ITEM
     assert spoken[11:16] == ["Commercials: off.", "Commercials: at every break, 0 files found.",
                              "Commercials: at every second break, 0 files found.",
@@ -382,7 +385,7 @@ def test_a_sound_system_that_did_not_start_is_the_first_item(tmp_path):
     rig = rig_for(tmp_path, [])
     rig.audio.error = "no device"
     spoken = sounds_menu(rig, [])
-    assert spoken[2] == ("Sounds. 10 items. Press F1 for help. " + words.NO_SOUND_DEVICE_ITEM)
+    assert spoken[2] == ("Sounds. 12 items. Press F1 for help. " + words.NO_SOUND_DEVICE_ITEM)
 
 
 def test_without_a_sound_layer_the_sounds_item_says_so(tmp_path):

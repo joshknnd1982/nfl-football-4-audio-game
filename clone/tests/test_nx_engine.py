@@ -110,7 +110,7 @@ def test_the_last_timeout_says_none_are_left_and_a_remark_may_follow(tmp_path):
     assert step == rig.engine.save_game
     said = texts(rig)
     i = said.index(" time out called by the Bengals. ")
-    assert said[i + 1:i + 3] == [" you have no time outs left. ", X.text("TO02")]    # its exact spaces (a default)
+    assert said[i + 1:i + 3] == [" you have no time outs left. ", X.text("TO02", commentator="Ghip")]    # its exact spaces (a default); SZ.1: the name is filled in
 
 
 def test_the_s_key_goes_to_save_game(tmp_path):
@@ -275,7 +275,7 @@ def test_f5_f6_f7_add_their_lines_after_the_original_text_during_an_nfl_game(tmp
         lead = [original] + ([words.KEYS_ADDED_F9] if menu == hot.speckeys else [])      # S8.2: F9 is in the key list, in every mode
         assert said[:len(lead)] == lead and said[len(lead):len(lead) + len(ids)] == [X.text(i) for i in ids]     # then SX.10b2's lines
     rig.rules.state.extras.timeouts_on = False
-    assert feature_help(rig.rules, "117") == [X.text(i) for i in ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-67", "NXH-68", "NXH-06")]   # SX.12: overtime; SY.1: the broadcast; SY.2: the stadium
+    assert feature_help(rig.rules, "117") == [X.text(i) for i in ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-06")]   # SX.12: overtime; SY.1: the broadcast; SY.2: the stadium; SZ.1, SZ.2: the name and the player's own sounds
 
 
 def test_the_help_of_a_classic_program_has_no_feature_lines_only_the_keys(tmp_path):

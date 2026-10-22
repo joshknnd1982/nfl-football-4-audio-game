@@ -80,6 +80,13 @@ OUTPUT_NAMES = {"sapi": "SAPI 5 voice only", "nvda": "NVDA only", "jaws": "JAWS 
 NVDA_NOT_RUNNING = "NVDA is not running now, so the SAPI 5 voice is used."
 JAWS_NOT_RUNNING = "JAWS is not running now, so the SAPI 5 voice is used."
 NEITHER_RUNNING = "NVDA and JAWS are not running now, so the SAPI 5 voice is used."
+# SZ.4 (D-109, a player's e-mail of 2026-10-22: "screen reader is not detected automatically ... it should say you are running NVDA or JAWS, do you
+# want to use this voice?"): asked once, after the welcome, when a screen reader runs and the player has not said how the game speaks
+SCREEN_READER_QUESTION = " You are running %s. Do you want the game to speak through it? "
+SCREEN_READER_YES = " The game speaks through %s. F9, Speech settings, changes how the game speaks. "
+SCREEN_READER_NO = " The game uses its own Windows voices. F9, Speech settings, changes how the game speaks. "
+SCREEN_READER_VOICES = (" A screen reader speaks the game, so the game's own voices are not used. "
+                        "To use them, choose SAPI 5 voice only in F9, Speech settings. ")
 PITCH_NOTE = "Not every voice supports it."
 SETTINGS_HELP = (MENU_HELP + " On the voice item, Enter lets you choose another voice. "
                  "Speech pitch: " + PITCH_NOTE)

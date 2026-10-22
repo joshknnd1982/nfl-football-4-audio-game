@@ -182,7 +182,9 @@ def test_the_computer_declares_by_its_rule_and_says_so_when_the_kick_begins(tmp_
     script(rig, draws)
     rig.rules.onside_kick(s)
     check(rig, draws)
-    assert texts(rig)[:2] == [" the Jets will try an onside kick. ", " the Jets line up for an onside kick. "]   # ... the kick does
+    said = texts(rig)                                                  # ... the kick does; SZ.6: the declaration is the line-up, said once
+    assert said[0] == " the Jets will try an onside kick. " and "hands team" in said[1]
+    assert " the Jets line up for an onside kick. " not in said
 
 
 def test_the_declaration_is_in_the_replay_list_that_f2_speaks(tmp_path):
@@ -193,7 +195,7 @@ def test_the_declaration_is_in_the_replay_list_that_f2_speaks(tmp_path):
     draws = kick_draws(distance=10).below(3, 0)
     script(rig, draws)
     step()
-    assert rig.game.replay[:2] == [" the Jets will try an onside kick. ", " the Jets line up for an onside kick. "]
+    assert rig.game.replay[0] == " the Jets will try an onside kick. " and "hands team" in rig.game.replay[1]       # SZ.6: not said twice
 
 
 def test_a_kick_made_again_does_not_declare_again(tmp_path):

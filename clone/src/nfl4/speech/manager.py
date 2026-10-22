@@ -11,9 +11,9 @@ speaker (the screen reader's own voice speaks everything). `rate_step` speaks on
 only SAPI 5 applies it. The rate counter vr (set_rate) reaches only SAPI 5: with NVDA or JAWS it changes only the game's
 pauses and the number it speaks (G-S4).
 
-Output modes (playbook 7.2, 7.3.1): "sapi" (nfl4's default, G-S7: the five voices are part of the game and the
-original always spoke through SAPI), "nvda" (NVDA, else SAPI 5), "jaws" (JAWS, else SAPI 5) and "auto" (NVDA if it
-runs, else JAWS if it runs, else SAPI 5). Whatever the mode, if the chosen engine is missing or fails, another one is
+Output modes (playbook 7.2, 7.3.1): "auto" (nfl4's default since SZ.4, D-109, after a player's e-mail: NVDA if it runs, else
+JAWS if it runs, else SAPI 5; the program asks once whether to speak through the screen reader it found), "sapi" (G-S7: the
+five voices of the game, as the original always spoke), "nvda" (NVDA, else SAPI 5) and "jaws" (JAWS, else SAPI 5). Whatever the mode, if the chosen engine is missing or fails, another one is
 used, so the game is never silent and never crashes; every engine call is guarded here (fixesforgames B-X2).
 """
 from __future__ import annotations
@@ -231,6 +231,11 @@ class SpeechManager:
                 self.sapi.on_voice_trial = arm
             if hasattr(self.sapi, "on_voice_proven"):
                 self.sapi.on_voice_proven = clear
+
+    def screen_reader_speaks(self) -> bool:
+        """NVDA or JAWS, not SAPI 5, would speak the next text: the game's own voices are not used then (SZ.4, D-109)."""
+        engine = self.active_engine()
+        return engine is not None and not getattr(engine, "takes_roles", False)
 
     def nvda_running(self) -> bool:
         try:

@@ -41,7 +41,7 @@ os.makedirs(scratch, exist_ok=True)
 with open(os.path.join(scratch, "settings.txt"), "w", encoding="utf-8") as handle:
     handle.write("# NFL Football 4 settings, format 1\n" + "".join(f"volume_{role} = 0\n" for role in (
         "announcer", "own_quarterback", "own_punter", "opponent_quarterback", "opponent_punter")) +
-        f"sound_volume = {SOUND_VOLUME}\nspeech_output = {OUTPUT}\n")
+        f"sound_volume = {SOUND_VOLUME}\nspeech_output = {OUTPUT}\nspeech_output_chosen = yes\n")      # SZ.4: no screen reader question in the smoke run
 results = []
 
 

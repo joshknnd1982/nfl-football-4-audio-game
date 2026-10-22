@@ -34,7 +34,7 @@ from typing import Mapping
 
 from ..game.banter import NAME_LIST_SIZE, play_line
 from ..game.banter_markup import NameRef, OneOf, Speak, Text, choice_sizes, parse_markup, to_markup
-from . import nx_texts
+from . import commentators, nx_texts
 from .state import RECENT_REMARKS
 
 log = logging.getLogger("nfl4.extras")
@@ -68,6 +68,20 @@ for _pool, _names in (("CKO", ("<team>", "<opponent>", "<coach>", "<quarterback>
                       ("CFT", ("<situation>", "<team>", "<opponent>")), ("CTT", ("<situation>", "<team>", "<opponent>")),
                       ("CBO", ("<situation>", "<team>", "<opponent>"))):
     PLACEHOLDERS[_pool] = _names
+# SZ.1 (D-106): <commentator> is the color commentator's name (F9, Rules, Commentator) and fits every pool; the default lines that said Ghip say it
+for _pool in PLACEHOLDERS:
+    PLACEHOLDERS[_pool] = tuple(PLACEHOLDERS[_pool]) + ("<commentator>",)
+# The wording the 0.10.0 files carry for the default lines that were reworded in SZ.1 (the others only had "Ghip" where "<commentator>" is now):
+# a line of the player's file that is still one of these is the unchanged default and follows the commentator's name like the new one.
+LEGACY_MARKUP = {
+    "BN42": "Ghip is looking very thoughtful over there. Either he is studying the game or he is wondering what is in the lunch bag.",
+    "BN43": "Ghip still gets that gleam in his eye when the crowd gets loud. Once a player, always a player.",
+    "BN82": "Ghip is nodding over there like he has seen it all before. Of course he has, he is practically older than the goalposts.",
+    "BN83": "Ghip, you used to play this game, and now you sit there making it look easy. I admire the nerve, my friend.",
+    "BN123": "Ghip, you played this game once. Tell me honestly, did you ever really enjoy the film study?",
+    "BN124": "Ghip is sitting very quietly over there. Either he is thinking deeply, or he is hoping nobody asks him a question.",
+    "ON03": "the hands team is on the field.",             # SZ.6: it repeated the sentence of the kick (NXO-03) that came just before it
+}
 ID_PATTERN = re.compile(r"([A-Z]{2,3})(\d{1,4})", re.IGNORECASE)
 MAX_NUMBER = 9999
 _PLACEHOLDER = re.compile(r"<[^<>]{1,30}>")
@@ -142,6 +156,26 @@ def _texts_of(pieces: tuple) -> list[str]:
     return out
 
 
+def legacy_markup(key: str) -> str | None:
+    """What a file of version 0.10.0 holds for an unchanged default line that now says <commentator>: the line with Ghip in its place, or
+    the old wording of a line that was reworded (LEGACY_MARKUP). None for a line that never said Ghip."""
+    if key in LEGACY_MARKUP:
+        return LEGACY_MARKUP[key]
+    original = DEFAULT_MARKUP.get(key)
+    if original is not None and "<commentator>" in original:
+        return original.replace("<commentator>", "Ghip")
+    return None
+
+
+def commentator_of(game) -> str:
+    """The color commentator's name for this game: the broadcast of the game's rules knows it (extras/broadcast.py); Ghip in a rig without."""
+    for rules in (getattr(getattr(game, "play_engine", None), "rules", None), getattr(game, "rules", None)):    # the game being played first
+        name = getattr(getattr(rules, "broadcast", None), "commentator", None)
+        if name:
+            return name
+    return commentators.DEFAULT
+
+
 def build_pools(overrides: Mapping[str, str | None], problems) -> RemarkPools:
     """The pools for the player's entries: `overrides` maps a canonical ID (TO03) to the markup, or to None for `off`.
     `problems` gets the plain-word problems (data.customlists.Problems): a bad line keeps the default (or is left out when it
@@ -154,8 +188,8 @@ def build_pools(overrides: Mapping[str, str | None], problems) -> RemarkPools:
             lines.pop(key, None)
             continue
         original = DEFAULT_MARKUP.get(key)
-        if original is not None and value == original:
-            continue                                            # the default, unchanged: its exact spaces stay
+        if original is not None and (value == original or value == legacy_markup(key)):
+            continue                                            # the default, unchanged: its exact spaces stay (a 0.10.0 file's too, SZ.1)
         parsed = parse_markup(value)
         for reason in parsed.problems:
             problems.add(key, reason)
@@ -180,6 +214,11 @@ def _fill(text: str, values: Mapping[str, str]) -> str:
     for placeholder, value in values.items():
         text = text.replace(placeholder, value)
     return text
+
+
+def filled(pieces: tuple, values: Mapping[str, str]) -> tuple:
+    """The pieces with the placeholders replaced in every text (the radio banter's <commentator>, SZ.1)."""
+    return _filled(pieces, values)
 
 
 def _filled(pieces: tuple, values: Mapping[str, str]) -> tuple:
@@ -247,7 +286,7 @@ def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=No
         names = state.banter_names
         index = rnd(NAME_LIST_SIZE)
         name = names[index - 1] if index <= len(names) else ""
-    pieces = _filled(remark.pieces, values)
+    pieces = _filled(remark.pieces, {"<commentator>": commentator_of(game), **values})
     choices = [rnd(size) for size in choice_sizes(pieces)]
     play_line(game, pieces, name, state.quarterbacks.get(2, ""), choices, say)
     return remark
@@ -274,14 +313,15 @@ NOTES = (
     "A line has at most 500 characters and 20 parts. The F8 key switches all comments off, these too, except the QB lines:",
     "they are the play by play of a run and stay on; if you switch every QB line off, the original five are used.",
     "BN are the announcer's radio banter, 142 lines that the N. F. L. rules use instead of the jokes of the original (banter.txt keeps the",
-    "original's lines for the Classic rules). They fit any moment, so they have no <...> words. ASK are the announcer's questions to Ghip.",
-    "The other new pools are Ghip's, the color commentator, said in his own voice: CKO before the opening kick off, CBG after a gain of 20",
+    "original's lines for the Classic rules). They fit any moment, so they have few <...> words. ASK are the announcer's questions to the color",
+    "commentator, who is called Ghip until you choose another name in F9, Rules, Commentator. <commentator> is that name, in every pool.",
+    "The other new pools are the color commentator's, said in a voice of their own: CKO before the opening kick off, CBG after a gain of 20",
     "yards or more, CSK after a sack, CTV after a turn over, CTD after a touch down, CFG after a field goal, CFM after a missed kick, CTC and",
     "CTS after a third down made or stopped, CFD when a team goes for it on fourth down, CRZ inside the twenty, CPN after a penalty, CTM at the",
     "two minute warning, CQE at the end of the first and third quarter, CHT at half time, CFN and CFT at the end (a win, a tie), CTT in a",
     "close fourth quarter and CBO in a game that is decided. In them <team> is the team the line is about, <opponent> the other team,",
     "<quarterback> that team's quarterback, <yards> the gain, <situation> a whole clause with the score (the Bengals lead the Jets 17 to 10),",
-    "<quarter> the quarter and <coach> your name; each pool says which of them it has. F9, Rules, Broadcast switches Ghip off.",
+    "<quarter> the quarter and <coach> your name; each pool says which of them it has. F9, Rules, Broadcast switches the commentator off.",
 )
 
 

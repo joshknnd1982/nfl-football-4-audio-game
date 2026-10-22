@@ -29,6 +29,7 @@ def guide_text() -> str:
     names = {"back": "Back", "more": "More Plays", "favourites": "Favourites", "again": "Again", "find": "Find a Play by Name",
              "settings": "Formation and Tempo", "timeout": "Time Out", "challenge": "Challenge the Ruling", "save": "Save Game"}
     out += ["- **%s**: %s" % (names[key], D.text(row)) for key, row in D.WORD_ROWS.items()]
+    out.append("- **More Plays (on defense)**: " + D.text(D.DEFENSE_MORE_ROW))
     out += ["", "## The groups of a playbook menu", "", "With a playbook of the N. F. L. rules, the offense menu starts with these groups; Enter opens one "
             "and Backspace or Left goes back.", ""]
     out += ["- **%s**: %s" % (X.text("NXB-%02d" % n).strip(), D.text(row)) for n, row in D.PLAYBOOK_GROUP_ROWS.items()]

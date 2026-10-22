@@ -353,6 +353,11 @@ class HotKeys:
         g = "112", the settings saved (footbal0.dat) and GetSexOf (0x4287a9 to 0x428e38). With fewer than two voices
         there is nothing to choose: the original returned at once (0x423a30, Q59); the clone hands F1 back."""
         g, options = self.g, self.options
+        if getattr(g.speech, "screen_reader_speaks", lambda: False)():
+            log.info("F12: a screen reader speaks the game, the game's own voices are not asked for")
+            g.say(words.SCREEN_READER_VOICES)            # SZ.4 (D-109): the pickers would play their samples in the screen reader's one voice
+            self._hand_back()
+            return
         from .voice_choice import choose_role_voice, voices_or_none
         voices = voices_or_none(options.voice_catalog)
         if voices is None or len(voices) < 2:

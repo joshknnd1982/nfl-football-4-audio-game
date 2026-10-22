@@ -62,7 +62,7 @@ def test_no_radio_banter_line_is_one_of_the_originals():
     banter = {X.TEXTS[r.id].strip().lower() for r in RM.DEFAULT_POOLS.lines("BN")}
     assert not (original & banter)
     # the radio lines are generic: no placeholder, no sound, no name of a team or a person of the game
-    assert all("<" not in X.TEXTS[r.id] and "[" not in X.TEXTS[r.id] for r in RM.DEFAULT_POOLS.lines("BN"))
+    assert all(X.TEXTS[r.id].replace("<commentator>", "") .count("<") == 0 and "[" not in X.TEXTS[r.id] for r in RM.DEFAULT_POOLS.lines("BN"))     # SZ.1: only the commentator's name
     assert not any("Kitchen" in X.TEXTS[r.id] or "Jim" in X.TEXTS[r.id] for r in RM.DEFAULT_POOLS.lines("BN"))
 
 
@@ -199,7 +199,7 @@ def test_the_intro_of_ghip_is_said_once_per_program_run_by_the_announcer(tmp_pat
     rig, engine, said, result = whole_game(tmp_path, 25, True)
     assert rig.game.ghip_introduced is True
     spoken = [t for t, role, step in rig.said]
-    assert spoken.count(X.TEXTS["NXB-B01"]) == 1
+    assert spoken.count(X.text("NXB-B01", commentator="Ghip")) == 1                 # SZ.1: the name is filled in
 
 
 def test_a_players_own_line_and_off_for_ghips_pools(tmp_path):
@@ -207,7 +207,7 @@ def test_a_players_own_line_and_off_for_ghips_pools(tmp_path):
     pools = RM.build_pools({"CTD01": None, "CTD11": "<team> score, says <coach>", "CTD12": "oops <nothing>"}, problems)
     assert [r.id for r in pools.lines("CTD")][0] == "CTD02" and pools.lines("CTD")[-1].id == "CTD12"
     assert [key for key, _ in problems.items] == ["CTD11", "CTD12"]          # <coach> is not in the CTD pool, nor is <nothing>: spoken as written
-    assert RM.PLACEHOLDERS["CTD"] == ("<team>", "<opponent>", "<situation>")
+    assert RM.PLACEHOLDERS["CTD"] == ("<team>", "<opponent>", "<situation>", "<commentator>")      # SZ.1: the name fits every pool
 
 
 # ----- the voice and the settings -----
@@ -333,5 +333,5 @@ def test_f11_asks_for_ghip_after_the_five_speakers_only_with_the_nfl_rules_and_t
 
 def test_ghips_name_and_the_originals_names_stay_apart():
     from nfl4.speech.roles import EXTRA_NAMES, F11_NAMES, F12_NAMES, spoken_name
-    assert set(F11_NAMES) == set(F12_NAMES) == set(ROLES) and EXTRA_NAMES == {COLOR: "Ghip, the color commentator", "referee": "the referee"}
-    assert spoken_name(COLOR) == "Ghip, the color commentator" and spoken_name(ANNOUNCER) == F11_NAMES[ANNOUNCER]
+    assert set(F11_NAMES) == set(F12_NAMES) == set(ROLES) and EXTRA_NAMES == {COLOR: "the color commentator", "referee": "the referee"}
+    assert spoken_name(COLOR) == "the color commentator" and spoken_name(ANNOUNCER) == F11_NAMES[ANNOUNCER]       # SZ.1: the name is a setting

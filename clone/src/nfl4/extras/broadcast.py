@@ -26,6 +26,7 @@ from ..game.banter_pool import Line
 from ..game.gamestate import other
 from ..game.rnd import GameRandom
 from ..speech.roles import ANNOUNCER, COLOR, EXTRA_ROLES
+from . import commentators
 from . import nx_texts as X
 from . import remarks
 
@@ -61,10 +62,11 @@ class Facts:
 
 
 class Broadcast:
-    def __init__(self, rules, radio_banter: bool = False, ghip: bool = False):
+    def __init__(self, rules, radio_banter: bool = False, ghip: bool = False, commentator: str = commentators.DEFAULT):
         self.rules = rules
         self.radio_banter = bool(radio_banter)      # the pool BN replaces the original's banter (the N. F. L. rules from the settings)
         self.ghip = bool(ghip)                      # Ghip and the announcer's questions (F9, Rules, Broadcast)
+        self.commentator = commentators.clean(commentator) or commentators.DEFAULT     # SZ.1: his name (F9, Rules, Commentator); Ghip by default
         self.game = None
         self.rnd: GameRandom | None = None
         self.facts: Facts | None = None
@@ -101,7 +103,8 @@ class Broadcast:
         lines = pools.lines("BN")
         if lines is not self._banter_source:
             self._banter_source = lines
-            self._banter_cache = tuple(Line(r.number, r.pieces, r.markup, r.builtin) for r in lines)
+            values = {"<commentator>": self.commentator}           # SZ.1: the banter that turns to the commentator says his name
+            self._banter_cache = tuple(Line(r.number, remarks.filled(r.pieces, values), r.markup, r.builtin) for r in lines)
         return self._banter_cache
 
     # ----- what the engine tells -----
@@ -120,7 +123,7 @@ class Broadcast:
         self._own_voice()
         if not getattr(g, "ghip_introduced", False):
             g.ghip_introduced = True
-            g.say5(X.text("NXB-B01"))
+            g.say5(X.text("NXB-B01", commentator=self.commentator))
         self._say(state, "CKO", self._values(state, 1), ask=False)
 
     def _own_voice(self) -> None:
@@ -132,6 +135,8 @@ class Broadcast:
             options = getattr(self.game, "options", None)
             if options is None or all(options.voice(role) for role in EXTRA_ROLES):
                 return
+            if getattr(getattr(self.game, "speech", None), "screen_reader_speaks", lambda: False)():
+                return                                   # SZ.4: a screen reader's one voice speaks them; no voice list is read, none is saved
             catalog = getattr(options, "voice_catalog", None)
             if catalog is None:
                 return
@@ -286,7 +291,7 @@ class Broadcast:
         if said is not None:
             self.since = 0
             self.spoken += 1
-            log.info("broadcast: Ghip says %s (%s) after %d plays", said.id, pool, getattr(x, "plays", 0))
+            log.info("broadcast: the commentator (%s) says %s (%s) after %d plays", self.commentator, said.id, pool, getattr(x, "plays", 0))
 
     @staticmethod
     def _final_clause(state) -> str:

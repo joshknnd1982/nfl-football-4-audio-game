@@ -16,7 +16,9 @@ SOUND_LEVEL_MIN, SOUND_LEVEL_MAX = -5000, 0     # wavol, hundredths of a decibel
 
 @dataclass
 class SpeechSettings:
-    mode: str = "sapi"           # "sapi" (G-S7: the five voices are part of the game), "nvda", "jaws", "auto"
+    mode: str = "auto"           # "auto" (since SZ.4, D-109: NVDA or JAWS when one runs, else the five SAPI voices), "sapi", "nvda", "jaws"
+    mode_chosen: bool = False    # the player said how the game speaks (the question at the start when a screen reader runs, or F9, Speech settings);
+    #                              a file without it that says sapi, the old default, becomes auto once (a player's e-mail, 2026-10-22)
     voices: dict[str, str | None] = field(default_factory=lambda: {role: None for role in ALL_ROLES})
     # None = the first voice in SAPI's list (the original's voice 0, GAME_SPEC 3 step 4)
     volumes: dict[str, int] = field(default_factory=lambda: {role: DEFAULT_VOLUME for role in ALL_ROLES})
@@ -43,6 +45,8 @@ class GameSettings:
     nx_defense_playbook: str = "team"      # and the defense playbook
     nx_stadium: bool = True      # the stadium sounds of the N. F. L. rules: the crowd, the hits, the chain (SY.2)
     nx_broadcast: bool = True    # the radio broadcast of the N. F. L. rules: the announcer's radio banter and Ghip, the color commentator (SY.1, rule 0.27)
+    nx_menu_hints: int = 0       # how many program runs gave the hint of the play menus (where Right and M are); 3 or more: no more (SZ.5)
+    nx_commentator: str = "Ghip"  # the color commentator's name (SZ.1, D-106): Ghip, a researched name or one the player typed
     nx_playbook_chosen: bool = False       # the player chose a playbook himself (a file from before SX.10e never did: its Classic, the old
     #                                        default, becomes the team's once)
     # the Franchise (SX.8a, NFL_FRANCHISE_DESIGN 10.5): nfl4 only; the Rules menu's reset leaves them alone

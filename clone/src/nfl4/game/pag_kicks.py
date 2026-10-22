@@ -49,8 +49,10 @@ class KickSteps:
         g.empty_replay()
         g.log_print("")
         g.ptf = 1
-        g.say4(" " + self.kicker(s.wisoff, 1) + P.FG_IN)
-        g.say4(" " + self.kicker(s.wisoff, 2) + P.WILL_HOLD)
+        if not self.setup_told("field goal"):                  # SZ.6: a kick withdrawn by a time out and called again is not set up twice
+            g.say4(" " + self.kicker(s.wisoff, 1) + P.FG_IN)
+            g.say4(" " + self.kicker(s.wisoff, 2) + P.WILL_HOLD)
+        self.setup_heard("field goal")
         self.rady(0x442081)
         self.kicksnap()
         snd.play_noise()

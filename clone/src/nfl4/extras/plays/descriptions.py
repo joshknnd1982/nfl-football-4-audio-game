@@ -21,6 +21,7 @@ OFFENSE_ITEM_ROWS = {n: "NXB-E%02d" % n for n in range(1, 8)}      # Line Plunge
 DEFENSE_ITEM_ROWS = {n: "NXB-E%02d" % (10 + n) for n in range(1, 7)}    # Goal Line ... Long Pass
 WORD_ROWS = {"back": "NXB-E17", "more": "NXB-E18", "favourites": "NXB-E19", "again": "NXB-E20", "find": "NXB-E21", "settings": "NXB-E22",
              "timeout": "NXB-E23", "challenge": "NXB-E24", menus.SAVE: "NXB-E25"}
+DEFENSE_MORE_ROW = "NXB-G09"
 PLAYBOOK_GROUP_ROWS = {n: "NXB-E%02d" % (26 + n) for n in range(1, 8)}        # the groups of SX.7's playbook menu (NXB-01 to NXB-07)
 SETTING_NAMES = ("formation", "personnel", "motion", "side", "tempo", "protection", "defense_personnel", "coverage_shade")
 SETTING_ROWS = {name: "NXB-G%02d" % n for n, name in enumerate(SETTING_NAMES, start=1)}
@@ -82,6 +83,8 @@ def menu_item_row(side: str, action: tuple, fourth_down_kick: bool = False) -> s
         return OFFENSE_ITEM_ROWS.get(value)
     if kind == "open":
         return LIST_ROWS.get(value)
+    if kind == "more" and side == "D":
+        return DEFENSE_MORE_ROW                      # SZ.5: on defense More Plays holds every list of calls
     if kind in ("more", "favourites", "again", "find", "back", "settings"):
         return WORD_ROWS[kind]
     if kind == "setting":
@@ -92,7 +95,7 @@ def menu_item_row(side: str, action: tuple, fourth_down_kick: bool = False) -> s
 def all_rows() -> list[str]:
     """Every description row there is, in the order of the guide: the items, the lists with their plays, the settings."""
     rows = [OFFENSE_ITEM_ROWS[n] for n in sorted(OFFENSE_ITEM_ROWS)] + [DEFENSE_ITEM_ROWS[n] for n in sorted(DEFENSE_ITEM_ROWS)]
-    rows += list(WORD_ROWS.values()) + list(PLAYBOOK_GROUP_ROWS.values()) + list(LIST_ROWS.values())
+    rows += list(WORD_ROWS.values()) + [DEFENSE_MORE_ROW] + list(PLAYBOOK_GROUP_ROWS.values()) + list(LIST_ROWS.values())
     rows += [play_row(c.id) for c in C.CATALOG] + list(SETTING_ROWS.values()) + list(F7_WORD_ROWS)
     return rows
 

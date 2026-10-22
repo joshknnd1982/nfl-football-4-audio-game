@@ -11,5 +11,5 @@ Packages:
   data    per-user paths, settings, logging, the voice crash guard, the process's start and end
 """
 
-VERSION = "0.10.0"         # S8.2: the second test installer for the owner (the broadcast, the stadium, the referee, R and L); 1.0.0 is the first release (P11)
+VERSION = "0.11.0"         # S8.2: the third test installer for the owner (the commentator's name, the player's own stadium sounds, the screen reader question, the defense's More Plays, no doubled sentences); 1.0.0 is the first release (P11)
 TITLE = "NFL Football 4"
