@@ -66,8 +66,9 @@ def test_a_key_typed_while_the_standings_are_spoken_ends_them_and_asks_for_no_se
     spoken = said(rig)
     assert spoken.count(HEADING % 1) == 1 and rig.keys.answers == []
     assert spoken.index(HEADING % 1) < spoken.index(WEEK % 2)       # the cut standings were followed by week 2, no key wait
-    # getkeys: the menu once, then week 2's four, no key wait for the standings; the speech waits: the standings and the exit's
-    assert rig.keys.waits == 1 + 4 and rig.keys.speech_waits == 2
+    # getkeys: the menu once, then week 2's four, no key wait for the standings; the speech waits: the standings only (the
+    # exit's closing sentence is gone, D-100, rule 0.26)
+    assert rig.keys.waits == 1 + 4 and rig.keys.speech_waits == 1
 
 
 def test_silent_standings_after_week_16_wait_for_no_key_q53_not_reproduced(tmp_path):
@@ -117,7 +118,7 @@ def test_save_game_ends_the_program_with_no_season_engine_and_no_standings(tmp_p
     rig.run()
     assert rig.pog_calls == [] and rig.game.season.gtp == 1
     spoken = said(rig)
-    assert not any(t.startswith(" Standings after") for t in spoken) and spoken[-2] == THANK_YOU
+    assert not any(t.startswith(" Standings after") for t in spoken) and spoken[-1] == THANK_YOU
     assert "beds stop" not in spoken_or_marked(rig)                  # pag does not stop the beds on Save Game: the exit does
     assert rig.game.program.ending == "saved"
 

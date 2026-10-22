@@ -11,5 +11,5 @@ Packages:
   data    per-user paths, settings, logging, the voice crash guard, the process's start and end
 """
 
-VERSION = "0.1.0"          # P7 S7.1: the skeleton; 1.0.0 is the first release (P11)
+VERSION = "0.9.0"          # S8.2: the first test installer for the owner; 1.0.0 is the first release (P11)
 TITLE = "NFL Football 4"

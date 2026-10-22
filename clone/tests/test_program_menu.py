@@ -123,7 +123,7 @@ def test_the_menu_says_the_select_line_then_only_the_current_choice(tmp_path):
 def test_up_from_the_first_choice_wraps_to_the_exit_and_down_from_the_last_to_the_first(tmp_path):
     rig = program_rig(tmp_path, [UP, DOWN, UP, ENTER], preset=preset_season()).run()
     assert menu_speech(rig)[2:] == [CHOICE[1], CHOICE[4], CHOICE[1], CHOICE[4]]
-    assert rig.keys.answers == [] and said(rig)[-2].startswith(" Thank you")
+    assert rig.keys.answers == [] and said(rig)[-1].startswith(" Thank you")
 
 
 @pytest.mark.parametrize("key, choice", [("1", 1), ("2", 2), ("3", 3), ("4", 4), (97, 1), (98, 2), (99, 3), (100, 4)])

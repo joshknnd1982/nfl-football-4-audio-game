@@ -1,0 +1,1 @@
+﻿4FA10DCC597C3197578417B7B2407B8E3D9A5356D354A356EAB58B4A6DA77CA3  nfl4-setup-0.9.0.exe (a TEST installer built 2026-10-22, S8.2; verify_installer.py ALL PASS, report work\s82\installer_verify_report.txt)

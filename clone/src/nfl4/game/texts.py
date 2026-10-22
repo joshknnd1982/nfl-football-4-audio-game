@@ -20,7 +20,7 @@ NO_VOICES = "Sorry but I couldn't find any voices to use"                       
 CONTACT = "Please contact Jim Kitchen"                                             # 2569, never shown by the clone (D-008)
 THANK_YOU_ORIGINAL = " Thank you for playing N. F. L. football version 4 By Jim Kitchen "   # 2567, the original's exit text
 THANK_YOU = " Thank you for playing N. F. L. football by Josh Kennedy, inspired by Jim Kitchen. "   # CLONE (owner 2026-10-20, S8.2, CLAUDE.md 0.18): the owner's exact words; the exit names the clone's author, never the original author as the maker
-NO_GAME_MENU = "Sorry, but I could not find the Kitchensinc game menu program."    # 2572, the exit (S7.4)
+NO_GAME_MENU_ORIGINAL = "Sorry, but I could not find the Kitchensinc game menu program."    # 2572, the original's exit; never said (D-100)
 
 # Clone additions (CLONE in the conformance tests)
 REPOSITORY = "https://github.com/joshknnd1982/nfl-football-4-audio-game"            # D-007 repository name, D-008

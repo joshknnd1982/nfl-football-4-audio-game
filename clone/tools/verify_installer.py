@@ -5,7 +5,7 @@ current-user mode, and checks: files and registry entry, the installed exe start
 survive an update over an older version (built here as 0.9.0), stale library files of the old version are removed,
 a player's own file in assets\\sounds is kept, silent uninstall removes the program and keeps the settings, and
 uninstall with /DELETEUSERDATA=1 removes them. The delete test touches the REAL per-user folder
-(%APPDATA%\\Kitchensinc Revival\\Brain), so that folder is copied away first and put back at the end.
+(%APPDATA%\\Kitchensinc Revival\\NFL Football 4), so that folder is copied away first and put back at the end.
 Usage: python verify_installer.py <report file>     (any Python 3; run from anywhere)
 """
 import os
@@ -30,7 +30,7 @@ APP = os.path.join(SCRATCH, "app")
 OLD_SETUP = os.path.join(SCRATCH, "nfl4-setup-0.9.0.exe")
 DATA = os.path.join(os.environ["APPDATA"], "Kitchensinc Revival")
 DATA_BACKUP = os.path.join(SCRATCH, "appdata-backup")
-KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\{6F2B8C14-3A7D-4E95-B1C0-5D9E47A82F36}_is1"
+KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\{BB3ABD62-0DFC-4990-955C-904410D53800}_is1"
 lines = []
 failed = []
 
@@ -151,14 +151,15 @@ def main():
         check(f"registry says {VERSION}", registry_version() == VERSION, registry_version())
         check("stale library file of the old version is removed", not os.path.exists(stale))
         check("a player's own file in assets\\sounds is kept", os.path.exists(mine))
-        check("42 shipped wavs and the license are installed",
-              len([f for f in os.listdir(os.path.join(APP, "assets", "sounds")) if f.startswith("brain")]) == 42
+        check("26 shipped wavs, the names data and the license are installed",
+              len([f for f in os.listdir(os.path.join(APP, "assets", "sounds")) if f.startswith("foot")]) == 26
+              and all(os.path.exists(os.path.join(APP, "assets", "data", n)) for n in ("rosters.txt", "coaches.txt", "surnames.txt", "respellings.txt"))
               and os.path.exists(os.path.join(APP, "LICENSE.txt")) and os.path.exists(os.path.join(APP, "THIRD_PARTY_NOTICES.txt")))
         check("README.txt and uninstaller installed", os.path.exists(os.path.join(APP, "README.txt")) and os.path.exists(os.path.join(APP, "unins000.exe")))
         bits = "64-bit" if os.path.exists(os.path.join(APP, "_internal", "nfl4", "speech", "nvda_client", "x64")) else "32-bit"
         check("this 64-bit Windows got the 64-bit build", bits == "64-bit", bits)
-        start_menu = os.path.join(os.environ["APPDATA"], "Microsoft", "Windows", "Start Menu", "Programs", "My Brain")
-        check("Start menu entries made", os.path.exists(os.path.join(start_menu, "My Brain.lnk")) and os.path.exists(os.path.join(start_menu, "Uninstall My Brain.lnk")))
+        start_menu = os.path.join(os.environ["APPDATA"], "Microsoft", "Windows", "Start Menu", "Programs", "NFL Football 4")
+        check("Start menu entries made", os.path.exists(os.path.join(start_menu, "NFL Football 4.lnk")) and os.path.exists(os.path.join(start_menu, "Uninstall NFL Football 4.lnk")))
 
         # 3. the installed exe runs, with a fresh empty data folder: files are created
         fresh = os.path.join(SCRATCH, "fresh-data")
@@ -169,13 +170,13 @@ def main():
               os.path.exists(os.path.join(fresh, "sounds", "sounds.txt")) and bool(logfiles.launch_files(fresh)))
         log_text = logfiles.launch_text(fresh)
         check("no warnings or errors in the installed exe's log", " ERROR " not in log_text and "Traceback" not in log_text)
-        check(f"installed exe says version {VERSION}", f"Brain clone {VERSION} starting" in log_text)
+        check(f"installed exe says version {VERSION}", f"NFL Football 4 clone {VERSION} starting" in log_text)
 
         # 4. silent uninstall keeps settings
-        marker = os.path.join(DATA, "Brain", "settings.txt")
+        marker = os.path.join(DATA, "NFL Football 4", "settings.txt")
         os.makedirs(os.path.dirname(marker), exist_ok=True)
         if not os.path.exists(marker):
-            open(marker, "w").write("# Brain settings, format 1\n")
+            open(marker, "w").write("# NFL Football 4 settings, format 1\n")
         before = count(DATA)
         result = uninstall()
         wait_for(lambda: registry_version() is None and not os.path.exists(APP))
@@ -215,9 +216,9 @@ def main():
         # 7. reinstall, uninstall with /DELETEUSERDATA=1 deletes the settings folder
         install(SETUP, os.path.join(SCRATCH, "install_final.log"))
         result = uninstall(["/DELETEUSERDATA=1"])
-        wait_for(lambda: registry_version() is None and not os.path.isdir(os.path.join(DATA, "Brain")))
+        wait_for(lambda: registry_version() is None and not os.path.isdir(os.path.join(DATA, "NFL Football 4")))
         check("uninstall with /DELETEUSERDATA=1 succeeds", result.returncode == 0, result.returncode)
-        check("settings folder deleted by it", not os.path.isdir(os.path.join(DATA, "Brain")))
+        check("settings folder deleted by it", not os.path.isdir(os.path.join(DATA, "NFL Football 4")))
     finally:
         if os.path.exists(os.path.join(APP, "unins000.exe")):
             uninstall()

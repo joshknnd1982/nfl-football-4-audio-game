@@ -9,8 +9,9 @@ texts, sounds and pauses, and the address of its lifted line beside it. What the
   the week loop begins (G-A5, B-A12); Save Game still ends the program (the saved game is loaded at the next start);
 * a season that is over (gtp = 0) deletes its files, says so and runs the new-season set-up (G-F3, D-029 item 4);
 * the title replaces the original's spoken title and is said at every launch, once (rule 0.5.1, G-F1);
-* the exit has only the original's "game menu not found" branch (D-006, G-F6, SOUND_DESIGN 4): foot0, the thank-you, then
-  the sounds stop, two beeps 0.1 s apart and the closing sentence, which any key cuts short (B-X13);
+* the exit is foot0, the thank-you, then the sounds stop and the program ends; the original's "game menu not found" branch
+  (two beeps and a closing sentence, D-006, G-F6, B-X13) is gone (owner, S8.2, D-100, rule 0.26: no game says a menu program
+  is missing);
 * the voice choice of the first start is asked only when SAPI 5 speaks (D-022 item 4); the files are a `ProgramStore` (S7.5).
 
 Not here: pag (game/pag.py), pog and finplay17 (game/season_engine.py), the typed prompts (game/prompts.py), the hot keys
@@ -34,8 +35,6 @@ log = logging.getLogger("nfl4.game")
 
 KEY_ENTER, KEY_UP, KEY_DOWN, KEY_F1 = "13", "38", "40", "112"
 INTRO_PAUSE = 0.2           # dy(0.2) before and after the F5 list of the first start (0x487d81, 0x487dea)
-BEEP_PAUSE = 0.1            # dy(0.1) after each of the two beeps (0x48a839, 0x48a88b)
-END_PAUSE = 0.2             # dy(0.2) after the closing sentence (0x48a9ce)
 MENU_CHOICES = 4
 
 
@@ -452,7 +451,7 @@ class Program:
     # ----- the exit (0x48a054 to 0x48aad2) -----
 
     def exit_program(self) -> None:
-        g, keys, sounds = self.g, self.keys, self.sounds
+        g, sounds = self.g, self.sounds
         if self.season.gtp == 0:                                # 0x48a09d: the season is over
             self.store.delete_season_files()                    # 0x48a0ec to 0x48a511
         if sounds is not None:
@@ -460,14 +459,5 @@ class Program:
         g.say(texts.THANK_YOU)                                  # 0x48a59a (waited)
         if sounds is not None:
             sounds.stop_all()                                   # 0x48a5ed to 0x48a775: the DirectSound objects are released
-        # "gamemenu.exe" is never there (D-006): the original's other branch, 0x48a80f to 0x48a9ce
-        for _beep_at, pause_at in ((0x48a80f, 0x48a839), (0x48a861, 0x48a88b)):
-            if sounds is not None:
-                sounds.exit_beep()                              # Beep (0x48a80f, 0x48a861)
-            g.dy(BEEP_PAUSE, pause_at)                          # dy(0.1) (0x48a839, 0x48a88b)
-        keys.key_handler = None                                 # no menu opens in the closing sentence: any key ends it
-        keys.clk()
-        g.say5(texts.NO_GAME_MENU)                              # 0x48a982 (the original waits; any key cuts it, B-X13)
-        keys.wait_speech(g.speech)
-        g.stopspeech()
-        g.dy(END_PAUSE, 0x48a9ce)
+        # the original's "gamemenu.exe not found" branch (two Beeps, the sentence, 0x48a80f to 0x48a9ce) is not run (D-100)
+        log.info("exit: the thank-you is said, the program ends (no menu-program sentence, D-100)")

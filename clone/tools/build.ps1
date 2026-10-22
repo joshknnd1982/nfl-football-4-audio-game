@@ -1,4 +1,4 @@
-# Build Brain (PyInstaller, onedir, windowed) for 64-bit and 32-bit. This is inspired by Jim Kitchen.
+# Build NFL Football 4 (PyInstaller, onedir, windowed) for 64-bit and 32-bit. This is inspired by Jim Kitchen.
 # Usage: powershell -ExecutionPolicy Bypass -File clone\tools\build.ps1 [-Bits "64,32"]
 # Builds from a COPY of clone\src in a scratch folder, so the build cannot see the source tree or the
 # original files (playbook 8.1: catches files that are missing from the bundle).
@@ -25,9 +25,11 @@ foreach ($b in ($Bits -split ",")) {
 
     Push-Location $root
     try {
+        # pygame._sdl2 is not excluded: the startup report lists the audio devices through it (rule 0.15; S8.2 smoke test)
         & $py -I -m PyInstaller --noconfirm --clean --windowed --onedir `
             --name nfl4 --distpath dist --workpath work --specpath spec `
             --paths src `
+            --collect-submodules nfl4 `
             --add-data "$srcCopy\nfl4\speech\nvda_client;nfl4\speech\nvda_client" `
             --hidden-import win32com.client --hidden-import pythoncom --hidden-import pywintypes `
             --hidden-import win32timezone `
@@ -36,7 +38,7 @@ foreach ($b in ($Bits -split ",")) {
             --exclude-module pygame.font --exclude-module pygame.freetype --exclude-module pygame.image `
             --exclude-module pygame.imageext --exclude-module pygame.transform --exclude-module pygame.draw `
             --exclude-module pygame.mask --exclude-module pygame.pixelarray --exclude-module pygame.pixelcopy `
-            --exclude-module pygame.scrap --exclude-module pygame._sdl2 `
+            --exclude-module pygame.scrap `
             --exclude-module pygame.surfarray --exclude-module pygame.camera --exclude-module pygame.gfxdraw `
             nfl4_entry.py
         if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed for $b-bit" }
@@ -65,7 +67,15 @@ foreach ($b in ($Bits -split ",")) {
     $sounds = Join-Path $out "assets\sounds"
     New-Item -ItemType Directory -Force $sounds | Out-Null
     Copy-Item (Join-Path $clone "assets\sounds\*") $sounds
-    Copy-Item (Join-Path $clone "README.md") (Join-Path $out "README.txt")
+    # The names data (rosters, coaches, surnames, respellings) beside the exe: the program reads assets\data (paths.program_dir).
+    Copy-Item -Recurse (Join-Path $clone "assets\data") (Join-Path $out "assets")
+    # README.txt is the installer's information page; the guides go to a docs folder (a README.md of the repository comes at P11).
+    Copy-Item (Join-Path $game "release\installer_info.txt") (Join-Path $out "README.txt")
+    $docs = Join-Path $out "docs"
+    New-Item -ItemType Directory -Force $docs | Out-Null
+    foreach ($doc in @("README_keys.md", "README_nfl_rules_and_franchise.md", "README_if_something_goes_wrong.md", "PLAYS_GUIDE.md", "CUSTOMIZE.md")) {
+        Copy-Item (Join-Path $clone $doc) $docs
+    }
     Copy-Item (Join-Path $game "LICENSE") (Join-Path $out "LICENSE.txt")
     Copy-Item (Join-Path $game "SOUNDS_NOTICE.txt") $out
     Copy-Item (Join-Path $clone "THIRD_PARTY_NOTICES.txt") $out

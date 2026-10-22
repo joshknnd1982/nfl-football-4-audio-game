@@ -1,21 +1,21 @@
-; Inno Setup 6 script: My Brain by Josh Kennedy, inspired by Jim Kitchen (Brain clone).
-; Phase 10 (playbook 8.2). Compile (from anywhere):
+; Inno Setup 6 script: NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen (nfl4 clone).
+; Phase 10 (playbook 8.2); this file is nfl4's since S8.2 (a test installer). Compile (from anywhere):
 ;   "C:\Users\joshk\AppData\Local\Programs\Inno Setup 6\ISCC.exe" "<game folder>\release\installer.iss"
-; Optional defines: /DAppVersion=1.0.3  /DBuild64=<dist\nfl4 folder>  /DBuild32=<dist\nfl4 folder>
+; Optional defines: /DAppVersion=0.9.0  /DBuild64=<dist\nfl4 folder>  /DBuild32=<dist\nfl4 folder>
 ; Run clone\tools\build.ps1 first so the build folders are fresh. Output: nfl4-setup-<version>.exe in this folder.
 ;
 ; Design decisions (DECISIONS.md, P10):
 ;  - One installer holds both builds and installs the one that fits the Windows (64-bit or 32-bit).
 ;  - Per-user install by default (no administrator rights); the player may choose all users in the first dialog.
 ;  - The program folder holds only program files. Settings, player sounds and logs live in
-;    %APPDATA%\Kitchensinc Revival\Brain; install, update and uninstall never touch them
+;    %APPDATA%\Kitchensinc Revival\NFL Football 4; install, update and uninstall never touch them
 ;    (the uninstaller asks, default keep).
 ;  - An update removes the old _internal folder first (stale library files), never assets\sounds' extras.
 ;  - Uninstall removes the WHOLE program folder: it stops a copy that is still running from that folder, deletes the
 ;    folder with retries and leaves the rest to a restart-delete (fixesforgames.md B-U1, B-U2).
 
 #ifndef AppVersion
-  #define AppVersion "1.0.3"
+  #define AppVersion "0.9.0"
 #endif
 #ifndef Build64
   #define Build64 "C:\Users\joshk\.kitchensinc-builds\nfl4\64\dist\nfl4"
@@ -26,19 +26,19 @@
 
 [Setup]
 ; Never change this GUID: it is how a newer version finds and replaces an older one.
-AppId={{6F2B8C14-3A7D-4E95-B1C0-5D9E47A82F36}
-AppName=My Brain
+AppId={{BB3ABD62-0DFC-4990-955C-904410D53800}
+AppName=NFL Football 4
 AppVersion={#AppVersion}
-AppVerName=My Brain {#AppVersion}
+AppVerName=NFL Football 4 {#AppVersion}
 AppPublisher=Josh Kennedy
 AppPublisherURL=https://github.com/joshknnd1982
 AppSupportURL=https://github.com/joshknnd1982
 AppUpdatesURL=https://github.com/joshknnd1982
 VersionInfoVersion={#AppVersion}
-VersionInfoDescription=My Brain by Josh Kennedy, inspired by Jim Kitchen (setup)
+VersionInfoDescription=NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen (setup)
 VersionInfoCopyright=Copyright (c) 2026 Josh Kennedy
-DefaultDirName={autopf}\My Brain
-DefaultGroupName=My Brain
+DefaultDirName={autopf}\NFL Football 4
+DefaultGroupName=NFL Football 4
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
@@ -50,7 +50,7 @@ Compression=lzma2/ultra64
 SolidCompression=yes
 LicenseFile=..\LICENSE
 InfoBeforeFile=installer_info.txt
-UninstallDisplayName=My Brain
+UninstallDisplayName=NFL Football 4
 UninstallDisplayIcon={app}\nfl4.exe
 CloseApplications=yes
 RestartApplications=no
@@ -74,13 +74,13 @@ Source: "{#Build32}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 [Icons]
 ; WorkingDir is a neutral folder, never the program folder: a process whose working directory is inside a folder keeps
 ; that folder locked ("folder in use") even when nothing shows in Task Manager (fixesforgames.md B-U1).
-Name: "{group}\My Brain"; Filename: "{app}\nfl4.exe"; WorkingDir: "{userdocs}"
-Name: "{group}\My Brain read me"; Filename: "{app}\README.txt"
-Name: "{group}\Uninstall My Brain"; Filename: "{uninstallexe}"; WorkingDir: "{userdocs}"
-Name: "{autodesktop}\My Brain"; Filename: "{app}\nfl4.exe"; WorkingDir: "{userdocs}"; Tasks: desktopicon
+Name: "{group}\NFL Football 4"; Filename: "{app}\nfl4.exe"; WorkingDir: "{userdocs}"
+Name: "{group}\NFL Football 4 read me"; Filename: "{app}\README.txt"
+Name: "{group}\Uninstall NFL Football 4"; Filename: "{uninstallexe}"; WorkingDir: "{userdocs}"
+Name: "{autodesktop}\NFL Football 4"; Filename: "{app}\nfl4.exe"; WorkingDir: "{userdocs}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\nfl4.exe"; Description: "Start My Brain now"; WorkingDir: "{userdocs}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+Filename: "{app}\nfl4.exe"; Description: "Start NFL Football 4 now"; WorkingDir: "{userdocs}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [UninstallDelete]
 ; The whole program folder: nothing of the program is meant to stay in it (settings, own sounds and the log are in AppData).
@@ -156,13 +156,13 @@ begin
   if CurUninstallStep <> usPostUninstall then Exit;
   RemoveFolderWithRetries(ExpandConstant('{app}'));
   Vendor := ExpandConstant('{userappdata}\Kitchensinc Revival');
-  DataDir := Vendor + '\Brain';
+  DataDir := Vendor + '\NFL Football 4';
   if not DirExists(DataDir) then Exit;
   DoDelete := WantsDeleteUserData;
   if (not DoDelete) and (not UninstallSilent) then
-    DoDelete := MsgBox('Also delete your My Brain settings, your own sounds and the log?' + #13#10 + #13#10 +
+    DoDelete := MsgBox('Also delete your NFL Football 4 settings, your own sounds and the log?' + #13#10 + #13#10 +
       'They are in ' + DataDir + #13#10 + #13#10 +
-      'Choose No to keep them (recommended if you may install My Brain again).',
+      'Choose No to keep them (recommended if you may install NFL Football 4 again).',
       mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES;
   if DoDelete then
   begin

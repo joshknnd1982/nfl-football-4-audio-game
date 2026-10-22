@@ -3,17 +3,19 @@
 Starts the exe with ITS OWN PROGRAM FOLDER as the working directory (what a double click in Explorer or an old shortcut
 does, and what used to lock the folder) and a scratch data folder, speech volume 0 and sound volume 2 percent
 (a faint sound the loopback capture can still see), types keys into its window, and checks:
-  1. it starts and speaks the title and the main prompt (log at debug level),
+  1. it starts and speaks the welcome and the first prompt (log at debug level),
   2. a sound plays: the speakers' loopback capture is louder during playback than before it,
   3. the right NVDA DLL file is in the bundle (PE machine type matches the build),
-  4. it exits cleanly (exit code 0, "Brain clone closed" in the log, no WARNING or ERROR lines), within 2 seconds of its
+  4. it exits cleanly when its window is closed (exit code 0, "NFL Football 4 clone closed" in the log, no WARNING or ERROR lines), within 2 seconds of its
      last log line (no lingering process), and then nothing holds its program folder (the folder can be renamed: fixesforgames.md B-U2),
   5. which modules the process loaded (pygame, SDL), to see the bundle is complete.
 NVDA mode is not exercised here (it would speak through the owner's screen reader).
   6. (rules 0.15 and 0.16) the debug log: the launch log begins with the startup report, which has every required item with a value or
      "n/a (reason)", the welcome sentence is spoken once (`welcome_spoken`), the LAST line of the log is `closed`, and the problem
      report (`nfl4.exe --problem-report`) makes a zip with the listed members.
-Usage: <python with soundcard, numpy, pywin32> exe_smoke.py <path to nfl4.exe> <bits 32|64> <scratch folder> [sound volume] [sapi|nvda|jaws|auto]
+The sound check listens to the intro sound (foot0), which plays while the game starts; the game is closed by its window's close button
+(WM_CLOSE), the way a player or an uninstaller closes it; no key is typed, so no game is begun.
+Usage: <python with soundcard, numpy, pywin32> exe_smoke.py <path to nfl4.exe> <bits 32|64> <scratch folder> [sound volume in dB, -34 default, -50 = a control run] [sapi|nvda|jaws|auto]
 """
 import os
 import struct
@@ -32,12 +34,14 @@ import win32gui
 import win32process
 
 exe, bits, scratch = sys.argv[1], int(sys.argv[2]), sys.argv[3]
-SOUND_VOLUME = int(sys.argv[4]) if len(sys.argv) > 4 else 2    # 0 makes a control run: no sound expected
+SOUND_VOLUME = int(sys.argv[4]) if len(sys.argv) > 4 else -34   # decibels below full (about 2 percent); -50 makes a control run: hardly any sound
 # "jaws" with JAWS not running checks the fallback to SAPI 5 inside the built exe (one expected warning)
 OUTPUT = sys.argv[5] if len(sys.argv) > 5 else "sapi"
 os.makedirs(scratch, exist_ok=True)
 with open(os.path.join(scratch, "settings.txt"), "w", encoding="utf-8") as handle:
-    handle.write(f"# Brain settings, format 1\nspeech_volume = 0\nsound_volume = {SOUND_VOLUME}\nspeech_output = {OUTPUT}\n")
+    handle.write("# NFL Football 4 settings, format 1\n" + "".join(f"volume_{role} = 0\n" for role in (
+        "announcer", "own_quarterback", "own_punter", "opponent_quarterback", "opponent_punter")) +
+        f"sound_volume = {SOUND_VOLUME}\nspeech_output = {OUTPUT}\n")
 results = []
 
 
@@ -102,29 +106,21 @@ def log_text():
     return logfiles.launch_text(scratch)
 
 
-# wait until the main prompt has been spoken (speech at volume 0 still takes its time)
+# wait until the first prompt has been spoken (speech at volume 0 still takes its time): a first start asks the kind of season
+FIRST_PROMPT = "which kind of season do you wish to play"
 for _ in range(300):
-    if "Press a number from one to nine" in log_text() or proc.poll() is not None:
+    if FIRST_PROMPT in log_text() or proc.poll() is not None:
         break
     time.sleep(0.1)
 text = log_text()
 WELCOME = "Welcome to Josh Kennedy's N. F. L. football, loosely inspired by Jim Kitchen's original games."
 check("speaks the welcome sentence once", text.count(" welcome_spoken ") == 1 and WELCOME in text)
 check("the window title is the caption", "NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen" in text)
-check("speaks the main prompt", "Press a number from one to nine" in text)
+check("speaks the first prompt", FIRST_PROMPT in text)
 time.sleep(1.5)
 
-# ----- play: 3 sounds, first panning mode, listen for 5 s, stop -----------------------------------
-key(0x33)                                  # "3"
-time.sleep(3.0)                            # panning menu speech
-key(13)                                    # Enter: the first mode
-for _ in range(100):
-    if "Press the space bar to stop" in log_text():
-        break
-    time.sleep(0.1)
-time.sleep(6.0)                            # sounds play (mixer is at 2 percent)
-mark = time.perf_counter()
-playing = [p for t, p in peaks if t > mark - 4.5]
+# ----- the intro sound (foot0) played while the game started and the welcome was said; no key is typed ---------------------
+playing = [p for t, p in peaks if t > started]
 loudest = max(playing) if playing else 0.0
 check("a sound plays (loopback)", loudest > max(baseline * 3, 0.0005),
       f"baseline peak {baseline:.5f}, peak during playback {loudest:.5f}")
@@ -140,9 +136,7 @@ try:
 except Exception as exc:  # the module list is a bonus check
     print("  module list unavailable:", exc)
 
-key(32)                                    # space: stop playback
-time.sleep(2.0)
-key(27)                                    # Escape: exit (the original speaks its goodbye first, several seconds)
+win32api.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)    # the window's close button: the program leaves at once (rule 0.10)
 escaped = time.perf_counter()
 closed_logged = None
 while proc.poll() is None and time.perf_counter() - escaped < 40:
@@ -214,6 +208,6 @@ except ImportError:
     print("SKIP Control Flow Guard check (pefile not installed in this environment)")
 sounds = os.path.join(os.path.dirname(exe), "assets", "sounds")
 count = len([f for f in os.listdir(sounds) if f.lower().endswith(".wav")]) if os.path.isdir(sounds) else 0
-check("42 wavs beside the exe", count == 42, f"{count}")
+check("26 wavs beside the exe", count == 26, f"{count}")
 print("ALL PASS" if all(results) else "SOME FAILED")
 sys.exit(0 if all(results) else 1)

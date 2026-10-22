@@ -23,7 +23,7 @@ CHUNK = 480
 THRESHOLD = 0.01     # the idle loopback level is 0.0002; JAWS peaks near 1.0
 QUIET_SECONDS = 0.6
 
-SAMPLES = [texts.TITLE_SPOKEN, texts.NO_GAME_MENU, " Hike! ", "One.", "Speech settings.",
+SAMPLES = [texts.TITLE_SPOKEN, texts.THANK_YOU, " Hike! ", "One.", "Speech settings.",
            "Voice: Microsoft David. Speech rate: 0, original.", texts.THANK_YOU]
 
 

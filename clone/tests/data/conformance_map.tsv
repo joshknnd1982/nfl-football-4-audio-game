@@ -54,7 +54,7 @@ S9.2	speech_roles_manager::pronoun_is	speakers::inrep_says	speakers::the_replay_
 S10	game_sounds::.*	audio_library::the_shipped_files_are_the_originals	audio_library::every_id_resolves	sound_pools::the_pools_are_exactly	audio_engine::the_seven_original_slots
 S11	league::.*	names::the_shipped_asset	names::a_pool_needs_exactly_1708	files_playernames::the_file_is_the_originals_layout
 S12	files_season_files::footbal1_holds	files_season_files::footbal2_is_16_records	files_season_files::footbal3_is_64_integers	files_season_files::footbal4_holds	files_season_files::footbal5_holds	files_season_files::football_gtp_is_one_integer	files_savedgame::the_values_are_in_the_originals_order	files_playernames::the_file_is_the_originals_layout	files_speechlog::.*	files_store::a_season_written_by_the_program_is_loaded_whole
-S13	program_exit::the_exit_plays_foot0_says_the_thank_you_then_beeps_twice	program_exit::exit_beeps_use_the_sound_chain
+S13	program_exit::the_exit_plays_foot0_says_the_thank_you_releases	program_exit::the_exit_has_no_menu_program_sentence
 S14	NA: the procedure index and the structure files are working files of the reverse engineering, checked by work\check_spec_s51.py (P5); they have no behavior
 
 # ----- GAME_SPEC 15: the quirks Q1 to Q62 (the class of each is in 17.5) -----
@@ -142,7 +142,7 @@ G-A5	program_game::the_crowd_beds_restart_when_the_week_loop_begins_again_g_a5	p
 G-F2	program_game::after_the_game_the_season_engine_gets_its_score	program_game::silent_standings_after_week_16
 G-F3	program_game::a_season_that_ends_in_pog_deletes_its_files	files_program::a_season_that_ends_keeps_the_names_as_previous
 G-F4	files_program::a_season_that_ends_keeps_the_names_as_previous	files_store::the_season_end_keeps_the_names_as_previous
-G-F6	program_exit::the_exit_plays_foot0_says_the_thank_you_then_beeps_twice	program_exit::exit_beeps_use_the_sound_chain
+G-F6	program_exit::the_exit_plays_foot0_says_the_thank_you_releases	program_exit::the_exit_has_no_menu_program_sentence
 G-D1	rnd::redraw_is_bounded	schedule::a_source_stuck_on_one_number	names::the_redraw_is_bounded	season_week::a_source_that_never_gives_a_free_team	playoffs::a_computer_game_ends_on_a_stuck_source
 G-D2	rnd::.*	season_frame::the_game_and_the_sounds_draw_from_the_same_generator
 G-C1	pag_games::every_game_ends_with_a_winner	pag_games::the_ball_down_and_distance	season_games::a_season_of_a_random_team	season_games::every_team_can_be_the_player	conformance_gaps::the_10000_game_and_season_property_runs
