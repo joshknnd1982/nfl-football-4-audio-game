@@ -1,7 +1,7 @@
 NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen
-This is a TEST build for the owner, not a release.
+This is a TEST build for the owner (version 0.10.0, the second), not a release.
 
-This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many free games for the blind community. He died in 2015. This game is loosely inspired by his "NFL football version 4": it is new code written from a description of how his program behaves, plays his original sound files, and adds the rules and plays of the real National Football League, the real head coaches and players of the 32 teams, time outs, penalties, replay challenges, quarterback runs, onside kicks and a Franchise mode. The exact original is still there: choose Classic in the Rules setting (F9). The sound files are included on the maintainer's own responsibility: Jim Kitchen gave Josh Kennedy permission to use his wav files, but the original email is lost. A rights holder can ask for the files to be removed and they will be.
+This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many free games for the blind community. He died in 2015. This game is loosely inspired by his "NFL football version 4": it is new code written from a description of how his program behaves, plays his original sound files, and adds the rules and plays of the real National Football League, the real head coaches and players of the 32 teams, time outs, penalties, replay challenges, quarterback runs, onside kicks and a Franchise mode. Version 0.10.0 adds a radio-style broadcast (the announcer's banter and Ghip, the color commentator, in a voice of his own), stadium sounds (a crowd, hits, the first down chain), a referee who announces over a microphone, and the choice of the receiver of a pass (R) and of the player who blitzes (L). The exact original is still there: choose Classic in the Rules setting (F9). The sound files are included on the maintainer's own responsibility: Jim Kitchen gave Josh Kennedy permission to use his wav files, but the original email is lost. A rights holder can ask for the files to be removed and they will be.
 
 The N. F. L. names, the playbook ideas and the Franchise ideas are used descriptively. The game is not endorsed by the National Football League, its teams or Electronic Arts. Madden NFL is a trademark of Electronic Arts; the game only uses football plays as ideas and copies nothing from it.
 
@@ -9,7 +9,8 @@ How to play
 - Start the game. It says "Welcome to Josh Kennedy's N. F. L. football, loosely inspired by Jim Kitchen's original games." Then it asks what to do about a saved game or season, if there is one.
 - Up and Down move in a menu, the digits and letters choose, Enter confirms, F1 repeats the prompt.
 - F5 lists the special keys, F6 explains the game, F7 gives the football words, F9 opens the added functions: speech settings, sounds, names and banter, rules and about.
-- The T key calls a time out at any moment of a game. D says what a play does.
+- The T key calls a time out at any moment of a game. D says what a play does. R in the offense menu chooses who your next pass goes to; L in the defense menu chooses who blitzes (Enter on a play keeps the random pick).
+- The new sounds are generated, not recordings: you can replace any of them (docs\CUSTOMIZE.md). F9, Rules switches Ghip and the referee (Broadcast) and the stadium sounds off.
 
 Speech
 The game speaks through NVDA or JAWS when one is running, or through any Windows SAPI 5 voice. Pick the voice, rate, volume and pitch in F9, Speech settings.

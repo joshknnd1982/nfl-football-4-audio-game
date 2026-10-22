@@ -1,0 +1,1 @@
+﻿E67AC43573EC6810CD3D32010F80673014A7E986FFFBDB377E970CE7782E30BC  nfl4-setup-0.10.0.exe (the second TEST installer, built 2026-10-22, S8.2; verify_installer.py ALL PASS, report work\s82\installer_verify_report2.txt)

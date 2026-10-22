@@ -209,5 +209,10 @@ except ImportError:
 sounds = os.path.join(os.path.dirname(exe), "assets", "sounds")
 count = len([f for f in os.listdir(sounds) if f.lower().endswith(".wav")]) if os.path.isdir(sounds) else 0
 check("26 wavs beside the exe", count == 26, f"{count}")
+stadium = os.path.join(os.path.dirname(exe), "assets", "sounds_nx")
+count = len([f for f in os.listdir(stadium) if f.lower().endswith(".wav")]) if os.path.isdir(stadium) else 0
+check("19 stadium wavs beside the exe (SY.2, SY.3)", count == 19, f"{count}")
+data = os.path.join(os.path.dirname(exe), "assets", "data")
+check("the names data beside the exe", all(os.path.exists(os.path.join(data, n)) for n in ("rosters.txt", "coaches.txt", "surnames.txt", "respellings.txt")))
 print("ALL PASS" if all(results) else "SOME FAILED")
 sys.exit(0 if all(results) else 1)
