@@ -350,8 +350,9 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         g, s = self.g, self.s
         self.get_sex_of()                                   # 0x43aa89
         self.snd.load_ambient()                             # foot9 into the ambient buffer, silent (Q33)
-        setup = (g.new_game_setup(self.own_names) if self.opponent_names is None       # GoSub 0x453eac: the rosters, the
-                 else g.new_game_setup(self.own_names, self.opponent_names))           # periods, M2W to M5W
+        real = self.real_names_in_use()                     # nfl4 only (SX.11): the real players of the two teams, after the draws
+        setup = (g.new_game_setup(self.own_names, real_names=real) if self.opponent_names is None       # GoSub 0x453eac: the rosters, the
+                 else g.new_game_setup(self.own_names, self.opponent_names, real_names=real))           # periods, M2W to M5W
         s.gpn = 0 if self.own_names is None else 1
         s.teams = {1: g.own_team(), 2: g.opponent_team()}
         s.rosters = setup.rosters
@@ -389,6 +390,23 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
                 gender = ""
             self.s.he_she[index] = pronoun(gender)
 
+    def real_names_in_use(self) -> bool:
+        """nfl4 only (SX.11, NX-N5): True when the game is played by the N. F. L. rules and the real coaches and players are loaded."""
+        if getattr(self.g, "real_names", None) is None:
+            return False
+        from ..extras.nfl_rules import is_nfl
+        return is_nfl(self.rules)
+
+    def real_quarterbacks(self) -> tuple[str, str]:
+        """The real starting quarterbacks of the two teams, the defaults of Getqbs ("" for a side that has none, or the Franchise's)."""
+        if not self.real_names_in_use():
+            return "", ""
+        from ..extras.franchise.league import team_index
+        season, real = self.g.season, self.g.real_names
+        own = real.quarterback(team_index(season.tn1, season.tn2)) if self.own_names is None or not self.own_names.quarterback else ""
+        opponent = real.quarterback(team_index(season.tn3, season.tn4)) if self.opponent_names is None else ""
+        return own, opponent
+
     def getqbs(self) -> None:
         """Getqbs (4.12, game/prompts.py since S7.4a): the own quarterback from footplay.txt (the Roster's last item) or
         asked, the opponent's asked unless a loaded game read footplay.txt. A test may hand the names in instead."""
@@ -396,7 +414,11 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
             own, opponent = self.quarterback_names(self.s)
         else:
             own_from_file = self.own_names.quarterback if self.own_names is not None else ""
-            own, opponent = self.g.getqbs(self.s, saved=self.saved is not None, own_from_file=own_from_file)
+            defaults = self.real_quarterbacks()
+            if defaults == ("", ""):
+                own, opponent = self.g.getqbs(self.s, saved=self.saved is not None, own_from_file=own_from_file)
+            else:
+                own, opponent = self.g.getqbs(self.s, saved=self.saved is not None, own_from_file=own_from_file, defaults=defaults)
         self.s.quarterbacks = {1: own, 2: opponent}
 
     # ----- the coin toss and the opening choice (4.14; 0x43bb4c to 0x43cc63) -----

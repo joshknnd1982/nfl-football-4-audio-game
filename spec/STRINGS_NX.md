@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 1619.
+- Texts: 1626.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -17,6 +17,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Menus and settings (design 10.4, 12): 36.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 552.
+- The real coaches and players (NX-N, SX.11): 7.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
 
 ## The clock (design section 5)
@@ -1667,4 +1668,14 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXG-22 (sentence, say5): " <player>, <position>, the <team>, <n> seasons, best rating <r>, entered in season <s>. ". history line: a member of the hall (SX.8o)
 - NXH-46 (help, say5): " Season awards, and the best players enter the hall of fame five seasons after they leave. Ratings decide who carries the ball; a back who carries a lot is hurt more often. ". F6, after NXH-45 (SX.8o)
 - NXG-B09 (sentence, say2): " the hall of fame takes one new member. ". stage 1 with the offseason short: a class of one (the review of SX.8o)
+
+## The real coaches and players (NX-N, SX.11)
+
+- NXB-N01 (sentence, say2): " The head coach of the <team> is <coach>. ". the coach question after the team is chosen (NX-N1, the N. F. L. rules); the first line, said again by F1
+- NXB-N02 (menu, say2): " Keep <coach> as your coach ". the question's first item: the real head coach of the chosen team; Enter takes it
+- NXB-N03 (menu, say2): " Choose another real coach ". the question's second item: the list of the 32 real head coaches (NX-N1)
+- NXB-N04 (menu, say2): " Type a name for your coach ". the question's third item: the original's typed prompt (NX-N1)
+- NXB-N05 (sentence, say2): " Choose your coach. ". the list of the 32 real head coaches: its first line
+- NXB-N06 (menu, say2): " <coach> of the <team> ". an item of the list of real coaches
+- NXB-N07 (sentence, say2): " <coach> is your coach. ". said after the coach is chosen from the list
 

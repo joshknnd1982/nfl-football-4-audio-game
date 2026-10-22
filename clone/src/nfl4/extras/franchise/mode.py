@@ -367,13 +367,13 @@ def start_new(p) -> None:
     g.season_engine.player_won = False
     p.saved_game = False
     store.creating = True
-    g.get_coach()
-    g.choose_team()
+    g.coach_and_team()                                  # GetCoach, ChooseTeam (SX.11: the team, then the real coach, nothing typed)
     team = team_index(season.tn1, season.tn2)
     table = getattr(g, "playbook_table", None)
     g.rnd.mark("league_start", team=team)               # the debug log: the generator and its draws so far, to replay the league (7.11)
     league = new_league(g.rnd, list(g.pool.original), season.coach, team, new_league_id(g), own_names(g),
-                        team_styles=table.teams if table is not None else None)      # SX.8l: the coordinators start with the teams' styles
+                        team_styles=table.teams if table is not None else None,      # SX.8l: the coordinators start with the teams' styles
+                        real=getattr(g, "real_names", None))                         # SX.11: the real coaches and players (None: drawn surnames)
     store.create(league)
     set_kind(g, "franchise")                             # only now: a window closed before this leaves no franchise to look for
     g.say2(X.text("NXF-07"))

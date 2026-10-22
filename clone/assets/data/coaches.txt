@@ -1,0 +1,41 @@
+# NFL Football 4 coaches, format 1.
+# These are the head coaches of the 32 teams. Each line is an ID, an equals sign and the name the voice speaks.
+# With the N. F. L. rules the game offers the real coach of the team you choose, so you never have to type a name.
+# The ID, T01 to T32, must stay as it is. A name has 1 to 30 characters, with no comma and no semicolon.
+# The VERSION line says which season these names are from. A new season: replace the names, change the VERSION line, save the file,
+# then choose Reload in the Customize item of the F9 menu. Delete a line to get the original name back.
+# The names are facts, used descriptively. They are not endorsed by the teams or the league.
+
+VERSION = season 2026, as of 2026-10-22
+T01 = Zac Taylor
+T02 = Todd Monken
+T03 = Jesse Minter
+T04 = Mike McCarthy
+T05 = Joe Brady
+T06 = Jeff Hafley
+T07 = Aaron Glenn
+T08 = Mike Vrabel
+T09 = Sean Payton
+T10 = Jim Harbaugh
+T11 = Andy Reid
+T12 = Klint Kubiak
+T13 = Shane Steichen
+T14 = Liam Coen
+T15 = DeMeco Ryans
+T16 = Robert Saleh
+T17 = Ben Johnson
+T18 = Dan Campbell
+T19 = Matt LaFleur
+T20 = Kevin O'Connell
+T21 = Brian Schottenheimer
+T22 = Nick Sirianni
+T23 = John Harbaugh
+T24 = Dan Quinn
+T25 = Mike LaFleur
+T26 = Kyle Shanahan
+T27 = Sean McVay
+T28 = Mike Macdonald
+T29 = Todd Bowles
+T30 = Kevin Stefanski
+T31 = Dave Canales
+T32 = Kellen Moore

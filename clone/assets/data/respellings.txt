@@ -1,0 +1,19 @@
+# NFL Football 4 respellings, format 1.
+# These tell the voice how to say a name or a part of a name. Each line is an ID, an equals sign, the written text, an arrow and what the voice speaks.
+# Example: R100 = Mac Jones => Mack Jones. A word is changed only as a whole word, inside a name; the longest written text goes first.
+# Write an ID = off to switch a line off. Add your own lines with new IDs. Delete the whole file to get the original lines back.
+
+R001 = Jr. => Junior
+R002 = Jr => Junior
+R003 = Sr. => Senior
+R004 = Sr => Senior
+R005 = II => the second
+R006 = III => the third
+R007 = IV => the fourth
+R008 = V => the fifth
+R009 = St. => Saint
+R010 = St-Juste => Saint Juste
+R011 = Piñeiro => Pineiro
+R012 = Jevón => Jevon
+R013 = Nuñez-Roches => Nunez-Roches
+R014 = Estimé => Estime

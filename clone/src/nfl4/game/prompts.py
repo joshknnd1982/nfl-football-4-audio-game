@@ -164,6 +164,62 @@ class Prompts:
             if not again:
                 return season.coach
 
+    # ----- the real coach (nfl4 only, SX.11, NX-N1) -----
+
+    def real_names_for_coach(self):
+        """The real names when the N. F. L. rules are in use and the coaches are loaded, else None (the original's typed coach)."""
+        real = getattr(self.g, "real_names", None)
+        if real is None or not real.has_coaches():
+            return None
+        from ..extras.nfl_rules import is_nfl
+        return real if is_nfl(self.g.rules) else None
+
+    def coach_and_team(self) -> None:
+        """GetCoach and ChooseTeam. With the real names the team comes first (the coach of a team is known only once it is chosen; the team
+        prompts say "coach" as the original does when nothing was typed), then the question that offers the real coach: nothing is typed."""
+        real = self.real_names_for_coach()
+        if real is None:
+            self.get_coach()
+            self.choose_team()
+            return
+        self.g.season.coach = DEFAULT_COACH
+        self.choose_team()
+        self.real_coach(real)
+
+    def real_coach(self, real) -> None:
+        from ..data import debuglog
+        from ..extras import nx_texts as X
+        from ..extras.franchise.league import team_index
+        from ..extras.franchise.question import FranchiseQuestion
+        g, season = self.g, self.g.season
+        coach = real.coach(team_index(season.tn1, season.tn2))
+        how = "typed"
+        if coach:
+            team = g.league.team(season.tn1, season.tn2).strip()
+            pick = FranchiseQuestion(g, [X.text("NXB-N01", team=team, coach=coach)],
+                                     [X.text("NXB-N02", coach=coach), X.text("NXB-N03"), X.text("NXB-N04")]).ask()
+            how = ("real", "list", "typed")[pick]
+            if pick == 0:
+                season.coach = coach
+            elif pick == 1:
+                season.coach = self._coach_from_list(real, team_index(season.tn1, season.tn2))
+        if how == "typed":
+            self.get_coach()
+        self.store.write_coach_and_team(season.tn1, season.tn2, season.coach)       # ChooseTeam wrote it with the first name
+        debuglog.event("names", "coach_chosen", how=how)
+
+    def _coach_from_list(self, real, own_team: int) -> str:
+        from ..extras import nx_texts as X
+        from ..extras.franchise.league import team_ref
+        from ..extras.franchise.question import FranchiseQuestion
+        g = self.g
+        choices = real.coach_choices()
+        items = [X.text("NXB-N06", coach=name, team=g.league.team(*team_ref(team)).strip()) for team, name in choices]
+        start = next((index for index, (team, _) in enumerate(choices) if team == own_team), 0)
+        name = choices[FranchiseQuestion(g, [X.text("NXB-N05")], items, start=start).ask()][1]
+        g.say2(X.text("NXB-N07", coach=name))
+        return name
+
     def _confirm(self, question: str, ask, answer_speaker) -> bool:
         """The yes or no question of GetCoach and Getqbs (0x43126d to 0x431482, 0x431702 to 0x431900, 0x431d08 to
         0x431fb7): True when the name is to be asked again. Enter takes the answer, Up and Down toggle it, F1 asks again
@@ -258,41 +314,44 @@ class Prompts:
 
     # ----- Getqbs (4.12) -----
 
-    def getqbs(self, state, saved: bool = False, own_from_file: str = "") -> tuple[str, str]:
+    def getqbs(self, state, saved: bool = False, own_from_file: str = "", defaults: tuple[str, str] | None = None) -> tuple[str, str]:
         """The two quarterbacks' names: the own one from footplay.txt when pag read it (gpn not 0), else asked and
         appended to the file; then the opponent's, asked at every game, except for a loaded game whose footplay.txt was
         read (its name came from football.sav, already in state.quarterbacks[2]). A name nobody types is a random free
         surname; an accepted name is blanked in the pool."""
         g = self.g
+        own_default, opponent_default = defaults or ("", "")
         if state.gpn != 0:                               # 0x43158a
             own = own_from_file                          # 0x431b26: the last item of footplay.txt
             if own == "":                                # S7.5: a footplay.txt without a quarterback asks for him, once
                 own = self._ask_quarterback(" " + g.season.coach + T.ENTER_OWN_QUARTERBACK,
-                                            lambda name: T.IS + name + T.OWN_QUARTERBACK_CORRECT)
+                                            lambda name: T.IS + name + T.OWN_QUARTERBACK_CORRECT, own_default)
                 self.store.append_quarterback(own)
             if saved:
                 return own, state.quarterbacks.get(2, "")    # 0x431b5e
         else:
             own = self._ask_quarterback(" " + g.season.coach + T.ENTER_OWN_QUARTERBACK,
-                                        lambda name: T.IS + name + T.OWN_QUARTERBACK_CORRECT)
+                                        lambda name: T.IS + name + T.OWN_QUARTERBACK_CORRECT, own_default)
             self.store.append_quarterback(own)          # 0x431978 to 0x4319ba
         team = g.opponent_team()
         opponent = self._ask_quarterback(T.ENTER_THE_NAME_OF_THE + team + T.QUARTERBACK_OR_PRESS_ENTER,
                                          lambda name: T.IS + name + T.CORRECT_FOR_THE_NAME_OF_THE + team
-                                         + T.QUARTERBACK_QUESTION_END)
+                                         + T.QUARTERBACK_QUESTION_END, opponent_default)
         return own, opponent
 
-    def _ask_quarterback(self, prompt: str, question) -> str:
+    def _ask_quarterback(self, prompt: str, question, default: str = "") -> str:
         """L_431596 (own) and L_431b64 (opponent): the typed name, else a random free surname (Int(Rnd * 1708) + 1, drawn
         again while the slot is blank: 0x43168e, 0x431c9a); the question; on acceptance the drawn slot is blanked, or
-        every pool entry equal to a typed name ignoring case (0x431949, 0x431a8f; 0x432005, 0x4320e1)."""
+        every pool entry equal to a typed name ignoring case (0x431949, 0x431a8f; 0x432005, 0x4320e1).
+        `default` (nfl4 only, SX.11): the real quarterback Enter takes instead of the drawn surname; the slot is still drawn and blanked,
+        so the game's draws are the same with or without real names."""
         g = self.g
         while True:
             name = cqn(self.getter(prompt))              # 0x4315da, 0x4315f5 (0x431bd8, 0x431bf7)
             slot = 0                                     # 0x43161d (0x431c2d)
             if name == "":
                 slot = g.pool.draw_slot()
-                name = g.pool.name(slot)
+                name = default or g.pool.name(slot)
             if not self._confirm(question(name), g.say5, g.say2):
                 break
         if slot > 0:

@@ -94,7 +94,7 @@ def _walked_names(league, surnames: list, count: int) -> list:
     return out
 
 
-def new_staff(league, surnames: list, team_styles=PD.TEAM_STYLES) -> None:
+def new_staff(league, surnames: list, team_styles=PD.TEAM_STYLES, real=None) -> None:
     """The staff of a new league: every team's head coach (the player's team's is the player), its two coordinators with the styles of `team_styles` (the
     playbooks' assignment of the teams) rated by the sides of their rosters, the goals of season 1. No draw. The player is new to his team (the job rating
     FR_APPROVAL_START, his season of grace); the other teams' coaches have served for a while with different standing (`league_start`), so the grace of
@@ -106,7 +106,7 @@ def new_staff(league, surnames: list, team_styles=PD.TEAM_STYLES) -> None:
         if team == league.team:
             coaches.append(new_coach(league.coach))
         else:
-            coach = new_coach(head)
+            coach = new_coach((real.coach(team) if real is not None else "") or head)      # SX.11: the real head coach of a team, else the walked name
             coach["approval"], coach["seasons"] = league_start(team)
             coaches.append(coach)
         styles = team_styles[team - 1] if team - 1 < len(team_styles) else (PD.CLASSIC_KEY, PD.CLASSIC_KEY)

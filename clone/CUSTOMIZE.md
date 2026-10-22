@@ -19,6 +19,7 @@ It holds these plain text files. Any text editor will do, and a screen reader re
 - remarks.txt, the remarks of the N. F. L. rules, only when that rule set is chosen in F9 (see below).
 - penalties.txt, the fouls of the N. F. L. rules: their names, and which are called and how often (see below).
 - the folder playbooks, with plays.txt, styles.txt, team_styles.txt and favourites.txt: the plays of the N. F. L. rules' playbooks and your favourite plays (see below).
+- coaches.txt, rosters.txt and respellings.txt, the real head coaches and players of the 32 teams and how the voice says their names, only when the N. F. L. rules are chosen in F9 (see below).
 - news.txt, the news lines of a franchise, only when the N. F. L. rules are chosen in F9 (see below).
 - injuries.txt, the words the game says about injuries in a franchise, only when the N. F. L. rules are chosen in F9 (see below).
 
@@ -47,6 +48,20 @@ footplay.txt holds the 33 names of your own team's players and your quarterback,
 ## Other surnames
 
 surnames.txt has 1,708 lines, S0001 to S1708. You can change the names. There are always 1,708 of them.
+
+## The real coaches and players of the N. F. L. rules
+
+With the N. F. L. rules you type no name. When you choose your team, the game offers the real head coach of that team (press Enter to keep him, or choose another real coach from a list of the 32, or type a name if you want one). Your team's players, the other team's players and the two quarterbacks are the real players of the two teams, so Enter takes the real quarterbacks. A franchise starts with the real players and the real head coaches of all 32 teams. The original game's random surnames are used only with the Classic rules, and for the players the game makes up later (the draft classes of a franchise, stand-ins).
+
+Three files hold the names. They are made for you the first time, in the same folder as the others, and they are kept right if you damage them (a copy of a damaged file is saved beside it).
+
+- coaches.txt: one line for each team, `T04 = Mike McCarthy`, and a line `VERSION = season 2026, as of 2026-10-22` that says which season the names are from.
+- rosters.txt: the players of each team, one line each: an ID, an equals sign, the position, the jersey number and the name, for example `T01P01 = QB 9 Joe Burrow`. The positions are QB, RB, FB, WR, TE, DL, LB, CB, S, K and P, and RET for a kick or punt returner (he is also written on his own line). A team's players come in depth order, the starters of each position first. The game does not use offensive linemen or long snappers, so they are not in the file. The numbers are kept for you and are never spoken.
+- respellings.txt: how the voice says a name or a part of one, for example `R001 = Jr. => Junior`. Add a line with a new ID to fix a name the voice says wrong, for example `R100 = Mac Jones => Mack Jones`. `R001 = off` switches a line off. A written text is changed only where it is a whole word of a name.
+
+The names in these files are facts, used descriptively. They are not endorsed by the teams or the league, and no ratings, photographs or logos are used.
+
+To put in a new season's names: replace the lines of the teams that changed in rosters.txt and coaches.txt, change the VERSION line, save, and choose Reload in the Customize menu. If you write any line for a team in rosters.txt, your lines replace all the built-in lines of that team, so an old player does not come back. A coach is replaced by writing his line again. Delete a whole file to get the built-in names back. Your own team's players are the names in footplay.txt: the game writes it from the real roster at the first game of a season, and your changes to it are kept.
 
 ## The banter
 

@@ -512,10 +512,34 @@ def draw_potential(rnd) -> str:
     return "high" if roll < high else "average" if roll < average else "low"
 
 
-def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_names: Roster | None = None, team_styles=None) -> LeagueRecord:
+def use_real_names(league: "LeagueRecord", real, own_team: int, given: list | None) -> int:
+    """SX.11 (NX-N5): the names the new league drew are replaced by the real players of the 32 teams, place by place (`real.places`), after
+    all the draws, so a league has exactly the ratings, ages and draws it has with the original's names. The player's own team keeps the
+    names of `given` (his footplay.txt is his); a real name another player of the league already has stays with the first, and the place
+    keeps its drawn surname. Returns how many players got a real name."""
+    assigned: set = set()
+    if given:
+        assigned |= {name.casefold() for name in given if name}
+    count = 0
+    for t in range(1, D.TEAMS + 1):
+        for index, name in enumerate(real.places(t)):
+            if not name or (t == own_team and given is not None and given[index] is not None) or name.casefold() in assigned:
+                continue
+            player = league.player_at(t, index)
+            if player is None:
+                continue
+            player.name = name
+            assigned.add(name.casefold())
+            count += 1
+    return count
+
+
+def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_names: Roster | None = None, team_styles=None,
+               real=None) -> LeagueRecord:
     """A new league (design 4.5): the player's team first, with the 33 names of `own_names` when it is a complete roster (and
     its quarterback when it names one), then T01 to T32 without it; every other value is drawn, in the order of design 12.1. `team_styles`: the
-    playbooks' assignment of the 32 teams the coordinators start with (SX.8l; None: the built-in one)."""
+    playbooks' assignment of the 32 teams the coordinators start with (SX.8l; None: the built-in one). `real` (SX.11): the real names
+    (extras.real_names.RealNames) the players and the other teams' head coaches get; None: the drawn surnames, as before."""
     if team_styles is None:
         from ..playbook_data import TEAM_STYLES as team_styles
     league = LeagueRecord(league_id=league_id, season=1, stage=SEASON, coach=coach, team=team)
@@ -544,9 +568,14 @@ def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_n
             league.players[player.id] = player
             league.rosters[t - 1][index] = player.id
             league.next_id += 1
+    if real is not None:
+        use_real_names(league, real, team, given)               # SX.11: the real players, after the draws
     from . import contracts
     contracts.give_initial_contracts(league)                    # SX.8g: the market price of each player; no draw
     league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]
     from . import staff
-    staff.new_staff(league, surnames, team_styles)              # SX.8l: the head coaches and the coordinators, the goals of season 1; no draw
+    if real is None:
+        staff.new_staff(league, surnames, team_styles)          # SX.8l: the head coaches and the coordinators, the goals of season 1; no draw
+    else:
+        staff.new_staff(league, surnames, team_styles, real)    # SX.11: the other teams' head coaches are the real ones
     return league

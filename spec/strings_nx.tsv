@@ -1618,3 +1618,10 @@ NXB-J25	playbooks	sentence	say4	 the kick goes out of bounds, and the ball is pl
 NXB-J26	playbooks	sentence	say4	 the kick lands short of the landing zone, and the ball is placed at the <n> 	a free kick short of the landing zone that was not made from the 35 (RB26 6-1-4 (d)(3), 6-2-4; SX.13)
 NXB-J27	playbooks	sentence	say4	 <player> falls on it in the end zone 	a punt blocked behind the kicking team's goal line, recovered there by the receivers: a touchdown (RB26 11-2; SX.13)
 NXB-J28	playbooks	sentence	say4	 the ball rolls out of the end zone 	a punt blocked behind the kicking team's goal line that leaves the end zone, before ' SAFETY' (RB26 11-5-1; SX.13)
+NXB-N01	names	sentence	say2	 The head coach of the <team> is <coach>. 	the coach question after the team is chosen (NX-N1, the N. F. L. rules); the first line, said again by F1
+NXB-N02	names	menu	say2	 Keep <coach> as your coach 	the question's first item: the real head coach of the chosen team; Enter takes it
+NXB-N03	names	menu	say2	 Choose another real coach 	the question's second item: the list of the 32 real head coaches (NX-N1)
+NXB-N04	names	menu	say2	 Type a name for your coach 	the question's third item: the original's typed prompt (NX-N1)
+NXB-N05	names	sentence	say2	 Choose your coach. 	the list of the 32 real head coaches: its first line
+NXB-N06	names	menu	say2	 <coach> of the <team> 	an item of the list of real coaches
+NXB-N07	names	sentence	say2	 <coach> is your coach. 	said after the coach is chosen from the list

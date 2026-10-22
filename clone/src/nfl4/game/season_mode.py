@@ -90,8 +90,7 @@ class ClassicSeason(SeasonMode):
             if franchise_mode.ask_kind(p, coach):               # the player chose a franchise: its set-up is done
                 return
         if not self._same_coach_and_team(defaults):
-            g.get_coach()
-            g.choose_team()
+            g.coach_and_team()                                  # GetCoach, ChooseTeam (with the real names: the team, then the real coach)
         g.make_schedule()
         p.season.gtp = 1
         (g.season_store or NULL_STORE).write_gtp(1)

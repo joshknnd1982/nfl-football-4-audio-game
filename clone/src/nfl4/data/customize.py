@@ -58,6 +58,7 @@ NEWS = "news"               # nfl4 only (rule 0.13): the Franchise's news lines,
 INJURIES = "injuries"       # nfl4 only (rule 0.13): the Franchise's injury words, read only with the N. F. L. rules (SX.8k)
 FAVOURITES = "favourite plays"   # the header word of favourites.txt; nfl4 only (rule 0.13): the player's favourite plays in `playbooks` (SX.10c, extras/plays/favourites.py)
 PLAYBOOKS_FOLDER = "playbooks"
+COACHES, ROSTERS, RESPELLINGS = "coaches", "rosters", "respellings"   # nfl4 only (rule 0.13, SX.11, NX-N4): the real coaches and rosters and how they are said
 
 
 @dataclass(frozen=True)
@@ -78,6 +79,9 @@ SPECS: tuple[ListSpec, ...] = (
 # CUSTOMIZABLE_CONTENT 13: the files of the extra features are read, made, checked and reset only while the Rules setting is
 # the N. F. L. rules (`Customization.use_extras`); with Classic none of them is ever opened
 EXTRA_SPECS: tuple[ListSpec, ...] = (
+    ListSpec(COACHES, "coaches.txt", "coach names", "the original coach names"),       # SX.11: first, so the older tests that count from the end still do
+    ListSpec(ROSTERS, "rosters.txt", "players", "the original players"),
+    ListSpec(RESPELLINGS, "respellings.txt", "respellings", "the original respellings"),
     ListSpec(REMARKS, "remarks.txt", "remarks", "the original remarks"),
     ListSpec(PENALTIES, "penalties.txt", "penalty names", "the original penalty names"),
     ListSpec(PLAYS, "plays.txt", "play names", "the original play names", PLAYBOOKS_FOLDER),
@@ -229,6 +233,7 @@ class Snapshot:
     news: object = None                 # extras.franchise.news_pools.NewsPools with the N. F. L. rules; None while not used (SX.8e)
     injuries: object = None             # extras.franchise.injury_pools.InjuryPools with the N. F. L. rules; None while not used (SX.8k)
     favourites: object = None           # (offense IDs, defense IDs) of favourites.txt with the N. F. L. rules; None while not used (SX.10c)
+    real_names: object = None           # extras.real_names.RealNames (coaches.txt, rosters.txt, respellings.txt) with the N. F. L. rules; None while not used (SX.11)
 
     def problem_count(self, key: str) -> int:
         problems = self.problems.get(key)
@@ -257,6 +262,7 @@ class Customization:
         self._parked_news = None          # and the Franchise's news lines (SX.8e)
         self._parked_injuries = None      # and its injury words (SX.8k)
         self._parked_favourites = None    # and the favourite plays (SX.10c)
+        self._parked_real = None          # and the real names (SX.11)
         self.files: dict[str, cl.ListFile] = {
             spec.key: cl.ListFile(os.path.join(folder, spec.folder) if spec.folder else folder, spec.file_name, GAME, spec.key,
                                   lambda key=spec.key: self.default_text(key))
@@ -285,6 +291,8 @@ class Customization:
             self._parked_news = self.snapshot.news
             self._parked_injuries = self.snapshot.injuries
             self._parked_favourites = self.snapshot.favourites
+            self._parked_real = self.snapshot.real_names
+            self.snapshot.real_names = None
             self.snapshot.remarks = None
             self.snapshot.fouls = None
             self.snapshot.playbooks = None
@@ -303,7 +311,9 @@ class Customization:
         from ..extras.franchise.injury_pools import DEFAULT_POOLS as DEFAULT_INJURIES
         previous = dataclasses.replace(self.snapshot, remarks=self._parked_remarks, fouls=self._parked_fouls,
                                        playbooks=self._parked_playbooks, news=self._parked_news, injuries=self._parked_injuries,
-                                       favourites=self._parked_favourites)
+                                       favourites=self._parked_favourites, real_names=self._parked_real)
+        from ..extras import real_names
+        self.snapshot.real_names = real_names.defaults()
         self.snapshot.remarks = DEFAULT_POOLS
         self.snapshot.fouls = DEFAULT_TABLE
         self.snapshot.playbooks = DEFAULT_PLAYBOOKS
@@ -363,6 +373,9 @@ class Customization:
         if key == FAVOURITES:
             from ..extras.plays import favourites
             return favourites.text_of()
+        if key in (COACHES, ROSTERS, RESPELLINGS):
+            from ..extras import real_names
+            return real_names.shipped_text(key)         # raises when the asset cannot be read: the file is then not made, the built-in names are used
         raise KeyError(key)
 
     # ----- loading -----
@@ -385,6 +398,8 @@ class Customization:
             snapshot.news = DEFAULT_NEWS
             snapshot.injuries = DEFAULT_INJURIES
             snapshot.favourites = ((), ())
+            from ..extras import real_names
+            snapshot.real_names = real_names.defaults()
         self._load_into(snapshot, self.specs, previous)
         self._notices_of(snapshot, self.specs)
         return snapshot
@@ -441,6 +456,12 @@ class Customization:
             if previous.favourites is None:
                 return
             snapshot.favourites = previous.favourites
+        elif key in (COACHES, ROSTERS, RESPELLINGS):
+            if previous.real_names is None or snapshot.real_names is None:
+                return
+            # the three files make one set of names: the part the held file makes is the earlier one's, the others stay as read
+            part = {COACHES: ("version", "coaches"), ROSTERS: ("rosters",), RESPELLINGS: ("respellings",)}[key]
+            snapshot.real_names = dataclasses.replace(snapshot.real_names, **{name: getattr(previous.real_names, name) for name in part})
         elif key in (PLAYS, STYLES, TEAMSTYLES):
             if previous.playbooks is None:
                 return
@@ -505,6 +526,10 @@ class Customization:
         elif key == FAVOURITES:
             from ..extras.plays import favourites
             snapshot.favourites = favourites.parse(entries, problems)
+        elif key in (COACHES, ROSTERS, RESPELLINGS):
+            from ..extras import real_names
+            if snapshot.real_names is not None:
+                snapshot.real_names = real_names.apply_kind(snapshot.real_names, key, entries, problems)
 
     def _notices_of(self, snapshot: Snapshot, specs) -> None:
         unwritable = [spec for spec in specs if snapshot.statuses[spec.key] == cl.UNWRITABLE]

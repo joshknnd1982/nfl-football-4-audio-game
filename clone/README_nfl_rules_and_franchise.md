@@ -76,6 +76,19 @@ continue the franchise, start a new game, delete the saved game, the season or t
   places, autosave.sav is the automatic save, the folder backup holds what was deleted or finished, and a franchise keeps its own set in its
   folder. Older saved games of the original game are place 1.
 
+### The real coaches and players
+
+With the N. F. L. rules you type no names. When you choose your team the game offers that team's real head coach (Enter keeps him, or pick
+another real coach from the list of 32, or type one). The players of your team and of the other team, and the two quarterbacks, are the real
+players of the two teams; Enter takes the quarterbacks. A new franchise starts with the real players and the real head coaches of all 32 teams.
+The names are from the teams' own websites on 2026-10-22 (the 2026 season, week 7) and live in three files you can edit (coaches.txt,
+rosters.txt, respellings.txt; CUSTOMIZE.md says how, and how a new season's names are put in). The Classic rules keep the original's random
+surnames and the typed coach.
+
+The names are facts (names, positions, numbers), used descriptively; this project is not made, endorsed or supported by any team or by the
+National Football League, and uses no ratings, photographs or logos. The names were collected from the teams' public websites, whose terms
+limit how their content is copied; see spec/NFL_NAMES_RESEARCH.md for the sources and the terms.
+
 ### Trademark notice
 
 The playbooks and the franchise mode are inspired by the playbooks and franchise ideas of Madden NFL. Madden NFL is a trademark of

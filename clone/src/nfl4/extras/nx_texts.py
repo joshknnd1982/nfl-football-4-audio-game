@@ -1627,6 +1627,13 @@ TEXTS: dict[str, str] = {
     'NXB-J26': ' the kick lands short of the landing zone, and the ball is placed at the <n> ',
     'NXB-J27': ' <player> falls on it in the end zone ',
     'NXB-J28': ' the ball rolls out of the end zone ',
+    'NXB-N01': ' The head coach of the <team> is <coach>. ',
+    'NXB-N02': ' Keep <coach> as your coach ',
+    'NXB-N03': ' Choose another real coach ',
+    'NXB-N04': ' Type a name for your coach ',
+    'NXB-N05': ' Choose your coach. ',
+    'NXB-N06': ' <coach> of the <team> ',
+    'NXB-N07': ' <coach> is your coach. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -3249,6 +3256,13 @@ SPEAKERS: dict[str, str] = {
     'NXB-J26': 'say4',
     'NXB-J27': 'say4',
     'NXB-J28': 'say4',
+    'NXB-N01': 'say2',
+    'NXB-N02': 'say2',
+    'NXB-N03': 'say2',
+    'NXB-N04': 'say2',
+    'NXB-N05': 'say2',
+    'NXB-N06': 'say2',
+    'NXB-N07': 'say2',
 }
 
 KINDS: dict[str, str] = {
@@ -4871,6 +4885,13 @@ KINDS: dict[str, str] = {
     'NXB-J26': 'sentence',
     'NXB-J27': 'sentence',
     'NXB-J28': 'sentence',
+    'NXB-N01': 'sentence',
+    'NXB-N02': 'menu',
+    'NXB-N03': 'menu',
+    'NXB-N04': 'menu',
+    'NXB-N05': 'sentence',
+    'NXB-N06': 'menu',
+    'NXB-N07': 'sentence',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

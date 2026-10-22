@@ -70,6 +70,7 @@ class Game(Speakers):
         self.news_pools = None                        # the Franchise's news.txt (nfl4 only, SX.8e); None = the defaults
         self.injury_pools = None                      # the Franchise's injuries.txt (nfl4 only, SX.8k); None = the defaults
         self.favourite_plays = None                   # the player's favourites.txt (nfl4 only, SX.10c): (offense, defense) IDs
+        self.real_names = None                        # the real coaches and rosters (nfl4 only, SX.11, extras.real_names.RealNames); None = the original's names
         self.customization = None                     # data.customize.Customization: the player's files (S7.7)
         self.season = SeasonState()                   # the coach, the teams, the week, the schedule, the records
         self.quarter_clock = QuarterClock()           # oldtime, mins, secs, CountDown, M2W, M4W, M5W
@@ -152,6 +153,10 @@ class Game(Speakers):
             self.news_pools = snapshot.news                   # and the Franchise's news.txt (SX.8e)
             self.injury_pools = snapshot.injuries             # and its injuries.txt (SX.8k)
             self.favourite_plays = snapshot.favourites        # and the favourite plays (SX.10c)
+            self.real_names = snapshot.real_names             # and the real coaches, players and respellings (SX.11)
+            if self.real_names is not None:
+                debuglog.event("names", "loaded", version=self.real_names.version, coaches=sum(1 for c in self.real_names.coaches if c),
+                               teams=sum(1 for r in self.real_names.rosters if r), respellings=len(self.real_names.respellings))
         except Exception:
             log.exception("the player's customization could not be applied")
 
@@ -221,6 +226,11 @@ class Game(Speakers):
         """GetCoach (GAME_SPEC 4.9): the coach's typed name, confirmed."""
         return self.prompts.get_coach()
 
+    def coach_and_team(self) -> None:
+        """GetCoach and ChooseTeam; with the N. F. L. rules and the real names the team is chosen first and the real coach of that team
+        is offered, so nothing is typed (nfl4 only, SX.11, NX-N1)."""
+        self.prompts.coach_and_team()
+
     def choose_team(self) -> None:
         """ChooseTeam (4.10): the player's team, confirmed, then footbal1.dat."""
         self.prompts.choose_team()
@@ -235,13 +245,36 @@ class Game(Speakers):
         if self.play_engine is not None:
             self.play_engine.get_sex_of()
 
-    def new_game_setup(self, own_names: Roster | None = None, opponent_names: Roster | None = None) -> GameSetup:
+    def new_game_setup(self, own_names: Roster | None = None, opponent_names: Roster | None = None,
+                       real_names: bool = False) -> GameSetup:
         """pag's set-up GoSub (GAME_SPEC 5.5): the rosters, the banter names, the periods' lengths and the warnings; the
-        three warning lengths also go to the clock. `opponent_names` is the Franchise's opponent (nfl4 only, SX.8b)."""
+        three warning lengths also go to the clock. `opponent_names` is the Franchise's opponent (nfl4 only, SX.8b). `real_names`
+        (nfl4 only, SX.11, the N. F. L. rules): the sides whose names the original draws take the real players of their teams."""
         setup = new_game_setup(self.rnd, self.pool, own_names, opponent_names)
+        if real_names and self.real_names is not None:
+            self._real_rosters(setup, own_names, opponent_names)
         self.quarter_clock.set_warnings(*setup.warnings)
         self.quarter_clock.start_quarter()
         return setup
+
+    def _real_rosters(self, setup: GameSetup, own_names: Roster | None, opponent_names: Roster | None) -> None:
+        """NX-N5: the names the set-up drew (after the draws, so a game draws exactly what it drew with the original's names) are replaced
+        by the real players of the two teams: the player's own team when footplay.txt has to be written (a file the player has is
+        the player's), the opponent when it is not a Franchise team. A place a team has no player for keeps the drawn name."""
+        from ..extras.franchise.league import team_index
+        season, real = self.season, self.real_names
+        changed = []
+        for side, names, tn1, tn2 in ((1, own_names, season.tn1, season.tn2), (2, opponent_names, season.tn3, season.tn4)):
+            if names is not None:
+                continue
+            roster = real.roster(team_index(tn1, tn2), setup.rosters[side]) if 1 <= tn1 <= 8 and 1 <= tn2 <= 4 else None
+            if roster is not None:
+                setup.rosters[side] = roster
+                changed.append(side)
+        if changed:
+            setup.banter_names = [name for side in (1, 2) for name in (setup.rosters[side].running_backs + setup.rosters[side].receivers
+                                                                       + setup.rosters[side].defense)]
+            debuglog.event("names", "real_rosters", sides=changed, version=real.version)
 
     def sgc(self, played: int, total: int, quarter: int) -> None:
         """The game clock (GAME_SPEC 5.3): say5 the made-up time, clk, then g = "112" so the waiting prompt repeats."""
@@ -282,9 +315,10 @@ class Game(Speakers):
             self.m414 = result.scores
         return result
 
-    def getqbs(self, state, saved: bool = False, own_from_file: str = "") -> tuple[str, str]:
-        """Getqbs (GAME_SPEC 4.12): the two quarterbacks' names (game/prompts.py)."""
-        names = self.prompts.getqbs(state, saved=saved, own_from_file=own_from_file)
+    def getqbs(self, state, saved: bool = False, own_from_file: str = "", defaults: tuple[str, str] | None = None) -> tuple[str, str]:
+        """Getqbs (GAME_SPEC 4.12): the two quarterbacks' names (game/prompts.py). `defaults` (nfl4 only, SX.11): the real quarterbacks
+        of the two teams, the names Enter takes instead of a drawn surname."""
+        names = self.prompts.getqbs(state, saved=saved, own_from_file=own_from_file, defaults=defaults)
         debuglog.add_typed(*names)            # typed now or read from footplay.txt: the debug log hides them (playbook 7.11)
         return names
 
