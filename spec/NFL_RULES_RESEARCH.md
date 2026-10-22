@@ -3269,3 +3269,8 @@ The league's overtime numbers (for the measurement of SX.12; SRC-SECONDARY):
 - The overtime coin toss in the format in which both teams possess (the play-offs since March 2022, the regular season since 2025): its winners chose to kick in 14 of 20 games, and the team that received first went 11-8-1 (57.5 percent); since the start of the 2025 regular season toss winners were 6-12-1. Yahoo Sports, "To kick or receive? NFL coaches still haven't figured out the overtime coin toss", 2026-09-25. Small samples.
 - Timeouts in a regular-season overtime: 22 of 60 teams used none, 26 one, 12 two (Part 9's play-by-play count, 2024 to 2026).
 - The receiving team won 56.8 percent of overtime games in 2017 to 2024 under the old rule (AP, September 2025, as quoted by search; not fetched whole). Not used for a band.
+
+
+## Part 11. The 2026 rules audit (SX.13)
+
+The fresh review of everything the N. F. L. rules mode plays against the 2026 book is `spec\NFL_RULES_AUDIT_2026.md` (D-097): every difference with its rule number, what was fixed and what was decided. The book read there is the same PDF this file cites (SHA-256 144cec5b...87c55).
