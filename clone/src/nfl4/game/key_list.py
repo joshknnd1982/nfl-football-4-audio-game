@@ -171,3 +171,19 @@ def readme_text() -> str:
         out.append("- **%s**%s: %s. %s. (%s)" % (row.keys, extra, row.where, row.what[0].upper() + row.what[1:], origin))
     out.append("")
     return "\n".join(out)
+
+
+README_START, README_END = "<!-- keys:start -->", "<!-- keys:end -->"
+
+
+def readme_block() -> str:
+    """The Keys section as it stands inside the repository's README.md (the game folder), between two markers: the rows of README_keys.md
+    under a second-level heading (P11, rule 0.24 (3))."""
+    text = readme_text()
+    return README_START + "\n## Keys" + text[len("# Keys"):].rstrip("\n") + "\n" + README_END
+
+
+def splice_readme(readme: str) -> str:
+    """The README text with its Keys block rewritten from the rows (the rest of the README is the maintainer's own words)."""
+    start, end = readme.index(README_START), readme.index(README_END) + len(README_END)
+    return readme[:start] + readme_block() + readme[end:]

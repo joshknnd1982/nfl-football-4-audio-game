@@ -26,3 +26,4 @@ venv/
 /release/checksums.txt
 /release/nfl4-portable-*/
 /fixesforgames.md
+/release/checksums_test_*.txt

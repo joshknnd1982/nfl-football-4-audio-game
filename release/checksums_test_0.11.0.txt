@@ -1,1 +1,0 @@
-9120F0AE70CF0451454AF5248968DA1F9D4B639FE1D1DAD4AD442CDF70E1E536  nfl4-setup-0.11.0.exe (the third TEST installer, built 2026-10-22, S8.2 second round; exe_smoke.py ALL PASS in 64-bit and 32-bit, verify_installer.py 31 checks PASS 0 FAIL, report work\s82\installer_verify_report3.txt; full suite 6,115 passed and 13 skipped in 64-bit and in 32-bit)
