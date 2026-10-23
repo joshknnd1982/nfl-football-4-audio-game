@@ -183,11 +183,12 @@ def seeds(winners: Sequence[Qualifier], conference: Sequence[int]) -> list[Quali
 
 
 def wild_cards(records: Records, conference: Sequence[int], winners: Sequence[Qualifier], own: TeamRef,
-               in_playoffs: bool) -> tuple[list[Qualifier], bool]:
+               in_playoffs: bool, count: int = 2) -> tuple[list[Qualifier], bool]:
     """The conference's 16 teams in division and place order, the four division winners given 0 wins and 20 losses so they
     come last, ordered by LOSSES, fewest first; the first two are the wild cards. When the player's team is neither a
     division winner (in_playoffs) nor one of the two, is in this conference and has as many wins as the second wild card,
-    it takes the second's place (Q43). Returns the two and the updated flag."""
+    it takes the second's place (Q43). Returns the two and the updated flag. `count` (nfl4 only, D-129) is 3 for the N. F. L.'s
+    14-team play-offs: the first three, and Q43's place is the third's (the last one)."""
     candidates = []
     for division in conference:
         for place in range(1, PLACES + 1):
@@ -197,15 +198,15 @@ def wild_cards(records: Records, conference: Sequence[int], winners: Sequence[Qu
                 wins, losses, ties = 0, 20, 0
             candidates.append(Qualifier(TeamRef(division, place), wins, losses, ties))
     ordered = original_sort(candidates, key=lambda q: half_losses(q.losses, q.ties))
-    first, second = ordered[0], ordered[1]
-    if first.team == own:
+    cards = list(ordered[:count])
+    for card in cards:
+        if card.team == own:
+            in_playoffs = True
+    last = cards[-1]
+    if not in_playoffs and own.division in conference and _own_wins(records, own) == half_wins(last.wins, last.ties):
+        cards[-1] = Qualifier(own, last.wins, last.losses, last.ties)
         in_playoffs = True
-    if second.team == own:
-        in_playoffs = True
-    if not in_playoffs and own.division in conference and _own_wins(records, own) == half_wins(second.wins, second.ties):
-        second = Qualifier(own, second.wins, second.losses, second.ties)
-        in_playoffs = True
-    return [first, second], in_playoffs
+    return cards, in_playoffs
 
 
 @dataclass(frozen=True)
@@ -218,6 +219,7 @@ class RegularSeasonEnd:
     pairings: list[Pairing]                   # footbal4.dat: the wild card games
     byes: list[TeamRef]                       # footbal5.dat
     player_in_playoffs: bool                  # L180
+    seed_of: dict = field(default_factory=dict)   # nfl4 only (D-129): the N. F. L. bracket's seeds 1 to 7 of each conference; empty for the original's
 
     def where(self, own: TeamRef) -> str:
         """pog's test after the files are written (0x46f321): the player's team is in a wild card game ("wild_card"), has a
@@ -239,3 +241,70 @@ def end_of_regular_season(records: Records, own: TeamRef) -> RegularSeasonEnd:
                 (nfc_cards[0].team, nfc_seeds[0].team), (nfc_cards[1].team, nfc_seeds[1].team)]
     byes = [afc_seeds[2].team, afc_seeds[3].team, nfc_seeds[2].team, nfc_seeds[3].team]
     return RegularSeasonEnd(winners, afc_cards, nfc_cards, afc_seeds, nfc_seeds, pairings, byes, in_playoffs)
+
+
+# ----- the N. F. L.'s 14-team play-offs (nfl4 only, rule 0.13; D-129, the owner's answer to Q-061) -----
+#
+# A franchise that plays the real calendar has the N. F. L.'s play-offs (NFL Rule Book, the playoff format since 2020, SRC-OFFICIAL): 7 teams a
+# conference, the four division winners seeded 1 to 4 and three wild cards 5 to 7; only seed 1 has a bye; in the wild card round 2 hosts 7, 3 hosts 6
+# and 4 hosts 5; the division round is reseeded (seed 1 hosts the lowest seed left, the other two winners meet at the better seed), and the better
+# seed hosts the conference championship. The order of the teams is the original's own rule (wins, a tie half a win; equal teams keep the division
+# order; the losses for the wild cards; Q43's place for the player's team): the N. F. L.'s long list of tie-breakers is not modelled. Classic and a
+# franchise on the original's 16 weeks keep the original's 12 teams exactly (the golden transcript).
+
+REAL_WILD_CARDS = 3                       # a conference's wild cards: seeds 5, 6 and 7
+REAL_BYES = 2                             # the two seeds 1, A. F. C. then N. F. C.
+REAL_WILD_CARD_GAMES = 6                  # three a conference
+CLASSIC_BYES = 4
+CLASSIC_WILD_CARD_GAMES = 4
+
+
+def real_seeds(winners: Sequence[Qualifier], conference: Sequence[int]) -> list[Qualifier]:
+    """The conference's four division winners as seeds 1 to 4: the most wins first (a tie is half a win), equal wins in the division order."""
+    return original_sort([winners[d - 1] for d in conference], key=lambda q: -half_wins(q.wins, q.ties))
+
+
+def _real_games(seeds_: Sequence[Qualifier], cards: Sequence[Qualifier]) -> list[Pairing]:
+    """A conference's wild card games (visitor, home): seed 7 at 2, seed 6 at 3, seed 5 at 4."""
+    return [(cards[2].team, seeds_[1].team), (cards[1].team, seeds_[2].team), (cards[0].team, seeds_[3].team)]
+
+
+def real_end_of_regular_season(records: Records, own: TeamRef) -> RegularSeasonEnd:
+    """The end of a regular season on the real calendar: the eight division winners (the original's rule), the seeds, three wild cards a
+    conference, the six wild card games (A. F. C. first) and the two teams with a bye (the A. F. C.'s seed 1, then the N. F. C.'s)."""
+    winners, in_playoffs = division_winners(records, own)
+    afc_seeds = real_seeds(winners, AFC_DIVISIONS)
+    nfc_seeds = real_seeds(winners, NFC_DIVISIONS)
+    afc_cards, in_playoffs = wild_cards(records, AFC_DIVISIONS, winners, own, in_playoffs, REAL_WILD_CARDS)
+    nfc_cards, in_playoffs = wild_cards(records, NFC_DIVISIONS, winners, own, in_playoffs, REAL_WILD_CARDS)
+    pairings = _real_games(afc_seeds, afc_cards) + _real_games(nfc_seeds, nfc_cards)
+    byes = [afc_seeds[0].team, nfc_seeds[0].team]
+    seed_of: dict = {}
+    for seeds_, cards in ((afc_seeds, afc_cards), (nfc_seeds, nfc_cards)):
+        for number, q in enumerate(list(seeds_) + list(cards), start=1):
+            seed_of[q.team] = number
+    return RegularSeasonEnd(winners, afc_cards, nfc_cards, afc_seeds, nfc_seeds, pairings, byes, in_playoffs, seed_of)
+
+
+def _by_seed(teams: Sequence[TeamRef], seed_of: dict) -> list[TeamRef]:
+    """The teams, the best seed first (a team the seeds do not know comes last: a damaged state still gives a whole round)."""
+    return sorted(teams, key=lambda team: seed_of.get(team, 99))
+
+
+def real_division_pairings(winners: Sequence[TeamRef], byes: Sequence[TeamRef], seed_of: dict) -> list[Pairing]:
+    """The division round after the six wild card games (their winners in game order, the A. F. C.'s three first): in each conference seed 1 hosts
+    the lowest seed left, and the other two winners meet at the better seed. Four games, the A. F. C.'s two first."""
+    out: list[Pairing] = []
+    for conference_winners, top in ((winners[:3], byes[0]), (winners[3:6], byes[1])):
+        best, middle, lowest = _by_seed(conference_winners, seed_of)
+        out += [(lowest, top), (middle, best)]
+    return out
+
+
+def real_championship_pairings(winners: Sequence[TeamRef], seed_of: dict) -> list[Pairing]:
+    """The two conference championships after the division round (its four winners in game order): the better seed hosts."""
+    out: list[Pairing] = []
+    for pair in (winners[:2], winners[2:4]):
+        better, worse = _by_seed(pair, seed_of)
+        out.append((worse, better))
+    return out

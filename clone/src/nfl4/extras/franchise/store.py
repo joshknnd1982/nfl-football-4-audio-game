@@ -191,12 +191,13 @@ class FranchiseStore:
         weeks = league.regular_weeks
         if gtp <= weeks:
             return regular == league.games_before(gtp) and playoff == 0 and not league.pairings
-        rounds = {1: (4, 0), 2: (4, 4), 3: (2, 8), 4: (1, 10)}
+        real = league.real_bracket()                             # D-129: the N. F. L.'s six wild card games and two byes
+        rounds = {1: (6, 0), 2: (4, 6), 3: (2, 10), 4: (1, 12)} if real else {1: (4, 0), 2: (4, 4), 3: (2, 8), 4: (1, 10)}
         if gtp - weeks not in rounds:
             return False
         games, played = rounds[gtp - weeks]
         return (regular == league.games_before(weeks + 1) and playoff == played and len(league.pairings) == 4 * games
-                and (gtp - weeks > 2 or len(league.byes) == 8))
+                and (gtp - weeks > 2 or len(league.byes) == (4 if real else 8)))
 
     def save(self) -> bool:
         """league.sav, whole: the new text to the temporary file, the present file copied to league.previous.sav, the

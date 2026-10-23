@@ -535,7 +535,7 @@ class LeagueRecord:
             if self.records[2 * team] + self.records[2 * team + 1] + self.ties[team] != weeks:
                 raise LeagueError("team %d has %d wins and %d losses and %d ties after %d games" %
                                   (team + 1, self.records[2 * team], self.records[2 * team + 1], self.ties[team], weeks))
-        if not isinstance(self.pairings, list) or len(self.pairings) > 16 or len(self.pairings) % 4:
+        if not isinstance(self.pairings, list) or len(self.pairings) > 24 or len(self.pairings) % 4:      # 24: the N. F. L.'s six wild card games (D-129)
             raise LeagueError("the pairings hold %r values" % (len(self.pairings) if isinstance(self.pairings, list) else None))
         for index, value in enumerate(self.pairings):
             whole(value, 1, 8 if index % 2 == 0 else 4, "a pairing value")
@@ -544,11 +544,18 @@ class LeagueRecord:
         for index, value in enumerate(self.byes):
             whole(value, 1, 8 if index % 2 == 0 else 4, "a bye value")
         if in_season and self.gtp > 0:                       # the games of the coming round (finding 3 of the SX.8a review)
-            games = {1: 4, 2: 4, 3: 2, 4: 1}.get(self.gtp - regular, 0)       # round 1 is the wild card week: 17 in the original, the calendar's 19
+            real = self.real_bracket()                       # D-129: the N. F. L.'s 14 teams (2 byes, 6 wild card games) on the real calendar
+            games = {1: 6 if real else 4, 2: 4, 3: 2, 4: 1}.get(self.gtp - regular, 0)     # round 1 is the wild card week: 17 in the original, the calendar's 19
             if len(self.pairings) != 4 * games:
                 raise LeagueError("week %d has %d play-off games, not %d" % (self.gtp, len(self.pairings) // 4, games))
-            if self.gtp - regular in (1, 2) and len(self.byes) != 8:
-                raise LeagueError("week %d has %d teams with a bye, not 4" % (self.gtp, len(self.byes) // 2))
+            byes = 4 if real else 8
+            if self.gtp - regular in (1, 2) and len(self.byes) != byes:
+                raise LeagueError("week %d has %d teams with a bye, not %d" % (self.gtp, len(self.byes) // 2, byes // 2))
+
+    def real_bracket(self) -> bool:
+        """The season's play-offs are the N. F. L.'s 14 teams (D-129): a season on the real calendar whose byes, once written, are the two seeds 1
+        (a league saved in the play-offs by version 0.12.1, with the original's four, finishes the bracket it began)."""
+        return bool(self.calendar) and len(self.byes) != 8
 
     def _check_calendar(self, whole) -> None:
         """The calendar of the season, when there is one: a label and the weeks of (visitor, home) games, every team once at most in a week, 17 games and

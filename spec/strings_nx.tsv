@@ -1673,6 +1673,7 @@ NXC-21	franchise	sentence	say2	 bye week. 	the real calendar's schedule (SZ.8): 
 NXC-22	franchise	menu	say5	 1. see this week's games 	the main menu's first choice in the bye week (SZ.8), in the place of ' 1. play game '
 NXC-23	franchise	sentence	say2	 Your team has a bye this week. There is no game today. 	'Today's game is ...' in the bye week (SZ.8)
 NXC-24	franchise	sentence	say2	 your team has a bye this week. 	the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
+NXC-25	franchise	sentence	say4	 the top seeds, the <team> and the <other>, have the only byes of the wild card round. 	the end of a regular season on the real calendar (D-129, the N. F. L.'s 14-team play-offs), after the N. F. C. wild card teams: the A. F. C.'s seed 1, then the N. F. C.'s
 NXB-J25	playbooks	sentence	say4	 the kick goes out of bounds, and the ball is placed at the <n> 	a free kick out of bounds that was not made from the 35: 25 yards from the kick, 30 after a safety (RB26 6-2-4; SX.13)
 NXB-J26	playbooks	sentence	say4	 the kick lands short of the landing zone, and the ball is placed at the <n> 	a free kick short of the landing zone that was not made from the 35 (RB26 6-1-4 (d)(3), 6-2-4; SX.13)
 NXB-J27	playbooks	sentence	say4	 <player> falls on it in the end zone 	a punt blocked behind the kicking team's goal line, recovered there by the receivers: a touchdown (RB26 11-2; SX.13)

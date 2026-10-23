@@ -63,6 +63,16 @@ class SeasonState:
         gtp = self.gtp if gtp is None else gtp
         return gtp if gtp < self.first_playoff_week else gtp - self.regular_weeks + WEEKS
 
+    @property
+    def real_playoffs(self) -> bool:
+        """The play-offs are the N. F. L.'s 14 teams (nfl4's Franchise on the real calendar, D-129): a season with a calendar, unless its play-off
+        state was written with the original's four bye teams (a league saved in the play-offs by version 0.12.1 or older finishes its bracket as
+        it began). Classic and a franchise on the original's 16 weeks: never."""
+        from .playoffs import REAL_BYES
+        if self.calendar is None:
+            return False
+        return not self.playoffs.byes or len(self.playoffs.byes) == REAL_BYES
+
     def playoff_week(self, round_no: int) -> int:
         """The week counter of play-off round 1 (wild card) to 4 (Super Bowl)."""
         return self.regular_weeks + round_no

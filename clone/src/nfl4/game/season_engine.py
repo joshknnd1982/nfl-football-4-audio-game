@@ -37,7 +37,9 @@ from typing import Protocol
 from . import season_texts as T
 from .league import DIVISIONS, PLACES, League
 from .schedule import team_pair
-from .playoffs import (ComputerGame, Pairing, Qualifier, TeamRef, computer_game, end_of_regular_season, score_of)
+from .playoffs import (CLASSIC_BYES, CLASSIC_WILD_CARD_GAMES, REAL_BYES, REAL_WILD_CARD_GAMES, ComputerGame, Pairing, Qualifier, TeamRef,
+                       computer_game, end_of_regular_season, real_championship_pairings, real_division_pairings,
+                       real_end_of_regular_season, score_of)
 from .standings import Records, ties_words
 from .vbnum import rtrim, str_, trim
 
@@ -233,14 +235,46 @@ class SeasonEngine:
                                    % (len(pairings), self.g.season.gtp, count))
         return list(pairings[:count])
 
-    def _byes(self, count: int = 4) -> list[TeamRef]:
-        """The four bye teams of footbal5.dat, checked BEFORE a round is drawn and spoken (a short list would otherwise
+    def _byes(self, count: int = CLASSIC_BYES) -> list[TeamRef]:
+        """The four bye teams of footbal5.dat (the N. F. L. bracket's two, D-129), checked BEFORE a round is drawn and spoken (a short list would otherwise
         be found only after four results were heard and thrown away, or written short by a zip)."""
         byes = self.g.season.playoffs.byes
         if len(byes) < count:
             raise SeasonStateError("the bye teams hold %d teams, week %d needs %d"
                                    % (len(byes), self.g.season.gtp, count))
         return list(byes[:count])
+
+    # ----- the bracket: the original's 12 teams, or the N. F. L.'s 14 on the real calendar (nfl4 only, D-129) -----
+
+    @property
+    def real_bracket(self) -> bool:
+        return self.g.season.real_playoffs
+
+    def _wild_card_count(self) -> int:
+        return REAL_WILD_CARD_GAMES if self.real_bracket else CLASSIC_WILD_CARD_GAMES
+
+    def _bye_count(self) -> int:
+        return REAL_BYES if self.real_bracket else CLASSIC_BYES
+
+    def _seed_of(self) -> dict:
+        """The seeds of the N. F. L. bracket, worked out again from the regular season's records (they do not change in the play-offs), so a
+        round resumed from the files is reseeded as the round that was played."""
+        season = self.g.season
+        return real_end_of_regular_season(season.records, season.own_team).seed_of
+
+    def _division_round(self, winners: list[TeamRef], byes: list[TeamRef]) -> list[Pairing]:
+        """The division round's games after the wild card round: the original's winners at the four bye teams in order, or the N. F. L.'s
+        reseeded games (seed 1 hosts the lowest seed left)."""
+        if self.real_bracket:
+            pairings = real_division_pairings(winners, byes, self._seed_of())
+            log.info("play-offs: the division round reseeded (D-129): %s", pairings)
+            return pairings
+        return list(zip(winners, byes))
+
+    def _championship_round(self, winners: list[TeamRef]) -> list[Pairing]:
+        if self.real_bracket:
+            return real_championship_pairings(winners, self._seed_of())
+        return [(winners[0], winners[1]), (winners[2], winners[3])]
 
     def _write_next_round(self, pairings: list[Pairing]) -> None:
         """k4 (deletes footbal4.dat), then the pairings of the coming round."""
@@ -424,7 +458,10 @@ class SeasonEngine:
     def _end_of_regular_season(self) -> None:
         g, season, league = self.g, self.g.season, self.g.league
         own = season.own_team
-        result = end_of_regular_season(season.records, own)
+        real = season.calendar is not None                        # D-129: the N. F. L.'s 14 teams on the real calendar
+        result = real_end_of_regular_season(season.records, own) if real else end_of_regular_season(season.records, own)
+        log.info("play-offs: %s bracket, wild card games %s, byes %s", "the N. F. L.'s 14-team" if real else "the original's 12-team",
+                 result.pairings, result.byes)
         g.empty_replay()                                          # 0x4698e9
         g.ptf = 1
         g.say4(T.DIVISION_WINNERS_ARE)
@@ -438,6 +475,9 @@ class SeasonEngine:
         g.say4(T.NFC_WILD_CARD_TEAMS)
         for card in result.nfc_wild_cards:
             g.say4(self._qualifier_line(card))
+        if real:                                                  # D-129: only the two top seeds rest in the wild card round
+            from ..extras import nx_texts as X
+            g.say4(X.text("NXC-25", team=self.name(result.byes[0]), other=self.name(result.byes[1])))
         g.log_print("")
         season.playoffs.pairings = list(result.pairings)          # k4, footbal4.dat; footbal5.dat
         season.playoffs.byes = list(result.byes)
@@ -461,10 +501,10 @@ class SeasonEngine:
         """The player's team has a bye: the four wild card games are played and spoken (0x46fec8 to 0x4734fd), the
         division round's pairings written, the wait, gtp = 18."""
         g, season = self.g, self.g.season
-        pairings, byes = self._pairings(4), self._byes()
+        pairings, byes = self._pairings(self._wild_card_count()), self._byes(self._bye_count())
         g.empty_replay()
         winners = self._computer_round(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD, WILD_CARD)
-        self._write_next_round(list(zip(winners, byes)))
+        self._write_next_round(self._division_round(winners, byes))
         self._round_wait()
         season.gtp += 1
         self.store.write_gtp(season.gtp)
@@ -526,11 +566,11 @@ class SeasonEngine:
 
     def _wild_card_week(self) -> None:
         g, season = self.g, self.g.season
-        pairings, byes = self._pairings(4), self._byes()
+        pairings, byes = self._pairings(self._wild_card_count()), self._byes(self._bye_count())
         season.gtp += 1                                           # 18
         g.empty_replay()
         winners = self._round_with_the_player(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD, WILD_CARD)
-        self._write_next_round(list(zip(winners, byes)))          # the four winners at the four bye teams
+        self._write_next_round(self._division_round(winners, byes))   # the four winners at the four bye teams (the N. F. L.'s: reseeded)
         self._round_wait()
         if not self.player_won:
             season.gtp = season.playoff_week(2)                   # 18
@@ -544,7 +584,7 @@ class SeasonEngine:
         g.empty_replay()
         self.player_won = False                                   # L3d0 = 0 (0x477a78)
         winners = self._round_with_the_player(pairings, T.POG_AFC_DIVISION, T.POG_NFC_DIVISION, DIVISION)
-        self._write_next_round([(winners[0], winners[1]), (winners[2], winners[3])])
+        self._write_next_round(self._championship_round(winners))
         self._round_wait()
         if not self.player_won:
             season.gtp = season.playoff_week(3)                   # 19
@@ -599,15 +639,15 @@ class SeasonEngine:
         self._fin_super_bowl()
 
     def _fin_wild_card_round(self) -> None:
-        pairings, byes = self._pairings(4), self._byes()
+        pairings, byes = self._pairings(self._wild_card_count()), self._byes(self._bye_count())
         winners = self._computer_round(pairings, T.POG_AFC_WILD_CARD, T.POG_NFC_WILD_CARD, WILD_CARD)
-        self._write_next_round(list(zip(winners, byes)))
+        self._write_next_round(self._division_round(winners, byes))
         self._round_wait()
 
     def _fin_division_round(self) -> None:
         self.g.empty_replay()                                     # 0x480331
         winners = self._computer_round(self._pairings(4), T.FIN_AFC_DIVISION, T.POG_NFC_DIVISION, DIVISION)
-        self._write_next_round([(winners[0], winners[1]), (winners[2], winners[3])])
+        self._write_next_round(self._championship_round(winners))
         self._round_wait()
 
     def _fin_championship_round(self) -> None:

@@ -204,8 +204,9 @@ def test_the_last_regular_week_of_a_calendar_ends_the_regular_season_at_week_19(
     kinds = [kind for kind, _ in rig.store.events]
     assert kinds[-2:] == ["pairings", "byes"]                                    # football.gtp is not written for a team that is out
     assert rig.finplay17_calls == [19]                                           # the rounds without him start at the wild card week, week 19
-    assert len(season.playoffs.pairings) == 4 and len(season.playoffs.byes) == 4
+    assert len(season.playoffs.pairings) == 6 and len(season.playoffs.byes) == 2         # D-129: the N. F. L.'s 14 teams on the real calendar
     assert texts(rig)[-1].endswith("did not make it into the playoffs. ")
+    assert any(line.startswith(" the top seeds, the ") for line in texts(rig))            # NXC-25: who has the only byes
 
 
 # ----- whole seasons on the Franchise rig -----
