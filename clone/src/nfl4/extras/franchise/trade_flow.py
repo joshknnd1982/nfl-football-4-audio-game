@@ -7,7 +7,8 @@ and runs F9's menu, which uses the F9 classes (`SpokenMenu`, `ListPicker`) as th
   recommendation), decline (the "do nothing" answer) or later; an offer still open at the kick-off is declined (nothing is decided for the player).
 * F9, franchise, trades: offers waiting; offer one of your players (the trade block: the other teams' best offers by the value rule); ask for a player (the
   other team answers by the value rule and names the picks it wants); your draft picks; the trades of the season. Every trade the player makes is made,
-  written, then told (B-X53). Trades are open in the regular season up to the kick-off of the deadline's week, never inside a game.
+  written, then told (B-X53). Trades are open in the regular season up to the kick-off of the deadline's week and in the offseason from free agency
+  to week 1 (D-130), never inside a game, while the draft is under way or while the roster cut is decided; from the draft to week 1 without picks.
 """
 from __future__ import annotations
 
@@ -76,6 +77,8 @@ def closed_reason(g, league) -> str | None:
     """Why the player cannot trade now (a sentence), or None when he can."""
     if g.play_engine is not None:
         return X.text("NXX-16")
+    if TR.closed_in_offseason_moves(league):
+        return X.text("NXX-37")                                     # D-130: the draft or the roster cut is in progress
     if not TR.in_window(league, league.gtp):
         return X.text("NXX-15", n=TR.last_week(league))
     return None
@@ -208,6 +211,8 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
             from .draft import Draft
             made = Draft(league).picks_of(league.team)
             return X.text("NXX-29", list=", ".join(X.text("NXK-15", round=r, pick=k) for r, k in made) if made else X.text("NXK-13"))
+        if not TR.picks_open(league):
+            return X.text("NXX-36")                                 # D-130: after the draft and before week 1 a trade is player for player
         picks = TR.picks_of(league, league.team)
         if not picks:
             return X.text("NXX-24")

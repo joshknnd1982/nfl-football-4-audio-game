@@ -221,14 +221,18 @@ def test_the_deadline_is_the_kick_off_of_week_9_of_the_originals_16_weeks_and_of
     assert TR.last_week(league) == 10 and TR.in_window(league, 10) and not TR.in_window(league, 11) and not TR.in_window(league, 0)
 
 
-def test_trades_are_open_in_free_agency_before_the_draft_and_closed_in_the_other_stages_of_the_offseason():
+def test_trades_are_open_from_free_agency_to_week_1_and_closed_in_the_earlier_stages_of_the_offseason():
+    """D-130 (the owner's answer to Q-063): open in free agency, before the draft, after it, after the roster cut and before week 1; closed while the
+    draft runs and while the cut is decided (test_trades_window_d130.py has the rest)."""
     league = fresh()
     league.stage = OFFSEASON
-    for stage in (D.STAGE_REVIEW, D.STAGE_AGING, D.STAGE_DEVELOPMENT, D.STAGE_CONTRACTS, D.STAGE_DRAFT, D.STAGE_CUT, D.STAGE_NEW_SEASON):
+    for stage in (D.STAGE_REVIEW, D.STAGE_STAFF, D.STAGE_AGING, D.STAGE_DEVELOPMENT, D.STAGE_CONTRACTS):
         league.stage_no = stage
         assert not TR.in_window(league, 0), stage
-    league.stage_no = D.STAGE_FREE_AGENCY
-    assert TR.in_window(league, 0) and not TR.in_window(league, 1)
+    for stage in (D.STAGE_FREE_AGENCY, D.STAGE_DRAFT, D.STAGE_CUT, D.STAGE_NEW_SEASON):
+        league.stage_no = stage
+        assert TR.in_window(league, 0) and not TR.in_window(league, 1), stage
+    league.stage_no = D.STAGE_DRAFT
     league.draft = {"x": 1}
     assert not TR.in_window(league, 0)                                                # the draft has begun: its picks are the draft's
 

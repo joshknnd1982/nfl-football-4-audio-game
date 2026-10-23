@@ -117,6 +117,7 @@ class LeagueRecord:
     usage: dict = field(default_factory=lambda: {"season": 0, "games": {}, "carries": {}})   # SX.8o, format 10: the season's games and carries (workload.py)
     practice: dict = field(default_factory=lambda: {"season": 0, "elevations": {}})   # D-136, format 14: practice.py
     calendar: dict | None = None                       # SZ.8, format 12: {"label": str, "weeks": [[[visitor, home], ...], ...]} the real calendar of this season; None: the original's 16 weeks
+    cut_deciding: bool = field(default=False, repr=False, compare=False)   # D-130: the roster cut's plans are made and not yet applied (never saved)
 
     # ----- the calendar (SZ.8) -----
 

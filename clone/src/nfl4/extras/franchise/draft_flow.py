@@ -157,31 +157,35 @@ def stage_cut(p, n: int, m: int, short: bool) -> None:
     words = store.words
     settings = g.options.settings.game
     team = league.team
-    waiting = DR.waiting_by_team(league)
-    plans = {t: DR.staff_cut(league, t, waiting) for t in range(1, D.TEAMS + 1)}
-    header = off._stage_line(n, m, "NXE-15")
-    spoken: list = []                            # the stage's lines that follow the questions
-    asked = False
-    mine = plans[team]
-    if not mine:
-        spoken.append(X.text("NXE-58"))
-    elif settings.nx_fr_auto:
-        spoken.append(X.text("NXE-56", n=len(mine)))
-    else:
-        asked = True
-        cut = DR.plan_cut(league, team, waiting)             # the cut's own list, then the players let go for the cap
-        situation = [header]
-        if cut:
-            situation += [X.text("NXE-50")] + [
-                X.text("NXE-51", player=pl.name, position=words.position(pl.pos), a=pl.age, r=pl.rating) for pl in cut]
-        if len(mine) > len(cut):
-            situation += [X.text("NXE-59" if cut else "NXA-15", over=words.amount(CT.cap_over(league, team, waiting, cut)))] + [
-                words.released_for_the_cap(pl) for pl in mine[len(cut):]]
-        if FranchiseQuestion(g, situation, [X.text("NXE-52"), X.text("NXE-53")]).ask() == 1:
-            plans[team] = _own_choice(g, words, league, waiting)
-            plans[team] += _own_cap_choice(g, words, league, waiting, plans[team])
-    first_new = league.next_id
-    DR.apply_cut(league, plans, waiting)
+    league.cut_deciding = True                   # D-130: no trade while the plans below wait for the player's answers (F9 is open at a question)
+    try:
+        waiting = DR.waiting_by_team(league)
+        plans = {t: DR.staff_cut(league, t, waiting) for t in range(1, D.TEAMS + 1)}
+        header = off._stage_line(n, m, "NXE-15")
+        spoken: list = []                        # the stage's lines that follow the questions
+        asked = False
+        mine = plans[team]
+        if not mine:
+            spoken.append(X.text("NXE-58"))
+        elif settings.nx_fr_auto:
+            spoken.append(X.text("NXE-56", n=len(mine)))
+        else:
+            asked = True
+            cut = DR.plan_cut(league, team, waiting)         # the cut's own list, then the players let go for the cap
+            situation = [header]
+            if cut:
+                situation += [X.text("NXE-50")] + [
+                    X.text("NXE-51", player=pl.name, position=words.position(pl.pos), a=pl.age, r=pl.rating) for pl in cut]
+            if len(mine) > len(cut):
+                situation += [X.text("NXE-59" if cut else "NXA-15", over=words.amount(CT.cap_over(league, team, waiting, cut)))] + [
+                    words.released_for_the_cap(pl) for pl in mine[len(cut):]]
+            if FranchiseQuestion(g, situation, [X.text("NXE-52"), X.text("NXE-53")]).ask() == 1:
+                plans[team] = _own_choice(g, words, league, waiting)
+                plans[team] += _own_cap_choice(g, words, league, waiting, plans[team])
+        first_new = league.next_id
+        DR.apply_cut(league, plans, waiting)
+    finally:
+        league.cut_deciding = False
     filled = aging.fill_places(league, g.rnd, list(g.pool.original))
     own_filled = [pl for pl in league.players.values() if pl.id >= first_new and pl.team == team]
     league.draft = None

@@ -686,7 +686,7 @@ NXX-11	franchise	menu	say5	offer one of your players	F9 trades: the trade block
 NXX-12	franchise	menu	say5	ask for a player	F9 trades
 NXX-13	franchise	menu	say5	your draft picks	F9 trades
 NXX-14	franchise	menu	say5	trades this season	F9 trades
-NXX-15	franchise	sentence	say5	 trades are closed. they open again in free agency and in the next regular season, until the kick-off of week <n>. 	F9 trades outside the window
+NXX-15	franchise	sentence	say5	 trades are closed. they open again in free agency and stay open until the kick-off of week <n> of the next regular season. 	F9 trades outside the window (D-130: open from free agency to the deadline)
 NXX-16	franchise	sentence	say5	 trades are closed during a game. 	F9 trades inside a game
 NXX-17	franchise	sentence	say5	 no team makes an offer for <give>. 	F9 trades: nobody wants the player on the block
 NXX-18	franchise	sentence	say5	 the <team> give <get>, rating <r>, age <a>. <picks> 	F9 trades: one offer for the player on the block
@@ -713,6 +713,8 @@ NXX-31	franchise	sentence	say2	 the trade deadline is next week. 	the news of th
 NXX-32	franchise	sentence	say2	 this is the last week for trades. the deadline is the kick-off. 	the news of the deadline's week (SZ.8)
 NXX-33	franchise	sentence	say2	 the trade deadline has passed. trades open again in free agency. 	the news of the week after the deadline (SZ.8)
 NXX-35	franchise	sentence	say5	 in the offseason: the <team> traded <give> to the <other> for <get>. <picks> 	F9 trades: a trade of the offseason (SZ.8), the season's list otherwise says the week
+NXX-36	franchise	sentence	say5	 from the draft to week 1 a trade is player for player: draft picks can be traded again when the regular season begins. 	F9 trades, your draft picks, after the draft has begun and before week 1 (D-130)
+NXX-37	franchise	sentence	say5	 trades are closed while the draft is under way and while the roster cut is decided. they open again when it is done. 	F9 trades in the offseason during the draft or the roster cut (D-130)
 NXI-10	franchise	sentence	say2	 <player>, <position>, is out with <injury>, <lo> to <hi> weeks. 	a new injury, out, the range (SX.8k)
 NXI-11	franchise	sentence	say2	 <player>, <position>, is out with <injury>, <n> weeks. 	a new injury, out, the range is one number (SX.8k)
 NXI-12	franchise	sentence	say2	 <player>, <position>, is out with <injury> for the season. 	a new injury that lasts past week 16 (SX.8k)

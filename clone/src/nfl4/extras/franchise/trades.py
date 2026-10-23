@@ -47,8 +47,21 @@ def owner(league, round_no: int, original: int) -> int:
     return original
 
 
+def picks_open(league) -> bool:
+    """Draft picks can be traded (D-130): in the regular season, and in the offseason before the draft begins (free agency and the wait before the
+    draft). From the draft's first pick to the new season a trade is player for player: the draft owns the picks of its table while it runs and until the
+    cut ends it (`check_trades`), and the first-round picks owed for the next draft join the table only at the new season (`tags.move_future`)."""
+    from .league import OFFSEASON, SEASON
+    if league.stage == SEASON:
+        return True
+    return league.stage == OFFSEASON and league.stage_no in (D.STAGE_FREE_AGENCY, D.STAGE_DRAFT) and league.draft is None
+
+
 def picks_of(league, team: int) -> list:
-    """The picks of the coming draft the team owns: (round, original team), the earliest round first, its own pick of a round before another's."""
+    """The picks of the coming draft the team owns: (round, original team), the earliest round first, its own pick of a round before another's. None
+    while picks cannot be traded (`picks_open`): every offer and answer of the value rule is then player for player."""
+    if not picks_open(league):
+        return []
     out = [(r, team) for r in range(1, D.DRAFT_ROUNDS + 1) if owner(league, r, team) == team]
     out += [(r, o) for r, o, own in league.trades["picks"] if own == team and o != team]
     return sorted(out, key=lambda pick: (pick[0], pick[1] != team, pick[1]))
@@ -182,13 +195,28 @@ def last_week(league) -> int:
     return T.FR_TRADE_LAST_WEEK_CALENDAR if league.calendar else T.FR_TRADE_LAST_WEEK
 
 
+OFFSEASON_OPEN = (D.STAGE_FREE_AGENCY, D.STAGE_DRAFT, D.STAGE_CUT, D.STAGE_NEW_SEASON)   # D-130: free agency to the new season
+
+
 def in_window(league, week: int) -> bool:
-    """Trades are made in the regular season up to the kick-off of the deadline's week (`last_week`), and in the offseason while free agency is the stage in progress, before the draft
-    has begun (SZ.8: the NFL's clubs trade from the new league year until the deadline; a player of the game wrote that he could not trade). The offseason's `week` is 0."""
+    """Trades are made in the regular season up to the kick-off of the deadline's week (`last_week`), and in the offseason from free agency on (SZ.8: the
+    NFL's clubs trade from the new league year until the deadline; D-130, the owner's answer to Q-063: after the draft, in the roster cut and before week 1
+    too). Closed in the offseason while the draft is under way (its picks are being made) and while the roster cut is being decided (`league.cut_deciding`:
+    the staff's plans of every team are made at its start and a trade would move a player they name). The offseason's `week` is 0."""
     from .league import OFFSEASON, SEASON
     if league.stage == OFFSEASON:
-        return week == T.FR_TRADE_OFFSEASON_WEEK and league.stage_no == D.STAGE_FREE_AGENCY and league.draft is None
+        if week != T.FR_TRADE_OFFSEASON_WEEK or league.stage_no not in OFFSEASON_OPEN:
+            return False
+        if league.stage_no == D.STAGE_DRAFT and league.draft is not None:
+            return False                                       # the draft has begun (stage 4 moves on to the cut only after its last pick)
+        return not league.cut_deciding
     return league.stage == SEASON and 1 <= week <= last_week(league)
+
+
+def closed_in_offseason_moves(league) -> bool:
+    """The trades are closed because the draft or the roster cut is in progress (they open again after it), not because of the season's calendar."""
+    from .league import OFFSEASON
+    return league.stage == OFFSEASON and ((league.stage_no == D.STAGE_DRAFT and league.draft is not None) or league.cut_deciding)
 
 NOTICE_FIRST, NOTICE_NEXT, NOTICE_LAST, NOTICE_PASSED = "NXX-30", "NXX-31", "NXX-32", "NXX-33"
 
