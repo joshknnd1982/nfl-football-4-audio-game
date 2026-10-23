@@ -327,7 +327,7 @@ NXZ-28	playbooks	menu	say5	Dime Short Coverage	defense play D028 of the catalog 
 NXZ-29	playbooks	menu	say5	Dime Deep Coverage	defense play D029 of the catalog (plays.txt)
 NXZ-30	playbooks	menu	say5	Man Press	defense play D030 of the catalog (plays.txt)
 NXB-10	playbooks	menu	say5	Back	the last play item of a group: back to the groups (letter B)
-NXH-27	playbooks	help	say5	 With a playbook, the play menus start with the original's items. Right opens the lists of the play you are on, M opens More Plays, and Backspace, Left or B. goes back. 	F5 addition (H12, SX.7; reworded in SX.10d: the play menus have lists, not groups)
+NXH-27	playbooks	help	say5	 With a playbook, the play menus start with the original's items. Enter on a play type lets the playbook pick the play. Right opens its lists, M opens More Plays, and Backspace, Left or B. goes back. 	F5 addition (H12, SX.7; reworded in SX.10d; Enter on a play type added in SZ.7, D-113)
 NXH-28	playbooks	help	say5	 Choose your offense and defense playbooks in the F9 menu, under Rules. Your team's playbook, with every play of the game, is the default. Classic is the original's plays and kicks. 	F6 addition (H12, C6), when a playbook is in use (reworded in SX.10e: the team's playbook is the default)
 NXH-29	playbooks	help	say5	 The others are styles: Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option and Pressure. A play changes an original play a little: strong against some calls, weak against others. 	F6 addition (H12, C6), when a playbook is in use, after NXH-28
 NXH-30	playbooks	help	say5	 The computer's teams call the plays of their own style, which the file team styles in the customize folder sets. 	F6 addition (H12, C6), when a playbook is in use, after NXH-29
@@ -486,7 +486,7 @@ NXN-01	franchise	sentence	say2	 this week's news. 	before the news of a week
 NXN-02	franchise	sentence	say5	 no news this week. 	F9 news with no news
 NXN-03	franchise	sentence	say2	 the news of the offseason. 	F9 news, the offseason's lines
 NXN-04	franchise	menu	say5	earlier	F9 news, the earlier lines
-NXH-34	franchise	help	say5	 With a franchise. F9. the franchise menu: the to do list, the news, your roster, the league history and the team ratings. 	F5 addition (H12, C6), while the franchise is in use
+NXH-34	franchise	help	say5	 With a franchise. F9. the franchise menu: the to do list, the news, your roster, the league history, the team ratings, free agents and trades. 	F5 addition (H12, C6), while the franchise is in use
 NXH-35	franchise	help	say5	 A franchise is a league that lasts from season to season. Your players have ratings, grow older, improve and decline, and retire. 	F6 addition (H12, C6), while the franchise is in use
 NXH-37	franchise	help	say5	 After the play offs comes the offseason with the draft and the roster cut. Before a game you hear the news and your to do list. Extra work you leave undone puts you behind the other teams. 	F6 addition (H12, C6), after NXH-35
 NXH-36	franchise	help	say5	 Rating: a player's skill from 40 to 99, where 70 is average. Potential: how fast a young player may still improve. 	F7 addition (H12, C6), while the franchise is in use
@@ -616,9 +616,28 @@ NXJ-E06	franchise	sentence	say2	 no free agent signed with you in this round. 	s
 NXJ-F02	franchise	sentence	say2	 free agency is over. signed: <n>. offers lost: <m>. free agents not signed, who leave: <k>. 	stage 8, the end of free agency
 NXJ-G01	franchise	sentence	say2	 the staff makes your offers. 	stage 8, the staff handles the player's team
 NXJ-G02	franchise	sentence	say2	 free agency: <n> players signed with your team. 	stage 8, the short offseason
-NXJ-H01	franchise	sentence	say5	 the market is closed. 	F9 free agents outside the stage of free agency
+NXJ-H01	franchise	sentence	say5	 the market is closed. you can sign free agents again in the regular season. 	F9 free agents outside the stage of free agency
+NXJ-S01	franchise	menu	say5	sign a free agent	F9 free agents in the regular season (SZ.8)
+NXJ-S02	franchise	menu	say5	hear the free agents	F9 free agents in the regular season (SZ.8)
+NXJ-S03	franchise	sentence	say5	 free agents. you can sign a player any week before the kick-off. you have <room> of room under the salary cap. 	title of F9's free agents menu in the regular season (SZ.8)
+NXJ-S04	franchise	sentence	say5	 <player>, <position>, age <a>, rating <r>, asks <contract>. 	F9 free agents: one free agent with what he asks (SZ.8)
+NXJ-S05	franchise	sentence	say5	 the free agents, the best first. 	F9 free agents: the title of the list (SZ.8)
+NXJ-S06	franchise	sentence	say5	 you have no open place there. who do you release to make room for <player>? 	F9 free agents: the title of the players the player may release (SZ.8)
+NXJ-S07	franchise	sentence	say5	 <player>, rating <r>, age <a>, <contract>. releasing him costs <dead> in dead money. 	F9 free agents: one player the player may release (SZ.8)
+NXJ-S08	franchise	sentence	say5	 sign <player>, <contract>? press enter to sign him, or escape to say no. 	F9 free agents: the question when the team has an open place (SZ.8)
+NXJ-S09	franchise	sentence	say5	 release <give> and sign <get>, <contract>? releasing <give> costs <dead> in dead money, which counts against the cap. press enter to do it, or escape to say no. 	F9 free agents: the question when a player is released to make room (SZ.8)
+NXJ-S10	franchise	sentence	say5	 you signed <player>, <contract>. 	F9 free agents: the signing was made (SZ.8)
+NXJ-S11	franchise	sentence	say5	 you released <give> and signed <get>, <contract>. 	F9 free agents: the signing was made with a release (SZ.8)
+NXJ-S12	franchise	sentence	say5	 free agents are signed in F9 during the regular season, not in the play offs. 	F9 free agents in the play offs (SZ.8)
+NXJ-S13	franchise	sentence	say5	 free agents cannot be signed during a game. 	F9 free agents inside a game (SZ.8)
+NXJ-S14	franchise	sentence	say5	 no free agent is left at that position. 	F9 free agents: nobody in the group (SZ.8)
+NXJ-S15	franchise	sentence	say5	 every player you have there is hurt, so none can be released. 	F9 free agents: nobody to release (SZ.8)
+NXJ-S16	franchise	sentence	say5	 that would put you over the salary cap. you have <room> of room. 	F9 free agents: the cap does not allow it (SZ.8)
+NXJ-S17	franchise	sentence	say5	 you did not sign <player>. 	F9 free agents: the player said no (SZ.8)
+NXJ-S18	franchise	sentence	say5	 that signing cannot be made now. 	F9 free agents: any other reason (SZ.8)
+NXJ-S19	franchise	sentence	say5	 free agents can be signed at the main menu, before the game, once the week's news and lists are told. 	F9 free agents while the results of the week before are still being told (SZ.8)
 NXF-29	franchise	menu	say5	free agents	F9 Franchise item (SX.8i)
-NXH-40	franchise	help	say5	 Free agency: before the draft the players nobody signed are on the market for a few rounds. Offer the price or a little more. The best offer wins. 	F6, after NXH-39 (SX.8i)
+NXH-40	franchise	help	say5	 Free agency: before the draft the players nobody signed are on the market for a few rounds. Offer the price or a little more. The best offer wins. In the season, sign free agents in F9. 	F6, after NXH-39 (SX.8i)
 NXJ-I01	franchise	sentence	say2	 one free agent is on the market. 	stage 8, the market at its start, one player
 NXJ-I02	franchise	sentence	say2	 one other free agent signed with another team. 	stage 8, the count of the other signings, one
 NXJ-I03	franchise	sentence	say2	 free agency: one player signed with your team. 	stage 8, the short offseason, one
@@ -642,7 +661,7 @@ NXX-11	franchise	menu	say5	offer one of your players	F9 trades: the trade block
 NXX-12	franchise	menu	say5	ask for a player	F9 trades
 NXX-13	franchise	menu	say5	your draft picks	F9 trades
 NXX-14	franchise	menu	say5	trades this season	F9 trades
-NXX-15	franchise	sentence	say5	 trades are closed. they open again in the next regular season, until the kick-off of week <n>. 	F9 trades outside the window
+NXX-15	franchise	sentence	say5	 trades are closed. they open again in free agency and in the next regular season, until the kick-off of week <n>. 	F9 trades outside the window
 NXX-16	franchise	sentence	say5	 trades are closed during a game. 	F9 trades inside a game
 NXX-17	franchise	sentence	say5	 no team makes an offer for <give>. 	F9 trades: nobody wants the player on the block
 NXX-18	franchise	sentence	say5	 the <team> give <get>, rating <r>, age <a>. <picks> 	F9 trades: one offer for the player on the block
@@ -656,7 +675,7 @@ NXX-25	franchise	sentence	say5	 week <n>: the <team> traded <give> to the <other
 NXX-27	franchise	sentence	say5	 a player traded this season cannot be traded again until the next season. 	F9 trades
 NXK-14	franchise	sentence	say2	 the draft has 7 rounds. your picks: <list>. 	stage 4 when a trade moved a pick of the player's team (SX.8j)
 NXK-15	franchise	piece	piece	round <round> pick <pick>	stage 4: one of the player's picks
-NXH-41	franchise	help	say5	 Trades: until the trade deadline teams swap players of the same position, with draft picks to even the value. Offers come in your to do list; F9 has trades. 	F6, after NXH-40 (SX.8j)
+NXH-41	franchise	help	say5	 Trades: until the trade deadline, and in free agency, teams swap players of the same position, with picks to even the value. Offers come in your to do list; F9 has trades. 	F6, after NXH-40 (SX.8j)
 NWX01	franchise	remark	say2	 the <team> traded <player>, <position>, to the <other>. 	a trade between two other teams (news)
 NWX02	franchise	remark	say2	 a trade: <player> goes from the <team> to the <other>. 	a trade between two other teams (news)
 NWX03	franchise	remark	say2	 the <other> got <player>, <position>, from the <team> in a trade. 	a trade between two other teams (news)
@@ -664,6 +683,11 @@ NWX04	franchise	remark	say2	 <player> is on the move: the <team> sent him to the
 NXX-P06	franchise	piece	piece	and	the word between two picks of a trade (SX.8j review)
 NXX-28	franchise	sentence	say5	 trades. the trade deadline is the kick-off of week <n>. 	the title of F9's trades menu (SX.8j review: the deadline week is spoken)
 NXX-29	franchise	sentence	say5	 the draft has begun. your picks: <list>. 	F9 trades, your draft picks during the draft (SX.8j review)
+NXX-30	franchise	sentence	say2	 in F9, under Franchise, you can sign free agents any week and make trades until the trade deadline, the kick-off of week <n>. 	the news of week 1 (SZ.8): where trades and free agents are
+NXX-31	franchise	sentence	say2	 the trade deadline is next week. 	the news of the week before the deadline (SZ.8)
+NXX-32	franchise	sentence	say2	 this is the last week for trades. the deadline is the kick-off. 	the news of the deadline's week (SZ.8)
+NXX-33	franchise	sentence	say2	 the trade deadline has passed. trades open again in free agency. 	the news of the week after the deadline (SZ.8)
+NXX-35	franchise	sentence	say5	 in the offseason: the <team> traded <give> to the <other> for <get>. <picks> 	F9 trades: a trade of the offseason (SZ.8), the season's list otherwise says the week
 NXI-10	franchise	sentence	say2	 <player>, <position>, is out with <injury>, <lo> to <hi> weeks. 	a new injury, out, the range (SX.8k)
 NXI-11	franchise	sentence	say2	 <player>, <position>, is out with <injury>, <n> weeks. 	a new injury, out, the range is one number (SX.8k)
 NXI-12	franchise	sentence	say2	 <player>, <position>, is out with <injury> for the season. 	a new injury that lasts past week 16 (SX.8k)
@@ -1614,6 +1638,11 @@ NXH-64	clock	help	say5	 A regular season over time is one 10 minute period and m
 NXC-12	clock	sentence	say2	<team> and the <other> tied at <score>. 	a regular week's result when the player's game ended tied (season engine, SX.12), in the place of '<winner> over the <loser> ...'
 NXC-13	clock	piece	piece	and <n> tie	after a team's losses in the standings, the qualifiers and the Franchise's records, when it has one tie (SX.12)
 NXC-14	clock	piece	piece	and <n> ties	the same with two or more ties (SX.12)
+NXC-20	franchise	sentence	say2	 week <n> 	the real calendar's schedule (SZ.8), before each week's game in the place of the original's 'game number <n>': the weeks run 1 to 18 and a bye is a week too
+NXC-21	franchise	sentence	say2	 bye week. 	the real calendar's schedule (SZ.8): the week in which the player's team does not play
+NXC-22	franchise	menu	say5	 1. see this week's games 	the main menu's first choice in the bye week (SZ.8), in the place of ' 1. play game '
+NXC-23	franchise	sentence	say2	 Your team has a bye this week. There is no game today. 	'Today's game is ...' in the bye week (SZ.8)
+NXC-24	franchise	sentence	say2	 your team has a bye this week. 	the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
 NXB-J25	playbooks	sentence	say4	 the kick goes out of bounds, and the ball is placed at the <n> 	a free kick out of bounds that was not made from the 35: 25 yards from the kick, 30 after a safety (RB26 6-2-4; SX.13)
 NXB-J26	playbooks	sentence	say4	 the kick lands short of the landing zone, and the ball is placed at the <n> 	a free kick short of the landing zone that was not made from the 35 (RB26 6-1-4 (d)(3), 6-2-4; SX.13)
 NXB-J27	playbooks	sentence	say4	 <player> falls on it in the end zone 	a punt blocked behind the kicking team's goal line, recovered there by the receivers: a touchdown (RB26 11-2; SX.13)
@@ -2004,7 +2033,17 @@ NXB-S16	broadcast	menu	say5	A short whistle	whistle_short (SZ.2)
 NXB-S17	broadcast	menu	say5	A long whistle	whistle_long (SZ.2)
 NXB-S18	broadcast	menu	say5	A double whistle	whistle_double (SZ.2)
 NXB-S19	broadcast	menu	say5	A triple whistle	whistle_triple (SZ.2)
-NXB-H17	playbooks	help	say5	 Right opens more plays: the lists of the play you are on. M opens More Plays, and D describes a play. Enter on a play type lets the playbook pick the play, and the call is told. 	once in a program run, three runs at most, after the first item of the offense menu (SZ.5, D-110)
-NXB-H18	playbooks	help	say5	 Right opens more calls: the lists of the call you are on, such as blitzes and zone coverages. M opens More Plays, and D describes a call. Enter on a call lets the playbook pick. 	once in a program run, three runs at most, after the first item of the defense menu (SZ.5, D-110)
+NXB-H17	playbooks	help	say5	 Right opens more plays: the lists of the play you are on. M opens More Plays, D describes a play, and W says which play the playbook most likely picks. Enter on a play type lets the playbook pick. 	once in a program run, three runs at most, after the first item of the offense menu (SZ.5, D-110; W added in SZ.7, D-112)
+NXB-H18	playbooks	help	say5	 Right opens the lists of the call you are on, such as blitzes. M opens More Plays, D describes a call, and W says which call the playbook most likely picks. Enter on a call lets the playbook pick. 	once in a program run, three runs at most, after the first item of the defense menu (SZ.5, D-110; W added in SZ.7, D-112)
 NXB-H19	playbooks	help	say5	 Each setting starts as the playbook's choice, which means the play you call sets it. The game recommends nothing here. Enter changes a setting, and it stays for the plays that follow. 	once in a program run, three runs at most, after the first item of Formation and Tempo (SZ.5, D-110)
 NXB-G09	playbooks	help	say5	 Opens every list of defensive calls, such as blitzes and zone coverages, and the situation defenses. 	description of the defense's More Plays item (SZ.5)
+NXB-W01	playbooks	sentence	say5	 <list>. The playbook would most likely pick <name>, about <n> percent of the time. 	W on a play type or in a list: the one play with the most weight and its chance (SZ.7, D-112)
+NXB-W02	playbooks	sentence	say5	 <list>. The playbook would pick <name> or <other> about equally often, each about <n> percent of the time. 	W: two plays share the most weight (SZ.7, D-112)
+NXB-W03	playbooks	sentence	say5	 <list>. The playbook would pick <name>, <other> or <third> about equally often, each about <n> percent of the time. 	W: three plays share the most weight (SZ.7, D-112)
+NXB-W04	playbooks	sentence	say5	 <list>. The playbook would pick any of <count> plays about equally often, such as <name>, each about <n> percent of the time. 	W: four or more plays share the most weight (SZ.7, D-112)
+NXB-W05	playbooks	sentence	say5	 <list>. The playbook picks <name> every time. 	W: one play has all the weight (SZ.7, D-112)
+NXB-W06	playbooks	sentence	say5	 <list>. The playbook has no favourite, and Enter takes <name>. 	W on a play type whose plays the playbook never weighs: Enter takes the first play (SZ.7, D-112)
+NXB-W07	playbooks	sentence	say5	 <list>. The playbook has no favourite play here. 	W in a list the playbook never calls from, such as the kinds of kicks and the kick defense (SZ.7, D-112)
+NXB-W08	playbooks	sentence	say5	 <name> is one play, and Enter calls it. 	W on a single play: a quarterback run, a kneel, a spike, Field Goal, Punt, a favourite (SZ.7, D-112)
+NXB-W09	playbooks	sentence	say5	 W says which play the playbook would most likely pick. Press it on a play type, such as Short Pass, or in a list of plays. 	W on an item that is neither (Save Game, Time Out, Challenge, Formation and Tempo) (SZ.7, D-112)
+NXB-W10	playbooks	sentence	say5	 W needs a playbook. Choose one in the F9 menu, under Rules. 	W in a menu with the original's items only (SZ.7, D-112)

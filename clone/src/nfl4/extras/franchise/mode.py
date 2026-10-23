@@ -193,6 +193,7 @@ def restore_state(dst: SeasonState, src: SeasonState) -> None:
     dst.coach, dst.tn1, dst.tn2, dst.tn3, dst.tn4 = src.coach, src.tn1, src.tn2, src.tn3, src.tn4
     dst.vtrnt, dst.gtp = src.vtrnt, src.gtp
     dst.schedule = list(src.schedule)
+    dst.calendar = src.calendar                        # SZ.8: a classic season has none
     src.records.copy_into(dst.records)                 # wins, losses and (SX.12) ties
     dst.playoffs.pairings[:] = src.playoffs.pairings
     dst.playoffs.byes[:] = src.playoffs.byes
@@ -324,12 +325,12 @@ def resume_playoffs(p) -> None:
     wild card round, is not in the coming round's games: the engine plays the rest, as it does in the original's own flow (review
     finding 1 of SX.8a)."""
     g, season = p.g, p.season
-    if season.gtp < 17:
+    if not season.in_playoffs:
         return
     own, playoffs = season.own_team, season.playoffs
     if playoffs.contains_player(own):
         return
-    if own in playoffs.byes and season.gtp == 17:
+    if own in playoffs.byes and season.gtp == season.playoff_week(1):
         g.season_engine._wild_card_games_without_the_player()
         return
     g.finplay17()

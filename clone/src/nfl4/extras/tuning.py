@@ -516,6 +516,13 @@ FR_FA_OFFER_MORE = 10
 FR_FA_OFFERS = 5
 FR_FA_LIST = 5
 FR_FA_RESERVE = 0                 # tenths of a million left under the cap for the draft's rookies when a team signs a free agent (0: the cap rule of the cut is the net)
+# SZ.8 (D-120): free agents the player signs in the regular season (F9, Franchise, free agents; `signings.py`). The pool is the veterans nobody signed: FR_FA_SEASON_PER_GROUP of
+# every position group, made without a draw from the league's ID, the season, the week and the group (so a reloaded league has the same ones), rated FR_FA_SEASON_RATING (the base
+# and the span: 58 to 69, below most starters), aged FR_FA_SEASON_AGE (27 to 33), plus the players the player released this season. They ask the price of stage 7 (`resign.asking`);
+# a signing needs an empty place or a release of a player of the group who is not hurt (the dead money counts against the cap), and the cap.
+FR_FA_SEASON_PER_GROUP = 3
+FR_FA_SEASON_RATING = (58, 12)
+FR_FA_SEASON_AGE = (27, 7)
 # SX.8i calibration (D-069; the reports are work/simulate_franchise_sx8f_fast_500x20_sx8i.txt, _fast_2000x20_sx8i_2000.txt, _fast_100x20_sx8i_cap1450.txt and _full_5x20_sx8i.txt, the
 # sweeps work/sweep_market_sx8i_a.txt, _b.txt and _c.txt, the probe work/probe_market_sx8i.py). THE SUPPLY (Q-031): at SX.8h's rule the market had 16 players a league-offseason, mean
 # rating 56.9, none rated 80. The one lever that makes a supply without a random draw is a payroll target of the staff when it signs players again (FR_RESIGN_TARGET): a sweep
@@ -553,6 +560,8 @@ FR_FA_RESERVE = 0                 # tenths of a million left under the cap for t
 # preparations of the weeks FR_TRADE_FIRST_WEEK to FR_TRADE_LAST_WEEK (after 3 to 8 games: before that a record says nothing about a team's situation).
 FR_TRADE_FIRST_WEEK = 4
 FR_TRADE_LAST_WEEK = 9
+FR_TRADE_LAST_WEEK_CALENDAR = 10  # SZ.8: in a season that plays the real 18-week calendar the deadline is the Tuesday after week 9 (2026-11-10): trades are made up to the kick-off of week 10
+FR_TRADE_OFFSEASON_WEEK = 0       # SZ.8: the `week` a trade made in the offseason (stage 8, before the draft) carries in the season's log
 # START VALUES that no measurement has moved (the SX.8j review's note; the playtest and SX.8p may): FR_TRADE_MIN_GAMES, FR_TRADE_CONTEND, FR_TRADE_REBUILD,
 # FR_TRADE_VETERAN_AGE, FR_TRADE_UPGRADE, FR_TRADE_AGE, FR_TRADE_POTENTIAL, FR_TRADE_MONEY_DIVISOR, FR_TRADE_PICK_SHARE, FR_TRADE_SEASON_MAX, FR_TRADE_PICKS_MAX.
 # MEASURED: FR_TRADE_PICK_VALUE (work/measure_pick_value_sx8j.txt); SWEPT: FR_TRADE_MARGIN and FR_TRADE_WEEK_MAX (the history below).

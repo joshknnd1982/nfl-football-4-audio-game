@@ -18,6 +18,7 @@ The sound check listens to the intro sound (foot0), which plays while the game s
 Usage: <python with soundcard, numpy, pywin32> exe_smoke.py <path to nfl4.exe> <bits 32|64> <scratch folder> [sound volume in dB, -34 default, -50 = a control run] [sapi|nvda|jaws|auto]
 """
 import os
+import shutil
 import struct
 import subprocess
 import sys
@@ -178,6 +179,7 @@ check("the startup report has every item with a value or n/a (reason)", not miss
 check("the report's n/a items always say why", all(v.startswith("n/a (") for v in held.values() if v.startswith("n/a")))
 check("the last line of the log is `closed`", bool(lines) and " closed code=" in lines[-1], lines[-1][:80] if lines else "empty")
 report_out = os.path.join(scratch, "report-out")
+shutil.rmtree(report_out, ignore_errors=True)       # a scratch folder used before holds the zips of earlier runs (B-X136)
 made = subprocess.run([exe, "--problem-report", "--quiet", "--folder=" + report_out], env=env, cwd=os.path.dirname(exe),
                       capture_output=True, text=True, timeout=120)
 zips = [n for n in os.listdir(report_out)] if os.path.isdir(report_out) else []
@@ -213,6 +215,6 @@ stadium = os.path.join(os.path.dirname(exe), "assets", "sounds_nx")
 count = len([f for f in os.listdir(stadium) if f.lower().endswith(".wav")]) if os.path.isdir(stadium) else 0
 check("19 stadium wavs beside the exe (SY.2, SY.3)", count == 19, f"{count}")
 data = os.path.join(os.path.dirname(exe), "assets", "data")
-check("the names data beside the exe", all(os.path.exists(os.path.join(data, n)) for n in ("rosters.txt", "coaches.txt", "surnames.txt", "respellings.txt")))
+check("the names data beside the exe", all(os.path.exists(os.path.join(data, n)) for n in ("rosters.txt", "coaches.txt", "surnames.txt", "respellings.txt", "schedule_2026.txt")))
 print("ALL PASS" if all(results) else "SOME FAILED")
 sys.exit(0 if all(results) else 1)

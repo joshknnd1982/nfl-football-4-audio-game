@@ -21,7 +21,7 @@ RESEARCH = {"Bengals": ("air", "pro"), "Browns": ("pressure", "pressure"), "Rave
             "Texans": ("west", "west"), "Titans": ("power", "power"), "Bears": ("power", "power"),
             "Lions": ("power", "power"), "Packers": ("west", "west"), "Vikings": ("pressure", "pressure"),
             "Cowboys": ("air", "air"), "Eagles": ("option", "option"), "Giants": ("power", "power"),
-            "Redskins": ("air", "air"), "Cardinals": ("option", "option"), "Forty Niners": ("zone", "zone"),
+            "Commanders": ("air", "air"), "Cardinals": ("option", "option"), "Forty Niners": ("zone", "zone"),
             "Rams": ("air", "air"), "Sea hawks": ("zone", "zone"), "Buccaneers": ("air", "air"),
             "Falcons": ("power", "power"), "Panthers": ("west", "west"), "Saints": ("west", "west")}
 

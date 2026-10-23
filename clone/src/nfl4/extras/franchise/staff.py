@@ -470,7 +470,7 @@ def fitted_styles(league, week: int) -> tuple | None:
     whole-program run's C-F2 was -1.07 wins with the computer teams alone fitted, so the fit helped only his opponents, B-P107). Outside the season (the
     offseason has empty places): the coordinators' styles. None while a place is open."""
     base = team_styles(league)
-    if base is None or league.stage != "season" or not 1 <= week <= D.SUPER_BOWL_WEEK:
+    if base is None or league.stage != "season" or not 1 <= week <= league.regular_weeks + 4:
         return base
     from . import injuries, people, workload
     hurt = people.hurt_teams(league, week)
@@ -545,12 +545,12 @@ def check_staff(league, whole) -> None:
         goal = coach["goal"]
         if not isinstance(goal, list) or len(goal) != 2 or goal[0] not in GOAL_KINDS:
             raise LeagueError("the goal of team %d is %r" % (team, goal))
-        whole(goal[1], 0, D.REGULAR_WEEKS, "the goal's number of team %d" % team)
+        whole(goal[1], 0, D.MAX_REGULAR_WEEKS, "the goal's number of team %d" % team)
         last = coach["last"]
         if last is not None:
             if not isinstance(last, list) or len(last) != 4:
                 raise LeagueError("the last season of team %d's head coach is %r" % (team, last))
-            whole(last[0], 0, D.REGULAR_WEEKS, "the wins of team %d's last season" % team)
+            whole(last[0], 0, D.MAX_REGULAR_WEEKS, "the wins of team %d's last season" % team)
             whole(last[1], D.FINISH_MISSED, D.FINISH_CHAMPION, "the finish of team %d's last season" % team)
             whole(last[2], 0, 1, "the goal met of team %d's last season" % team)
             whole(last[3], 0, 100, "the job rating before team %d's last season" % team)

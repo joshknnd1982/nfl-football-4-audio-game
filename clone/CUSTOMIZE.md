@@ -35,7 +35,7 @@ The ID stays as it is. The text is what the voice speaks, so spell it the way it
 
 ## Rename a team
 
-Open teams.txt and change the name after the ID. The teams are T01 to T32. To rename the Broncos, change `T09 = Broncos` to `T09 = Mustangs`. Two teams cannot have the same name. If you give a team the name another team has, the later one goes back to its original name. A season in progress and a saved game are not affected: they keep numbers, not names.
+Open teams.txt and change the name after the ID. The teams are T01 to T32. To rename the Broncos, change `T09 = Broncos` to `T09 = Mustangs`. T24 is the Commanders; the original game called that team the Redskins, and `T24 = Redskins` brings that name back. A teams.txt written by an earlier version still said Redskins: the first time it is read the game changes that line to Commanders, adds a note, and keeps your file as teams.txt.before-commanders (once; after that your own T24 stays). Two teams cannot have the same name. If you give a team the name another team has, the later one goes back to its original name. A season in progress and a saved game are not affected: they keep numbers, not names.
 
 ## Rename a division
 

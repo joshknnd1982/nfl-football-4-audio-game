@@ -238,7 +238,7 @@ def test_trades_are_closed_inside_a_game():
         play_engine = object()
 
     class League:
-        stage, gtp = "season", 3
+        stage, gtp, calendar = "season", 3, None
     assert trade_flow.closed_reason(Game(), League()) == X.text("NXX-16")
     Game.play_engine = None
     assert trade_flow.closed_reason(Game(), League()) is None
@@ -327,7 +327,7 @@ def test_the_weekly_preparation_makes_the_real_searchs_trades_and_offers_the_pla
     store = SimpleNamespace(words=history.Words(lambda team: "Team%d" % team), save=lambda: saves.append(len(league.trades["log"])))
     game = SimpleNamespace(news_pools=None, rnd=GameRandom(random.Random(1)), playbook_table=None,
                            options=SimpleNamespace(settings=SimpleNamespace(game=SimpleNamespace(nx_offense_playbook="classic", nx_defense_playbook="classic"))))
-    weekly.prepare(SimpleNamespace(g=game, store=store, season=SimpleNamespace(tn3=1, tn4=2)), league, 5)
+    weekly.prepare(SimpleNamespace(g=game, store=store, season=SimpleNamespace(tn3=1, tn4=2, on_bye=False)), league, 5)
     (row,) = league.trades["log"]                                           # the computer trade: a contender (4 or 14) with team 15
     assert row[7] == TR.KIND_COMPUTER and row[1] in (4, 14) and row[2] == 15 and qb(league, row[1]).rating == 86 and qb(league, 9).id == mine
     (item,) = [item for item in league.todo if item["kind"] == D.TODO_TRADE]   # the other contender's offer to the player's team, waiting

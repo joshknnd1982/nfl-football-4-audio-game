@@ -74,7 +74,7 @@ class GameInjuries:
         self.words = words
         self.pools = pools or DEFAULT_POOLS
         self.say = say                                 # the game's speech for the announcer's lines (Game.say2 and the banter player)
-        self.exposed = 1 <= week <= T.FR_INJ_LAST_WEEK
+        self.exposed = 1 <= week <= league.last_prepared_week
         self.state = None
         self.identity = {1: [], 2: []}
         I.lineup_decided(league, own, week, staff)     # the kick-off: who of the player's hurt players plays is written into the rows
@@ -268,9 +268,11 @@ class GameInjuries:
 
 # ----- the week's report (made in the preparation, told after the news) -----
 
-def _status_line(words, player, row, week: int, injury: str | None) -> str:
-    """One line of the report: the named lines for an injury of last week (with the kind's name when a line of its pool is on), the plain ones after."""
-    state = I.status_of_row(row, week)
+def _status_line(words, player, row, week: int, injury: str | None, league: LeagueRecord | None = None) -> str:
+    """One line of the report: the named lines for an injury of last week (with the kind's name when a line of its pool is on), the plain ones after.
+    `league`: the season's length (16 weeks, or the calendar's 18) says when the play-offs are and when the Super Bowl is."""
+    regular = league.regular_weeks if league is not None else D.REGULAR_WEEKS
+    state = I.status_of_row(row, week, regular)
     values = dict(player=_plain(player.name), position=words.position(player.pos))
     if injury is not None:
         values["injury"] = injury
@@ -279,7 +281,7 @@ def _status_line(words, player, row, week: int, injury: str | None) -> str:
     if state == D.STATUS_QUESTIONABLE:
         return X.text("NXI-14" if injury is not None else "NXI-19", **values)
     low, high = I.spoken_range(row, week)
-    if row[3] > D.SUPER_BOWL_WEEK:                              # back only after the Super Bowl (a player back for the play-offs is told his weeks)
+    if row[3] > regular + 4:                                    # back only after the Super Bowl (a player back for the play-offs is told his weeks)
         return X.text("NXI-12" if injury is not None else "NXI-17", **values)
     if low == high:
         return X.text("NXI-11" if injury is not None else "NXI-16", n=low, **values)
@@ -302,12 +304,12 @@ def report_lines(league: LeagueRecord, week: int, back: list, words, pools, rnd,
     lines = []
     for player, _state in fresh:
         row = I.row_of(league, player.id)
-        lines.append(_status_line(words, player, row, week, injury_name(pools, row[1], rnd)))
+        lines.append(_status_line(words, player, row, week, injury_name(pools, row[1], rnd), league))
     for player, _state in older:
-        lines.append(_status_line(words, player, I.row_of(league, player.id), week, None))
+        lines.append(_status_line(words, player, I.row_of(league, player.id), week, None, league))
     table = I.lineup(league, team, week, staff)
-    for position in D.ROSTER_ORDER:                             # the stand-ins who play this week as the decisions stand (rested players rest)
-        if any(table[i][0] == (I.STAND_IN, position) for i in D.PLACES_OF[position]):
+    for position in D.ROSTER_ORDER:                             # the stand-ins who play this week as the decisions stand (rested players rest); nobody plays in a bye week
+        if not league.has_bye(team, week) and any(table[i][0] == (I.STAND_IN, position) for i in D.PLACES_OF[position]):
             row = I.stand_in(league, team, position)
             lines.append(X.text("NXI-21", player=_plain(row[2]), position=words.position(position)))
     names = [_plain(league.players[pid].name) for pid in back if pid in league.players and league.players[pid].team == team]
@@ -323,7 +325,7 @@ def headline(league: LeagueRecord, week: int):
     best = None
     for row in league.injuries["hurt"]:
         player = league.players[row[0]]
-        if player.team == league.team or row[2] != week - 1 or I.status_of_row(row, week) != D.STATUS_OUT:
+        if player.team == league.team or row[2] != week - 1 or I.status_of_row(row, week, league.regular_weeks) != D.STATUS_OUT:
             continue
         if best is None or (player.rating, -player.id) > (best[0].rating, -best[0].id):
             best = (player, row)
@@ -374,7 +376,7 @@ def list_lines(words, league: LeagueRecord, week: int, staff: bool) -> list:
     """F9, franchise, injury report: (the line, the player id when Enter changes whether he plays, else None) for each player of the team who is not fit."""
     out = []
     for player, state in I.hurt_of(league, league.team, week):
-        line = _status_line(words, player, I.row_of(league, player.id), week, None)
+        line = _status_line(words, player, I.row_of(league, player.id), week, None, league)
         if state in (D.STATUS_DOUBTFUL, D.STATUS_QUESTIONABLE):
             line += X.text("NXI-51" if I.plays(league, player, week, staff) else "NXI-52")
             out.append((line, player.id))

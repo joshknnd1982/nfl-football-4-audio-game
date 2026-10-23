@@ -41,8 +41,9 @@ from ..game.banter_markup import Sound
 from ..game.banter_pool import DEFAULT_LINES, BanterPool, banter_id, banter_number, build_pool
 from ..game.names import POOL_SIZE, load_surnames
 from . import customlists as cl
+from . import debuglog
 from .files import playernames
-from .healing import read_player_text
+from .healing import read_player_text, save_backup_copy, write_text_atomic
 
 log = logging.getLogger("nfl4.data")
 
@@ -107,7 +108,12 @@ TEAM_NOTES = (
     "The ID, T01 to T32, must stay as it is. A name has 1 to 30 characters, with no comma and no semicolon.",
     "Two teams cannot have the same name. Spell a name the way the voice should say it.",
     "Delete a line to get the original name back. Delete the whole file to get all the original names back.",
+    "T24 is the Commanders now. The original game called this team the Redskins. Write T24 = Redskins to bring that name back.",
 )
+TEAM_OLD_LAST_NOTE = TEAM_NOTES[4]             # the last note of a teams.txt written before the rename (Q-026, 2026-10-22)
+TEAM_RENAME_NOTE = TEAM_NOTES[5]               # a teams.txt that has this note has been made or migrated since: T24 = Redskins in it is the player's choice
+TEAMS_BEFORE_RENAME = ".before-commanders"     # the copy of the player's teams.txt that the one-time migration keeps
+_T24_REDSKINS = re.compile(r"^(\s*T0*24\s*=\s*)Redskins(\s*)$", re.IGNORECASE | re.MULTILINE)
 DIVISION_NOTES = (
     "These are the 8 division names. Each line is an ID, an equals sign and the words the voice speaks.",
     "The conference names A. F. C. and N. F. C. also appear inside fixed sentences of the play offs. They do not change here.",
@@ -139,6 +145,38 @@ BANTER_NOTES = (
     "  B144 = [sound crowd boo.wav]",
     "A line has at most 500 characters and 20 parts. The F8 key switches all comments off, yours too.",
 )
+
+
+def migrate_team_names(folder: str) -> str:
+    """The one-time rename of T24 (Q-026, the owner 2026-10-22: "They are the Commanders"). Every teams.txt written by an older version names every
+    team, so changing the built-in default alone would change nothing for a player who already has the file. A file that has the old notes and not
+    the rename note is old: the note is added (so a later T24 = Redskins is the player's own choice and stays) and a T24 that still says Redskins
+    becomes Commanders, with the player's file kept first as teams.txt.before-commanders. Returns "renamed", "noted" or "" (nothing to do, or the
+    file could not be read or written: the file is then left as it is, and the built-in default shows through only where the file has no line).
+    Never raises."""
+    path = os.path.join(folder, "teams.txt")
+    try:
+        if not os.path.isfile(path):
+            return ""
+        text = read_player_text(path)
+        if TEAM_RENAME_NOTE in text or TEAM_OLD_LAST_NOTE not in text:
+            return ""
+        lines = text.replace("\r\n", "\n").split("\n")
+        at = next(i for i, line in enumerate(lines) if line.strip() == "# " + TEAM_OLD_LAST_NOTE)
+        lines.insert(at + 1, "# " + TEAM_RENAME_NOTE)
+        edited = "\n".join(lines)
+        renamed = _T24_REDSKINS.search(edited) is not None
+        if renamed:
+            edited = _T24_REDSKINS.sub(lambda m: m.group(1) + league_module.DEFAULT_TEAM_NAMES[23] + m.group(2), edited, count=1)
+            if save_backup_copy(path, TEAMS_BEFORE_RENAME) is None:
+                return ""                                     # never replace a file whose copy could not be made
+        if not write_text_atomic(path, edited):
+            return ""
+        debuglog.event("file", "teams_renamed", path=path, t24="Commanders" if renamed else "unchanged")
+        return "renamed" if renamed else "noted"
+    except Exception:                                         # a file that cannot be used here is healed or kept by the list loader as always
+        log.exception("teams.txt could not be migrated")
+        return ""
 
 
 def name_problem(name: str) -> str | None:
@@ -269,6 +307,7 @@ class Customization:
             for spec in SPECS + EXTRA_SPECS}
         self._notices: list[str] = []
         self._unwritable_told: set[str] = set()
+        migrate_team_names(folder)                    # Q-026: a teams.txt of an older version says Redskins for T24; once, before it is read
         self.snapshot = self._load()
         self._notices.extend(self.snapshot.notices)
 

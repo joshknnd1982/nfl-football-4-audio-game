@@ -26,7 +26,7 @@ from ..game.keys import MODIFIER_KEYS
 from ..game.rules import MENU_QUIET, MENU_REFRESH
 from . import nx_texts as X
 from . import playbooks as PB
-from .offense_flow import MINUS_CODES, PLUS_CODES, engine_family
+from .offense_flow import MINUS_CODES, PLUS_CODES, engine_family, likely_for
 from .plays import catalog as C
 from .plays import personnel
 from .plays import play_menus as PM
@@ -152,12 +152,22 @@ class DefenseFlow:
         """Enter on one of the original's six calls (design 2.2, SX.10e): the playbook's pick, the computer's calling weights over the
         family's usable calls for the player's style and the offense's situation (one draw); the first usable call of the family's lists
         when none has a weight (no draw); "" when every call of the family is off."""
-        context = self.context(state)
-        family_calls = [c for group in PM.family_groups("D", family) for c in PM.concepts_of(group, context) if c.side == "D"]
+        family_calls = self.family_calls(state, family)
         if not family_calls:
             return ""
         picked = self.rules.books.pick(state, 1, "D", family_calls)
         return picked or family_calls[0].id
+
+    def family_calls(self, state, family: int) -> list[C.Concept]:
+        """The usable calls of the lists Right opens from one of the original's six calls, in the order of the lists."""
+        context = self.context(state)
+        return [c for group in PM.family_groups("D", family) for c in PM.concepts_of(group, context) if c.side == "D"]
+
+    def likely_text(self, state, item) -> str:
+        """The W key (D-112, Q-050), as the offense's (offense_flow.likely_for): the call the playbook would most likely pick for the call
+        the menu is on, or most likely make in the list it is in, and how often; no draw. "" for an item that is none of these."""
+        kind, value = item.action[0][len(PREFIX):], item.action[1]
+        return likely_for(self, state, "D", kind, value, lambda family: self.family_calls(state, family), PM.defense_family_items(), {})
 
     def find(self, state):
         self.menus.set_context(self.context(state))

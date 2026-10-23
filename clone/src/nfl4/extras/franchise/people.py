@@ -152,7 +152,7 @@ def gain_of(league, team: int, table: list) -> int:
 def hurt_teams(league, week: int) -> set:
     """The teams that have a player hurt for `week` by an earlier game (the frame of `injuries.effective_sums`)."""
     return {league.players[pid].team for pid, row in injuries.rows(league).items()
-            if row[2] < week and injuries.status_of_row(row, week) != D.STATUS_HEALTHY}
+            if row[2] < week and injuries.status_of_row(row, week, league.regular_weeks) != D.STATUS_HEALTHY}
 
 
 def week_sums(league, week: int) -> list:
@@ -184,7 +184,7 @@ def after_week(league, week: int, results: list, staff: bool = True) -> dict:
     week); `staff`: the player's team's lineup by the staff's rule. Returns team -> (won, goal met). Weeks after FR_MORALE_LAST_WEEK move nothing."""
     out = {}
     tied = set()                                                       # SX.12: a tie moves no morale by its result (neither a win nor a loss)
-    if not 1 <= week <= T.FR_MORALE_LAST_WEEK:
+    if not 1 <= week <= league.last_prepared_week:
         return out
     for row in results:
         if row[0] != 0 or row[1] != week:
@@ -250,7 +250,7 @@ def told_goal(league, week: int):
 def set_goal(league, week: int, opponent: int) -> list | None:
     """The player's goal of `week` against `opponent` (weeks 1 to FR_MORALE_LAST_WEEK: the weeks whose result is judged, so every goal he hears gets its
     verdict), kept untold until the kick-off."""
-    if not 1 <= week <= T.FR_MORALE_LAST_WEEK or not 1 <= opponent <= D.TEAMS or opponent == league.team:
+    if not 1 <= week <= league.last_prepared_week or not 1 <= opponent <= D.TEAMS or opponent == league.team:
         league.people["goal"] = None
         return None
     kind, n = goal_for(league.sums, league.team, opponent, played=True)
@@ -538,7 +538,7 @@ def check_people(league, whole) -> None:
             raise LeagueError("a trade demand is %r" % (row,))
         whole(row[0], 1, 10 ** 9, "a trade demand's player")
         whole(row[1], 1, D.TEAMS, "a trade demand's team")
-        whole(row[2], 1, T.FR_TRADE_LAST_WEEK, "a trade demand's week")
+        whole(row[2], 1, T.FR_TRADE_LAST_WEEK_CALENDAR, "a trade demand's week")
         whole(row[3], OPEN, ENDED, "a trade demand's state")
         if row[0] not in league.players or row[0] in asked:
             raise LeagueError("the trade demand of player %r, who is not in the league or asked twice" % (row[0],))
@@ -548,7 +548,7 @@ def check_people(league, whole) -> None:
         if not isinstance(goal, list) or len(goal) != 5 or goal[2] not in GOAL_KINDS:
             raise LeagueError("the game goal is %r" % (goal,))
         whole(goal[0], 1, D.MAX_SEASONS, "the goal's season")
-        whole(goal[1], 1, D.REGULAR_WEEKS, "the goal's week")
+        whole(goal[1], 1, D.MAX_REGULAR_WEEKS, "the goal's week")
         whole(goal[3], 0, 99, "the goal's points")
         whole(goal[4], 0, 1, "the goal's told mark")
     verdict = data["verdict"]
@@ -556,6 +556,6 @@ def check_people(league, whole) -> None:
         if not isinstance(verdict, list) or len(verdict) != 4:
             raise LeagueError("the goal's verdict is %r" % (verdict,))
         whole(verdict[0], 1, D.MAX_SEASONS, "the verdict's season")
-        whole(verdict[1], 1, D.REGULAR_WEEKS, "the verdict's week")
+        whole(verdict[1], 1, D.MAX_REGULAR_WEEKS, "the verdict's week")
         whole(verdict[2], 0, 1, "the verdict")
         whole(verdict[3], 0, 1, "the verdict's told mark")

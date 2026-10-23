@@ -22,7 +22,7 @@ from ...data.files.shelf import AUTO_FILE, ORPHAN, OK, STALE, SaveShelf
 from ...data.healing import FileInUse
 from ...game.gamestate import SavedGame
 from ...game.playoffs import PlayoffState
-from ...game.schedule import ScheduleEntry
+from ...game.schedule import Calendar, ScheduleEntry
 from ...game.season import SeasonState
 from ...game.setup import Roster
 from ...game.standings import Records
@@ -53,8 +53,10 @@ class FranchiseStore:
         self.staff_setting = lambda: False      # SX.8k: whether the staff handles the to-do list (mode.activate gives the setting)
         self.game_injuries = None               # SX.8k: the injuries of the player's game in progress (injury_flow.GameInjuries), until its result
         self.strict = False                     # tests: a record that fails its own check raises instead of being refused
+        self.real_calendar = True               # SZ.8: a season plays the league's real calendar (fixtures.py); False (the tests of the original's 16 weeks): the original's `makes`
         self.unwritable = False
         self.keep_old = False                   # the old franchise could not be archived: the new league is never written over it
+        self.season_current = False             # SZ.8: the Game's SeasonState holds this league's season (loaded, or made by the engine or the set-up); until then `sync` copies nothing
         self._notices: list = []
         self.shelf = SaveShelf(files)           # SX.14: the franchise's saved games (three slots, the automatic save, the backup)
         self._write_notice_given = False
@@ -140,19 +142,24 @@ class FranchiseStore:
 
     def bind(self, season: SeasonState) -> None:
         self.season = season
+        self.season_current = False
 
     def unbind(self) -> None:
         self.season = None
+        self.season_current = False
 
     def sync(self) -> None:
-        """The season values of the Game's SeasonState go into the record (only while a season is being played)."""
+        """The season values of the Game's SeasonState go into the record (only while a season is being played, and only once the state holds this league's season:
+        at the start-up menu the store is bound but the state still has its defaults, and a save there (an F9 trade, a signing) would have written week 1 of team 1
+        over the league, SZ.8 review)."""
         league, season = self.league, self.season
-        if league is None or season is None or league.stage != SEASON:
+        if league is None or season is None or league.stage != SEASON or not self.season_current:
             return
         league.coach = season.coach
         league.team = team_index(season.tn1, season.tn2)
         league.gtp = season.gtp
         league.schedule = [[e.division, e.team, e.flag] for e in season.schedule]
+        league.calendar = None if season.calendar is None else {"label": season.calendar.label, "weeks": season.calendar.to_rows()}      # SZ.8
         league.records = season.records.as_file_values()
         league.ties = season.records.tie_values()          # SX.12: the ties of the 2026 overtime
         league.pairings = season.playoffs.pairing_values()
@@ -168,11 +175,15 @@ class FranchiseStore:
             return True
         regular = sum(1 for row in league.results if row[0] == 0)
         playoff = len(league.results) - regular
-        if gtp <= 16:
-            return regular == 16 * (gtp - 1) and playoff == 0 and not league.pairings
-        games, played = {17: (4, 0), 18: (4, 4), 19: (2, 8), 20: (1, 10)}[gtp]
-        return (regular == 256 and playoff == played and len(league.pairings) == 4 * games
-                and (gtp > 18 or len(league.byes) == 8))
+        weeks = league.regular_weeks
+        if gtp <= weeks:
+            return regular == league.games_before(gtp) and playoff == 0 and not league.pairings
+        rounds = {1: (4, 0), 2: (4, 4), 3: (2, 8), 4: (1, 10)}
+        if gtp - weeks not in rounds:
+            return False
+        games, played = rounds[gtp - weeks]
+        return (regular == league.games_before(weeks + 1) and playoff == played and len(league.pairings) == 4 * games
+                and (gtp - weeks > 2 or len(league.byes) == 8))
 
     def save(self) -> bool:
         """league.sav, whole: the new text to the temporary file, the present file copied to league.previous.sav, the
@@ -377,6 +388,8 @@ class FranchiseStore:
         debuglog.add_typed(season.coach)
         season.tn1, season.tn2 = (league.team - 1) // 4 + 1, (league.team - 1) % 4 + 1
         season.schedule = [ScheduleEntry(*entry) for entry in league.schedule]
+        season.calendar = Calendar.from_rows(league.calendar["label"], league.calendar["weeks"]) if league.calendar else None      # SZ.8
+        self.season_current = True
         season.gtp = league.gtp
         loaded = Records.from_file_values(league.records)
         loaded.set_tie_values(league.ties)                 # SX.12
@@ -412,15 +425,19 @@ class FranchiseStore:
     # ----- SeasonStore -----
 
     def write_records(self, records) -> None:
+        self.season_current = True              # (the engine wrote: its state is the season)
         self.save()
 
     def write_gtp(self, gtp) -> None:
+        self.season_current = True
         self.save()
 
     def write_pairings(self, pairings) -> None:
+        self.season_current = True
         self.save()
 
     def write_byes(self, byes) -> None:
+        self.season_current = True
         self.save()
 
     # ----- SetupStore -----
@@ -429,9 +446,29 @@ class FranchiseStore:
         if self.creating or self.league is None:
             self.pending = (tn1, tn2, coach)
             return
+        self.season_current = True
         self.save()
 
+    def make_season_schedule(self, season: SeasonState, rnd):
+        """SZ.8 (Game.make_schedule asks the setup store first): this season's real calendar and the player's team's schedule in it, or None when the Franchise
+        plays the original's random 16 weeks (the setting for the tests, no calendar file that passes its check, no league yet). The calendar goes into the
+        Game's SeasonState (the record takes it at the next sync) and no random number is drawn."""
+        from . import fixtures
+        league = self.league
+        if league is None or not self.real_calendar:
+            return None
+        calendar = fixtures.for_season(league.season)
+        if calendar is None:
+            debuglog.event("franchise", "calendar_missing", season=league.season, year=fixtures.year_of(league.season))
+            return None
+        season.calendar = calendar
+        season.schedule = calendar.entries_of(team_index(season.tn1, season.tn2))
+        debuglog.event("franchise", "calendar", season=league.season, label=calendar.label, weeks=calendar.length,
+                       byes=[week for week, entry in enumerate(season.schedule, start=1) if entry.is_bye])
+        return season.schedule
+
     def write_schedule(self, schedule) -> None:
+        self.season_current = True              # (the set-up of a season made it: the state is the season)
         self.save()
 
     def append_quarterback(self, name: str) -> None:

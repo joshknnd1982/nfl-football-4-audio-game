@@ -383,7 +383,7 @@ def test_well_formed_news_passes_the_check():
 
 
 @pytest.mark.parametrize("change", [
-    lambda e: e.update(pool="TO"), lambda e: e.update(week=0), lambda e: e.update(week=17), lambda e: e.update(season=0),
+    lambda e: e.update(pool="TO"), lambda e: e.update(week=0), lambda e: e.update(week=100), lambda e: e.update(season=0),
     lambda e: e.update(told=2), lambda e: e.update(markup=""), lambda e: e.update(markup="x" * 2001), lambda e: e.update(markup="a\x00b"),
     lambda e: e.update(markup=5), lambda e: e.update(extra=1), lambda e: e.pop("pool"),
 ])

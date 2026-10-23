@@ -22,10 +22,14 @@ DEFAULT_TEAM_NAMES = (
     "Broncos", "Chargers", "Chiefs", "Raiders",            # A. F. C. West
     "Colts", "Jaguars", "Texans", "Titans",                # A. F. C. South
     "Bears", "Lions", "Packers", "Vikings",                # N. F. C. North
-    "Cowboys", "Eagles", "Giants", "Redskins",             # N. F. C. East
+    "Cowboys", "Eagles", "Giants", "Commanders",           # N. F. C. East (the original's "Redskins", renamed by the owner 2026-10-22, Q-026)
     "Cardinals", "Forty Niners", "Rams", "Sea hawks",      # N. F. C. West
     "Buccaneers", "Falcons", "Panthers", "Saints",         # N. F. C. South
 )
+# The one default that differs from the original (Q-026, answered by the owner 2026-10-22 after a player's e-mail: "They are the Commanders"):
+# T24 was "Redskins". The original's name stays in STRINGS.md; a player who wants it writes T24 = Redskins in teams.txt, and a teams.txt that was
+# written before the rename is migrated once by `data/customize.py` (a file with the note TEAM_RENAME_NOTE has been migrated or made since).
+ORIGINAL_T24_NAME = "Redskins"
 # D1 to D8: the texts SayStand speaks, without the spaces the program puts around them (strings 637 to 777)
 DEFAULT_DIVISION_NAMES = (
     "A. F. C. North.", "A. F. C. East.", "A. F. C. West.", "A. F. C. South.",

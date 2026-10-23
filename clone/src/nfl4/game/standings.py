@@ -143,11 +143,12 @@ class StandingsSpeech:
     divisions: list[tuple[str, list[str]]]       # (the division text with its spaces, its four team sentences)
 
 
-def standings_speech(league: League, records: Records, gtp: int) -> StandingsSpeech | None:
-    """What SayStand says, in order, or None when it says nothing (gtp 0 or less, or above 17)."""
-    if gtp > 17 or gtp < 1:
+def standings_speech(league: League, records: Records, gtp: int, regular_weeks: int = 16) -> StandingsSpeech | None:
+    """What SayStand says, in order, or None when it says nothing (gtp 0 or less, or above 17: after the regular season's last week the wild card
+    week is the first that is silent; `regular_weeks` is 16, or 18 in a Franchise that plays the real calendar)."""
+    if gtp > regular_weeks + 1 or gtp < 1:
         return None
-    week = min(gtp - 1, 16)
+    week = min(gtp - 1, regular_weeks)
     divisions = []
     for division in range(1, DIVISIONS + 1):
         ties = standings_ties(division, league, records)

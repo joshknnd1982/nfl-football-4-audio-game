@@ -96,14 +96,25 @@ ROWS: tuple[KeyRow, ...] = (
            "off; the main row's plus and the keypad's plus both work", "nfl", False, "",
            " Plus and Minus. in a list of plays, add the play to your favourites or take it off. ",
            consts=("KEY_PLUS_PAD", "KEY_PLUS_MAIN", "KEY_MINUS_PAD", "KEY_MINUS_MAIN"), feature="playbooks"),
-    KeyRow("play_letters", "F, A, M, K, P, O, N", "In the offense and defense menus of the N. F. L. rules with a playbook", "F opens "
-           "your favourites, A calls your last play again, M opens more plays, K kneels down and P spikes the ball when they help, O "
-           "opens formation and tempo, and N in more plays finds a play by its name; the defense menu has F, A, M, O and N as well "
-           "(M opens every list of defensive calls), and on fourth down P opens the kick defense", "nfl", False, "",
-           " F, A, M, K, P, O and N. in the offense menu: favourites, again, more plays, kneel down, spike the ball, formation and "
-           "tempo, and find a play by name; the defense menu has F, A, M, O and N too, and on fourth down P. is the kick defense. ",
-           letters="famkpon",
+    KeyRow("enter_pick", "Enter on a play type", "In the offense and defense menus of the N. F. L. rules with a playbook", "lets the "
+           "playbook pick a play of that type for the down, the distance and the field position, and tells you its name; Enter on a play "
+           "in a list calls that play", "nfl", False, "Enter on a play type lets the playbook pick the play", feature="playbooks"),
+    KeyRow("more", "M", "In the offense and defense menus of the N. F. L. rules with a playbook", "opens More Plays, which holds every "
+           "other list of plays; on defense it holds every list of defensive calls and the situation defenses", "nfl", False,
+           "M opens More Plays", letters="m", feature="playbooks"),
+    KeyRow("play_letters", "F, A, K, P, O, N", "In the offense and defense menus of the N. F. L. rules with a playbook", "F opens "
+           "your favourites, A calls your last play again, K kneels down and P spikes the ball when they help, O opens formation and "
+           "tempo, and N in More Plays finds a play by its name; the defense menu has F, A, O and N as well, and on fourth down P opens "
+           "the kick defense", "nfl", False, "",
+           " F, A, K, P, O and N. in the offense menu: favourites, again, kneel down, spike the ball, formation and tempo, and find a "
+           "play by name; the defense menu has F, A, O and N too, and on fourth down P. is the kick defense. ",
+           letters="fakpon",
            feature="playbooks"),
+    KeyRow("likely", "W", "In the offense and defense menus of the N. F. L. rules with a playbook", "says which play the playbook "
+           "would most likely pick for the play type you are on, or call in the list you are in, and how often; it draws nothing, so "
+           "asking changes nothing in the game", "nfl", False, "",
+           " W. in the offense and defense menus, says which play the playbook would most likely pick, and how often. ",
+           letters="w", feature="playbooks"),
     KeyRow("target", "R", "In the offense menu of the N. F. L. rules with a playbook", "chooses who your next pass goes to: the first item "
            "keeps the play's own pick, then the receivers, and the first two running backs when the play can throw to one", "nfl", False, "",
            " R. in the offense menu, chooses the receiver of your next pass. ", letters="r", feature="playbooks"),

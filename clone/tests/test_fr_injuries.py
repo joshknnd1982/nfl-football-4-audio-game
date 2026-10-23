@@ -530,7 +530,7 @@ def test_format_6_round_trips_with_injuries_and_stand_ins():
     I.settle(league, 2, FakeRnd(), SURNAMES)
     league.injuries["report"] = {"season": 1, "week": 2, "lines": [" the line. "], "told": 0}
     text = league.to_json()
-    assert json.loads(text)["format"] == 11 == D.FORMAT     # (11 since SX.12: the injuries are format 6's)
+    assert json.loads(text)["format"] == 12 == D.FORMAT     # (12 since SZ.8: the injuries are format 6's)
     again = LeagueRecord.from_json(text)
     assert again.injuries == league.injuries and again.to_json() == text
 
@@ -550,7 +550,7 @@ def test_a_format_5_file_loads_with_nobody_hurt():
     lambda inj, league: inj["hurt"].append([1, "IJA", 1, 3, 1, 0]),
     lambda inj, league: inj["hurt"].append([10 ** 8, "IJA", 1, 3, 1, 0, 0]),
     lambda inj, league: inj["hurt"].append([1, "XXX", 1, 3, 1, 0, 0]),
-    lambda inj, league: inj["hurt"].append([1, "IJA", 16, 18, 1, 0, 0]),
+    lambda inj, league: inj["hurt"].append([1, "IJA", 18, 20, 1, 0, 0]),
     lambda inj, league: inj["hurt"].append([1, "IJA", 2, 2, 1, 0, 0]),
     lambda inj, league: inj["hurt"].append([1, "IJA", 2, 4, 1, 2, 0]),
     lambda inj, league: inj["hurt"].append([1, "IJA", 2, 4, 4, 0, 0]),

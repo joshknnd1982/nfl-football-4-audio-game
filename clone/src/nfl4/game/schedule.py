@@ -26,6 +26,7 @@ from .rnd import GameRandom
 
 WEEKS = 16
 FLAG_LIMIT = 5      # the free weeks give each flag at most five of the ten games
+BYE = (0, 0, 0)     # a calendar's week in which the team does not play: the entry's three values (nfl4's Franchise only)
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,66 @@ class ScheduleEntry:
     division: int   # the opponent's division tn3 (1 to 8)
     team: int       # the opponent's place tn4 (1 to 4)
     flag: int       # vtrnt's value for the week: 1 or 2 (4.11: flag 1 "A verses the B" with A the opponent)
+
+    @property
+    def is_bye(self) -> bool:
+        """A week of a calendar in which the team does not play (BYE: the three values are 0; nfl4's Franchise only)."""
+        return self.division == 0
+
+
+def team_number(division: int, place: int) -> int:
+    """The team 1 to 32 of a division 1 to 8 and a place 1 to 4 (T01 to T32 in the order of teams.txt)."""
+    return (division - 1) * PLACES + place
+
+
+def team_pair(team: int) -> tuple[int, int]:
+    """(division, place) of the team 1 to 32."""
+    return (team - 1) // PLACES + 1, (team - 1) % PLACES + 1
+
+
+@dataclass(frozen=True)
+class Calendar:
+    """A season whose every game is known before it is played (nfl4's Franchise, the real NFL calendar: 18 weeks, 17 games for each team, one bye
+    week). `weeks[w - 1]` holds the games of week w as (visiting team, home team) with the teams as numbers 1 to 32. The original has no such thing:
+    its 16 weeks come from `make_schedule` and its other games are drawn week by week among the teams that have not played. A season with a calendar
+    ends its regular season after `length` weeks, so the play-off weeks follow it (SeasonState.regular_weeks)."""
+    label: str
+    weeks: tuple
+
+    @property
+    def length(self) -> int:
+        return len(self.weeks)
+
+    def games(self, week: int) -> tuple:
+        return self.weeks[week - 1]
+
+    def game_of(self, week: int, team: int):
+        """The (visitor, home) game of the team in the week, or None when it has its bye."""
+        for game in self.weeks[week - 1]:
+            if team in game:
+                return game
+        return None
+
+    def entries_of(self, team: int) -> list[ScheduleEntry]:
+        """The team's schedule: one entry for each week, the opponent's division and place and the flag (1: the team is at home, the original's meaning
+        of "the opponent first"; 2: away), or BYE for the week without a game."""
+        out = []
+        for week in range(1, self.length + 1):
+            game = self.game_of(week, team)
+            if game is None:
+                out.append(ScheduleEntry(*BYE))
+                continue
+            visitor, home = game
+            opponent = visitor if home == team else home
+            out.append(ScheduleEntry(*team_pair(opponent), 1 if home == team else 2))
+        return out
+
+    def to_rows(self) -> list:
+        return [[[visitor, home] for visitor, home in week] for week in self.weeks]
+
+    @classmethod
+    def from_rows(cls, label: str, rows) -> "Calendar":
+        return cls(label, tuple(tuple((int(v), int(h)) for v, h in week) for week in rows))
 
 
 def make_schedule(rnd: GameRandom, own_division: int, own_team: int) -> list[ScheduleEntry]:

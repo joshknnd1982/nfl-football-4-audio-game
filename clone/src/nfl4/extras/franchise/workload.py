@@ -115,12 +115,15 @@ def ensure(league) -> dict:
 
 
 def count_games(league, week: int, staff: bool = True) -> None:
-    """The game of `week` (1 to 16) counts for every player who played his own place in it (people.played_ids: the week's lineup)."""
+    """The game of `week` (1 to 16, or the calendar's 18) counts for every player who played his own place in it (people.played_ids: the week's lineup);
+    a team on its bye played no game."""
     from . import people
-    if not 1 <= week <= D.REGULAR_WEEKS:
+    if not 1 <= week <= league.regular_weeks:
         return
     games = ensure(league)["games"]
     for team in range(1, D.TEAMS + 1):
+        if league.has_bye(team, week):
+            continue
         for pid in people.played_ids(league, team, week, staff or team != league.team):
             key = str(pid)
             games[key] = games.get(key, 0) + 1
@@ -179,7 +182,7 @@ def check_usage(league, whole) -> None:
     if not isinstance(usage, dict) or set(usage) != set(KEYS):
         raise LeagueError("the usage is %r" % (sorted(usage) if isinstance(usage, dict) else type(usage).__name__,))
     whole(usage["season"], 0, D.MAX_SEASONS, "the season of the usage")
-    for name, high in (("games", D.REGULAR_WEEKS), ("carries", MAX_CARRIES)):
+    for name, high in (("games", D.MAX_REGULAR_WEEKS), ("carries", MAX_CARRIES)):
         table = usage[name]
         if not isinstance(table, dict) or len(table) > 4 * D.TEAMS * D.PLACE_COUNT:
             raise LeagueError("the %s are %r" % (name, type(table).__name__))

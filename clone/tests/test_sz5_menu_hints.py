@@ -136,7 +136,8 @@ def test_the_hint_texts_are_plain_and_short_and_name_the_keys():
     for text_id in ("NXB-H17", "NXB-H18", "NXB-H19", "NXB-G09"):
         assert text_id in X.TEXTS and len(X.TEXTS[text_id]) <= 200
     assert "Enter on a call lets the playbook pick" in X.TEXTS["NXB-H18"] and "M opens More Plays" in X.TEXTS["NXB-H18"]
-    assert "Right on a call opens its lists, and M opens every list" in X.TEXTS["NXH-57"] and "Right opens the lists of the play you are on" in X.TEXTS["NXH-27"]
+    assert "Right on a call opens its lists, and M opens every list" in X.TEXTS["NXH-57"]
+    assert "Enter on a play type lets the playbook pick the play. Right opens its lists, M opens More Plays" in X.TEXTS["NXH-27"]       # SZ.7, D-113
 
 
 def test_the_setting_is_saved_and_read_back():

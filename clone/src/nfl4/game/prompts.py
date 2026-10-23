@@ -364,8 +364,11 @@ class Prompts:
 
     def say_schedule(self) -> None:
         g, season = self.g, self.g.season
-        if season.gtp >= 17:                             # 0x42eca0
+        if season.in_playoffs:                           # 0x42eca0
             self._say_playoff_games()
+            return
+        if season.calendar is not None:                  # nfl4's Franchise, the real calendar (SZ.8): week by week, the bye said, no question
+            self._say_calendar_schedule()
             return
         while True:                                      # L_42efd2
             g.say2(" " + g.own_team() + T.SCHEDULE)      # 0x42f04a
@@ -389,6 +392,24 @@ class Prompts:
             if verdict == SCHEDULE_REJECTED:
                 g.make_schedule()                        # 0x42f957: makes, then the whole schedule again
             # SCHEDULE_AGAIN (F1, 0x42f814): the whole schedule again, unchanged
+
+    def _say_calendar_schedule(self) -> None:
+        """The real calendar's schedule (nfl4's Franchise, SZ.8): the team's schedule, then each week as "Week 7" with the game ("A verses the B", the
+        opponent first when the player's team is at home, as the original orders it) or "bye week". The real calendar is the league's, so the original's
+        question whether the player likes it is not asked and nothing can be rejected."""
+        from ..extras import nx_texts as X
+        g, season = self.g, self.g.season
+        g.say2(" " + g.own_team() + T.SCHEDULE)
+        for number, entry in enumerate(season.schedule[:season.regular_weeks], start=1):
+            g.say2(X.text("NXC-20", n=number))
+            g.dy(0.1, 0x42f30b)
+            if entry.is_bye:
+                g.say2(X.text("NXC-21"))
+            else:
+                other = g.league.team(entry.division, entry.team)
+                first, second = (other, g.own_team()) if entry.flag == 1 else (g.own_team(), other)
+                g.say2(" " + first + T.VERSES_THE + second)
+            g.dy(0.2, 0x42f5c6)
 
     def _schedule_question(self) -> str:
         """0x42f6e5 to 0x42f94e: the question with " yes " in it; Up, Down and Tab toggle and speak the answer; Enter
@@ -416,7 +437,7 @@ class Prompts:
         """gtp 17 to 20: one say4 text, " games for the <week name> are. " and " the <A> verses the <B>. " for every
         game of footbal4.dat in its order (0x42ecd4 to 0x42efab)."""
         g, season = self.g, self.g.season
-        text = T.GAMES_FOR_THE + T.PLAYOFF_WEEK_NAMES.get(season.gtp, "") + T.ARE
+        text = T.GAMES_FOR_THE + T.PLAYOFF_WEEK_NAMES.get(season.classic_gtp(), "") + T.ARE
         for first, second in season.playoffs.pairings:
             text += (T.THE + g.league.team(first.division, first.place) + T.VERSES_THE
                      + g.league.team(second.division, second.place) + T.END)

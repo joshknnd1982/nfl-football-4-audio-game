@@ -268,7 +268,7 @@ def test_the_check_refuses_damaged_honors(damage):
 
 
 @pytest.mark.parametrize("damage", [
-    lambda u: u.update(season=-1), lambda u: u.update(more={}), lambda u: u["games"].__setitem__("1", 17),
+    lambda u: u.update(season=-1), lambda u: u.update(more={}), lambda u: u["games"].__setitem__("1", 19),
     lambda u: u["games"].__setitem__("x", 1), lambda u: u["carries"].__setitem__("999999", 3), lambda u: u["carries"].__setitem__("1", 0),
     lambda u: u.update(carries=[])])
 def test_the_check_refuses_damaged_usage(damage):

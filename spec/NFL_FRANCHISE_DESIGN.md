@@ -645,7 +645,7 @@ The starting design of each block (written at SX.8, before D-062 moved it into t
 ## 18. Accepted defaults the owner may change (none asked: rule 0.8)
 
 - The franchise is offered only at a new season with the N. F. L. rules; the classic season is the first answer.
-- A franchise keeps the original's 34 places and 16-week season with random pairings for the other teams (no 53-man roster, no 17-game schedule: research B12).
+- A franchise keeps the original's 34 places (no 53-man roster: research B12). SZ.8 (D-121, 2026-10-22, a player's e-mail) CHANGED the season: a franchise plays the real calendar, 18 weeks, 17 games and a bye for every team (`assets/data/schedule_2026.txt`, `extras/franchise/fixtures.py`); a franchise made before keeps its season's 16 random weeks and plays the calendar from its next season.
 - The draft has seven rounds and every team keeps 34 players, so about seven players a team leave each year (retired or released) and careers average about five seasons.
 - The player's team starts from footplay.txt's names when that file is complete, with ratings drawn like everyone's (no guaranteed average start).
 - F8 does not silence the news; the to-do list is asked by default (the staff's setting is off); the offseason speaks every stage by default.

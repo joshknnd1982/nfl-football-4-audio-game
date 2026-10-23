@@ -39,7 +39,7 @@ def run(p) -> None:
     numbers = [number for number, _ in D.STAGES]
     if league.stage == SEASON:                           # the season is over: the finished season's values are kept
         store.sync()
-        workload.count_games(league, D.REGULAR_WEEKS, bool(g.options.settings.game.nx_fr_auto))   # SX.8o: the games of week 16 (weeks 1 to 15: the preparations)
+        workload.count_games(league, league.regular_weeks, bool(g.options.settings.game.nx_fr_auto))   # SX.8o: the games of the last week, 16 or the calendar's 18 (the weeks before it: the preparations)
         injuries.end_of_season(league)                   # SX.8k: every player is fit for the next season (in the step that ends the season)
         league.stage, league.stage_no = OFFSEASON, numbers[0]
         store.save()

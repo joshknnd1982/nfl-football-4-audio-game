@@ -116,7 +116,7 @@ from . import tuning as T
 from .clock import RUNNING_KINDS, NflPeriodClock, late_window
 from .defense_flow import DefenseFlow
 from .kick_flow import KickFlow
-from .offense_flow import OffenseFlow, text_for
+from .offense_flow import W_FOR, W_NO_BOOK, OffenseFlow, text_for
 from .broadcast import Broadcast
 from .choices import Choices
 from .stadium import Stadium
@@ -200,7 +200,7 @@ class NflRules(ClassicRules):
 
     def period_clock(self, game, state) -> NflPeriodClock:
         self.game, self.state = game, state
-        state.extras = ExtrasRecord(timeouts_on=self.timeouts_on, postseason=game.season.gtp >= 17,
+        state.extras = ExtrasRecord(timeouts_on=self.timeouts_on, postseason=game.season.in_playoffs,
                                     penalties_on=self.penalties_on, onside_on=self.onside_on,
                                     onside_always=self.onside_always, qb_on=self.qb_on,
                                     challenges_on=self.challenges_on)
@@ -544,6 +544,8 @@ class NflRules(ClassicRules):
         game's speech log; the menu stays on the item. No menu of the N. F. L. rules gives the letter D to an item (a test)."""
         if letter == "d" and item is not None:
             return self.describe_item(state, item)
+        if letter == "w" and item is not None:
+            return self.say_likely(state, item)
         if letter == "c" and state.extras.challenges_on:
             return self.review.say_refusal(state, 1)
         if letter == "r" and item is not None and state.wisoff == 1 and self.offense.owns(item.action):
@@ -569,6 +571,21 @@ class NflRules(ClassicRules):
             return False
         debuglog.event("key", "describe", item=item.action, row=row)
         self.game.voice_speak(descriptions.text(row), wait=False)
+        return True
+
+    def say_likely(self, state, item) -> bool:
+        """The W key (D-112, Q-050; the owner: "a key that says which play the playbook would most likely call"): on a play type, the
+        play Enter would most likely get and how often; in a list, the play of it the playbook most likely calls; on a single play, that it
+        is one play; on any other item (or with no playbook in use) what W is for. The same weights as Enter's pick and NO draw, so the
+        game is the same with or without the key. Said in the voice that spoke last, once per press, not written to the game's speech
+        log (as D); the menu stays on the item."""
+        flow = self.flow(state)
+        if flow is None:                           # the original's items: no playbook in use for this side
+            sentence = X.text(W_NO_BOOK)
+        else:                                      # a tail item (Save Game, Time Out, Challenge) or a menu without plays: what W is for
+            sentence = (flow.likely_text(state, item) if flow.owns(item.action) else "") or X.text(W_FOR)
+        debuglog.event("key", "likely", item=item.action, text=sentence.strip())
+        self.game.voice_speak(sentence, wait=False)
         return True
 
     # ----- H4 -----

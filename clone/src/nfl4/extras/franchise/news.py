@@ -8,7 +8,7 @@ more of another team (wins NWS, losses NWL) and the closest game that is not alr
 champion, NWR the stars who retire, NWP the player's big improvers, NWD the first pick) is made by its stage. A line is one line of
 its pool in news.txt (`news_pools.py`), drawn as the remarks are, filled and kept as markup in `LeagueRecord.news`:
 
-    {"season": s, "week": w (1 to 15, or 16 for the offseason), "pool": "NWB", "markup": "...", "told": 0 or 1}
+    {"season": s, "week": w (1 to 15, or 17 of a calendar; 99 for the offseason), "pool": "NWB", "markup": "...", "told": 0 or 1}
 
 Ties (the design leaves them open): the first game in the week's order (the results are kept in the order the engine decided them);
 for another team's streak the longest, then the lower team number.
@@ -71,7 +71,7 @@ OWN_POOLS = ("NWY", "NWZ", "NWM")                  # the player's own news comes
 def week_events(league: LeagueRecord, week: int, cut: bool = True) -> list:
     """The events of the week in the order of the rules, at most FR_NEWS_MAX (design 8.3; `cut` False: all of them, for `with_trades`)."""
     games = week_games(league, week)
-    if not games or not 1 <= week <= D.NEWS_LAST_WEEK:
+    if not games or not 1 <= week <= league.last_prepared_week:
         return []
     own = league.team
     events: list = []

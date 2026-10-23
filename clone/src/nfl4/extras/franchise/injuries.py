@@ -76,18 +76,19 @@ def left(row, week: int) -> int:
     return row[3] - week
 
 
-def status_of_row(row, week: int) -> str:
+def status_of_row(row, week: int, regular: int = D.REGULAR_WEEKS) -> str:
+    """`regular`: the weeks of the regular season (16, or the calendar's 18): after them everybody who is hurt is out (the play-offs ask nobody)."""
     games = left(row, week)
     if games <= 0:
         return D.STATUS_HEALTHY
-    if week > D.REGULAR_WEEKS or games > T.FR_INJ_DOUBTFUL:
+    if week > regular or games > T.FR_INJ_DOUBTFUL:
         return D.STATUS_OUT
     return D.STATUS_DOUBTFUL if games == T.FR_INJ_DOUBTFUL else D.STATUS_QUESTIONABLE
 
 
 def status(league: LeagueRecord, pid: int, week: int) -> str:
     row = row_of(league, pid)
-    return D.STATUS_HEALTHY if row is None else status_of_row(row, week)
+    return D.STATUS_HEALTHY if row is None else status_of_row(row, week, league.regular_weeks)
 
 
 def healthy(league: LeagueRecord, pid: int, week: int) -> bool:
@@ -106,7 +107,7 @@ def plays(league: LeagueRecord, player, week: int, staff: bool, out=frozenset(),
     row = known.get(player.id) if known is not None else row_of(league, player.id)
     if row is None:
         return True
-    state = status_of_row(row, week)
+    state = status_of_row(row, week, league.regular_weeks)
     if state == D.STATUS_HEALTHY:
         return True
     if state == D.STATUS_OUT:
@@ -118,7 +119,7 @@ def plays(league: LeagueRecord, player, week: int, staff: bool, out=frozenset(),
 
 def penalty(league: LeagueRecord, pid: int, week: int, known=None) -> int:
     row = known.get(pid) if known is not None else row_of(league, pid)
-    state = D.STATUS_HEALTHY if row is None else status_of_row(row, week)
+    state = D.STATUS_HEALTHY if row is None else status_of_row(row, week, league.regular_weeks)
     return T.FR_INJ_HURT_PENALTY.get(state, 0)
 
 
@@ -132,7 +133,7 @@ def hurt_of(league: LeagueRecord, team: int, week: int) -> list:
         row = known.get(player.id)
         if row is None:
             continue
-        state = status_of_row(row, week)
+        state = status_of_row(row, week, league.regular_weeks)
         if state != D.STATUS_HEALTHY:
             out.append((player, state))
     return out
@@ -256,7 +257,7 @@ def effective_sums(league: LeagueRecord, week: int) -> list:
     sums = list(league.sums)
     if nobody_hurt(league):
         return sums
-    teams = {league.players[pid].team for pid, row in rows(league).items() if row[2] < week and status_of_row(row, week) != D.STATUS_HEALTHY}
+    teams = {league.players[pid].team for pid, row in rows(league).items() if row[2] < week and status_of_row(row, week, league.regular_weeks) != D.STATUS_HEALTHY}
     for team in sorted(teams):                       # (an injury of this week's game counts from the next week, as in the fast run)
         sums[team - 1] += effective_sum(league, team, week, hurt_before=week) - league.strength_sum(team)
     return sums
@@ -392,7 +393,7 @@ def after_games(league: LeagueRecord, week: int, rnd, surnames: list, played=())
     play (`played`: the two teams of the player's game, whose injuries came per play). Then the players fit for the next week leave the list (`back`) and
     a group with nobody fit gets its stand-in. Changes the league; returns what it did."""
     done = WeekInjuries()
-    if not 1 <= week <= T.FR_INJ_LAST_WEEK:
+    if not 1 <= week <= league.last_prepared_week:
         return done
     from . import workload
     for team in range(1, D.TEAMS + 1):
@@ -410,8 +411,8 @@ def after_games(league: LeagueRecord, week: int, rnd, surnames: list, played=())
         for _ in range(draws):
             if rnd.below(10000) < chance:
                 _hit(league, team, week, rnd.below(D.PLACE_COUNT), rnd, done, table)
-        if team in played:
-            continue                                       # its carries and its workload came per play (injury_flow.GameInjuries)
+        if team in played or league.has_bye(team, week):
+            continue                                       # its carries and its workload came per play (injury_flow.GameInjuries); a team on its bye played no game
         draws, chance = T.FR_INJ_GAME
         shares = workload.place_weights(rated)
         for _ in range(draws):
@@ -483,7 +484,7 @@ def ask_gap(league: LeagueRecord, team: int, pid: int, week: int) -> int:
 def to_ask(league: LeagueRecord, week: int) -> list:
     """The player's doubtful and questionable players the to-do list asks about this week: a gap of FR_INJ_ASK_GAP or more, the biggest first (equal: place
     order), at most FR_INJ_ASK_MAX."""
-    if not 1 <= week <= D.REGULAR_WEEKS:
+    if not 1 <= week <= league.regular_weeks or league.has_bye(league.team, week):       # (SZ.8: nobody plays in the player's bye week, so nobody is asked)
         return []
     found = []
     for player, state in hurt_of(league, league.team, week):
@@ -517,12 +518,12 @@ def check_injuries(league: LeagueRecord, whole) -> None:
         seen.add(row[0])
         if row[1] not in KIND_IDS:
             raise LeagueError("an injury of the kind %r" % (row[1],))
-        whole(row[2], 1, T.FR_INJ_LAST_WEEK, "an injury's week")
+        whole(row[2], 1, D.MAX_REGULAR_WEEKS - 1, "an injury's week")
         whole(row[3], row[2] + 1, row[2] + 1 + max_games(), "an injury's return")
         whole(row[4], 0, T.FR_INJ_RANGE_MAX, "an injury's range")
         whole(row[5], 0, row[4], "an injury's offset")
         if row[6] != 0:
-            whole(row[6], row[2] + 1, D.REGULAR_WEEKS, "an injury's decision")
+            whole(row[6], row[2] + 1, D.MAX_REGULAR_WEEKS, "an injury's decision")
     places = set()
     for row in standing:
         if not isinstance(row, list) or len(row) != 4:
@@ -538,7 +539,7 @@ def check_injuries(league: LeagueRecord, whole) -> None:
         if not isinstance(report, dict) or set(report) != {"season", "week", "lines", "told"}:
             raise LeagueError("the injury report is %r" % (report,))
         whole(report["season"], 1, D.MAX_SEASONS, "the injury report's season")
-        whole(report["week"], 1, D.REGULAR_WEEKS, "the injury report's week")
+        whole(report["week"], 1, D.MAX_REGULAR_WEEKS, "the injury report's week")
         whole(report["told"], 0, 1, "the injury report's told mark")
         lines = report["lines"]
         if not isinstance(lines, list) or len(lines) > D.PLACE_COUNT + 2 or any(

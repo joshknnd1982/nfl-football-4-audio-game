@@ -212,7 +212,11 @@ class Game(Speakers):
 
     def make_schedule(self):
         """makes (GAME_SPEC 5.1): a new schedule for the player's team, written to footbal2.dat (setup_store, S7.5)."""
-        schedule = self.season.make_schedule(self.rnd)
+        maker = getattr(self.setup_store, "make_season_schedule", None)     # nfl4's Franchise (SZ.8): the real calendar of the season, when it has one
+        schedule = maker(self.season, self.rnd) if maker is not None else None
+        if schedule is None:
+            self.season.calendar = None
+            schedule = self.season.make_schedule(self.rnd)
         if self.setup_store is not None:
             self.setup_store.write_schedule(schedule)
         return schedule
@@ -341,6 +345,11 @@ class Game(Speakers):
         flag ptf stays 1, as in the original: the week loop sets it to 0 afterwards (Form_Load)."""
         return self.season_engine.pog()
 
+    def pog_bye(self):
+        """The week in which the player's team has its bye (nfl4's Franchise, the real calendar, SZ.8): no game was played; the week's other games
+        are told and the records and the week counter go on."""
+        return self.season_engine.bye_week()
+
     def finplay17(self) -> None:
         """finplay17 (GAME_SPEC 5.17): the rounds without the player's team, to the Super Bowl and the celebration."""
         self.season_engine.finplay17()
@@ -370,7 +379,7 @@ class Game(Speakers):
         """SayStand (GAME_SPEC 5.2): the standings after the week just played, nothing when gtp is 0 or above 17. The
         original clears the key twice (clk) on the way, the second time only when it will speak. True when it spoke."""
         self.keys.clk()
-        speech = standings_speech(self.league, self.season.records, self.season.gtp)
+        speech = standings_speech(self.league, self.season.records, self.season.gtp, self.season.regular_weeks)
         if speech is None:
             return False
         self.keys.clk()

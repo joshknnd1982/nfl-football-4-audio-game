@@ -165,7 +165,10 @@ def gain(league, trade: Trade, team: int, how: str) -> int:
 
 
 def traded_this_season(league) -> set:
-    return {pid for row in league.trades["log"] for pid in (row[3], row[4])}
+    """The players traded in the season; in the offseason (free agency's window) only the offseason's own trades, week 0: the finished season's log stays until stage 6."""
+    from .league import SEASON
+    rows = league.trades["log"] if league.stage == SEASON else [row for row in league.trades["log"] if row[0] == T.FR_TRADE_OFFSEASON_WEEK]
+    return {pid for row in rows for pid in (row[3], row[4])}
 
 
 def trades_of(league, team: int) -> int:
@@ -173,10 +176,36 @@ def trades_of(league, team: int) -> int:
     return sum(1 for row in league.trades["log"] if team in (row[1], row[2]))
 
 
+def last_week(league) -> int:
+    """The week whose kick-off is the trade deadline: 9 of the original's 16 weeks; in a season that plays the real calendar the NFL's deadline of 2026 is the day after week 9 of 18
+    (2026-11-10, the Tuesday before week 10), so trades are made up to the kick-off of week 10 (SZ.8)."""
+    return T.FR_TRADE_LAST_WEEK_CALENDAR if league.calendar else T.FR_TRADE_LAST_WEEK
+
+
 def in_window(league, week: int) -> bool:
-    """Trades are made in the regular season up to the kick-off of week FR_TRADE_LAST_WEEK (the trade deadline)."""
-    from .league import SEASON
-    return league.stage == SEASON and 1 <= week <= T.FR_TRADE_LAST_WEEK
+    """Trades are made in the regular season up to the kick-off of the deadline's week (`last_week`), and in the offseason while free agency is the stage in progress, before the draft
+    has begun (SZ.8: the NFL's clubs trade from the new league year until the deadline; a player of the game wrote that he could not trade). The offseason's `week` is 0."""
+    from .league import OFFSEASON, SEASON
+    if league.stage == OFFSEASON:
+        return week == T.FR_TRADE_OFFSEASON_WEEK and league.stage_no == D.STAGE_FREE_AGENCY and league.draft is None
+    return league.stage == SEASON and 1 <= week <= last_week(league)
+
+NOTICE_FIRST, NOTICE_NEXT, NOTICE_LAST, NOTICE_PASSED = "NXX-30", "NXX-31", "NXX-32", "NXX-33"
+
+
+def notice_id(league, week: int) -> str | None:
+    """The sentence about the deadline the preparation of this week keeps in the news (SZ.8): where trades and free agents are at the first week, then the week before the deadline,
+    its last week and the week after. None in the other weeks."""
+    last = last_week(league)
+    if week == 1:
+        return NOTICE_FIRST
+    if week == last - 1:
+        return NOTICE_NEXT
+    if week == last:
+        return NOTICE_LAST
+    if week == last + 1:
+        return NOTICE_PASSED
+    return None
 
 
 def cap_after(league, trade: Trade, team: int) -> int:
@@ -200,6 +229,10 @@ def problems(league, trade: Trade, week: int) -> str | None:
         return "a player who is hurt"                          # SX.8k: a hurt player is not traded
     if {pa.id, pb.id} & traded_this_season(league):
         return "a player traded already this season"
+    from . import tags
+    tagged = tags.tagged(league)
+    if tagged is not None and tagged.id in (pa.id, pb.id):
+        return "a player under the non-exclusive tag"             # SZ.8: stage 8 asks about his offer sheet; he stays until it is answered
     for team, picks in ((trade.a, trade.picks_a), (trade.b, trade.picks_b)):
         if len(picks) > T.FR_TRADE_PICKS_MAX or len(set(picks)) != len(picks):
             return "too many picks"
@@ -297,7 +330,7 @@ def search(league, week: int, records: list) -> list:
     week takes these trades the greatest gain first (equal gains: the week's turned order of the contender, then of the rebuilder, `rotation`), each team in one
     trade, at most FR_TRADE_WEEK_MAX; a team starts at most FR_TRADE_SEASON_MAX a season. Taking the best trade of the week, not the first contender's, keeps a team's number from deciding (the SX.8j review: with one trade a week the
     turned order alone gave the trade to its first contender, and the order evens out only over 32 seasons). No draw; nothing is changed."""
-    if not T.FR_TRADE_FIRST_WEEK <= week <= T.FR_TRADE_LAST_WEEK or not in_window(league, week):
+    if not T.FR_TRADE_FIRST_WEEK <= week <= last_week(league) or not in_window(league, week):
         return []
     how = situations(records)
     traded = traded_this_season(league)
@@ -447,7 +480,7 @@ def check_trades(league, whole) -> None:
     for row in log:
         if not isinstance(row, list) or len(row) != 8:
             raise LeagueError("a trade is %r" % (row,))
-        whole(row[0], 1, T.FR_TRADE_LAST_WEEK, "a trade's week")
+        whole(row[0], T.FR_TRADE_OFFSEASON_WEEK, T.FR_TRADE_LAST_WEEK_CALENDAR, "a trade's week")
         whole(row[1], 1, D.TEAMS, "a trade's team")
         whole(row[2], 1, D.TEAMS, "a trade's team")
         whole(row[7], KIND_COMPUTER, KIND_DEMAND, "a trade's kind")

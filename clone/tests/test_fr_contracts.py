@@ -347,7 +347,7 @@ def test_a_format_one_file_still_loads_and_gets_its_contracts_by_the_rules_with_
             if market[player.team] <= T.FR_CAP:
                 assert player.salary == CT.market_salary(player.pos, player.rating)
     assert all(CT.cap_used(loaded, t) <= T.FR_CAP for t in range(1, D.TEAMS + 1))
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 11                    # the next save is format 11 (SX.12)
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 12                    # the next save is format 11 (SX.12)
     again = LeagueRecord.from_json(text)
     assert again.to_json() == loaded.to_json()                                        # a migration draws nothing: the same file, the same answer
     assert LeagueRecord.from_json(loaded.to_json()).to_json() == loaded.to_json()
@@ -436,14 +436,14 @@ def test_formats_other_than_one_to_three_are_damage_or_newer():
     text = fresh().to_json()
     for version in (0, -1, True, 1.5, "2", None):
         with pytest.raises(LeagueError) as raised:
-            LeagueRecord.from_json(text.replace('"format":11', '"format":%s' % json.dumps(version), 1))
+            LeagueRecord.from_json(text.replace('"format":12', '"format":%s' % json.dumps(version), 1))
         assert not isinstance(raised.value, NewerFormat)
     with pytest.raises(NewerFormat):
-        LeagueRecord.from_json(text.replace('"format":11', '"format":12', 1))
+        LeagueRecord.from_json(text.replace('"format":12', '"format":13', 1))
 
 
 def test_a_format_one_file_with_a_contract_column_is_damage_like_any_row_of_the_wrong_length():
-    text = fresh().to_json().replace('"format":11', '"format":1', 1)
+    text = fresh().to_json().replace('"format":12', '"format":1', 1)
     with pytest.raises(LeagueError):
         LeagueRecord.from_json(text)
 

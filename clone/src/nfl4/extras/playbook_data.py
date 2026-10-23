@@ -350,7 +350,7 @@ STYLE_BY_KEY = {s.key: s for s in STYLES}
 # The 32 teams' styles (T01 .. T32, the order of league.DEFAULT_TEAM_NAMES): (offense style key, defense style key)
 # MADDEN_PLAYBOOK_RESEARCH 5: the style named for the team, and where EA names a different defensive identity the defense
 # (Bengals, Chiefs: Pro Style; Steelers: offense Pro Style, defense Pressure). The weak assignments (Browns, Panthers,
-# Lions, Redskins) stay as proposed. Pro 4, West Coast 5 (6 with the Steelers' defense counted apart), Air Raid 6, Power 5,
+# Lions, Commanders) stay as proposed. Pro 4, West Coast 5 (6 with the Steelers' defense counted apart), Air Raid 6, Power 5,
 # Zone 4, Option 5, Pressure 3.
 TEAM_STYLES: tuple[tuple[str, str], ...] = (
     ("air", "pro"), ("pressure", "pressure"), ("option", "option"), ("pro", "pressure"),       # A. F. C. North

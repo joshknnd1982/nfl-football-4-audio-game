@@ -288,12 +288,24 @@ class OffenseFlow:
         usable = self.usable(state)
         if family in QB_PLAYS and QB_PLAYS[family] in usable:
             return QB_PLAYS[family]
-        context = self.context(state)
-        family_plays = [c for group in PM.family_groups("O", family) for c in PM.concepts_of(group, context)]
+        family_plays = self.family_plays(state, family)
         if not family_plays:
             return ""                       # every play of the family is off (SX.10d: the original's play, not an off play)
         picked = self.rules.books.pick(state, 1, "O", family_plays)
         return picked or family_plays[0].id
+
+    def family_plays(self, state, family: int) -> list[C.Concept]:
+        """The usable plays of the lists Right opens from one of the original's play types, in the order of the lists."""
+        context = self.context(state)
+        return [c for group in PM.family_groups("O", family) for c in PM.concepts_of(group, context)]
+
+    def likely_text(self, state, item) -> str:
+        """The W key (D-112, Q-050): what the playbook would most likely pick for the play type the menu is on, or most likely call in the
+        list it is in, and how often (the same weights as `pick`, no draw); one play (a quarterback run, a kneel, the original's Field Goal
+        and Punt, a play of a list of favourites) says it is one play. "" for an item that is none of these (the caller says what W is for)."""
+        kind, value = item.action[0][len(PREFIX):], item.action[1]
+        return likely_for(self, state, "O", kind, value, lambda family: self.family_plays(state, family),
+                          PM.offense_family_items(), QB_PLAYS)
 
     def change_setting(self, state, name: str) -> None:
         """Enter on a setting of Formation and Tempo: its next value (the values go around); kept with the game (extras.play_settings)."""
@@ -506,6 +518,53 @@ class OffenseFlow:
             self.result = None
         self.called = self.played = ""
         self.reset()
+
+
+# the W key (D-112, Q-050): what it says about a play type ("family") or a list by how the weights lie: one favourite with its chance
+# (LIKELY_ONE), one play with all the weight (LIKELY_ALL), two or three or more that share the most (LIKELY_TIED), or no weight at all
+# (NO_FAVOURITE: Enter takes the first play of a play type); a single play says it is one play (ONE_PLAY); every other item and a menu with
+# no playbook have a sentence that says what W is for (W_FOR, W_NO_BOOK)
+LIKELY_ONE, LIKELY_ALL, LIKELY_TIED = "NXB-W01", "NXB-W05", ("NXB-W02", "NXB-W03", "NXB-W04")
+NO_FAVOURITE = {"family": "NXB-W06", "list": "NXB-W07"}
+ONE_PLAY, W_FOR, W_NO_BOOK = "NXB-W08", "NXB-W09", "NXB-W10"
+
+
+def likely_sentence(kind: str, where: str, ids, percent: int, name_of) -> str:
+    """What W says about a play type ("family") or a list: the plays that share the greatest weight (`ids`) and the chance of each, in
+    percent; 100 is every time; 0 means no play of it has a weight in the playbook's calling (it has no favourite). Many plays are tied
+    more often than not, so a tie is told as a tie and never one of them as the favourite."""
+    names = [name_of(i) for i in ids]
+    if not names:
+        return ""
+    if percent <= 0:
+        return X.text(NO_FAVOURITE[kind], list=where, name=names[0])
+    if len(names) == 1:
+        return X.text(LIKELY_ALL if percent >= 100 else LIKELY_ONE, list=where, name=names[0], n=percent)
+    if len(names) <= 3:
+        others = dict(zip(("other", "third"), names[1:]))
+        return X.text(LIKELY_TIED[len(names) - 2], list=where, name=names[0], n=percent, **others)
+    return X.text(LIKELY_TIED[2], list=where, name=names[0], n=percent, count=len(names))
+
+
+def likely_for(flow, state, role: str, kind: str, value, family_plays, family_names, single) -> str:
+    """The W sentence for one item of either side's catalog menus (OffenseFlow.likely_text, DefenseFlow.likely_text); "" when the item is
+    none of: a play type, a list (opened or listed in More Plays), a play. `family_plays(family)` are the usable plays of a play type,
+    `family_names` the original's names of the play types, `single` the play types that are one play each ({family: play id}). No draw."""
+    menus_, books, name_of = flow.menus, flow.rules.books, flow.table.name
+    group = value if kind == PM.OPEN else menus_.group if menus_.level == PM.LIST else ""
+    if group in C.GROUP_BY_KEY:                                    # a list: the plays of it the playbook most likely calls
+        ids, percent = books.likely(state, 1, role, PM.concepts_of(group, flow.context(state)))
+        return likely_sentence("list", X.text(C.group_text_id(C.GROUP_BY_KEY[group])).strip(), ids, percent, name_of)
+    if kind in (PM.CALL, PM.AGAIN):                                # one play
+        return X.text(ONE_PLAY, name=name_of(value))
+    if kind == PM.KICK:                                            # the original's Field Goal and Punt
+        return X.text(ONE_PLAY, name=family_names[value - 1])
+    if kind == PM.PICK and value in single:
+        return X.text(ONE_PLAY, name=name_of(single[value]))
+    if kind == PM.PICK:                                            # a play type: what Enter would most likely pick
+        ids, percent = books.likely(state, 1, role, family_plays(value))
+        return likely_sentence("family", family_names[value - 1], ids, percent, name_of)
+    return ""
 
 
 def text_for(key: str, **values) -> str:

@@ -109,6 +109,38 @@ class LeagueRecord:
     people: dict = field(default_factory=lambda: {"morale": {}, "begun": 0, "holdouts": [], "pending": [], "demands": [], "goal": None, "verdict": None})   # SX.8n, format 9: see people.py
     honors: dict = field(default_factory=lambda: {"awards": [], "hall": []})   # SX.8o, format 10: the awards and the hall of fame (honors.py)
     usage: dict = field(default_factory=lambda: {"season": 0, "games": {}, "carries": {}})   # SX.8o, format 10: the season's games and carries (workload.py)
+    calendar: dict | None = None                       # SZ.8, format 12: {"label": str, "weeks": [[[visitor, home], ...], ...]} the real calendar of this season; None: the original's 16 weeks
+
+    # ----- the calendar (SZ.8) -----
+
+    @property
+    def regular_weeks(self) -> int:
+        """Weeks of this season's regular season: the calendar's, else the original's 16."""
+        return len(self.calendar["weeks"]) if self.calendar else D.REGULAR_WEEKS
+
+    @property
+    def last_prepared_week(self) -> int:
+        """The last regular week that has a preparation after it: 15 of the original's 16, 17 of the calendar's 18 (the last game has none, and the play-offs have
+        no to-do list). The news, the injuries of the games and the morale count the weeks 1 to this one."""
+        return self.regular_weeks - 1
+
+    def games_before(self, week: int) -> int:
+        """The regular-season games the whole league has played before this week (the results the record must hold)."""
+        if not self.calendar:
+            return 16 * max(0, min(week, D.REGULAR_WEEKS + 1) - 1)
+        return sum(len(games) for games in self.calendar["weeks"][:max(0, min(week, self.regular_weeks + 1) - 1)])
+
+    def team_games_before(self, team: int, week: int) -> int:
+        """The games a team has played before this week: one for each earlier week, except the week of its bye."""
+        if not self.calendar:
+            return max(0, min(week, D.REGULAR_WEEKS + 1) - 1)
+        return sum(1 for games in self.calendar["weeks"][:max(0, min(week, self.regular_weeks + 1) - 1)] if any(team in game for game in games))
+
+    def has_bye(self, team: int, week: int) -> bool:
+        """The team has its bye in this week of the calendar (never in a league without one)."""
+        if not self.calendar or not 1 <= week <= self.regular_weeks:
+            return False
+        return not any(team in game for game in self.calendar["weeks"][week - 1])
 
     # ----- the teams -----
 
@@ -207,7 +239,7 @@ class LeagueRecord:
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
                 "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
                 "injuries": self.injuries, "staff": self.staff, "comp": self.comp, "future_picks": self.future_picks, "tags": self.tags,
-                "people": self.people, "honors": self.honors, "usage": self.usage, "ties": self.ties}
+                "people": self.people, "honors": self.honors, "usage": self.usage, "ties": self.ties, "calendar": self.calendar}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -266,10 +298,16 @@ class LeagueRecord:
                 #                                                                   no game or carry counted this season (the defaults: a migration with no draw)
             if version >= 11:
                 record.ties = data["ties"]                          # SX.12; a file of format 10 or older: no team has a tie (the default)
+            if version >= 12:
+                record.calendar = data["calendar"]                  # SZ.8; a file of format 11 or older: the original's 16 weeks (the default)
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
             raise LeagueError("a player of the franchise file is not a record: %s" % exc) from exc
+        if version < 12:                                                 # SZ.8: the offseason's news lines were week 16; 16 is a regular week of the calendar now
+            for line in record.news if isinstance(record.news, list) else ():
+                if isinstance(line, dict) and line.get("week") == 16:
+                    line["week"] = D.NEWS_OFFSEASON
         if version < 5 and isinstance(record.draft, dict) and isinstance(record.draft.get("order"), list) and "owners" not in record.draft:
             # a draft saved before SX.8j has no owners: every pick is the team's of the draft order (no trade moved one), the migration of format 5
             # (made first: the check of every older format reads the owners of a draft in progress)
@@ -437,7 +475,7 @@ class LeagueRecord:
             if not isinstance(row, list) or len(row) != 6:
                 raise LeagueError("a result is %r" % (row,))
             whole(row[0], 0, 4, "a result's round")
-            whole(row[1], 1, 20, "a result's week")
+            whole(row[1], 1, D.MAX_REGULAR_WEEKS + 4, "a result's week")
             whole(row[2], 1, D.TEAMS, "a result's winner")
             whole(row[3], 1, D.TEAMS, "a result's loser")
             whole(row[4], 0, 200, "a result's score")
@@ -452,24 +490,32 @@ class LeagueRecord:
         at_review = self.stage == OFFSEASON and self.stage_no == D.STAGE_REVIEW
         if not (in_season or at_review):
             return                                         # stages 2 to 6 of an offseason: the season is over, the next not made
-        whole(self.gtp, 0, 20, "the week")                    # 0: the season is over (the engine writes it when the player is out)
+        self._check_calendar(whole)
+        regular = self.regular_weeks
+        whole(self.gtp, 0, regular + 4, "the week")           # 0: the season is over (the engine writes it when the player is out)
         if self.schedule:
-            if not isinstance(self.schedule, list) or len(self.schedule) != 16:
+            if not isinstance(self.schedule, list) or len(self.schedule) != regular:
                 raise LeagueError("the schedule holds %r weeks" % (len(self.schedule) if isinstance(self.schedule, list) else None))
-            for entry in self.schedule:
+            for week, entry in enumerate(self.schedule, start=1):
                 if not isinstance(entry, list) or len(entry) != 3:
                     raise LeagueError("a schedule week is %r" % (entry,))
+                if self.calendar and entry == [0, 0, 0]:             # the bye week of the calendar (and only where the calendar says so)
+                    if not self.has_bye(self.team, week):
+                        raise LeagueError("week %d of the schedule is a bye but the calendar has the team's game there" % week)
+                    continue
                 whole(entry[0], 1, 8, "a schedule division")
                 whole(entry[1], 1, 4, "a schedule team")
                 whole(entry[2], 1, 2, "a schedule flag")
+                if self.calendar and self.has_bye(self.team, week):
+                    raise LeagueError("week %d of the schedule has a game but the calendar gives the team its bye" % week)
         elif in_season and self.gtp != 1:
             raise LeagueError("the season has no schedule")          # week 1 may be written before makes has made one
         ints(self.records, 64, 0, 20, "the records")
-        ints(self.ties, D.TEAMS, 0, 16, "the ties")
-        weeks = 16 if self.gtp == 0 or self.gtp > 16 else self.gtp - 1
+        ints(self.ties, D.TEAMS, 0, 17, "the ties")
         for team in range(D.TEAMS):
+            weeks = self.team_games_before(team + 1, regular + 1 if self.gtp == 0 or self.gtp > regular else self.gtp)
             if self.records[2 * team] + self.records[2 * team + 1] + self.ties[team] != weeks:
-                raise LeagueError("team %d has %d wins and %d losses and %d ties after %d weeks" %
+                raise LeagueError("team %d has %d wins and %d losses and %d ties after %d games" %
                                   (team + 1, self.records[2 * team], self.records[2 * team + 1], self.ties[team], weeks))
         if not isinstance(self.pairings, list) or len(self.pairings) > 16 or len(self.pairings) % 4:
             raise LeagueError("the pairings hold %r values" % (len(self.pairings) if isinstance(self.pairings, list) else None))
@@ -480,11 +526,41 @@ class LeagueRecord:
         for index, value in enumerate(self.byes):
             whole(value, 1, 8 if index % 2 == 0 else 4, "a bye value")
         if in_season and self.gtp > 0:                       # the games of the coming round (finding 3 of the SX.8a review)
-            games = {17: 4, 18: 4, 19: 2, 20: 1}.get(self.gtp, 0)
+            games = {1: 4, 2: 4, 3: 2, 4: 1}.get(self.gtp - regular, 0)       # round 1 is the wild card week: 17 in the original, the calendar's 19
             if len(self.pairings) != 4 * games:
                 raise LeagueError("week %d has %d play-off games, not %d" % (self.gtp, len(self.pairings) // 4, games))
-            if self.gtp in (17, 18) and len(self.byes) != 8:
+            if self.gtp - regular in (1, 2) and len(self.byes) != 8:
                 raise LeagueError("week %d has %d teams with a bye, not 4" % (self.gtp, len(self.byes) // 2))
+
+    def _check_calendar(self, whole) -> None:
+        """The calendar of the season, when there is one: a label and the weeks of (visitor, home) games, every team once at most in a week, 17 games and
+        one bye for every team, the same teams in a week never twice. Only a whole calendar is kept; a damaged one is a damaged file."""
+        if self.calendar is None:
+            return
+        calendar = self.calendar
+        if not isinstance(calendar, dict) or set(calendar) != {"label", "weeks"} or not isinstance(calendar["label"], str) or len(calendar["label"]) > 120:
+            raise LeagueError("the calendar is %r" % (type(calendar).__name__,))
+        weeks = calendar["weeks"]
+        if not isinstance(weeks, list) or len(weeks) != 18:
+            raise LeagueError("the calendar holds %r weeks" % (len(weeks) if isinstance(weeks, list) else None))
+        played = [0] * (D.TEAMS + 1)
+        for number, games in enumerate(weeks, start=1):
+            if not isinstance(games, list) or not 1 <= len(games) <= 16:
+                raise LeagueError("week %d of the calendar holds %r games" % (number, len(games) if isinstance(games, list) else None))
+            seen: set = set()
+            for game in games:
+                if not isinstance(game, list) or len(game) != 2:
+                    raise LeagueError("a game of the calendar is %r" % (game,))
+                for team in game:
+                    whole(team, 1, D.TEAMS, "a team of the calendar")
+                    if team in seen:
+                        raise LeagueError("team %d plays twice in week %d of the calendar" % (team, number))
+                    seen.add(team)
+                    played[team] += 1
+                if game[0] == game[1]:
+                    raise LeagueError("a team plays itself in week %d of the calendar" % number)
+        if any(played[team] != 17 for team in range(1, D.TEAMS + 1)):
+            raise LeagueError("the calendar gives the teams %r games, not 17" % (sorted({played[team] for team in range(1, D.TEAMS + 1)}),))
 
 
 # ----- a new league (design 4.5, 12.1) -----

@@ -283,7 +283,7 @@ class Program:
             if fresh:
                 g.log_print(texts.CAPTION)                      # 0x488422: the clone's title replaces the original's
             g.log_print("")                                     # 0x48842f, 0x488454
-        if season.gtp < 17:
+        if not season.in_playoffs:
             self._regular_week_line()
         else:
             self._playoff_week_line()
@@ -309,9 +309,9 @@ class Program:
         self.week_intro = P.THIS_IS_THE                         # Q5 not reproduced: F1 in the menu says it again
         self._stop_intro()                                      # 0x4888c8 L68 test, 0x4888dd Stop, 0x4888f7, 0x48892c, 0x48894f
         g.voice_speak(" ", wait=True)                           # 0x4889a9 Voice.Speak " ", 0
-        name = " " + T.PLAYOFF_WEEK_NAMES.get(season.gtp, "")   # 0x488960, 0x488ad0: " " & the week's name
+        name = " " + T.PLAYOFF_WEEK_NAMES.get(season.classic_gtp(), "")   # 0x488960, 0x488ad0: " " & the week's name
         g.log_print("")                                         # 0x488adf
-        g.log_print("#" + trim(str_(season.gtp)))               # 0x488b7d (16 + the week of the play-offs)
+        g.log_print("#" + trim(str_(season.classic_gtp())))     # 0x488b7d (16 + the week of the play-offs)
         g.log_print(name)                                       # 0x488b8d
         g.log_print("")                                         # 0x488b96
         self.week_text = name + P.OF_FOOTBALL              # 0x488bb7, 0x488bc5 (L118)
@@ -326,6 +326,9 @@ class Program:
             wins, losses = season.records.record(division, place)
             return g.league.team(division, place), wins, losses
 
+        if season.on_bye:                                       # SZ.8: a bye week of the real calendar has no opponent and no game
+            from ..extras import nx_texts as X
+            return X.text("NXC-23")
         own = record(season.tn1, season.tn2)
         opponent = record(season.tn3, season.tn4)
         first, second = (opponent, own) if season.vtrnt == 1 else (own, opponent)
@@ -342,6 +345,14 @@ class Program:
             return int(code) - 96
         char = self.keys.char
         return int(char) if len(char) == 1 and char in "1234" else 0
+
+    def choice_text(self, choice: int) -> str:
+        """The main menu's choice as it is spoken: the original's four, except that in the bye week of a calendar (SZ.8) the first one does not offer a
+        game: it plays the week of the other teams."""
+        if choice == 1 and self.season.on_bye:
+            from ..extras import nx_texts as X
+            return X.text("NXC-22")
+        return P.CHOICES[choice]
 
     def main_menu(self) -> int:
         """Returns the choice 1 to 4 (L34). A saved game takes choice 1 after the two lines (0x4898fb)."""
@@ -362,7 +373,7 @@ class Program:
                 self.mode.before_menu()                         # H15: the franchise's news and to-do list (Classic: nothing)
                 g.say2(" " + season.coach + P.SELECT)           # 0x489935, 0x489951
                 while True:                                     # L_489969
-                    g.say2(P.CHOICES[choice])                   # 0x4899c0, 0x489a1b, 0x489a76, 0x489aca
+                    g.say2(self.choice_text(choice))            # 0x4899c0, 0x489a1b, 0x489a76, 0x489aca
                     keys.getkey(g.speech)                       # 0x489af1
                     if self.mode.switch_pending():              # H15, B-X48: a menu asked for another kind of season
                         return 0
@@ -393,6 +404,8 @@ class Program:
         leaves for its exit after any game; the clone goes back to the week loop (D-024 item 1)."""
         g, season, store = self.g, self.season, self.store
         self.mode.before_game()                                 # H15: the to-do list's deadline (Classic: nothing)
+        if season.on_bye:                                       # SZ.8: the player's team has its bye: no game, the other teams play
+            return self.play_bye_week()
         # pag read football.sav and deleted it (0x43afa4); the clone keeps it until the game it holds ends (NX-S3, rule 0.23), so a crash
         # or a closed window after the load loses nothing
         entry = self.load_entry if self.saved_game else None
@@ -437,6 +450,23 @@ class Program:
             g.ptf = 0                                           # 0x489ec0
             self.after_game_standings()
             self.mode.after_week()                              # H15: the franchise's news (Classic: nothing)
+        if season.gtp == 0:
+            self.season_over()
+        return False
+
+    def play_bye_week(self) -> bool:
+        """The bye week of the real calendar (nfl4's Franchise, SZ.8): the same steps as after a game, without a game. The week's other games are told,
+        the records and the week counter go on, the standings follow, the Franchise prepares its next week. Never ends the program (False)."""
+        g, season = self.g, self.season
+        week = season.gtp
+        debuglog.event("app", "bye_week", week=week, team=season.tn1)
+        g.rnd.mark("bye_week", week=week, tn1=season.tn1, tn2=season.tn2)
+        self.saved_game = False
+        self.load_entry = None
+        g.pog_bye()
+        g.ptf = 0
+        self.after_game_standings()
+        self.mode.after_week()
         if season.gtp == 0:
             self.season_over()
         return False

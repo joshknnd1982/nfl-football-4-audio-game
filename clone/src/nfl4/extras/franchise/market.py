@@ -217,7 +217,8 @@ def resolve(league, bids: list, round_no: int) -> Round:
         for bid in ranked:
             if can_sign(league, bid):
                 decision.winner = bid
-                result.moves.append([player.id, player.team, bid.team, bid.salary])     # (a free agent keeps the team he last played for until he signs)
+                if player.team:                                                          # (a player the player released in the season has no team: nobody lost him)
+                    result.moves.append([player.id, player.team, bid.team, bid.salary])     # (a free agent keeps the team he last played for until he signs)
                 sign(league, player, bid)
                 result.signed.append((player, bid))
                 touched.add(bid.team)

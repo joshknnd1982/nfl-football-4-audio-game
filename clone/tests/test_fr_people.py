@@ -545,7 +545,7 @@ def test_the_new_season_halves_the_morale_toward_zero_and_ends_the_seasons_deman
     lambda lg, pid: lg.people.update(holdouts=[[pid, 5, 1, 7]]),
     lambda lg, pid: lg.people.update(holdouts=[[pid, 5, 1, 1], [pid, 5, 1, 2]]),
     lambda lg, pid: lg.people.update(demands=[[pid, 5, 3, 0], [pid, 5, 4, 0]]),
-    lambda lg, pid: lg.people.update(demands=[[pid, 5, T.FR_TRADE_LAST_WEEK + 1, 0]]),
+    lambda lg, pid: lg.people.update(demands=[[pid, 5, T.FR_TRADE_LAST_WEEK_CALENDAR + 1, 0]]),
     lambda lg, pid: lg.people.update(goal=[1, 3, "lose", 0, 0]),
     lambda lg, pid: lg.people.update(verdict=[1, 3, 2, 0]),
     lambda lg, pid: lg.people.update(extra=1),

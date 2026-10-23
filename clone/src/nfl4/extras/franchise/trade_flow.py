@@ -11,6 +11,7 @@ and runs F9's menu, which uses the F9 classes (`SpokenMenu`, `ListPicker`) as th
 """
 from __future__ import annotations
 
+from ...data import debuglog
 from ...game.keys import KEY_ENTER
 from ...game.spoken_menu import Item, ListPicker, SpokenMenu
 from .. import nx_texts as X
@@ -66,7 +67,8 @@ def log_line(words, league, row: list) -> str:
     """A trade of the season in F9's list: " week 5: the Bears traded Smith to the Lions for Jones. the Lions add ... "."""
     week, a, b, pa, pb, picks_a, picks_b, _kind = row
     trade = TR.Trade(a, b, pa, pb, tuple(tuple(p) for p in picks_a), tuple(tuple(p) for p in picks_b))
-    return X.text("NXX-25", n=week, team=words.team_name(a), other=words.team_name(b), give=league.players[pa].name,
+    text_id = "NXX-25" if week >= 1 else "NXX-35"                    # SZ.8: a trade of the offseason (week 0) says so
+    return X.text(text_id, n=week, team=words.team_name(a), other=words.team_name(b), give=league.players[pa].name,
                   get=league.players[pb].name, picks=picks_line(words, trade, league.team))
 
 
@@ -75,7 +77,7 @@ def closed_reason(g, league) -> str | None:
     if g.play_engine is not None:
         return X.text("NXX-16")
     if not TR.in_window(league, league.gtp):
-        return X.text("NXX-15", n=T.FR_TRADE_LAST_WEEK)
+        return X.text("NXX-15", n=TR.last_week(league))
     return None
 
 
@@ -104,6 +106,8 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
     def make(trade: TR.Trade) -> None:
         league = store.league
         TR.execute(league, trade, league.gtp, TR.KIND_PLAYER)
+        debuglog.event("franchise", "trade_made", week=league.gtp, stage=league.stage, a=trade.a, b=trade.b, give_a=trade.give_a, give_b=trade.give_b,
+                       picks_a=len(trade.picks_a), picks_b=len(trade.picks_b))                    # rule 0.15
         store.save()                                             # made and written, then told (B-X53)
         say(made_line(words, league, trade))
 
@@ -220,4 +224,4 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
              Item(lambda: X.text("NXX-12"), enter=ask_for_a_player),
              Item(lambda: X.text("NXX-13"), enter=draft_picks),
              Item(lambda: X.text("NXX-14"), enter=season_trades)]
-    SpokenMenu(speech, keys, X.text("NXX-28", n=T.FR_TRADE_LAST_WEEK), items, space_enters=True, digits_jump=True).run()
+    SpokenMenu(speech, keys, X.text("NXX-28", n=TR.last_week(store.league)), items, space_enters=True, digits_jump=True).run()

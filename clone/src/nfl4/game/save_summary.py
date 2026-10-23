@@ -41,7 +41,7 @@ def make_info(engine) -> dict:
         minutes, seconds = engine.clock.summary_left()
     except Exception:                                   # the summary must never stop a save
         minutes, seconds = None, None
-    return {"v": FORMAT, "week": g.season.gtp, "kind": "franchise" if g.franchise_in_use else "classic",
+    return {"v": FORMAT, "week": g.season.gtp, "reg": g.season.regular_weeks, "kind": "franchise" if g.franchise_in_use else "classic",
             "rules": getattr(engine.rules, "name", "classic") or "classic", "own": _name(s.teams.get(1, "")), "opp": _name(s.teams.get(2, "")),
             "lm": minutes, "ls": seconds}
 
@@ -64,11 +64,16 @@ def left_words(info: dict) -> str:
     return " ".join(parts)
 
 
-def week_words(week: int | None) -> str:
+def playoff_name(week: int, regular: int = 16, default: str = "play off week") -> str:
+    """The name of a play-off week by its counter, in the original's numbering (17 to 20) whatever the length of the regular season (a calendar's 18 weeks)."""
+    return T.PLAYOFF_WEEK_NAMES.get(week - regular + 16, default)
+
+
+def week_words(week: int | None, regular: int = 16) -> str:
     if not isinstance(week, int) or week < 1:
         return ""
-    if week >= 17:
-        return S.THE_PLAYOFF_WEEK % T.PLAYOFF_WEEK_NAMES.get(week, "play off week")
+    if week > regular:
+        return S.THE_PLAYOFF_WEEK % playoff_name(week, regular)
     return S.THE_WEEK % week
 
 
@@ -99,7 +104,7 @@ def game_sentence(entry, many: bool = False) -> str:
     ball = own if saved.wisoff == 1 else opp
     if ball:
         text += S.THE_BALL % ball
-    text += week_words(info.get("week"))
+    text += week_words(info.get("week"), info.get("reg") if isinstance(info.get("reg"), int) else 16)
     when = when_words(entry.stamp)
     return text + (S.SAVED_ON % when if when else S.NO_DATE)
 
@@ -116,7 +121,8 @@ def short_game(entry, with_slot: bool = True) -> str:
         parts.append("%s and %s" % (info["own"], info["opp"]))
     week = info.get("week")
     if isinstance(week, int) and week >= 1:
-        parts.append("week %d" % week if week < 17 else T.PLAYOFF_WEEK_NAMES.get(week, "play off week"))
+        regular = info.get("reg") if isinstance(info.get("reg"), int) else 16
+        parts.append("week %d" % week if week <= regular else playoff_name(week, regular))
     when = when_words(entry.stamp)
     if when:
         parts.append("saved " + when)
@@ -136,10 +142,10 @@ def season_sentence(coach: str, team: str, gtp: int, wins: int, losses: int) -> 
     return S.THE_SEASON_NO_COACH % (team, where, record)
 
 
-def franchise_sentence(coach: str, team: str, season: int, in_season: bool, gtp: int, wins: int, losses: int) -> str:
+def franchise_sentence(coach: str, team: str, season: int, in_season: bool, gtp: int, wins: int, losses: int, regular: int = 16) -> str:
     team = _name(team)
     coach = coach if coach and coach != "coach" else "the player"
     if not in_season:
         return S.THE_FRANCHISE_OFFSEASON % (coach, team, season)
-    where = S.WEEK_RECORD % gtp if gtp < 17 else S.PLAYOFFS_RECORD % T.PLAYOFF_WEEK_NAMES.get(gtp, "play offs")
+    where = S.WEEK_RECORD % gtp if gtp <= regular else S.PLAYOFFS_RECORD % playoff_name(gtp, regular, "play offs")
     return S.THE_FRANCHISE % (coach, team, season, where, _record_words(wins, losses))

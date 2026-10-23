@@ -300,7 +300,7 @@ def test_a_list_of_well_formed_items_passes_the_check_and_the_league_round_trips
 
 
 @pytest.mark.parametrize("change", [
-    lambda item: item.update(kind="contract"), lambda item: item.update(week=0), lambda item: item.update(week=17),
+    lambda item: item.update(kind="contract"), lambda item: item.update(week=0), lambda item: item.update(week=19),
     lambda item: item.update(season=0), lambda item: item.update(state=3), lambda item: item.update(state=True),
     lambda item: item.update(extra=1), lambda item: item.pop("week"), lambda item: item.update(players=[]),
     lambda item: item.update(players=[1, 2, 3]), lambda item: item.update(players=["a"]), lambda item: item.update(state=D.ITEM_SET),

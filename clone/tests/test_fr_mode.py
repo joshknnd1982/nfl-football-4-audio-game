@@ -98,7 +98,7 @@ def test_the_second_answer_is_franchise_when_none_exists_and_it_makes_the_league
     assert text[text.index(QUESTION):text.index(QUESTION) + 3] == [QUESTION, " 1. classic season ", " 2. franchise "]
     prompts = [text.index(" Enter the name of your coach "), text.index(X.text("NXF-07")), text.index(X.text("NXF-08", n=1))]
     assert prompts == sorted(prompts)
-    assert text[prompts[2] - 1].startswith(" Today's game is") and text[prompts[2] + 1] == " kim select "       # design 3.4
+    assert text[prompts[2] - 1].startswith(" Today's game is") and text[prompts[2] + 1] == X.text("NXX-30", n=9) and text[prompts[2] + 2] == " kim select "       # design 3.4 (SZ.8: and where trades and free agents are)
     assert settings_of(rig).nx_season_kind == "franchise" and rig.game.program.mode.kind == "franchise"
     assert sorted(rig.files.data) == ["history.txt", "league.previous.sav", "league.sav"]
     made = league(rig)

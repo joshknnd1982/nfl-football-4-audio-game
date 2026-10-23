@@ -84,7 +84,7 @@ def game_plan_item(league: LeagueRecord, week: int, their_offense: str, their_de
     coordinators' recommendation (`staff.recommended`: a coordinator who reads the opponent answers its style as FR_GAME_PLAN does, a lesser one
     recommends his own); None is the table alone."""
     classic = "classic"
-    if not 1 <= week <= D.REGULAR_WEEKS or (offense_book == classic and defense_book == classic):
+    if not 1 <= week <= league.regular_weeks or (offense_book == classic and defense_book == classic):
         return None
 
     def recommended(table: dict, key: str) -> str:
@@ -230,7 +230,7 @@ def check_items(league: LeagueRecord, whole) -> None:
         if item["kind"] not in D.TODO_KINDS:
             raise LeagueError("a to-do item of the kind %r" % (item["kind"],))
         whole(item["season"], 1, D.MAX_SEASONS, "a to-do season")
-        whole(item["week"], 1, D.REGULAR_WEEKS, "a to-do week")
+        whole(item["week"], 1, D.MAX_REGULAR_WEEKS, "a to-do week")
         whole(item["state"], D.ITEM_NEW, D.ITEM_SET, "a to-do state")
         key = (item["kind"], item["season"], item["week"], item.get("player"))      # SX.8k: one injury item per player
         if key in seen:

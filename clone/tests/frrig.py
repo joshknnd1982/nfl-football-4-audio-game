@@ -26,10 +26,11 @@ WANT_CLASSIC = [ENTER]
 
 def odd_week_wins(rig):
     """The player wins in odd weeks; in the play-offs he wins the wild card and the division games, loses the rest."""
-    gtp = rig.game.season.gtp
-    if gtp <= 16:
+    season = rig.game.season
+    gtp = season.gtp
+    if gtp <= season.regular_weeks:
         return (24, 17) if gtp % 2 else (10, 31)
-    return (24, 17) if gtp in (17, 18) else (10, 31)
+    return (24, 17) if gtp - season.regular_weeks in (1, 2) else (10, 31)
 
 
 MARKET_ANSWER = (UP, UP, ENTER)                       # "end the round and hear the results" of free agency's question (the last item but one), and the wait that ends the stage
@@ -55,7 +56,7 @@ def market_aware(policy, holder):
 
 
 def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=None, scores=odd_week_wins, seed=1, nfl=True,
-                  preset=None, classic_names=None, books=("classic", "classic"), **kwargs):
+                  preset=None, classic_names=None, books=("classic", "classic"), real_calendar=False, **kwargs):
     holder = []
     rig = program_rig(tmp_path, answers, market_aware(policy, holder), fast=True, seed=seed, preset=preset, pog=None, **kwargs)
     holder.append(rig)
@@ -80,6 +81,7 @@ def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=No
     def factory(classic):
         store = FranchiseStore(rig.files, classic)
         store.strict = True
+        store.real_calendar = real_calendar       # SZ.8: the tests of the original's 16 random weeks stay as they were; the tests of the calendar ask for it
         rig.fstore = store
         return store
 
@@ -106,7 +108,7 @@ def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=No
             return result
         own, opponent = rig.scores(rig)
         game.m414 = (own, opponent)
-        if game.season.gtp == 20:                         # the Super Bowl game: the presentation, then the season is over
+        if game.season.gtp == game.season.playoff_week(4):    # the Super Bowl game: the presentation, then the season is over
             game.superbowl((own, opponent))
             game.season.gtp = 0
         rig.sounds.stop_crowds()

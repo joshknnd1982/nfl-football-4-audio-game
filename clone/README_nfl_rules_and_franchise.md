@@ -47,6 +47,22 @@ and tells you. F9, Franchise has your to-do list, the news, your roster, the lea
 trades, the injury report, your job and staff, the franchise settings, and the way back to a classic season. Injuries happen only in a
 franchise, never in a quick game or a classic season.
 
+**The schedule.** A franchise plays the league's real calendar. The first season is the real 2026 NFL season: 18 weeks, 17 games for
+every team and one bye week, with the real opponents and the real home and away games (the file `schedule_2026.txt` in the program's
+`assets\data` folder; the facts were read from the public nflverse schedule table, which follows the NFL's release, and checked against the
+NFL's announcement of the opener and of a team's last week; the source repository states no license, so only the facts of the schedule are used: the week, the two teams and the date). In your bye week the game tells you so and plays the other teams' games. The play
+offs follow week 18. The NFL publishes each year's schedule only when it is released, so from the second season the game uses the same calendar
+with the teams relabeled (the divisions of each conference rotate), which gives every team other opponents and keeps every rule of the calendar.
+That is an approximation, not the NFL's own rotation. A franchise that was started before this version keeps the season it is in, with the
+original's 16 random weeks, and plays the real calendar from its next season.
+
+**Free agents and trades.** In the regular season, F9, Franchise, free agents lets you sign a free agent any week before the kick-off: choose
+the position, the player and, when you have no open place there, the player of that position you release (his dead money counts against the
+salary cap). Trades (F9, Franchise, trades) are open until the trade deadline, which is the kick-off of week 10 of the real calendar (the NFL's
+deadline of 2026 is the day after week 9) and of week 9 of a season with the original's 16 weeks, and again in free agency of the offseason,
+before the draft. The news at the start of the season says where they are, and the week before the deadline, its last week and the week after it
+are told too.
+
 ### Your own words
 
 The announcer's remarks of the added features (remarks.txt), the names of the fouls (penalties.txt), the playbooks (the folder

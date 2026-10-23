@@ -90,7 +90,7 @@ The 32 team nicknames, set in GetTeams (p_4321d0) into Me.m294(tn1 + 9 * tn2): t
 - `813` @0x0a414 [4321d0]: "Cowboys"
 - `814` @0x0a428 [4321d0]: "Eagles"
 - `815` @0x0a43c [4321d0]: "Giants"
-- `816` @0x0a450 [4321d0]: "Redskins"
+- `816` @0x0a450 [4321d0]: "Redskins" (the clone says "Commanders" for this team since 2026-10-22, Q-026, D-120; the original's word stays here and in `league.ORIGINAL_T24_NAME`)
 - `817` @0x0a468 [4321d0]: "Cardinals"
 - `818` @0x0a480 [4321d0]: "Forty Niners"
 - `819` @0x0a4b0 [4321d0]: "Sea hawks"

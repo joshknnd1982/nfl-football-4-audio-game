@@ -336,7 +336,7 @@ def test_format_7_round_trips_with_a_stage_in_progress():
     judged(league, TEAM, 20, 4)
     S.begin(league)
     text = league.to_json()
-    assert json.loads(text)["format"] == D.FORMAT == 11          # (11 since SX.12)
+    assert json.loads(text)["format"] == D.FORMAT == 12          # (12 since SZ.8)
     again = LeagueRecord.from_json(text)
     assert again.staff == league.staff and again.to_json() == text
 
@@ -348,7 +348,7 @@ def test_a_format_6_file_gets_a_new_leagues_staff_by_the_migration_with_no_draw(
     data["format"] = 6
     loaded = LeagueRecord.from_json(json.dumps(data))
     fresh = league_of()
-    assert loaded.staff == fresh.staff and json.loads(loaded.to_json())["format"] == D.FORMAT == 11
+    assert loaded.staff == fresh.staff and json.loads(loaded.to_json())["format"] == D.FORMAT == 12
 
 
 def test_a_format_7_file_without_its_staff_is_damage():
@@ -361,8 +361,8 @@ def test_a_format_7_file_without_its_staff_is_damage():
 @pytest.mark.parametrize("mutate", [
     lambda s: s.update(extra=1), lambda s: s.update(coaches=s["coaches"][:31]), lambda s: s["coaches"].__setitem__(3, None),
     lambda s: s["coordinators"][3].__setitem__(0, None), lambda s: s["coaches"][2].update(approval=101), lambda s: s["coaches"][2].update(approval=-1),
-    lambda s: s["coaches"][2].update(goal=["points", 3]), lambda s: s["coaches"][2].update(goal=["wins", 17]), lambda s: s["coaches"][2].update(name=""),
-    lambda s: s["coaches"][2].update(last=[17, 0, 0, 60]), lambda s: s["coaches"][2].update(last=[8, 6, 0, 60]), lambda s: s["coaches"][2].update(last=[8, 0, 2, 60]),
+    lambda s: s["coaches"][2].update(goal=["points", 3]), lambda s: s["coaches"][2].update(goal=["wins", 19]), lambda s: s["coaches"][2].update(name=""),
+    lambda s: s["coaches"][2].update(last=[19, 0, 0, 60]), lambda s: s["coaches"][2].update(last=[8, 6, 0, 60]), lambda s: s["coaches"][2].update(last=[8, 0, 2, 60]),
     lambda s: s["coaches"][2].update(last=[8, 0]), lambda s: s["coaches"][2].pop("seasons"), lambda s: s["coordinators"][2][1].update(style="nonsense"),
     lambda s: s["coordinators"][2][1].update(rating=100), lambda s: s["coordinators"][2][1].update(rating=39), lambda s: s["coordinators"][2].append(None),
     lambda s: s["coordinators"][2][0].update(name="a\x01b"), lambda s: s.update(stage={"step": "draw"})])

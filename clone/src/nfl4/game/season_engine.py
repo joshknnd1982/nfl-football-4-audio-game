@@ -16,6 +16,10 @@ text is the lifted text, every wait is the lifted wait):
   wait with F1 and F2; after week 16 the division winners, the wild cards, the seeds, the files of the bracket and where
   the player's team is), or a play-off week with the player's team (gtp 17 to 19: the round's results, the next round's
   pairings; a loss hands the rest to finplay17), or a conceded Super Bowl (gtp 20, D-029 item 3: Q48 is not reproduced).
+* nfl4's Franchise may play the real calendar (`SeasonState.calendar`, rule 0.13, SZ.8): 18 regular weeks, the games of each week are the calendar's
+  (not drawn among the teams that have not played), a team has one bye, and the play-off weeks follow the 18th week. Everything below that says
+  "week 16" or "gtp 17 to 20" means `season.regular_weeks` and the weeks after it; with no calendar those are the original's 16 and 17 to 20.
+  `bye_week()` is the week in which the player's team does not play: the league's games of the week are played and told, nothing else.
 * `finplay17()` plays every round from gtp - 16 to the Super Bowl without the player and ends with the celebration and gtp = 0.
 * `super_bowl_presentation(scores)` is superbowl, called by pag after a Super Bowl game in place of the final score (Q27).
 
@@ -32,6 +36,7 @@ from typing import Protocol
 
 from . import season_texts as T
 from .league import DIVISIONS, PLACES, League
+from .schedule import team_pair
 from .playoffs import (ComputerGame, Pairing, Qualifier, TeamRef, computer_game, end_of_regular_season, score_of)
 from .standings import Records, ties_words
 from .vbnum import rtrim, str_, trim
@@ -101,7 +106,8 @@ class ClassicSeasonHooks:
 CLASSIC_SEASON_HOOKS = ClassicSeasonHooks()
 
 REGULAR, WILD_CARD, DIVISION, CHAMPIONSHIP, SUPER_BOWL = "regular", "wild_card", "division", "championship", "super_bowl"
-PLAYOFF_WEEK = {WILD_CARD: 17, DIVISION: 18, CHAMPIONSHIP: 19, SUPER_BOWL: 20}     # the week counter of each round
+PLAYOFF_WEEK = {WILD_CARD: 17, DIVISION: 18, CHAMPIONSHIP: 19, SUPER_BOWL: 20}     # the week counter of each round (the original's; a calendar's: SeasonState.playoff_week)
+ROUND_OF = {WILD_CARD: 1, DIVISION: 2, CHAMPIONSHIP: 3, SUPER_BOWL: 4}
 
 
 # ----- the sentences -----
@@ -178,6 +184,10 @@ class SeasonEngine:
     def name(self, team: TeamRef) -> str:
         return self.g.league.team(team.division, team.place)
 
+    def week_of(self, stage: str) -> int:
+        """The week counter of a play-off round: 17 to 20 in the original, after the calendar's last regular week in a Franchise that plays one."""
+        return self.g.season.playoff_week(ROUND_OF[stage])
+
     @property
     def scores(self) -> tuple[int, int]:
         """Me.m414: the last game's final score (the player's, the opponent's)."""
@@ -247,16 +257,29 @@ class SeasonEngine:
         g.ptf = 1
         self.player_won = False                                   # L3d0 = 0 (0x4625a5)
         g.empty_replay()                                          # Me.ilc = 0 (0x4625ce)
-        if season.gtp < 17:
+        after = season.gtp - season.regular_weeks                 # <= 0: a regular week; 1 wild card, 2 division, 3 championship, 4 Super Bowl
+        if after < 1:
             self._regular_week()
-        elif season.gtp <= 17:
+        elif after <= 1:
             self._wild_card_week()
-        elif season.gtp <= 18:
+        elif after <= 2:
             self._division_week()
-        elif season.gtp <= 19:
+        elif after <= 3:
             self._championship_week()
         else:
             self._conceded_super_bowl()
+        return PogResult(season.gtp)
+
+    def bye_week(self) -> PogResult:
+        """The player's team has its bye (a calendar, SZ.8): no game was played, so there is no final score. The week's other games are played
+        and told as in any regular week, the records and the week counter go on, and the wait is the regular week's."""
+        g, season = self.g, self.g.season
+        if season.calendar is None or not season.in_regular_season:
+            raise SeasonStateError("bye_week needs a regular week of a calendar (gtp %d)" % season.gtp)
+        g.ptf = 1
+        self.player_won = False
+        g.empty_replay()
+        self._calendar_week(bye=True)
         return PogResult(season.gtp)
 
     # ----- a regular week (5.14) -----
@@ -268,18 +291,11 @@ class SeasonEngine:
         return rnd.redraw(lambda: TeamRef(rnd(DIVISIONS), rnd(PLACES)), lambda t: played[t] is None,
                           lambda: next(t for t in played if played[t] is None), "a team that has not played this week")
 
-    def _regular_week(self) -> None:
-        g, season, rnd = self.g, self.g.season, self.g.rnd
+    def _own_game_result(self, lines: list) -> None:
+        """The player's game of a regular week: the result line (a win, a loss, or a tie of the N. F. L. rules), the records and H14."""
+        g, season = self.g, self.g.season
         own, opponent = season.own_team, season.opponent_team
         own_score, opponent_score = self.scores
-        played: dict[TeamRef, int | None] = {TeamRef(d, p): None for d in range(1, DIVISIONS + 1)
-                                             for p in range(1, PLACES + 1)}
-        played[own], played[opponent] = own_score, opponent_score    # L270 (0x462a3f, 0x462b0e)
-        g.keys.clk()                                              # 0x462b54
-        # footbal3.dat is read here (0x462bb3 to 0x462ea5): the records are in memory
-        g.keys.clk()                                              # 0x462eb4
-        lines = [T.GAMES_OF_WEEK + trim(str_(season.gtp)) + T.END]   # " Games of week number 5. "
-        g.say2(lines[0])
         if own_score == opponent_score and self.ties_allowed:     # SX.12: the N. F. L. rules' overtime ended tied (16-1-3 (d)); a
             self._tie(own)                                        # Classic game is never tied here (its overtime ends on a score)
             self._tie(opponent)
@@ -295,6 +311,64 @@ class SeasonEngine:
             self.hooks.game_played(REGULAR, season.gtp, winner, loser, winner_score, loser_score)
             lines.append(week_result(self.name(winner), self.name(loser), winner_score, loser_score))
         g.say2(lines[1])
+
+    def _calendar_week(self, bye: bool = False) -> None:
+        """A regular week of a calendar (SZ.8): the heading, the player's result (or, on his bye, the sentence that says so) and then the week's
+        other games IN THE CALENDAR'S ORDER with the calendar's visitor and home team (the original draws the pairs among the teams that have not
+        played). A game is told as the original tells a computer game and draws the same two score indices (the visitor's, then the home team's,
+        which must differ in score), through the same hook."""
+        g, season, rnd = self.g, self.g.season, self.g.rnd
+        own = season.own_team
+        g.keys.clk()
+        g.keys.clk()
+        lines = [T.GAMES_OF_WEEK + trim(str_(season.gtp)) + T.END]
+        g.say2(lines[0])
+        if bye:
+            from ..extras import nx_texts as X
+            lines.append(X.text("NXC-24"))
+            g.say2(lines[1])
+        else:
+            self._own_game_result(lines)
+        for visitor_number, home_number in season.calendar.games(season.gtp):
+            team_a, team_b = TeamRef(*team_pair(visitor_number)), TeamRef(*team_pair(home_number))
+            if own in (team_a, team_b):
+                continue                                          # the player's own game was told above
+            index_a = self.hooks.computer_index(team_a, rnd(32))
+
+            def shifted(i, team=team_b):
+                return self.hooks.computer_index(team, i)
+
+            index_b = shifted(rnd.redraw(lambda: rnd(32), lambda i: score_of(shifted(i)) != score_of(index_a),
+                                         lambda: next(i for i in range(1, 33) if score_of(shifted(i)) != score_of(index_a)),
+                                         "a score that differs from the other team's"))
+            if index_a <= index_b:
+                winner, loser, winner_score, loser_score = team_b, team_a, score_of(index_b), score_of(index_a)
+            else:
+                winner, loser, winner_score, loser_score = team_a, team_b, score_of(index_a), score_of(index_b)
+            line = week_result(self.name(winner), self.name(loser), winner_score, loser_score)
+            self._win(winner)
+            self._loss(loser)
+            self.hooks.game_played(REGULAR, season.gtp, winner, loser, winner_score, loser_score)
+            lines.append(line)
+            g.say2(line)
+        self._finish_regular_week(lines)
+
+    def _regular_week(self) -> None:
+        g, season, rnd = self.g, self.g.season, self.g.rnd
+        if season.calendar is not None:
+            self._calendar_week()
+            return
+        own, opponent = season.own_team, season.opponent_team
+        own_score, opponent_score = self.scores
+        played: dict[TeamRef, int | None] = {TeamRef(d, p): None for d in range(1, DIVISIONS + 1)
+                                             for p in range(1, PLACES + 1)}
+        played[own], played[opponent] = own_score, opponent_score    # L270 (0x462a3f, 0x462b0e)
+        g.keys.clk()                                              # 0x462b54
+        # footbal3.dat is read here (0x462bb3 to 0x462ea5): the records are in memory
+        g.keys.clk()                                              # 0x462eb4
+        lines = [T.GAMES_OF_WEEK + trim(str_(season.gtp)) + T.END]   # " Games of week number 5. "
+        g.say2(lines[0])
+        self._own_game_result(lines)
         for _ in range(WEEK_COMPUTER_GAMES):                      # For Lb0 = 1 To 15
             team_a = self._free_team(played)
             index_a = self.hooks.computer_index(team_a, rnd(32))  # La0 (H14: the Franchise shifts it by the team's strength)
@@ -318,6 +392,12 @@ class SeasonEngine:
             self.hooks.game_played(REGULAR, season.gtp, winner, loser, winner_score, loser_score)
             lines.append(line)
             g.say2(line)
+        self._finish_regular_week(lines)
+
+    def _finish_regular_week(self, lines: list) -> None:
+        """The end of a regular week, the original's and a calendar's: the log, the next week, the records, the wait (F1 or F2 say the lines again),
+        and after the last regular week the end of the regular season."""
+        g, season = self.g, self.g.season
         g.log_print("")                                           # Print #3,
         season.gtp += 1
         self.store.write_records(season.records)                  # footbal3.dat
@@ -331,7 +411,7 @@ class SeasonEngine:
                 g.say2(line)
             g.keys.clk()
             g.keys.getkey(g.speech)
-        if season.gtp < 17:
+        if season.gtp <= season.regular_weeks:
             self.store.write_gtp(season.gtp)                      # 0x47d257
             return
         self._end_of_regular_season()
@@ -396,7 +476,7 @@ class SeasonEngine:
         visitor, home = pairing
         game: ComputerGame = computer_game(self.g.rnd, lambda rnd: self.hooks.playoff_first_wins(rnd, visitor, home))
         winner, loser = (visitor, home) if game.first_wins else (home, visitor)
-        self.hooks.game_played(stage, PLAYOFF_WEEK[stage], winner, loser, game.winner_score, game.loser_score)
+        self.hooks.game_played(stage, self.week_of(stage), winner, loser, game.winner_score, game.loser_score)
         return winner, playoff_result(self.name(winner), self.name(loser), game.winner_score, game.loser_score)
 
     def _computer_round(self, pairings: list[Pairing], first_heading: str, second_heading: str,
@@ -423,9 +503,9 @@ class SeasonEngine:
         own_score, opponent_score = self.scores
         if own_score > opponent_score:
             self.player_won = True                                # L3d0 = 1
-            self.hooks.game_played(stage, PLAYOFF_WEEK[stage], own, opponent, own_score, opponent_score)
+            self.hooks.game_played(stage, self.week_of(stage), own, opponent, own_score, opponent_score)
             return own, playoff_result(self.name(own), self.name(opponent), own_score, opponent_score)
-        self.hooks.game_played(stage, PLAYOFF_WEEK[stage], opponent, own, opponent_score, own_score)
+        self.hooks.game_played(stage, self.week_of(stage), opponent, own, opponent_score, own_score)
         return opponent, playoff_result(self.name(opponent), self.name(own), opponent_score, own_score)
 
     def _round_with_the_player(self, pairings: list[Pairing], first_heading: str, second_heading: str,
@@ -453,7 +533,7 @@ class SeasonEngine:
         self._write_next_round(list(zip(winners, byes)))          # the four winners at the four bye teams
         self._round_wait()
         if not self.player_won:
-            season.gtp = 18
+            season.gtp = season.playoff_week(2)                   # 18
             self.finplay17()
         self.store.write_gtp(season.gtp)
 
@@ -467,7 +547,7 @@ class SeasonEngine:
         self._write_next_round([(winners[0], winners[1]), (winners[2], winners[3])])
         self._round_wait()
         if not self.player_won:
-            season.gtp = 19
+            season.gtp = season.playoff_week(3)                   # 19
             self.finplay17()
         self.store.write_gtp(season.gtp)
 
@@ -481,7 +561,7 @@ class SeasonEngine:
         self._write_next_round([(winners[0], winners[1])])        # the A. F. C. champion at the N. F. C. champion
         self._round_wait()
         if not self.player_won:
-            season.gtp = 20
+            season.gtp = season.playoff_week(4)                   # 20
             self.finplay17()
         self.store.write_gtp(season.gtp)
 
@@ -493,7 +573,7 @@ class SeasonEngine:
         own_score, opponent_score = self.scores
         g.empty_replay()
         g.say4(T.IN_THE_SUPER_BOWL)
-        self.hooks.game_played(SUPER_BOWL, PLAYOFF_WEEK[SUPER_BOWL], opponent, own, opponent_score, own_score)
+        self.hooks.game_played(SUPER_BOWL, self.week_of(SUPER_BOWL), opponent, own, opponent_score, own_score)
         g.say4(playoff_result(self.name(opponent), self.name(own), opponent_score, own_score))
         self._super_bowl_ending()
         self.store.write_gtp(season.gtp)                          # 0
@@ -507,7 +587,7 @@ class SeasonEngine:
         g.empty_replay()
         g.ptf = 1
         g.dy(0.2, FINPLAY_FIRST_PAUSE_SITE)
-        start = season.gtp - 16                                   # On L54 GoTo ...
+        start = season.gtp - season.regular_weeks                 # On L54 GoTo ...
         if not 1 <= start <= 4:
             start = 1
         if start <= 1:
@@ -575,10 +655,10 @@ class SeasonEngine:
         g, season = self.g, self.g.season
         own_score, opponent_score = scores
         if own_score <= opponent_score:                           # H14: once, whatever F1 and F2 repeat afterwards
-            self.hooks.game_played(SUPER_BOWL, PLAYOFF_WEEK[SUPER_BOWL], season.opponent_team, season.own_team,
+            self.hooks.game_played(SUPER_BOWL, self.week_of(SUPER_BOWL), season.opponent_team, season.own_team,
                                    opponent_score, own_score)
         else:
-            self.hooks.game_played(SUPER_BOWL, PLAYOFF_WEEK[SUPER_BOWL], season.own_team, season.opponent_team,
+            self.hooks.game_played(SUPER_BOWL, self.week_of(SUPER_BOWL), season.own_team, season.opponent_team,
                                    own_score, opponent_score)
         while True:
             g.empty_replay()                                      # Me.ilc = 0 (0x484947)

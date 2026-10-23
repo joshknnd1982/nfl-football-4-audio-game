@@ -38,7 +38,7 @@ from .question import FranchiseQuestion
 
 
 def in_regular_season(league) -> bool:
-    return league is not None and league.stage == SEASON and 1 <= league.gtp <= D.REGULAR_WEEKS
+    return league is not None and league.stage == SEASON and 1 <= league.gtp <= league.regular_weeks
 
 
 # ----- the preparation of a week (the league changes and is saved before anything is said) -----
@@ -73,14 +73,14 @@ def prepare(p, league, week: int) -> None:
     extra = todo.extra_work_item(league, week)
     if extra is not None:
         items.append(extra)
-    plan = _game_plan_item(p, league, week)
+    plan = None if p.season.on_bye else _game_plan_item(p, league, week)         # SZ.8: a bye week has no opponent to plan for
     if plan is not None:
         items.append(plan)
     items += [todo.trade_item(league, week, offer) for offer in offers]
     items += [injury_flow.item(league, week, pid) for pid in injuries.to_ask(league, week)]
     items += [people_flow.demand_item(league, week, row, choices) for row, choices in own_demands]
     league.todo.extend(items)
-    people.set_goal(league, week, team_index(p.season.tn3, p.season.tn4))    # SX.8n: the player's game goal of the week, told at the kick-off
+    people.set_goal(league, week, 0 if p.season.on_bye else team_index(p.season.tn3, p.season.tn4))    # SX.8n: the player's game goal of the week, told at the kick-off (a bye week has none)
     league.told = [league.season, week]
     league.prepared = [league.season, week]
     store.save()
@@ -154,17 +154,26 @@ def plain_text(markup: str) -> str:
 def speak_news(p, league) -> None:
     """The lines of the week that are not told yet: NXN-01, then each line (marked told as it is said), then league.sav."""
     g = p.g
-    fresh = [e for e in news.untold(league) if e["season"] == league.season and e["week"] <= D.NEWS_LAST_WEEK]
+    last = league.last_prepared_week
+    fresh = [e for e in news.untold(league) if e["season"] == league.season and e["week"] <= last]
     if fresh:
         g.say2(X.text("NXN-01"))
         for entry in fresh:
             say_markup(g, entry["markup"])
             entry["told"] = 1
     for entry in league.news:                                  # a line of an older season is not told late
-        if not entry["told"] and entry not in fresh and entry["week"] <= D.NEWS_LAST_WEEK:
+        if not entry["told"] and entry not in fresh and entry["week"] <= last:
             entry["told"] = 1
     if fresh:
         p.store.save()
+
+
+def say_deadline(g, league) -> None:
+    """The sentence about the trade deadline this week has, if any (`trades.notice_id`): week 1 says where trades and free agents are, the week before the deadline
+    that it is next week, its week that it is the last, the week after that it has passed. Not kept in the news (the trades menu says the deadline too)."""
+    notice = trades.notice_id(league, league.gtp)
+    if notice is not None:
+        g.say2(X.text(notice, n=trades.last_week(league)))
 
 
 # ----- the to-do list -----
@@ -292,11 +301,14 @@ def before_menu(p) -> None:
     if not in_regular_season(league):
         return
     announce = league.gtp == 1 and league.told != [league.season, 1]       # the season line, once
-    if league.prepared != [league.season, league.gtp]:
+    fresh = league.prepared != [league.season, league.gtp]               # the first pass of the week
+    if fresh:
         prepare(p, league, league.gtp)
     if announce:
         g.say2(X.text("NXF-08", n=league.season))
     speak_news(p, league)
+    if fresh:
+        say_deadline(g, league)                              # SZ.8: where trades and free agents are, and the deadline, once a week with the news
     injury_flow.say_report(p, league)                        # SX.8k: the injury report after the news, once
     people_flow.say_verdict(p)                               # SX.8n: last week's game goal, met or missed, once
     if g.options.settings.game.nx_fr_auto:

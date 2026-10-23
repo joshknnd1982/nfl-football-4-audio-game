@@ -153,7 +153,7 @@ def main():
         check("a player's own file in assets\\sounds is kept", os.path.exists(mine))
         check("26 shipped wavs, the names data and the license are installed",
               len([f for f in os.listdir(os.path.join(APP, "assets", "sounds")) if f.startswith("foot")]) == 26
-              and all(os.path.exists(os.path.join(APP, "assets", "data", n)) for n in ("rosters.txt", "coaches.txt", "surnames.txt", "respellings.txt"))
+              and all(os.path.exists(os.path.join(APP, "assets", "data", n)) for n in ("rosters.txt", "coaches.txt", "surnames.txt", "respellings.txt", "schedule_2026.txt"))
               and os.path.exists(os.path.join(APP, "LICENSE.txt")) and os.path.exists(os.path.join(APP, "THIRD_PARTY_NOTICES.txt")))
         check("README.txt and uninstaller installed", os.path.exists(os.path.join(APP, "README.txt")) and os.path.exists(os.path.join(APP, "unins000.exe")))
         bits = "64-bit" if os.path.exists(os.path.join(APP, "_internal", "nfl4", "speech", "nvda_client", "x64")) else "32-bit"

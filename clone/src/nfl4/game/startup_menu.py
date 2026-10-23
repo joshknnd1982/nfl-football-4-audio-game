@@ -112,7 +112,7 @@ class StartupMenu:
         team = self.g.league.team(*team_ref(league.team))
         in_season = league.stage == SEASON
         wins, losses = Records.from_file_values(league.records).record(*team_ref(league.team)) if in_season else (0, 0)
-        return SS.franchise_sentence(league.coach, team, league.season, in_season, league.gtp, wins, losses)
+        return SS.franchise_sentence(league.coach, team, league.season, in_season, league.gtp, wins, losses, league.regular_weeks)
 
     def _season_sentence(self, peek) -> str:
         return SS.season_sentence(peek.coach, self.g.league.team(peek.tn1, peek.tn2), peek.gtp, peek.wins, peek.losses)

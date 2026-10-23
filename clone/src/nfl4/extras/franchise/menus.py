@@ -16,7 +16,7 @@ from ...game.spoken_menu import Item, ListPicker, SpokenMenu
 from ..nfl_rules import is_nfl
 from .. import nx_texts as X
 from . import data as D
-from . import history, honors_flow, market_flow, mode, news, staff_flow, todo, trade_flow, weekly
+from . import history, honors_flow, market_flow, mode, news, signings_flow, staff_flow, todo, trade_flow, weekly
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
@@ -246,11 +246,10 @@ def franchise_menu(g, speech, keys) -> None:
 
     def market_menu() -> None:
         league = store.league
-        if league.market is None:
-            speech.stop()
-            speech.say_async(X.text("NXJ-H01"))
+        if league.market is not None:                  # the stage of free agency is in progress: its list (the offers are the stage's questions)
+            _lines_picker(speech, keys, X.text("NXF-29"), market_flow.market_lines(league, _words(g)))
             return
-        _lines_picker(speech, keys, X.text("NXF-29"), market_flow.market_lines(league, _words(g)))
+        signings_flow.free_agents_menu(g, speech, keys, store, _words(g))      # SZ.8: in the regular season the player signs free agents here
 
     # ----- the trades (design 17 SX.8j, NXF-43) -----
 

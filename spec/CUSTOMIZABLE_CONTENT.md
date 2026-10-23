@@ -64,7 +64,7 @@ Clone IDs: T01 to T32 in the original's order (T01 = division 1 place 1 ... T32 
 - T21 (division D6, place 1): Cowboys
 - T22 (division D6, place 2): Eagles
 - T23 (division D6, place 3): Giants
-- T24 (division D6, place 4): Redskins
+- T24 (division D6, place 4): Commanders (the original's Redskins, renamed by the owner 2026-10-22, Q-026 answered; `T24 = Redskins` in teams.txt brings the old name back; an older teams.txt is migrated once)
 - T25 (division D7, place 1): Cardinals
 - T26 (division D7, place 2): Forty Niners
 - T27 (division D7, place 3): Rams

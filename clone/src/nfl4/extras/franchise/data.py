@@ -6,7 +6,7 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 11                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 12                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
@@ -21,6 +21,8 @@ FORMAT = 11                                  # league.sav's format; a higher one
 #                                                (`LeagueRecord.usage`, workload.py)
 #                                              11 (SX.12) the season's ties of the 2026 overtime (`LeagueRecord.ties`; a history entry's "ties"); a file of
 #                                                format 10 or older has none (the default: a migration with no draw)
+#                                              12 (SZ.8) the real calendar of the season (`LeagueRecord.calendar`, fixtures.py): 18 weeks, the bye weeks; a file of
+#                                                format 11 or older has none (the default: the original's 16 random weeks, the season goes on as it was)
 COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the end of rounds 3 to 7 (NFL, SRC-OFFICIAL)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
@@ -117,10 +119,11 @@ TODO_INJURY = "injury"                        # SX.8k: play or rest a doubtful o
 TODO_DEMAND = "trade_demand"                  # SX.8n: a player of the player's team asks to be traded: the other teams' offers, or keep him
 TODO_KINDS = (TODO_EXTRA_WORK, TODO_GAME_PLAN, TODO_TRADE, TODO_INJURY, TODO_DEMAND)
 ITEM_NEW, ITEM_LATER, ITEM_SET = 0, 1, 2     # not asked yet; answered "later"; the game plan, taken for this week's game
-REGULAR_WEEKS = 16
+REGULAR_WEEKS = 16                           # the original's regular season; a league that plays the real calendar has `LeagueRecord.regular_weeks` (18)
+MAX_REGULAR_WEEKS = 18                       # the longest regular season a record may name (the real calendar's), for the whole-file checks
 SUPER_BOWL_WEEK = 20                         # the last week (gtp) of a season: the Super Bowl
-NEWS_LAST_WEEK = 15                          # the news of a week is made after weeks 1 to 15 (design 8.3)
-NEWS_OFFSEASON = 16                          # the `week` of an offseason's news line
+NEWS_LAST_WEEK = 15                          # the news of a week is made after weeks 1 to 15 (design 8.3); a league that plays the calendar: LeagueRecord.last_prepared_week
+NEWS_OFFSEASON = 99                          # the `week` of an offseason's news line (SZ.8: it was 16, which is a regular week of the calendar; a file of format 11 or older is migrated)
 MAX_NEWS = 400                               # lines kept in league.sav (a season's 15 weeks of 4 and the offseason's, with room)
 MAX_TODO = 200
 # the fourteen kinds of news line of news.txt (design 8.3, 15); the letter says the kind
@@ -138,5 +141,5 @@ MAX_DEAD = 100_000                           # the most dead money a team's reco
 
 MAX_DEMANDS = 64                             # the trade demands of one season kept in league.sav (SX.8n)
 MAX_TRADES = 200                            # the trades of one season kept in league.sav (SX.8j)
-MAX_RESULTS = 400                           # games of one season (16 weeks of 16 games and 13 play-off games), with room
+MAX_RESULTS = 400                           # games of one season (16 weeks of 16 games and 13 play-off games, or the calendar's 272 and 13), with room
 MAX_HISTORY = 500                            # seasons kept

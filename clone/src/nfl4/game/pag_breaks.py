@@ -249,7 +249,7 @@ class BreakSteps:
         g.ptf = 0
         s.final_scores = (s.score(1), s.score(2))
         self.result.scores = s.final_scores
-        if g.season.gtp == 20:
+        if g.season.gtp == g.season.playoff_week(4):                # the Super Bowl week: 20, or after a calendar's 18 weeks 22
             g.superbowl(s.final_scores)                             # Q27: once, in place of the final score (S7.3c)
         else:
             self.final_score()

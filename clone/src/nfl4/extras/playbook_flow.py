@@ -166,15 +166,33 @@ class PlaybookFlow:
         side = "O" if role == "O" else "D"
         return frozenset(c.id for c in C.CATALOG if c.side == side and c.id not in disabled)
 
-    def pick(self, state, side: int, role: str, candidates) -> str:
-        """The playbook's pick behind Enter on a family of the player's catalog menus (design 2.2): the calling's weights over the family's
-        usable plays for the side's style and the situation, one draw; "" when none has a weight (the caller takes the first play)."""
+    def weights(self, state, side: int, role: str, candidates) -> list[tuple[str, int]]:
+        """The calling's weights over `candidates` for the side's style and the situation (extras/plays/calling.py): no draw, no state."""
         style = self.style(state, side, role)
         own = self.own_plays(style, role)
         sit = self.call_situation(state)
-        weights = (K.offense_weights(candidates, style, own, sit) if role == "O"
-                   else K.defense_weights(candidates, style, own, sit))
-        return K.draw(weights, self.rnd)
+        return (K.offense_weights(candidates, style, own, sit) if role == "O"
+                else K.defense_weights(candidates, style, own, sit))
+
+    def pick(self, state, side: int, role: str, candidates) -> str:
+        """The playbook's pick behind Enter on a family of the player's catalog menus (design 2.2): the calling's weights over the family's
+        usable plays for the side's style and the situation, one draw; "" when none has a weight (the caller takes the first play)."""
+        return K.draw(self.weights(state, side, role, candidates), self.rnd)
+
+    def likely(self, state, side: int, role: str, candidates) -> tuple[tuple[str, ...], int]:
+        """The W key (D-112, Q-050): the play or plays `pick` would most likely return from `candidates` (all that share the greatest weight,
+        in the order of `candidates`) and the chance of each in whole percent (1 to 100), from the same weights and with NO draw, so asking
+        changes nothing in the game. Many plays share a weight (a list of equal plays), and the key must not name one of them as the
+        favourite. No weight at all (the playbook never calls these plays, as the kinds of kicks): the first play, as `pick`'s callers take
+        it, with 0 percent; ((), 0) with no candidates."""
+        if not candidates:
+            return (), 0
+        weights = self.weights(state, side, role, candidates)
+        total = sum(w for _i, w in weights)
+        if total <= 0:
+            return (candidates[0].id,), 0
+        top = max(w for _i, w in weights)
+        return tuple(i for i, w in weights if w == top), max(1, min(100, (top * 100 + total // 2) // total))
 
     def catalog_offense(self, state) -> None:
         """The computer's call over the catalog, after the original's rules chose the kind of play (a scrimmage play, the field goal or the

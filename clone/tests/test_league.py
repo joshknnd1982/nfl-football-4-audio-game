@@ -6,8 +6,16 @@ import re
 
 import pytest
 
-from nfl4.game.league import DEFAULT_DIVISION_NAMES, DEFAULT_TEAM_NAMES, DIVISIONS, PLACES, TEAM_COUNT, League
+from nfl4.game.league import DEFAULT_DIVISION_NAMES, DEFAULT_TEAM_NAMES, DIVISIONS, ORIGINAL_T24_NAME, PLACES, TEAM_COUNT, League
 from specfiles import LIFT, need, original_strings, spec_team_lists, strings_of_class
+
+# Q-026 (the owner, 2026-10-22): the one default that is not the original's. The spec and the string table keep the original's "Redskins"; the game says
+# "Commanders" for T24, and nothing else differs.
+RENAMED = {ORIGINAL_T24_NAME: "Commanders"}
+
+
+def renamed(name):
+    return RENAMED.get(name, name)
 
 
 def test_there_are_32_teams_and_8_divisions_of_4_places():
@@ -21,7 +29,7 @@ def test_the_teams_are_in_the_order_of_the_specs_list():
     assert len(lists) == 8 and all(len(names) == 4 for _, names in lists)
     league = League()
     for division, (label, names) in enumerate(lists, start=1):
-        assert [league.team(division, place) for place in range(1, 5)] == names
+        assert [league.team(division, place) for place in range(1, 5)] == [renamed(name) for name in names]
 
 
 def test_the_division_names_are_the_specs_in_the_specs_order():
@@ -35,8 +43,9 @@ def test_the_division_names_are_the_specs_in_the_specs_order():
 def test_every_team_and_division_text_is_a_string_of_the_original():
     strings = original_strings()
     teams = set(strings_of_class("TEAM-NAME"))
-    assert set(DEFAULT_TEAM_NAMES) <= teams
-    for name in DEFAULT_TEAM_NAMES:
+    originals = [ORIGINAL_T24_NAME if name == RENAMED[ORIGINAL_T24_NAME] else name for name in DEFAULT_TEAM_NAMES]
+    assert set(originals) <= teams
+    for name in originals:
         assert name in strings
     spoken = set(strings_of_class("DIVISION-NAME"))
     league = League()
@@ -53,7 +62,7 @@ def test_the_division_text_has_the_spaces_the_original_speaks_it_with():
 def test_team_ids_run_from_t01_to_t32_in_the_originals_order():
     league = League()
     assert league.team_id(1, 1) == "T01"
-    assert league.team_id(6, 4) == "T24" and league.team(6, 4) == "Redskins"     # the owner question Q-026
+    assert league.team_id(6, 4) == "T24" and league.team(6, 4) == "Commanders"     # Q-026: the owner renamed the original's "Redskins" (2026-10-22)
     assert league.team_id(8, 4) == "T32" and league.team(8, 4) == "Saints"
     ids = [league.team_id(d, p) for d in range(1, 9) for p in range(1, 5)]
     assert ids == ["T%02d" % n for n in range(1, 33)]
@@ -69,7 +78,7 @@ def test_the_cut_is_the_originals_array_index_division_plus_9_times_place():
         index = int(offset) // 4
         place, division = divmod(index, 9)
         assert 1 <= division <= 8 and 1 <= place <= 4, (offset, name)
-        assert league.team(division, place) == name
+        assert league.team(division, place) == renamed(name)
         found += 1
     assert found == 32
 

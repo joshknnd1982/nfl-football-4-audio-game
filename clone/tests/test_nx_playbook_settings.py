@@ -171,5 +171,5 @@ def test_f5_f6_and_f7_add_the_playbook_lines_only_when_a_playbook_is_in_use(tmp_
             for i in ids:
                 # the line about the menus is for a player whose own books are playbooks, not for one who only meets a style
                 assert (X.text(i) in help_) == (i != "NXH-27" or rig is used), (key, i)
-    assert X.text("NXH-27") == (" With a playbook, the play menus start with the original's items. Right opens the lists of the play you are on, "
-                                "M opens More Plays, and Backspace, Left or B. goes back. ")   # SX.10d; SZ.5 added Right's lists and M
+    assert X.text("NXH-27") == (" With a playbook, the play menus start with the original's items. Enter on a play type lets the playbook pick the "
+                                "play. Right opens its lists, M opens More Plays, and Backspace, Left or B. goes back. ")   # SX.10d; SZ.5 added Right's lists and M; SZ.7 (D-113) Enter on a play type

@@ -51,7 +51,7 @@ Written by `work\sx11\make_names_doc.py` from the research files of session SX.1
 - Spoken forms: the file keeps the written name; the game says the respelled form (`respellings.txt`): Jr. is Junior, Sr. Senior, II the second,
   III the third, IV the fourth, V the fifth, St. Saint. Pronunciation of other names cannot be checked by listening here; the owner's playtest
   adds lines to the file (PLAYTEST_LIST item 15).
-- T24 is the game's "Redskins" (Q-026): the real team is the Washington Commanders; the files go by the team's ID, so renaming the team in
+- T24 was the game's "Redskins" and is "Commanders" since 2026-10-22 (Q-026 answered by the owner, D-120): the real team is the Washington Commanders; the files go by the team's ID, so renaming the team in
   teams.txt does not change its players.
 
 ## 4. The teams
@@ -194,7 +194,7 @@ Written by `work\sx11\make_names_doc.py` from the research files of session SX.1
 - Depth chart: the roster page's order
 - Active players in the research: 53
 
-### T24 Redskins (Washington Commanders)
+### T24 Commanders (the original's Redskins; the game says Commanders since 2026-10-22, D-120)
 - Head coach: Dan Quinn (Head Coach ; https://www.commanders.com/team/coaches-roster/ ; SRC-OFFICIAL)
 - Roster: https://www.commanders.com/team/players-roster/ (none shown ; SRC-OFFICIAL ; 2026-10-22)
 - Depth chart: the roster page's order
