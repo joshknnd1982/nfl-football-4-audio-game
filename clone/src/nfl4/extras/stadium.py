@@ -30,7 +30,7 @@ import os
 import random
 import re
 
-from ..data import paths
+from ..data import debuglog, paths
 from ..game import outcome as O
 from ..game.gamestate import other
 from ..game.rnd import GameRandom
@@ -67,18 +67,23 @@ def player_folder() -> str:
     return os.path.join(paths.user_data_dir(), "sounds")
 
 
+MAX_TRIES = 8                                   # a family's damaged files tried before the shipped sound plays (S8.3 round 2)
+
+
 def family(name: str, folders: tuple[str, ...]) -> list[str]:
     """The files of a sound family: name.wav and name2.wav, name3.wav ... in the folders, the player's folder first (a file of the same
     number there replaces the shipped one, a new number adds one: rule 0.14). A player's file may be a wav, ogg, flac or mp3 (SZ.2, D-107);
-    two files of one number in a folder (crowd_cheer2.wav and crowd_cheer2.ogg) count once, the wav first."""
+    two files of one number in a folder (crowd_cheer2.wav and crowd_cheer2.ogg) count once, the wav first. The folder is read at every call (a
+    file the player adds is heard at the next sound); S8.3 round 2: only the names that start with the family's go through the pattern."""
     found: dict[str, str] = {}
+    prefix = name.lower()
     for folder in reversed(folders):
         try:
-            entries = sorted(os.listdir(folder))
+            entries = os.listdir(folder)
         except OSError:
             continue
         here: dict[str, tuple[int, str]] = {}
-        for entry in entries:
+        for entry in sorted(e for e in entries if e.lower().startswith(prefix)):
             match = _FAMILY.match(entry)
             if match and match.group("name").lower() == name:
                 key = (match.group("n") or "1").lstrip("0") or "1"
@@ -166,15 +171,35 @@ class Stadium:
         usable = [path for path in files if library.pick_file(path).sound is not None]
         return usable or family(name, (self.folders[-1],))
 
+    def pick(self, name: str) -> str | None:
+        """One file of the family for a sound that plays now: drawn first, then only that file is read (S8.3 round 2: reading every file of a
+        family the player filled with thousands stalled the game for seconds). A file that cannot be used is left out and the draw is made again
+        among the others, at most MAX_TRIES times, then the shipped sound plays. With every file usable the draw is the one `files` gave."""
+        files = family(name, self.folders)
+        library = getattr(getattr(getattr(self.game, "sounds", None), "audio", None), "library", None)
+        tries = 0
+        while files:
+            path = files[self.rnd(len(files)) - 1] if len(files) > 1 else files[0]
+            if library is None or library.pick_file(path).sound is not None:
+                return path
+            files = [f for f in files if f != path]
+            tries += 1
+            if tries >= MAX_TRIES:
+                debuglog.event("audio", "stadium_files_skipped", logging.INFO, name=name, tried=tries)
+                break
+        shipped = family(name, (self.folders[-1],))
+        if not shipped:
+            return None
+        return shipped[self.rnd(len(shipped)) - 1] if len(shipped) > 1 else shipped[0]
+
     def play(self, name: str) -> None:
         """One sound of the family, on the extra channel, nothing waits for it."""
         if not self.active():
             return
-        files = self.files(name)
-        if not files:
+        path = self.pick(name)
+        if path is None:
             log.debug("stadium: no file for %s", name)
             return
-        path = files[self.rnd(len(files)) - 1] if len(files) > 1 else files[0]
         self.game.sounds.play_effect(path, LEVELS[name])
         self.played += 1
 
@@ -185,10 +210,7 @@ class Stadium:
         name = CONTEXT_WHISTLES.get(context) if context else DEFAULT_WHISTLES[self.rnd(len(DEFAULT_WHISTLES)) - 1]
         if name is None:
             return None
-        files = self.files(name)
-        if not files:
-            return None
-        return files[self.rnd(len(files)) - 1] if len(files) > 1 else files[0]
+        return self.pick(name)
 
     def mic(self, opening: bool) -> None:
         """The click of the referee's microphone: when it opens (not twice within three seconds) and when it closes."""

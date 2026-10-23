@@ -119,7 +119,8 @@ def parse(text: str) -> Calendar:
 
 
 def load_file(path: str) -> Calendar:
-    with open(path, "r", encoding="utf-8") as handle:
+    # utf-8-sig (S8.3 round 2): a calendar saved by Notepad or another editor starts with a byte order mark, and the program's other text files read it too
+    with open(path, "r", encoding="utf-8-sig") as handle:
         return parse(handle.read())
 
 

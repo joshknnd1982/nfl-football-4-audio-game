@@ -11,6 +11,7 @@ from drrig import SURNAMES
 
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
+from nfl4.extras.franchise import first_names as FN
 from nfl4.extras.franchise import injuries as I
 from nfl4.extras.franchise import injury_flow as F
 from nfl4.extras.franchise import todo
@@ -202,9 +203,10 @@ def test_a_whole_group_out_gets_its_stand_in():
 
 def test_a_stand_in_has_a_name_nobody_active_has():
     league = fresh()
-    taken = SURNAMES.index(player_at(league, 1, "RB").name) + 1
+    taken = SURNAMES.index(FN.surname_of(league.league_id, player_at(league, 1, "RB").name)) + 1     # D-131: his drawn surname
     row = I.make_stand_in(league, 9, "QB", FakeRnd([taken - 1]), SURNAMES)
-    assert row[2] not in {p.name for p in league.players.values() if p.status == "active"}
+    active = {p.name for p in league.players.values() if p.status == "active"}
+    assert row[2] not in active and FN.surname_of(league.league_id, row[2]) not in FN.name_keys(league.league_id, active)
 
 
 # ----- an injury, its range -----
@@ -530,7 +532,7 @@ def test_format_6_round_trips_with_injuries_and_stand_ins():
     I.settle(league, 2, FakeRnd(), SURNAMES)
     league.injuries["report"] = {"season": 1, "week": 2, "lines": [" the line. "], "told": 0}
     text = league.to_json()
-    assert json.loads(text)["format"] == 12 == D.FORMAT     # (12 since SZ.8: the injuries are format 6's)
+    assert json.loads(text)["format"] == 13 == D.FORMAT     # (12 since SZ.8: the injuries are format 6's)
     again = LeagueRecord.from_json(text)
     assert again.injuries == league.injuries and again.to_json() == text
 

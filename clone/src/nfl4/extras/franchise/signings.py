@@ -22,6 +22,7 @@ from .. import tuning as T
 from . import aging
 from . import contracts as CT
 from . import data as D
+from . import first_names as FN
 from . import injuries
 from . import market
 from . import resign as R
@@ -56,7 +57,7 @@ def ensure_pool(league, surnames: list) -> int:
     """Make the veterans the pool lacks: for every position group the pool holds at least FR_FA_SEASON_PER_GROUP free agents (the veterans made earlier, the players released
     this season and these). Returns how many were made. Adds players to the league (status "free"); the caller saves."""
     made = 0
-    used = {p.name for p in league.players.values() if p.status == "active"} | {p.name for p in pool(league)}
+    used = FN.name_keys(league.league_id, {p.name for p in league.players.values() if p.status == "active"} | {p.name for p in pool(league)})
     base, span = T.FR_FA_SEASON_RATING
     age_base, age_span = T.FR_FA_SEASON_AGE
     for position in D.ROSTER_ORDER:
@@ -69,7 +70,7 @@ def ensure_pool(league, surnames: list) -> int:
             used.add(name)
             rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
             age = age_base + (h >> 8) % age_span
-            player = _new_player(league, name, position, rating, age)
+            player = _new_player(league, FN.full_name(league.league_id, name), position, rating, age)   # D-131: first and last name
             league.players[player.id] = player
             league.next_id += 1
             made += 1

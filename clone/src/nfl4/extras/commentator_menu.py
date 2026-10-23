@@ -65,6 +65,7 @@ def pick(game, speech, keys, settings) -> bool:
         from .franchise import rename
         typed = rename.typed(game, speech, keys, X.text("NXM-43"))
         name = commentators.clean(P.cqn(typed))
+        debuglog.event("setting", "commentator_typed", typed=typed, kept=name)   # S8.3 round 2: what was typed and what the cleaning kept
         if not name:
             speech.say_async(X.text("NXM-44"))
             return False

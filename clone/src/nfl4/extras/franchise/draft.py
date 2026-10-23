@@ -25,6 +25,7 @@ from dataclasses import dataclass
 from .. import tuning as T
 from . import contracts
 from . import data as D
+from . import first_names as FN
 from .league import LeagueError, LeagueRecord, Player, draw_name
 
 SURPLUS_POSITIONS = ("K", "P", "RET")        # design 7.3: a prospect of these needs an open place to be worth a pick
@@ -71,7 +72,7 @@ def make_class(league: LeagueRecord, rnd, surnames: list, comp_count: int = 0) -
     `below(100)`, the age `below(3)` and the scouting offset `below(7)`. Nothing of the league is changed."""
     weights = T.FR_CLASS_WEIGHTS
     total = sum(weight for _, weight in weights)
-    used = {player.name for player in league.players.values() if player.status == "active"}
+    used = FN.name_keys(league.league_id, (player.name for player in league.players.values() if player.status == "active"))   # D-131
     base, span = T.FR_ROOKIE_RATING
     high, average = T.FR_ROOKIE_POTENTIAL_SHARES
     age_base, age_span = T.FR_ROOKIE_AGE
@@ -89,7 +90,7 @@ def make_class(league: LeagueRecord, rnd, surnames: list, comp_count: int = 0) -
         potential = "high" if chance < high else "average" if chance < average else "low"
         age = age_base + rnd.below(age_span)
         offset = rnd.below(T.FR_SCOUT_SPAN)
-        prospects.append(Prospect(index, position, name, true, potential, age, true - offset))
+        prospects.append(Prospect(index, position, FN.full_name(league.league_id, name), true, potential, age, true - offset))
     return prospects
 
 

@@ -46,6 +46,7 @@ from __future__ import annotations
 
 from .. import tuning as T
 from . import data as D
+from . import first_names as FN
 from .league import LeagueError, LeagueRecord, draw_name
 
 HURT_FIELDS = 7
@@ -159,12 +160,13 @@ def stand_in_rating(position: str) -> int:
 def used_names(league: LeagueRecord, extra=()) -> set:
     names = {p.name for p in league.players.values() if p.status == "active"}
     names |= {row[2] for row in list(extra) + league.injuries["stand_ins"]}
-    return names
+    return FN.name_keys(league.league_id, names)            # D-131: a made-up full name keeps its surname in use
 
 
 def make_stand_in(league: LeagueRecord, team: int, position: str, rnd, surnames: list, extra=()) -> list:
     """A stand-in for the group: a name (the league's own name rule: `rnd(len(surnames))` again while it is in use) and the stand-in rating."""
-    return [team, position, draw_name(rnd, surnames, used_names(league, extra)), stand_in_rating(position)]
+    surname = draw_name(rnd, surnames, used_names(league, extra))
+    return [team, position, FN.full_name(league.league_id, surname), stand_in_rating(position)]   # D-131
 
 
 def needs_stand_in(league: LeagueRecord, team: int, position: str, week: int, out=frozenset()) -> bool:

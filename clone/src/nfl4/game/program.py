@@ -99,6 +99,11 @@ class Program:
         engine = self.g.speech.active_engine()
         return engine is not None and getattr(engine, "takes_roles", False)
 
+    def _screen_reader_wanted(self) -> bool:
+        """True when the player answered yes to the screen reader question in this run (rule 0.28 (1)): the voice list is not offered then, even when
+        the screen reader has closed since and SAPI speaks."""
+        return getattr(self, "screen_reader_yes", False)
+
     def screen_reader_choice(self) -> None:
         """SZ.4 (D-109, a player's e-mail of 2026-10-22: the screen reader was not detected and the voices were asked for anyway). When NVDA or
         JAWS runs and the player has not yet said how the game speaks, the game says which one it found and asks, in the original's yes or no
@@ -116,6 +121,7 @@ class Program:
         debuglog.event("app", "screen_reader_found", logging.INFO, engine=name, mode=speech.mode)
         no = g.prompts._confirm(words.SCREEN_READER_QUESTION % name, g.say5, g.say2)        # True: the answer was no
         speech.mode_chosen = True
+        self.screen_reader_yes = not no
         if no:
             speech.mode = "sapi"
             g.speech.mode = "sapi"
@@ -168,8 +174,11 @@ class Program:
             g.hotkeys.speckeys()                                # 0x487daa: the F5 key list
             # S8.2: where F9 is is now a line of the key list itself (hotkeys.speckeys), so the first start has no separate sentence
             g.dy(INTRO_PAUSE, 0x487dea)
-            if self._sapi_speaks():
+            if self._sapi_speaks() and not self._screen_reader_wanted():
                 g.hotkeys.change_voice()                        # 0x487e0d ChangeVoice (writes footbal0.dat: settings.txt)
+            elif self._sapi_speaks():
+                # S8.3 round 2, rule 0.28 (1): the player said yes to the screen reader and it closed a moment later; yes still means no voice list
+                debuglog.event("app", "voice_list_skipped", logging.INFO, reason="the player chose the screen reader")
         else:
             g.say(texts.TITLE_SPOKEN)                           # rule 0.16, G-F1: once per launch, the intro loop goes on
             debuglog.event("app", "welcome_spoken", logging.INFO, first_start=False, text=texts.TITLE_SPOKEN)

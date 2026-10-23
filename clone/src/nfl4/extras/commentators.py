@@ -18,6 +18,7 @@ this game (the About text says so). The lines never state a fact about the perso
 from __future__ import annotations
 
 import re
+import unicodedata
 
 DEFAULT = "Ghip"
 NAME_MAX = 30
@@ -37,7 +38,10 @@ def clean(name) -> str:
     NAME_MAX characters. "" when nothing usable is left (fewer than two characters)."""
     if not isinstance(name, str):
         return ""
-    text = " ".join(_UNSAFE.sub("", name).split())[:NAME_MAX].strip()
+    # S8.3 round 2: an accented letter is folded to its plain letter ("José" is "Jose"), not dropped ("Jos"); the voices that cannot say an
+    # accent (SX.11's respellings) then still say the name
+    folded = "".join(c for c in unicodedata.normalize("NFKD", name) if not unicodedata.combining(c))
+    text = " ".join(_UNSAFE.sub("", folded).split())[:NAME_MAX].strip()
     return text if len(text) >= 2 else ""
 
 

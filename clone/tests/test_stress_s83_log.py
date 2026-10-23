@@ -227,3 +227,37 @@ def test_a_long_session_keeps_the_caps_the_redaction_and_the_speed_of_the_game_t
     text = written(path)
     assert not leaks(text, USER) and f"{USER}@" not in text
     assert text.count("system") >= 0 and "play" in text
+
+
+# ----- S8.3 round 2: the lines added since the first S8.3 -----
+
+def test_the_new_lines_with_paths_and_typed_names_are_redacted(tmp_path):
+    """The lines of SZ.4 to SZ.8 and of this round that carry a path or the player's own text (rule 0.15: no account name, nothing private)."""
+    path = begin(tmp_path / "logs")
+    home = "C:\\Users\\%s" % USER
+    debuglog.event("franchise", "calendar_missing", logging.INFO, season=2, year=2027, path=home + "\\AppData\\Local\\Programs\\NFL\\assets\\data\\schedule_2027.txt")
+    debuglog.event("file", "teams_renamed", path=home + "\\AppData\\Roaming\\NFL Football 4\\customize\\teams.txt", t24="Commanders")
+    debuglog.event("setting", "commentator_typed", typed="Jos\u00e9 " + USER, kept="Jose")
+    debuglog.event("app", "screen_reader_found", logging.INFO, engine="NVDA", mode="auto")
+    debuglog.event("app", "voice_list_skipped", logging.INFO, reason="the player chose the screen reader")
+    debuglog.event("menu", "key", key="w", likely="Two Man", percent=22)
+    logging.getLogger("nfl4.extras").info("first names: %d made-up players of franchise %s got a first name (D-131)", 1100, "20260101-000000")
+    text = written(path)
+    assert not leaks(text, USER) and f"{USER}@" not in text
+    for name in ("calendar_missing", "teams_renamed", "commentator_typed", "screen_reader_found", "voice_list_skipped", "got a first name"):
+        assert name in text, name
+
+
+def test_a_franchise_season_on_the_real_calendar_logs_its_calendar_within_the_caps_and_without_the_account_name(tmp_path):
+    from frrig import COACH_AND_TEAM, WANT_FRANCHISE, enter_until, franchise_rig, run_until
+    logs = tmp_path / "logs"
+    path = begin(logs, half_bytes=256 * 1024)
+    rig = franchise_rig(tmp_path / "game", WANT_FRANCHISE + COACH_AND_TEAM, real_calendar=True, scores=lambda r: (28, 10),
+                        policy=enter_until(lambda: rig.fstore is not None and rig.fstore.league is not None and rig.game.season.gtp == 19))
+    run_until(rig)
+    debuglog.flush(30)
+    total = sum(os.path.getsize(logs / name) for name in os.listdir(logs))
+    assert total <= 2 * 256 * 1024 + 64 * 1024, total
+    text = written(path)
+    assert not leaks(text, USER)
+    assert "calendar" in text and "weeks=18" in text                                   # the calendar line names the 18 weeks and the bye

@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2048.
+- Texts: 2049.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 828.
 - Menus and settings (design 10.4, 12): 56.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 581.
+- Franchise (design section 11): 582.
 - The real coaches and players (NX-N, SX.11): 7.
 - The radio broadcast: banter and Ghip (SY.1, rule 0.27): 359.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
@@ -1189,6 +1189,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXF-35 (sentence, say): " the franchise file is in use by another program. a classic season is played this time. ". start-up notice
 - NXF-36 (sentence, say): " the franchise file was missing. the copy from before the last save is used. ". start-up notice
 - NXF-37 (sentence, say): " your franchise could not be found. a classic season begins. ". start-up notice
+- NXF-46 (sentence, say): " the real N. F. L. calendar could not be read, so this season plays the original game's 16 weeks. ". notice when schedule_<year>.txt is missing or not whole at the start of a franchise season (S8.3 round 2)
 - NXF-40 (menu, say2): "more". paging of a long list in a franchise question (the back item is NXB-10)
 - NXF-42 (sentence, say2): " page <n> of <m>. ". each page of a paged franchise question
 - NXE-01 (sentence, say2): " the season is over. the offseason begins. ". design 3.3

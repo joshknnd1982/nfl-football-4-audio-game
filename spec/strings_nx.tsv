@@ -369,6 +369,7 @@ NXF-34	franchise	sentence	say	 this franchise was saved by a newer version of th
 NXF-35	franchise	sentence	say	 the franchise file is in use by another program. a classic season is played this time. 	start-up notice
 NXF-36	franchise	sentence	say	 the franchise file was missing. the copy from before the last save is used. 	start-up notice
 NXF-37	franchise	sentence	say	 your franchise could not be found. a classic season begins. 	start-up notice
+NXF-46	franchise	sentence	say	 the real N. F. L. calendar could not be read, so this season plays the original game's 16 weeks. 	notice when schedule_<year>.txt is missing or not whole at the start of a franchise season (S8.3 round 2)
 NXF-40	franchise	menu	say2	more	paging of a long list in a franchise question (the back item is NXB-10)
 NXF-42	franchise	sentence	say2	 page <n> of <m>. 	each page of a paged franchise question
 NXE-01	franchise	sentence	say2	 the season is over. the offseason begins. 	design 3.3

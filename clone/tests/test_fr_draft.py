@@ -9,6 +9,7 @@ import pytest
 from drrig import SURNAMES, draft_league
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
+from nfl4.extras.franchise import first_names as FN
 from nfl4.extras.franchise import draft as DR
 from nfl4.extras.franchise.league import SEASON, LeagueError, LeagueRecord, Player
 from nfl4.game.rnd import GameRandom
@@ -49,24 +50,25 @@ def test_the_first_prospects_position_follows_the_roll_below_35(roll):
 
 def test_one_prospect_is_drawn_in_the_order_position_name_rating_twice_potential_age_offset():
     league = draft_league()
-    active = {p.name for p in league.players.values()}
+    active = FN.name_keys(league.league_id, (p.name for p in league.players.values()))     # D-131: the draw compares the surnames
     free = next(i for i, name in enumerate(SURNAMES, start=1) if name not in active)
     script = [below_value(35, 14), value_for(len(SURNAMES), free), below_value(15, 7), below_value(15, 9), below_value(100, 10),
               below_value(3, 1), below_value(7, 4)]
     prospect = DR.make_class(league, GameRandom(ScriptedRandom(script, strict=False)), SURNAMES)[0]
     base = T.FR_ROOKIE_RATING[0]                                       # 45 since SX.8m (46 before: the design's)
     assert (prospect.pos, prospect.name, prospect.true, prospect.potential, prospect.age, prospect.low) == (
-        "DL", SURNAMES[free - 1], base + 7 + 9, "high", 22, base + 16 - 4)
+        "DL", FN.full_name(league.league_id, SURNAMES[free - 1]), base + 7 + 9, "high", 22, base + 16 - 4)
     assert (prospect.middle, prospect.high) == (base + 15, base + 18)
 
 
 def test_a_name_in_use_by_an_active_player_is_drawn_again():
     league = draft_league()
-    taken = league.players[1].name
-    free = next(i for i, name in enumerate(SURNAMES, start=1) if name not in {p.name for p in league.players.values()})
+    taken = FN.surname_of(league.league_id, league.players[1].name)                         # D-131: his drawn surname
+    free = next(i for i, name in enumerate(SURNAMES, start=1)
+                if name not in FN.name_keys(league.league_id, (p.name for p in league.players.values())))
     script = [below_value(35, 0), value_for(len(SURNAMES), SURNAMES.index(taken) + 1), value_for(len(SURNAMES), free)]
     prospect = DR.make_class(league, GameRandom(ScriptedRandom(script, strict=False)), SURNAMES)[0]
-    assert prospect.name == SURNAMES[free - 1]
+    assert prospect.name == FN.full_name(league.league_id, SURNAMES[free - 1])
 
 
 @pytest.mark.parametrize("seed", [1, 2, 3, 4])

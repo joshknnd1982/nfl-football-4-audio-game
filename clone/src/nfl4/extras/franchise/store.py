@@ -459,7 +459,10 @@ class FranchiseStore:
             return None
         calendar = fixtures.for_season(league.season)
         if calendar is None:
-            debuglog.event("franchise", "calendar_missing", season=league.season, year=fixtures.year_of(league.season))
+            # S8.3 round 2: the README promises the real calendar, so a missing or damaged file is told once (said at the next week line), not only logged
+            debuglog.event("franchise", "calendar_missing", logging.INFO, season=league.season, year=fixtures.year_of(league.season),
+                           path=fixtures.shipped_path(fixtures.year_of(league.season)))
+            self._notice("NXF-46")
             return None
         season.calendar = calendar
         season.schedule = calendar.entries_of(team_index(season.tn1, season.tn2))

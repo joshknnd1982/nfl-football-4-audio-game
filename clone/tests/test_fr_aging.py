@@ -15,6 +15,7 @@ from nfl4.extras import nx_texts as X
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import aging, resign
 from nfl4.extras.franchise import data as D
+from nfl4.extras.franchise import first_names as FN
 from nfl4.extras.franchise import offseason
 from nfl4.extras.franchise.files import MemoryFiles
 from nfl4.extras.franchise.league import OFFSEASON, LeagueRecord, new_league, team_ref
@@ -258,15 +259,15 @@ def test_the_stand_in_fill_gives_every_empty_place_an_undrafted_rookie_by_the_de
     league = with_all_aged(made(), 25)
     retire(league, 5, D.PLACES_OF["QB"][0])                                     # a group of one place
     retire(league, 11, D.PLACES_OF["RB"][2])                                    # a group of six
-    active = {p.name for p in league.players.values() if p.status == "active"}
+    active = FN.name_keys(league.league_id, (p.name for p in league.players.values() if p.status == "active"))   # D-131
     free = [i for i, name in enumerate(SURNAMES, start=1) if name not in active]
     # a name is rnd(1708) = below(1708) + 1; the rating below(11); the potential below(100); team 5 comes before team 11
     rnd, source = scripted((len(SURNAMES), free[0] - 1), (11, 3), (100, 10), (len(SURNAMES), free[1] - 1), (11, 4), (100, 80))
     assert aging.fill_places(league, rnd, SURNAMES) == 2 and source.left == 0
     qb = league.player_at(5, D.PLACES_OF["QB"][0])
     rb = [p for p in league.group_of(11, "RB") if p.age == 22]
-    assert qb.name == SURNAMES[free[0] - 1] and qb.rating == 50 + 3 and qb.potential == "high" and qb.age == 22 and qb.seasons == 0
-    assert len(rb) == 1 and rb[0].name == SURNAMES[free[1] - 1] and rb[0].rating == 45 + 4 and rb[0].potential == "low"
+    assert qb.name == FN.full_name(league.league_id, SURNAMES[free[0] - 1]) and qb.rating == 50 + 3 and qb.potential == "high" and qb.age == 22 and qb.seasons == 0
+    assert len(rb) == 1 and rb[0].name == FN.full_name(league.league_id, SURNAMES[free[1] - 1]) and rb[0].rating == 45 + 4 and rb[0].potential == "low"
     assert qb.peak == qb.rating and qb.drafted is None and qb.id >= 1089 and qb.team == 5
     league.stage, league.stage_no, league.gtp, league.records = OFFSEASON, 6, 0, [8, 8] * 32
     LeagueRecord.from_json(league.to_json())                                    # whole again: stage 6 is valid

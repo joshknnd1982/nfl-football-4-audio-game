@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from .. import tuning as T
 from . import contracts
 from . import data as D
+from . import first_names as FN
 from .league import LeagueRecord, Player, draw_name
 
 
@@ -170,7 +171,7 @@ def fill_places(league: LeagueRecord, rnd, surnames: list) -> int:
     """The fill of the roster cut (design 7.6, stage 5): every empty place gets an undrafted rookie, in team order and place order,
     the name, the rating, the potential as design 12 item 6 draws them for the fill. Returns how many. The places are then put in
     rating order. (SX.8c used it as a stand-in at the end of stage 3, before the draft existed.)"""
-    used = {player.name for player in league.players.values() if player.status == "active"}
+    used = FN.name_keys(league.league_id, (player.name for player in league.players.values() if player.status == "active"))   # D-131
     high, average = T.FR_ROOKIE_POTENTIAL_SHARES
     count = 0
     for team in range(1, D.TEAMS + 1):
@@ -185,7 +186,7 @@ def fill_places(league: LeagueRecord, rnd, surnames: list) -> int:
             rating = clamp_rating(base + rnd.below(span))
             roll = rnd.below(100)
             potential = "high" if roll < high else "average" if roll < average else "low"
-            player = Player(league.next_id, name, position, rating, potential, D.AGE_MIN + 1, 0, rating, None, 0, "active", 0,
+            player = Player(league.next_id, FN.full_name(league.league_id, name), position, rating, potential, D.AGE_MIN + 1, 0, rating, None, 0, "active", 0,
                             team, index, T.FR_MIN_SALARY, T.FR_FILL_YEARS)       # SX.8g: an undrafted rookie signs for the minimum
             league.players[player.id] = player
             roster[index] = player.id

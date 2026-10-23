@@ -11,11 +11,15 @@ written in the middle of an offseason has empty places and is not damage, a reco
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass, field
 
 from ...game.setup import Roster
 from .. import tuning as T
 from . import data as D
+from . import first_names as FN
+
+log = logging.getLogger("nfl4.extras")
 
 SEASON, OFFSEASON, DRAFT = "season", "offseason", "draft"
 STATUSES = ("active", "retired", "released", "free")      # SX.8h: "free", a player whose contract ended and who was not signed again
@@ -334,6 +338,8 @@ class LeagueRecord:
         # `market` None, `trades` empty, from the dataclass defaults): nothing to migrate but a draft's owners (below). A league written before the stage of free agency existed and saved in the middle of the offseason is
         # at a stage number of its own list, so it goes on at that stage (the market is simply not held for it)
         record.check()
+        if version < 13:
+            give_first_names(record, skip_team=record.team)    # D-131: a league of 0.12.0 or older has bare drawn surnames (once; no draw)
         return record
 
     # ----- the whole-file check, by stage (design 10.1, B-X49) -----
@@ -578,6 +584,50 @@ def draw_name(rnd, surnames: list, used: set) -> str:
     return surnames[number - 1]
 
 
+_SHIPPED_SURNAMES: frozenset | None = None
+
+
+def _shipped_surnames() -> frozenset:
+    """The original's surnames (the ones with a space are told from a real or a full name by this list); empty when the file cannot be read."""
+    global _SHIPPED_SURNAMES
+    if _SHIPPED_SURNAMES is None:
+        try:
+            from ...game.names import load_surnames
+            _SHIPPED_SURNAMES = frozenset(load_surnames())
+        except (OSError, ValueError, UnicodeError):
+            log.warning("first names: the original surnames could not be read; only one-word names get a first name")
+            _SHIPPED_SURNAMES = frozenset()
+    return _SHIPPED_SURNAMES
+
+
+def give_first_names(league: "LeagueRecord", skip_team: int | None = None) -> int:
+    """D-131, the migration of format 13: every made-up player of the league (players, the draft class in progress, the stand-ins) whose name
+    is a bare drawn surname gets his first name (first_names.full_name: no draw); a real player's name and a full name are left. The players
+    of `skip_team` (the player's own team: footplay.txt's names and his renames are his) are left too. Returns how many changed."""
+    surnames = _shipped_surnames()
+    lid = league.league_id
+    changed = 0
+    for player in league.players.values():
+        if player.team != skip_team and FN.needs_first_name(player.name, surnames):
+            player.name = FN.full_name(lid, player.name)
+            changed += 1
+    draft = league.draft
+    if isinstance(draft, dict) and isinstance(draft.get("class"), list):
+        for row in draft["class"]:
+            if isinstance(row, list) and len(row) > 1 and FN.needs_first_name(row[1], surnames):
+                row[1] = FN.full_name(lid, row[1])
+                changed += 1
+    injuries = league.injuries
+    if isinstance(injuries, dict) and isinstance(injuries.get("stand_ins"), list):
+        for row in injuries["stand_ins"]:
+            if isinstance(row, list) and len(row) > 2 and FN.needs_first_name(row[2], surnames):
+                row[2] = FN.full_name(lid, row[2])
+                changed += 1
+    if changed:
+        log.info("first names: %d made-up players of franchise %s got a first name (D-131)", changed, lid)
+    return changed
+
+
 def _clamp(value: int) -> int:
     return max(D.RATING_MIN, min(D.RATING_MAX, value))
 
@@ -632,6 +682,8 @@ def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_n
             else:
                 name = draw_name(rnd, surnames, used)
             used.add(name)
+            if not (own and given[index] is not None):
+                name = FN.full_name(league_id, name)            # D-131: a drawn player has a first name too (no draw)
             rating = _clamp(T.FR_RATING_BASE + rnd.below(T.FR_RATING_DRAW) + rnd.below(T.FR_RATING_DRAW) + level)
             potential = draw_potential(rnd)
             base, first, second, third = T.FR_START_AGE
