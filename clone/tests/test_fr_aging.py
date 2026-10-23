@@ -607,7 +607,7 @@ def test_play_classic_seasons_asked_at_a_stages_wait_leaves_the_stage_done_once(
     with_all_aged(league, 25)
     files = MemoryFiles()
     files.data["league.sav"] = league.to_json().encode("utf-8")
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 11 + [ENTER, ENTER, ESC, ENTER]   # F9, Franchise, classic (the 12th item since SX.8l), confirm
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 12 + [ENTER, ENTER, ESC, ENTER]   # F9, Franchise, classic (the 12th item since SX.8l), confirm   # D-136: practice squad is the 10th item
     rig = franchise_rig(tmp_path / "one", keys, files=files, kind="franchise", preset=preset_season(gtp=3), policy=quit_policy)
     run_until(rig)
     saved = LeagueRecord.from_json(files.data["league.sav"].decode("utf-8"))

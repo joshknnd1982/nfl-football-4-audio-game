@@ -41,6 +41,8 @@ def run(p) -> None:
         store.sync()
         workload.count_games(league, league.regular_weeks, bool(g.options.settings.game.nx_fr_auto))   # SX.8o: the games of the last week, 16 or the calendar's 18 (the weeks before it: the preparations)
         injuries.end_of_season(league)                   # SX.8k: every player is fit for the next season (in the step that ends the season)
+        from . import practice
+        practice.dissolve(league)                        # D-136: the practice squads' contracts end with the season
         league.stage, league.stage_no = OFFSEASON, numbers[0]
         store.save()
     if league.stage_no == numbers[0]:
@@ -221,9 +223,13 @@ def stage_new_season(p, n: int, m: int, short: bool) -> None:
     season = g.season
     trades.new_season(league)                            # SX.8j: the season's trades are history (before the players they name may be dropped)
     workload.new_season(league)                          # SX.8o: the season's games and carries are over (before the players they name may be dropped)
-    aging.drop_the_unkept(league)
+    from . import practice
+    if getattr(store, "practice_squads", True):
+        practice.form(league)                            # D-136: the practice squads, from the players cut and let go this offseason (no draw)
+    aging.drop_the_unkept(league)                        # (after the squads: a squad player is kept)
     news.drop_for_new_season(league)                     # the finished season's weekly news goes; its offseason's stays
     league.season += 1
+    league.practice["season"] = league.season            # D-136: the squads formed above are this season's
     comp.drop_past(league)                               # SX.8m: the compensatory picks of the draft that is over
     tags.move_future(league)                             # SX.8m: the first-round picks owed for this season's draft join its table
     tags.close(league)

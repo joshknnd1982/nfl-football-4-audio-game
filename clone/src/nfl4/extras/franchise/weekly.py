@@ -68,6 +68,8 @@ def prepare(p, league, week: int) -> None:
         news.make_entries(league, news.with_trades([], news.trade_events(league, demanded) + news.demand_events(league, filed)), pools, store.words, g.rnd, 1)
     lines = injury_flow.report_lines(league, week, back, store.words, getattr(g, "injury_pools", None), g.rnd,
                                      bool(getattr(g.options.settings.game, "nx_fr_auto", False)))
+    from . import practice
+    lines += practice.report_lines(league, store.words)          # D-136: the player's squad players elevated this week
     league.injuries["report"] = {"season": league.season, "week": week, "lines": lines, "told": 0} if lines else None
     items = []
     extra = todo.extra_work_item(league, week)

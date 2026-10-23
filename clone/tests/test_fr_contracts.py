@@ -347,7 +347,7 @@ def test_a_format_one_file_still_loads_and_gets_its_contracts_by_the_rules_with_
             if market[player.team] <= T.FR_CAP:
                 assert player.salary == CT.market_salary(player.pos, player.rating)
     assert all(CT.cap_used(loaded, t) <= T.FR_CAP for t in range(1, D.TEAMS + 1))
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 13                    # the next save is format 11 (SX.12)
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 14                    # the next save is format 11 (SX.12)
     again = LeagueRecord.from_json(text)
     assert again.to_json() == loaded.to_json()                                        # a migration draws nothing: the same file, the same answer
     assert LeagueRecord.from_json(loaded.to_json()).to_json() == loaded.to_json()
@@ -358,7 +358,8 @@ def test_a_format_one_team_that_would_be_over_the_cap_is_lowered_when_it_is_read
     for player in league.active_of(8):
         player.rating = 99
     loaded = LeagueRecord.from_json(as_format_one(league))
-    assert CT.cap_used(loaded, 8) <= T.FR_CAP and CT.cap_used(loaded, 7) == CT.cap_used(league, 7)
+    squad7 = sum(p.salary for p in loaded.players.values() if p.status == "practice" and p.team == 7)     # D-136: the squads formed at the load
+    assert CT.cap_used(loaded, 8) <= T.FR_CAP and CT.cap_used(loaded, 7) - squad7 == CT.cap_used(league, 7)
     assert all(p.salary >= T.FR_MIN_SALARY for p in loaded.active_of(8))
 
 

@@ -79,6 +79,7 @@ foreach ($b in ($Bits -split ",")) {
         Copy-Item (Join-Path $clone $doc) $docs
     }
     Copy-Item (Join-Path $game "LICENSE") (Join-Path $out "LICENSE.txt")
+    Copy-Item (Join-Path $game "CHANGELOG.md") $out           # rule 0.29: what is new and how to test it, beside the exe
     Copy-Item (Join-Path $game "SOUNDS_NOTICE.txt") $out
     Copy-Item (Join-Path $clone "THIRD_PARTY_NOTICES.txt") $out
     Write-Host "built $b-bit: $out"

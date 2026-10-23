@@ -55,7 +55,7 @@ def test_format_9_round_trips_every_people_value_through_the_real_store():
         P.set_morale(league, pid, value)
     league.people["holdouts"].append([ids[0], 1, league.season, P.WAITED])
     loaded, files = through_store(league)
-    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 13
+    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 14
     assert loaded.people == league.people and loaded.to_json() == league.to_json()
 
 
@@ -80,7 +80,9 @@ def test_a_format_8_file_loads_with_nobody_moved_and_is_saved_as_format_9(stage_
     loaded = LeagueRecord.from_json(json.dumps(data))
     assert loaded.people == P.empty() != league.people
     assert json.loads(loaded.to_json())["format"] == D.FORMAT
-    assert [p.to_list() for p in loaded.players.values()] == [p.to_list() for p in league.players.values()]
+    before = set(league.players)                                                     # D-136: the squads formed at the load are new players
+    assert [p.to_list() for p in loaded.players.values() if p.id in before and p.status != "practice"] == [
+        p.to_list() for p in league.players.values() if loaded.players[p.id].status != "practice"]
 
 
 def test_a_format_8_file_at_stage_3_starts_its_camp_holdouts_when_the_stage_runs():

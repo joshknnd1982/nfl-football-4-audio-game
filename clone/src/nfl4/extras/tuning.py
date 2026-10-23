@@ -520,6 +520,8 @@ FR_FA_RESERVE = 0                 # tenths of a million left under the cap for t
 # every position group, made without a draw from the league's ID, the season, the week and the group (so a reloaded league has the same ones), rated FR_FA_SEASON_RATING (the base
 # and the span: 58 to 69, below most starters), aged FR_FA_SEASON_AGE (27 to 33), plus the players the player released this season. They ask the price of stage 7 (`resign.asking`);
 # a signing needs an empty place or a release of a player of the group who is not hurt (the dead money counts against the cap), and the cap.
+FR_PRACTICE_RATING = (44, 11)     # D-136: the made-up young players of a practice squad: 44 to 54 (the fill's rookies are 45 to 55)
+FR_PRACTICE_MAX_AGE = 32          # D-136: the oldest player a practice squad signs (the NFL has no age limit; its veterans' limit is practice.VETERANS)
 FR_FA_SEASON_PER_GROUP = 3
 FR_FA_SEASON_RATING = (58, 12)
 FR_FA_SEASON_AGE = (27, 7)

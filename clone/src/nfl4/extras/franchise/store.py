@@ -53,6 +53,7 @@ class FranchiseStore:
         self.staff_setting = lambda: False      # SX.8k: whether the staff handles the to-do list (mode.activate gives the setting)
         self.game_injuries = None               # SX.8k: the injuries of the player's game in progress (injury_flow.GameInjuries), until its result
         self.strict = False                     # tests: a record that fails its own check raises instead of being refused
+        self.practice_squads = True             # D-136: the practice squads are formed at the new season (False: the older tests' leagues)
         self.real_names_of = None               # 2026-10-23: a callable that gives the program's real names (flow.franchise), for fix_real_backs
         self.real_calendar = True               # SZ.8: a season plays the league's real calendar (fixtures.py); False (the tests of the original's 16 weeks): the original's `makes`
         self.unwritable = False

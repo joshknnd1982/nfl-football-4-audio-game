@@ -158,7 +158,11 @@ def migrate_team_names(folder: str) -> str:
     try:
         if not os.path.isfile(path):
             return ""
-        text = read_player_text(path)
+        try:
+            text = read_player_text(path)
+        except (ValueError, UnicodeError) as exc:              # a damaged file (binary, another encoding): the list loader heals it next
+            debuglog.event("file", "teams_migration_skipped", logging.INFO, path=path, reason=str(exc))   # S8.3 round 2: no traceback for it
+            return ""
         if TEAM_RENAME_NOTE in text or TEAM_OLD_LAST_NOTE not in text:
             return ""
         lines = text.replace("\r\n", "\n").split("\n")

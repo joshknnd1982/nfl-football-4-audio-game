@@ -24,7 +24,7 @@ from . import first_names as FN
 log = logging.getLogger("nfl4.extras")
 
 SEASON, OFFSEASON, DRAFT = "season", "offseason", "draft"
-STATUSES = ("active", "retired", "released", "free")      # SX.8h: "free", a player whose contract ended and who was not signed again
+STATUSES = ("active", "retired", "released", "free", "practice")      # D-136: "practice", a player of a practice squad (practice.py)      # SX.8h: "free", a player whose contract ended and who was not signed again
 
 
 class LeagueError(ValueError):
@@ -115,6 +115,7 @@ class LeagueRecord:
     people: dict = field(default_factory=lambda: {"morale": {}, "begun": 0, "holdouts": [], "pending": [], "demands": [], "goal": None, "verdict": None})   # SX.8n, format 9: see people.py
     honors: dict = field(default_factory=lambda: {"awards": [], "hall": []})   # SX.8o, format 10: the awards and the hall of fame (honors.py)
     usage: dict = field(default_factory=lambda: {"season": 0, "games": {}, "carries": {}})   # SX.8o, format 10: the season's games and carries (workload.py)
+    practice: dict = field(default_factory=lambda: {"season": 0, "elevations": {}})   # D-136, format 14: practice.py
     calendar: dict | None = None                       # SZ.8, format 12: {"label": str, "weeks": [[[visitor, home], ...], ...]} the real calendar of this season; None: the original's 16 weeks
 
     # ----- the calendar (SZ.8) -----
@@ -245,7 +246,8 @@ class LeagueRecord:
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
                 "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
                 "injuries": self.injuries, "staff": self.staff, "comp": self.comp, "future_picks": self.future_picks, "tags": self.tags,
-                "people": self.people, "honors": self.honors, "usage": self.usage, "ties": self.ties, "calendar": self.calendar}
+                "people": self.people, "honors": self.honors, "usage": self.usage, "ties": self.ties, "calendar": self.calendar,
+                "practice": self.practice}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -306,6 +308,8 @@ class LeagueRecord:
                 record.ties = data["ties"]                          # SX.12; a file of format 10 or older: no team has a tie (the default)
             if version >= 12:
                 record.calendar = data["calendar"]                  # SZ.8; a file of format 11 or older: the original's 16 weeks (the default)
+            if version >= 14:
+                record.practice = data["practice"]                  # D-136; a file of format 13 or older: no squads yet (formed below in its season)
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -342,6 +346,10 @@ class LeagueRecord:
         record.check()
         if version < 13:
             give_first_names(record, skip_team=record.team)    # D-131: a league of 0.12.0 or older has bare drawn surnames (once; no draw)
+        if version < 14 and record.stage == SEASON:
+            from . import practice
+            practice.form(record)                               # D-136: a league in its season gets its practice squads at once (no draw)
+            record.check()
         return record
 
     # ----- the whole-file check, by stage (design 10.1, B-X49) -----
@@ -412,6 +420,8 @@ class LeagueRecord:
         from . import honors as honor_rules, workload as workload_rules
         honor_rules.check_honors(self, whole)                  # SX.8o: the awards and the hall of fame
         workload_rules.check_usage(self, whole)                # SX.8o: the season's games and carries
+        from . import practice as practice_rules
+        practice_rules.check(self, whole)                      # D-136: the practice squads
         self._check_results(whole)
         self._check_season(whole, ints)
 

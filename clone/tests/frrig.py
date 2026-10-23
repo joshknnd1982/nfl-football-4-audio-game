@@ -56,7 +56,7 @@ def market_aware(policy, holder):
 
 
 def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=None, scores=odd_week_wins, seed=1, nfl=True,
-                  preset=None, classic_names=None, books=("classic", "classic"), real_calendar=False, **kwargs):
+                  preset=None, classic_names=None, books=("classic", "classic"), real_calendar=False, practice=False, **kwargs):
     holder = []
     rig = program_rig(tmp_path, answers, market_aware(policy, holder), fast=True, seed=seed, preset=preset, pog=None, **kwargs)
     holder.append(rig)
@@ -81,6 +81,7 @@ def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=No
     def factory(classic):
         store = FranchiseStore(rig.files, classic)
         store.strict = True
+        store.practice_squads = practice          # D-136: the older tests keep the league they were written for; the squads' tests ask for them
         store.real_calendar = real_calendar       # SZ.8: the tests of the original's 16 random weeks stay as they were; the tests of the calendar ask for it
         rig.fstore = store
         return store

@@ -20,7 +20,8 @@ from . import history, honors_flow, market_flow, mode, news, signings_flow, staf
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
-HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45", "NXH-46"), "118": ("NXH-36", "NXH-38")}   # F5, F6 and F7 (H12, while the franchise is in use)
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45", "NXH-46", "NXH-72", "NXH-74"),
+              "118": ("NXH-36", "NXH-38", "NXH-73")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
 
@@ -256,6 +257,12 @@ def franchise_menu(g, speech, keys) -> None:
     def trades_menu() -> None:
         trade_flow.trades_menu(g, speech, keys, store, _words(g), ask_in_menu)
 
+    # ----- the practice squad (D-136, NXF-47) -----
+
+    def practice_menu() -> None:
+        from .practice_flow import practice_menu as run
+        run(g, speech, keys, store, store.words)
+
     # ----- your job and staff (design 17 SX.8l, NXF-45) -----
 
     def job_menu() -> None:
@@ -318,6 +325,7 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(lambda: X.text("NXF-29"), enter=market_menu),
                  Item(lambda: X.text("NXF-43"), enter=trades_menu),
                  Item(lambda: X.text("NXF-44"), enter=injury_menu),
+                 Item(lambda: X.text("NXF-47"), enter=practice_menu),
                  Item(lambda: X.text("NXF-45"), enter=job_menu),
                  Item(lambda: X.text("NXF-16"), enter=settings_menu),
                  Item(lambda: X.text("NXF-17"), enter=ask_switch("classic", "NXF-23"))]

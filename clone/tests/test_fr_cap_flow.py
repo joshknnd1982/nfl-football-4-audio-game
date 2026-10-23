@@ -75,7 +75,7 @@ def test_every_team_is_under_the_cap_after_the_stage_and_the_dead_money_of_its_r
     rig = run(tmp_path, league)
     final = rig.fstore.league
     assert all(CT.cap_used(final, t) <= T.FR_CAP for t in range(1, D.TEAMS + 1))
-    assert all(p.id not in final.players or final.players[p.id].status == "released" for p in staff[9])       # (the dropped ones are gone)
+    assert all(p.id not in final.players or final.players[p.id].status in ("released", "practice") for p in staff[9])       # (the dropped ones are gone)
     assert final.dead[8] == sum(CT.dead_money(p) for p in staff[9]) > 0
 
 
@@ -99,7 +99,7 @@ def test_the_staffs_list_for_a_team_over_the_cap_names_the_cap_and_the_players_l
     assert text[at + 1:at + 1 + len(expected)] == expected
     assert text[at + 1 + len(expected)] == " 1. release them "
     final = rig.fstore.league
-    assert {p.id for p in final.players.values() if p.status == "released" and p.left == 1 and p.team == TEAM} == {p.id for p in staff}
+    assert {p.id for p in final.players.values() if p.status in ("released", "practice") and p.left in (0, 1) and p.team == TEAM} == {p.id for p in staff}
     assert CT.cap_used(final, TEAM) <= T.FR_CAP
 
 
@@ -134,7 +134,7 @@ def test_choosing_yourself_asks_for_each_release_the_cap_needs_after_the_groups_
     for player in extras:
         assert X.text("NXE-55", player=player.name) in text
     final = rig.fstore.league
-    assert {p.id for p in final.players.values() if p.status == "released" and p.left == 1 and p.team == TEAM} == {p.id for p in cut + extras}
+    assert {p.id for p in final.players.values() if p.status in ("released", "practice") and p.left in (0, 1) and p.team == TEAM} == {p.id for p in cut + extras}
     assert CT.cap_used(final, TEAM) <= T.FR_CAP
 
 
@@ -147,11 +147,11 @@ def test_choosing_a_player_other_than_the_staffs_first_for_the_cap_releases_him_
     candidates = CT.cap_candidates(start, TEAM, waiting, cut)
     rig = run(tmp_path, league, keys=[DOWN, ENTER] + [ENTER] * groups + [DOWN, ENTER])        # the second of the staff's list at the first cap question
     final = rig.fstore.league
-    assert final.players[candidates[1].id].status == "released"
+    assert final.players[candidates[1].id].status in ("released", "practice")
     assert X.text("NXE-55", player=candidates[1].name) in spoken(rig)
     assert CT.cap_used(final, TEAM) <= T.FR_CAP
     asked = [t for t in spoken(rig) if t.endswith(" choose who is released. ") and "salary cap" in t]
-    own = {p.id for p in final.players.values() if p.status == "released" and p.left == 1 and p.team == TEAM}
+    own = {p.id for p in final.players.values() if p.status in ("released", "practice") and p.left in (0, 1) and p.team == TEAM}
     assert len(asked) == len(own) - len(cut) >= 1              # one question for each release the cap needed, then no more
 
 

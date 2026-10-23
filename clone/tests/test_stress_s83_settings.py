@@ -161,6 +161,17 @@ def old_teams_file(folder):
     return path
 
 
+@pytest.mark.parametrize("junk", [bytes(range(256)) * 40, "T24 = Redskins\n".encode("utf-16"), b"\x00" * 300])
+def test_a_teams_file_of_junk_is_left_to_the_healing_with_no_error_in_the_log(tmp_path, junk, caplog):
+    """Found by the built exe's smoke test (exe_smoke.py teams_junk): the migration logged an ERROR with a traceback for a binary teams.txt."""
+    import logging
+    (tmp_path / "teams.txt").write_bytes(junk)
+    with caplog.at_level(logging.INFO):
+        assert CU.migrate_team_names(str(tmp_path)) == ""
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING and "migrated" in r.getMessage()]
+    assert (tmp_path / "teams.txt").read_bytes() == junk                               # left for the loader, which heals it
+
+
 @pytest.mark.parametrize("state", ["read_only", "held_open", "copy_is_a_folder", "copy_is_read_only", "copy_exists", "already_migrated_twice"])
 def test_the_commanders_migration_in_every_awkward_state_never_raises_and_never_loses_the_players_file(tmp_path, state):
     path = old_teams_file(tmp_path)

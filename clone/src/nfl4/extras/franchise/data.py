@@ -6,7 +6,7 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 13                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 14                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
@@ -25,6 +25,8 @@ FORMAT = 13                                  # league.sav's format; a higher one
 #                                                format 11 or older has none (the default: the original's 16 random weeks, the season goes on as it was)
 #                                              13 (S8.3 round 2, D-131) the made-up players have a first name; a file of format 12 or older is migrated once
 #                                                (league.give_first_names, no draw): every bare drawn surname but the player's own team's (his own names)
+#                                              14 (2026-10-23, D-136) the practice squads (`LeagueRecord.practice`, practice.py); a file of format 13 or older has
+#                                                none, and a league in its season gets them at once from the players cut this offseason (no draw)
 COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the end of rounds 3 to 7 (NFL, SRC-OFFICIAL)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"

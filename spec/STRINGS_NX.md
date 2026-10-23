@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2057.
+- Texts: 2084.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 828.
 - Menus and settings (design 10.4, 12): 56.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 582.
+- Franchise (design section 11): 609.
 - The real coaches and players (NX-N, SX.11): 7.
 - The radio broadcast: banter and Ghip (SY.1, rule 0.27): 362.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
@@ -1195,6 +1195,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXF-36 (sentence, say): " the franchise file was missing. the copy from before the last save is used. ". start-up notice
 - NXF-37 (sentence, say): " your franchise could not be found. a classic season begins. ". start-up notice
 - NXF-46 (sentence, say): " the real N. F. L. calendar could not be read, so this season plays the original game's 16 weeks. ". notice when schedule_<year>.txt is missing or not whole at the start of a franchise season (S8.3 round 2)
+- NXF-47 (menu, say5): "practice squad". F9 Franchise item (D-136)
 - NXF-40 (menu, say2): "more". paging of a long list in a franchise question (the back item is NXB-10)
 - NXF-42 (sentence, say2): " page <n> of <m>. ". each page of a paged franchise question
 - NXE-01 (sentence, say2): " the season is over. the offseason begins. ". design 3.3
@@ -1462,6 +1463,29 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXJ-S17 (sentence, say5): " you did not sign <player>. ". F9 free agents: the player said no (SZ.8)
 - NXJ-S18 (sentence, say5): " that signing cannot be made now. ". F9 free agents: any other reason (SZ.8)
 - NXJ-S19 (sentence, say5): " free agents can be signed at the main menu, before the game, once the week's news and lists are told. ". F9 free agents while the results of the week before are still being told (SZ.8)
+- NXJ-P01 (sentence, say5): " <player>, <position>, age <a>, rating <r>. ". F9 practice squad: a squad player in the play-offs (D-136)
+- NXJ-P02 (sentence, say5): " practice squad, <n> of 16 players. ". F9 practice squad: the menu's title (D-136)
+- NXJ-P03 (sentence, say5): " your practice squad, <n> players, the best first. ". F9 practice squad: the list's title (D-136)
+- NXJ-P04 (sentence, say5): " <player>, <position>, age <a>, rating <r>, <n> elevations left. ". F9 practice squad: a squad player (D-136)
+- NXJ-P05 (sentence, say5): " your practice squad is empty. ". F9 practice squad (D-136)
+- NXJ-P06 (sentence, say5): " sign <player> to your roster, <contract>? press enter to sign him, or escape to say no. ". F9 practice squad: the question with an open place (D-136)
+- NXJ-P07 (sentence, say5): " release <give> and sign <get> to your roster, <contract>? releasing <give> costs <dead> in dead money. press enter to do it, or escape to say no. ". F9 practice squad: the question with a release (D-136)
+- NXJ-P08 (sentence, say5): " <player> is signed to your roster. ". F9 practice squad: done (D-136)
+- NXJ-P09 (sentence, say5): " you released <give> and signed <get> to your roster. ". F9 practice squad: done with a release (D-136)
+- NXJ-P10 (sentence, say5): " the practice squad cannot be changed during a game. ". F9 practice squad inside a game (D-136)
+- NXJ-P11 (sentence, say5): " practice squads are formed at the roster cut and end with the season. there is none in the offseason. ". F9 practice squad in the offseason (D-136)
+- NXJ-P12 (sentence, say5): " free agents who may join your practice squad, the best first. ". F9 practice squad: the list's title (D-136)
+- NXJ-P13 (sentence, say5): " your practice squad is full: 16 players, at most 6 of them veterans. ". F9 practice squad: no room (D-136)
+- NXJ-P14 (sentence, say5): " add <player> to your practice squad, <contract>? press enter to add him, or escape to say no. ". F9 practice squad: the question (D-136)
+- NXJ-P15 (sentence, say5): " <player> joins your practice squad. ". F9 practice squad: done (D-136)
+- NXJ-P16 (sentence, say5): " release <player> from your practice squad? press enter to release him, or escape to say no. ". F9 practice squad: the question (D-136)
+- NXJ-P17 (sentence, say5): " <player> is released from your practice squad. ". F9 practice squad: done (D-136)
+- NXJ-P18 (sentence, say5): " <player> is elevated from the practice squad to play for <group>. ". the weekly injury report, the play-offs (D-136)
+- NXJ-P19 (sentence, say5): " <player> is elevated from the practice squad to play for <group>. he has <n> elevations left this season. ". the weekly injury report (D-136)
+- NXJ-P20 (menu, say5): "hear the practice squad". F9 practice squad item (D-136)
+- NXJ-P21 (menu, say5): "sign a player to your roster". F9 practice squad item (D-136)
+- NXJ-P22 (menu, say5): "add a free agent". F9 practice squad item (D-136)
+- NXJ-P23 (menu, say5): "release a squad player". F9 practice squad item (D-136)
 - NXF-29 (menu, say5): "free agents". F9 Franchise item (SX.8i)
 - NXH-40 (help, say5): " Free agency: before the draft the players nobody signed are on the market for a few rounds. Offer the price or a little more. The best offer wins. In the season, sign free agents in F9. ". F6, after NXH-39 (SX.8i)
 - NXJ-I01 (sentence, say2): " one free agent is on the market. ". stage 8, the market at its start, one player
@@ -1738,6 +1762,9 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXC-22 (menu, say5): " 1. see this week's games ". the main menu's first choice in the bye week (SZ.8), in the place of ' 1. play game '
 - NXC-23 (sentence, say2): " Your team has a bye this week. There is no game today. ". 'Today's game is ...' in the bye week (SZ.8)
 - NXC-24 (sentence, say2): " your team has a bye this week. ". the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
+- NXH-72 (help, say5): " Practice squad: up to 16 players, at most 6 veterans, formed at the roster cut. A squad player is elevated when an injury leaves his position with nobody, up to 3 times a season. ". F6 while the franchise is in use (D-136)
+- NXH-73 (help, say5): " Practice squad: the players a team keeps to practice with it but who do not play unless they are elevated for a game or signed. Elevated: moved up from the practice squad for one game. ". F7 glossary while the franchise is in use (D-136)
+- NXH-74 (help, say5): " F9, Franchise, practice squad: sign a squad player to your roster, add a free agent to the squad, or release a squad player. ". F6 while the franchise is in use (D-136)
 
 ## The real coaches and players (NX-N, SX.11)
 

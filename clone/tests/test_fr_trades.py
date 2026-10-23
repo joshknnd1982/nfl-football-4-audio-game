@@ -582,7 +582,7 @@ def test_format_five_round_trips_the_trades_and_a_format_four_file_loads_with_no
     league = scenario()
     TR.execute(league, TR.search(league, 5, standing())[0], 5, TR.KIND_COMPUTER)
     data = json.loads(league.to_json())
-    assert data["format"] == D.FORMAT == 13 and data["trades"] == league.trades     # (format 12 since SZ.8: the trades are format 5's)
+    assert data["format"] == D.FORMAT == 14 and data["trades"] == league.trades     # (format 12 since SZ.8: the trades are format 5's)
     again = LeagueRecord.from_json(league.to_json())
     assert again.trades == league.trades and again.to_json() == league.to_json()
     old = json.loads(fresh().to_json())

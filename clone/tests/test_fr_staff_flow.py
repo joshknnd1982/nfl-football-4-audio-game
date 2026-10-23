@@ -223,7 +223,7 @@ def test_f9_has_your_job_and_staff_with_the_goal_the_job_rating_and_the_coordina
         lists.append((title, list(lines)))
         real(speech, keys, title, lines, **kwargs)
     monkeypatch.setattr(menus, "_lines_picker", picker)
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 9 + [ENTER, ESC, ESC, ESC, ESC]       # F9, Franchise, your job and staff (the 10th item)
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 10 + [ENTER, ESC, ESC, ESC, ESC]       # F9, Franchise, your job and staff (the 10th item)   # D-136: practice squad is the 10th item
     rig = offseason_rig(tmp_path, staff_league(), keys=keys, until=lambda r: bool(lists))
     league = rig.fstore.league
     coach = S.coach_of(league, TEAM)
@@ -329,7 +329,7 @@ def test_leaving_the_franchise_clears_its_styles_and_a_classic_season_plays_the_
     league = rig.fstore.league                                    # SX.8o: the computer teams' styles follow their best players (staff.fitted_styles)
     assert rig.game.franchise_styles is not None and rig.game.franchise_styles() == S.fitted_styles(league, league.gtp)
     assert rig.game.franchise_styles()[league.team - 1] == S.team_styles(league)[league.team - 1]
-    keys = WANT_FRANCHISE + COACH_AND_TEAM + [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 11 + [ENTER, ENTER, ESC]     # play classic seasons (12th)
+    keys = WANT_FRANCHISE + COACH_AND_TEAM + [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 12 + [ENTER, ENTER, ESC]     # play classic seasons (12th)   # D-136: practice squad is the 10th item
     rig = run_until(franchise_rig(tmp_path / "out", keys, policy=quit_policy))
     assert rig.game.program.mode.kind == "classic" and rig.game.franchise_styles is None
     assert S.game_team_styles(rig.game) is None
@@ -363,6 +363,6 @@ def test_f9_your_job_and_staff_says_he_was_fired_while_the_job_question_waits(tm
         lists.append((title, list(lines)))
         real(speech, keys, title, lines, **kwargs)
     monkeypatch.setattr(menus, "_lines_picker", picker)
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 9 + [ENTER, ESC, ESC, ESC, ESC]       # at the job question: F9, Franchise, your job and staff
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 10 + [ENTER, ESC, ESC, ESC, ESC]       # at the job question: F9, Franchise, your job and staff   # D-136: practice squad is the 10th item
     run(tmp_path, staff_league(player_approval=20, player_wins=4), keys=keys, until=lambda r: bool(lists))
     assert lists[0] == (X.text("NXF-45"), [X.text("NXV-32")])

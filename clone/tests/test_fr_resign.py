@@ -544,7 +544,8 @@ def test_a_format_two_file_loads_with_no_stage_in_progress_and_the_next_save_is_
     del data["resign"]
     loaded = LeagueRecord.from_json(json.dumps(data))
     assert loaded.resign is None and json.loads(loaded.to_json())["format"] == D.FORMAT
-    assert [(p.salary, p.years) for p in loaded.players.values()] == [(p.salary, p.years) for p in league.players.values()]    # a migration changes nothing
+    kept = [p for p in loaded.players.values() if p.id in league.players and p.status != "practice"]      # D-136: the squads formed at the load
+    assert [(p.salary, p.years) for p in kept] == [(league.players[p.id].salary, league.players[p.id].years) for p in kept]    # a migration changes nothing else
 
 
 def test_a_format_two_file_saved_after_stage_two_has_signed_contracts_and_the_expiring_stage_finds_nobody():

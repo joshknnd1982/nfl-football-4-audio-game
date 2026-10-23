@@ -311,7 +311,7 @@ def test_an_accepted_defense_foul_on_the_last_play_of_the_half_gives_an_untimed_
     said = texts(rig)
     assert any(t.endswith(", " + X.text("NXP-S09") + ". ") for t in said)
     assert any(t.endswith(", " + X.text("NXP-S08") + ". ") for t in said)
-    assert X.text("NXP-14") in said
+    assert any(X.text("NXP-14").strip().rstrip(".") in t for t in said)          # said once: in the referee's result (2026-10-23)
     x, clock = rig.engine.s.extras, rig.engine.clock
     assert x.left == 0 and x.extension and not clock.period_over()
     assert clock.before_snap() is False and not x.extension and clock.period_over()

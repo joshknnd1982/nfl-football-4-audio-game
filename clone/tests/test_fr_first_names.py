@@ -132,15 +132,17 @@ def test_a_format_12_league_gets_first_names_once_and_the_players_own_team_keeps
         loaded = LeagueRecord.from_json(text)
     assert any("got a first name (D-131)" in r.getMessage() for r in caplog.records)      # rule 0.15: the migration is in the log
     for pid, player in loaded.players.items():
-        if player.team == TEAM:
+        if player.team == TEAM and player.status == "active":
             assert player.name == league.players[pid].name                              # his own team: as it was (bare here)
+        elif player.status == "practice" or pid not in league.players:
+            continue                                                                    # D-136: the squads formed at the load
         else:
             assert made_up(loaded, player.name), player.name
     assert " " not in loaded.players[own_qb.id].name or own_qb.name in SURNAMES
     assert all(made_up(loaded, p.name) for p in S.pool(loaded))
     again = LeagueRecord.from_json(loaded.to_json())                                    # format 13 now: nothing more changes
     assert [p.name for p in again.players.values()] == [p.name for p in loaded.players.values()]
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 13
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 14
 
 
 def test_a_one_word_name_the_player_gave_in_a_format_13_league_is_never_changed():

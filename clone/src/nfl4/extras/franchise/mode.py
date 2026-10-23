@@ -375,6 +375,9 @@ def start_new(p) -> None:
     league = new_league(g.rnd, list(g.pool.original), season.coach, team, new_league_id(g), own_names(g),
                         team_styles=table.teams if table is not None else None,      # SX.8l: the coordinators start with the teams' styles
                         real=getattr(g, "real_names", None))                         # SX.11: the real coaches and players (None: drawn surnames)
+    if getattr(store, "practice_squads", True):
+        from . import practice
+        practice.top_up(league, list(g.pool.original))       # D-136: the practice squads of season 1 (young made-up players, no draw)
     store.create(league)
     set_kind(g, "franchise")                             # only now: a window closed before this leaves no franchise to look for
     g.say2(X.text("NXF-07"))

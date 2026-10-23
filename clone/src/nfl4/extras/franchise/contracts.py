@@ -121,6 +121,7 @@ def team_players(league, team: int, waiting: dict | None = None) -> list:
     """The team's players that are paid: the 34 places and the rookies waiting for the cut (`waiting` is draft.waiting_by_team's table; when
     it is None the draft record's own picks are used)."""
     placed = [league.players[pid] for pid in league.rosters[team - 1] if pid]
+    placed += [p for p in league.players.values() if p.status == "practice" and p.team == team]     # D-136: the practice squad is paid too
     if waiting is None:
         return placed + league.waiting_rookies(team)          # (the drafted rookies and, SX.8m, the undrafted free agents in camp)
     return placed + list(waiting.get(team, ()))
@@ -140,7 +141,7 @@ def payrolls(league) -> list:
     """The 32 payrolls (team 1 first) of every active player, placed or waiting."""
     totals = [0] * D.TEAMS
     for player in league.players.values():
-        if player.status == "active" and running(player):
+        if player.status in ("active", "practice") and running(player):          # D-136: the practice squads are paid too
             totals[player.team - 1] += player.salary
     return totals
 

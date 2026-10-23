@@ -448,11 +448,17 @@ def settle(league: LeagueRecord, week: int, rnd, surnames: list, done: WeekInjur
     for team in range(1, D.TEAMS + 1):
 
         def make(position, team=team):
-            row = make_stand_in(league, team, position, rnd, surnames)
+            row = make_stand_in(league, team, position, rnd, surnames)      # the draw is made as ever (the league's draws stay the same)
+            from . import practice
+            elevated = practice.elevate(league, team, position, week)
+            if elevated is not None:                    # D-136: a practice squad player of the position stands in, not a made-up one
+                row = practice.stand_in_row(team, position, elevated)
             league.injuries["stand_ins"].append(row)
             done.stand_ins.append(row)
             return row
         lineup(league, team, week, staff=False, make=make)     # every hurt player resting: the most stand-ins any decision of the week can need
+    from . import practice
+    practice.count_week(league, week)                          # D-136: an elevation for every squad player standing in this week
     return done
 
 

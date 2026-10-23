@@ -56,7 +56,7 @@ def test_release_them_releases_exactly_those_players_and_the_rookies_who_stay_ta
     expected = {p.id for p in staffs_releases(LeagueRecord.from_json(league.to_json()))}
     rig = run(tmp_path, league)
     final = rig.fstore.league
-    released = {p.id for p in final.players.values() if p.status == "released" and p.left == 1}
+    released = {p.id for p in final.players.values() if p.status in ("released", "practice") and p.left in (0, 1)}
     assert released == expected
     after_cut = LeagueRecord.from_json(rig.kept[D.STAGE_NEW_SEASON].decode("utf-8"))
     assert after_cut.stage_no == 6 and after_cut.draft is None and after_cut.pick_no == 0
@@ -118,7 +118,7 @@ def test_choosing_a_player_other_than_the_staffs_first_releases_him_and_keeps_th
     order = DR.release_order(players)
     rig = run(tmp_path, league, keys=[DOWN, ENTER, DOWN, ENTER])                       # choose yourself; in the first group the second of the list
     final = rig.fstore.league
-    assert final.players[order[1].id].status == "released"
+    assert final.players[order[1].id].status in ("released", "practice")
     if over == 1:
         assert final.players[order[0].id].status == "active"                           # the staff's first choice stays
     assert X.text("NXE-55", player=order[1].name) in spoken(rig)
