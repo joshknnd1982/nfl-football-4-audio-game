@@ -55,10 +55,10 @@ VOICES_DONE = "Back from the voices."
 ABOUT_TITLE = "About NFL Football 4"
 ABOUT_LINES = (
     f"NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen. Version {VERSION}. "
-    "A new version of Jim Kitchen's N. F. L. football version 4.",
+    "A game loosely inspired by Jim Kitchen's N. F. L. football version 4.",
     "This is inspired by Jim Kitchen. Jim Kitchen was blind from birth. "
     "He made his games free for the blind community. He died in 2015.",
-    "This version is new code, written from a description of how his program behaves. "
+    "This game is new code, written from a description of how his program behaves. "
     "It plays his original sound files.",
     # nfl4 only (rule 0.13, NFL_EXTRA_FEATURES NX-R6, SX.9): the added rules and the franchise, and the trademark notice. The notice is the
     # only text of the game that names Madden or Electronic Arts (tests/test_sx9_about.py)

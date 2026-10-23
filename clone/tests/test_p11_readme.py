@@ -56,6 +56,23 @@ def test_the_front_of_the_repository_speaks_for_this_game_only():
     assert (GAME / "LICENSE").read_text(encoding="utf-8").startswith("MIT License\n\nCopyright (c) 2026 Josh Kennedy")
 
 
+def test_no_text_a_reader_meets_calls_the_game_a_clone_or_a_new_version_of_jim_kitchens():
+    """The owner, 2026-10-22: 'These games are my games now. They are loosely based on Jim Kitchen's games. They are not clones of Jim's games.'
+    The files a player or a visitor reads, and the About of the game, say loosely inspired / loosely based; the folder name `clone` in a path or a
+    code span is not a word of the text."""
+    from nfl4.game import extra_texts
+    files = [README, GAME / "CHANGELOG.md", GAME / "SOUNDS_NOTICE.txt", GAME / "release" / "installer_info.txt",
+             GAME / ".github" / "ISSUE_TEMPLATE" / "bug_report.md", CLONE / "CUSTOMIZE.md", CLONE / "README_if_something_goes_wrong.md",
+             CLONE / "README_nfl_rules_and_franchise.md", CLONE / "THIRD_PARTY_NOTICES.txt", CLONE / "PLAYS_GUIDE.md"]
+    texts = {path.name: path.read_bytes().decode("utf-8") for path in files}
+    texts["About (in the game)"] = " ".join(extra_texts.ABOUT_LINES)
+    for name, text in texts.items():
+        text = re.sub(r"`[^`]*`|\]\([^)]*\)|clone[/\\]", "", text)                  # code spans, link targets and paths
+        text = text.replace("it is not a clone or a copy of them", "")             # the README says so on purpose
+        assert not re.search(r"\bclones?\b", text, re.IGNORECASE), name
+        assert not re.search(r"new version of|remake|re-creation|recreation", text, re.IGNORECASE), name
+
+
 def test_the_changelog_names_no_release_and_the_version_of_the_code_is_in_it():
     from nfl4 import VERSION
     text = (GAME / "CHANGELOG.md").read_text(encoding="utf-8")

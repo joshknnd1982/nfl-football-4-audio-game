@@ -1,6 +1,6 @@
 # Changing the names and the banter in NFL Football 4
 
-This is inspired by Jim Kitchen. The game is a new version of his N. F. L. football version 4. You can change the team names, the division names, the players' surnames and the announcer's banter, and you can add your own banter lines and your own sounds. With the files left alone the game says and plays exactly what the original does.
+This is inspired by Jim Kitchen. The game is loosely inspired by his N. F. L. football version 4. You can change the team names, the division names, the players' surnames and the announcer's banter, and you can add your own banter lines and your own sounds. With the files left alone, Classic says and plays what the original does, and the N. F. L. rules use the game's own radio banter.
 
 ## Where the files are
 

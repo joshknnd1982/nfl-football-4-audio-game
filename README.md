@@ -1,16 +1,16 @@
 # NFL Football 4
 
-An audio-only American football game for blind players, by Josh Kennedy, inspired by Jim Kitchen. You play with the keyboard. The game tells you everything in speech and sound, through your screen reader or the Windows voices. There are no pictures.
+An audio-only American football game for blind players, by Josh Kennedy, inspired by Jim Kitchen. It is Josh Kennedy's own game, loosely based on Jim Kitchen's games; it is not a clone or a copy of them. You play with the keyboard. The game tells you everything in speech and sound, through your screen reader or the Windows voices. There are no pictures.
 
 **Status: a work in progress.** There is no release yet and no installer to download. The game can be run and built from the source in this repository. Test builds exist for the maintainer only.
 
 ## Inspired by Jim Kitchen
 
-This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many free games for the blind community. He died in 2015. This game is loosely inspired by his "NFL football version 4". It is new code, written from a description of how his program behaves, and it contains none of his program code. It plays his original sound files (see "Sounds and rights" below).
+This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many free games for the blind community. He died in 2015. This game is loosely based on his "NFL football version 4", and it has grown well beyond it. It is new code, written from a description of how his program behaves, and it contains none of his program code. It plays his original sound files (see "Sounds and rights" below).
 
 ## Two ways to play
 
-- **Classic** is the original game exactly as Jim Kitchen made it: the same menus, keys, plays, pace and sounds.
+- **Classic** plays the way Jim Kitchen's game played, so that anyone who knew it feels at home: the same menus, keys, plays, pace and sounds.
 - **N. F. L. rules** is the default for a new player. The way you play stays like the original (short spoken menus, the same function keys), and the game adds the real National Football League:
   - a real game clock of 15 minutes a quarter, time outs and the two-minute warning;
   - penalties you may accept or decline, onside kicks, quarterback runs, replay challenges and the replay official's reviews;
