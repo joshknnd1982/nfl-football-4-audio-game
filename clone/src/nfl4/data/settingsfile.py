@@ -83,6 +83,8 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     stop them, to 0 to hear them again)
 # nx_commentator      the name of the color commentator of the radio broadcast (default Ghip): the Rules item of the F9 menu lists
 #                     well known sports podcasters and lets you type a name of your own; it is used from the next game
+# nx_qb_starters      the quarterbacks you chose to start for a team (F9, Rules, Quarterbacks), like T05=Tyler Huntley; T12=Kenny Pickett.
+#                     Empty (default): every team's first quarterback of rosters.txt starts. Used with the N. F. L. rules' real names
 # nx_onside_question  always = you are asked about an onside kick at every kick off and safety kick (default, the 2026 rule),
 #                     sensible = only when it makes sense (the late game of a team that trails or leads by one score)
 # nx_onside_question_chosen  yes when you chose the line above yourself; a file without it is read as always, once
@@ -141,6 +143,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_stadium = {'on' if game.nx_stadium else 'off'}",
         f"nx_broadcast = {'on' if game.nx_broadcast else 'off'}",
         f"nx_commentator = {game.nx_commentator}",
+        f"nx_qb_starters = {game.nx_qb_starters}",
         f"nx_menu_hints = {game.nx_menu_hints}",
         f"nx_season_kind = {game.nx_season_kind}",
         f"nx_fr_auto = {'on' if game.nx_fr_auto else 'off'}",
@@ -295,6 +298,11 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if not clean(value):
             raise ValueError("not a name (at least two letters or digits)")
         game.nx_commentator = clean(value)
+    elif name == "nx_qb_starters":
+        from ..extras.quarterbacks import clean as clean_starters
+        if value.strip() and not clean_starters(value):
+            raise ValueError("not a list like T05=Tyler Huntley; T12=Kenny Pickett")
+        game.nx_qb_starters = clean_starters(value)
     elif name == "nx_onside":
         word = _ON_WORDS.get(value.lower())
         if word is None:

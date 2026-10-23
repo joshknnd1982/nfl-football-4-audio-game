@@ -16,11 +16,20 @@ This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many 
   - penalties you may accept or decline, onside kicks, quarterback runs, replay challenges and the replay official's reviews;
   - every real NFL play, grouped into lists you reach with Right and M, each with a plain description (D) for people who do not know football, and a W key that says which play the playbook would most likely pick;
   - playbooks in seven styles, for your team and for the computer's;
-  - the real head coaches and players of the 32 teams, so you type no names;
+  - the real head coaches and players of the 32 teams, so you type no names, and a list of every team's quarterbacks where you choose who starts (F9, Rules, Quarterbacks);
   - a radio-style broadcast: the announcer's banter and a color commentator in a voice of their own, stadium sounds, and a referee who announces over a microphone;
-  - a Franchise: a league of 32 teams that lasts from season to season, with the real 2026 schedule and bye weeks, ratings, aging, the draft, contracts and the salary cap, free agency, trades until the deadline, injuries, coaches and history.
+  - a Franchise: a league of 32 teams that lasts from season to season, with the real 2026 schedule and bye weeks, the NFL's 14-team play-offs, ratings, aging, the draft, contracts and the salary cap, free agency, trades from free agency to the deadline, practice squads, injuries, coaches and history.
 
 Choose the rules in the game: press F9, then Rules. The full description is in [clone/README_nfl_rules_and_franchise.md](clone/README_nfl_rules_and_franchise.md).
+
+## Getting the latest NFL calendar
+
+A franchise plays the real 2026 NFL schedule in its first season. The NFL releases each season's schedule in the spring; when it does, the maintainer publishes it in this repository as `calendars/schedule_<year>.txt` (for example [calendars/schedule_2026.txt](calendars/schedule_2026.txt)).
+
+- **From the game:** press F9, then Franchise, then the last item, "get the latest calendar". The game asks this repository for the newest calendar after the newest one it has, checks that it is a whole NFL calendar (18 weeks, 17 games and one bye for every team), saves it in your customize folder and tells you in one sentence what it got, or why not (no connection, nothing newer yet, a damaged file). It goes on the internet only when you choose this item, never by itself. Escape stops it.
+- **By hand:** download the file `schedule_<year>.txt` from the [calendars](calendars) folder and put it in your customize folder, `%APPDATA%\Kitchensinc Revival\NFL Football 4\customize` (F9, Customize, open the folder). Keep its name.
+
+Your franchise plays a year's calendar from the season of that year (a season already begun keeps its calendar). Until a newer calendar is there, a later season plays the newest calendar the game has with the teams relabeled, so every team meets other opponents. The file's format is explained at its top and in [clone/CUSTOMIZE.md](clone/CUSTOMIZE.md).
 
 ## Requirements
 

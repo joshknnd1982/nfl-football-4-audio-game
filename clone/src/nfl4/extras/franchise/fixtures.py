@@ -53,6 +53,17 @@ def shipped_path(year: int) -> str:
     return os.path.join(paths.program_dir(), "assets", "data", FILE_NAME % year)
 
 
+def player_path(year: int) -> str:
+    """The player's own copy of a year's calendar (D-128): the customize folder of the data folder, where the menu item "get the latest N. F. L. calendar"
+    saves it and where the README tells the player to put one by hand. It is read before the shipped file of the same year."""
+    return os.path.join(player_folder(), FILE_NAME % year)
+
+
+def player_folder() -> str:
+    """The folder of the player's own calendars (the tests point it at a folder of their own, conftest.py)."""
+    return paths.customize_dir()
+
+
 def check(calendar: Calendar) -> None:
     """CalendarError unless the calendar is whole: 18 weeks, 17 games and one bye for every team, each division rival twice (once at home, once away)."""
     if calendar.length != WEEKS:
@@ -145,11 +156,11 @@ def relabel(calendar: Calendar, shift: int, label: str = "") -> Calendar:
 
 
 _cache: dict = {}
+NEWEST_YEAR_TRIED = 2100                  # the years a base calendar is looked for (a file of a year after it is never read)
 
 
-def _shipped(year: int):
-    """The shipped calendar of a year, or None (cached by the file's time; never raises)."""
-    path = shipped_path(year)
+def _read(path: str):
+    """The calendar of a file, or None (cached by the file's time; never raises)."""
     try:
         stamp = os.stat(path).st_mtime_ns
     except OSError:
@@ -164,20 +175,43 @@ def _shipped(year: int):
     return _cache[key]
 
 
+def _shipped(year: int):
+    """The calendar of a year: the player's own file (D-128) when it is whole, else the shipped one, else None (never raises)."""
+    return _read(player_path(year)) or _read(shipped_path(year))
+
+
+def local_years() -> list:
+    """The years whose calendar the game has (the player's files and the shipped ones that are whole), the newest last."""
+    found = set()
+    for folder in (player_folder(), os.path.join(paths.program_dir(), "assets", "data")):
+        try:
+            names = os.listdir(folder)
+        except OSError:
+            continue
+        for name in names:
+            match = re.fullmatch(r"schedule_(\d{4})\.txt", name, re.IGNORECASE)
+            if match and FIRST_YEAR <= int(match.group(1)) <= NEWEST_YEAR_TRIED:
+                found.add(int(match.group(1)))
+    return sorted(year for year in found if _shipped(year) is not None)
+
+
 def for_season(season: int):
-    """The calendar a franchise plays in its season `season` (1 is 2026), or None when no calendar can be made: the file of that year when the game ships
-    one, else the file of the first year relabeled by the number of years since. None sends the Franchise back to the original's random weeks."""
+    """The calendar a franchise plays in its season `season` (1 is 2026), or None when no calendar can be made: the file of that year (the player's or the
+    shipped one), else the newest calendar of an earlier year relabeled by the number of years since (the 2026 one until a newer is shipped or downloaded,
+    D-128). None sends the Franchise back to the original's random weeks."""
     year = year_of(season)
     exact = _shipped(year)
     if exact is not None:
         return exact
-    base = _shipped(FIRST_YEAR)
-    if base is None:
+    earlier = [y for y in local_years() if y < year]
+    if not earlier:
         return None
+    base_year = earlier[-1]
+    base = _shipped(base_year)
     if season <= 1:
         return base
     try:
-        return relabel(base, season - 1, "season %d, the %d calendar with the divisions rotated" % (year, FIRST_YEAR))
+        return relabel(base, year - base_year, "season %d, the %d calendar with the divisions rotated" % (year, base_year))
     except CalendarError:
-        log.exception("the %d calendar could not be relabeled", FIRST_YEAR)
+        log.exception("the %d calendar could not be relabeled", base_year)
         return None

@@ -61,7 +61,15 @@ Three files hold the names. They are made for you the first time, in the same fo
 
 The names in these files are facts, used descriptively. They are not endorsed by the teams or the league, and no ratings, photographs or logos are used.
 
+The first quarterback of a team in rosters.txt starts. To make another of its quarterbacks the starter without changing the file, use F9, Rules, Quarterbacks: Enter on the team, then Enter on the quarterback. The choice is kept in settings.txt as `nx_qb_starters = T01=Joe Flacco` (one `Tnn=name` for each team you changed, separated by semicolons); when a new rosters.txt no longer has that player on the team, the first quarterback starts again.
+
 To put in a new season's names: replace the lines of the teams that changed in rosters.txt and coaches.txt, change the VERSION line, save, and choose Reload in the Customize menu. If you write any line for a team in rosters.txt, your lines replace all the built-in lines of that team, so an old player does not come back. A coach is replaced by writing his line again. Delete a whole file to get the built-in names back. Your own team's players are the names in footplay.txt: the game writes it from the real roster at the first game of a season, and your changes to it are kept.
+
+## The real NFL calendar of a franchise
+
+A franchise plays the real NFL schedule from a file `schedule_<year>.txt`. The game ships `schedule_2026.txt`. A newer year's file can be downloaded in the game (F9, Franchise, get the latest calendar) or from the `calendars` folder of the game's GitHub repository, and goes into this customize folder with its name kept. A file here is read before the game's own file of the same year.
+
+Each line is an ID, an equals sign, the visiting team, the home team and the date: `W01G01 = T08 T28 2026-09-09` is the first game of week 1. The teams are the IDs of teams.txt, T01 to T32; a team with no line in a week has its bye. A `VERSION` line says which season it is. The game uses a file only when it is whole: 18 weeks, 17 games and one bye for every team, every division rival twice (once at home); a file that is not whole is not used, and the game says so.
 
 ## The banter
 

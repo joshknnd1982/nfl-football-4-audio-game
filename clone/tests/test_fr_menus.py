@@ -50,7 +50,8 @@ def test_while_the_franchise_is_in_use_its_menu_has_the_to_do_list_the_news_the_
     seen = menus_seen(monkeypatch)
     in_a_franchise(tmp_path, INTO_FRANCHISE)
     assert ("Franchise", ["to do list", "news", "your roster", "league history", "team ratings", "salary cap",
-                          "free agents", "trades", "injury report", "practice squad", "your job and staff", "franchise settings", "play classic seasons"]) in seen       # injury report since SX.8k, your job and staff since SX.8l
+                          "free agents", "trades", "injury report", "practice squad", "your job and staff", "franchise settings", "play classic seasons",
+                          "get the latest calendar"]) in seen      # D-128: the latest calendar, the last item       # injury report since SX.8k, your job and staff since SX.8l
     assert [labels for title, labels in seen if title == "Added functions"][0][3:] == ["Rules.", "Franchise", "About NFL Football 4."]
 
 
@@ -105,7 +106,7 @@ def test_a_waiting_franchise_has_back_to_your_franchise_and_its_history_in_the_m
     seen = menus_seen(monkeypatch)
     script = [ENTER] + COACH_AND_TEAM + GAME + INTO_FRANCHISE                  # the classic answer, a classic game, F9, Franchise
     run_until(franchise_rig(tmp_path / "two", script, files=first.files, kind="classic", policy=quit_policy))
-    assert ("Franchise", ["back to your franchise", "league history"]) in seen
+    assert ("Franchise", ["back to your franchise", "league history", "get the latest calendar"]) in seen      # D-128
 
 
 def test_the_history_of_a_waiting_franchise_can_be_heard_from_the_classic_season(tmp_path):

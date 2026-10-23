@@ -155,6 +155,8 @@ class Game(Speakers):
             self.favourite_plays = snapshot.favourites        # and the favourite plays (SX.10c)
             self.real_names = snapshot.real_names             # and the real coaches, players and respellings (SX.11)
             if self.real_names is not None:
+                from ..extras import quarterbacks
+                quarterbacks.apply(self)                      # D-132: the starters the player chose (F9, Rules, Quarterbacks)
                 debuglog.event("names", "loaded", version=self.real_names.version, coaches=sum(1 for c in self.real_names.coaches if c),
                                teams=sum(1 for r in self.real_names.rosters if r), respellings=len(self.real_names.respellings))
         except Exception:

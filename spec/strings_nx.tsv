@@ -700,7 +700,7 @@ NXX-25	franchise	sentence	say5	 week <n>: the <team> traded <give> to the <other
 NXX-27	franchise	sentence	say5	 a player traded this season cannot be traded again until the next season. 	F9 trades
 NXK-14	franchise	sentence	say2	 the draft has 7 rounds. your picks: <list>. 	stage 4 when a trade moved a pick of the player's team (SX.8j)
 NXK-15	franchise	piece	piece	round <round> pick <pick>	stage 4: one of the player's picks
-NXH-41	franchise	help	say5	 Trades: until the trade deadline, and in free agency, teams swap players of the same position, with picks to even the value. Offers come in your to do list; F9 has trades. 	F6, after NXH-40 (SX.8j)
+NXH-41	franchise	help	say5	 Trades: from free agency to the trade deadline, teams swap players of the same position, with picks to even the value; from the draft to week 1 without picks. F9 has trades. 	F6 while the franchise is in use (SX.8j; D-130: the window from free agency to the deadline)
 NWX01	franchise	remark	say2	 the <team> traded <player>, <position>, to the <other>. 	a trade between two other teams (news)
 NWX02	franchise	remark	say2	 a trade: <player> goes from the <team> to the <other>. 	a trade between two other teams (news)
 NWX03	franchise	remark	say2	 the <other> got <player>, <position>, from the <team> in a trade. 	a trade between two other teams (news)
@@ -822,6 +822,15 @@ NXV-28	franchise	sentence	say2	 the <team> let their head coach go to make room 
 NXV-30	franchise	sentence	say5	 the owner's goal this season: <goal>. 	F9, franchise, your job and staff
 NXV-31	franchise	sentence	say5	 your job rating: <a> of 100. 	F9, franchise, your job and staff
 NXF-45	franchise	menu	say5	your job and staff	F9 Franchise item (SX.8l)
+NXF-48	franchise	menu	say5	get the latest calendar	F9, Franchise, the last item (D-128): download the newest N. F. L. schedule_<year>.txt from the game's GitHub repository, only when chosen
+NXF-49	franchise	sentence	say5	 asking the game's page on GitHub for the newest N. F. L. calendar. this takes a few seconds. Escape stops it. 	F9, Franchise, get the latest N. F. L. calendar, while the request runs (D-128)
+NXF-50	franchise	sentence	say5	 the <year> calendar is saved in your customize folder. your franchise plays it in its <year> season. 	the download's result (D-128): a newer calendar, for a season the franchise has not begun
+NXF-51	franchise	sentence	say5	 you have the newest calendar already, the one of <year>. the N. F. L. releases each season's schedule in the spring. 	the download's result (D-128): nothing newer is published
+NXF-52	franchise	sentence	say5	 the game could not reach GitHub. check the internet connection and try again later. nothing was changed. 	the download's result (D-128): no connection, no answer in time
+NXF-53	franchise	sentence	say5	 the calendar on GitHub is not a whole N. F. L. calendar, so it was not saved. 	the download's result (D-128): the parser refused the file (the log has the reason)
+NXF-54	franchise	sentence	say5	 you stopped the download. 	the download's result (D-128): Escape during the request
+NXF-55	franchise	sentence	say5	 the calendar could not be saved in your customize folder. nothing was changed. 	the download's result (D-128): the folder cannot be written
+NXF-56	franchise	sentence	say5	 the <year> calendar is saved in your customize folder. a franchise plays it in its <year> season. 	the download's result (D-128): saved, and no franchise, or a franchise past that season
 NXH-43	franchise	help	say5	 Your job: the owner sets a goal each season and rates you from 0 to 100; a low rating costs your job unless you won more than you lost. Your coordinators' styles are your team playbook. 	F6, after NXH-42 (SX.8l)
 NXV-09	franchise	sentence	say2	 the owner has fired you. your job rating was <a>, after 1 win and <l> losses. 	stage 9: NXV-10 for a season of one win
 NXV-32	franchise	sentence	say5	 the owner has fired you. choose your new team at the question. 	F9, franchise, your job and staff, while the job question waits
@@ -2031,6 +2040,10 @@ NXH-71	broadcast	help	say5	 The stadium and referee sounds can be replaced with 
 NXH-72	franchise	help	say5	 Practice squad: up to 16 players, at most 6 veterans, formed at the roster cut. A squad player is elevated when an injury leaves his position with nobody, up to 3 times a season. 	F6 while the franchise is in use (D-136)
 NXH-73	franchise	help	say5	 Practice squad: the players a team keeps to practice with it but who do not play unless they are elevated for a game or signed. Elevated: moved up from the practice squad for one game. 	F7 glossary while the franchise is in use (D-136)
 NXH-74	franchise	help	say5	 F9, Franchise, practice squad: sign a squad player to your roster, add a free agent to the squad, or release a squad player. 	F6 while the franchise is in use (D-136)
+NXH-75	menus	help	say5	 F9, Rules, Quarterbacks lists every team's quarterbacks. Enter on a team lists them, and Enter on one makes him the team's starter from the next game. 	F6 addition (D-132)
+NXH-76	franchise	help	say5	 The play-offs of a franchise on the real calendar are the N. F. L.'s: 7 teams in each conference, and only the top seed rests in the wild card round. The division round is reseeded. 	F6 while the franchise is in use (D-129)
+NXH-77	franchise	help	say5	 F9, Franchise, get the latest N. F. L. calendar asks the game's page on GitHub for the newest schedule, only when you choose it. 	F6 while the franchise is in use (D-128)
+NXH-78	franchise	help	say5	 In a franchise, F9, Rules, Quarterbacks lists every team's starter and its practice squad quarterbacks; on your team a practice squad quarterback can become the starter. 	F6 while the franchise is in use (D-132)
 NXM-39	broadcast	menu	say5	Commentator	F9 Rules item 12: the color commentator's name, followed by the name (SZ.1, D-106)
 NXM-40	broadcast	menu	say5	Choose the commentator	the title of the list of names (SZ.1)
 NXM-41	broadcast	help	say5	 Up and Down move through the names. Typing letters jumps to a name. Enter chooses it, and Escape goes back without a change. The last item lets you type a name of your own. 	F1 in the list of names (SZ.1)
@@ -2050,6 +2063,7 @@ NXM-54	broadcast	menu	say5	Put the stadium sounds back	F9 Sounds item: the playe
 NXM-55	broadcast	prompt	say5	 this moves your own stadium and referee sound files to the removed sounds folder. Press Enter to do it, or any other key to cancel. 	the confirmation of that item (SZ.2)
 NXM-56	broadcast	sentence	say5	 <n> of your files were moved. The original sounds are back. 	after that item (SZ.2)
 NXM-57	broadcast	sentence	say5	 you have no stadium or referee sound files of your own. 	after that item when there is nothing to move (SZ.2)
+NXM-58	menus	menu	say5	Quarterbacks	F9, Rules, the item before Reset (D-132): every team's quarterbacks and the starter you choose
 NXB-S01	broadcast	menu	say5	The crowd cheers	crowd_cheer (SZ.2)
 NXB-S02	broadcast	menu	say5	The crowd roars	crowd_roar (SZ.2)
 NXB-S03	broadcast	menu	say5	The crowd groans	crowd_groan (SZ.2)
@@ -2086,3 +2100,23 @@ NXB-W07	playbooks	sentence	say5	 <list>. The playbook has no favourite play here
 NXB-W08	playbooks	sentence	say5	 <name> is one play, and Enter calls it. 	W on a single play: a quarterback run, a kneel, a spike, Field Goal, Punt, a favourite (SZ.7, D-112)
 NXB-W09	playbooks	sentence	say5	 W says which play the playbook would most likely pick. Press it on a play type, such as Short Pass, or in a list of plays. 	W on an item that is neither (Save Game, Time Out, Challenge, Formation and Tempo) (SZ.7, D-112)
 NXB-W10	playbooks	sentence	say5	 W needs a playbook. Choose one in the F9 menu, under Rules. 	W in a menu with the original's items only (SZ.7, D-112)
+NXJ-Q01	franchise	sentence	say5	 the quarterbacks of every team. Up and Down move through the teams, letters find one, and Enter lists a team's quarterbacks so you can choose who starts. 	F9, Rules, Quarterbacks: the title of the teams' list outside a franchise (D-132)
+NXJ-Q02	franchise	sentence	say5	 the <team>: <player> starts. 	a team's line in the quarterbacks' list (D-132)
+NXJ-Q03	franchise	sentence	say5	 behind him: <list>. 	a team's line in the quarterbacks' list: the other quarterbacks in depth order (D-132)
+NXJ-Q04	franchise	sentence	say5	 the <team> have no quarterback in the list. 	a team without a quarterback in rosters.txt or in the franchise (D-132)
+NXJ-Q05	franchise	sentence	say5	 the quarterbacks of the <team>, the starter first. Enter makes the one you hear the starter, from the next game. Escape goes back. 	the title of one team's quarterbacks outside a franchise (D-132)
+NXJ-Q06	franchise	menu	say5	<player>, starts	the starter in one team's list (D-132)
+NXJ-Q07	franchise	sentence	say5	 <player> is your starter. Enter on a practice squad quarterback makes him the starter instead. 	Enter on your own starter in a franchise (D-132)
+NXJ-Q08	franchise	sentence	say5	 <player> starts for the <team> from the next game. 	a starter chosen outside a franchise (D-132): saved in settings.txt
+NXJ-Q09	franchise	sentence	say5	 <player> already starts for the <team>. 	Enter on the starter outside a franchise (D-132)
+NXJ-Q10	franchise	sentence	say5	 the real players could not be read, so there is no list of quarterbacks. 	F9, Rules, Quarterbacks when the rosters cannot be read (D-132)
+NXJ-Q11	franchise	sentence	say5	 the quarterbacks of your franchise's teams. Up and Down move through the teams, letters find one. Enter on your own team lets you choose who starts. 	F9, Rules, Quarterbacks while a franchise is in use (D-132)
+NXJ-Q12	franchise	sentence	say5	 the <team>: <player>, rating <r>, age <a>, starts. 	a team's line in a franchise (D-132)
+NXJ-Q13	franchise	sentence	say5	 on the practice squad: <list>. 	a team's line in a franchise: its practice squad quarterbacks (D-132)
+NXJ-Q14	franchise	sentence	say5	<player>, rating <r>	a practice squad quarterback in a team's line (D-132)
+NXJ-Q15	franchise	sentence	say5	 your quarterbacks, the starter first. you have one quarterback place: a squad quarterback you make the starter signs to the roster, and the starter is released. Enter asks first. 	the title of your own quarterbacks in a franchise (D-132)
+NXJ-Q16	franchise	sentence	say5	<player>, rating <r>, age <a>, starts	your starter in a franchise (D-132)
+NXJ-Q17	franchise	sentence	say5	<player>, rating <r>, age <a>, practice squad	a practice squad quarterback of yours in a franchise (D-132)
+NXJ-Q18	franchise	sentence	say5	 the staff of the <team> chooses its own starter. 	Enter on another team in a franchise (D-132)
+NXJ-Q19	franchise	sentence	say5	 your practice squad has no quarterback. F9, Franchise, practice squad, add a free agent, can sign one. 	Enter on your own starter in a franchise with no squad quarterback (D-132)
+NXJ-Q20	franchise	sentence	say5	 the real players are used with the N. F. L. rules. choose the N. F. L. rules in this menu to hear and choose the quarterbacks. 	F9, Rules, Quarterbacks while the Rules are Classic (D-132)

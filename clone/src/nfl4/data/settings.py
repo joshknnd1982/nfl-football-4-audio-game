@@ -47,6 +47,7 @@ class GameSettings:
     nx_broadcast: bool = True    # the radio broadcast of the N. F. L. rules: the announcer's radio banter and Ghip, the color commentator (SY.1, rule 0.27)
     nx_menu_hints: int = 0       # how many program runs gave the hint of the play menus (where Right and M are); 3 or more: no more (SZ.5)
     nx_commentator: str = "Ghip"  # the color commentator's name (SZ.1, D-106): Ghip, a researched name or one the player typed
+    nx_qb_starters: str = ""      # D-132: the starters the player chose, "T05=Tyler Huntley; T12=Kenny Pickett" (extras/quarterbacks.py); "": the rosters' first
     nx_playbook_chosen: bool = False       # the player chose a playbook himself (a file from before SX.10e never did: its Classic, the old
     #                                        default, becomes the team's once)
     # the Franchise (SX.8a, NFL_FRANCHISE_DESIGN 10.5): nfl4 only; the Rules menu's reset leaves them alone

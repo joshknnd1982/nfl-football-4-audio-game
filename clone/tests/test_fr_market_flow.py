@@ -587,4 +587,4 @@ def test_the_franchise_menu_lists_the_free_agents_after_the_salary_cap(tmp_path,
     monkeypatch.setattr(spoken_menu.SpokenMenu, "__init__", spy)
     run(tmp_path, market_league(), keys=[F9, DOWN, DOWN, DOWN, DOWN, ENTER, ESC, ESC, ESC], until=lambda r: any(t == "Franchise" for t, _ in seen))
     franchise = [labels for title, labels in seen if title == "Franchise"][0]
-    assert franchise.index("free agents") == franchise.index("salary cap") + 1 and franchise[-1] == "play classic seasons"
+    assert franchise.index("free agents") == franchise.index("salary cap") + 1 and franchise[-2:] == ["play classic seasons", "get the latest calendar"]      # D-141

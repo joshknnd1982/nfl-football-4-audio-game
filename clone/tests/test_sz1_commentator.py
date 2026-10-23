@@ -168,7 +168,7 @@ def rules_menu(rig, keys):
 
 def test_the_rules_menu_has_the_commentator_before_reset_and_enter_chooses_a_name_from_the_list(tmp_path):
     rig = rig_for(tmp_path, [])
-    spoken = rules_menu(rig, [END, UP, ENTER, DOWN, ENTER])
+    spoken = rules_menu(rig, [END, UP, UP, ENTER, DOWN, ENTER])     # D-140: Quarterbacks between it and Reset
     assert "Commentator: Ghip" in spoken
     assert any(s.startswith("Choose the commentator. %d items." % (len(CO.NAMES) + 2)) for s in spoken)
     assert spoken[spoken.index("Alan Shearer")] == "Alan Shearer"
@@ -179,10 +179,10 @@ def test_the_rules_menu_has_the_commentator_before_reset_and_enter_chooses_a_nam
 
 def test_escape_in_the_list_changes_nothing_and_left_and_right_step_through_the_names(tmp_path):
     rig = rig_for(tmp_path, [])
-    spoken = rules_menu(rig, [END, UP, ENTER, DOWN, ESC])
+    spoken = rules_menu(rig, [END, UP, UP, ENTER, DOWN, ESC])
     assert rig.game.options.settings.game.nx_commentator == "Ghip" and not any("Commentator: Alan" in s for s in spoken)
     rig = rig_for(tmp_path / "step", [])
-    spoken = rules_menu(rig, [END, UP, 39, 39, 37])
+    spoken = rules_menu(rig, [END, UP, UP, 39, 39, 37])
     assert [s for s in spoken if s.startswith("Commentator:")] == ["Commentator: Ghip", "Commentator: Alan Shearer", "Commentator: Bill Simmons",
                                                                      "Commentator: Alan Shearer"]
     assert rig.game.options.settings.game.nx_commentator == "Alan Shearer"

@@ -46,6 +46,15 @@ def close_the_debug_log():
 
 
 @pytest.fixture(autouse=True)
+def no_player_calendars(monkeypatch):
+    """D-128: the Franchise reads the player's own schedule_<year>.txt from his customize folder first. A test never reads the real player's folder
+    (a calendar the owner downloaded would change what a later season plays); a test of the download points it at its own folder."""
+    from nfl4.extras.franchise import fixtures
+    monkeypatch.setattr(fixtures, "player_folder", lambda: os.path.join(os.sep, "nfl4-tests-no-player-calendars"))
+    yield
+
+
+@pytest.fixture(autouse=True)
 def keep_the_working_directory():
     """The program moves its own working directory out of its folder (data/lifecycle.py); a test that starts the whole
     program must not move the next tests' working directory."""

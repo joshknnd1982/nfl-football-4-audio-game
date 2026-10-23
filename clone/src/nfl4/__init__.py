@@ -11,5 +11,5 @@ Packages:
   data    per-user paths, settings, logging, the voice crash guard, the process's start and end
 """
 
-VERSION = "0.12.1"         # S8.3 round 2: the fifth test installer (full names of made-up players, the calendar notice, the stress-test fixes); 1.0.0 is the first release (P11)
+VERSION = "0.13.0"         # P8, 2026-10-23: the sixth test installer (the latest calendar, 14-team play-offs, the trade window, the quarterbacks' list); 1.0.0 is the first release (P11)
 TITLE = "NFL Football 4"

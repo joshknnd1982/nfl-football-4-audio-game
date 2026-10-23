@@ -51,11 +51,22 @@ franchise, never in a quick game or a classic season.
 every team and one bye week, with the real opponents and the real home and away games (the file `schedule_2026.txt` in the program's
 `assets\data` folder; the facts were read from the public nflverse schedule table, which follows the NFL's release, and checked against the
 NFL's announcement of the opener and of a team's last week; the source repository states no license, so only the facts of the schedule are used: the week, the two teams and the date). In your bye week the game tells you so and plays the other teams' games. The play
-offs follow week 18. The NFL publishes each year's schedule only when it is released, so from the second season the game uses the same calendar
-with the teams relabeled (the divisions of each conference rotate), which gives every team other opponents and keeps every rule of the calendar.
-That is an approximation, not the NFL's own rotation. A franchise that was started before this version keeps the season it is in, with the
-original's 16 random weeks, and plays the real calendar from its next season. If the calendar file is missing or damaged, the game says once
-that the real calendar could not be read and plays that season with the original's 16 weeks; the next season tries the file again.
+offs follow week 18. The NFL publishes each year's schedule only when it is released. When it is, the maintainer publishes it in the game's
+GitHub repository (the `calendars` folder), and F9, Franchise, "get the latest calendar" (the last item) downloads it, only when you choose it:
+the game checks that it is a whole calendar, saves it in your customize folder and says what it got, or why not. You can also put a
+`schedule_<year>.txt` in your customize folder yourself. A season plays its own year's calendar when the game has one; otherwise it uses the
+newest calendar the game has with the teams relabeled (the divisions of each conference rotate), which gives every team other opponents and
+keeps every rule of the calendar. That is an approximation, not the NFL's own rotation. A franchise that was started before this version keeps
+the season it is in, with the original's 16 random weeks, and plays the real calendar from its next season. If the calendar file is missing or
+damaged, the game says once that the real calendar could not be read and plays that season with the original's 16 weeks; the next season tries
+the file again.
+
+**The play-offs.** A franchise on the real calendar has the NFL's play-offs: 7 teams in each conference, the four division winners seeded 1 to 4
+by their record and three wild cards seeded 5 to 7. Only seed 1 rests in the wild card round, where 2 hosts 7, 3 hosts 6 and 4 hosts 5. In the
+division round seed 1 hosts the lowest seed left and the other two winners meet at the better seed, and the better seed hosts the conference
+championship. At the end of the regular season the game names the division winners, the wild cards and the two teams with a bye. The order of
+the teams follows the game's own rule (the most wins, a tie counting half a win), not the NFL's long list of tie-breakers. Classic and a
+franchise on the original's 16 weeks keep the original's 12 teams.
 
 **Practice squads.** Every team keeps a practice squad of up to 16 players (at most 6 of them veterans), the players who practice with the team but do not play unless they are elevated or signed. The squads are formed at the start of each season from the players cut and let go in the offseason, each team taking its own first; places nobody filled get young made-up players, so a new franchise has full squads from week 1. When an injury leaves a position with nobody fit to play, a squad player of that position is elevated to play (up to 3 times in a regular season, any number of times in the play-offs) before a made-up stand-in is used, and the week's injury report says so. F9, Franchise, practice squad (the tenth item) lets you hear your squad, sign a squad player to your roster for the minimum salary, add a free agent of the season to the squad, or release a squad player. Squad salaries count against the salary cap. The squads end with the season. Other teams do not sign players from your squad in this version.
 
@@ -65,10 +76,18 @@ older version gets the first names when it is opened; the players of your own te
 
 **Free agents and trades.** In the regular season, F9, Franchise, free agents lets you sign a free agent any week before the kick-off: choose
 the position, the player and, when you have no open place there, the player of that position you release (his dead money counts against the
-salary cap). Trades (F9, Franchise, trades) are open until the trade deadline, which is the kick-off of week 10 of the real calendar (the NFL's
-deadline of 2026 is the day after week 9) and of week 9 of a season with the original's 16 weeks, and again in free agency of the offseason,
-before the draft. The news at the start of the season says where they are, and the week before the deadline, its last week and the week after it
-are told too.
+salary cap). Trades (F9, Franchise, trades) are open from free agency of the offseason until the trade deadline, which is the kick-off of week 10
+of the real calendar (the NFL's deadline of 2026 is the day after week 9) and of week 9 of a season with the original's 16 weeks: before the
+draft, after it, after the roster cut and before week 1 too, as in the NFL. They are closed while the draft is under way and while the roster
+cut is being decided, and from the draft to week 1 a trade is player for player (draft picks can be traded again when the season begins). The
+news at the start of the season says where they are, and the week before the deadline, its last week and the week after it are told too.
+
+**Quarterbacks.** F9, Rules, Quarterbacks (the item before Reset) lists every team's quarterbacks. Outside a franchise they are the real
+players of the rosters, the starter first; Enter on a team lists its quarterbacks, and Enter on one makes him that team's starter from the next
+game (the choice is kept in settings.txt, and a new franchise starts with him as the team's quarterback). In a franchise the list has every
+team's starter and its practice squad quarterbacks. Your roster has one quarterback place, so on your own team a practice squad quarterback you
+make the starter signs to the roster for the minimum and your starter is released (the game says his dead money and asks first). The other
+teams' staffs choose their own starters.
 
 ### Your own words
 

@@ -78,8 +78,11 @@ def closed_reason(g, league) -> str | None:
     if g.play_engine is not None:
         return X.text("NXX-16")
     if TR.closed_in_offseason_moves(league):
+        debuglog.event("franchise", "trades_closed", why="draft or cut in progress", stage=league.stage, stage_no=league.stage_no)    # rule 0.15
         return X.text("NXX-37")                                     # D-130: the draft or the roster cut is in progress
     if not TR.in_window(league, league.gtp):
+        debuglog.event("franchise", "trades_closed", why="outside the window", stage=league.stage, stage_no=getattr(league, "stage_no", 0),
+                       week=league.gtp)
         return X.text("NXX-15", n=TR.last_week(league))
     return None
 

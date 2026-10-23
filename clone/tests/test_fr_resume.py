@@ -200,7 +200,7 @@ def test_the_rules_item_says_the_franchise_uses_the_nfl_rules_only_while_they_ar
     rig = franchise_rig(tmp_path, script, policy=quit_policy)
     run_until(rig)
     text = spoken(rig)
-    opening = [t for t in text if t.startswith("Rules. 13 items")][0]     # SY.1: Broadcast is the tenth switch, SY.2: Stadium sounds the eleventh, SZ.1: Commentator the twelfth
+    opening = [t for t in text if t.startswith("Rules. 14 items")][0]     # D-140: Quarterbacks the thirteenth item     # SY.1: Broadcast is the tenth switch, SY.2: Stadium sounds the eleventh, SZ.1: Commentator the twelfth
     assert "Rules: N. F. L. rules. the franchise uses the N. F. L. rules." in opening
     changed = text[text.index(opening) + 1]
     assert "Rules: Classic" in changed and "the franchise uses" not in changed and X.text("NXF-04") in changed

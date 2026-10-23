@@ -314,7 +314,8 @@ def test_the_help_of_a_franchise_has_its_lines_for_f5_f6_and_f7_after_the_rules_
     assert g.franchise_help("116") == [X.text("NXH-34")]
     assert g.franchise_help("117") == [X.text("NXH-35"), X.text("NXH-37"), X.text("NXH-39"), X.text("NXH-40"), X.text("NXH-41"),
                                        X.text("NXH-42"), X.text("NXH-43"), X.text("NXH-44"), X.text("NXH-45"),
-                                       X.text("NXH-46"), X.text("NXH-72"), X.text("NXH-74")]       # D-136: the practice squad; SX.8k: injuries; SX.8l: your job; SX.8m: the market's later items; SX.8n: the people; SX.8o: the game's
+                                       X.text("NXH-46"), X.text("NXH-72"), X.text("NXH-74"),
+                                       X.text("NXH-76"), X.text("NXH-77"), X.text("NXH-78")]       # D-138, D-141, D-140       # D-136: the practice squad; SX.8k: injuries; SX.8l: your job; SX.8m: the market's later items; SX.8n: the people; SX.8o: the game's
     assert g.franchise_help("118") == [X.text("NXH-36"), X.text("NXH-38"), X.text("NXH-73")]
     assert g.franchise_help("119") == [] and all(len(X.text(i)) < 200 for i in ("NXH-34", "NXH-35", "NXH-36", "NXH-37", "NXH-38"))
     before = len(spoken(rig))

@@ -269,4 +269,4 @@ def test_the_menu_of_the_franchise_lists_the_salary_cap_after_the_team_ratings(t
     monkeypatch.setattr(spoken_menu.SpokenMenu, "__init__", spy)
     offseason_rig(tmp_path, cut_league(), keys=[F9, DOWN, DOWN, DOWN, DOWN, ENTER, ESC, ESC, ESC], until=lambda r: any(t == "Franchise" for t, _ in seen))
     franchise = [labels for title, labels in seen if title == "Franchise"][0]
-    assert franchise.index("salary cap") == franchise.index("team ratings") + 1 and franchise[-1] == "play classic seasons"
+    assert franchise.index("salary cap") == franchise.index("team ratings") + 1 and franchise[-2:] == ["play classic seasons", "get the latest calendar"]      # D-141

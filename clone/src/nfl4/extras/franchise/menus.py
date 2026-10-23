@@ -20,7 +20,8 @@ from . import history, honors_flow, market_flow, mode, news, signings_flow, staf
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
-HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45", "NXH-46", "NXH-72", "NXH-74"),
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45", "NXH-46", "NXH-72", "NXH-74",
+                "NXH-76", "NXH-77", "NXH-78"),
               "118": ("NXH-36", "NXH-38", "NXH-73")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
@@ -298,6 +299,12 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(picks_label, enter=lambda: (cycle(), picks_label())[1], change=cycle)]
         SpokenMenu(speech, keys, X.text("NXF-16"), items, space_enters=True, digits_jump=True).run()
 
+    # ----- the latest N. F. L. calendar (D-128, NXF-48) -----
+
+    def latest_calendar():
+        from . import calendar_flow
+        return calendar_flow.run(g, speech, keys, store if store.exists else None)
+
     # ----- between the kinds of season (design 3.5) -----
 
     def confirmed(text_id: str) -> bool:
@@ -334,6 +341,7 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(lambda: X.text("NXF-14"), enter=history_menu)]
     else:
         items = [Item(lambda: X.text("NXF-19"), enter=ask_switch("franchise", "NXF-27"))]
+    items.append(Item(lambda: X.text("NXF-48"), enter=latest_calendar))      # D-128: the last item in every case (only when the player asks)
     try:
         SpokenMenu(speech, keys, X.text("NXF-10"), items, space_enters=True, digits_jump=True).run()
     except _Closed:

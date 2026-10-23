@@ -10,6 +10,27 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.13.0 (2026-10-23, test build)
+
+### Get the latest NFL calendar
+A franchise plays the real 2026 schedule. When the NFL releases a new season's schedule, it is published in the game's GitHub repository, and the game can fetch it, only when you ask.
+- How to test: F9, Franchise, the last item, "get the latest calendar". The game says it is asking, then one sentence: today GitHub has only the 2026 calendar, so it should say you have the newest one already. Unplug the network or turn Wi-Fi off and try again: it should say it could not reach GitHub. Press Escape while it is asking: it should stop at once.
+- Tell us: is the waiting sentence clear? Did anything take longer than about 15 seconds?
+
+### The NFL's 14-team play-offs in a franchise
+A franchise on the real calendar now has the NFL's play-offs: 7 teams in each conference, and only the top seed rests in the wild card round (six wild card games). The division round is reseeded: the top seed plays the lowest seed left. Classic and a franchise on the original's 16 weeks keep the original's 12 teams. A franchise saved in the middle of its play-offs by 0.12.1 finishes them as they began.
+- How to test: play a franchise season to the end (F9, Franchise, franchise settings, the staff and a short offseason make it faster). After week 18 the game names the division winners, three wild cards in each conference and "the top seeds ... have the only byes of the wild card round". Listen to the wild card games: six of them.
+- Tell us: does the end of the regular season tell you enough about who plays whom?
+
+### Trades from free agency to the deadline
+Trades are open in the offseason from free agency on: before the draft, after it, after the roster cut and before week 1, then in the season until the deadline. They are closed while the draft is under way and while the roster cut is decided, and from the draft to week 1 a trade is player for player (no draft picks).
+- How to test: in a franchise's offseason, at the end of the draft stage and at the end of the roster cut stage, press F9, Franchise, trades, and offer a player or ask for one. During the cut's own question the menu should say trades are closed. "Your draft picks" after the draft should say picks can be traded again when the season begins.
+
+### Every team's quarterbacks, and you choose who starts
+F9, Rules, Quarterbacks (the item before Reset) lists every team's quarterbacks with the starter first. Outside a franchise, Enter on a team lists its real quarterbacks and Enter on one makes him the starter from the next game; the choice is kept, and a new franchise starts with him. In a franchise the list has every team's starter and its practice squad quarterbacks; on your own team, a practice squad quarterback you make the starter signs to your roster and your starter is released (the game says the dead money and asks first).
+- How to test: with the N. F. L. rules and no franchise, F9, Rules, Quarterbacks, choose a team and its second quarterback, then play a quick game with that team: the game names him as your quarterback. In a franchise, open the list on your own team and choose a practice squad quarterback.
+- Tell us: in a franchise, would you rather keep the old starter as a backup? (The franchise roster has one quarterback place, so this build releases him.)
+
 ## 0.12.1 (2026-10-23, test build)
 
 ### Practice squads in the Franchise

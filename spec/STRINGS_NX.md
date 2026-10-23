@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2084.
+- Texts: 2121.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -14,9 +14,9 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 89.
 - Playbooks (design section 10): 828.
-- Menus and settings (design 10.4, 12): 56.
+- Menus and settings (design 10.4, 12): 58.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 609.
+- Franchise (design section 11): 644.
 - The real coaches and players (NX-N, SX.11): 7.
 - The radio broadcast: banter and Ghip (SY.1, rule 0.27): 362.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
@@ -1141,6 +1141,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXB-T19 (piece, piece): "defender". the word where the position is not known (SY.5)
 - NXB-T21 (sentence, say5): " that play is not a pass. ". R on a play that is not a pass (SY.4)
 - NXH-69 (help, say5): " R in the offense menu chooses who your next pass goes to, a running back too when the play can throw to one. L in the defense menu chooses who blitzes. Enter keeps the play's own pick. ". F6 addition (SY.4, SY.5)
+- NXH-75 (help, say5): " F9, Rules, Quarterbacks lists every team's quarterbacks. Enter on a team lists them, and Enter on one makes him the team's starter from the next game. ". F6 addition (D-132)
+- NXM-58 (menu, say5): "Quarterbacks". F9, Rules, the item before Reset (D-132): every team's quarterbacks and the starter you choose
 
 ## Statistics lines (C7, H11)
 
@@ -1511,7 +1513,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXX-12 (menu, say5): "ask for a player". F9 trades
 - NXX-13 (menu, say5): "your draft picks". F9 trades
 - NXX-14 (menu, say5): "trades this season". F9 trades
-- NXX-15 (sentence, say5): " trades are closed. they open again in free agency and in the next regular season, until the kick-off of week <n>. ". F9 trades outside the window
+- NXX-15 (sentence, say5): " trades are closed. they open again in free agency and stay open until the kick-off of week <n> of the next regular season. ". F9 trades outside the window (D-130: open from free agency to the deadline)
 - NXX-16 (sentence, say5): " trades are closed during a game. ". F9 trades inside a game
 - NXX-17 (sentence, say5): " no team makes an offer for <give>. ". F9 trades: nobody wants the player on the block
 - NXX-18 (sentence, say5): " the <team> give <get>, rating <r>, age <a>. <picks> ". F9 trades: one offer for the player on the block
@@ -1525,7 +1527,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXX-27 (sentence, say5): " a player traded this season cannot be traded again until the next season. ". F9 trades
 - NXK-14 (sentence, say2): " the draft has 7 rounds. your picks: <list>. ". stage 4 when a trade moved a pick of the player's team (SX.8j)
 - NXK-15 (piece, piece): "round <round> pick <pick>". stage 4: one of the player's picks
-- NXH-41 (help, say5): " Trades: until the trade deadline, and in free agency, teams swap players of the same position, with picks to even the value. Offers come in your to do list; F9 has trades. ". F6, after NXH-40 (SX.8j)
+- NXH-41 (help, say5): " Trades: from free agency to the trade deadline, teams swap players of the same position, with picks to even the value; from the draft to week 1 without picks. F9 has trades. ". F6 while the franchise is in use (SX.8j; D-130: the window from free agency to the deadline)
 - NWX01 (remark, say2): " the <team> traded <player>, <position>, to the <other>. ". a trade between two other teams (news)
 - NWX02 (remark, say2): " a trade: <player> goes from the <team> to the <other>. ". a trade between two other teams (news)
 - NWX03 (remark, say2): " the <other> got <player>, <position>, from the <team> in a trade. ". a trade between two other teams (news)
@@ -1538,6 +1540,8 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXX-32 (sentence, say2): " this is the last week for trades. the deadline is the kick-off. ". the news of the deadline's week (SZ.8)
 - NXX-33 (sentence, say2): " the trade deadline has passed. trades open again in free agency. ". the news of the week after the deadline (SZ.8)
 - NXX-35 (sentence, say5): " in the offseason: the <team> traded <give> to the <other> for <get>. <picks> ". F9 trades: a trade of the offseason (SZ.8), the season's list otherwise says the week
+- NXX-36 (sentence, say5): " from the draft to week 1 a trade is player for player: draft picks can be traded again when the regular season begins. ". F9 trades, your draft picks, after the draft has begun and before week 1 (D-130)
+- NXX-37 (sentence, say5): " trades are closed while the draft is under way and while the roster cut is decided. they open again when it is done. ". F9 trades in the offseason during the draft or the roster cut (D-130)
 - NXI-10 (sentence, say2): " <player>, <position>, is out with <injury>, <lo> to <hi> weeks. ". a new injury, out, the range (SX.8k)
 - NXI-11 (sentence, say2): " <player>, <position>, is out with <injury>, <n> weeks. ". a new injury, out, the range is one number (SX.8k)
 - NXI-12 (sentence, say2): " <player>, <position>, is out with <injury> for the season. ". a new injury that lasts past week 16 (SX.8k)
@@ -1645,6 +1649,15 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXV-30 (sentence, say5): " the owner's goal this season: <goal>. ". F9, franchise, your job and staff
 - NXV-31 (sentence, say5): " your job rating: <a> of 100. ". F9, franchise, your job and staff
 - NXF-45 (menu, say5): "your job and staff". F9 Franchise item (SX.8l)
+- NXF-48 (menu, say5): "get the latest calendar". F9, Franchise, the last item (D-128): download the newest N. F. L. schedule_<year>.txt from the game's GitHub repository, only when chosen
+- NXF-49 (sentence, say5): " asking the game's page on GitHub for the newest N. F. L. calendar. this takes a few seconds. Escape stops it. ". F9, Franchise, get the latest N. F. L. calendar, while the request runs (D-128)
+- NXF-50 (sentence, say5): " the <year> calendar is saved in your customize folder. your franchise plays it in its <year> season. ". the download's result (D-128): a newer calendar, for a season the franchise has not begun
+- NXF-51 (sentence, say5): " you have the newest calendar already, the one of <year>. the N. F. L. releases each season's schedule in the spring. ". the download's result (D-128): nothing newer is published
+- NXF-52 (sentence, say5): " the game could not reach GitHub. check the internet connection and try again later. nothing was changed. ". the download's result (D-128): no connection, no answer in time
+- NXF-53 (sentence, say5): " the calendar on GitHub is not a whole N. F. L. calendar, so it was not saved. ". the download's result (D-128): the parser refused the file (the log has the reason)
+- NXF-54 (sentence, say5): " you stopped the download. ". the download's result (D-128): Escape during the request
+- NXF-55 (sentence, say5): " the calendar could not be saved in your customize folder. nothing was changed. ". the download's result (D-128): the folder cannot be written
+- NXF-56 (sentence, say5): " the <year> calendar is saved in your customize folder. a franchise plays it in its <year> season. ". the download's result (D-128): saved, and no franchise, or a franchise past that season
 - NXH-43 (help, say5): " Your job: the owner sets a goal each season and rates you from 0 to 100; a low rating costs your job unless you won more than you lost. Your coordinators' styles are your team playbook. ". F6, after NXH-42 (SX.8l)
 - NXV-09 (sentence, say2): " the owner has fired you. your job rating was <a>, after 1 win and <l> losses. ". stage 9: NXV-10 for a season of one win
 - NXV-32 (sentence, say5): " the owner has fired you. choose your new team at the question. ". F9, franchise, your job and staff, while the job question waits
@@ -1762,9 +1775,33 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXC-22 (menu, say5): " 1. see this week's games ". the main menu's first choice in the bye week (SZ.8), in the place of ' 1. play game '
 - NXC-23 (sentence, say2): " Your team has a bye this week. There is no game today. ". 'Today's game is ...' in the bye week (SZ.8)
 - NXC-24 (sentence, say2): " your team has a bye this week. ". the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
+- NXC-25 (sentence, say4): " the top seeds, the <team> and the <other>, have the only byes of the wild card round. ". the end of a regular season on the real calendar (D-129, the N. F. L.'s 14-team play-offs), after the N. F. C. wild card teams: the A. F. C.'s seed 1, then the N. F. C.'s
 - NXH-72 (help, say5): " Practice squad: up to 16 players, at most 6 veterans, formed at the roster cut. A squad player is elevated when an injury leaves his position with nobody, up to 3 times a season. ". F6 while the franchise is in use (D-136)
 - NXH-73 (help, say5): " Practice squad: the players a team keeps to practice with it but who do not play unless they are elevated for a game or signed. Elevated: moved up from the practice squad for one game. ". F7 glossary while the franchise is in use (D-136)
 - NXH-74 (help, say5): " F9, Franchise, practice squad: sign a squad player to your roster, add a free agent to the squad, or release a squad player. ". F6 while the franchise is in use (D-136)
+- NXH-76 (help, say5): " The play-offs of a franchise on the real calendar are the N. F. L.'s: 7 teams in each conference, and only the top seed rests in the wild card round. The division round is reseeded. ". F6 while the franchise is in use (D-129)
+- NXH-77 (help, say5): " F9, Franchise, get the latest N. F. L. calendar asks the game's page on GitHub for the newest schedule, only when you choose it. ". F6 while the franchise is in use (D-128)
+- NXH-78 (help, say5): " In a franchise, F9, Rules, Quarterbacks lists every team's starter and its practice squad quarterbacks; on your team a practice squad quarterback can become the starter. ". F6 while the franchise is in use (D-132)
+- NXJ-Q01 (sentence, say5): " the quarterbacks of every team. Up and Down move through the teams, letters find one, and Enter lists a team's quarterbacks so you can choose who starts. ". F9, Rules, Quarterbacks: the title of the teams' list outside a franchise (D-132)
+- NXJ-Q02 (sentence, say5): " the <team>: <player> starts. ". a team's line in the quarterbacks' list (D-132)
+- NXJ-Q03 (sentence, say5): " behind him: <list>. ". a team's line in the quarterbacks' list: the other quarterbacks in depth order (D-132)
+- NXJ-Q04 (sentence, say5): " the <team> have no quarterback in the list. ". a team without a quarterback in rosters.txt or in the franchise (D-132)
+- NXJ-Q05 (sentence, say5): " the quarterbacks of the <team>, the starter first. Enter makes the one you hear the starter, from the next game. Escape goes back. ". the title of one team's quarterbacks outside a franchise (D-132)
+- NXJ-Q06 (menu, say5): "<player>, starts". the starter in one team's list (D-132)
+- NXJ-Q07 (sentence, say5): " <player> is your starter. Enter on a practice squad quarterback makes him the starter instead. ". Enter on your own starter in a franchise (D-132)
+- NXJ-Q08 (sentence, say5): " <player> starts for the <team> from the next game. ". a starter chosen outside a franchise (D-132): saved in settings.txt
+- NXJ-Q09 (sentence, say5): " <player> already starts for the <team>. ". Enter on the starter outside a franchise (D-132)
+- NXJ-Q10 (sentence, say5): " the real players could not be read, so there is no list of quarterbacks. ". F9, Rules, Quarterbacks when the rosters cannot be read (D-132)
+- NXJ-Q11 (sentence, say5): " the quarterbacks of your franchise's teams. Up and Down move through the teams, letters find one. Enter on your own team lets you choose who starts. ". F9, Rules, Quarterbacks while a franchise is in use (D-132)
+- NXJ-Q12 (sentence, say5): " the <team>: <player>, rating <r>, age <a>, starts. ". a team's line in a franchise (D-132)
+- NXJ-Q13 (sentence, say5): " on the practice squad: <list>. ". a team's line in a franchise: its practice squad quarterbacks (D-132)
+- NXJ-Q14 (sentence, say5): "<player>, rating <r>". a practice squad quarterback in a team's line (D-132)
+- NXJ-Q15 (sentence, say5): " your quarterbacks, the starter first. you have one quarterback place: a squad quarterback you make the starter signs to the roster, and the starter is released. Enter asks first. ". the title of your own quarterbacks in a franchise (D-132)
+- NXJ-Q16 (sentence, say5): "<player>, rating <r>, age <a>, starts". your starter in a franchise (D-132)
+- NXJ-Q17 (sentence, say5): "<player>, rating <r>, age <a>, practice squad". a practice squad quarterback of yours in a franchise (D-132)
+- NXJ-Q18 (sentence, say5): " the staff of the <team> chooses its own starter. ". Enter on another team in a franchise (D-132)
+- NXJ-Q19 (sentence, say5): " your practice squad has no quarterback. F9, Franchise, practice squad, add a free agent, can sign one. ". Enter on your own starter in a franchise with no squad quarterback (D-132)
+- NXJ-Q20 (sentence, say5): " the real players are used with the N. F. L. rules. choose the N. F. L. rules in this menu to hear and choose the quarterbacks. ". F9, Rules, Quarterbacks while the Rules are Classic (D-132)
 
 ## The real coaches and players (NX-N, SX.11)
 
