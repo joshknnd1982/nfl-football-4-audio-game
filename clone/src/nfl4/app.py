@@ -95,6 +95,8 @@ def main(argv=None) -> int:
                                         arm=lambda voice_id: guard.arm(voice_id) if voice_id else None,
                                         clear=lambda voice_id: guard.clear(voice_id) if voice_id else None)
     speech_holder["speech"] = speech
+    if getattr(speech, "jaws", None) is not None:
+        speech.jaws.key_waiting = keys.key_waiting     # 2026-10-23: a key ends a JAWS wait from its earliest end (speech/jaws.py)
     debuglog.event("speech", "started", ok=started.ok, voices=started.voice_count, voice=started.voice_name,
                    error=started.error or None, crashed_voices_skipped=len(crashed) or None)
     if not started.ok:

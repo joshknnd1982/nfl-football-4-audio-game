@@ -36,6 +36,7 @@ import copy
 import logging
 from dataclasses import asdict, dataclass, fields, replace
 
+from ..data import debuglog
 from ..data.files.savedgame import STATISTICS
 from ..game import outcome as O
 from ..game.gamestate import own_half
@@ -129,6 +130,7 @@ class PenaltyFlow:
         self.rules = rules
         self.down: PEN.Down | None = None     # the down at the snap (or the kick-off)
         self.stats = None                     # the statistics at the snap (a play the penalty erases did not happen)
+        self.referee_said = ""                # the referee's last result (ref_result): a note of apply() that repeats it is not said again
         self.qb_stats = None                  # and the quarterback's runs (SX.5)
         self.late: Flag | None = None         # a late hit on a slider waiting for the end of the play (SX.5)
         self.waiting: Flag | None = None      # an at-snap foul, announced at the end of the play
@@ -422,6 +424,8 @@ class PenaltyFlow:
     def announce(self, state, flags: list[Flag], dead: bool) -> None:
         g = self.game
         g.ptf = 1
+        if flags:
+            self.rules.stadium.penalty(state, flags[0].side)     # the crowd answers the flag as it is thrown (2026-10-23)
         say = self.rules.ref_says                    # SY.3: the referee's microphone (the announcer's say4 when the broadcast is off)
         if dead:
             say(X.text("NXP-02"), last=False)
@@ -537,7 +541,10 @@ class PenaltyFlow:
         state.interception_flag = state.fumble_flag = state.downs_flag = False
         state.punt_flag = 0
         state.return_flag = False
+        said_by_referee, self.referee_said = self.referee_said, ""
         for note in result.notes:
+            if said_by_referee and note.strip().rstrip(".").strip() in said_by_referee:
+                continue                                         # the referee's result has just said it (rule 0.28 (3))
             g.say4(note)
         if result.untimed:
             x.extension = True
@@ -576,7 +583,6 @@ class PenaltyFlow:
                       "<quarterback>": state.quarterbacks.get(flag.side, ""), "<surname>": self.surname(state, flag)}
             remarks.say_remark(g, state, state.extras, "PN", values)
         self.rules.broadcast.penalty(state, flag.side)          # SY.1: Ghip's own line after an accepted penalty (his own draws)
-        self.rules.stadium.penalty(state, flag.side)            # SY.2: the flag and the crowd
 
     @staticmethod
     def half_over(state) -> bool:
@@ -659,11 +665,32 @@ class PenaltyFlow:
             return self.suspend(state, flag, accepted, declined)
         if answer == DECLINE:
             self.note(state, "declined", flag)
+            self.ref_result(state, flag, False, declined)
             return None
         self.note(state, "accepted", flag, accepted.yards)
+        self.ref_result(state, flag, True, accepted)
         then = self.apply(state, flag, accepted)
         self.remark(state, flag)
         return then
+
+    def ref_result(self, state, flag: Flag, accepted: bool, result: PEN.Result) -> None:
+        """The referee's last words on the foul, as an NFL referee says them (a tester, 2026-10-23: "you don't hear the referee announcement
+        of a penalty"): accepted or declined, the yards, and the down that follows. After the computer's own answer (NXP-06, NXP-07) the
+        accepted or declined is not said twice."""
+        offended = 2 if flag.side == 1 else 1
+        by_computer = offended in self.rules.auto_sides
+        situation = PEN.situation(result, self.down.offense)
+        if accepted:
+            yards = abs(int(result.yards or 0))
+            if by_computer:
+                text = X.text("NXP-26", yards=yards, situation=situation) if yards else X.text("NXP-27", situation=situation)
+            else:
+                text = X.text("NXP-24", yards=yards, situation=situation) if yards else X.text("NXP-28", situation=situation)
+        else:
+            text = X.text("NXP-27", situation=situation) if by_computer else X.text("NXP-25", situation=situation)
+        debuglog.event("penalty", "referee_result", foul=flag.foul.id, accepted=accepted, by_computer=by_computer, text=text)
+        self.referee_said = text
+        self.rules.ref_says(text)
 
     # ----- Save Game at the prompt (C10, SX.9) -----
 

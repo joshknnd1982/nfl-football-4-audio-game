@@ -229,12 +229,12 @@ class GameSounds:
         self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT) and (end is None or self.clock() < end))
         self.audio.stop(SLOT_ONESHOT)
 
-    def play_effect(self, path: str, level: int = 0) -> None:
+    def play_effect(self, path: str, level: int = 0, slot: int = EXTRA_SLOT) -> None:
         """A stadium sound of the N. F. L. rules (SY.2, extras/stadium.py): the file once on the extra channel, `level` hundredths of a
         decibel under the sound volume. Nothing waits for it, no key stops it, no random number is drawn; a file that cannot be used plays
         nothing (the library logs it)."""
         try:
-            self.audio.play_file(EXTRA_SLOT, path, int(level) + self.wavol)
+            self.audio.play_file(slot, path, int(level) + self.wavol)
         except Exception as exc:
             log.warning("a stadium sound could not be played: %s", exc)
 

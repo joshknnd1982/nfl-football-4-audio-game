@@ -38,7 +38,24 @@ exe, bits, scratch = sys.argv[1], int(sys.argv[2]), sys.argv[3]
 SOUND_VOLUME = int(sys.argv[4]) if len(sys.argv) > 4 else -34   # decibels below full (about 2 percent); -50 makes a control run: hardly any sound
 # "jaws" with JAWS not running checks the fallback to SAPI 5 inside the built exe (one expected warning)
 OUTPUT = sys.argv[5] if len(sys.argv) > 5 else "sapi"
+# S8.3 round 2: a customization file the start reads, in a bad state: "teams_old:<file>" (teams.txt as 0.11.0 wrote it, made by
+# work\s83b\make_old_teams.py: T24 = Redskins, the one-time rename to the Commanders must happen) or "teams_junk" (binary bytes in place of
+# teams.txt: healed, one expected warning). This tool's Python has no audioop, so it cannot import the game to make the file itself.
+DAMAGE = sys.argv[6] if len(sys.argv) > 6 else "none"
 os.makedirs(scratch, exist_ok=True)
+customize_dir = os.path.join(scratch, "customize")
+teams_path = os.path.join(customize_dir, "teams.txt")
+if DAMAGE != "none":
+    shutil.rmtree(customize_dir, ignore_errors=True)
+    os.makedirs(customize_dir)
+    if DAMAGE.startswith("teams_old:"):
+        shutil.copyfile(DAMAGE.split(":", 1)[1], teams_path)
+        DAMAGE = "teams_old"
+    elif DAMAGE == "teams_junk":
+        with open(teams_path, "wb") as handle:
+            handle.write(bytes(range(256)) * 40)
+    else:
+        raise SystemExit("unknown damage " + DAMAGE)
 with open(os.path.join(scratch, "settings.txt"), "w", encoding="utf-8") as handle:
     handle.write("# NFL Football 4 settings, format 1\n" + "".join(f"volume_{role} = 0\n" for role in (
         "announcer", "own_quarterback", "own_punter", "opponent_quarterback", "opponent_punter")) +
@@ -185,8 +202,18 @@ made = subprocess.run([exe, "--problem-report", "--quiet", "--folder=" + report_
 zips = [n for n in os.listdir(report_out)] if os.path.isdir(report_out) else []
 check("--problem-report makes one zip without a window", made.returncode == 0 and len(zips) == 1, made.stdout.strip()[:100])
 bad = [l for l in text.splitlines() if (" WARNING " in l or " ERROR " in l or "Traceback" in l)
-       and not (OUTPUT != "sapi" and "preferred engine unavailable" in l)]
+       and not (OUTPUT != "sapi" and "preferred engine unavailable" in l)
+       and not (DAMAGE == "teams_junk" and "teams.txt" in l and "Traceback" not in l)]
 check("no warnings or errors in the log", not bad, "; ".join(bad[:3]))
+if DAMAGE == "teams_old":
+    now = open(teams_path, encoding="utf-8-sig").read() if os.path.isfile(teams_path) else ""
+    check("an older teams.txt became the Commanders once and the player's file was kept",
+          "= Commanders" in now and os.path.isfile(teams_path + ".before-commanders")
+          and "= Redskins" in open(teams_path + ".before-commanders", encoding="utf-8-sig").read())
+    check("the rename is in the log", " teams_renamed " in text)
+elif DAMAGE == "teams_junk":
+    now = open(teams_path, encoding="utf-8-sig", errors="replace").read() if os.path.isfile(teams_path) else ""
+    check("a teams.txt of binary junk was healed and the program still started", "T24" in now and WELCOME in text)
 spoken = [l.split("speak ", 1)[1] for l in text.splitlines() if "speak " in l]
 print("  spoken:", *[s[:60] for s in spoken[:8]], sep="\n    ")
 
@@ -213,7 +240,7 @@ count = len([f for f in os.listdir(sounds) if f.lower().endswith(".wav")]) if os
 check("26 wavs beside the exe", count == 26, f"{count}")
 stadium = os.path.join(os.path.dirname(exe), "assets", "sounds_nx")
 count = len([f for f in os.listdir(stadium) if f.lower().endswith(".wav")]) if os.path.isdir(stadium) else 0
-check("19 stadium wavs beside the exe (SY.2, SY.3)", count == 19, f"{count}")
+check("22 stadium wavs beside the exe (SY.2, SY.3, the tester of 2026-10-23)", count == 22, f"{count}")
 data = os.path.join(os.path.dirname(exe), "assets", "data")
 check("the names data beside the exe", all(os.path.exists(os.path.join(data, n)) for n in ("rosters.txt", "coaches.txt", "surnames.txt", "respellings.txt", "schedule_2026.txt")))
 print("ALL PASS" if all(results) else "SOME FAILED")

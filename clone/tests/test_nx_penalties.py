@@ -98,7 +98,9 @@ def test_the_player_accepts_defensive_holding_with_enter_and_gets_the_first_down
     assert said[i + 1:i + 6] == [" defensive holding, on the Jets, ODef4. ",
                                  " Kim if you accept the penalty, it will be first and 10 on your 35 yard line. ",
                                  " if you decline it, it will be second and 10 on your 30 yard line. ", " accept ",
-                                 X.text("NXP-09")]
+                                 X.text("NXP-24", yards=5, situation="it will be first and 10 on your 35 yard line"),      # the referee (2026-10-23)
+                                 X.text("NXP-09")][:5]
+    assert said[i + 5:i + 7] == [X.text("NXP-24", yards=5, situation="it will be first and 10 on your 35 yard line"), X.text("NXP-09")]
     s = rig.engine.s
     assert step == rig.engine.position and s.text == P.ITS
     assert (s.half, s.yard_line, s.down, s.to_go) == (2, 35, 1, 10)
@@ -117,7 +119,7 @@ def test_the_player_declines_with_down_and_the_play_stands(tmp_path):
     step = rig.engine.field_play_end()
     check(rig, draws)
     said = texts(rig)
-    assert said[-2:] == [" accept ", " decline "]
+    assert said[-3:] == [" accept ", " decline ", X.text("NXP-25", situation="it will be second and 10 on your 30 yard line")]
     s = rig.engine.s
     assert step == rig.engine.banter_position and (s.down, s.to_go, s.yard_line) == (2, 10, 30)
     assert s.extras.flags == [0, 0] and rig.rules.penalty.events[-1][1] == "declined"
@@ -133,7 +135,8 @@ def test_the_prompt_starts_at_decline_when_the_play_was_better_and_a_d_and_a_key
     step = rig.engine.field_play_end()
     check(rig, draws)
     said = texts(rig)
-    assert said[-3:] == [" decline ", " accept ", " decline "]       # the better one first; A, then D
+    assert said[-4:-1] == [" decline ", " accept ", " decline "]     # the better one first; A, then D
+    assert said[-1].startswith(" the penalty is declined, ")             # the referee (2026-10-23)
     assert step == rig.engine.banter_position
 
 
@@ -148,7 +151,8 @@ def test_f1_says_the_flag_again_and_the_keypad_one_is_not_the_letter_a(tmp_path)
     said = texts(rig)
     first = said.index(X.text("NXP-01"))
     assert said.count(X.text("NXP-01")) == 2 and said.count(" defensive holding, on the Jets, ODef1. ") == 2
-    assert said[-1] == " decline " and rig.engine.s.extras.flags == [0, 0]     # 97 typed "a": echoed, not accept
+    assert said[-2] == " decline " and rig.engine.s.extras.flags == [0, 0]     # 97 typed "a": echoed, not accept
+    assert said[-1].startswith(" the penalty is declined, ")                   # the referee's result (2026-10-23)
     assert said.index(X.text("NXP-01"), first + 1) > first
 
 

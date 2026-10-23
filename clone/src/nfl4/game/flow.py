@@ -184,6 +184,7 @@ class Game(Speakers):
                 store = self.franchise_factory(self.program_store)
             else:
                 store = FranchiseStore(MemoryFiles(), self.program_store)
+            store.real_names_of = lambda: self.real_names      # 2026-10-23: the real names, to fix a league's wrong-position backs
             self._franchise_store = store
             self.notice_sources = self.notice_sources + (store,)
         return self._franchise_store

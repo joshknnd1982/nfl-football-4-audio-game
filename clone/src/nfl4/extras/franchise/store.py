@@ -53,6 +53,7 @@ class FranchiseStore:
         self.staff_setting = lambda: False      # SX.8k: whether the staff handles the to-do list (mode.activate gives the setting)
         self.game_injuries = None               # SX.8k: the injuries of the player's game in progress (injury_flow.GameInjuries), until its result
         self.strict = False                     # tests: a record that fails its own check raises instead of being refused
+        self.real_names_of = None               # 2026-10-23: a callable that gives the program's real names (flow.franchise), for fix_real_backs
         self.real_calendar = True               # SZ.8: a season plays the league's real calendar (fixtures.py); False (the tests of the original's 16 weeks): the original's `makes`
         self.unwritable = False
         self.keep_old = False                   # the old franchise could not be archived: the new league is never written over it
@@ -111,6 +112,7 @@ class FranchiseStore:
             return
         if sav_state == "ok":
             self.league = sav
+            self._fix_backs()
             return
         if prev_state == "ok":
             if sav_state == "damaged":
@@ -121,6 +123,7 @@ class FranchiseStore:
                 self._notice("NXF-36")
                 self.problem = "missing"
             self.league = prev
+            self._fix_backs()
             self.save()                          # the copy is league.sav again
             return
         damaged = [name for name, state in ((D.LEAGUE_FILE, sav_state), (D.PREVIOUS_FILE, prev_state)) if state == "damaged"]
@@ -133,6 +136,15 @@ class FranchiseStore:
         if kind_is_franchise:                    # nothing there although the setting says there is a franchise
             self.problem, self.force_classic = "missing", True
             self._notice("NXF-37")
+
+    def _fix_backs(self) -> None:
+        """A league made before 2026-10-23 may have real tight ends, quarterbacks or defenders in running back places: renamed in memory."""
+        from .league import fix_real_backs
+        try:
+            real = self.real_names_of() if self.real_names_of is not None else None
+            fix_real_backs(self.league, real)
+        except Exception:                        # a fix of names must never cost the player his franchise
+            log.exception("the running backs of the franchise could not be checked")
 
     @property
     def exists(self) -> bool:

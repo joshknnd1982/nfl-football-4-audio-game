@@ -41,6 +41,20 @@ def team_index(division: int, place: int) -> int:
     return (division - 1) * 4 + (place - 1)
 
 
+BLITZ_FAMILY = 4          # the original's defense family 4, Blitz
+BLITZ_MIN_RUSHERS = 5
+
+
+def blitz_family_sends_five(candidates):
+    """Enter on the Blitz item (a tester, 2026-10-23: "blitzes rarely get home"): the draw is among the calls of the family that send five or
+    more; a list of the family's plays that holds only four-man looks (one play chosen by name) is left as it is."""
+    calls = list(candidates)
+    if not calls or any(getattr(c, "family", 0) != BLITZ_FAMILY or c.side != "D" for c in calls):
+        return calls
+    sending = [c for c in calls if c.params.rushers >= BLITZ_MIN_RUSHERS]
+    return sending or calls
+
+
 class PlaybookFlow:
     def __init__(self, rules):
         self.rules = rules
@@ -171,6 +185,8 @@ class PlaybookFlow:
         style = self.style(state, side, role)
         own = self.own_plays(style, role)
         sit = self.call_situation(state)
+        if role != "O":
+            candidates = blitz_family_sends_five(candidates)
         return (K.offense_weights(candidates, style, own, sit) if role == "O"
                 else K.defense_weights(candidates, style, own, sit))
 

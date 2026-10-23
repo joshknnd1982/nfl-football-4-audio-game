@@ -13,6 +13,7 @@ from randsources import ScriptedRandom, below_value, value_for
 from nfl4.extras import playbook_data as PD
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
+from nfl4.extras.franchise import first_names as FN
 from nfl4.extras.franchise import staff as S
 from nfl4.extras.franchise.league import OFFSEASON, LeagueError, LeagueRecord, new_league
 from nfl4.extras.playbooks import DEFAULT_TABLE
@@ -248,7 +249,7 @@ def test_the_candidates_are_drawn_in_team_order_the_computer_takes_the_best_and_
     S.hire_head_coaches(league, staff=False)
     league.staff["coordinators"][1][1] = None                         # team 2's defense is open
     S.own_sides(league, [0])                                          # the player replaces his offensive coordinator
-    free = [n for n, name in enumerate(SURNAMES, start=1) if name not in {p.name for p in league.players.values()}
+    free = [n for n, name in enumerate(SURNAMES, start=1) if name not in FN.name_keys(league.league_id, (p.name for p in league.players.values()))
             and all(name != c["name"] for pair in league.staff["coordinators"] for c in pair if c is not None)
             and all(c is None or name != c["name"] for c in league.staff["coaches"]) and name != "Kim"]
     source = ScriptedRandom(strict=True)
@@ -435,7 +436,7 @@ def test_a_candidate_never_takes_a_name_of_the_staff():
     league.staff["coordinators"][1][1] = None                         # team 2's defense is open
     taken = S.coach_of(league, 9)["name"]
     other = S.coordinator_of(league, 4, 0)["name"]
-    used = {p.name for p in league.players.values()} | {"Kim"} | {c["name"] for c in league.staff["coaches"] if c is not None}         | {c["name"] for pair in league.staff["coordinators"] for c in pair if c is not None}
+    used = FN.name_keys(league.league_id, (p.name for p in league.players.values())) | {"Kim"} | {c["name"] for c in league.staff["coaches"] if c is not None}         | {c["name"] for pair in league.staff["coordinators"] for c in pair if c is not None}
     free = [n for n, name in enumerate(SURNAMES, start=1) if name not in used]
     source = ScriptedRandom(strict=True)
     source.values += [value_for(len(SURNAMES), SURNAMES.index(taken) + 1), value_for(len(SURNAMES), SURNAMES.index(other) + 1),

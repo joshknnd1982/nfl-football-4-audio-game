@@ -35,9 +35,10 @@ SLOT_AMBIENT = 4      # Me.m230: PlayRan's ambient sounds (foot8 to foot10)
 SLOT_TACKLE = 5       # Me.m234: PlayTackle (foot4, foot5, foot6, foot11)
 SLOT_NOISE = 6        # Me.m238: the play noise (foot14), looping
 SLOT_COUNT = 7        # the original's buffers
-EXTRA_SLOT = 7        # not an original buffer: previews and the exit beep, never used in play
-CHANNELS = 8
-SLOT_NAMES = ("one-shot", "crowd 1", "crowd 2", "hike", "ambient", "tackle", "play noise", "extra")
+EXTRA_SLOT = 7        # not an original buffer: previews, the exit beep and the stadium's sounds (N. F. L. rules)
+CROWD_SLOT = 8        # not an original buffer: the stadium's crowd reactions, so a hit or the referee's microphone never cuts them (2026-10-23)
+CHANNELS = 9
+SLOT_NAMES = ("one-shot", "crowd 1", "crowd 2", "hike", "ambient", "tackle", "play noise", "extra", "crowd reaction")
 
 
 class Output(Protocol):

@@ -30,6 +30,7 @@ import os
 import random
 import re
 
+from ..audio.output import CROWD_SLOT
 from ..data import debuglog, paths
 from ..game import outcome as O
 from ..game.gamestate import other
@@ -40,18 +41,24 @@ log = logging.getLogger("nfl4.extras")
 
 FOLDER = "sounds_nx"                      # beside the original's assets/sounds in the program folder
 SEED_MIX = 0x57AD_1A70
-LEVELS = {"crowd_cheer": -1900, "crowd_roar": -2100, "crowd_groan": -2100, "crowd_boo": -2300, "crowd_gasp": -2200, "crowd_applause": -2200,
-          "crowd_oh": -2200, "hit_helmet": -1700, "hit_pads": -1900, "ball_catch": -2000, "flag_throw": -2200, "first_down_chain": -2400,
-          "goal_post_hit": -1900}                       # hundredths of a decibel under the sound volume
+# hundredths of a decibel under the sound volume. The crowd reactions were 19 to 23 dB under it and the crowd bed of the game drowned them (a
+# tester, 2026-10-23: "you don't hear crowd reaction"); they are now 8 to 11 dB under it, on a channel of their own (CROWD_SLOT), and the N. F. L.
+# rules keep the crowd bed at its quiet level in a game (game/pag.py, NflRules.start_sounds)
+LEVELS = {"crowd_cheer": -800, "crowd_roar": -900, "crowd_groan": -1000, "crowd_boo": -1000, "crowd_gasp": -1100, "crowd_applause": -1000,
+          "crowd_oh": -1100, "hit_helmet": -1700, "hit_pads": -1900, "ball_catch": -2000, "flag_throw": -2200, "first_down_chain": -2400,
+          "goal_post_hit": -1900}
 LEVELS.update({"mic_on": -2000, "mic_off": -2200})
 NAMES = tuple(LEVELS)
-WHISTLES = ("whistle_short", "whistle_long", "whistle_double", "whistle_triple")      # SY.3: the pea whistles, in the whistle hook of GameSounds
-ALL_NAMES = NAMES + WHISTLES                                      # the nineteen sounds a player can replace (SZ.2): the list in F9, Sounds
+WHISTLES = ("whistle_short", "whistle_long", "whistle_double", "whistle_triple")      # SY.3: the official's whistles, in the whistle hook of GameSounds
+ADDED = ("crowd_big_play", "crowd_flag_cheer", "whistle")         # 2026-10-23: a big play of the player's team, a flag on the other team, every whistle
+LEVELS.update({"crowd_big_play": -700, "crowd_flag_cheer": -900})
+ALL_NAMES = NAMES + WHISTLES + ADDED                              # the twenty-two sounds a player can replace (SZ.2): the list in F9, Sounds
 LABEL_IDS = {name: "NXB-S%02d" % (n + 1) for n, name in enumerate(ALL_NAMES)}     # their plain-word names (strings_nx.tsv)
 WHISTLE_LEVEL = -1500                                             # the whistle's level in the game: the tackle's (GameSounds.play_tackle)
 CONTEXT_WHISTLES = {"final": "whistle_long", "quarter": "whistle_long", "twominute": "whistle_double", "timeout": "whistle_short",
                     "penalty": "whistle_long", "review": "whistle_double"}
-DEFAULT_WHISTLES = ("whistle_short",) * 5 + ("whistle_double",) * 2 + (None,) * 3        # no context: a pea whistle seven times in ten
+DEFAULT_WHISTLES = ("whistle_short",) * 7 + ("whistle_double",) * 3        # no context (2026-10-23: never the original's foot11 in these rules)
+CROWD_NAMES = frozenset(name for name in ALL_NAMES if name.startswith("crowd_"))
 BIG_GAIN, HIT_GAIN = 20, 8
 POST_CHANCE = 25                                         # percent of the missed field goals that hit the post
 CATCH_CHANCE = 60                                        # percent of the completions that have the pop of the catch
@@ -200,7 +207,10 @@ class Stadium:
         if path is None:
             log.debug("stadium: no file for %s", name)
             return
-        self.game.sounds.play_effect(path, LEVELS[name])
+        if name in CROWD_NAMES:
+            self.game.sounds.play_effect(path, LEVELS[name], CROWD_SLOT)
+        else:
+            self.game.sounds.play_effect(path, LEVELS[name])
         self.played += 1
 
     def whistle(self, context) -> str | None:
@@ -210,6 +220,12 @@ class Stadium:
         name = CONTEXT_WHISTLES.get(context) if context else DEFAULT_WHISTLES[self.rnd(len(DEFAULT_WHISTLES)) - 1]
         if name is None:
             return None
+        own = mine(family("whistle", (self.folders[0],)), self.folders[0])      # the player's whistle.wav: every whistle (2026-10-23)
+        if own:
+            path = own[self.rnd(len(own)) - 1] if len(own) > 1 else own[0]
+            library = getattr(getattr(getattr(self.game, "sounds", None), "audio", None), "library", None)
+            if library is None or library.pick_file(path).sound is not None:
+                return path
         return self.pick(name)
 
     def mic(self, opening: bool) -> None:
@@ -256,7 +272,7 @@ class Stadium:
         elif facts.kind == O.SACK:
             self.play("crowd_groan" if mine else "crowd_roar")
         elif facts.kind in (O.RUN, O.PASS_COMPLETE) and facts.yards >= BIG_GAIN and not facts.score:
-            self.play("crowd_roar" if mine else "crowd_gasp")
+            self.play("crowd_big_play" if mine else "crowd_gasp")
         elif facts.kind in (O.FIELD_GOAL_MISSED, O.FIELD_GOAL_SHORT):
             self.play("crowd_groan" if mine else "crowd_oh")
         elif facts.kind in (O.RUN, O.PASS_COMPLETE) and facts.yards >= facts.to_go and not facts.score and not facts.turnover:
@@ -276,6 +292,11 @@ class Stadium:
             self.play("crowd_applause")
 
     def penalty(self, state, side: int) -> None:
+        """The flag, as the referee begins: the crowd boos a flag on the player's team and cheers one on the other (2026-10-23)."""
         if not self.active():
             return
-        self.play("crowd_boo" if side == 1 else "flag_throw")
+        if side == 1:
+            self.play("crowd_boo")
+        else:
+            self.play("flag_throw")
+            self.play("crowd_flag_cheer")

@@ -23,6 +23,7 @@ import logging
 import threading
 import time
 
+from ..data import debuglog
 from .backend import SpeechBackend
 
 log = logging.getLogger(__name__)
@@ -31,6 +32,8 @@ PROG_ID = "FreedomSci.JawsApi"
 WINDOW_CLASS = "JFWUI2"          # JAWS's main window class (SECONDARY: accessible_output2); the probe covers a miss
 AVAILABLE_CACHE_SECONDS = 0.3    # the manager asks is_available() right before every speak()
 STOP_MARGIN_SECONDS = 1.5        # the wait estimate may be short for a slow JAWS voice: still cut this long after it
+EARLY_SHARE = 0.5                # a key waiting ends a wait once this share of the guess has passed (the fastest rate measured is
+#                                  about half the guess's; 2026-10-23, the owner: "with Jaws, speech is laggy when I press arrow and other keys")
 
 
 def estimated_seconds(text: str) -> float:
@@ -71,6 +74,9 @@ class JawsBackend(SpeechBackend):
         self._broken = False          # the COM class cannot be made at all (JAWS not installed): stop trying
         self._cv = threading.Condition()
         self._deadline = 0.0
+        self._early = 0.0             # the earliest end of our speech (EARLY_SHARE of the guess): a key waiting may end a wait from then
+        self._flush_next = False      # the next text interrupts JAWS (set by stop(): the game stops the speech on every key)
+        self.key_waiting = None       # a callable: True when a key is waiting for the game (app.py sets it to KeyInput.key_waiting)
         self._checked_at = -1e9
         self._checked = False
 
@@ -128,12 +134,19 @@ class JawsBackend(SpeechBackend):
     def speak(self, text: str) -> bool:
         if not text.strip():
             return True
-        if not bool(self._call("SayString", text, False)):
+        flush, self._flush_next = self._flush_next, False
+        if not bool(self._call("SayString", text, flush)):
             self._checked_at = -1e9           # ask again next time
             return False
-        log.debug("JAWS speak %r", text)       # NFL4_DEBUG=1: lets the exe smoke test see what JAWS was given
+        log.debug("JAWS speak %r flush=%s", text, flush)       # NFL4_DEBUG=1: lets the exe smoke test see what JAWS was given
         with self._cv:
-            self._deadline = max(self._clock(), self._deadline) + estimated_seconds(text)
+            now = self._clock()
+            guess = estimated_seconds(text)
+            if flush:                         # JAWS dropped what it was saying: our speech starts now
+                self._early, self._deadline = now + guess * EARLY_SHARE, now + guess
+            else:                             # queued after what we said before
+                self._early = max(now, self._early) + guess * EARLY_SHARE
+                self._deadline = max(now, self._deadline) + guess
         return True
 
     def stop(self) -> None:
@@ -144,6 +157,8 @@ class JawsBackend(SpeechBackend):
         with self._cv:
             playing = self._clock() < self._deadline + STOP_MARGIN_SECONDS
             self._deadline = 0.0
+            self._early = 0.0
+            self._flush_next = True       # the game's next text interrupts whatever JAWS says then, its own echo of the key too
             self._cv.notify_all()
         if playing:
             self._call("SayString", " ", True)
@@ -154,13 +169,25 @@ class JawsBackend(SpeechBackend):
             return self._clock() < self._deadline
 
     def wait_until_done(self, abort: threading.Event | None = None) -> None:
+        """Until the guessed end of our speech; a key waiting for the game ends it from the earliest end on (EARLY_SHARE): JAWS gives no
+        end of speech, and at a fast JAWS rate the guess is far too long, so without this every key waited for it (2026-10-23)."""
+        key_waiting = self.key_waiting
         with self._cv:
             while True:
                 if abort is not None and abort.is_set():
                     return
-                left = self._deadline - self._clock()
+                now = self._clock()
+                left = self._deadline - now
                 if left <= 0:
                     return
+                if key_waiting is not None and now >= self._early:
+                    try:
+                        waiting = bool(key_waiting())
+                    except Exception:
+                        waiting = False
+                    if waiting:
+                        debuglog.event("speech", "jaws_wait_ended_by_key", left_ms=round(left * 1000))
+                        return
                 self._cv.wait(min(left, 0.02))
 
     def close(self) -> None:

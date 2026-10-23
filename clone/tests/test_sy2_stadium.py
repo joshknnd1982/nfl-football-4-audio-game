@@ -21,17 +21,20 @@ from nflrig import RecordingRules, sim_game
 
 def test_every_stadium_sound_is_shipped_as_a_short_quiet_enough_wav():
     folder = ST.shipped_folder()
-    for name in ST.NAMES:
+    for name in ST.NAMES + ("crowd_big_play", "crowd_flag_cheer"):
         path = os.path.join(folder, name + ".wav")
         assert os.path.exists(path), name
         with wave.open(path, "rb") as w:
             assert (w.getnchannels(), w.getsampwidth(), w.getframerate()) == (1, 2, 22050)
             seconds = w.getnframes() / w.getframerate()
             data = w.readframes(w.getnframes())
-        assert 0.2 <= seconds <= 4.0, (name, seconds)
+        assert 0.2 <= seconds <= 4.5, (name, seconds)
         samples = memoryview(data).cast("h")
         assert max(abs(s) for s in samples) < 32767 and any(abs(s) > 3000 for s in samples), name
-        assert -2600 <= ST.LEVELS[name] <= -1500, name            # under the speech: -15 to -26 dB under the sound volume
+        if name.startswith("crowd_"):                             # 2026-10-23: heard over the crowd bed of a game, still under the speech
+            assert -1200 <= ST.LEVELS[name] <= -600, name
+        else:
+            assert -2600 <= ST.LEVELS[name] <= -1500, name        # under the speech: -15 to -26 dB under the sound volume
 
 
 def test_a_players_file_replaces_the_shipped_one_and_a_new_number_adds_to_the_family(tmp_path):
@@ -57,8 +60,9 @@ class Recorder:
     def __init__(self):
         self.calls = []
 
-    def play_effect(self, path, level=0):
+    def play_effect(self, path, level=0, slot=None):
         self.calls.append((os.path.basename(path)[:-4], level))
+        self.slots = getattr(self, "slots", []) + [slot]
 
 
 def stadium_with(seed=1):
@@ -79,7 +83,7 @@ def facts(kind, side=1, yards=0, to_go=10, turnover=False, score=None):
 @pytest.mark.parametrize("what, side, expected", [
     (dict(kind=O.INTERCEPTION, turnover=True), 1, "crowd_groan"), (dict(kind=O.FUMBLE, turnover=True), 2, "crowd_roar"),
     (dict(kind=O.SACK), 1, "crowd_groan"), (dict(kind=O.SACK), 2, "crowd_roar"),
-    (dict(kind=O.PASS_COMPLETE, yards=31), 1, "crowd_roar"), (dict(kind=O.RUN, yards=22), 2, "crowd_gasp"),
+    (dict(kind=O.PASS_COMPLETE, yards=31), 1, "crowd_big_play"), (dict(kind=O.RUN, yards=22), 2, "crowd_gasp"),
     (dict(kind=O.FIELD_GOAL_MISSED), 1, "crowd_groan"), (dict(kind=O.FIELD_GOAL_SHORT), 2, "crowd_oh"),
     (dict(kind=O.RUN, yards=6, to_go=5), 1, "first_down_chain"), (dict(kind=O.PASS_COMPLETE, yards=11, to_go=10), 2, "first_down_chain"),
 ])
@@ -130,7 +134,7 @@ def test_scores_quarters_half_time_and_penalties():
     st.penalty(state, 1)
     st.penalty(state, 2)
     assert [name for name, level in calls] == ["crowd_cheer", "crowd_applause", "crowd_oh", "crowd_groan", "crowd_applause", "crowd_applause",
-                                               "crowd_applause", "crowd_boo", "flag_throw"]
+                                               "crowd_applause", "crowd_boo", "flag_throw", "crowd_flag_cheer"]
 
 
 def test_the_stadium_is_silent_when_off_and_without_sounds():
@@ -160,7 +164,7 @@ def whole_game(tmp_path, seed, on):
     from nfl4.game import sounds as game_sounds
     played = []
     real = game_sounds.GameSounds.play_effect
-    game_sounds.GameSounds.play_effect = lambda self, path, level=0: played.append(os.path.basename(path)) or real(self, path, level)
+    game_sounds.GameSounds.play_effect = lambda self, path, level=0, *slot: played.append(os.path.basename(path)) or real(self, path, level, *slot)
     try:
         rig, engine, rules, result = sim_game(tmp_path, seed, rules=rules, trace=True)
     finally:

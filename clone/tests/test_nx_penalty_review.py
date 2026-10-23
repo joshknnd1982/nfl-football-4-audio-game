@@ -111,7 +111,8 @@ def test_11_on_the_last_play_of_a_half_both_answers_say_the_half_ends(tmp_path):
     rig.engine.field_play_end()
     check(rig, draws)
     halves = [t for t in texts(rig) if t.endswith(", " + X.text("NXP-S08") + ". ")]
-    assert len(halves) == 2 and halves[0].startswith(" Kim if you accept")
+    assert len(halves) == 3 and halves[0].startswith(" Kim if you accept")
+    assert halves[2].startswith(" the penalty is accepted. ")                  # the referee's result says it too (2026-10-23)
     x = rig.engine.s.extras
     assert x.left == 0 and not x.extension and rig.rules.penalty.events[-1][1] == "accepted"
 

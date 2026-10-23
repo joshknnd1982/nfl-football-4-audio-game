@@ -131,6 +131,9 @@ class RealNames:
             return out
 
         kickers = [(take(by["K"], 1) or [None])[0], (take(by["P"], 1) or [None])[0]]
+        # the running backs and fullbacks first (tester, 2026-10-23: "wrong position players are still playing at running back"): a returner is
+        # listed again as RET with the name of his RB line, so taking the returners first cost 23 teams' backs one of their real backs
+        backs = take(by["RB"] + by["FB"], COUNTS[0])
         returners = take(by["RET"], 2)
         wide, tight = list(by["WR"]), list(by["TE"])
         mixed = []                                               # WR1, WR2, WR3, TE1, WR4, TE2, WR5, TE3, ...
@@ -141,9 +144,8 @@ class RealNames:
             if tight:
                 mixed.append(tight.pop(0))
         receivers = take(mixed, COUNTS[1])
-        backs = take(by["RB"] + by["FB"], COUNTS[0])
-        if len(backs) < COUNTS[0]:
-            backs += take(mixed + by["QB"][1:], COUNTS[0] - len(backs))      # the receivers left over, then the quarterbacks behind the first
+        # a back place with no real running back stays None: the set-up keeps the draw's name there (a made-up running back), never a tight
+        # end, a quarterback, a receiver or a defender (before: 100 of the 192 back places of the league held another position)
         defenders = {pos: take(by[pos], count) for pos, count in (("DL", 6), ("LB", 5), ("CB", 4), ("S", 2))}
         for pos, count in (("DL", 6), ("LB", 5), ("CB", 4), ("S", 2)):
             for other in _DEFENSE_TAKES[pos][1:]:
@@ -155,7 +157,7 @@ class RealNames:
         while len(receivers) < COUNTS[1]:
             receivers += take(free(mixed) + free(by["RB"]) + free(by["QB"][1:]), COUNTS[1] - len(receivers)) or [None]
         spare = free(by["WR"] + by["TE"] + by["RB"] + by["FB"] + by["CB"] + by["S"] + by["LB"] + by["DL"])      # the last resort, after the defense has its own
-        for names, count in ((backs, COUNTS[0]), (receivers, COUNTS[1]), (returners, COUNTS[3])):
+        for names, count in ((receivers, COUNTS[1]), (returners, COUNTS[3])):
             names[:] = [n for n in names if n] + take(spare, count - len([n for n in names if n]))
         defense = defenders["DL"] + defenders["LB"] + defenders["CB"] + defenders["S"]
         quarterback = (by["QB"] or [""])[0]

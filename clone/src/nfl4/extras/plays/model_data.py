@@ -64,7 +64,8 @@ BLITZ_INT = (130, 110, 120, 100, 90, 70, 80)                    # interception m
 THROW_AWAY_BY_RUSHERS = {3: 290, 4: 340, 5: 390, 6: 450}       # legal throw-aways per drop-back: FTN 3.6 percent in all; the
                                                                 # split by rushers is UNVERIFIED (more rushers, more pressure)
 # sacks per drop-back by the number of rushers and the shell (one-high, two-high)
-SACK_BY_RUSHERS = {3: (510, 530), 4: (600, 620), 5: (720, 820), 6: (840, 1100)}
+SACK_BY_RUSHERS = {3: (510, 530), 4: (570, 590), 5: (920, 1020), 6: (1140, 1350)}   # 2026-10-23, a tester: "blitzes rarely get home"
+#                 (before: 4: (600, 620), 5: (720, 820), 6: (840, 1100), the charting's own rates; the league's total stays in its band)
 RUSHER_SHARE = {2: 100, 3: 330, 4: 6910, 5: 1990, 6: 660}         # share of drop-backs (2 is two or fewer, 6 is six or more)
 BLITZ_SHARE = 2910                                               # drop-backs with one or more blitzers
 

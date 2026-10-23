@@ -111,7 +111,7 @@ class Sounds:
         self.calls = []
         self.now = 0.0
 
-    def play_effect(self, path, level=0):
+    def play_effect(self, path, level=0, slot=None):
         self.calls.append(os.path.basename(path)[:-4])
 
     def clock(self):
@@ -135,7 +135,7 @@ def test_the_whistle_is_chosen_by_what_happened_and_is_a_file_of_the_pea_whistle
     for context, name in ST.CONTEXT_WHISTLES.items():
         assert os.path.basename(st.whistle(context)) == name + ".wav"
     seen = {st.whistle(None) for _ in range(60)}
-    assert None in seen and any(p and os.path.basename(p) in ("whistle_short.wav", "whistle_double.wav") for p in seen)
+    assert None not in seen and {os.path.basename(p) for p in seen} == {"whistle_short.wav", "whistle_double.wav"}    # never foot11 (2026-10-23)
     assert st.whistle("nonesuch") is None
 
 
@@ -188,7 +188,7 @@ def test_the_microphone_clicks_once_per_burst_and_closes_at_the_end():
 
 
 def test_every_shipped_stadium_file_is_a_known_sound():
-    names = set(ST.NAMES) | set(ST.WHISTLES)
+    names = set(ST.ALL_NAMES)
     files = {f[:-4] for f in os.listdir(ST.shipped_folder()) if f.endswith(".wav")}
     assert files == names, files ^ names
 
@@ -217,6 +217,7 @@ def test_the_referee_and_the_whistles_do_not_move_a_draw_and_the_flags_are_the_r
     assert any("time out called by" in t for t in said_on) or any("review" in t for t in said_on) or len(said_on) > 10
     assert rig_on.rnd.trace == rig_off.rnd.trace and rig_on.rnd.draws == rig_off.rnd.draws and result_on.scores == result_off.scores
     whistles = [e.sound_id for e in rig_on.slot_log if e.action == "play" and e.slot == SLOT_TACKLE]
-    assert {"file whistle_short.wav", "file whistle_long.wav", "file whistle_double.wav", "snd_foot11"} <= set(whistles)        # by what happened, or the original's
+    assert {"file whistle_short.wav", "file whistle_long.wav", "file whistle_double.wav"} <= set(whistles)        # by what happened
+    assert "snd_foot11" not in whistles                       # a tester, 2026-10-23: every whistle of these rules is the official's
     rig_classic = sim_game(tmp_path / "classic", 21, rules=RecordingRules(penalties_on=True, qb_on=True, playbooks_on=True))[0]
     assert not [e for e in rig_classic.slot_log if e.action == "play" and "whistle_" in str(e.sound_id)]    # the original's rules hear no pea whistle

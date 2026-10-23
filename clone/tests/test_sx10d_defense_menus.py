@@ -122,6 +122,8 @@ def test_enter_on_one_of_the_six_calls_is_the_styles_pick_said_before_the_snap(t
     rig = rig_for(tmp_path, answers=["4", ENTER])
     s, books = rig.engine.s, rig.rules.books
     family = [c for g in PM.family_groups("D", 4) for c in PM.concepts_of(g, rig.rules.defense.context(s)) if c.side == "D"]
+    from nfl4.extras.playbook_flow import blitz_family_sends_five
+    family = blitz_family_sends_five(family)                      # 2026-10-23: Enter on Blitz draws among the calls that send five or more
     weights = K.defense_weights(family, "pressure", books.own_plays("pressure", "D"), books.call_situation(s))
     assert {i for i, _w in weights} <= {c.id for c in family} and len(weights) > 5
     assert the_menu(rig, Draws().below(sum(w for _i, w in weights), 0)) == "defense_chosen"

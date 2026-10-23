@@ -76,16 +76,39 @@ def test_every_shipped_name_passes_the_name_rules_and_the_numbers_are_numbers():
             assert player.pos in R.POSITIONS and (player.number == "-" or player.number.isdigit())
 
 
-def test_the_set_up_has_a_real_player_in_every_place_of_every_team():
+def test_the_set_up_has_a_real_player_in_every_place_but_the_back_places_the_team_has_no_running_back_for():
+    """Tester 2026-10-23 ("wrong position players are still playing at running back"): a back place holds a real running back or fullback,
+    else the draw's made-up name ("player" here, with no draw handed in); every other place holds a real player."""
     real = R.defaults()
+    fillers = 0
     for team in range(1, 33):
         roster = real.roster(team, None)
-        assert roster.is_complete() and "player" not in roster.names(), team
-        assert len(set(roster.names())) == 33, team                      # nobody twice
+        backs = [p.name for p in real.rosters[team - 1] if p.pos in ("RB", "FB")]
+        real_backs = [n for n in roster.running_backs if n != "player"]
+        assert real_backs == [real.spoken(n) for n in backs][:6], team          # every real back, in depth order, none lost to the returners
+        fillers += 6 - len(real_backs)
+        others = roster.receivers + roster.defense + roster.special_teams + roster.kickers
+        assert "player" not in others, team
+        assert len(set(real_backs + others)) == len(real_backs) + len(others), team     # nobody twice
         places = real.places(team)
-        assert len(places) == D.PLACE_COUNT and all(places), team
+        assert len(places) == D.PLACE_COUNT and all(places[6:]), team
         assert places[-1] == real.quarterback(team)
-        assert places[:33] == roster.names(), team                          # the Franchise's places are the set-up's names in the same order
+        assert [p or "player" for p in places[:33]] == roster.names(), team      # the Franchise's places are the set-up's names in the same order
+    assert fillers < 100                                                         # before the fix: 100 of 192 back places held another position
+
+
+def test_no_back_place_holds_a_player_of_another_position_and_the_draw_fills_the_rest():
+    from nfl4.game.setup import Roster
+    real = R.defaults()
+    positions = {}
+    for roster in real.rosters:
+        for p in roster:
+            positions.setdefault(real.spoken(p.name), set()).add(p.pos)
+    drawn = Roster(["Drawn%d" % n for n in range(6)], ["x%d" % n for n in range(6)], ["y%d" % n for n in range(17)], ["z0", "z1"], ["k0", "k1"])
+    for team in range(1, 33):
+        backs = real.roster(team, drawn).running_backs
+        for index, name in enumerate(backs):
+            assert name == "Drawn%d" % index or positions[name] & {"RB", "FB"}, (team, name, positions.get(name))
 
 
 def test_each_group_takes_its_own_positions_first():
@@ -375,7 +398,8 @@ def test_a_new_leagues_players_and_coaches_are_the_real_ones_with_the_same_ratin
         expected = names.places(team)
         got = [real.player_at(team, i).name for i in range(D.PLACE_COUNT)]
         replaced = sum(1 for a, b in zip(expected, got) if a == b)
-        assert replaced >= 33, (team, replaced)                                  # a name another team's player has already stays with the first
+        assert replaced >= 33 - expected[:6].count(None), (team, replaced)       # a name another team's player has already stays with the first
+        assert all(got[i] == expected[i] or expected[i] is None or expected[i] in got for i in range(6))      # a back place: a real back or the drawn name
     assert real.player_at(1, 33).name == "Joe Burrow"
     coaches = [c["name"] for c in real.staff["coaches"]]
     assert coaches[0] == "Zac Taylor" and coaches[1] == "Todd Monken" and coaches[3] == "Kim"       # the player's own team: the player
@@ -416,3 +440,20 @@ def test_a_whole_game_with_only_enter_has_the_real_players_and_quarterbacks(tmp_
     spoken = " ".join(said(rig))
     assert "Joe Burrow" in spoken or "Geno Smith" in spoken
     assert "Eddy" not in spoken
+
+
+def test_an_older_franchise_with_real_non_backs_in_running_back_places_gets_made_up_backs_once():
+    """Tester 2026-10-23: a league made before the fix put real tight ends and quarterbacks in running back places; opening it renames them (the
+    ratings stay), the player's own team keeps its names, and a second pass changes nothing."""
+    from nfl4.extras.franchise import first_names as FN
+    from nfl4.extras.franchise.league import fix_real_backs
+    names = R.defaults()
+    league = make_league(names)
+    flacco, kelce = league.player_at(9, 4), league.player_at(4, 5)              # team 9's 5th back, the player's own team's 6th
+    flacco.name, kelce.name = "Joe Flacco", "Bubba"                              # as the older league had it; his own back, a typed name
+    rating = flacco.rating
+    assert fix_real_backs(league, names) == 1
+    assert FN.surname_of(league.league_id, flacco.name) is not None and flacco.rating == rating and flacco.pos == "RB"
+    assert kelce.name == "Bubba"
+    assert fix_real_backs(league, names) == 0 and fix_real_backs(league, None) == 0
+    assert len({p.name for p in league.players.values()}) == len(league.players)

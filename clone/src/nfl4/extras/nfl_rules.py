@@ -346,6 +346,8 @@ class NflRules(ClassicRules):
                 # SX.6: the ruling of the play, its hint and the replay official's review. A reversal names the step that
                 # applies the corrected result and offers the declined flags again
                 outcome.then = self.review.rule(state, outcome, board, left_before, flags)
+        if outcome.then is not None and self.broadcast.facts is not None:
+            self.broadcast.facts.taken_over = True # a penalty or a review took the play over: no crowd or line for it (Facts was made before)
         self.modifiers.arm(None)                   # SX.7: the play's rows are done
         if state.quarter >= 5 and outcome.kind == O.PUNT and not outcome.turnover and outcome.then is None:
             OT.kickers_kept_punt(x, state, outcome.offense)     # SX.12: a muffed punt the kickers kept was the receivers' chance (16-1-5 (c))
@@ -385,13 +387,19 @@ class NflRules(ClassicRules):
         injuries = self.game_injuries()
         return second if injuries is None else injuries.other_man(state.defense, first, second)
 
+    def start_sounds(self) -> bool:
+        """Tester 2026-10-23: "remove the band and sound effects when you start the game and load a saved game". No foot0 and no jump of the
+        crowd to full at the start of a game or of a loaded one; the crowd bed stays quiet, under the stadium's reactions."""
+        return False
+
     def draw_carrier(self, state, rnd) -> int:
-        """H17 (SX.8o): the ball carrier; a Franchise game weighs the places by the players' ratings (equal weights, and every other game: rnd(6))."""
+        """H17 (SX.8o): the ball carrier; a Franchise game weighs the places by the players' ratings; every other game draws rnd(6) and reads
+        it through the depth chart (T.DEPTH_CARRY_SLOTS, a tester 2026-10-23: the first back carries most)."""
         values = self.modifiers.carrier_weights(state) if hasattr(self.modifiers, "carrier_weights") else None
-        if values is None:
-            drawn = rnd(6)
+        from .franchise import workload
+        if values is None or workload.even(values):     # no rating decides (equal weights draw rnd(6) as ever): the depth chart does
+            drawn = T.DEPTH_CARRY_SLOTS[rnd(6) - 1]
         else:
-            from .franchise import workload
             drawn = workload.draw(rnd, values)
         return self.choices.carrier(state, drawn)        # SY.4: the receiver the player chose takes the drawn one's place (the draw is made)
 

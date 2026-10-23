@@ -12,8 +12,10 @@ from __future__ import annotations
 
 import json
 import logging
+import zlib
 from dataclasses import dataclass, field
 
+from ...data import debuglog
 from ...game.setup import Roster
 from .. import tuning as T
 from . import data as D
@@ -625,6 +627,43 @@ def give_first_names(league: "LeagueRecord", skip_team: int | None = None) -> in
                 changed += 1
     if changed:
         log.info("first names: %d made-up players of franchise %s got a first name (D-131)", changed, lid)
+    return changed
+
+
+def fix_real_backs(league: "LeagueRecord", real) -> int:
+    """Tester 2026-10-23 ("wrong position players are still playing at running back"): a league made before this fix put real tight ends,
+    quarterbacks, receivers and defenders into running back places (real_names filled short back groups with them). Each such player of the
+    league (place of a running back, a real name that the real rosters list at no RB or FB line) gets a made-up running back's name: a surname
+    not in use, chosen from a hash (no draw), with its first name. His ratings and contract stay. Idempotent; in memory (the next save keeps it).
+    The player's own team is left (his names are his). Returns how many were renamed."""
+    if real is None:
+        return 0
+    backs, others = set(), set()
+    for roster in getattr(real, "rosters", ()):
+        for p in roster:
+            (backs if p.pos in ("RB", "FB") else others).add(real.spoken(p.name).casefold())
+    wrong = others - backs
+    if not wrong:
+        return 0
+    try:
+        from ...game.names import load_surnames
+        surnames = load_surnames()
+    except (OSError, ValueError, UnicodeError):
+        return 0
+    used = FN.name_keys(league.league_id, (p.name for p in league.players.values()))
+    changed = 0
+    for player in sorted(league.players.values(), key=lambda p: p.id):
+        if player.pos != "RB" or player.team == league.team or player.name.casefold() not in wrong:
+            continue
+        start = zlib.crc32(("%s|%d" % (league.league_id, player.id)).encode("utf-8")) % len(surnames)
+        surname = next((surnames[(start + k) % len(surnames)] for k in range(len(surnames)) if surnames[(start + k) % len(surnames)] not in used), None)
+        if surname is None:
+            break
+        used.add(surname)
+        old, player.name = player.name, FN.full_name(league.league_id, surname)
+        used.add(player.name)
+        changed += 1
+        debuglog.event("franchise", "back_renamed", logging.INFO, player=player.id, before=old, after=player.name)
     return changed
 
 

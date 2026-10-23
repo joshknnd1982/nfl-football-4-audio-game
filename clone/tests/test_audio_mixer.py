@@ -46,7 +46,7 @@ def busy_time(audio, slot, limit=1.0):
 def test_mixer_format_and_eight_channels(audio):
     import pygame
     assert pygame.mixer.get_init() == (MIX_RATE, -16, 2)
-    assert pygame.mixer.get_num_channels() == CHANNELS == 8
+    assert pygame.mixer.get_num_channels() == CHANNELS == 9      # 8: the crowd's reactions (2026-10-23)
 
 
 def test_the_seven_slots_and_the_extra_channel_play_at_once(audio):

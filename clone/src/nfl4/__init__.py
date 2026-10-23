@@ -11,5 +11,5 @@ Packages:
   data    per-user paths, settings, logging, the voice crash guard, the process's start and end
 """
 
-VERSION = "0.12.0"         # S8.2: the fourth test installer for the owner (the W key and the menu keys in F5 and F6; the real 2026 calendar, the Commanders, free agents and trades in the Franchise); 1.0.0 is the first release (P11)
+VERSION = "0.12.1"         # S8.3 round 2: the fifth test installer (full names of made-up players, the calendar notice, the stress-test fixes); 1.0.0 is the first release (P11)
 TITLE = "NFL Football 4"

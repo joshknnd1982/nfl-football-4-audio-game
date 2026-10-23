@@ -22,13 +22,14 @@ from test_functions import END, rig_for, sounds_menu
 # ----- the nineteen sounds -----
 
 def test_every_sound_a_player_can_replace_is_shipped_has_a_plain_name_and_a_label_in_the_text_table():
-    assert len(ST.ALL_NAMES) == 19 and len(set(ST.ALL_NAMES)) == 19
+    assert len(ST.ALL_NAMES) == 22 and len(set(ST.ALL_NAMES)) == 22
     for name in ST.ALL_NAMES:
         assert os.path.exists(os.path.join(ST.shipped_folder(), name + ".wav")), name
         text = X.TEXTS[ST.LABEL_IDS[name]]
         assert 1 <= len(text.split()) <= 6 and text == text.strip(), name
-    assert len({X.TEXTS[i] for i in ST.LABEL_IDS.values()}) == 19
-    assert ST.ALL_NAMES[0] == "crowd_cheer" and ST.ALL_NAMES[-1] == "whistle_triple" and ST.LABEL_IDS["mic_on"] == "NXB-S14"
+    assert len({X.TEXTS[i] for i in ST.LABEL_IDS.values()}) == 22
+    assert ST.ALL_NAMES[0] == "crowd_cheer" and ST.ALL_NAMES[-1] == "whistle" and ST.LABEL_IDS["mic_on"] == "NXB-S14"
+    assert ST.LABEL_IDS["whistle_triple"] == "NXB-S19" and ST.LABEL_IDS["crowd_big_play"] == "NXB-S20"
 
 
 def test_a_family_reads_the_formats_of_the_sound_layer_the_wav_first_and_a_new_number_adds(tmp_path):
@@ -137,7 +138,7 @@ def test_enter_plays_the_sound_at_its_level_in_the_game_and_again_plays_the_next
     SM.sounds_list(rig.speech, rig.keys, audio, -300, lambda: 0.0)
     assert audio.played[:3] == [(7, "crowd_cheer.wav", ST.LEVELS["crowd_cheer"] - 300)] * 3         # the first sound has one file: the same again
     said = [t for t, *_ in rig.said]
-    assert said[0].startswith("Stadium and referee sounds. 19 items. Press F1 for help. The crowd cheers. File name crowd_cheer.")
+    assert said[0].startswith("Stadium and referee sounds. 22 items. Press F1 for help. The crowd cheers. File name crowd_cheer.")
     assert "Sound 1 of 1, original." in said and audio.stopped >= 4
 
 
@@ -149,7 +150,7 @@ def test_the_whistles_play_at_the_level_of_the_game_s_whistle(tmp_path):
     for key in [END, ENTER, ESC]:
         rig.keys.post(key)
     SM.sounds_list(rig.speech, rig.keys, audio, 0, lambda: 0.0)
-    assert audio.played == [(7, "whistle_triple.wav", ST.WHISTLE_LEVEL)]
+    assert audio.played == [(7, "whistle.wav", ST.WHISTLE_LEVEL)]          # the last item: one file for every whistle (2026-10-23)
 
 
 def test_f1_in_the_list_says_how_to_use_your_own_file(tmp_path):

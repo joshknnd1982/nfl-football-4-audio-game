@@ -53,7 +53,7 @@ def rig(tmp_path):
 
 def test_the_seven_original_slots_and_the_extra_channel():
     assert (SLOT_ONESHOT, SLOT_CROWD1, SLOT_CROWD2, SLOT_HIKE, SLOT_AMBIENT, SLOT_TACKLE, SLOT_NOISE) == tuple(range(7))
-    assert SLOT_COUNT == 7 and EXTRA_SLOT == 7 and CHANNELS == 8 and Audio.SLOTS == 7
+    assert SLOT_COUNT == 7 and EXTRA_SLOT == 7 and CHANNELS == 9 and Audio.SLOTS == 7       # 8: the crowd's reactions (2026-10-23)
 
 
 def test_play_returns_the_real_length_and_the_slot_is_busy_until_then(rig):

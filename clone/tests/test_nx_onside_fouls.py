@@ -83,7 +83,7 @@ def test_the_computers_kick_is_recovered_with_an_offside_and_the_player_chooses_
         X.text("NXP-01"), " off sides on the kick off, on the Jets, ODef3. ",
         " Kim if you accept the penalty, the kick will be made again. ",
         " if you decline it, it will be my ball, first and 10 on my 45 yard line. ", " accept ",
-        X.text("NXP-13")]
+        X.text("NXP-24", yards=5, situation="the kick will be made again")]      # the referee says it; the note is not said again (2026-10-23)
     assert step.__name__ == "kick_off"                                  # KICK_AGAIN
     x = s.extras
     assert x.kick_again is True and x.kick_back == 5 and x.flags == [0, 1] and x.flag_yards == [0, 5]
@@ -122,7 +122,8 @@ def test_the_player_may_decline_and_the_kickers_keep_a_recovery(tmp_path):
     value = value_of(rig, rows(rig, O.ONSIDE_KICK, after=False), "P33")
     draws = kick_draws(distance=10).below(10000, value).rnd(17, 4).rnd(40, 2)
     step = kick_off_and_kick(rig, draws)
-    assert texts(rig)[-2:] == [" accept ", " decline "] and step == rig.engine.possession
+    assert texts(rig)[-3:-1] == [" accept ", " decline "] and step == rig.engine.possession
+    assert texts(rig)[-1].startswith(" the penalty is declined, ")                       # the referee (2026-10-23)
     assert s.extras.onside_recovered == [0, 1] and s.extras.flags == [0, 0]              # counted: no penalty took it away
     assert rig.rules.penalty.events[-1][1] == "declined"
 

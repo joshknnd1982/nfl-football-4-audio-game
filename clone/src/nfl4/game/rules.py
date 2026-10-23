@@ -233,6 +233,10 @@ class ClassicRules:
     def draw_carrier(self, state, rnd) -> int:
         return rnd(6)
 
+    def start_sounds(self) -> bool:
+        """The original's sounds at the start of a game (the crowd to full, foot0 waited): Classic plays them."""
+        return True
+
     def second_tackler(self, state, first: int, second: int) -> int:
         return second
 

@@ -86,14 +86,18 @@ def test_the_franchise_object_gives_the_backs_on_a_run_and_the_receivers_on_a_pa
     assert m.carrier_weights(s) == [base] * 6
 
 
-def test_without_ratings_or_without_a_franchise_object_the_rules_draw_rnd6(tmp_path):
+def test_without_ratings_the_nfl_rules_draw_by_depth_and_classic_draws_rnd6(tmp_path):
+    """Outside the Franchise the N. F. L. rules weigh the six places by depth (T.DEPTH_CARRY_WEIGHT, tester 2026-10-23); Classic keeps rnd(6)."""
     from nflrig import RecordingRules
     from pagrig import named_roster
+    from nfl4.extras import tuning as TU
     rules = RecordingRules()
     s = state_with(named_roster(""), named_roster("O"), offense_play=1)
     rules.modifiers.bind(s)
-    rnd = Script(("rnd", 6, 2))
-    assert rules.draw_carrier(s, rnd) == 2 and rnd.trace == [6]
+    for value, place in zip(range(1, 7), (1, 1, 2, 2, 3, 4)):
+        rnd = Script(("rnd", 6, value))                                       # the same one rnd(6) as ever, read through the depth chart
+        assert rules.draw_carrier(s, rnd) == place and rnd.trace == [6]
+    assert TU.DEPTH_CARRY_SLOTS == (1, 1, 2, 2, 3, 4)
     rnd = Script(("rnd", 6, 5))
     assert CLASSIC.draw_carrier(s, rnd) == 5 and rnd.trace == [6]
 

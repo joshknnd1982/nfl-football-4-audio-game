@@ -54,7 +54,12 @@ NFL's announcement of the opener and of a team's last week; the source repositor
 offs follow week 18. The NFL publishes each year's schedule only when it is released, so from the second season the game uses the same calendar
 with the teams relabeled (the divisions of each conference rotate), which gives every team other opponents and keeps every rule of the calendar.
 That is an approximation, not the NFL's own rotation. A franchise that was started before this version keeps the season it is in, with the
-original's 16 random weeks, and plays the real calendar from its next season.
+original's 16 random weeks, and plays the real calendar from its next season. If the calendar file is missing or damaged, the game says once
+that the real calendar could not be read and plays that season with the original's 16 weeks; the next season tries the file again.
+
+**Names of new players.** The players of the real rosters keep their real names. Every player the game makes up (a free agent of the season,
+a draft prospect, an undrafted rookie of the roster cut, a stand-in for an injured player) has a first and a last name. A franchise saved by an
+older version gets the first names when it is opened; the players of your own team keep the names you gave them.
 
 **Free agents and trades.** In the regular season, F9, Franchise, free agents lets you sign a free agent any week before the kick-off: choose
 the position, the player and, when you have no open place there, the player of that position you release (his dead money counts against the
@@ -118,4 +123,4 @@ With the N. F. L. rules the game sounds like a radio broadcast. The announcer's 
 
 ## The stadium sounds and the referee
 
-The crowd cheers, groans and boos at what happens, hits and catches sound, the first down chain clanks, a flag is thrown, the referee announces the flags, the time outs and the reviews over a microphone in a voice of their own, and the whistles are a referee's pea whistles. The sounds are generated (not recordings) and quiet; you can replace any of them with your own wav, ogg, flac or mp3 file: F9, Sounds, Stadium and referee sounds lists the nineteen sounds with the file name each one takes, plays them, and says whether you have replaced them; F9, Sounds, Put the stadium sounds back moves your files aside (CUSTOMIZE.md). F9, Rules, Stadium sounds and Broadcast switch them off.
+The crowd cheers, groans and boos at what happens (it roars for your big plays, cheers a flag on the other team and boos one on yours, as the flag is thrown), hits and catches sound, the first down chain clanks, a flag is thrown, the referee announces the flags, then the result after the penalty is accepted or declined (the yards and the next down), the time outs and the reviews over a microphone in a voice of their own, and the whistles are an NFL official's whistles. A game of the N. F. L. rules starts, or a saved one goes on, without the intro jingle and without the crowd surge of the original. The sounds are generated (not recordings); you can replace any of them with your own wav, ogg, flac or mp3 file, and one file named whistle.wav replaces every whistle: F9, Sounds, Stadium and referee sounds lists the twenty-two sounds with the file name each one takes, plays them, and says whether you have replaced them; F9, Sounds, Put the stadium sounds back moves your files aside (CUSTOMIZE.md). F9, Rules, Stadium sounds and Broadcast switch them off.

@@ -388,9 +388,12 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
             s.load(self.saved)
             g.quarter_clock.countdown = self.saved.countdown
         self.getqbs()
-        self.snd.set_crwd1(-100)                            # 0x43b8fe
-        self.dy(0.2, 0x43b9d9)
-        self.snd.play(0, 0)
+        if self.rules.start_sounds():
+            self.snd.set_crwd1(-100)                        # 0x43b8fe
+            self.dy(0.2, 0x43b9d9)
+            self.snd.play(0, 0)
+        else:                                               # the N. F. L. rules (tester 2026-10-23): no jingle, no crowd surge at the start
+            debuglog.event("audio", "start_sounds_skipped", saved=self.saved is not None)
         if self.saved is not None:                          # SavedGame = 0, 0x43bb41; N. F. L. rules (SX.9, C10): a choice the
             self.game_on = True                             # the loaded game is in play (H18: T works from its first question)
             if self.saved.resume:                           # SX.14 (NX-S4): an automatic save goes on with the same draws and histories

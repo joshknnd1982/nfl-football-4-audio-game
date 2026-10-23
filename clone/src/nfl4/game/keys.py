@@ -156,6 +156,10 @@ class KeyInput:
     def close(self) -> None:
         self.quit.set()
 
+    def key_waiting(self) -> bool:
+        """A key is posted and not yet taken by the game (any thread may ask; the JAWS wait does, 2026-10-23)."""
+        return not self._posted.empty()
+
     # called by the game thread
     def pump(self) -> None:
         """DoEvents: run Form_KeyDown for every key posted since the last pump, in order."""

@@ -93,10 +93,11 @@ def test_stop_without_our_speech_leaves_jaws_alone():
     backend, com, _, clock = make()
     backend.stop()                                          # nothing spoken: the game calls stop() on every key
     assert com.calls == []
-    backend.speak("hello")
+    assert com.calls == [] or all(c[1] != " " for c in com.calls)   # the stop itself flushes nothing
+    backend.speak("hello")                                  # the first text after the key interrupts (2026-10-23: the JAWS lag)
     clock.now += 60                                         # long finished, even with the margin
     backend.stop()
-    assert [c for c in com.calls if c[0] == "say" and c[2] is True] == []
+    assert [c for c in com.calls if c[0] == "say" and c[1] == " "] == []      # nothing of ours was playing: no cut of its own
 
 
 def test_stop_still_cuts_when_the_estimate_was_short():
@@ -112,7 +113,37 @@ def test_arrowing_pattern_cuts_then_queues_the_next_item():
     backend.speak("Voice: Microsoft David.")
     backend.stop()
     backend.speak("Speech rate: 0, original.")
-    assert [c[1:] for c in com.calls if c[0] == "say"][-2:] == [(" ", True), ("Speech rate: 0, original.", False)]
+    assert [c[1:] for c in com.calls if c[0] == "say"][-2:] == [(" ", True), ("Speech rate: 0, original.", True)]   # interrupts (2026-10-23)
+    backend.speak("Speech pitch: 0.")                       # the next texts of the same answer queue after it
+    assert [c[1:] for c in com.calls if c[0] == "say"][-1] == ("Speech pitch: 0.", False)
+
+
+def test_a_key_waiting_ends_the_wait_from_half_the_guess_on():
+    """The owner, 2026-10-23: "with Jaws, speech is laggy when I press arrow and other keys". JAWS gives no end of speech; at a fast rate
+    the guess is far too long. A key waiting ends the wait from EARLY_SHARE of the guess on, never before."""
+    from nfl4.speech import jaws as J
+    backend, com, _, clock = make()
+    waiting = [False]
+    backend.key_waiting = lambda: waiting[0]
+    backend.speak("x" * 100)                                # guess 2.48 s
+    guess = estimated_seconds("x" * 100)
+    clock.now += guess * J.EARLY_SHARE - 0.01
+    waiting[0] = True
+    assert backend.is_speaking()
+    done = threading.Event()
+    threading.Thread(target=lambda: (backend.wait_until_done(), done.set()), daemon=True).start()
+    assert not done.wait(0.1)                               # before the earliest end: the key waits
+    clock.now += 0.02
+    assert done.wait(2.0)                                   # from it on: the wait ends at once
+    waiting[0] = False
+    backend.stop()                                          # the key was taken: a new answer
+    backend.speak("y" * 100)
+    clock.now += guess * 0.9                                # no key: the wait goes on to the guess
+    finished = threading.Event()
+    threading.Thread(target=lambda: (backend.wait_until_done(), finished.set()), daemon=True).start()
+    assert not finished.wait(0.1)
+    clock.now += guess
+    assert finished.wait(2.0)
 
 
 def test_wait_uses_an_estimate_from_the_text_and_ends_on_abort():

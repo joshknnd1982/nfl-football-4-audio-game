@@ -55,7 +55,8 @@ GAIN_4 = " There is a gain of 4 yards on the play"
 FIRST_PROMPT = [FLAG, HORSE_COLLAR,
                 " Kim if you accept the penalty, it will be first and 10 on your 49 yard line. ",
                 " if you decline it, it will be fourth and 1 on your 34 yard line. ", " accept ", " decline "]
-REVIEW = [X.text("NXR-08"), X.text("NXR-04"), X.text("NXR-05"), " the runner made the first down. "]
+DECLINED_FIRST = X.text("NXP-25", situation="it will be fourth and 1 on your 34 yard line")        # the referee (2026-10-23)
+REVIEW = [DECLINED_FIRST, X.text("NXR-08"), X.text("NXR-04"), X.text("NXR-05"), " the runner made the first down. "]
 SECOND_PROMPT = [" There is a gain of 5 yards on the play", FLAG, HORSE_COLLAR,
                  " Kim if you accept the penalty, it will be first and 10 on the 50 yard line. ",
                  " if you decline it, it will be first and 10 on your 35 yard line. ", " accept "]
@@ -69,7 +70,8 @@ def test_the_player_declines_a_flag_the_review_changes_the_ruling_and_the_flag_i
     d = ruled_wrong(collar(rig)).below(4, 0)                        # the corrected play's live time; nothing after the choice
     assert run_steps(rig, rig.engine.gain_and_end, d) == "next_play"
     assert texts(rig) == ([GAIN_4] + FIRST_PROMPT + REVIEW + SECOND_PROMPT
-                          + [" accept ", X.text("NXP-09"), " it's your ball on the 50yard line",
+                          + [" accept ", X.text("NXP-24", yards=15, situation="it will be first and 10 on the 50 yard line"),
+                             X.text("NXP-09"), " it's your ball on the 50yard line",
                              " it's first down and 10yards to go"])
     s, x = rig.engine.s, rig.engine.s.extras
     assert (s.half, s.yard_line, s.down, s.to_go) == (2, 50, 1, 10)
@@ -86,7 +88,8 @@ def test_the_flag_declined_twice_leaves_the_corrected_play_as_it_is(tmp_path):
     d = ruled_wrong(collar(rig)).below(4, 0).rnd(4, 1)
     assert run_steps(rig, rig.engine.gain_and_end, d) == "next_play"
     assert texts(rig) == ([GAIN_4] + FIRST_PROMPT + REVIEW + SECOND_PROMPT
-                          + [" decline ", " it's your ball on your 35yard line", " it's first down and 10yards to go"])
+                          + [" decline ", X.text("NXP-25", situation="it will be first and 10 on your 35 yard line"),
+                             " it's your ball on your 35yard line", " it's first down and 10yards to go"])
     s, x = rig.engine.s, rig.engine.s.extras
     assert (s.half, s.yard_line, s.down, s.to_go) == (2, 35, 1, 10)
     assert (x.flags, x.flag_yards) == ([0, 0], [0, 0])
@@ -100,7 +103,8 @@ def test_a_flag_accepted_at_first_takes_the_play_over_and_the_play_is_not_ruled(
     d = collar(rig)
     assert run_steps(rig, rig.engine.gain_and_end, d) == "next_play"
     assert texts(rig) == ([GAIN_4] + FIRST_PROMPT[:5]
-                          + [X.text("NXP-09"), " it's your ball on your 49yard line", " it's first down and 10yards to go"])
+                          + [X.text("NXP-24", yards=15, situation="it will be first and 10 on your 49 yard line"),
+                             X.text("NXP-09"), " it's your ball on your 49yard line", " it's first down and 10yards to go"])
     assert rig.rules.review.rulings == [] and rig.rules.review.pending is None
     assert [e[1] for e in rig.rules.penalty.events] == ["accepted"] and rig.engine.s.extras.flags == [0, 1]
 
@@ -114,7 +118,7 @@ def test_a_ruling_that_stands_after_a_declined_flag_does_not_offer_the_flag_agai
     assert run_steps(rig, rig.engine.gain_and_end, d) == "next_play"
     said = texts(rig)
     assert said[:len(FIRST_PROMPT) + 1] == [GAIN_4] + FIRST_PROMPT
-    assert said[len(FIRST_PROMPT) + 1:len(FIRST_PROMPT) + 3] == [X.text("NXR-08"), X.text("NXR-04")]
+    assert said[len(FIRST_PROMPT) + 1:len(FIRST_PROMPT) + 4] == [DECLINED_FIRST, X.text("NXR-08"), X.text("NXR-04")]
     assert said.count(FLAG) == 1 and X.text("NXR-07") in said
     assert [e[1] for e in rig.rules.penalty.events] == ["declined"]
 

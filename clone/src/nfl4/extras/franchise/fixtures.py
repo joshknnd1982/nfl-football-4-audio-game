@@ -12,7 +12,9 @@ table, which follows the NFL's release of 2026-05, and checked against the NFL's
   conference rotate and the places in them turn, so a team meets other opponents each year and every rule of the calendar still holds (the same week
   structure, byes and home games; division games stay division games). That is an approximation, said plainly in the README, not the NFL's rotation.
 * `check` is the whole check of a calendar (every team plays 17 games and has one bye, twice against each team of its division, once at home and once
-  away, never twice in a week). A file that does not pass is not used: the Franchise then plays the original's random 16 weeks and says nothing wrong.
+  away, never twice in a week). A file that does not pass is not used: the Franchise then plays the original's random 16 weeks and says so once (NXF-46, S8.3
+  round 2: the README promises the real calendar, so a silent fallback broke rule 0.28 (4)); the log's `calendar_missing` line names the file.
+  A file with a byte order mark (Notepad's) is read.
 
 No speech, no draw and no file writing here; the league record keeps the calendar of its season (`LeagueRecord.calendar`).
 """

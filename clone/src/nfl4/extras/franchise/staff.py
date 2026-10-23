@@ -27,6 +27,7 @@ from __future__ import annotations
 from .. import playbook_data as PD
 from .. import tuning as T
 from . import data as D
+from . import first_names as FN
 from .league import LeagueError, draw_name
 
 STYLE_KEYS = tuple(s.key for s in PD.STYLES)          # what a candidate's style is drawn from (below(7)); a new league's coordinators may also have Classic
@@ -77,7 +78,7 @@ def side_rating(league, team: int, side: int) -> int:
 def _walked_names(league, surnames: list, count: int) -> list:
     """`count` names for a new staff without a draw: a walk through the surnames from a place the league's strengths decide, every NAME_STRIDE-th
     name, skipping the names of active players and names already given (then the pool's order; a duplicate only when the pool is used up)."""
-    used = {p.name for p in league.players.values() if p.status == "active"} | {league.coach}
+    used = FN.name_keys(league.league_id, (p.name for p in league.players.values() if p.status == "active")) | {league.coach}   # D-131
     n = len(surnames)
     out = []
     if n:
@@ -354,7 +355,7 @@ def draw_candidates(league, rnd, surnames: list, staff: bool) -> None:
     """FR_COORD_CANDIDATES candidates for every open coordinator's place, team by team, the offense first; every computer team takes its best at once, and
     so does the player's team when `staff`; the player's open places wait for his choice (`hire`)."""
     state = league.staff["stage"]
-    used = {p.name for p in league.players.values() if p.status == "active"} | {league.coach}
+    used = FN.name_keys(league.league_id, (p.name for p in league.players.values() if p.status == "active")) | {league.coach}   # D-131
     for coach in league.staff["coaches"]:
         if coach is not None:
             used.add(coach["name"])

@@ -6,19 +6,19 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2049.
+- Texts: 2057.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
-- Penalties (design section 9): 84.
+- Penalties (design section 9): 89.
 - Playbooks (design section 10): 828.
 - Menus and settings (design 10.4, 12): 56.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 582.
 - The real coaches and players (NX-N, SX.11): 7.
-- The radio broadcast: banter and Ghip (SY.1, rule 0.27): 359.
+- The radio broadcast: banter and Ghip (SY.1, rule 0.27): 362.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
 
 ## The clock (design section 5)
@@ -241,6 +241,11 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXP-S17 (piece, piece): "the kick will be made again". situation: accepting a foul by the kicking team on an onside kick that it recovered (6-3-1)
 - NXP-22 (sentence, say5): " the game can be saved after this choice. ". S at the accept-or-decline prompt when the choice cannot be kept in a saved game (a score, a turnover, a try, a kept choice that would change sides, the last second of a quarter or a half; SX.9)
 - NXP-23 (sentence, say5): " a penalty is waiting for your choice. ". a loaded game with a pending accept-or-decline choice, before the flag is told again (C10, SX.9)
+- NXP-24 (sentence, say4): " the penalty is accepted. <yards> yards, <situation>. ". the referee after the player accepts a penalty (tester 2026-10-23)
+- NXP-25 (sentence, say4): " the penalty is declined, <situation>. ". the referee after the player declines a penalty (tester 2026-10-23)
+- NXP-26 (sentence, say4): " <yards> yards, <situation>. ". the referee after NXP-06, the computer accepted (tester 2026-10-23)
+- NXP-27 (sentence, say4): " <situation>. ". the referee after NXP-07 or NXP-06 with no yards (tester 2026-10-23)
+- NXP-28 (sentence, say4): " the penalty is accepted, <situation>. ". the referee after the player accepts a penalty of no yards (tester 2026-10-23)
 - NXH-47 (help, say5): " At the question about a penalty, S. saves the game with the question kept, when it can be kept. The loaded game asks it again. ". F5 addition (H12, C6), when penalties are on (SX.9)
 - NXP-F34 (foul, piece): "illegal wedge". P34 (SX.10d, G26-14)
 - NXP-F35 (foul, piece): "illegal kick off formation". P35 (SX.10d, G26-14)
@@ -2105,4 +2110,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXB-S17 (menu, say5): "A long whistle". whistle_long (SZ.2)
 - NXB-S18 (menu, say5): "A double whistle". whistle_double (SZ.2)
 - NXB-S19 (menu, say5): "A triple whistle". whistle_triple (SZ.2)
+- NXB-S20 (menu, say5): "Crowd roars for your big play". F9 Sounds, stadium sounds list: crowd_big_play (tester 2026-10-23)
+- NXB-S21 (menu, say5): "Crowd cheers a flag on them". F9 Sounds, stadium sounds list: crowd_flag_cheer (tester 2026-10-23)
+- NXB-S22 (menu, say5): "One file for every whistle". F9 Sounds, stadium sounds list: whistle (tester 2026-10-23)
 
