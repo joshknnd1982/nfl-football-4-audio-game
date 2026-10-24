@@ -14,6 +14,16 @@ from . import tuning as T
 RUN, PASS = "run", "pass"
 
 
+def kind_of(offense_play: int) -> str | None:
+    """Which group carries the play: the backs on a run (plays 1 and 2), the receivers on a pass (3 to 5); None for a kick or a quarterback run (the
+    same rule as the Franchise's workload.kind_of, kept here so a game outside a franchise reaches nothing of the Franchise)."""
+    if offense_play in (1, 2):
+        return RUN
+    if offense_play in (3, 4, 5):
+        return PASS
+    return None
+
+
 def shares(kind: str | None) -> list:
     """The six places' shares of a run (the backs) or a pass (the receivers: WR1, WR2, WR3, TE1, WR4, TE2); a run's for anything else."""
     return list(T.USAGE_PASS if kind == PASS else T.USAGE_RUN)
@@ -21,8 +31,8 @@ def shares(kind: str | None) -> list:
 
 def combine(base: list, rating_weights: list | None) -> list:
     """The shares times a franchise's rating weights (None: the shares alone)."""
-    if rating_weights is None:
-        return list(base)
+    if rating_weights is None or all(w == rating_weights[0] for w in rating_weights):
+        return list(base)                                    # equal ratings decide nothing: the plain shares (N2: a league of 70s is the game without ratings)
     return [share * weight for share, weight in zip(base, rating_weights)]
 
 

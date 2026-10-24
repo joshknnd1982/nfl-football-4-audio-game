@@ -476,3 +476,4 @@
 - IJX04 (remark, say2): " the trainers come out for <player>. the <team> lose their <position> for the rest of the game. ". the announcer (injuries.txt)
 - NWJ01 (remark, say2): " the <team> will be without <player>, their <position>, for up to <n> weeks. ". another team's injury (news)
 - NWJ02 (remark, say2): " bad news for the <team>: <player> is out for up to <n> weeks. ". another team's injury (news)
+- NWJ03 (remark, say2): " <player> of the <team> is hurt and will miss up to <n> weeks. ". another team's injury (news)

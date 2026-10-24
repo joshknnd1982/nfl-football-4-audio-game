@@ -132,10 +132,10 @@ def test_the_file_keeps_the_choice_and_an_older_file_has_none():
     I.injure(league, hurt.id, "IJA", 5, 0, 2)
     I.choose(league, hurt.id, dl(league, 4).id)
     data = json.loads(league.to_json())
-    assert data["format"] == 15 and data["injuries"]["chosen"] == [[hurt.id, dl(league, 4).id]]
+    assert data["format"] == D.FORMAT >= 15 and data["injuries"]["chosen"] == [[hurt.id, dl(league, 4).id]]
     data["format"] = 14
     del data["injuries"]["chosen"]
-    assert D.FORMAT == 15                                              # (the loads of both formats: the program test below, a whole league)
+    assert D.FORMAT >= 15                                              # (the loads of both formats: the program test below, a whole league)
 
 
 @pytest.mark.parametrize("bad", [[[1]], [[10 ** 10, 1]], "x", [[1, 1]]])

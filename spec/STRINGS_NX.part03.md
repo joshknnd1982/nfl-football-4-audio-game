@@ -1,10 +1,3 @@
-- NXY-S66 (help, say5): " A receiver runs out, then comes back to the quarterback. A short, safe catch against man for man defense; defenders guarding areas can cover it. ". description of O166 Return Route (NX-P8; heard with D)
-- NXY-S67 (help, say5): " A receiver runs a medium distance toward the sideline. Good against defenders guarding areas; weak against defenders who bump the receivers. ". description of O167 Bench Route (NX-P8; heard with D)
-- NXY-S10 (help, say5): " A receiver fakes toward the sideline, then cuts the other way. Good against man for man defense; defenders guarding areas can cover it. ". description of O110 Zig Route (NX-P8; heard with D)
-- NXY-R87 (help, say5): " Two receivers cut sharply across the field for a fast throw. Beats a blitz; defenders who drop back can cover it. ". description of O087 Double Slants (NX-P8; heard with D)
-- NXZ-R01 (help, say5): " Eight defenders crowd the line and the rest cover man for man with no deep help. Strong against runs near the goal line; a pass over their heads can score. ". description of D001 Goal Line Eight Up (NX-P8; heard with D)
-- NXZ-R02 (help, say5): " A packed line with five rushers. Strong against runs near the goal line; weak against play action passes. ". description of D002 Goal Line Stack (NX-P8; heard with D)
-- NXZ-R03 (help, say5): " Eight defenders close to the line, with extra rushers coming. Strong against runs; weak against screens. ". description of D003 Bear Front (NX-P8; heard with D)
 - NXZ-R31 (help, say5): " Six linemen and two linebackers fill the line. Strong against runs near the goal line; weak against passes. ". description of D031 Goal Line Six Two (NX-P8; heard with D)
 - NXZ-R32 (help, say5): " Five linemen and three linebackers fill the line. Strong against runs near the goal line; weak against passes. ". description of D032 Goal Line Five Three (NX-P8; heard with D)
 - NXZ-R33 (help, say5): " Four linemen and four linebackers crowd the line. Strong against runs for a yard or two; weak against passes. ". description of D033 Short Yardage Four Four (NX-P8; heard with D)
@@ -322,5 +315,55 @@
 - NXB-T21 (sentence, say5): " that play is not a pass. ". R on a play that is not a pass (SY.4)
 - NXH-69 (help, say5): " R in the offense menu chooses who your next pass goes to, a running back too when the play can throw to one. L in the defense menu chooses who blitzes. Enter keeps the play's own pick. ". F6 addition (SY.4, SY.5)
 - NXH-75 (help, say5): " F9, Rules, Quarterbacks lists every team's quarterbacks. Enter on a team lists them, and Enter on one makes him the team's starter from the next game. ". F6 addition (D-132)
+- NXH-79 (help, say5): " F9, Rules, Depth charts: any team's order, position by position; Enter on a player makes him the first. In a franchise, your own team. ". F6 addition (NX-D3)
+- NXH-80 (help, say5): " Depth charts, key downs and moments: who gets the ball on third and fourth down, in the red zone, and in the last two minutes of a half. ". F6 addition (NX-D4)
 - NXM-58 (menu, say5): "Quarterbacks". F9, Rules, the item before Reset (D-132): every team's quarterbacks and the starter you choose
+- NXM-D01 (menu, say5): "Depth charts". F9, Rules, after Quarterbacks: every team's depth chart and key players (NX-D3, NX-D4)
+- NXM-D02 (sentence, say5): " depth charts. which team? the letters find a team. ". F9 depth charts: the list of teams (NX-D3)
+- NXM-D03 (sentence, say5): " the depth chart of the <team>. ". F9 depth charts: a team's menu title (NX-D3)
+- NXM-D04 (menu, say5): "<group>, <player> first". F9 depth charts: a group with its first man (NX-D3)
+- NXM-D05 (sentence, say5): " the <group> of the <team>, in order. Enter makes one the first. ". F9 depth charts: a group's list title (NX-D3)
+- NXM-D06 (sentence, say5): " <player>, <position>. ". F9 depth charts: a player (NX-D3)
+- NXM-D07 (sentence, say5): " <player>, <position>, rating <r>, age <a>. ". F9 depth charts in a franchise: a player (NX-D3)
+- NXM-D08 (sentence, say5): " <player> is now the first of the <group>. ". F9 depth charts: done (NX-D3)
+- NXM-D09 (menu, say5): "back to the real order". F9 depth charts: the team's real order and no key players (NX-D3)
+- NXM-D10 (menu, say5): "back to the staff's order". F9 depth charts in a franchise: the staff's order and no key players (NX-D3)
+- NXM-D11 (sentence, say5): " the <team> play in their real order again. ". F9 depth charts: done (NX-D3)
+- NXM-D12 (sentence, say5): " your team plays in the staff's order again, with no key players. ". F9 depth charts in a franchise: done (NX-D3)
+- NXM-D14 (sentence, say5): " nobody is in this group. ". F9 depth charts: an empty group (NX-D3)
+- NXM-D20 (piece, piece): "running backs". F9 depth charts: group names (NX-D3)
+- NXM-D21 (piece, piece): "wide receivers". group name
+- NXM-D22 (piece, piece): "tight ends". group name
+- NXM-D23 (piece, piece): "defensive linemen". group name
+- NXM-D24 (piece, piece): "linebackers". group name
+- NXM-D25 (piece, piece): "cornerbacks". group name
+- NXM-D26 (piece, piece): "safeties". group name
+- NXM-D27 (piece, piece): "kickers". group name
+- NXM-D28 (piece, piece): "punters". group name
+- NXM-D29 (piece, piece): "returners". group name
+- NXM-D30 (piece, piece): "running back". F9 depth charts: position words (NX-D3)
+- NXM-D31 (piece, piece): "fullback". position word
+- NXM-D32 (piece, piece): "wide receiver". position word
+- NXM-D33 (piece, piece): "tight end". position word
+- NXM-D34 (piece, piece): "defensive lineman". position word
+- NXM-D35 (piece, piece): "linebacker". position word
+- NXM-D36 (piece, piece): "cornerback". position word
+- NXM-D37 (piece, piece): "safety". position word
+- NXM-D38 (piece, piece): "kicker". position word
+- NXM-D39 (piece, piece): "punter". position word
+- NXM-D40 (piece, piece): "quarterback". position word
+- NXM-D41 (piece, piece): "offensive lineman". position word
+- NXM-D42 (piece, piece): "long snapper". position word
+- NXM-D43 (menu, say5): "<group>, nobody". F9 depth charts: a group with no player (NX-D3)
+- NXM-K01 (menu, say5): "key downs and moments". F9 depth charts: who gets the ball in the key situations (NX-D4)
+- NXM-K02 (sentence, say5): " key downs and moments: who gets the ball there. ". the menu's title (NX-D4)
+- NXM-K03 (menu, say5): "<situation>, <group>: <player>". an item: the situation, the back or the receiver, and the man (NX-D4)
+- NXM-K04 (piece, piece): "the starter". no man named: the starter (NX-D4)
+- NXM-K05 (piece, piece): "third and fourth down". a key situation (NX-D4)
+- NXM-K06 (piece, piece): "the red zone". a key situation: the ball inside the other team's 20 (NX-D4)
+- NXM-K07 (piece, piece): "the last two minutes of a half". a key situation (NX-D4)
+- NXM-K08 (piece, piece): "the back". the role of a run (NX-D4)
+- NXM-K09 (piece, piece): "the receiver". the role of a pass (NX-D4)
+- NXM-K10 (sentence, say5): " on <situation>, <player> gets the ball most of the time. ". after a choice (NX-D4)
+- NXM-K11 (sentence, say5): " on <situation>, the starter gets the ball as usual. ". after choosing the starter (NX-D4)
 

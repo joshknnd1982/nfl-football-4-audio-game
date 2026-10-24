@@ -160,6 +160,9 @@ def place_by_rating(league: LeagueRecord, team: int | None = None) -> None:
         roster = league.rosters[t - 1]
         for position, places in D.PLACES_OF.items():
             players = sorted((league.players[roster[i]] for i in places if roster[i]), key=lambda p: (-p.rating, p.id))
+            if t == league.team:
+                from . import depth
+                players = depth.player_order(league, position, players)     # NX-D3: the player's own order for the men he placed
             for index, player in zip(places, players):
                 roster[index] = player.id
                 player.place = index

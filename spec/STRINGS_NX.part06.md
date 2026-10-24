@@ -1,4 +1,3 @@
-- BN86 (remark, say): " If I ever go quiet for a second, it is not because I ran out of words. It is because I am hunting for a better one. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN87 (remark, say): " Up here in the booth my headset is a little tight and my coffee is a little cold, and I would not trade it for any seat in the house. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN88 (remark, say): " A broadcaster's best friends are a sharp pencil, a steady voice and a stat sheet that somebody remembered to print. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN89 (remark, say): " What is in a broadcast booth? Mostly headsets, wires, snacks and one enormous pile of paper that nobody can ever find anything in. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
@@ -234,6 +233,7 @@
 - NXH-68 (help, say5): " The referee announces the flags and the reviews over a microphone, in a separate voice. F12 and F11 ask for that voice and its volume, and F9, Rules, Broadcast switches the referee off. ". F6 addition (SY.3)
 - NXH-70 (help, say5): " The commentator is called Ghip until you choose another name in F9, Rules, Commentator. The list has well known sports podcasters, and you can type a name of your own. ". F6 addition (SZ.1)
 - NXH-71 (help, say5): " The stadium and referee sounds can be replaced with your own sound files: F9, Sounds, Stadium and referee sounds lists them with the file name each one takes. ". F6 addition (SZ.2)
+- NXH-81 (help, say5): " Your own music and celebrations: put music.wav, or celebration1.wav and up, in the sounds folder. The game plays no music or celebrations of its own. ". F6 addition (NX-M1, NX-M2)
 - NXM-39 (menu, say5): "Commentator". F9 Rules item 12: the color commentator's name, followed by the name (SZ.1, D-106)
 - NXM-40 (menu, say5): "Choose the commentator". the title of the list of names (SZ.1)
 - NXM-41 (help, say5): " Up and Down move through the names. Typing letters jumps to a name. Enter chooses it, and Escape goes back without a change. The last item lets you type a name of your own. ". F1 in the list of names (SZ.1)

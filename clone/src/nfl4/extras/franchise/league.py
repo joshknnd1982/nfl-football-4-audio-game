@@ -116,6 +116,7 @@ class LeagueRecord:
     honors: dict = field(default_factory=lambda: {"awards": [], "hall": []})   # SX.8o, format 10: the awards and the hall of fame (honors.py)
     usage: dict = field(default_factory=lambda: {"season": 0, "games": {}, "carries": {}})   # SX.8o, format 10: the season's games and carries (workload.py)
     practice: dict = field(default_factory=lambda: {"season": 0, "elevations": {}})   # D-136, format 14: practice.py
+    depth: dict = field(default_factory=lambda: {"order": {}, "key": {}})   # NX-D3, NX-D4, format 16: the player's depth chart and key players (depth.py)
     calendar: dict | None = None                       # SZ.8, format 12: {"label": str, "weeks": [[[visitor, home], ...], ...]} the real calendar of this season; None: the original's 16 weeks
     cut_deciding: bool = field(default=False, repr=False, compare=False)   # D-130: the roster cut's plans are made and not yet applied (never saved)
 
@@ -248,7 +249,7 @@ class LeagueRecord:
                 "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
                 "injuries": self.injuries, "staff": self.staff, "comp": self.comp, "future_picks": self.future_picks, "tags": self.tags,
                 "people": self.people, "honors": self.honors, "usage": self.usage, "ties": self.ties, "calendar": self.calendar,
-                "practice": self.practice}
+                "practice": self.practice, "depth": self.depth}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -313,6 +314,8 @@ class LeagueRecord:
                 record.calendar = data["calendar"]                  # SZ.8; a file of format 11 or older: the original's 16 weeks (the default)
             if version >= 14:
                 record.practice = data["practice"]                  # D-136; a file of format 13 or older: no squads yet (formed below in its season)
+            if version >= 16:
+                record.depth = data["depth"]                        # NX-D3; a file of format 15 or older: the staff's order and the starters (the default)
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -425,6 +428,8 @@ class LeagueRecord:
         workload_rules.check_usage(self, whole)                # SX.8o: the season's games and carries
         from . import practice as practice_rules
         practice_rules.check(self, whole)                      # D-136: the practice squads
+        from . import depth as depth_rules
+        depth_rules.check(self, whole)                         # NX-D3, NX-D4: the player's depth chart and key players
         self._check_results(whole)
         self._check_season(whole, ints)
 
@@ -801,6 +806,8 @@ def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_n
             league.next_id += 1
     if real is not None:
         use_real_names(league, real, team, given)               # SX.11: the real players, after the draws
+        from . import depth
+        depth.real_starters_first(league)                       # NX-D2, NX-D3: each group's best drawn rating to its real starter (no draw)
     from . import contracts
     contracts.give_initial_contracts(league)                    # SX.8g: the market price of each player; no draw
     league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]

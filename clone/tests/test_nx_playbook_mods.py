@@ -13,7 +13,8 @@ from nfl4.game.playtables import NEUTRAL, PASSES, RUNS, PassEntry, QBRunEntry, R
 from nflrig import nfl_engine_rig
 from pagrig import Draws, run_steps
 from test_nx_qb_plays import after_play
-from test_pag_scrimmage import first_handoff, quiet_snap_count, snap_draws
+from test_pag_scrimmage import first_handoff, quiet_snap_count
+from nxdraws import nfl_snap_draws as snap_draws, tackle_value      # NX-D2: the N. F. L. rules draw by the usage shares
 
 TABLE = PB.DEFAULT_TABLE
 START = dict(wisoff=1, defense=2, half=2, yard_line=30, down=1, to_go=10, quarter=1)

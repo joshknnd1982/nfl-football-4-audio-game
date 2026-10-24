@@ -106,9 +106,13 @@ def apply(game) -> None:
     if base is None:
         return
     choices = parse_choices(game.options.settings.game.nx_qb_starters)
-    game.real_names = with_starters(base, choices)
+    from .depth_chart import parse_depth, with_depth
+    depth = parse_depth(getattr(game.options.settings.game, "nx_depth", ""))
+    game.real_names = with_depth(with_starters(base, choices), depth)          # NX-D3: the player's depth charts after the starters
     if choices:
         debuglog.event("names", "quarterbacks_chosen", teams=sorted(choices))
+    if depth:
+        debuglog.event("names", "depth_charts_set", teams=sorted(depth))      # rule 0.15
 
 
 # ----- F9, Rules, Quarterbacks -----

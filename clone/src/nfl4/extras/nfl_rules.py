@@ -397,9 +397,8 @@ class NflRules(ClassicRules):
         usage shares (the starters most, like Madden's depth chart), a franchise's rating weights multiplied in (SX.8o), the player's man for a key
         down or moment given KEY_PLAYER_SHARE of it (NX-D4)."""
         from . import usage
-        from .franchise import workload
         values = self.modifiers.carrier_weights(state) if hasattr(self.modifiers, "carrier_weights") else None
-        kind = workload.kind_of(state.offense_play)
+        kind = usage.kind_of(state.offense_play)
         weights = usage.combine(usage.shares(kind), values)
         weights = usage.with_key_player(weights, self.key_place(state, kind))
         drawn = usage.weighted_place(rnd, weights)
@@ -1000,7 +999,7 @@ class NflRules(ClassicRules):
 
     def extra_help(self, key: str) -> list[str]:
         ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-47", "NXH-14", "NXH-18", "NXH-27"),
-               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-79", "NXH-80", "NXH-81", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
                         "NXH-16", "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30") + MENU_HELP_F6,     # SX.12: overtime after the clock
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
                         "NXH-33") + descriptions.F7_WORD_ROWS}.get(key, ())

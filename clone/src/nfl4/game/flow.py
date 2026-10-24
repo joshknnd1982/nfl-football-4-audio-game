@@ -198,6 +198,11 @@ class Game(Speakers):
         from ..extras.franchise.menus import help_lines
         return help_lines(key)
 
+    def key_place(self, state, kind):
+        """NX-D4 (the N. F. L. rules' draw_carrier asks it): the place of the player's man for this key down or moment, or None."""
+        from ..extras.depth_chart import key_place_for
+        return key_place_for(self, state, kind)
+
     @property
     def franchise_in_use(self) -> bool:
         """True while the franchise is the kind of season being played (nfl4 only, SX.8a)."""

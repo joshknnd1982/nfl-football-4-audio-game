@@ -21,7 +21,8 @@ from nfl4.extras.playbooks import PlaybookModifiers
 from nfl4.extras.qb_runs import make_entry
 from nfl4.game.playtables import NEUTRAL, PASSES, RUNS, PassEntry, QBRunEntry, RunEntry
 from test_nx_qb_plays import after_play
-from test_pag_scrimmage import first_handoff, quiet_snap_count, snap_draws
+from test_pag_scrimmage import first_handoff, quiet_snap_count
+from nxdraws import nfl_snap_draws as snap_draws, tackle_value      # NX-D2: the N. F. L. rules draw by the usage shares
 
 
 @pytest.fixture(autouse=True)
@@ -371,8 +372,8 @@ def test_a_better_carrier_against_two_weak_tacklers_reads_a_moved_row_and_a_larg
     d = quiet_snap_count(Draws())
     # SX.8o: the carrier is drawn by the backs' carry weights (the back rated 90 weighs more), so back 3 is the roll just past the first two weights
     from nfl4.extras.franchise import workload
-    weights = workload.weights([70, 70, 90, 70, 70, 70])
-    d.below(sum(weights), weights[0] + weights[1]).rnd(17, 5).rnd(17, 9).rnd(13, 1).rady()
+    weights = [s * w for s, w in zip(T.USAGE_RUN, workload.weights([70, 70, 90, 70, 70, 70]))]     # NX-D2: the shares times the weights
+    d.below(sum(weights), weights[0] + weights[1]).below(100, tackle_value(5)).below(100, tackle_value(9)).rnd(13, 1).rady()
     first_handoff(d, group=1, phrase=1)
     d.rnd(3, 1).rnd(53, 1).below(7, 0)                  # the direction; the fumble 1 in 50 + 3; the row is 1 to 8: width 7, 1 yard
     after_play(d, oob=99)

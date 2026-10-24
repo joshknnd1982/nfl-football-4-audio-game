@@ -2069,6 +2069,9 @@ NXH-75	menus	help	say5	 F9, Rules, Quarterbacks lists every team's quarterbacks.
 NXH-76	franchise	help	say5	 The play-offs of a franchise on the real calendar are the N. F. L.'s: 7 teams in each conference, and only the top seed rests in the wild card round. The division round is reseeded. 	F6 while the franchise is in use (D-129)
 NXH-77	franchise	help	say5	 F9, Franchise, get the latest N. F. L. calendar asks the game's page on GitHub for the newest schedule, only when you choose it. 	F6 while the franchise is in use (D-128)
 NXH-78	franchise	help	say5	 In a franchise, F9, Rules, Quarterbacks lists every team's starter and its practice squad quarterbacks; on your team a practice squad quarterback can become the starter. 	F6 while the franchise is in use (D-132)
+NXH-79	menus	help	say5	 F9, Rules, Depth charts: any team's order, position by position; Enter on a player makes him the first. In a franchise, your own team. 	F6 addition (NX-D3)
+NXH-80	menus	help	say5	 Depth charts, key downs and moments: who gets the ball on third and fourth down, in the red zone, and in the last two minutes of a half. 	F6 addition (NX-D4)
+NXH-81	broadcast	help	say5	 Your own music and celebrations: put music.wav, or celebration1.wav and up, in the sounds folder. The game plays no music or celebrations of its own. 	F6 addition (NX-M1, NX-M2)
 NXM-39	broadcast	menu	say5	Commentator	F9 Rules item 12: the color commentator's name, followed by the name (SZ.1, D-106)
 NXM-40	broadcast	menu	say5	Choose the commentator	the title of the list of names (SZ.1)
 NXM-41	broadcast	help	say5	 Up and Down move through the names. Typing letters jumps to a name. Enter chooses it, and Escape goes back without a change. The last item lets you type a name of your own. 	F1 in the list of names (SZ.1)
@@ -2089,6 +2092,54 @@ NXM-55	broadcast	prompt	say5	 this moves your own stadium and referee sound file
 NXM-56	broadcast	sentence	say5	 <n> of your files were moved. The original sounds are back. 	after that item (SZ.2)
 NXM-57	broadcast	sentence	say5	 you have no stadium or referee sound files of your own. 	after that item when there is nothing to move (SZ.2)
 NXM-58	menus	menu	say5	Quarterbacks	F9, Rules, the item before Reset (D-132): every team's quarterbacks and the starter you choose
+NXM-D01	menus	menu	say5	Depth charts	F9, Rules, after Quarterbacks: every team's depth chart and key players (NX-D3, NX-D4)
+NXM-D02	menus	sentence	say5	 depth charts. which team? the letters find a team. 	F9 depth charts: the list of teams (NX-D3)
+NXM-D03	menus	sentence	say5	 the depth chart of the <team>. 	F9 depth charts: a team's menu title (NX-D3)
+NXM-D04	menus	menu	say5	<group>, <player> first	F9 depth charts: a group with its first man (NX-D3)
+NXM-D05	menus	sentence	say5	 the <group> of the <team>, in order. Enter makes one the first. 	F9 depth charts: a group's list title (NX-D3)
+NXM-D06	menus	sentence	say5	 <player>, <position>. 	F9 depth charts: a player (NX-D3)
+NXM-D07	menus	sentence	say5	 <player>, <position>, rating <r>, age <a>. 	F9 depth charts in a franchise: a player (NX-D3)
+NXM-D08	menus	sentence	say5	 <player> is now the first of the <group>. 	F9 depth charts: done (NX-D3)
+NXM-D09	menus	menu	say5	back to the real order	F9 depth charts: the team's real order and no key players (NX-D3)
+NXM-D10	menus	menu	say5	back to the staff's order	F9 depth charts in a franchise: the staff's order and no key players (NX-D3)
+NXM-D11	menus	sentence	say5	 the <team> play in their real order again. 	F9 depth charts: done (NX-D3)
+NXM-D12	menus	sentence	say5	 your team plays in the staff's order again, with no key players. 	F9 depth charts in a franchise: done (NX-D3)
+NXM-D14	menus	sentence	say5	 nobody is in this group. 	F9 depth charts: an empty group (NX-D3)
+NXM-D20	menus	piece	piece	running backs	F9 depth charts: group names (NX-D3)
+NXM-D21	menus	piece	piece	wide receivers	group name
+NXM-D22	menus	piece	piece	tight ends	group name
+NXM-D23	menus	piece	piece	defensive linemen	group name
+NXM-D24	menus	piece	piece	linebackers	group name
+NXM-D25	menus	piece	piece	cornerbacks	group name
+NXM-D26	menus	piece	piece	safeties	group name
+NXM-D27	menus	piece	piece	kickers	group name
+NXM-D28	menus	piece	piece	punters	group name
+NXM-D29	menus	piece	piece	returners	group name
+NXM-D30	menus	piece	piece	running back	F9 depth charts: position words (NX-D3)
+NXM-D31	menus	piece	piece	fullback	position word
+NXM-D32	menus	piece	piece	wide receiver	position word
+NXM-D33	menus	piece	piece	tight end	position word
+NXM-D34	menus	piece	piece	defensive lineman	position word
+NXM-D35	menus	piece	piece	linebacker	position word
+NXM-D36	menus	piece	piece	cornerback	position word
+NXM-D37	menus	piece	piece	safety	position word
+NXM-D38	menus	piece	piece	kicker	position word
+NXM-D39	menus	piece	piece	punter	position word
+NXM-D40	menus	piece	piece	quarterback	position word
+NXM-D41	menus	piece	piece	offensive lineman	position word
+NXM-D42	menus	piece	piece	long snapper	position word
+NXM-D43	menus	menu	say5	<group>, nobody	F9 depth charts: a group with no player (NX-D3)
+NXM-K01	menus	menu	say5	key downs and moments	F9 depth charts: who gets the ball in the key situations (NX-D4)
+NXM-K02	menus	sentence	say5	 key downs and moments: who gets the ball there. 	the menu's title (NX-D4)
+NXM-K03	menus	menu	say5	<situation>, <group>: <player>	an item: the situation, the back or the receiver, and the man (NX-D4)
+NXM-K04	menus	piece	piece	the starter	no man named: the starter (NX-D4)
+NXM-K05	menus	piece	piece	third and fourth down	a key situation (NX-D4)
+NXM-K06	menus	piece	piece	the red zone	a key situation: the ball inside the other team's 20 (NX-D4)
+NXM-K07	menus	piece	piece	the last two minutes of a half	a key situation (NX-D4)
+NXM-K08	menus	piece	piece	the back	the role of a run (NX-D4)
+NXM-K09	menus	piece	piece	the receiver	the role of a pass (NX-D4)
+NXM-K10	menus	sentence	say5	 on <situation>, <player> gets the ball most of the time. 	after a choice (NX-D4)
+NXM-K11	menus	sentence	say5	 on <situation>, the starter gets the ball as usual. 	after choosing the starter (NX-D4)
 NXB-S01	broadcast	menu	say5	The crowd cheers	crowd_cheer (SZ.2)
 NXB-S02	broadcast	menu	say5	The crowd roars	crowd_roar (SZ.2)
 NXB-S03	broadcast	menu	say5	The crowd groans	crowd_groan (SZ.2)

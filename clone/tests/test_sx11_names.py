@@ -392,8 +392,12 @@ def make_league(real, seed=1, team=4):
 def test_a_new_leagues_players_and_coaches_are_the_real_ones_with_the_same_ratings_ages_and_draws():
     names = R.defaults()
     real, old = make_league(names), make_league(None)
-    assert [(p.pos, p.rating, p.age, p.potential, p.team, p.place) for p in real.players.values()] == \
-           [(p.pos, p.rating, p.age, p.potential, p.team, p.place) for p in old.players.values()]
+    assert [(p.pos, p.age, p.team, p.place) for p in real.players.values()] == [(p.pos, p.age, p.team, p.place) for p in old.players.values()]
+    for team in range(1, 33):                                                    # NX-D2/D3: the same drawn ratings, the best to the real starter
+        for position, places in D.PLACES_OF.items():
+            mine = [(real.player_at(team, i).rating, real.player_at(team, i).potential) for i in places]
+            drawn = [(old.player_at(team, i).rating, old.player_at(team, i).potential) for i in places]
+            assert sorted(mine) == sorted(drawn) and [r for r, _p in mine] == sorted((r for r, _p in drawn), reverse=True), (team, position)
     for team in range(1, 33):
         expected = names.places(team)
         got = [real.player_at(team, i).name for i in range(D.PLACE_COUNT)]

@@ -18,7 +18,8 @@ from nfl4.game.rules import FOUL_BEFORE_SNAP, GO_ON, NEXT_DOWN
 from nflrig import nfl_engine_rig
 from pagrig import Draws, run_steps
 from randsources import ScriptedRandom
-from test_pag_scrimmage import quiet_snap_count, snap_draws
+from test_pag_scrimmage import quiet_snap_count
+from nxdraws import nfl_snap_draws as snap_draws, tackle_value      # NX-D2: the N. F. L. rules draw by the usage shares
 
 ENTER, DOWN = 13, 40
 NO_FOUL = 9999

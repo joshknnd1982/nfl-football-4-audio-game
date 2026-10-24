@@ -1,4 +1,3 @@
-- NWJ03 (remark, say2): " <player> of the <team> is hurt and will miss up to <n> weeks. ". another team's injury (news)
 - NWJ04 (remark, say2): " an injury report from the <team>: their <position> <player> is out for up to <n> weeks. ". another team's injury (news)
 - NXI-01 (sentence, say2): " the injury report. ". before the week's injury report of the player's team (SX.8k, INJ-4)
 - NXI-A01 (answer, say2): "play him". an answer of the injury item (the staff's recommendation for a questionable player)
@@ -301,3 +300,4 @@
 - BN83 (remark, say): " <commentator>, you make calling this game look so easy from up here. I admire the nerve, my friend. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN84 (remark, say): " The tricky thing about radio is that I paint the whole picture with words, and my paint box is mostly adjectives and enthusiasm. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN85 (remark, say): " Describing a football game on the radio is like telling a joke through a keyhole. You do your best and hope the punchline gets through. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN86 (remark, say): " If I ever go quiet for a second, it is not because I ran out of words. It is because I am hunting for a better one. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)

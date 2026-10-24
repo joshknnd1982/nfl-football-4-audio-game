@@ -320,7 +320,7 @@ def test_a_timeout_between_the_end_of_a_play_and_the_next_menu_stops_the_whole_r
 def test_a_refused_t_says_one_sentence_and_the_snap_count_goes_on(tmp_path, extras, sentence):
     """Also the second T of one dead-ball period: the snap's own bookkeeping ends that period, but the snap count is still in it."""
     rig = scene(tmp_path, offense_play=1, defense_play=1, extras=dict(pending=0, running=False, **extras))
-    draws = Draws().extend(quiet_snap_count(Draws())).rnd(6, 1).rnd(17, 1).rnd(17, 2)
+    draws = Draws().extend(quiet_snap_count(Draws())).below(100, 0).below(100, 0).below(100, 6)      # NX-D2: the carrier and the tacklers by the usage shares
     script(rig, draws)
     press_t_at(rig, "dy", 1)
     engine = rig.engine
