@@ -10,6 +10,7 @@ the roster and adds the team ratings; SX.8e adds the to-do list and the news; SX
 """
 from __future__ import annotations
 
+from ...data import debuglog
 from ...game import extra_texts as words
 from ...game.keys import KEY_ENTER
 from ...game.spoken_menu import Item, ListPicker, SpokenMenu
@@ -63,6 +64,11 @@ def _lines_picker(speech, keys, title: str, lines: list, on_enter=None) -> None:
     ListPicker(speech, keys, title, len(lines), lambda i: lines[i], on_enter=on_enter, close_on_enter=False).run()
 
 
+def _lineup_choices(league, item) -> list:
+    from . import injury_flow
+    return injury_flow.lineup_choices(league, item)
+
+
 def roster_line(words, league, player) -> str:
     """A player of the player's team in F9's roster: his line with his contract (NXL-33), then his tag, morale and word (SX.8n, NXU-T05 or NXU-T06)."""
     from . import people_flow
@@ -81,6 +87,10 @@ def franchise_menu(g, speech, keys) -> None:
         league = store.league
         if item["kind"] == D.TODO_EXTRA_WORK and not todo.valid_players(league, item):
             league.todo.remove(item)
+            store.save()
+            return True
+        if item["kind"] == D.TODO_LINEUP and not _lineup_choices(league, item):
+            league.todo.remove(item)                # D-143: he plays after all, or nobody else is fit
             store.save()
             return True
         situation, answers = weekly.item_view(g, league, item)
@@ -125,10 +135,34 @@ def franchise_menu(g, speech, keys) -> None:
         if not rows:
             return X.text("NXI-53")
 
+        def choose_starter(pid: int):
+            """D-143 (NX-B1): who starts in place of `pid`, the staff's choice first; the choice is written, then said."""
+            if g.play_engine is not None or not weekly.in_regular_season(league):
+                return X.text("NXI-54")
+            if staff:
+                return X.text("NXI-55")
+            choices = injuries.cover_choices(league, pid, week)
+            if not choices:
+                return X.text("NXI-64")
+            words = _words(g)
+            names = [injury_flow.choice_text(words, choice, index == 0) for index, choice in enumerate(choices)]
+            picked = ListPicker(speech, keys, X.text("NXI-63", player=league.players[pid].name), len(names), lambda i: names[i]).run()
+            if picked is None:
+                return None
+            injuries.choose(league, pid, None if picked == 0 else choices[picked].id)
+            for item in [i for i in league.todo if i["kind"] == D.TODO_LINEUP and i["player"] == pid]:
+                league.todo.remove(item)           # the question about his place is answered
+            debuglog.event("franchise", "lineup_chosen", week=week, player=pid, starts=choices[picked].id, staff=picked == 0, where="F9")   # rule 0.15
+            store.save()                           # written, then told (B-X53)
+            rows[:] = injury_flow.list_lines(_words(g), league, week, staff)
+            return injury_flow.starts_text(league, pid, choices[picked])
+
         def enter(index: int):
             pid = rows[index][1]
             if pid is None:
                 return None
+            if isinstance(pid, tuple):             # D-143: the row "who starts for <player>"
+                return choose_starter(pid[1])
             if g.play_engine is not None or not weekly.in_regular_season(league):
                 return X.text("NXI-54")            # the kick-off has passed: the lineup is the game's
             if staff:

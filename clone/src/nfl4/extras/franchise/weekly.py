@@ -24,6 +24,7 @@ wait) and writes league.sav, as `offseason.py` does for the stages:
 """
 from __future__ import annotations
 
+from ...data import debuglog
 from ...game.banter import play_line
 from ...game.banter_markup import Speak, parse_markup, speak_text
 from .. import nx_texts as X
@@ -80,6 +81,10 @@ def prepare(p, league, week: int) -> None:
         items.append(plan)
     items += [todo.trade_item(league, week, offer) for offer in offers]
     items += [injury_flow.item(league, week, pid) for pid in injuries.to_ask(league, week)]
+    chooses = injuries.to_choose(league, week)                    # D-143 (NX-B1): who starts for each of his men who will not play
+    items += [injury_flow.lineup_item(league, week, pid) for pid in chooses]
+    if chooses:
+        debuglog.event("franchise", "lineup_items", week=week, players=chooses)          # rule 0.15
     items += [people_flow.demand_item(league, week, row, choices) for row, choices in own_demands]
     league.todo.extend(items)
     people.set_goal(league, week, 0 if p.season.on_bye else team_index(p.season.tn3, p.season.tn4))    # SX.8n: the player's game goal of the week, told at the kick-off (a bye week has none)
@@ -193,6 +198,8 @@ def item_view(g, league, item: dict, later: bool = True) -> tuple:
         answers = [X.text("NXX-A01"), X.text("NXX-A02")]
     elif item["kind"] == D.TODO_INJURY:                      # SX.8k: play or rest a hurt player (the staff's recommendation first)
         situation, answers = injury_flow.item_view(words, league, item)
+    elif item["kind"] == D.TODO_LINEUP:                      # D-143: who starts for an injured player (the staff's choice first)
+        situation, answers = injury_flow.lineup_view(words, league, item)
     elif item["kind"] == D.TODO_DEMAND:                      # SX.8n: a player asks to be traded: the offers and "keep him" (the staff's recommendation first)
         situation, answers = people_flow.demand_view(words, league, item)
     else:
@@ -232,6 +239,10 @@ def finish_item(store, league, item: dict, answer: int, answers: int) -> tuple:
             text = X.text("NXD-11", player=chosen.name)
     elif item["kind"] == D.TODO_INJURY:
         text = injury_flow.result_text(league, item["player"], bool(chosen))
+    elif item["kind"] == D.TODO_LINEUP:                      # D-143: say who starts (his choice, or the staff's)
+        if chosen is not None:
+            text = injury_flow.starts_text(league, item["player"], chosen)
+            debuglog.event("franchise", "lineup_chosen", week=item["week"], player=item["player"], starts=chosen.id, staff=answer == 0)   # rule 0.15
     elif item["kind"] == D.TODO_DEMAND:
         text = people_flow.demand_result(getattr(store, "words", None), league, item, chosen, wanted=wanted)
     elif item["state"] == D.ITEM_SET:
@@ -253,6 +264,10 @@ def ask_item(p, league, item: dict, later: bool = True) -> bool:
         return True
     if item["kind"] == D.TODO_EXTRA_WORK and not todo.valid_players(league, item):
         league.todo.remove(item)                              # nobody can take the point any more
+        p.store.save()
+        return True
+    if item["kind"] == D.TODO_LINEUP and not injury_flow.lineup_choices(league, item):
+        league.todo.remove(item)                              # D-143: he plays after all (the play or rest answer), or nobody else is fit
         p.store.save()
         return True
     situation, answers = item_view(g, league, item, later)

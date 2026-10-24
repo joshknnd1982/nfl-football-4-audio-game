@@ -55,7 +55,7 @@ def test_format_9_round_trips_every_people_value_through_the_real_store():
         P.set_morale(league, pid, value)
     league.people["holdouts"].append([ids[0], 1, league.season, P.WAITED])
     loaded, files = through_store(league)
-    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 14
+    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 15
     assert loaded.people == league.people and loaded.to_json() == league.to_json()
 
 

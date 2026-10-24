@@ -9,7 +9,8 @@ The record, `LeagueRecord.injuries` (league.sav format 6):
 
     {"hurt": [[player id, kind, week hurt, back, width, offset, play], ...],
      "stand_ins": [[team, position, name, rating], ...],
-     "report": None or {"season": s, "week": w, "lines": [markup, ...], "told": 0 or 1}}
+     "report": None or {"season": s, "week": w, "lines": [markup, ...], "told": 0 or 1},
+     "chosen": [[injured player id, the id of the player chosen to start in his place], ...]}      (D-143, NX-B1, league.sav format 15)
 
 * kind: the injury's ID (tuning FR_INJ_KINDS: IJA to IJM, the pools of injuries.txt that hold its spoken names);
 * week hurt: the week (gtp) of the game he was hurt in; back: the first week he is fit again, so the games he misses when he rests are back - week for
@@ -55,7 +56,7 @@ KIND_IDS = tuple(kind[0] for kind in T.FR_INJ_KINDS)
 
 
 def empty() -> dict:
-    return {"hurt": [], "stand_ins": [], "report": None}
+    return {"hurt": [], "stand_ins": [], "report": None, "chosen": []}
 
 
 # ----- the statuses -----
@@ -177,7 +178,8 @@ def needs_stand_in(league: LeagueRecord, team: int, position: str, week: int, ou
 
 # ----- who plays each place -----
 
-def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozenset(), extra_stand_ins=(), make=None, hurt_before=None) -> list:
+def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozenset(), extra_stand_ins=(), make=None, hurt_before=None,
+           use_chosen: bool = True) -> list:
     """The 34 places as they are played in the game of `week`: (identity, name, rating), identity the player's id or (STAND_IN, position). A place with
     nobody to play it takes the team's stand-in of its position; `make(position)` makes one when there is none (the week's `settle`, and a game in
     progress), else that is an error (every lineup after the week's draws has the stand-ins it needs). A place a substitute plays (the next man up, a
@@ -185,8 +187,13 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
     replacement player fills the bottom, so the hurt player's own rating counts for nothing (INJ-2) and his place counts the same whoever is behind
     him and in whatever order the places are (the review of SX.8k: with the next man's own rating an injury raised the strength of a team whose
     places were not in rating order, or whose last man was hurt). `hurt_before`: only the injuries of games before that week count (the computer's
-    games of a week do not see the injuries of the player's game of the same week)."""
+    games of a week do not see the injuries of the player's game of the same week).
+
+    D-143 (NX-B1, the owner: "I should get to determine what player will start at the beginning of the week if a player is injured"): on the player's
+    own team with the staff setting off, the man the player chose (`choose`) plays the injured man's place when he plays this week and may cover it (a
+    player of the group, a back or a receiver for a returner); else the staff's rule above. The place is still played at replacement level (INJ-2)."""
     places: list = [None] * D.PLACE_COUNT
+    chosen = chosen_map(league) if use_chosen and team == league.team and not staff else {}
     playing: dict = {}
     known = rows(league)
     if hurt_before is not None:
@@ -222,6 +229,10 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
             if player.id in playing:
                 places[index] = entry(player)
                 continue
+            pick = league.players.get(chosen.get(player.id, 0))
+            if pick is not None and pick.id in playing and pick in group:
+                places[index] = entry(pick, player)                    # D-143: the player's choice
+                continue
             rank = depth.index(player)
             below = [q for q in depth[rank + 1:] if q.id in playing]
             above = [q for q in reversed(depth[:rank]) if q.id in playing]
@@ -233,6 +244,11 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
     for index, player in zip(D.PLACES_OF["RET"], [league.player_at(team, i) for i in D.PLACES_OF["RET"]]):
         if places[index] is not None:
             continue
+        pick = league.players.get(chosen.get(player.id, 0))
+        if pick is not None and pick.id in playing and pick.id not in taken and pick in depths["RB"] + depths["WR"]:
+            taken.add(pick.id)
+            places[index] = entry(pick, player)                        # D-143: the player's choice
+            continue
         backs = [q for q in list(reversed(depths["RB"])) + list(reversed(depths["WR"])) if q.id in playing and q.id not in taken]
         if backs:
             taken.add(backs[0].id)
@@ -240,6 +256,56 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
         else:
             places[index] = substitute("RET", player)
     return places
+
+
+# ----- the player's choice of who starts (D-143, NX-B1) -----
+
+def chosen_map(league: LeagueRecord) -> dict:
+    """injured player id -> the id of the player chosen to start in his place."""
+    return {hurt: sub for hurt, sub in league.injuries.get("chosen", ())}
+
+
+def choose(league: LeagueRecord, pid: int, sub: int | None) -> None:
+    """The player's choice for the place of `pid` (None: the staff's rule, the next man up). It holds until `pid` is fit again (`settle`) or is changed."""
+    kept = [row for row in league.injuries["chosen"] if row[0] != pid]
+    if sub is not None:
+        kept.append([pid, sub])
+    league.injuries["chosen"] = kept
+
+
+def cover_choices(league: LeagueRecord, pid: int, week: int) -> list:
+    """Who may start in place of the player's injured man `pid` this week: the staff's choice first (the next man up, the man today's rule picks), then
+    every other player of his group who plays (for a returner: the backs and receivers who play, but the other returner), the best first. [] when he plays,
+    when the group has nobody fit (the staff's stand-in plays) or when there is only one man to choose (nothing to ask)."""
+    player = league.players.get(pid)
+    if player is None or player.status != "active" or player.team != league.team:
+        return []
+    team = league.team
+    if plays(league, player, week, staff=False):
+        return []
+    try:
+        staff_table = lineup(league, team, week, staff=False, use_chosen=False)
+    except LeagueError:
+        return []
+    first = staff_table[player.place][0]
+    if not isinstance(first, int):
+        return []                                         # a stand-in (or an elevated squad player): nobody of his own team is fit
+    if player.pos == "RET":
+        returners = {o.id for o in league.group_of(team, "RET") if o is not None}
+        group = [q for q in league.group_of(team, "RB") + league.group_of(team, "WR") if q is not None and q.id not in returners]
+    else:
+        group = [q for q in league.group_of(team, player.pos) if q is not None]
+    others = sorted((q for q in group if q.id not in (pid, first) and plays(league, q, week, staff=False)), key=lambda q: (-q.rating, q.place))
+    choices = [league.players[first]] + others
+    return choices if len(choices) > 1 else []
+
+
+def to_choose(league: LeagueRecord, week: int) -> list:
+    """The player's injured men whose place the to-do list asks about this week (D-143): every man of his team who does not play (out, or resting by
+    the decisions so far), in place order, when there is someone to choose. Not in a bye week, not in the play-offs (they have no to-do list)."""
+    if not 1 <= week <= league.regular_weeks or league.has_bye(league.team, week):
+        return []
+    return [player.id for player, _state in hurt_of(league, league.team, week) if cover_choices(league, player.id, week)]
 
 
 def effective_sum(league: LeagueRecord, team: int, week: int, staff: bool = True, hurt_before=None) -> int:
@@ -445,6 +511,8 @@ def settle(league: LeagueRecord, week: int, rnd, surnames: list, done: WeekInjur
         (keep if left(row, week) > 0 else done.back).append(row)
     done.back = [row[0] for row in done.back]
     league.injuries["hurt"][:] = keep
+    still = {row[0] for row in keep}
+    league.injuries["chosen"] = [row for row in league.injuries.get("chosen", []) if row[0] in still]     # D-143: a choice ends when he is back
     for team in range(1, D.TEAMS + 1):
 
         def make(position, team=team):
@@ -508,13 +576,25 @@ def to_ask(league: LeagueRecord, week: int) -> list:
 
 def check_injuries(league: LeagueRecord, whole) -> None:
     record = league.injuries
-    if not isinstance(record, dict) or set(record) != {"hurt", "stand_ins", "report"}:
+    if not isinstance(record, dict) or set(record) != {"hurt", "stand_ins", "report", "chosen"}:
         raise LeagueError("the injuries are %r" % (type(record).__name__,))
     hurt, standing, report = record["hurt"], record["stand_ins"], record["report"]
     if not isinstance(hurt, list) or len(hurt) > D.MAX_HURT or not isinstance(standing, list) or len(standing) > D.TEAMS * len(D.POSITIONS):
         raise LeagueError("the injury lists are %r" % (record,) if len(str(record)) < 80 else "the injury lists are too long")
     if league.stage != "season" and (hurt or standing):
         raise LeagueError("injuries outside the season")
+    chosen = record["chosen"]                                    # D-143: [injured player, the man chosen to start for him]
+    if not isinstance(chosen, list) or len(chosen) > D.MAX_HURT:
+        raise LeagueError("the choices of who starts are %r" % (type(chosen).__name__,))
+    picked = set()
+    for row in chosen:
+        if not isinstance(row, list) or len(row) != 2:
+            raise LeagueError("a choice of who starts is %r" % (row,))
+        whole(row[0], 1, 10 ** 9, "an injured player of a choice")
+        whole(row[1], 1, 10 ** 9, "the player of a choice")
+        if row[0] in picked or row[0] not in league.players or row[1] not in league.players or row[0] == row[1]:
+            raise LeagueError("the choice %r names a player twice or one who is not in the league" % (row,))
+        picked.add(row[0])
     seen = set()
     for row in hurt:
         if not isinstance(row, list) or len(row) != HURT_FIELDS:

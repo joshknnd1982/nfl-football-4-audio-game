@@ -755,7 +755,7 @@ NXI-51	franchise	piece	say5	he plays this week.	after a doubtful or questionable
 NXI-52	franchise	piece	say5	he rests this week.	after a doubtful or questionable player in F9's injury report (SX.8k)
 NXI-53	franchise	sentence	say5	 nobody on your team is hurt. 	F9's injury report when it is empty (SX.8k)
 NXI-54	franchise	sentence	say5	 the game has begun, so the lineup stays as it is. 	F9's injury report inside a game: Enter changes nothing (SX.8k)
-NXH-42	franchise	help	say5	 Injuries: in a franchise players get hurt and miss games. The report comes after the news; a doubtful or questionable player plays only when you say so. F9 has the injury report. 	F6, after NXH-41 (SX.8k)
+NXH-42	franchise	help	say5	 Injuries: players get hurt and miss games. A doubtful or questionable player plays only when you say so, and you choose who starts for a hurt player. F9 has the injury report. 	F6, after NXH-41 (SX.8k)
 IJA01	franchise	remark	piece	a sprained ankle	injury kind IJA (injuries.txt)
 IJA02	franchise	remark	piece	an ankle sprain	injury kind IJA (injuries.txt)
 IJA03	franchise	remark	piece	a twisted ankle	injury kind IJA (injuries.txt)
@@ -801,6 +801,13 @@ NXI-01	franchise	sentence	say2	 the injury report. 	before the week's injury rep
 NXI-A01	franchise	answer	say2	play him	an answer of the injury item (the staff's recommendation for a questionable player)
 NXI-A02	franchise	answer	say2	rest him	an answer of the injury item (the staff's for a doubtful player, and the do-nothing answer)
 NXI-55	franchise	sentence	say5	 the staff decides who plays while the staff handles the to do list. 	F9's injury report with the staff setting on (SX.8k)
+NXI-60	franchise	prompt	say2	 <player>, your <position>, will not play this week. who starts in his place? 	the to-do item: who starts for an injured player of the player's team (NX-B1, D-143)
+NXI-A03	franchise	answer	say2	<player>, <position>, rating <r>, age <a>, the staff's choice	the first answer of the who-starts item: the next man up (NX-B1)
+NXI-A04	franchise	answer	say2	<player>, <position>, rating <r>, age <a>	an answer of the who-starts item (NX-B1)
+NXI-61	franchise	sentence	say2	 <get> starts in place of <give>. 	the who-starts item or F9 chose a player (NX-B1)
+NXI-62	franchise	sentence	say5	 who starts for <player>: <get>. 	F9 injury report: the row after a player who does not play; Enter chooses who starts (NX-B1)
+NXI-63	franchise	sentence	say5	 who starts in place of <player>? the staff's choice is first. 	F9 injury report: the title of the list of who may start (NX-B1)
+NXI-64	franchise	sentence	say5	 nobody else of your team can play his place this week. 	F9 injury report: no other choice (NX-B1)
 NXE-19	franchise	piece	piece	the staff	the name of stage 9 (SX.8l), right after the season in review
 NXV-01	franchise	sentence	say2	 the owner's goal was to <goal>. you met it. 	stage 1, the verdict (SX.8l): the goal met
 NXV-02	franchise	sentence	say2	 the owner's goal was to <goal>. you missed it. 	stage 1, the verdict: the goal missed

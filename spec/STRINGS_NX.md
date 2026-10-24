@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2139.
+- Texts: 2146.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 828.
 - Menus and settings (design 10.4, 12): 58.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 662.
+- Franchise (design section 11): 669.
 - The real coaches and players (NX-N, SX.11): 7.
 - The radio broadcast: banter and Ghip (SY.1, rule 0.27): 362.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
@@ -1582,7 +1582,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXI-52 (piece, say5): "he rests this week.". after a doubtful or questionable player in F9's injury report (SX.8k)
 - NXI-53 (sentence, say5): " nobody on your team is hurt. ". F9's injury report when it is empty (SX.8k)
 - NXI-54 (sentence, say5): " the game has begun, so the lineup stays as it is. ". F9's injury report inside a game: Enter changes nothing (SX.8k)
-- NXH-42 (help, say5): " Injuries: in a franchise players get hurt and miss games. The report comes after the news; a doubtful or questionable player plays only when you say so. F9 has the injury report. ". F6, after NXH-41 (SX.8k)
+- NXH-42 (help, say5): " Injuries: players get hurt and miss games. A doubtful or questionable player plays only when you say so, and you choose who starts for a hurt player. F9 has the injury report. ". F6, after NXH-41 (SX.8k)
 - IJA01 (remark, piece): "a sprained ankle". injury kind IJA (injuries.txt)
 - IJA02 (remark, piece): "an ankle sprain". injury kind IJA (injuries.txt)
 - IJA03 (remark, piece): "a twisted ankle". injury kind IJA (injuries.txt)
@@ -1628,6 +1628,13 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXI-A01 (answer, say2): "play him". an answer of the injury item (the staff's recommendation for a questionable player)
 - NXI-A02 (answer, say2): "rest him". an answer of the injury item (the staff's for a doubtful player, and the do-nothing answer)
 - NXI-55 (sentence, say5): " the staff decides who plays while the staff handles the to do list. ". F9's injury report with the staff setting on (SX.8k)
+- NXI-60 (prompt, say2): " <player>, your <position>, will not play this week. who starts in his place? ". the to-do item: who starts for an injured player of the player's team (NX-B1, D-143)
+- NXI-A03 (answer, say2): "<player>, <position>, rating <r>, age <a>, the staff's choice". the first answer of the who-starts item: the next man up (NX-B1)
+- NXI-A04 (answer, say2): "<player>, <position>, rating <r>, age <a>". an answer of the who-starts item (NX-B1)
+- NXI-61 (sentence, say2): " <get> starts in place of <give>. ". the who-starts item or F9 chose a player (NX-B1)
+- NXI-62 (sentence, say5): " who starts for <player>: <get>. ". F9 injury report: the row after a player who does not play; Enter chooses who starts (NX-B1)
+- NXI-63 (sentence, say5): " who starts in place of <player>? the staff's choice is first. ". F9 injury report: the title of the list of who may start (NX-B1)
+- NXI-64 (sentence, say5): " nobody else of your team can play his place this week. ". F9 injury report: no other choice (NX-B1)
 - NXE-19 (piece, piece): "the staff". the name of stage 9 (SX.8l), right after the season in review
 - NXV-01 (sentence, say2): " the owner's goal was to <goal>. you met it. ". stage 1, the verdict (SX.8l): the goal met
 - NXV-02 (sentence, say2): " the owner's goal was to <goal>. you missed it. ". stage 1, the verdict: the goal missed

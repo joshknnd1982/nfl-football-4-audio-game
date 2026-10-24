@@ -368,6 +368,39 @@ def item_view(words, league: LeagueRecord, item_: dict) -> tuple:
     return situation, answers
 
 
+# ----- who starts in place of an injured player (D-143, NX-B1) -----
+
+def lineup_item(league: LeagueRecord, week: int, pid: int) -> dict:
+    return {"kind": D.TODO_LINEUP, "season": league.season, "week": week, "state": D.ITEM_NEW, "player": pid}
+
+
+def lineup_choices(league: LeagueRecord, item_: dict) -> list:
+    """The players the item offers, the staff's choice first ([] when the injured man plays now or there is nobody else to choose)."""
+    return I.cover_choices(league, item_["player"], item_["week"])
+
+
+def choice_text(words, player, staff: bool) -> str:
+    return X.text("NXI-A03" if staff else "NXI-A04", player=_plain(player.name), position=words.position(player.pos), r=player.rating, a=player.age)
+
+
+def lineup_view(words, league: LeagueRecord, item_: dict) -> tuple:
+    player = league.players[item_["player"]]
+    situation = [X.text("NXI-60", player=_plain(player.name), position=words.position(player.pos))]
+    answers = [choice_text(words, choice, index == 0) for index, choice in enumerate(lineup_choices(league, item_))]
+    return situation, answers
+
+
+def starts_text(league: LeagueRecord, pid: int, sub) -> str:
+    return X.text("NXI-61", get=_plain(sub.name), give=_plain(league.players[pid].name))
+
+
+def starter_for(league: LeagueRecord, pid: int, week: int):
+    """The player who starts in the place of the player's injured man `pid` this week as things stand (his choice, else the staff's), or None (a stand-in)."""
+    table = I.lineup(league, league.team, week, staff=False)
+    first = table[league.players[pid].place][0]
+    return league.players.get(first) if isinstance(first, int) else None
+
+
 def result_text(league: LeagueRecord, pid: int, play: bool) -> str:
     return X.text("NXI-42" if play else "NXI-43", player=_plain(league.players[pid].name))
 
@@ -382,4 +415,8 @@ def list_lines(words, league: LeagueRecord, week: int, staff: bool) -> list:
             out.append((line, player.id))
         else:
             out.append((line, None))
+        if not staff and I.cover_choices(league, player.id, week):        # D-143 (NX-B1): who starts in his place; Enter chooses
+            starter = starter_for(league, player.id, week)
+            if starter is not None:
+                out.append((X.text("NXI-62", player=_plain(player.name), get=_plain(starter.name)), ("start", player.id)))
     return out

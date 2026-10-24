@@ -127,6 +127,9 @@ def answer_count(league: LeagueRecord, item: dict) -> int:
         return len(valid_players(league, item)) + 1
     if item["kind"] == D.TODO_DEMAND:                # SX.8n: the offers and "keep him"
         return len(item["demand"][1]) + 1
+    if item["kind"] == D.TODO_LINEUP:                # D-143: who starts for an injured player, the staff's choice first
+        from . import injury_flow
+        return len(injury_flow.lineup_choices(league, item))
     return 2                                         # the game plan: use it, keep yours; a trade offer: accept, decline
 
 
@@ -136,10 +139,20 @@ def is_do_nothing(league: LeagueRecord, item: dict, answer: int) -> bool:
     if item["kind"] == D.TODO_DEMAND:
         from . import people_flow
         return people_flow.demand_choices(league, item)[answer] is None
+    if item["kind"] == D.TODO_LINEUP:                # D-143: the staff's choice (the first) changes nothing
+        return answer == 0
     return answer == answer_count(league, item) - 1
 
 
 def apply_answer(league: LeagueRecord, item: dict, answer: int):
+    if item["kind"] == D.TODO_LINEUP:                # D-143: answer 0 the staff's choice (no choice kept), another the man he chose
+        from . import injuries, injury_flow
+        choices = injury_flow.lineup_choices(league, item)
+        league.todo.remove(item)
+        if not choices or answer >= len(choices):
+            return None
+        injuries.choose(league, item["player"], None if answer == 0 else choices[answer].id)
+        return choices[answer]
     if item["kind"] == D.TODO_INJURY:                # SX.8k: the staff's recommendation first; "rest him" is also the do-nothing answer
         from . import injuries, injury_flow
         league.todo.remove(item)
@@ -236,9 +249,9 @@ def check_items(league: LeagueRecord, whole) -> None:
         if key in seen:
             raise LeagueError("two to-do items of one kind in one week: %r" % (item,))
         seen.add(key)
-        if (item["kind"] == D.TODO_INJURY) != ("player" in item):
+        if (item["kind"] in (D.TODO_INJURY, D.TODO_LINEUP)) != ("player" in item):
             raise LeagueError("a to-do item of the kind %r is %r" % (item["kind"], item))
-        if item["kind"] == D.TODO_INJURY:
+        if item["kind"] in (D.TODO_INJURY, D.TODO_LINEUP):                           # D-143: the who-starts item names the injured man too
             whole(item["player"], 1, 10 ** 9, "an injury item's player")
             if item["state"] == D.ITEM_SET or item["player"] not in league.players:
                 raise LeagueError("an injury item is %r" % (item,))

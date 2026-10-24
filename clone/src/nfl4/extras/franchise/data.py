@@ -6,7 +6,7 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 14                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 15                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
@@ -27,6 +27,8 @@ FORMAT = 14                                  # league.sav's format; a higher one
 #                                                (league.give_first_names, no draw): every bare drawn surname but the player's own team's (his own names)
 #                                              14 (2026-10-23, D-136) the practice squads (`LeagueRecord.practice`, practice.py); a file of format 13 or older has
 #                                                none, and a league in its season gets them at once from the players cut this offseason (no draw)
+#                                              15 (2026-10-24, D-143, NX-B1) who starts for an injured player of the player's team (`injuries["chosen"]`); a file of
+#                                                format 14 or older has no choice (the staff's next man up, as before)
 COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the end of rounds 3 to 7 (NFL, SRC-OFFICIAL)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
@@ -121,7 +123,8 @@ TODO_EXTRA_WORK, TODO_GAME_PLAN = "extra_work", "game_plan"
 TODO_TRADE = "trade_offer"                    # SX.8j: a trade a computer team offers the player (design 17)
 TODO_INJURY = "injury"                        # SX.8k: play or rest a doubtful or questionable player of the player's team (INJ-4)
 TODO_DEMAND = "trade_demand"                  # SX.8n: a player of the player's team asks to be traded: the other teams' offers, or keep him
-TODO_KINDS = (TODO_EXTRA_WORK, TODO_GAME_PLAN, TODO_TRADE, TODO_INJURY, TODO_DEMAND)
+TODO_LINEUP = "lineup"                        # D-143, NX-B1: who starts in place of a player of the player's team who will not play this week
+TODO_KINDS = (TODO_EXTRA_WORK, TODO_GAME_PLAN, TODO_TRADE, TODO_INJURY, TODO_DEMAND, TODO_LINEUP)
 ITEM_NEW, ITEM_LATER, ITEM_SET = 0, 1, 2     # not asked yet; answered "later"; the game plan, taken for this week's game
 REGULAR_WEEKS = 16                           # the original's regular season; a league that plays the real calendar has `LeagueRecord.regular_weeks` (18)
 MAX_REGULAR_WEEKS = 18                       # the longest regular season a record may name (the real calendar's), for the whole-file checks
