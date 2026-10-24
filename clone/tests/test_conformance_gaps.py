@@ -203,10 +203,10 @@ def test_whole_games_play_the_kick_the_ball_contact_the_bleep_and_the_celebratio
 # ----- NFL_EXTRA_FEATURES N5.1 (the research) and GAP_REGISTER G-C1 (the 10,000 games and seasons of S8.1) -----
 
 def test_the_research_documents_exist_and_name_their_sources():
-    from specfiles import SPEC
+    from specfiles import SPEC, read_spec
     for name, size in (("NFL_RULES_RESEARCH.md", 100000), ("MADDEN_PLAYBOOK_RESEARCH.md", 20000),
                        ("MADDEN_FRANCHISE_RESEARCH.md", 20000)):
-        text = need(SPEC / name).read_text(encoding="utf-8")
+        text = read_spec(SPEC / name)
         assert len(text) > size, name
         assert text.count("http") >= 10, name
         assert "SRC-OFFICIAL" in text or "SRC-SECONDARY" in text, name

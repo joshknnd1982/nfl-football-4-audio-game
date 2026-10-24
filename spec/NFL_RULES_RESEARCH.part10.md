@@ -1,0 +1,410 @@
+#### 2024 and 2025 combined (REG, 544 games, 1088 team-games)
+- Parse notes (unparsed rows; how the side was decided): {'side_from_next': 3728, 'side_from_previous': 322, 'standalone_unparsed': 1, 'side_from_none': 1}
+- All charged team timeouts: 4205, per team per game 3.86 (called by the coach 3.72, charged for a lost challenge 0.14)
+- first half: 2093 timeouts, per team per game 1.92
+- second half: 2062 timeouts, per team per game 1.90
+- overtime: 50 timeouts, per team per game 0.05
+- By quarter, per team per game: Q1 0.211, Q2 1.712, Q3 0.198, Q4 1.698, QOT 0.046
+- First three quarters: 2.12 charged timeouts per team per game (coach-called only 2.02)
+- Integrity check: team-halves where the number of events differs from the highest "Timeout #n": 8 of 1897 team-halves with any timeout
+- Timeouts USED per team in the first half: 0: 11.5%, 1: 23.1%, 2: 28.1%, 3: 37.3% (mean 1.91)
+- Timeouts REMAINING at the end of the first half: 3 left: 11.5%, 2 left: 23.1%, 1 left: 28.1%, 0 left: 37.3% (mean 1.09)
+- Timeouts USED per team in the second half: 0: 17.6%, 1: 18.9%, 2: 20.8%, 3: 42.6% (mean 1.88)
+- Timeouts REMAINING at the end of the second half: 3 left: 17.6%, 2 left: 18.9%, 1 left: 20.8%, 0 left: 42.6% (mean 1.12)
+- Regulation timeouts used per team per game, distribution: 0: 2.0%, 1: 6.7%, 2: 11.6%, 3: 19.9%, 4: 23.9%, 5: 20.0%, 6: 15.0%, 7: 0.8%
+- Overtime: 30 games went to overtime; timeouts used per team in overtime: 0 used: 22 teams, 1 used: 26 teams, 2 used: 12 teams
+- first half timeouts by time left in the half (n=2093; per team per game in brackets): 8:00 or more left in the half: 17.1% [0.329]; 4:00 to 8:00 left: 5.2% [0.100]; 2:00 to 4:00 left: 4.1% [0.078]; under 2:00 left: 73.6% [1.416]
+- second half timeouts by time left in the half (n=2062; per team per game in brackets): 8:00 or more left in the half: 18.3% [0.347]; 4:00 to 8:00 left: 13.8% [0.262]; 2:00 to 4:00 left: 25.5% [0.483]; under 2:00 left: 42.4% [0.803]
+- first half coach-called timeouts by side (n=2020): offense 61.9%, defense 38.1%, before a kickoff 0.0%, unknown 0.0%
+  - first half, 8:00 or more left in the half: n=304, offense 78.0%, defense 22.0%
+  - first half, 4:00 to 8:00 left: n=95, offense 78.9%, defense 21.1%
+  - first half, 2:00 to 4:00 left: n=80, offense 52.5%, defense 47.5%
+  - first half, under 2:00 left: n=1541, offense 58.1%, defense 41.8%
+- second half coach-called timeouts by side (n=1981): offense 39.2%, defense 60.8%, before a kickoff 0.0%, unknown 0.0%
+  - second half, 8:00 or more left in the half: n=317, offense 72.6%, defense 27.4%
+  - second half, 4:00 to 8:00 left: n=277, offense 35.7%, defense 64.3%
+  - second half, 2:00 to 4:00 left: n=513, offense 20.1%, defense 79.9%
+  - second half, under 2:00 left: n=874, offense 39.5%, defense 60.5%
+  - first half, 8:00 or more left in the half, all charged timeouts by the score at that moment (n=358): leading 31.0%, tied 38.3%, trailing 30.7%
+  - first half, 4:00 to 8:00 left, all charged timeouts by the score at that moment (n=109): leading 40.4%, tied 11.9%, trailing 47.7%
+  - first half, 2:00 to 4:00 left, all charged timeouts by the score at that moment (n=85): leading 44.7%, tied 8.2%, trailing 47.1%
+  - first half, under 2:00 left, all charged timeouts by the score at that moment (n=1541): leading 45.4%, tied 8.1%, trailing 46.5%
+  - second half, 8:00 or more left in the half, all charged timeouts by the score at that moment (n=377): leading 60.7%, tied 5.0%, trailing 34.2%
+  - second half, 4:00 to 8:00 left, all charged timeouts by the score at that moment (n=285): leading 31.2%, tied 2.1%, trailing 66.7%
+  - second half, 2:00 to 4:00 left, all charged timeouts by the score at that moment (n=526): leading 19.2%, tied 3.2%, trailing 77.6%
+  - second half, under 2:00 left, all charged timeouts by the score at that moment (n=874): leading 35.2%, tied 14.3%, trailing 50.5%
+- Lost-challenge timeouts (n=154): charged to a team that had the ball 26.6%, to the defense 73.4%
+- first half, all charged timeouts by the score at that moment (n=2093): leading 42.6%, tied 13.5%, trailing 43.9%
+- first half, last 5:00 only (n=1656): leading 45.2%, tied 8.3%, trailing 46.4%; side: offense 58.0%, defense 41.9%
+- second half, all charged timeouts by the score at that moment (n=2062): leading 35.3%, tied 8.1%, trailing 56.6%
+- second half, last 5:00 only (n=1523): leading 28.5%, tied 9.4%, trailing 62.1%; side: offense 32.0%, defense 68.0%
+- Timeouts used in the last 5:00 of the first half, per team, grouped by the score at the start of those 5 minutes:
+  - leading by 9 or more: 1.40 used per team-half (n=171), zero used in 21.6%, timeouts still left at the end of the half 1.06
+  - leading by 1 to 8: 1.53 used per team-half (n=310), zero used in 18.7%, timeouts still left at the end of the half 1.07
+  - tied: 1.44 used per team-half (n=126), zero used in 24.6%, timeouts still left at the end of the half 1.23
+  - trailing by 1 to 8: 1.56 used per team-half (n=310), zero used in 20.3%, timeouts still left at the end of the half 1.09
+  - trailing by 9 or more: 1.62 used per team-half (n=171), zero used in 16.4%, timeouts still left at the end of the half 1.03
+  - ALL leading teams: 1.48; ALL trailing teams: 1.58; tied: 1.44
+- Timeouts used in the last 5:00 of the second half, per team, grouped by the score at the start of those 5 minutes:
+  - leading by 9 or more: 0.58 used per team-half (n=295), zero used in 56.6%, timeouts still left at the end of the half 1.77
+  - leading by 1 to 8: 1.45 used per team-half (n=217), zero used in 25.8%, timeouts still left at the end of the half 1.12
+  - tied: 1.75 used per team-half (n=64), zero used in 14.1%, timeouts still left at the end of the half 0.77
+  - trailing by 1 to 8: 2.25 used per team-half (n=217), zero used in 5.1%, timeouts still left at the end of the half 0.44
+  - trailing by 9 or more: 1.48 used per team-half (n=295), zero used in 34.9%, timeouts still left at the end of the half 1.03
+  - ALL leading teams: 0.95; ALL trailing teams: 1.81; tied: 1.75
+- First half: 26.2% of timeouts come with more than 2:00 left in the half (before the two-minute warning), 73.8% with 2:00 or less (n=2093)
+- Second half: 26.1% with more than 5:00 left, 57.1% with more than 2:00 left (n=2062)
+- Cross-check: the field home/away_timeouts_remaining on the last row of each half equals 3 minus the timeouts I counted in 99.4% of 2176 team-halves
+
+### 2. Quarterback runs (regular season)
+
+What is counted: runs by a quarterback on plays that stood (no kneel-downs, no spikes, no two-point tries, no aborted snaps). "Designed" and "scramble" follow the nflverse flag qb_scramble (the text says "scrambles"). Sacks, kneel-downs and spikes are shown apart. "First down or TD" means a new first down by the run or a touchdown. There is no position column; quarterbacks are found by their passes (see "Sources and method"). A sneak is not marked in the data; the "sneak proxy" lines use designed runs "up the middle" on third or fourth and 1 or 2.
+
+#### 2026 to date (REG, 79 games, 158 team-games)
+- QB rushes (excluding kneel-downs, spikes, two-point tries, aborted snaps): 477 total, 3.02 per team per game; designed 170 (1.08 per team per game), scrambles 307 (1.94 per team per game)
+- Kneel-downs (play_type qb_kneel): 125, 0.79 per team per game; spikes: 24, 0.15 per team per game; sacks: 357, 2.26 per team per game
+- Share of all scrimmage plays that are QB rushes: 4.94% (designed 1.76%, scramble 3.18%); scrimmage plays 61.13 per team per game
+- Dropbacks (qb_dropback=1: pass attempts, sacks, scrambles): 5873, 37.17 per team per game. Scramble rate per dropback 5.23%; sack rate per dropback 6.08%; designed QB run per 100 non-dropback plays 4.5
+- All QB rushes: n=477, 6.14 yd/att, first down or TD 47.4%, TD 6.7%, fumble lost 1.05%
+- Designed QB runs: n=170, 3.04 yd/att, first down or TD 57.1%, TD 11.8%, fumble lost 1.18%
+- Scrambles: n=307, 7.86 yd/att, first down or TD 42.0%, TD 3.9%, fumble lost 0.98%
+- Yards per attempt: designed 3.04, scramble 7.86; share of runs for zero or negative yards: designed 19.4%, scramble 0.3%; for 10 or more yards: designed 5.9%, scramble 28.0%
+- Gain percentiles designed (10, 25, 50, 75, 90): 0, 1, 2, 3, 8; mean 3.04; max 35, min -12
+- Gain percentiles scramble (10, 25, 50, 75, 90): 2, 3, 6, 10, 16; mean 7.86; max 39, min 0
+- Out of bounds (ran ob or pushed ob in the text): 10.0% of designed runs; a slide is not recorded anywhere in the data (no text with slide or slid)
+- Out of bounds (ran ob or pushed ob in the text): 38.1% of scramble runs; a slide is not recorded anywhere in the data (no text with slide or slid)
+- Kneel-downs: mean yards -1.21
+#### Short yardage, QB designed runs (sneak proxy): 2026 to date
+- Run location of designed QB runs on 3rd or 4th and 1 (the text of a sneak says "up the middle", no sneak word exists): {'middle': 59, 'left': 12, 'right': 8}
+- 3 down and 1 yard, any designed QB run: n=61, 1.98 yd/att, first down or TD 90.2%, TD 6.6%, fumble lost 0.00%
+  - of those "up the middle" (sneak proxy): n=48, 2.04 yd/att, first down or TD 91.7%, TD 6.2%, fumble lost 0.00%
+- 3 down and 2 yards, any designed QB run: n=4, 0.50 yd/att, first down or TD 25.0%, TD 25.0%, fumble lost 0.00%
+  - of those "up the middle" (sneak proxy): n=2, -1.00 yd/att, first down or TD 0.0%, TD 0.0%, fumble lost 0.00%
+- 4 down and 1 yard, any designed QB run: n=18, 0.78 yd/att, first down or TD 61.1%, TD 16.7%, fumble lost 0.00%
+  - of those "up the middle" (sneak proxy): n=11, 1.09 yd/att, first down or TD 72.7%, TD 27.3%, fumble lost 0.00%
+- 4 down and 2 yards, any designed QB run: n=0
+  - of those "up the middle" (sneak proxy): n=0
+- 3rd and 4th and 1 together, any designed QB run: n=79, 1.71 yd/att, first down or TD 83.5%, TD 8.9%, fumble lost 0.00%
+- 3rd and 4th and 1 together, up the middle: n=59, 1.86 yd/att, first down or TD 88.1%, TD 10.2%, fumble lost 0.00%
+- 3rd and 4th and 1 or 2 together, any designed QB run: n=83, 1.65 yd/att, first down or TD 80.7%, TD 9.6%, fumble lost 0.00%
+- 3rd and 4th and 1 or 2 together, up the middle: n=61, 1.77 yd/att, first down or TD 85.2%, TD 9.8%, fumble lost 0.00%
+#### 2024 and 2025 combined (REG, 544 games, 1088 team-games)
+- QB rushes (excluding kneel-downs, spikes, two-point tries, aborted snaps): 3543 total, 3.26 per team per game; designed 1399 (1.29 per team per game), scrambles 2144 (1.97 per team per game)
+- Kneel-downs (play_type qb_kneel): 838, 0.77 per team per game; spikes: 150, 0.14 per team per game; sacks: 2601, 2.39 per team per game
+- Share of all scrimmage plays that are QB rushes: 5.36% (designed 2.11%, scramble 3.24%); scrimmage plays 60.80 per team per game
+- Dropbacks (qb_dropback=1: pass attempts, sacks, scrambles): 39850, 36.63 per team per game. Scramble rate per dropback 5.38%; sack rate per dropback 6.53%; designed QB run per 100 non-dropback plays 5.3
+- All QB rushes: n=3543, 6.09 yd/att, first down or TD 45.1%, TD 6.0%, fumble lost 0.71%
+- Designed QB runs: n=1399, 3.66 yd/att, first down or TD 51.3%, TD 9.4%, fumble lost 1.07%
+- Scrambles: n=2144, 7.67 yd/att, first down or TD 41.0%, TD 3.8%, fumble lost 0.47%
+- Yards per attempt: designed 3.66, scramble 7.67; share of runs for zero or negative yards: designed 20.3%, scramble 0.1%; for 10 or more yards: designed 10.6%, scramble 27.3%
+- Gain percentiles designed (10, 25, 50, 75, 90): 0, 1, 2, 5, 10; mean 3.66; max 50, min -10
+- Gain percentiles scramble (10, 25, 50, 75, 90): 2, 3, 6, 10, 15; mean 7.67; max 47, min 0
+- Out of bounds (ran ob or pushed ob in the text): 12.1% of designed runs; a slide is not recorded anywhere in the data (no text with slide or slid)
+- Out of bounds (ran ob or pushed ob in the text): 34.0% of scramble runs; a slide is not recorded anywhere in the data (no text with slide or slid)
+- Kneel-downs: mean yards -1.09
+#### Short yardage, QB designed runs (sneak proxy): 2024 and 2025 combined
+- Run location of designed QB runs on 3rd or 4th and 1 (the text of a sneak says "up the middle", no sneak word exists): {'middle': 307, 'left': 93, 'right': 67, 'none': 2}
+- 3 down and 1 yard, any designed QB run: n=315, 2.18 yd/att, first down or TD 81.9%, TD 5.4%, fumble lost 1.27%
+  - of those "up the middle" (sneak proxy): n=201, 1.66 yd/att, first down or TD 82.6%, TD 4.5%, fumble lost 0.50%
+- 3 down and 2 yards, any designed QB run: n=55, 3.75 yd/att, first down or TD 74.5%, TD 5.5%, fumble lost 1.82%
+  - of those "up the middle" (sneak proxy): n=14, 2.86 yd/att, first down or TD 64.3%, TD 7.1%, fumble lost 0.00%
+- 4 down and 1 yard, any designed QB run: n=154, 2.27 yd/att, first down or TD 86.4%, TD 5.8%, fumble lost 0.65%
+  - of those "up the middle" (sneak proxy): n=106, 1.55 yd/att, first down or TD 84.9%, TD 4.7%, fumble lost 0.94%
+- 4 down and 2 yards, any designed QB run: n=7, 4.43 yd/att, first down or TD 71.4%, TD 14.3%, fumble lost 0.00%
+  - of those "up the middle" (sneak proxy): n=1, 3.00 yd/att, first down or TD 100.0%, TD 0.0%, fumble lost 0.00%
+- 3rd and 4th and 1 together, any designed QB run: n=469, 2.21 yd/att, first down or TD 83.4%, TD 5.5%, fumble lost 1.07%
+- 3rd and 4th and 1 together, up the middle: n=307, 1.62 yd/att, first down or TD 83.4%, TD 4.6%, fumble lost 0.65%
+- 3rd and 4th and 1 or 2 together, any designed QB run: n=531, 2.40 yd/att, first down or TD 82.3%, TD 5.6%, fumble lost 1.13%
+- 3rd and 4th and 1 or 2 together, up the middle: n=322, 1.68 yd/att, first down or TD 82.6%, TD 4.7%, fumble lost 0.62%
+#### Down and distance, field zone, sneak proxy: 2024 and 2025 combined
+- By down, designed QB runs: down 1: n=413, 4.96 yd/att, first down or TD 27.1%, TD 14.0%, fumble lost 0.48%; down 2: n=352, 3.49 yd/att, first down or TD 32.4%, TD 10.5%, fumble lost 1.42%; down 3: n=469, 3.10 yd/att, first down or TD 74.8%, TD 5.5%, fumble lost 1.49%; down 4: n=165, 2.40 yd/att, first down or TD 85.5%, TD 6.1%, fumble lost 0.61%
+  - designed QB runs, down 1, 1 yard to go: n=45, 0.49 yd/att, first down or TD 62.2%, TD 62.2%, fumble lost 0.00%
+  - designed QB runs, down 1, 2 yards to go: n=8, 0.75 yd/att, first down or TD 50.0%, TD 50.0%, fumble lost 0.00%
+  - designed QB runs, down 1, 3 to 5 yards to go: n=16, 2.00 yd/att, first down or TD 31.2%, TD 25.0%, fumble lost 0.00%
+  - designed QB runs, down 1, 6 to 10 yards to go: n=329, 5.84 yd/att, first down or TD 22.8%, TD 6.7%, fumble lost 0.30%
+  - designed QB runs, down 1, 11 or more yards to go: n=15, 4.47 yd/att, first down or TD 0.0%, TD 0.0%, fumble lost 6.67%
+  - designed QB runs, down 2, 1 yard to go: n=67, 2.18 yd/att, first down or TD 79.1%, TD 29.9%, fumble lost 1.49%
+  - designed QB runs, down 2, 2 yards to go: n=17, 0.65 yd/att, first down or TD 41.2%, TD 17.6%, fumble lost 0.00%
+  - designed QB runs, down 2, 3 to 5 yards to go: n=61, 2.33 yd/att, first down or TD 29.5%, TD 13.1%, fumble lost 1.64%
+  - designed QB runs, down 2, 6 to 10 yards to go: n=175, 4.27 yd/att, first down or TD 19.4%, TD 3.4%, fumble lost 1.14%
+  - designed QB runs, down 2, 11 or more yards to go: n=32, 5.69 yd/att, first down or TD 6.2%, TD 0.0%, fumble lost 3.12%
+  - designed QB runs, down 3, 1 yard to go: n=315, 2.18 yd/att, first down or TD 81.9%, TD 5.4%, fumble lost 1.27%
+  - designed QB runs, down 3, 2 yards to go: n=55, 3.75 yd/att, first down or TD 74.5%, TD 5.5%, fumble lost 1.82%
+  - designed QB runs, down 3, 3 to 5 yards to go: n=57, 5.47 yd/att, first down or TD 68.4%, TD 7.0%, fumble lost 0.00%
+  - designed QB runs, down 3, 6 to 10 yards to go: n=25, 5.84 yd/att, first down or TD 36.0%, TD 8.0%, fumble lost 4.00%
+  - designed QB runs, down 3, 11 or more yards to go: n=17, 6.06 yd/att, first down or TD 23.5%, TD 0.0%, fumble lost 5.88%
+  - designed QB runs, down 4, 1 yard to go: n=154, 2.27 yd/att, first down or TD 86.4%, TD 5.8%, fumble lost 0.65%
+  - designed QB runs, down 4, 2 yards to go: n=7, 4.43 yd/att, first down or TD 71.4%, TD 14.3%, fumble lost 0.00%
+  - designed QB runs, down 4, 3 to 5 yards to go: n=2, 7.50 yd/att, first down or TD 100.0%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, down 4, 6 to 10 yards to go: n=2, 0.50 yd/att, first down or TD 50.0%, TD 0.0%, fumble lost 0.00%
+- By field zone, designed QB runs: 
+  - designed QB runs, own half (51 to 99 yards from the goal): n=491, 4.10 yd/att, first down or TD 45.4%, TD 0.0%, fumble lost 0.61%
+  - designed QB runs, opponent half outside the 10 (11 to 50): n=651, 4.12 yd/att, first down or TD 53.5%, TD 2.5%, fumble lost 1.54%
+  - designed QB runs, inside the opponent 10 (6 to 10): n=79, 3.46 yd/att, first down or TD 53.2%, TD 26.6%, fumble lost 1.27%
+  - designed QB runs, inside the opponent 5 (1 to 5): n=178, 0.90 yd/att, first down or TD 59.0%, TD 52.8%, fumble lost 0.56%
+- By down, scrambles: down 1: n=707, 7.14 yd/att, first down or TD 24.3%, TD 2.7%, fumble lost 0.71%; down 2: n=694, 7.68 yd/att, first down or TD 40.5%, TD 4.2%, fumble lost 0.29%; down 3: n=681, 8.11 yd/att, first down or TD 54.8%, TD 3.5%, fumble lost 0.44%; down 4: n=62, 8.58 yd/att, first down or TD 87.1%, TD 16.1%, fumble lost 0.00%
+  - scrambles, down 1, 1 yard to go: n=2, 1.00 yd/att, first down or TD 100.0%, TD 100.0%, fumble lost 0.00%
+  - scrambles, down 1, 2 yards to go: n=3, 1.33 yd/att, first down or TD 33.3%, TD 33.3%, fumble lost 0.00%
+  - scrambles, down 1, 3 to 5 yards to go: n=10, 3.20 yd/att, first down or TD 20.0%, TD 20.0%, fumble lost 0.00%
+  - scrambles, down 1, 6 to 10 yards to go: n=651, 7.27 yd/att, first down or TD 25.3%, TD 2.2%, fumble lost 0.77%
+  - scrambles, down 1, 11 or more yards to go: n=41, 6.85 yd/att, first down or TD 4.9%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 2, 1 yard to go: n=11, 7.64 yd/att, first down or TD 90.9%, TD 9.1%, fumble lost 0.00%
+  - scrambles, down 2, 2 yards to go: n=23, 6.74 yd/att, first down or TD 87.0%, TD 13.0%, fumble lost 0.00%
+  - scrambles, down 2, 3 to 5 yards to go: n=111, 8.18 yd/att, first down or TD 65.8%, TD 7.2%, fumble lost 0.00%
+  - scrambles, down 2, 6 to 10 yards to go: n=393, 7.51 yd/att, first down or TD 39.7%, TD 4.1%, fumble lost 0.25%
+  - scrambles, down 2, 11 or more yards to go: n=156, 7.92 yd/att, first down or TD 14.1%, TD 0.6%, fumble lost 0.64%
+  - scrambles, down 3, 1 yard to go: n=27, 4.89 yd/att, first down or TD 100.0%, TD 14.8%, fumble lost 0.00%
+  - scrambles, down 3, 2 yards to go: n=48, 6.10 yd/att, first down or TD 75.0%, TD 4.2%, fumble lost 0.00%
+  - scrambles, down 3, 3 to 5 yards to go: n=190, 6.95 yd/att, first down or TD 72.1%, TD 3.7%, fumble lost 0.53%
+  - scrambles, down 3, 6 to 10 yards to go: n=271, 9.00 yd/att, first down or TD 52.0%, TD 3.0%, fumble lost 0.74%
+  - scrambles, down 3, 11 or more yards to go: n=145, 9.23 yd/att, first down or TD 22.1%, TD 2.1%, fumble lost 0.00%
+  - scrambles, down 4, 1 yard to go: n=18, 6.56 yd/att, first down or TD 100.0%, TD 27.8%, fumble lost 0.00%
+  - scrambles, down 4, 2 yards to go: n=9, 8.67 yd/att, first down or TD 88.9%, TD 22.2%, fumble lost 0.00%
+  - scrambles, down 4, 3 to 5 yards to go: n=20, 8.10 yd/att, first down or TD 95.0%, TD 15.0%, fumble lost 0.00%
+  - scrambles, down 4, 6 to 10 yards to go: n=10, 10.20 yd/att, first down or TD 60.0%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 4, 11 or more yards to go: n=5, 14.40 yd/att, first down or TD 60.0%, TD 0.0%, fumble lost 0.00%
+- By field zone, scrambles: 
+  - scrambles, own half (51 to 99 yards from the goal): n=1154, 8.04 yd/att, first down or TD 38.6%, TD 0.0%, fumble lost 0.26%
+  - scrambles, opponent half outside the 10 (11 to 50): n=858, 7.65 yd/att, first down or TD 42.3%, TD 2.7%, fumble lost 0.82%
+  - scrambles, inside the opponent 10 (6 to 10): n=76, 5.78 yd/att, first down or TD 46.1%, TD 34.2%, fumble lost 0.00%
+  - scrambles, inside the opponent 5 (1 to 5): n=56, 2.73 yd/att, first down or TD 64.3%, TD 58.9%, fumble lost 0.00%
+#### Down and distance, field zone, sneak proxy: 2026 to date
+- By down, designed QB runs: down 1: n=46, 4.43 yd/att, first down or TD 21.7%, TD 10.9%, fumble lost 0.00%; down 2: n=31, 3.23 yd/att, first down or TD 41.9%, TD 22.6%, fumble lost 6.45%; down 3: n=75, 2.65 yd/att, first down or TD 84.0%, TD 6.7%, fumble lost 0.00%; down 4: n=18, 0.78 yd/att, first down or TD 61.1%, TD 16.7%, fumble lost 0.00%
+  - designed QB runs, down 1, 1 yard to go: n=6, 0.83 yd/att, first down or TD 83.3%, TD 83.3%, fumble lost 0.00%
+  - designed QB runs, down 1, 3 to 5 yards to go: n=2, 0.00 yd/att, first down or TD 0.0%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, down 1, 6 to 10 yards to go: n=35, 4.97 yd/att, first down or TD 11.4%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, down 1, 11 or more yards to go: n=3, 8.33 yd/att, first down or TD 33.3%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, down 2, 1 yard to go: n=9, 0.89 yd/att, first down or TD 66.7%, TD 55.6%, fumble lost 0.00%
+  - designed QB runs, down 2, 2 yards to go: n=3, 2.00 yd/att, first down or TD 66.7%, TD 33.3%, fumble lost 0.00%
+  - designed QB runs, down 2, 3 to 5 yards to go: n=3, 6.67 yd/att, first down or TD 66.7%, TD 33.3%, fumble lost 0.00%
+  - designed QB runs, down 2, 6 to 10 yards to go: n=14, 4.00 yd/att, first down or TD 21.4%, TD 0.0%, fumble lost 14.29%
+  - designed QB runs, down 2, 11 or more yards to go: n=2, 5.00 yd/att, first down or TD 0.0%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, down 3, 1 yard to go: n=61, 1.98 yd/att, first down or TD 90.2%, TD 6.6%, fumble lost 0.00%
+  - designed QB runs, down 3, 2 yards to go: n=4, 0.50 yd/att, first down or TD 25.0%, TD 25.0%, fumble lost 0.00%
+  - designed QB runs, down 3, 3 to 5 yards to go: n=6, 6.67 yd/att, first down or TD 83.3%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, down 3, 6 to 10 yards to go: n=3, 9.67 yd/att, first down or TD 66.7%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, down 3, 11 or more yards to go: n=1, 7.00 yd/att, first down or TD 0.0%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, down 4, 1 yard to go: n=18, 0.78 yd/att, first down or TD 61.1%, TD 16.7%, fumble lost 0.00%
+- By field zone, designed QB runs: 
+  - designed QB runs, own half (51 to 99 yards from the goal): n=54, 4.24 yd/att, first down or TD 66.7%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, opponent half outside the 10 (11 to 50): n=78, 3.01 yd/att, first down or TD 51.3%, TD 0.0%, fumble lost 2.56%
+  - designed QB runs, inside the opponent 10 (6 to 10): n=7, 2.57 yd/att, first down or TD 14.3%, TD 0.0%, fumble lost 0.00%
+  - designed QB runs, inside the opponent 5 (1 to 5): n=31, 1.13 yd/att, first down or TD 64.5%, TD 64.5%, fumble lost 0.00%
+- By down, scrambles: down 1: n=92, 7.34 yd/att, first down or TD 26.1%, TD 4.3%, fumble lost 3.26%; down 2: n=108, 8.28 yd/att, first down or TD 46.3%, TD 4.6%, fumble lost 0.00%; down 3: n=104, 8.00 yd/att, first down or TD 50.0%, TD 2.9%, fumble lost 0.00%; down 4: n=3, 4.33 yd/att, first down or TD 100.0%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 1, 2 yards to go: n=1, 2.00 yd/att, first down or TD 100.0%, TD 100.0%, fumble lost 0.00%
+  - scrambles, down 1, 3 to 5 yards to go: n=2, 8.00 yd/att, first down or TD 50.0%, TD 0.0%, fumble lost 50.00%
+  - scrambles, down 1, 6 to 10 yards to go: n=83, 7.18 yd/att, first down or TD 26.5%, TD 3.6%, fumble lost 2.41%
+  - scrambles, down 1, 11 or more yards to go: n=6, 10.17 yd/att, first down or TD 0.0%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 2, 1 yard to go: n=4, 6.75 yd/att, first down or TD 100.0%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 2, 2 yards to go: n=4, 7.25 yd/att, first down or TD 75.0%, TD 25.0%, fumble lost 0.00%
+  - scrambles, down 2, 3 to 5 yards to go: n=15, 6.93 yd/att, first down or TD 66.7%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 2, 6 to 10 yards to go: n=67, 8.18 yd/att, first down or TD 40.3%, TD 4.5%, fumble lost 0.00%
+  - scrambles, down 2, 11 or more yards to go: n=18, 10.33 yd/att, first down or TD 33.3%, TD 5.6%, fumble lost 0.00%
+  - scrambles, down 3, 1 yard to go: n=6, 2.83 yd/att, first down or TD 100.0%, TD 16.7%, fumble lost 0.00%
+  - scrambles, down 3, 2 yards to go: n=6, 11.67 yd/att, first down or TD 83.3%, TD 16.7%, fumble lost 0.00%
+  - scrambles, down 3, 3 to 5 yards to go: n=30, 6.77 yd/att, first down or TD 60.0%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 3, 6 to 10 yards to go: n=36, 7.83 yd/att, first down or TD 47.2%, TD 2.8%, fumble lost 0.00%
+  - scrambles, down 3, 11 or more yards to go: n=26, 10.00 yd/att, first down or TD 23.1%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 4, 1 yard to go: n=1, 1.00 yd/att, first down or TD 100.0%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 4, 2 yards to go: n=1, 5.00 yd/att, first down or TD 100.0%, TD 0.0%, fumble lost 0.00%
+  - scrambles, down 4, 6 to 10 yards to go: n=1, 7.00 yd/att, first down or TD 100.0%, TD 0.0%, fumble lost 0.00%
+- By field zone, scrambles: 
+  - scrambles, own half (51 to 99 yards from the goal): n=165, 7.90 yd/att, first down or TD 40.6%, TD 0.0%, fumble lost 1.21%
+  - scrambles, opponent half outside the 10 (11 to 50): n=126, 8.33 yd/att, first down or TD 43.7%, TD 4.8%, fumble lost 0.79%
+  - scrambles, inside the opponent 10 (6 to 10): n=10, 4.90 yd/att, first down or TD 40.0%, TD 30.0%, fumble lost 0.00%
+  - scrambles, inside the opponent 5 (1 to 5): n=6, 2.17 yd/att, first down or TD 50.0%, TD 50.0%, fumble lost 0.00%
+- CROSS-CHECK 2024: QB rushes plus kneel-downs = 2247 attempts, 10974 yards; adding 102 aborted snaps (a fumbled snap the QB picked up) = 2349 attempts, 10980 yards (4.67 per attempt)
+- CROSS-CHECK 2025: QB rushes plus kneel-downs = 2134 attempts, 9675 yards; adding 78 aborted snaps (a fumbled snap the QB picked up) = 2212 attempts, 9682 yards (4.38 per attempt)
+- CROSS-CHECK FOX figures (2024, 3rd or 4th and 1, REG only): J.Hurts all QB runs incl. scrambles and aborted snaps 22 of 27 (designed only 22 of 26); J.Allen all QB runs incl. scrambles and aborted snaps 17 of 18 (designed only 17 of 18); B.Nix all QB runs incl. scrambles and aborted snaps 12 of 14 (designed only 12 of 14); J.Daniels all QB runs incl. scrambles and aborted snaps 12 of 12 (designed only 9 of 9)
+- CROSS-CHECK FOX figures (2024, 3rd or 4th and 1, REG and POST): J.Hurts all QB runs incl. scrambles and aborted snaps 25 of 30 (designed only 25 of 29); J.Allen all QB runs incl. scrambles and aborted snaps 24 of 29 (designed only 23 of 28); B.Nix all QB runs incl. scrambles and aborted snaps 13 of 15 (designed only 13 of 15); J.Daniels all QB runs incl. scrambles and aborted snaps 13 of 13 (designed only 10 of 10)
+
+#### Short-yardage context (all teams): 2026 to date
+- 3rd or 4th and 1 yard: 328 plays; designed runs 73.2% (QB designed runs 79 = 24.1% of all plays, conversion 83.5%; other runners 161, conversion 66.5%); scrambles 7; passes 24.7% (conversion 59.3%, incl. sacks)
+  - down 3: 237 plays; QB designed runs 61 (25.7% of plays; conversion 90.2%), other runs 110 (conversion 67.3%), passes 60 (conversion 60.0%)
+  - down 4: 91 plays; QB designed runs 18 (19.8% of plays; conversion 61.1%), other runs 51 (conversion 64.7%), passes 21 (conversion 57.1%)
+- 3rd or 4th and 2 yards: 213 plays; designed runs 37.1% (QB designed runs 4 = 1.9% of all plays, conversion 25.0%; other runners 75, conversion 56.0%); scrambles 7; passes 59.6% (conversion 58.3%, incl. sacks)
+  - down 3: 185 plays; QB designed runs 4 (2.2% of plays; conversion 25.0%), other runs 71 (conversion 56.3%), passes 104 (conversion 55.8%)
+  - down 4: 28 plays; QB designed runs 0 (0.0% of plays; conversion n/a%), other runs 4 (conversion 50.0%), passes 23 (conversion 69.6%)
+#### Short-yardage context (all teams): 2024 and 2025 regular seasons
+- 3rd or 4th and 1 yard: 2307 plays; designed runs 75.6% (QB designed runs 469 = 20.3% of all plays, conversion 83.4%; other runners 1274, conversion 69.2%); scrambles 45; passes 22.5% (conversion 52.0%, incl. sacks)
+  - down 3: 1658 plays; QB designed runs 315 (19.0% of plays; conversion 81.9%), other runs 942 (conversion 69.9%), passes 374 (conversion 52.1%)
+  - down 4: 649 plays; QB designed runs 154 (23.7% of plays; conversion 86.4%), other runs 332 (conversion 67.5%), passes 145 (conversion 51.7%)
+- 3rd or 4th and 2 yards: 1403 plays; designed runs 36.4% (QB designed runs 62 = 4.4% of all plays, conversion 74.2%; other runners 448, conversion 60.0%); scrambles 58; passes 59.5% (conversion 53.2%, incl. sacks)
+  - down 3: 1164 plays; QB designed runs 55 (4.7% of plays; conversion 74.5%), other runs 417 (conversion 59.5%), passes 643 (conversion 51.2%)
+  - down 4: 239 plays; QB designed runs 7 (2.9% of plays; conversion 71.4%), other runs 31 (conversion 67.7%), passes 192 (conversion 59.9%)
+
+### 3. Accepted penalties (regular season)
+
+What is counted: every foul that was enforced (text "PENALTY on ..." in upper case, nflverse flag penalty=1). Declined and offsetting fouls are not flagged in the data; I read them from the text "Penalty on ..., declined" and "..., offsetting" (reliability: section 7). "Before the snap" is decided by the type of the foul (false start, offside, neutral zone, encroachment, delay of game, illegal formation, illegal shift, illegal motion, too many men, defensive delay of game); "during a run", "during a pass" and "special teams" by the play of that row or the play text. The per-100-plays figures use the plays that stood as the denominator, plus a version that adds the live plays a foul wiped out. The last two blocks add the playoffs and exist only to compare with sources that include them (headline lines only).
+
+#### 2026 regular season to date (79 games, 158 team-games)
+- Accepted fouls (text "PENALTY on" in upper case): 1193, 15.10 per game (both teams), 7.55 per team per game; yards 9557, 60.49 per team per game, 8.01 per accepted foul
+- Declined fouls (text "Penalty on ..., declined"): 133 flags (131 plays), 0.84 per team per game; offsetting flags 32 (14 plays), 0.20 flags per team per game; share of accepted among accepted plus declined: 90.0%
+- Standing scrimmage plays (pass, run, kneel, spike, no two-point tries): 9807, 62.07 per team per game. Plays run and then nullified by a foul (no_play rows with play text): 534, 3.38 per team per game
+- Accepted fouls per 100 standing scrimmage plays: 12.16 (per team per game 7.55 fouls over 62.07 plays); per 100 standing plus nullified-live plays: 11.54
+- By phase, count, share, per team per game, per 100 standing plays:
+  - before the snap: 472, 39.6%, 2.987 per team per game, 4.81 per 100 plays
+  - during a run play: 173, 14.5%, 1.095 per team per game, 1.76 per 100 plays
+  - during a pass play: 392, 32.9%, 2.481 per team per game, 4.00 per 100 plays
+  - special teams (kickoff, punt, field goal, extra point): 155, 13.0%, 0.981 per team per game, 1.58 per 100 plays
+  - other or unclear (no play text): 1, 0.1%, 0.006 per team per game, 0.01 per 100 plays
+- Special-teams fouls by play (not counting before-the-snap types): kickoff 87 (0.551 per team per game), punt 59 (0.373 per team per game), field goal or extra point 9 (0.057 per team per game)
+- Of the before-the-snap fouls, 74.4% stopped the play before any snap (no play text); the rest were called with the play running (offside with a free play, for example)
+- By side of the committing team (offense / defense / special teams play): offense 633 (53.1%), defense 388 (32.5%), special teams 172 (14.4%)
+- By quarter: Q1 261 (21.9%), Q2 349 (29.3%), Q3 275 (23.1%), Q4 299 (25.1%), QOT 9 (0.8%)
+- Last two minutes of each half (clock 2:00 or less in Q2 and Q4): 140 accepted fouls, 11.7% of all (those 4 minutes are 6.7% of the regulation clock), 0.89 per team per game; 10.17 per 100 plays there against 11.75 per 100 plays elsewhere (plays include nullified ones)
+- Standing plays in the last two minutes of the halves: 8.33 per team per game
+- Accepted fouls on a row that is "no_play" (the play is nullified or never run): 880 = 73.8% of accepted fouls; 5.57 per team per game; of these 528 had play text (the play ran and was wiped out) and 352 had none (dead-ball fouls before the snap)
+- Nullifying fouls as a share of all snap-like events (standing plays plus nullified rows): 8.5%
+- Fouls flagged first_down_penalty=1 (the foul produced the first down): 313 = 26.2% of accepted, 3.96 per game (both teams)
+- Team spread (accepted fouls committed, per team per game, 32 teams): mean 7.56, SD 1.23, min 5.00 (IND), max 9.80 (CLE), 10th percentile 6.02, 90th percentile 9.16; lowest three IND 5.00, SF 5.00, MIN 6.00; highest three CLE 9.80, LAC 9.60, NYJ 9.40
+- SD expected from chance alone for a team with the same rate over 5 games, if fouls were Poisson: 1.24
+- Accepted fouls per game (both teams): mean 15.10, SD 4.51, percentiles 5/25/50/75/95: 8, 12, 15, 17, 23.1, max 30, min 6
+- By type (accepted count; per game both teams; average yards over fouls with a yardage; declined flags; first_down_penalty share). Types with at least 5 accepted:
+  - Offensive Holding: 260; 3.29; 9.6 yd; declined 30; first-down flag 0%; phase during or after the play
+  - False Start: 222; 2.81; 4.9 yd; declined 0; first-down flag 0%; phase before the snap
+  - Defensive Pass Interference: 85; 1.08; 16.9 yd; declined 12; first-down flag 98%; phase during or after the play
+  - Delay of Game: 80; 1.01; 4.9 yd; declined 2; first-down flag 0%; phase before the snap
+  - Defensive Holding: 63; 0.80; 4.6 yd; declined 14; first-down flag 98%; phase during or after the play
+  - Unnecessary Roughness: 55; 0.70; 12.6 yd; declined 1; first-down flag 62%; phase during or after the play
+  - Defensive Offside: 49; 0.62; 4.5 yd; declined 15; first-down flag 18%; phase before the snap
+  - Face Mask: 36; 0.46; 12.6 yd; declined 1; first-down flag 69%; phase during or after the play
+  - Illegal Formation: 36; 0.46; 5.0 yd; declined 14; first-down flag 0%; phase before the snap
+  - Neutral Zone Infraction: 32; 0.41; 4.9 yd; declined 0; first-down flag 41%; phase before the snap
+  - Roughing the Passer: 30; 0.38; 11.6 yd; declined 0; first-down flag 100%; phase during or after the play
+  - Illegal Block Above the Waist: 27; 0.34; 9.4 yd; declined 1; first-down flag 0%; phase during or after the play
+  - Illegal Use of Hands: 25; 0.32; 6.4 yd; declined 5; first-down flag 64%; phase during or after the play
+  - Illegal Shift: 24; 0.30; 5.0 yd; declined 11; first-down flag 0%; phase before the snap
+  - Illegal Contact: 23; 0.29; 5.0 yd; declined 8; first-down flag 100%; phase during or after the play
+  - Offensive Pass Interference: 22; 0.28; 9.5 yd; declined 7; first-down flag 0%; phase during or after the play
+  - Kickoff Short of Landing Zone: 13; 0.16; 0.0 yd; declined 0; first-down flag 0%; phase during or after the play
+  - Ineligible Downfield Pass: 12; 0.15; 5.0 yd; declined 4; first-down flag 0%; phase during or after the play
+  - Unsportsmanlike Conduct: 12; 0.15; 12.6 yd; declined 0; first-down flag 25%; phase during or after the play
+  - Encroachment: 11; 0.14; 4.6 yd; declined 0; first-down flag 9%; phase before the snap
+  - Intentional Grounding: 11; 0.14; 12.0 yd; declined 0; first-down flag 0%; phase during or after the play
+  - Kickoff Out of Bounds: 8; 0.10; 0.0 yd; declined 0; first-down flag 0%; phase during or after the play
+  - Chop Block: 6; 0.08; 13.0 yd; declined 0; first-down flag 0%; phase during or after the play
+  - Illegal Blindside Block: 6; 0.08; 12.7 yd; declined 1; first-down flag 0%; phase during or after the play
+  - Taunting: 6; 0.08; 15.0 yd; declined 0; first-down flag 33%; phase during or after the play
+  - Defensive Too Many Men on Field: 6; 0.08; 4.3 yd; declined 3; first-down flag 33%; phase before the snap
+  - Offensive Offside: 6; 0.08; 4.5 yd; declined 2; first-down flag 0%; phase before the snap
+  - all other types (fewer than 5 each): 27
+- Types where declined flags exceed 3 in the sample (decline share = declined / (accepted + declined)): Offensive Holding 10% (30 of 290); Defensive Offside 23% (15 of 64); Illegal Formation 28% (14 of 50); Defensive Holding 18% (14 of 77); Defensive Pass Interference 12% (12 of 97); Illegal Shift 31% (11 of 35); Illegal Contact 26% (8 of 31); Offensive Pass Interference 24% (7 of 29); Illegal Use of Hands 17% (5 of 30); Ineligible Downfield Pass 25% (4 of 16)
+- Parser check: 1189 of 1193 accepted fouls have a type equal to the nflverse penalty_type column of their row (rows with two fouls only match the first)
+#### 2024 and 2025 regular seasons combined (544 games, 1088 team-games)
+- Accepted fouls (text "PENALTY on" in upper case): 6981, 12.83 per game (both teams), 6.42 per team per game; yards 56397, 51.84 per team per game, 8.08 per accepted foul
+- Declined fouls (text "Penalty on ..., declined"): 992 flags (966 plays), 0.91 per team per game; offsetting flags 323 (153 plays), 0.30 flags per team per game; share of accepted among accepted plus declined: 87.6%
+- Standing scrimmage plays (pass, run, kneel, spike, no two-point tries): 67136, 61.71 per team per game. Plays run and then nullified by a foul (no_play rows with play text): 3247, 2.98 per team per game
+- Accepted fouls per 100 standing scrimmage plays: 10.40 (per team per game 6.42 fouls over 61.71 plays); per 100 standing plus nullified-live plays: 9.92
+- By phase, count, share, per team per game, per 100 standing plays:
+  - before the snap: 2737, 39.2%, 2.516 per team per game, 4.08 per 100 plays
+  - during a run play: 976, 14.0%, 0.897 per team per game, 1.45 per 100 plays
+  - during a pass play: 2448, 35.1%, 2.250 per team per game, 3.65 per 100 plays
+  - special teams (kickoff, punt, field goal, extra point): 816, 11.7%, 0.750 per team per game, 1.22 per 100 plays
+  - other or unclear (no play text): 4, 0.1%, 0.004 per team per game, 0.01 per 100 plays
+- Special-teams fouls by play (not counting before-the-snap types): kickoff 377 (0.347 per team per game), punt 375 (0.345 per team per game), field goal or extra point 64 (0.059 per team per game)
+- Of the before-the-snap fouls, 71.0% stopped the play before any snap (no play text); the rest were called with the play running (offside with a free play, for example)
+- By side of the committing team (offense / defense / special teams play): offense 3616 (51.8%), defense 2408 (34.5%), special teams 957 (13.7%)
+- By quarter: Q1 1463 (21.0%), Q2 2076 (29.7%), Q3 1643 (23.5%), Q4 1774 (25.4%), QOT 25 (0.4%)
+- Last two minutes of each half (clock 2:00 or less in Q2 and Q4): 869 accepted fouls, 12.4% of all (those 4 minutes are 6.7% of the regulation clock), 0.80 per team per game; 9.45 per 100 plays there against 9.99 per 100 plays elsewhere (plays include nullified ones)
+- Standing plays in the last two minutes of the halves: 8.07 per team per game
+- Accepted fouls on a row that is "no_play" (the play is nullified or never run): 5103 = 73.1% of accepted fouls; 4.69 per team per game; of these 3155 had play text (the play ran and was wiped out) and 1948 had none (dead-ball fouls before the snap)
+- Nullifying fouls as a share of all snap-like events (standing plays plus nullified rows): 7.3%
+- Fouls flagged first_down_penalty=1 (the foul produced the first down): 1928 = 27.6% of accepted, 3.54 per game (both teams)
+- Team spread (accepted fouls committed, per team per game, 32 teams): mean 6.42, SD 0.59, min 4.88 (LA), max 7.71 (TEN), 10th percentile 5.80, 90th percentile 7.05; lowest three LA 4.88, CIN 5.56, SF 5.71; highest three TEN 7.71, DAL 7.68, NYJ 7.26
+- SD expected from chance alone for a team with the same rate over 34 games, if fouls were Poisson: 0.43
+- Accepted fouls per game (both teams): mean 12.83, SD 4.11, percentiles 5/25/50/75/95: 7, 10, 13, 15, 20, max 26, min 4
+- By type (accepted count; per game both teams; average yards over fouls with a yardage; declined flags; first_down_penalty share). Types with at least 5 accepted:
+  - Offensive Holding: 1356; 2.49; 9.6 yd; declined 169; first-down flag 0%; phase during or after the play
+  - False Start: 1337; 2.46; 4.9 yd; declined 5; first-down flag 0%; phase before the snap
+  - Defensive Pass Interference: 585; 1.08; 15.3 yd; declined 50; first-down flag 99%; phase during or after the play
+  - Defensive Holding: 353; 0.65; 4.7 yd; declined 128; first-down flag 99%; phase during or after the play
+  - Unnecessary Roughness: 347; 0.64; 13.2 yd; declined 8; first-down flag 58%; phase during or after the play
+  - Delay of Game: 343; 0.63; 4.9 yd; declined 18; first-down flag 0%; phase before the snap
+  - Defensive Offside: 298; 0.55; 4.8 yd; declined 155; first-down flag 18%; phase before the snap
+  - Illegal Formation: 240; 0.44; 4.9 yd; declined 90; first-down flag 0%; phase before the snap
+  - Roughing the Passer: 192; 0.35; 13.5 yd; declined 3; first-down flag 96%; phase during or after the play
+  - Face Mask: 181; 0.33; 13.5 yd; declined 7; first-down flag 67%; phase during or after the play
+  - Neutral Zone Infraction: 166; 0.31; 4.9 yd; declined 1; first-down flag 28%; phase before the snap
+  - Illegal Contact: 152; 0.28; 4.9 yd; declined 60; first-down flag 100%; phase during or after the play
+  - Offensive Pass Interference: 143; 0.26; 9.6 yd; declined 24; first-down flag 0%; phase during or after the play
+  - Illegal Use of Hands: 125; 0.23; 5.7 yd; declined 40; first-down flag 76%; phase during or after the play
+  - Ineligible Downfield Pass: 116; 0.21; 4.9 yd; declined 93; first-down flag 0%; phase during or after the play
+  - Illegal Shift: 109; 0.20; 4.9 yd; declined 57; first-down flag 0%; phase before the snap
+  - Illegal Block Above the Waist: 106; 0.19; 9.3 yd; declined 7; first-down flag 0%; phase during or after the play
+  - Intentional Grounding: 91; 0.17; 11.5 yd; declined 1; first-down flag 0%; phase during or after the play
+  - Defensive Too Many Men on Field: 82; 0.15; 4.4 yd; declined 19; first-down flag 29%; phase before the snap
+  - Unsportsmanlike Conduct: 78; 0.14; 13.1 yd; declined 1; first-down flag 18%; phase during or after the play
+  - Encroachment: 68; 0.12; 4.5 yd; declined 2; first-down flag 25%; phase before the snap
+  - Kickoff Short of Landing Zone: 63; 0.12; 0.0 yd; declined 0; first-down flag 0%; phase during or after the play
+  - Kickoff Out of Bounds: 54; 0.10; 0.0 yd; declined 2; first-down flag 0%; phase during or after the play
+  - Taunting: 44; 0.08; 14.5 yd; declined 1; first-down flag 27%; phase during or after the play
+  - Illegal Blindside Block: 41; 0.08; 12.3 yd; declined 2; first-down flag 5%; phase during or after the play
+  - Offensive Offside: 32; 0.06; 4.7 yd; declined 21; first-down flag 0%; phase before the snap
+  - Illegal Motion: 29; 0.05; 4.9 yd; declined 10; first-down flag 3%; phase before the snap
+  - Low Block: 29; 0.05; 12.9 yd; declined 0; first-down flag 62%; phase during or after the play
+  - Player Out of Bounds on Kick: 25; 0.05; 5.0 yd; declined 1; first-down flag 0%; phase during or after the play
+  - Tripping: 21; 0.04; 12.6 yd; declined 0; first-down flag 52%; phase during or after the play
+  - Horse Collar Tackle: 20; 0.04; 14.2 yd; declined 0; first-down flag 90%; phase during or after the play
+  - Offensive Too Many Men on Field: 18; 0.03; 4.8 yd; declined 0; first-down flag 0%; phase before the snap
+  - Illegal Forward Pass: 15; 0.03; 4.1 yd; declined 2; first-down flag 0%; phase during or after the play
+  - Fair Catch Interference: 13; 0.02; 13.8 yd; declined 0; first-down flag 0%; phase during or after the play
+  - Defensive Delay of Game: 12; 0.02; 5.0 yd; declined 0; first-down flag 17%; phase before the snap
+  - Roughing the Kicker: 11; 0.02; 15.0 yd; declined 0; first-down flag 82%; phase during or after the play
+  - Chop Block: 11; 0.02; 13.7 yd; declined 3; first-down flag 0%; phase during or after the play
+  - Disqualification: 10; 0.02; 12.2 yd; declined 0; first-down flag 30%; phase during or after the play
+  - Running Into the Kicker: 10; 0.02; 5.0 yd; declined 7; first-down flag 50%; phase during or after the play
+  - Kick Catch Interference: 9; 0.02; 15.0 yd; declined 0; first-down flag 0%; phase during or after the play
+  - Leverage: 9; 0.02; 11.9 yd; declined 0; first-down flag 56%; phase during or after the play
+  - Illegal Touch Pass: 8; 0.01; 0.5 yd; declined 2; first-down flag 0%; phase during or after the play
+  - Ineligible Downfield Kick: 8; 0.01; 4.9 yd; declined 1; first-down flag 0%; phase during or after the play
+  - all other types (fewer than 5 each): 21
+- Types where declined flags exceed 3 in the sample (decline share = declined / (accepted + declined)): Offensive Holding 11% (169 of 1525); Defensive Offside 34% (155 of 453); Defensive Holding 27% (128 of 481); Ineligible Downfield Pass 44% (93 of 209); Illegal Formation 27% (90 of 330); Illegal Contact 28% (60 of 212); Illegal Shift 34% (57 of 166); Defensive Pass Interference 8% (50 of 635); Illegal Use of Hands 24% (40 of 165); Offensive Pass Interference 14% (24 of 167); Offensive Offside 40% (21 of 53); Defensive Too Many Men on Field 19% (19 of 101); Delay of Game 5% (18 of 361); Illegal Motion 26% (10 of 39); Unnecessary Roughness 2% (8 of 355); Illegal Block Above the Waist 6% (7 of 113); Running Into the Kicker 41% (7 of 17); Face Mask 4% (7 of 188); False Start 0% (5 of 1342)
+- Parser check: 6966 of 6981 accepted fouls have a type equal to the nflverse penalty_type column of their row (rows with two fouls only match the first)
+### 4. Onside kicks and kickoffs (regular season)
+
+What is counted: an onside kick is a kickoff row (including free kicks after a safety) whose text says onside. The kicking team is the defteam of the kickoff row. Margin is the kicking team's score minus the receiving team's score. "Time left" is game time left. Kickoff statistics leave out onside kicks. The 2026 list names every attempt of the season so far (weeks 1 to 5, 79 games).
+
+#### Onside kicks 2026 regular season (79 games)
+- Attempts (kickoff rows with the word onside, kickoff_attempt=1): 11, recoveries by the kicking team (own_kickoff_recovery=1): 0, recovery rate 0.0%; per game 0.139, per team per game 0.070
+- Playoffs 2026: attempts 0, recoveries 0
+- Outcome type: receivers took it 8, other 1, fair catch 1, out of bounds 1
+- With a foul on the play (PENALTY in the text): 1 of 11
+- By quarter: Q4 11 (rec 0)
+- By score margin of the kicking team: trailing by 1 to 8 6 (rec 0); trailing by 9 to 16 4 (rec 0); trailing by more than 16 1 (rec 0)
+- By time left in the game: 10:00 to 15:00 left (rest of Q4) 1 (rec 0); 2:00 to 5:00 left 2 (rec 0); last 2:00 of the game 8 (rec 0)
+- Kick distance (yards): mean 13.4, median 12, min 9, max 22; kick spot: 35: 10, 20: 1
+- Margin check: the kicker margin from total scores equals minus score_differential in 11 of 11 attempts
+#### 2026 regular season to date: every onside kick
+- Week 1, CAR kicking to CHI, Q4 04:00 (game clock left 240 s), kicker margin -15.0 (trailing means negative), kick 14 yards from the 35, receivers took it
+- Week 1, TEN kicking to NYJ, Q4 02:42 (game clock left 162 s), kicker margin -13.0 (trailing means negative), kick 9 yards from the 35, receivers took it
+- Week 1, WAS kicking to PHI, Q4 01:01 (game clock left 61 s), kicker margin -2.0 (trailing means negative), kick 17 yards from the 35, receivers took it
+- Week 2, DET kicking to BUF, Q4 01:42 (game clock left 102 s), kicker margin -10.0 (trailing means negative), kick 12 yards from the 35, other
+- Week 2, LAC kicking to LV, Q4 01:41 (game clock left 101 s), kicker margin -12.0 (trailing means negative), kick 22 yards from the 20, fair catch
+- Week 3, ARI kicking to SF, Q4 00:34 (game clock left 34 s), kicker margin -6.0 (trailing means negative), kick 10 yards from the 35, receivers took it
+- Week 3, LAC kicking to BUF, Q4 01:56 (game clock left 116 s), kicker margin -8.0 (trailing means negative), kick 10 yards from the 35, receivers took it
+- Week 4, LV kicking to KC, Q4 01:46 (game clock left 106 s), kicker margin -3.0 (trailing means negative), kick 20 yards from the 35, receivers took it
+- Week 4, TEN kicking to BAL, Q4 01:12 (game clock left 72 s), kicker margin -6.0 (trailing means negative), kick 9 yards from the 35, receivers took it
+- Week 5, MIA kicking to CIN, Q4 00:45 (game clock left 45 s), kicker margin -7.0 (trailing means negative), kick 15 yards from the 35, out of bounds (foul on the play)
+- Week 5, LV kicking to NE, Q4 10:49 (game clock left 649 s), kicker margin -21.0 (trailing means negative), kick 9 yards from the 35, receivers took it
+#### Onside kicks 2024 and 2025 regular seasons combined (n=102)
+- Attempts 102, recoveries 8 (7.8%)
+- By kicker margin: trailing by 1 to 8 43 (rec 5); trailing by 9 to 16 39 (rec 1); trailing by more than 16 20 (rec 2)
+- By quarter: Q4 102
+- By time left: 10:00 to 15:00 left (rest of Q4) 3 (rec 0); 2:00 to 5:00 left 30 (rec 2); 5:00 to 10:00 left 14 (rec 1); last 2:00 of the game 55 (rec 5)
+- Kick distance: mean 10.4, percentiles 10/50/90: 7, 10, 14
+- Kick distance of recoveries: 9, 13, 8, 9, 13, 8, 10, 12; of failures (mean) 10.4
+#### Kickoffs excluding onside kicks: 2024 regular season (272 games)
+- Kickoffs: 2753, 10.12 per game (both teams)
+- Touchback rate (touchback flag on the kickoff row): 65.5% (1803); kicks into the end zone 12.9%; returned (a returner is named, no touchback) 33.3% (917); any returner named incl. from the end zone 33.3%; fair catch 0.0%; out of bounds 0.5%; downed 0.0%; return touchdowns 6
+- Average starting yard line of the receiving team after all kickoffs (own yard line, from the next scrimmage row; n=2716): 29.6; after returns only: 29.2 (n=913); median all 30
+- Spots after touchbacks (own yard line: count): 30: 1741, 20: 39, 25: 12, 35: 11
+- Kick distance (yards): mean 63.9, median 65; return yards on returns: mean 27.5, median 26, 90th percentile 37; returns of 40 or more yards: 58
+- Starting yard line percentiles after all kickoffs (10, 25, 50, 75, 90): 24, 30, 30, 30, 32
+#### Kickoffs excluding onside kicks: 2025 regular season (272 games)
+- Kickoffs: 2733, 10.05 per game (both teams)
+- Touchback rate (touchback flag on the kickoff row): 21.1% (576); kicks into the end zone 9.8%; returned (a returner is named, no touchback) 76.0% (2076); any returner named incl. from the end zone 76.0%; fair catch 0.0%; out of bounds 1.4%; downed 0.0%; return touchdowns 6
+- Average starting yard line of the receiving team after all kickoffs (own yard line, from the next scrimmage row; n=2694): 30.3; after returns only: 29.7 (n=2118); median all 31
+- Spots after touchbacks (own yard line: count): 35: 489, 20: 80, 30: 4, 40: 2, 10: 1
+- Kick distance (yards): mean 60.7, median 62; return yards on returns: mean 25.9, median 25, 90th percentile 33; returns of 40 or more yards: 87
+- Starting yard line percentiles after all kickoffs (10, 25, 50, 75, 90): 20, 26, 31, 35, 37

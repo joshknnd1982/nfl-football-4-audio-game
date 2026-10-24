@@ -1,0 +1,317 @@
+- NXZ-63 (menu, say5): "Free Fire". defense call D063 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-64 (menu, say5): "Twist Stunt". defense call D064 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-65 (menu, say5): "Loop Stunt". defense call D065 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-66 (menu, say5): "Edge Blitz". defense call D066 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-67 (menu, say5): "Cover Three Sky". defense call D067 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-68 (menu, say5): "Cover Three Cloud". defense call D068 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-69 (menu, say5): "Cover Three Buzz". defense call D069 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-70 (menu, say5): "Cover Three Match". defense call D070 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-71 (menu, say5): "Drop Eight". defense call D071 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-72 (menu, say5): "Cover One Robber". defense call D072 of the catalog (call, list dg08, SRC-SECONDARY)
+- NXZ-73 (menu, say5): "Two Man". defense call D073 of the catalog (call, list dg08, SRC-SECONDARY)
+- NXZ-74 (menu, say5): "Off Man". defense call D074 of the catalog (call, list dg08, SRC-SECONDARY)
+- NXZ-75 (menu, say5): "Man Three Deep". defense call D075 of the catalog (call, list dg08, UNVERIFIED)
+- NXZ-76 (menu, say5): "Cover One Contain". defense call D076 of the catalog (call, list dg08, SRC-SECONDARY)
+- NXZ-77 (menu, say5): "Match Quarters". defense call D077 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-78 (menu, say5): "Cover Nine". defense call D078 of the catalog (call, list dg09, UNVERIFIED)
+- NXZ-79 (menu, say5): "Two Deep Disguise". defense call D079 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-80 (menu, say5): "Cover Two Match". defense call D080 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-88 (menu, say5): "Cover Two Hard Flat". defense call D088 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-89 (menu, say5): "Cover Two Invert". defense call D089 of the catalog (call, list dg09, UNVERIFIED)
+- NXZ-90 (menu, say5): "Cover Four Drop". defense call D090 of the catalog (call, list dg09, SRC-SECONDARY)
+- NXZ-81 (menu, say5): "Bracket Coverage". defense call D081 of the catalog (call, list dg10, SRC-OFFICIAL)
+- NXZ-82 (menu, say5): "Safety Rotation". defense call D082 of the catalog (call, list dg10, SRC-OFFICIAL)
+- NXZ-83 (menu, say5): "Quarter Defense". defense call D083 of the catalog (call, list dg10, SRC-SECONDARY)
+- NXZ-91 (menu, say5): "Cover Three Seam". defense call D091 of the catalog (call, list dg10, SRC-SECONDARY)
+- NXZ-92 (menu, say5): "Cover Four Press". defense call D092 of the catalog (call, list dg10, SRC-SECONDARY)
+- NXZ-85 (menu, say5): "Hail Mary Defense". defense call D085 of the catalog (call, list dg11, SRC-SECONDARY)
+- NXZ-86 (menu, say5): "Two Point Defense". defense call D086 of the catalog (call, list dg11, SRC-SECONDARY)
+- NXZ-87 (menu, say5): "Two Minute Defense". defense call D087 of the catalog (call, list dg11, SRC-SECONDARY)
+- NXB-K01 (menu, say5): "Deep Kick". special teams play K001 of the catalog (kickoff, list kg01, SRC-OFFICIAL)
+- NXB-K02 (menu, say5): "Short Kick". special teams play K002 of the catalog (kickoff, list kg01, SRC-OFFICIAL)
+- NXB-K03 (menu, say5): "Squib Kick". special teams play K003 of the catalog (kickoff, list kg01, SRC-SECONDARY)
+- NXB-K04 (menu, say5): "Onside Kick". special teams play K004 of the catalog (kickoff, list kg01, SRC-OFFICIAL)
+- NXB-K11 (menu, say5): "Punt". special teams play K011 of the catalog (punt, list kg02, SRC-SECONDARY)
+- NXB-K12 (menu, say5): "Pin Punt". special teams play K012 of the catalog (punt, list kg02, SRC-SECONDARY)
+- NXB-K13 (menu, say5): "Rugby Punt". special teams play K013 of the catalog (punt, list kg02, SRC-SECONDARY)
+- NXB-K14 (menu, say5): "Tight Punt". special teams play K014 of the catalog (punt, list kg02, SRC-OFFICIAL)
+- NXB-K15 (menu, say5): "Fake Punt Run". special teams play K015 of the catalog (fake, list kg02, SRC-SECONDARY)
+- NXB-K16 (menu, say5): "Fake Punt Pass". special teams play K016 of the catalog (fake, list kg02, SRC-SECONDARY)
+- NXB-K21 (menu, say5): "Field Goal". special teams play K021 of the catalog (field_goal, list kg03, SRC-SECONDARY)
+- NXB-K22 (menu, say5): "Fake Field Goal Run". special teams play K022 of the catalog (fake, list kg03, SRC-SECONDARY)
+- NXB-K23 (menu, say5): "Fake Field Goal Pass". special teams play K023 of the catalog (fake, list kg03, SRC-SECONDARY)
+- NXB-K24 (menu, say5): "Extra Point Kick". special teams play K024 of the catalog (try, list kg03, SRC-OFFICIAL)
+- NXB-K25 (menu, say5): "Fair Catch Kick". special teams play K025 of the catalog (fair_catch_kick, list kg03, SRC-OFFICIAL)
+- NXB-K26 (menu, say5): "Swinging Gate Try". special teams play K026 of the catalog (try, list kg03, SRC-SECONDARY)
+- NXB-K27 (menu, say5): "Safety Punt". special teams play K027 of the catalog (kickoff, list kg01, SRC-OFFICIAL)
+- NXB-K31 (menu, say5): "Punt Return". special teams play K031 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-K32 (menu, say5): "Fair Catch". special teams play K032 of the catalog (kick_defense, list kg04, SRC-OFFICIAL)
+- NXB-K33 (menu, say5): "Punt Block". special teams play K033 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-K34 (menu, say5): "Punt Safe". special teams play K034 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-K35 (menu, say5): "Field Goal Block". special teams play K035 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-K36 (menu, say5): "Field Goal Safe". special teams play K036 of the catalog (kick_defense, list kg04, SRC-SECONDARY)
+- NXB-11 (menu, say5): "Inside Runs". list og01 (O side) opened by Right on family 1, list 1
+- NXB-12 (menu, say5): "Power and Gap Runs". list og02 (O side) opened by Right on family 1, list 2
+- NXB-13 (menu, say5): "Outside Runs". list og03 (O side) opened by Right on family 2, list 1
+- NXB-14 (menu, say5): "Misdirection Runs". list og04 (O side) opened by Right on family 2, list 2
+- NXB-15 (menu, say5): "Screens". list og05 (O side) opened by Right on family 3, list 1
+- NXB-16 (menu, say5): "Quick Passes". list og06 (O side) opened by Right on family 4, list 1
+- NXB-17 (menu, say5): "Crossers and Backs". list og07 (O side) opened by Right on family 4, list 2
+- NXB-18 (menu, say5): "Intermediate Passes". list og08 (O side) opened by Right on family 4, list 3
+- NXB-19 (menu, say5): "Deep Passes". list og09 (O side) opened by Right on family 5, list 1
+- NXB-20 (menu, say5): "Deep Combinations". list og10 (O side) opened by Right on family 5, list 2
+- NXB-21 (menu, say5): "Play Action". list og11 (O side) under More Plays
+- NXB-22 (menu, say5): "Moving Pocket". list og12 (O side) under More Plays
+- NXB-23 (menu, say5): "Quarterback Runs". list og13 (O side) under More Plays
+- NXB-24 (menu, say5): "Option Runs". list og14 (O side) under More Plays
+- NXB-25 (menu, say5): "Run Pass Options". list og15 (O side) under More Plays
+- NXB-26 (menu, say5): "Trick Plays". list og16 (O side) under More Plays
+- NXB-27 (menu, say5): "Goal Line and Short Yardage". list og17 (O side) under More Plays
+- NXB-28 (menu, say5): "Clock Plays". list og18 (O side) under More Plays
+- NXB-29 (menu, say5): "Old Formations". list og19 (O side) under More Plays
+- NXB-30 (menu, say5): "More Routes". list og20 (O side) under More Plays
+- NXB-31 (menu, say5): "Goal Line Defenses". list dg01 (D side) opened by Right on family 1, list 1
+- NXB-32 (menu, say5): "Run Fronts". list dg02 (D side) opened by Right on family 2, list 1
+- NXB-33 (menu, say5): "Run Stunts". list dg03 (D side) opened by Right on family 2, list 2
+- NXB-34 (menu, say5): "Edge and Contain". list dg04 (D side) opened by Right on family 3, list 1
+- NXB-35 (menu, say5): "Blitzes". list dg05 (D side) opened by Right on family 4, list 1
+- NXB-36 (menu, say5): "Pressure Looks". list dg06 (D side) opened by Right on family 4, list 2
+- NXB-37 (menu, say5): "Zone Coverages". list dg07 (D side) opened by Right on family 5, list 1
+- NXB-38 (menu, say5): "Man Coverages". list dg08 (D side) opened by Right on family 5, list 2
+- NXB-39 (menu, say5): "Two Deep Coverages". list dg09 (D side) opened by Right on family 6, list 1
+- NXB-40 (menu, say5): "Deep Help". list dg10 (D side) opened by Right on family 6, list 2
+- NXB-41 (menu, say5): "Situation Defenses". list dg11 (D side) under More Plays
+- NXB-42 (menu, say5): "Kick Offs". list kg01 (K side) under More Plays
+- NXB-43 (menu, say5): "Punts". list kg02 (K side) under More Plays
+- NXB-44 (menu, say5): "Field Goals and Tries". list kg03 (K side) under More Plays
+- NXB-45 (menu, say5): "Kick Defense". list kg04 (K side) under More Plays
+- NXB-50 (menu, say5): "More Plays". top item of a play menu, letter M: the lists that are not the original's families (design 2.4)
+- NXB-51 (menu, say5): "Favourites". top item, letter F, only when the player has favourites (design 2.5)
+- NXB-52 (menu, say5): "Again". top item, letter A: said with the last play's name after it (design 2.5)
+- NXB-53 (menu, say5): "Find a Play by Name". item of More Plays, letter N: a typed search (design 2.5)
+- NXB-54 (menu, say5): "Formation and Tempo". top item, letter O: the remembered settings of a game (design 2.5)
+- NXB-56 (prompt, say5): " type the first letters of the play's name, then press enter. ". the typed search's prompt
+- NXB-57 (sentence, say5): " no play has that name. ". the typed search found nothing
+- NXB-58 (sentence, say5): " added to your favourites. ". the plus key in a list (design 2.5)
+- NXB-59 (sentence, say5): " taken off your favourites. ". the minus key in a list or in Favourites
+- NXB-60 (sentence, say5): " your favourites list is full. ". ten favourites already
+- NXB-61 (sentence, say5): " list <n> of <m>. ". after a list's name when it opens: its place among its family's lists
+- NXB-62 (menu, say5): "Formation". setting (design 2.5)
+- NXB-63 (menu, say5): "Personnel". setting: the backs and tight ends, said in plain words
+- NXB-64 (menu, say5): "Motion". setting
+- NXB-65 (menu, say5): "Side". setting: the play run to the left or the right
+- NXB-66 (menu, say5): "Tempo". setting: normal, no huddle or hurry up
+- NXB-67 (menu, say5): "Protection". setting: normal, max protect or slide
+- NXB-68 (menu, say5): "Defensive Personnel". setting: matched to the offense or chosen
+- NXB-69 (menu, say5): "Coverage Shade". setting: press or off
+- NXB-70 (answer, say5): "the playbook's choice". value book of the setting formation
+- NXB-71 (answer, say5): "under center". value under_center of the setting formation
+- NXB-72 (answer, say5): "shotgun". value shotgun of the setting formation
+- NXB-73 (answer, say5): "pistol". value pistol of the setting formation
+- NXB-74 (answer, say5): "singleback". value singleback of the setting formation
+- NXB-75 (answer, say5): "I formation". value i_form of the setting formation
+- NXB-76 (answer, say5): "split backs". value split_backs of the setting formation
+- NXB-77 (answer, say5): "empty backfield". value empty of the setting formation
+- NXB-78 (answer, say5): "heavy goal line". value heavy of the setting formation
+- NXB-79 (answer, say5): "the playbook's choice". value book of the setting personnel
+- NXB-80 (answer, say5): "one back, one tight end". value 11 of the setting personnel
+- NXB-81 (answer, say5): "one back, two tight ends". value 12 of the setting personnel
+- NXB-82 (answer, say5): "one back, three tight ends". value 13 of the setting personnel
+- NXB-83 (answer, say5): "two backs, one tight end". value 21 of the setting personnel
+- NXB-84 (answer, say5): "two backs, two tight ends". value 22 of the setting personnel
+- NXB-85 (answer, say5): "one back, four receivers". value 10 of the setting personnel
+- NXB-86 (answer, say5): "two backs, three receivers". value 20 of the setting personnel
+- NXB-87 (answer, say5): "no back, one tight end". value 01 of the setting personnel
+- NXB-88 (answer, say5): "no back, five receivers". value 00 of the setting personnel
+- NXB-89 (answer, say5): "the playbook's choice". value book of the setting motion
+- NXB-90 (answer, say5): "none". value none of the setting motion
+- NXB-91 (answer, say5): "jet motion". value jet of the setting motion
+- NXB-92 (answer, say5): "orbit motion". value orbit of the setting motion
+- NXB-93 (answer, say5): "a shift". value shift of the setting motion
+- NXB-94 (answer, say5): "the playbook's choice". value book of the setting side
+- NXB-95 (answer, say5): "to the left". value left of the setting side
+- NXB-96 (answer, say5): "to the right". value right of the setting side
+- NXB-97 (answer, say5): "normal". value normal of the setting tempo
+- NXB-98 (answer, say5): "no huddle". value no_huddle of the setting tempo
+- NXB-99 (answer, say5): "hurry up". value hurry_up of the setting tempo
+- NXB-A00 (answer, say5): "normal". value normal of the setting protection
+- NXB-A01 (answer, say5): "max protect". value max of the setting protection
+- NXB-A02 (answer, say5): "slide protection". value slide of the setting protection
+- NXB-A03 (answer, say5): "matched to the offense". value match of the setting defense_personnel
+- NXB-A04 (answer, say5): "base, four three". value base 4-3 of the setting defense_personnel
+- NXB-A05 (answer, say5): "base, three four". value base 3-4 of the setting defense_personnel
+- NXB-A06 (answer, say5): "nickel, four two five". value nickel 4-2-5 of the setting defense_personnel
+- NXB-A07 (answer, say5): "nickel, three three five". value nickel 3-3-5 of the setting defense_personnel
+- NXB-A08 (answer, say5): "nickel, two four five". value nickel 2-4-5 of the setting defense_personnel
+- NXB-A09 (answer, say5): "big nickel, three safeties". value big nickel of the setting defense_personnel
+- NXB-A10 (answer, say5): "dime, four one six". value dime 4-1-6 of the setting defense_personnel
+- NXB-A11 (answer, say5): "dime, three two six". value dime 3-2-6 of the setting defense_personnel
+- NXB-A12 (answer, say5): "quarter, seven defensive backs". value quarter of the setting defense_personnel
+- NXB-A13 (answer, say5): "two five". value 2-5 of the setting defense_personnel
+- NXB-A14 (answer, say5): "heavy goal line". value heavy of the setting defense_personnel
+- NXB-A15 (answer, say5): "the playbook's choice". value book of the setting coverage_shade
+- NXB-A16 (answer, say5): "press". value press of the setting coverage_shade
+- NXB-A17 (answer, say5): "off coverage". value off of the setting coverage_shade
+- NXY-R01 (help, say5): " A handoff to the running back, who runs between the guards and picks the hole that opens. Steady gains against two deep defenders; weak when many defenders crowd the line. ". description of O001 Inside Zone (NX-P8; heard with D)
+- NXY-R05 (help, say5): " A fast handoff straight ahead through the middle. It gains a short, sure yard or two against a blitz, but loses ground when defenders crowd the line. ". description of O005 Dive (NX-P8; heard with D)
+- NXY-R04 (help, say5): " The quarterback fakes a pass, then hands the ball off. Works against a blitz; weak when many defenders wait near the line or a defender stays back. ". description of O004 Draw Play (NX-P8; heard with D)
+- NXY-R53 (help, say5): " A handoff up the middle while a blocker cuts across to stop the defender coming from behind. Good against a thin defense; extra rushers can stop it. ". description of O053 Split Zone (NX-P8; heard with D)
+- NXY-R54 (help, say5): " A run just outside the guard, with blockers moving sideways together and the runner choosing a hole. Good against two deep defenders; defenders slanting across the line spoil it. ". description of O054 Mid Zone (NX-P8; heard with D)
+- NXY-R55 (help, say5): " The quarterback fakes a pass, waits a moment, then hands off. Works against a blitz; weak when a defender stays back to watch the runner. ". description of O055 Delayed Draw (NX-P8; heard with D)
+- NXY-R56 (help, say5): " A fake pass, then a handoff to a runner with a big back leading the way. Strong against a blitz; stopped when many defenders crowd the line. ". description of O056 Lead Draw (NX-P8; heard with D)
+- NXY-R57 (help, say5): " A surprise blocker hits the middle defender while the runner goes up the middle. Beats extra rushers; weak against big defenders who hold their ground. ". description of O057 Wham (NX-P8; heard with D)
+- NXY-R58 (help, say5): " A handoff with the runner following a lead blocker just off the middle. Good against a thin defense; weak when the defense squeezes the line tight. ". description of O058 Belly (NX-P8; heard with D)
+- NXY-R59 (help, say5): " A short handoff straight ahead to a big running back, mostly for one yard near the goal line. Reliable against a blitz; stops when defenders crowd the line. ". description of O059 Fullback Dive (NX-P8; heard with D)
+- NXY-R02 (help, say5): " Linemen run to the side to lead the way and the runner follows them. Strong against a thin defense; defenders slanting into the hole can stop it. ". description of O002 Power Left (NX-P8; heard with D)
+- NXY-R03 (help, say5): " The play starts one way, then the blockers and the runner cut back the other way. Beats rushers who chase the first move; weak against defenders who stay wide. ". description of O003 Counter (NX-P8; heard with D)
+- NXY-R06 (help, say5): " One blocker clears a defender and the runner follows straight into the hole. Good against two deep defenders; extra rushers stop it. ". description of O006 Iso (NX-P8; heard with D)
+- NXY-R07 (help, say5): " A defender is let through on purpose and hit from the side while the runner goes up the middle. Beats rushers; weak against big defenders who hold their ground. ". description of O007 Trap (NX-P8; heard with D)
+- NXY-R08 (help, say5): " A running back leads the way and the runner follows him through the hole. Good against a thin defense; weak when defenders crowd the line. ". description of O008 Lead Run (NX-P8; heard with D)
+- NXY-R60 (help, say5): " Two blockers push the same defender apart while the runner picks a hole. Good against two deep defenders; extra rushers can break it up. ". description of O060 Duo (NX-P8; heard with D)
+- NXY-R61 (help, say5): " Like the counter, with two linemen leading the runner back against the flow. Beats extra rushers; weak when defenders stay wide. ". description of O061 Counter Trey (NX-P8; heard with D)
+- NXY-R62 (help, say5): " A big back runs through the middle behind a surprise block. Beats extra rushers; weak when defenders crowd the line. ". description of O062 Fullback Trap (NX-P8; heard with D)
+- NXY-R63 (help, say5): " A run toward the outer side of the line. Good against a thin defense; weak when the defense squeezes the line in. ". description of O063 Off Tackle (NX-P8; heard with D)
+- NXY-R64 (help, say5): " The runner heads outside, then cuts back against the flow. Good against defenders who slant to one side; weak against big defenders who hold the middle. ". description of O064 Cutback Run (NX-P8; heard with D)
+- NXY-R09 (help, say5): " The line moves sideways, the runner heads toward the sideline, then turns up the field. Good against two deep defenders; defenders who stay wide stop it. ". description of O009 Stretch Outside (NX-P8; heard with D)
+- NXY-R10 (help, say5): " Blockers all move toward the sideline and the runner picks a lane. Good against a thin defense; weak against defenders who stay wide. ". description of O010 Outside Zone (NX-P8; heard with D)
+- NXY-R11 (help, say5): " The quarterback tosses the ball to a running back who runs wide behind blockers. Works when the middle is crowded; weak against defenders who stay wide. ". description of O011 Toss Sweep (NX-P8; heard with D)
+- NXY-R13 (help, say5): " A quick toss to a running back running wide. Beats a blitz; weak against defenders who stay wide. ". description of O013 Pitch (NX-P8; heard with D)
+- NXY-R65 (help, say5): " A very fast toss to the running back moving toward the sideline. Beats extra rushers; weak against defenders who stay wide. ". description of O065 Quick Toss (NX-P8; heard with D)
+- NXY-R66 (help, say5): " A toss wide while a receiver blocks inside on the first defender. Works when the middle is crowded; weak against defenders who stay wide. ". description of O066 Crack Toss (NX-P8; heard with D)
+- NXY-R67 (help, say5): " Some linemen block the nearest defenders while others run ahead to lead the runner around the end. Good against a thin defense; slanting defenders can stop it. ". description of O067 Pin and Pull Sweep (NX-P8; heard with D)
+- NXY-R68 (help, say5): " Two linemen run ahead of the runner around the end. Good against two deep defenders; extra rushers break it up. ". description of O068 Double Pull Sweep (NX-P8; heard with D)
+- NXY-R12 (help, say5): " A receiver runs across before the snap and takes a quick handoff, racing around the end. Works against man for man defense; weak against defenders who stay wide. ". description of O012 Jet Sweep (NX-P8; heard with D)
+- NXY-R14 (help, say5): " A receiver takes a handoff going the other way and runs around the end. Surprises extra rushers; loses yards if defenders stay wide. ". description of O014 End Around (NX-P8; heard with D)
+- NXY-R16 (help, say5): " The runner goes one way, then hands the ball to a receiver going the other way. Surprises extra rushers; slow to develop, so defenders who stay wide stop it. ". description of O016 Reverse (NX-P8; heard with D)
+- NXY-R69 (help, say5): " The runner pretends to hand the ball to a receiver going the other way, then keeps it. Good against defenders who stay wide; slanting defenders can get through. ". description of O069 Fake Reverse (NX-P8; heard with D)
+- NXY-R70 (help, say5): " A receiver circles behind the quarterback before the snap and takes a quick handoff. Works against man for man defense; weak against defenders who stay wide. ". description of O070 Orbit Sweep (NX-P8; heard with D)
+- NXY-R71 (help, say5): " A receiver runs across as if to take a quick handoff, but the runner takes the ball up the middle. Works against man for man defense; weak when the line is crowded. ". description of O071 Jet Fake Inside Zone (NX-P8; heard with D)
+- NXY-R17 (help, say5): " The quarterback drops back, lets the rushers come, then throws short to a running back with blockers in front. Strong against a blitz; weak when defenders drop back. ". description of O017 Running Back Screen (NX-P8; heard with D)
+- NXY-R18 (help, say5): " A short throw to a receiver near the sideline with blockers ahead of him. Good against two deep defenders; defenders who bump the receivers can stop it. ". description of O018 Receiver Screen (NX-P8; heard with D)
+- NXY-R19 (help, say5): " A short throw to a tight end with blockers ahead of him. Works against a blitz; weak when defenders drop back and are ready. ". description of O019 Tight End Screen (NX-P8; heard with D)
+- NXY-R20 (help, say5): " A short throw to a receiver who runs behind a wall of blockers. Works against man for man defense; weak when defenders drop back. ". description of O020 Tunnel Screen (NX-P8; heard with D)
+- NXY-R21 (help, say5): " A very quick throw to a receiver near the sideline with blockers in front. Works when the middle is crowded; defenders who bump the receivers can stop it. ". description of O021 Bubble Screen (NX-P8; heard with D)
+- NXY-R72 (help, say5): " A short throw to a back running toward the sideline. Works against a blitz; weak against defenders guarding areas of the field. ". description of O072 Flat Screen (NX-P8; heard with D)
+- NXY-R73 (help, say5): " A short throw over the middle to a running back with blockers waiting. Works against a blitz; weak when defenders drop back. ". description of O073 Middle Screen (NX-P8; heard with D)
+- NXY-R74 (help, say5): " A throw to a receiver near the sideline while blockers race out ahead of him. Works against a heavy blitz; defenders who bump the receivers can stop it. ". description of O074 Jailbreak Screen (NX-P8; heard with D)
+- NXY-R75 (help, say5): " A short throw to a big running back with blockers ahead of him. Works against a blitz; weak when defenders drop back. ". description of O075 Fullback Screen (NX-P8; heard with D)
+- NXY-R76 (help, say5): " The quarterback flips the ball forward to a runner close by. Works against a blitz; a defender who watches the runner can stop it. ". description of O076 Shovel Pass (NX-P8; heard with D)
+- NXY-R22 (help, say5): " Receivers run a few steps, stop and turn back to the quarterback. A short, safe catch against two deep defenders; defenders who bump the receivers break it up. ". description of O022 Hitch Routes (NX-P8; heard with D)
+- NXY-R23 (help, say5): " A receiver runs a few steps, then cuts toward the sideline. Good against defenders guarding areas; defenders who bump the receivers break it up. ". description of O023 Quick Out (NX-P8; heard with D)
+- NXY-R25 (help, say5): " A short throw to a receiver who stops quickly near the line, with other short choices. Good against a blitz and defenders guarding areas; man for man defense can cover it. ". description of O025 Stick (NX-P8; heard with D)
+- NXY-R31 (help, say5): " Receivers cut sharply across the field toward the middle for a fast throw. Beats a blitz because the ball leaves quickly; defenders who drop back can cover it. ". description of O031 Slants (NX-P8; heard with D)
+- NXY-R29 (help, say5): " Receivers spread across the field with short patterns so one is open. Good against defenders guarding areas; man for man defense can cover it. ". description of O029 Spacing (NX-P8; heard with D)
+- NXY-R77 (help, say5): " One receiver slants across the middle while another runs to the sideline, and the quarterback throws to the open one. Good against one deep defender; weak against two. ". description of O077 Slant Flat (NX-P8; heard with D)
+- NXY-R78 (help, say5): " Three receivers run a short stop, a corner pattern and a sideline pattern, giving the quarterback several choices. Good against defenders guarding areas; man for man defense covers it. ". description of O078 Snag (NX-P8; heard with D)
+- NXY-R79 (help, say5): " A receiver runs hard, then breaks quickly toward the sideline. Good against defenders guarding areas; defenders who bump the receivers can cover it. ". description of O079 Speed Out (NX-P8; heard with D)
+- NXY-R80 (help, say5): " A receiver runs down the sideline and the quarterback throws a high ball. Good against one deep defender; two deep defenders can cover it. ". description of O080 Fade (NX-P8; heard with D)
+- NXY-R81 (help, say5): " The quarterback throws the ball behind the receiver so only he can catch it. Good against defenders who bump the receivers; two deep defenders can cover it. ". description of O081 Back Shoulder Fade (NX-P8; heard with D)
+- NXY-R24 (help, say5): " One receiver runs and turns back while another runs to the sideline, so the quarterback has two choices. Good against one deep defender; weak against two. ". description of O024 Curl and Flat (NX-P8; heard with D)
+- NXY-R26 (help, say5): " A receiver runs shallow across the field. Beats a blitz because the ball comes out fast; defenders who drop back can cover it. ". description of O026 Drag (NX-P8; heard with D)
+- NXY-R27 (help, say5): " Two receivers cross close to each other so the defenders get in each other's way. Good against man for man defense; weak when defenders drop back. ". description of O027 Mesh Crossers (NX-P8; heard with D)
+- NXY-R28 (help, say5): " Receivers cross the field close to the line. Beats a blitz; weak when defenders drop back. ". description of O028 Shallow Cross (NX-P8; heard with D)
+- NXY-R82 (help, say5): " One receiver crosses the field close to the line and another crosses deeper. Good against one deep defender; weak against two. ". description of O082 Drive (NX-P8; heard with D)
+- NXY-R83 (help, say5): " A running back runs forward, then cuts back toward the middle. Good against man for man defense; defenders guarding areas can cover it. ". description of O083 Angle Route (NX-P8; heard with D)
+- NXY-R84 (help, say5): " A running back runs toward the sideline and catches a short throw. Beats a blitz; defenders guarding areas can stop it. ". description of O084 Swing Pass (NX-P8; heard with D)
+- NXY-R85 (help, say5): " When nobody is open, the quarterback throws short to a running back. Safe against two deep defenders; man for man defense can cover it. ". description of O085 Check Down (NX-P8; heard with D)
+- NXY-R86 (help, say5): " A receiver runs a short path to the sideline. Good against one deep defender; weak against two deep defenders. ". description of O086 Flat Route (NX-P8; heard with D)
+- NXY-S65 (help, say5): " A receiver fakes toward the sideline and cuts back inside. Good against man for man defense; defenders guarding areas can cover it. ". description of O165 Whip Route (NX-P8; heard with D)
+- NXY-R88 (help, say5): " A receiver runs deep, then cuts across the middle. Good against one deep defender, but the quarterback needs time and two deep defenders can cover it. ". description of O088 Dig (NX-P8; heard with D)
+- NXY-R89 (help, say5): " Receivers run across the field at different depths, so one defender cannot cover them all. Good against defenders guarding areas; weak against man for man defense. ". description of O089 Levels (NX-P8; heard with D)
+- NXY-R90 (help, say5): " The tight end crosses the middle while other receivers go deep or wide. Good against one deep defender; weak against two deep defenders. ". description of O090 Y Cross (NX-P8; heard with D)
+- NXY-R91 (help, say5): " One receiver runs a short stop and another runs deep toward the corner. Good against two deep defenders; weak against one deep defender. ". description of O091 Smash (NX-P8; heard with D)
+- NXY-R92 (help, say5): " A receiver runs deeper than on a short stop, then turns back to the quarterback. Good against defenders guarding areas; defenders who bump the receivers can cover it. ". description of O092 Curl (NX-P8; heard with D)
+- NXY-R93 (help, say5): " A receiver runs deep, then comes back toward the sideline. Good against man for man defense; weak against two deep defenders. ". description of O093 Comeback (NX-P8; heard with D)
+- NXY-R94 (help, say5): " A receiver runs a medium distance, then turns toward the sideline. Good against defenders guarding areas; defenders who bump the receivers can cover it. ". description of O094 Out Route (NX-P8; heard with D)
+- NXY-R95 (help, say5): " A receiver runs deep, then cuts to the sideline. Good against one deep defender; weak against two deep defenders. ". description of O095 Deep Out (NX-P8; heard with D)
+- NXY-R96 (help, say5): " The receiver decides while running whether to stop, cut out or slant, depending on the defender. Good against man for man defense; weak when defenders drop back. ". description of O096 Choice Route (NX-P8; heard with D)
+- NXY-R97 (help, say5): " Three receivers run to different depths on one side, giving the quarterback several choices. Good against one deep defender; two deep defenders can cover it. ". description of O097 Sail (NX-P8; heard with D)
+- NXY-R32 (help, say5): " Four receivers run straight down the field and the quarterback picks the open one. Strong against one deep defender; weak against defenders staying very deep, and the quarterback needs time. ". description of O032 Four Verticals (NX-P8; heard with D)
+- NXY-R33 (help, say5): " A receiver runs deep, then cuts toward the middle of the field. Good against two deep defenders; weak against one deep defender. ". description of O033 Deep Post (NX-P8; heard with D)
+- NXY-R34 (help, say5): " A receiver runs deep, then cuts toward the far corner of the field. Good against two deep defenders; weak against man for man defense. ". description of O034 Corner Route (NX-P8; heard with D)
+- NXY-R35 (help, say5): " A receiver simply runs straight down the field for a long throw. Good against man for man defense; weak against two deep defenders. ". description of O035 Go Route (NX-P8; heard with D)
+- NXY-R36 (help, say5): " A receiver crosses the field far from the line. Good against man for man defense; weak when defenders drop back. ". description of O036 Deep Cross (NX-P8; heard with D)
+- NXY-R37 (help, say5): " Three receivers run to different depths on the same side of the field. Good against one deep defender; weak against man for man defense. ". description of O037 Flood (NX-P8; heard with D)
+- NXY-R39 (help, say5): " A running back runs toward the sideline, then turns up the field for a long throw. Good against man for man defense; weak against defenders guarding areas. ". description of O039 Wheel Route (NX-P8; heard with D)
+- NXY-R98 (help, say5): " Receivers run straight up the middle between the deep defenders. Good against one deep defender; weak against two deep defenders. ". description of O098 Seam (NX-P8; heard with D)
+- NXY-R99 (help, say5): " A receiver fakes toward the middle, then cuts to the corner. Good against one deep defender; weak against two deep defenders. ". description of O099 Post Corner (NX-P8; heard with D)
+- NXY-S00 (help, say5): " Two receivers run deep toward the middle from both sides. Good against two deep defenders; weak against one deep defender. ". description of O100 Double Posts (NX-P8; heard with D)
+- NXY-S01 (help, say5): " One receiver clears defenders by going deep while another cuts across behind them. Good against one deep defender; two deep defenders can cover it. ". description of O101 Dagger (NX-P8; heard with D)
+- NXY-S02 (help, say5): " Two receivers cut toward the middle at different depths. Good against two deep defenders; weak against one deep defender. ". description of O102 Mills (NX-P8; heard with D)
+- NXY-S03 (help, say5): " A deep cut toward the middle and a deep crossing pattern together, a long play that needs time. Good against one deep defender; two deep defenders can cover it. ". description of O103 Yankee (NX-P8; heard with D)
+- NXY-S04 (help, say5): " Two receivers run deep and split apart, one up the middle and one toward the sideline. Good against one deep defender; weak against two deep defenders. ". description of O104 Divide (NX-P8; heard with D)
+- NXY-S05 (help, say5): " Two receivers cross on deep patterns, one to the corner and one to the middle. Good against two deep defenders; weak against man for man defense. ". description of O105 Scissors (NX-P8; heard with D)
+- NXY-S06 (help, say5): " One receiver runs toward the middle while a running back circles toward the sideline, then up the field. Good against man for man defense; weak against two deep defenders. ". description of O106 Post Wheel (NX-P8; heard with D)
+- NXY-S07 (help, say5): " A receiver fakes a short stop, then sprints deep. Beats defenders who bump the receivers; weak against two deep defenders, and hard to throw accurately. ". description of O107 Sluggo (NX-P8; heard with D)
+- NXY-S08 (help, say5): " A receiver stutters his steps to fool the defender, then runs deep. Good against man for man defense; weak against two deep defenders. ". description of O108 Stutter Go (NX-P8; heard with D)
+- NXY-S09 (help, say5): " A receiver fakes toward the sideline, then turns deep. Good against man for man defense; weak against two deep defenders. ". description of O109 Out and Up (NX-P8; heard with D)
+- NXY-R40 (help, say5): " The quarterback fakes a handoff, then throws short. Works when defenders crowd the line to stop the run; weak against two deep defenders. ". description of O040 Play Action Short (NX-P8; heard with D)
+- NXY-R41 (help, say5): " A fake handoff, then a long throw. Good when defenders crowd the line or only one stays deep; weak against two deep defenders. ". description of O041 Play Action Deep (NX-P8; heard with D)
+- NXY-R44 (help, say5): " A fake handoff draws defenders forward, then comes a long throw. A big gain if it works; weak against two deep defenders. ". description of O044 Play Action Shot (NX-P8; heard with D)
+- NXY-R45 (help, say5): " A fake handoff, then a throw to a receiver crossing the field. Good against one deep defender; weak when defenders drop back. ". description of O045 Play Action Cross (NX-P8; heard with D)
+- NXY-S11 (help, say5): " A fake handoff, then receivers run to three depths on one side. Good against one deep defender; weak against man for man defense. ". description of O111 Play Action Flood (NX-P8; heard with D)
+- NXY-S12 (help, say5): " A fake handoff, then a running back runs toward the sideline and up the field. Good against man for man defense; weak against two deep defenders. ". description of O112 Play Action Wheel (NX-P8; heard with D)
+- NXY-S13 (help, say5): " A fake handoff, then a short throw behind blockers. Beats a blitz; weak when defenders drop back. ". description of O113 Play Action Screen (NX-P8; heard with D)
+- NXY-S14 (help, say5): " A fake handoff, then a tight end slips out to the side unnoticed. Good when defenders crowd the line; weak against defenders who stay wide. ". description of O114 Play Action Leak (NX-P8; heard with D)
+- NXY-S15 (help, say5): " A fake handoff, then a receiver crosses the field. Good against one deep defender; weak against two deep defenders. ". description of O115 Play Action Dig (NX-P8; heard with D)
+- NXY-S16 (help, say5): " A fake handoff, then a receiver cuts to the corner. Good against two deep defenders; weak against man for man defense. ". description of O116 Play Action Corner (NX-P8; heard with D)
+- NXY-R42 (help, say5): " The quarterback fakes a handoff, runs the other way and throws short on the move. Beats rushers who chase the run; weak against defenders who stay wide. ". description of O042 Bootleg Short (NX-P8; heard with D)
+- NXY-R43 (help, say5): " The quarterback runs to the side before he throws. Beats a blitz; defenders who stay wide can stop it. ". description of O043 Rollout (NX-P8; heard with D)
+- NXY-S17 (help, say5): " The quarterback fakes a handoff, then runs the other way alone with no blockers ahead. Beats rushers who chase the run; weak against defenders who stay wide. ". description of O117 Naked Bootleg (NX-P8; heard with D)
+- NXY-S18 (help, say5): " The quarterback fakes a handoff and moves to one side while receivers cross in front. Works against slanting defenders; weak against defenders who stay wide. ". description of O118 Waggle (NX-P8; heard with D)
+- NXY-S19 (help, say5): " The quarterback runs fast toward the sideline and throws. Works against man for man defense; weak against defenders who stay wide. ". description of O119 Sprint Out (NX-P8; heard with D)
+- NXY-S20 (help, say5): " Most of the offense stays in to block while only two receivers run deep. Good against a blitz; weak against two deep defenders. ". description of O120 Max Protect Shot (NX-P8; heard with D)
+- NXY-R46 (help, say5): " The quarterback pushes forward behind the center for a yard or so. Reliable for a very short distance; fails against a crowded line. ". description of O046 Quarterback Sneak (NX-P8; heard with D)
+- NXY-R47 (help, say5): " The quarterback keeps the ball and runs outside. Works against man for man defense; a defender who watches the quarterback can stop it. ". description of O047 Quarterback Keeper (NX-P8; heard with D)
+- NXY-R48 (help, say5): " The quarterback fakes a pass, then runs up the middle. Works against a blitz and man for man defense; a defender who watches the quarterback can stop it. ". description of O048 Quarterback Draw (NX-P8; heard with D)
+- NXY-R50 (help, say5): " The quarterback runs behind lead blockers up the middle. Good against a thin defense; a defender who watches the quarterback can stop it. ". description of O050 Quarterback Power (NX-P8; heard with D)
+- NXY-R51 (help, say5): " The quarterback sneaks forward while teammates push him from behind. Good against slanting defenders; weak against big defenders who hold their ground. ". description of O051 Sneak Push (NX-P8; heard with D)
+- NXY-R52 (help, say5): " The quarterback fakes a handoff, then runs around the end himself. Beats rushers who chase the run; weak against defenders who stay wide. ". description of O052 Bootleg Run (NX-P8; heard with D)
+- NXY-S21 (help, say5): " The quarterback fakes one way and runs the other with linemen leading. Beats the run blitz; a defender who watches the quarterback can stop it. ". description of O121 Quarterback Counter (NX-P8; heard with D)
+- NXY-S22 (help, say5): " The quarterback runs wide while the blockers move sideways together. Good against two deep defenders; a defender who watches the quarterback can stop it. ". description of O122 Quarterback Zone (NX-P8; heard with D)
+- NXY-S23 (help, say5): " The quarterback runs wide while a receiver blocks inside. Good when the middle is crowded; weak against defenders who stay wide. ". description of O123 Quarterback Crack Sweep (NX-P8; heard with D)
+- NXY-R49 (help, say5): " The quarterback watches one defender and either keeps the ball or hands it off, depending on that defender's move. Beats the run blitz; weak against a defender who watches the quarterback. ". description of O049 Read Option Keep (NX-P8; heard with D)
+- NXY-R15 (help, say5): " The quarterback runs wide with a running back beside him and keeps the ball or pitches it, depending on the nearest defender. Beats a blitz; weak against defenders who stay wide. ". description of O015 Speed Option (NX-P8; heard with D)
+- NXY-S24 (help, say5): " The quarterback sees what one defender does, then keeps the ball or hands it to the running back. Good against slanting defenders; defenders who chase along the line spoil it. ". description of O124 Zone Read (NX-P8; heard with D)
+- NXY-S25 (help, say5): " The quarterback can hand off, keep the ball, or pitch it to a running back, choosing by watching defenders. Beats the run blitz; weak against a defender who covers the pitch. ". description of O125 Triple Option (NX-P8; heard with D)
+- NXY-S26 (help, say5): " The quarterback hands off up the middle or keeps the ball, depending on one defender. Good against slanting defenders; defenders who chase along the line spoil it. ". description of O126 Midline Option (NX-P8; heard with D)
+- NXY-S27 (help, say5): " The quarterback hands the ball inside or keeps it going outside, depending on one defender. Beats the run blitz; defenders who chase along the line spoil it. ". description of O127 Inside Veer (NX-P8; heard with D)
+- NXY-S28 (help, say5): " The running back goes outside and the quarterback goes inside, and one defender decides who keeps the ball. Good against slanting defenders; weak against a defender who watches the quarterback. ". description of O128 Inverted Veer (NX-P8; heard with D)
+- NXY-S29 (help, say5): " A run with lead blockers, where the quarterback may keep the ball. Good against defenders who stay wide; a defender who watches the quarterback can stop it. ". description of O129 Power Read (NX-P8; heard with D)
+- NXY-S30 (help, say5): " The quarterback runs wide and either keeps the ball or pitches it to a receiver. Beats a blitz; weak against a defender who covers the pitch. ". description of O130 Receiver Pitch Option (NX-P8; heard with D)
+- NXY-R30 (help, say5): " A run and a quick pass at once: after the snap the quarterback watches one defender and hands off or throws. Strong against a crowded line; weak against two deep defenders. ". description of O030 Run Pass Option (NX-P8; heard with D)
+- NXY-S31 (help, say5): " A run play with a quick screen as the other choice: the quarterback hands off or throws behind the line. Good against a crowded line; defenders who bump the receivers can stop it. ". description of O131 Bubble Option (NX-P8; heard with D)
+- NXY-S32 (help, say5): " A run play with a quick slanting pass as the other choice. Good against the run blitz; weak against two deep defenders. ". description of O132 Glance Option (NX-P8; heard with D)
+- NXY-S33 (help, say5): " A run play with a short pass to the sideline as the other choice. Good against a crowded line; defenders who bump the receivers can stop it. ". description of O133 Quick Flat Option (NX-P8; heard with D)
+- NXY-S34 (help, say5): " A run play with a quick short pass as the other choice. Good against defenders guarding areas; weak against man for man defense. ". description of O134 Stick Option (NX-P8; heard with D)
+- NXY-S35 (help, say5): " A run play with a pass to a tight end as the other choice. Good against a crowded line; weak against defenders guarding areas. ". description of O135 Tight End Option (NX-P8; heard with D)
+- NXY-S36 (help, say5): " A receiver runs across before the snap, then the quarterback hands off or throws a quick screen. Good against man for man defense; weak against defenders who stay wide. ". description of O136 Jet Option (NX-P8; heard with D)
+- NXY-S37 (help, say5): " A run play where the quarterback may throw deep to a receiver left alone. Strong against a crowded line; weak against two deep defenders. ". description of O137 Alert Throw (NX-P8; heard with D)
+- NXY-S38 (help, say5): " A handoff, then the runner tosses the ball back to the quarterback for a deep throw. Strong against a crowded line, but risky and rarely used. ". description of O138 Flea Flicker (NX-P8; heard with D)
+- NXY-S39 (help, say5): " A running back takes a handoff and throws downfield. Works against the run blitz; rarely used and risky because a runner is not a passer. ". description of O139 Halfback Pass (NX-P8; heard with D)
+- NXY-S40 (help, say5): " The quarterback laterals to a receiver, who throws deep. Works when the line is crowded; rarely used and risky. ". description of O140 Double Pass (NX-P8; heard with D)
+- NXY-S41 (help, say5): " A receiver catches a pass, then throws back across the field to the quarterback. Works against man for man defense; rarely used and risky. ". description of O141 Throwback to the Quarterback (NX-P8; heard with D)
+- NXY-S42 (help, say5): " A short catch followed by a lateral to a teammate who runs on. A desperate play to gain extra yards; very risky because of fumbles. ". description of O142 Hook and Lateral (NX-P8; heard with D)
+- NXY-S43 (help, say5): " The quarterback pretends to pass, and a runner takes the ball from his raised hand. Works against a blitz; rarely used. ". description of O143 Statue of Liberty (NX-P8; heard with D)
+- NXY-S44 (help, say5): " A receiver in motion takes a quick short pass like a handoff. Works against man for man defense; rarely used. ". description of O144 Jet Touch Pass (NX-P8; heard with D)
+- NXY-S45 (help, say5): " The quarterback fakes a sneak, then throws to a back at the sideline. Works against a crowded line; rarely used. ". description of O145 Fake Sneak Swing (NX-P8; heard with D)
+- NXY-S46 (help, say5): " Two screens at once: blockers set up on both sides and the quarterback picks one side to throw to. Works against a blitz; rarely used. ". description of O146 Double Screen (NX-P8; heard with D)
+- NXY-S47 (help, say5): " A receiver takes a handoff going the other way, then throws deep. Works against the run blitz; rarely used and risky. ". description of O147 Reverse Pass (NX-P8; heard with D)
+- NXY-S48 (help, say5): " A high throw to a receiver in the corner of the end zone. Works against man for man defense; weak when two defenders stay deep. ". description of O148 Goal Line Fade (NX-P8; heard with D)
+- NXY-S49 (help, say5): " Receivers cross very close to each other so defenders collide. Works against man for man defense near the goal line; weak against defenders guarding areas. ". description of O149 Rub Routes (NX-P8; heard with D)
+- NXY-S50 (help, say5): " Extra blockers line up and push straight ahead. A strong run for a very short distance near the goal line; the run blitz can stop it. ". description of O150 Jumbo Power (NX-P8; heard with D)
+- NXY-S51 (help, say5): " A fake handoff, then a short throw to a tight end moving toward the sideline. Works when the line is crowded; weak against defenders who stay wide. ". description of O151 Tight End Flat (NX-P8; heard with D)
+- NXY-S52 (help, say5): " The quarterback takes the snap and kneels to end the play safely. Used to run out the clock when winning; loses about a yard. ". description of O152 Kneel Down (NX-P8; heard with D)
+- NXY-S53 (help, say5): " The quarterback throws the ball into the ground to stop the clock. It uses a down, but saves time when you are behind. ". description of O153 Spike the Ball (NX-P8; heard with D)
+- NXY-S54 (help, say5): " The quarterback pretends to spike the ball, then throws a real pass. Works if the defense relaxes; rarely used. ". description of O154 Fake Spike (NX-P8; heard with D)
+- NXY-S55 (help, say5): " The team lines up as if to run out the clock, then the quarterback throws deep at once, without faking a kneel, which would end the play. A rare surprise, and risky. ". description of O155 Victory Formation Pass (NX-P8; heard with D; SX.13)
+- NXY-R38 (help, say5): " A very long, high throw into a crowd of players in the end zone, tried when time is almost out. It rarely works, but it is the last chance. ". description of O038 Hail Mary (NX-P8; heard with D)
+- NXY-S56 (help, say5): " Players keep tossing the ball backward to gain yards when time is almost out. Very risky, since one fumble loses the ball, so a last chance only. ". description of O156 Laterals at the End (NX-P8; heard with D)
+- NXY-S57 (help, say5): " An old formation with three running backs; one runs straight ahead through the middle. Strong against two deep defenders; weak when the line is crowded; rarely used. ". description of O157 Wishbone Dive (NX-P8; heard with D)
+- NXY-S58 (help, say5): " An old formation where the quarterback hands off, keeps the ball or pitches it. Works against the run blitz; rarely used, and weak against a defender who covers the pitch. ". description of O158 Flexbone Option (NX-P8; heard with D)
+- NXY-S59 (help, say5): " A very old formation where a running back takes the snap and runs behind blockers. Works against a thin defense; rarely used. ". description of O159 Single Wing Power (NX-P8; heard with D)
+- NXY-S60 (help, say5): " An old formation where a back runs wide behind blockers. Works against a thin defense; rarely used. ". description of O160 Wing T Buck Sweep (NX-P8; heard with D)
+- NXY-S61 (help, say5): " Three running backs line up behind the quarterback and one runs straight ahead. Works against two deep defenders; rarely used. ". description of O161 Full House Dive (NX-P8; heard with D)
+- NXY-S62 (help, say5): " A running back takes the snap and runs, with the quarterback lined up wide. Works against man for man defense; weak when the line is crowded; rarely used. ". description of O162 Wildcat Run (NX-P8; heard with D)
+- NXY-S63 (help, say5): " A running back takes the snap and throws a pass. Works when defenders crowd the line; rarely used and risky. ". description of O163 Wildcat Pass (NX-P8; heard with D)
+- NXY-S64 (help, say5): " An old play where the quarterback hands off, keeps the ball or pitches it. Beats a blitz; weak against a defender who covers the pitch. ". description of O164 Split T Option (NX-P8; heard with D)

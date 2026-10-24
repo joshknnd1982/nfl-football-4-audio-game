@@ -14,6 +14,7 @@ from nfl4.extras import nx_texts as X
 from nfl4.extras import rules_2026 as R
 from nfl4.extras import tuning as T
 from nfl4.game import outcome as O
+from specfiles import read_spec
 
 DESIGN = Path(__file__).resolve().parents[2] / "spec" / "NFL_EXTRAS_DESIGN.md"
 
@@ -31,7 +32,7 @@ EXPECTED = {
 
 
 def test_the_ids_are_the_designs_rows_and_p27_to_p32_are_kept_free():
-    design_ids = sorted(set(re.findall(r"^- (P\d\d) ", DESIGN.read_text(encoding="utf-8"), flags=re.M)))
+    design_ids = sorted(set(re.findall(r"^- (P\d\d) ", read_spec(DESIGN), flags=re.M)))
     assert list(F.IDS) == design_ids == sorted(EXPECTED)
     assert not any("P%02d" % n in F.BY_ID for n in range(27, 33))
 

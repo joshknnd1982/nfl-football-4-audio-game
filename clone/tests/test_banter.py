@@ -16,11 +16,11 @@ from nfl4.game.banter_lines import LINES, NAME, OPPONENT_QB
 from nfl4.game.gamestate import GameState
 from nfl4.speech.roles import ANNOUNCER
 from randsources import ScriptedRandom, below_value, value_for
-from specfiles import SPEC, need, original_strings, strings_of_class
+from specfiles import SPEC, original_strings, read_spec, strings_of_class
 
 
 def spec_banter_rows():
-    text = need(SPEC / "GAME_SPEC.md").read_text(encoding="utf-8")
+    text = read_spec(SPEC / "GAME_SPEC.md")
     block = text[text.index("<!-- BANTER-TABLE-BEGIN -->"):text.index("<!-- BANTER-TABLE-END -->")]
     rows = {}
     for line in block.split("\n"):

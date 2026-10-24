@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from specfiles import GAME_ROOT, SPEC, need
+from specfiles import GAME_ROOT, SPEC, need, read_spec
 
 TESTS = Path(__file__).resolve().parent
 MAP = TESTS / "data" / "conformance_map.tsv"
@@ -47,7 +47,7 @@ def load_map() -> dict[str, list[str]]:
 
 
 def spec_text() -> str:
-    return need(SPEC / "GAME_SPEC.md").read_text(encoding="utf-8")
+    return read_spec(SPEC / "GAME_SPEC.md")
 
 
 def section_ids() -> list[str]:
@@ -79,7 +79,7 @@ def exact_ids() -> list[str]:
 
 
 def gap_ids() -> list[str]:
-    text = need(SPEC / "GAP_REGISTER.md").read_text(encoding="utf-8")
+    text = read_spec(SPEC / "GAP_REGISTER.md")
     block = text.split("<!-- CLOSES-BEGIN -->")[1].split("<!-- CLOSES-END -->")[0]
     line = next(l for l in block.splitlines() if l.startswith("- S8.1:"))
     return re.findall(r"G-[A-Z]\d+", line)
@@ -95,12 +95,13 @@ def observed_ids() -> list[str]:
 
 
 def extra_ids() -> list[str]:
-    text = need(SPEC / "NFL_EXTRA_FEATURES.md").read_text(encoding="utf-8")
+    text = read_spec(SPEC / "NFL_EXTRA_FEATURES.md")
     ids = re.findall(r"^- (C\d+) ", text, re.M) + re.findall(r"^- (N\d\.\d+) ", text, re.M)
     ids += re.findall(r"^- (NX-T\d) ", text, re.M)               # SX.2b: the three parts of the T key (owner rule 0.22)
     ids += re.findall(r"^- (NX-S\d) (?!to )", text, re.M)        # SX.14: the eight parts of the start-up choice and saved games (owner rule 0.23)
     ids += re.findall(r"^- (NX-P\d) ", text, re.M)               # SX.10e: every real NFL play and Madden concept (section 18; no NX-P6)
     ids += re.findall(r"^- (NX-N\d) ", text, re.M)               # SX.11: the real coaches and players, no typing of names (owner rule 0.19; no NX-N8)
+    ids += re.findall(r"^- \*\*(NX-B\d) ", text, re.M)          # the owner's bug report of 2026-10-24 (section 19, D-142 to D-146)
     ids += sorted(set(re.findall(r"^- (NX-R7) ", text, re.M)))   # SX.10e: the 2026 rules (D-085); the id is used twice in the file
     #                                                              (section 1's style rule and section 18's 2026 rules): one row covers both
     return ids
@@ -118,7 +119,8 @@ def test_the_spec_parts_have_the_counts_the_map_was_written_for():
     assert [i for i in extra_ids() if i.startswith("C")] == ["C%d" % n for n in range(1, 11)]
     assert len([i for i in extra_ids() if re.match(r"N\d\.", i)]) == 47
     assert [i for i in extra_ids() if i.startswith("NX-")] == (["NX-T1", "NX-T2", "NX-T3"] + ["NX-S%d" % n for n in range(1, 9)]
-                                                               + ["NX-P%d" % n for n in (1, 2, 3, 4, 5, 7, 8)] + ["NX-N%d" % n for n in range(1, 8)] + ["NX-R7"])
+                                                               + ["NX-P%d" % n for n in (1, 2, 3, 4, 5, 7, 8)] + ["NX-N%d" % n for n in range(1, 8)]
+                                                               + ["NX-B%d" % n for n in range(1, 6)] + ["NX-R7"])
     assert "S5.17" in section_ids() and "S4.19" in section_ids() and "S14" in section_ids() and "S15" not in section_ids()
 
 

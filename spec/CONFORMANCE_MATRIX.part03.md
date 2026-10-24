@@ -1,0 +1,538 @@
+### N4.3
+
+Requirement: Penalties on the kick (offside, illegal touching, illegal alignment) use NX7's machinery if NX7 is on; if not, they are not simulated.
+
+Tests:
+- test_nx_onside_fouls.py: test_the_players_offside_on_a_kick_the_receivers_recovered_gives_them_five_more_yards, test_the_computers_kick_is_recovered_with_an_offside_and_the_player_chooses_to_have_it_kicked_again, test_illegal_touching_on_a_recovered_kick_gives_the_receivers_the_ball_at_the_spot, test_the_player_may_decline_and_the_kickers_keep_a_recovery, test_a_foul_by_the_kicking_team_on_a_return_is_the_original_kick_off_machinery, test_a_kick_made_again_after_offsetting_fouls_keeps_a_normal_kick_normal, test_an_onside_kick_with_penalties_off_draws_no_foul, test_the_foul_names_of_the_kick_are_in_the_foul_table_and_the_prompt_says_the_kick_again and 19 more
+
+### N4.4
+
+Requirement: The computer: declares onside kicks by a rule table (trailing in the fourth quarter by the time left and the deficit, design 8.4). The 2026 rule allows an onside kick...
+
+Tests:
+- test_nx_onside.py: test_the_computer_declares_by_its_rule_and_says_so_when_the_kick_begins
+- test_nx_onside.py: test_the_computers_rules_of_design_8_4
+
+### N4.5
+
+Requirement: Statistics: onside kicks tried and recovered (C7).
+
+Tests:
+- test_nx_onside_fouls.py: test_the_statistics_add_the_onside_kicks_tried_and_recovered
+
+### N5.1
+
+Requirement: Research (SX.0, then deepened in SX.1): read EA's Madden NFL 27 playbook guide and current 2026 playbook guides, and write `spec\MADDEN_PLAYBOOK_RESEARCH.md` with sour...
+
+Tests:
+- test_conformance_gaps.py: test_the_research_documents_exist_and_name_their_sources
+
+### N5.2
+
+Requirement: Mapping. Each playbook play is a named, spoken play that maps to a base family of the original's tables (inside run, outside run, screen, short pass, long pass, and th...
+
+Tests:
+- test_nx_playbook_data.py: test_every_play_maps_to_a_family_of_the_original_and_has_a_group
+- test_nx_playbook_mods.py: test_a_called_play_moves_the_row_the_engine_draws_its_yards_from
+
+### N5.3
+
+Requirement: Defense. Playbooks also carry defensive schemes: a set of defense calls (named like the original's six plus scheme calls) that map to the original's six defense famili...
+
+Tests:
+- test_nx_playbook_data.py: test_the_catalog_has_52_offense_plays_and_30_defense_plays_with_permanent_ids
+- test_nx_playbook_menus.py: test_a_styles_defense_menu_is_the_six_calls_and_right_opens_their_lists
+
+### N5.4
+
+Requirement: Selection. The player chooses the offense playbook and the defense playbook separately (as EA does) in the F9 menu ("Classic" is always first; the default is the team'...
+
+Tests:
+- test_nx_playbook_settings.py: test_every_choice_is_read_and_written_back
+- test_nx_playbook_data.py: test_the_playbook_choices_are_classic_first_then_the_team_then_the_seven_styles
+
+### N5.5
+
+Requirement: Menus. No menu longer than 12 items; a two-level menu (a group such as "runs", "short passes", "deep passes", "play action", "special", then the play) is used when a p...
+
+Tests:
+- test_nx_playbook_menus.py: test_every_defense_list_of_every_style_fits_a_menu_of_twelve
+- test_nx_playbook_data.py: test_every_play_has_a_spoken_name_of_at_most_six_words_and_thirty_characters
+- test_sx10c_offense_menus.py: test_right_opens_a_familys_lists_with_their_heading_and_left_goes_back
+- test_sx10d_defense_menus.py: test_a_defense_playbook_gives_the_catalogs_six_calls_more_plays_and_formation
+- test_sx10d_defense_menus.py: test_right_opens_a_calls_lists_with_their_heading_and_left_goes_back
+
+### N5.6
+
+Requirement: The computer's play choice for a non-Classic playbook is a weighted draw over its plays by down, distance, field position and score, in the structure of 5.7 (the origi...
+
+Tests:
+- test_nx_playbook_menus.py: test_the_computer_draws_one_play_of_its_style_by_weight_and_situation
+
+### N5.7
+
+Requirement: Customization: playbooks are text data files in the `customize` folder with permanent IDs; the player can disable a play, rename a play and edit the modifiers within t...
+
+Tests:
+- test_nx_playbook_list.py: test_a_line_changes_removes_or_adds_a_play_of_a_style
+- test_nx_playbook_list.py: test_a_line_renames_or_switches_off_a_play_for_every_style
+
+### N6.1
+
+Requirement: Franchise is a game mode chosen when a new season starts: "Classic season" (the original's) or "Franchise". The Classic season is untouched. Franchise uses its own sav...
+
+Tests:
+- test_fr_mode.py: test_with_rules_classic_nothing_of_the_franchise_is_asked_made_or_opened, test_with_rules_classic_f9s_list_is_exactly_the_five_items_of_the_original, test_with_the_nfl_rules_f9_gets_the_franchise_item_after_rules_and_before_about, test_with_the_nfl_rules_a_new_season_asks_the_question_and_classic_is_the_first_answer, test_the_second_answer_is_franchise_when_none_exists_and_it_makes_the_league, test_the_franchise_teams_names_come_from_footplay_txt_when_it_is_whole, test_the_franchise_team_plays_with_the_leagues_players_and_the_leagues_quarterback, test_with_a_franchise_the_question_has_three_answers_and_the_first_resumes_it and 21 more
+- test_fr_menus.py: test_while_the_franchise_is_in_use_its_menu_has_the_to_do_list_the_news_the_roster_the_history_the_ratings_the_settings_and_the_way_to_classic, test_the_roster_has_the_ten_groups_with_their_counts, test_a_group_lists_its_players_by_name_position_rating_age_and_potential, test_the_history_menu_says_nothing_yet_before_the_first_season_ends, test_the_history_menu_after_a_season_lists_the_champion_the_record_and_the_seasons, test_the_franchise_settings_change_the_offseason_with_left_right_and_enter_and_are_kept, test_a_waiting_franchise_has_back_to_your_franchise_and_its_history_in_the_menu, test_the_history_of_a_waiting_franchise_can_be_heard_from_the_classic_season and 1 more
+
+### N6.2
+
+Requirement: Continuity. The league persists from season to season: 32 teams, their players, the coach (the player), standings history, records. The original's play-off and Super B...
+
+Tests:
+- test_fr_league.py: test_a_team_has_34_places_in_the_originals_order_with_a_position_each, test_team_numbers_and_the_engines_division_and_place_turn_into_each_other, test_a_new_league_has_32_full_teams_with_every_value_in_range, test_no_name_is_used_twice_among_the_active_players_while_free_names_exist, test_the_league_is_not_all_alike_there_is_a_spread_of_strengths, test_the_same_seed_makes_the_same_league_and_another_seed_another, test_the_players_team_is_made_first_with_the_names_of_the_file_and_its_quarterback, test_a_file_that_is_not_complete_is_not_used_and_a_missing_quarterback_is_drawn and 16 more
+- test_fr_history.py: test_the_entry_of_a_season_is_worked_out_from_the_results_and_the_records, test_ties_for_the_best_and_the_worst_record_go_to_the_lower_team_number, test_a_season_with_no_recorded_super_bowl_still_has_a_champion, test_the_entry_passes_the_whole_file_check_and_a_bad_one_does_not, test_the_coach_s_career_adds_the_seasons_up, test_the_league_records_keep_the_first_of_equal_values_and_name_the_season, test_the_spoken_lines_are_the_texts_of_the_table_newest_season_first, test_nothing_is_said_when_there_is_nothing_yet and 3 more
+- test_fr_resume.py: test_a_restart_from_any_league_sav_written_in_the_play_offs_ends_the_season_with_one_entry_of_267_games, test_when_the_old_league_cannot_be_moved_it_stays_and_the_new_one_is_not_written_over_it, test_a_record_whose_pairings_do_not_fit_its_week_is_damage, test_after_a_franchise_was_set_aside_at_the_start_f9_can_still_start_a_new_one, test_the_kind_of_season_is_not_changed_until_the_league_exists, test_f9_has_no_franchise_item_while_a_new_franchise_is_being_made, test_a_switch_asked_in_an_offseason_that_a_switch_resumed_is_made_before_anything_is_announced, test_a_change_of_the_rules_does_not_ask_for_a_switch_when_the_franchise_cannot_be_used and 2 more
+
+### N6.3
+
+Requirement: Ratings. Each roster slot (the 33 named players of 5.5 and the quarterback, for both sides, and the computer teams' units) gets a rating, from an average neutral value...
+
+Tests:
+- test_fr_ratings.py: test_step_is_zero_under_its_size_whole_numbers_and_the_same_size_up_and_down, test_the_mod_of_a_gap_is_worked_out_from_the_four_steps, test_the_ratings_alone_never_move_a_row_more_than_one_yard_and_three_points, test_a_run_reads_the_carrier_and_the_two_tacklers, test_a_pass_reads_two_thirds_quarterback_and_one_third_the_target, test_a_designed_quarterback_run_reads_the_quarterback_and_the_tackles, test_the_defense_sides_ratings_are_the_other_teams_and_the_side_with_the_ball_may_be_either, test_a_league_of_70s_reads_every_row_field_goal_and_punt_as_the_original and 19 more
+- test_fr_strength.py: test_sixteen_teams_four_points_above_and_sixteen_below_are_one_standard_deviation_out, test_the_spread_floor_keeps_a_nearly_even_league_from_exaggerating_one_teams_lead, test_the_shift_is_capped_and_a_league_of_equal_teams_has_none, test_the_play_off_lean_is_capped_at_250_and_750_per_mille, test_a_league_needs_32_sums, test_the_index_stays_inside_the_table, test_the_integer_shift_and_lean_equal_the_decimal_calculation_in_many_leagues, test_the_calibrated_values_equal_the_decimal_calculation_in_many_leagues and 15 more
+
+### N6.4
+
+Requirement: Progression: each offseason players develop, hold or decline by age and potential; retirement; the roster stays at its slot counts.
+
+Tests:
+- test_fr_aging.py: test_nobody_under_thirty_can_retire, test_the_chance_rises_with_age_at_every_rating, test_the_chance_falls_with_rating_at_every_age, test_the_chance_is_the_designs_formula_clamped_to_zero_and_a_thousand, test_at_the_oldest_age_the_chance_is_a_thousand_whatever_the_rating, test_the_curve_has_the_shape_of_the_window_and_the_potential, test_the_windows_differ_by_position_as_research_says, test_a_rating_is_kept_in_forty_to_ninety_nine and 32 more
+
+### N6.5
+
+Requirement: Draft: seven rounds in an order from the previous season's standings, spoken one pick at a time with a short list the coach chooses from; drafted rookies take names fr...
+
+Tests:
+- test_fr_draft.py: test_the_positions_are_drawn_by_the_weights_of_the_design, test_the_first_prospects_position_follows_the_roll_below_35, test_one_prospect_is_drawn_in_the_order_position_name_rating_twice_potential_age_offset, test_a_name_in_use_by_an_active_player_is_drawn_again, test_the_class_has_the_designs_size_ranges_ages_and_unique_new_names, test_the_potentials_follow_the_shares_of_the_design_over_many_classes, test_the_order_on_hand_worked_standings_uses_every_group_and_every_tie_rule, test_the_order_of_a_league_reads_its_history_entry_and_the_strengths_of_the_season and 18 more
+- test_fr_draft_flow.py: test_the_stage_names_itself_tells_the_players_pick_and_asks_seven_times, test_the_player_takes_the_staffs_first_prospect_with_enter_and_it_is_told_as_his_pick, test_after_the_last_pick_the_rookies_are_told_by_their_ranges_and_the_stage_waits, test_the_player_with_the_first_pick_and_the_player_with_the_last_pick_hear_the_right_pick_numbers, test_the_picks_told_setting_decides_which_computer_picks_are_spoken, test_with_the_first_setting_the_players_pick_at_the_start_of_a_round_is_preceded_by_the_last_pick_of_the_round_before, test_a_round_is_announced_before_the_first_spoken_line_of_it_and_not_before_the_players_own_prompt, test_an_announced_round_is_not_repeated_by_the_staffs_pick_of_his_team and 16 more
+
+### N6.6
+
+Requirement: Free agency, contracts and salary cap: a spoken, numbered flow with a clear running summary (cap space), adapted for audio.
+
+Tests:
+- test_fr_contracts.py: test_the_market_price_is_the_minimum_at_the_bottom_of_the_scale_and_follows_the_position_and_the_rating, test_the_rookie_scale_runs_in_straight_lines_between_its_points_and_never_rises_with_the_pick, test_the_length_of_a_new_contract_falls_with_age_and_is_never_under_a_year, test_dead_money_is_a_share_of_the_salary_for_every_year_left_rounded_half_up, test_an_amount_is_said_in_millions_with_a_tenth_only_when_there_is_one, test_an_amount_below_zero_is_said_with_a_minus_and_its_own_size_not_rounded_the_wrong_way, test_the_cap_is_the_nfls_scaled_to_34_places_and_the_scale_leaves_room_under_it, test_a_new_league_has_a_contract_for_every_player_that_is_the_market_price_and_a_length_of_his_age and 25 more
+- test_fr_market.py: test_the_minimum_salary_follows_the_nfl_table_by_seasons, test_exclusive_rights_ask_the_minimum_of_the_seasons_for_one_year, test_the_pool_is_the_free_agents_of_this_offseason_best_first_and_no_one_else, test_a_free_agent_asks_what_he_asked_in_stage_seven_and_less_every_round_he_stays, test_the_falling_price_never_goes_under_the_minimum_of_his_seasons, test_offering_more_is_ten_percent_over_rounded_half_up_and_never_over_the_maximum, test_open_places_are_the_empty_places_by_position_in_the_rosters_order, test_the_room_is_the_cap_room_of_stage_seven_less_the_reserve_for_the_rookies and 37 more
+- test_fr_cap_flow.py: test_the_stage_tells_the_players_cap_space_after_the_fill_and_the_news_names_the_team_with_the_most_room, test_the_news_line_and_the_cap_space_are_written_with_the_stage_before_they_are_spoken, test_the_short_offseason_says_the_cap_space_in_one_sentence_and_keeps_the_news_line_unspoken, test_every_team_is_under_the_cap_after_the_stage_and_the_dead_money_of_its_releases_is_on_its_books, test_the_staffs_list_for_a_team_over_the_cap_names_the_cap_and_the_players_let_go_for_it_after_the_cuts_own_list, test_a_released_player_of_the_cap_list_is_told_with_what_he_costs, test_choosing_yourself_asks_for_each_release_the_cap_needs_after_the_groups_with_the_staffs_choice_first, test_choosing_a_player_other_than_the_staffs_first_for_the_cap_releases_him_and_asks_again_until_the_cap_is_met and 8 more
+- test_fr_resign.py: test_the_mood_is_happy_after_many_wins_or_a_playoff_win_unhappy_after_few_wins_else_content, test_the_mood_is_the_teams_own_and_content_without_a_history, test_a_player_asks_the_market_price_for_the_length_of_his_age, test_a_player_with_fewer_than_three_seasons_has_only_the_exclusive_rights_of_his_team_the_minimum_for_one_year, test_a_veteran_never_asks_for_less_than_the_minimum_of_his_seasons_even_when_his_rating_is_worth_less, test_a_talk_with_a_player_who_has_exclusive_rights_never_goes_under_the_minimum_whatever_his_mood, test_the_floor_is_the_least_his_mood_accepts_rounded_half_up_and_never_under_the_minimum, test_a_happy_players_floor_is_exactly_the_offer_for_less_at_every_price and 44 more
+
+### N6.7
+
+Requirement: Trades: the player proposes, the computer answers by a value rule.
+
+Tests:
+- test_fr_trades.py: test_the_shipped_values_are_the_measured_ones, test_the_situation_of_a_team_comes_from_its_record, test_a_veterans_worth_and_value_in_each_situation, test_youth_and_potential_count_for_a_young_player, test_a_contract_under_his_market_price_adds_value_and_one_over_it_takes_it_away_the_same_size, test_a_player_worth_less_than_his_replacement_has_no_value_but_his_contract, test_a_picks_value_by_round_and_situation, test_cover_takes_the_cheapest_pick_that_is_enough and 43 more
+- test_fr_trade_flow.py: test_an_offer_is_asked_in_the_weeks_list_and_its_first_answer_makes_the_trade_written_before_it_is_told, test_the_second_answer_declines_and_nothing_is_traded, test_an_offer_left_for_later_is_declined_at_the_kick_off_nothing_is_decided_for_the_player, test_with_the_staff_setting_on_the_staff_accepts_and_says_the_trade, test_an_offer_that_can_no_longer_be_made_is_called_off, test_the_weeks_trades_are_looked_for_with_the_records_of_the_weeks_played, test_two_other_teams_trade_and_the_news_tells_it_within_the_weeks_lines, test_the_franchise_menu_has_trades_and_its_draft_picks_and_season_lists and 14 more
+
+### N6.8
+
+Requirement: Injuries, staff and goals: injuries with games missed (rules INJ-1 to INJ-6 below), a coordinator or staff effect that picks the scheme (NX5), the job rating and a sea...
+
+Tests:
+- test_fr_injuries.py: test_status_by_the_games_still_to_miss_and_in_the_play_offs, test_who_plays_the_staff_rule_and_the_players_own_decision, test_nobody_hurt_the_lineup_is_the_roster_and_the_sums_are_the_seasons, test_an_out_player_is_replaced_by_the_next_man_down_the_depth_order, test_the_rating_of_an_injured_player_never_counts, test_an_injury_raises_a_teams_strength_only_from_under_replacement_level, test_a_player_who_plays_hurt_plays_below_his_rating, test_the_quarterback_out_is_played_by_the_stand_in_and_a_returner_by_a_running_back and 32 more
+- test_fr_staff.py: test_a_new_league_has_a_head_coach_and_two_coordinators_for_every_team_with_the_teams_styles_and_no_draw, test_a_new_leagues_draws_are_the_same_with_the_staff, test_a_coordinator_of_a_new_league_is_rated_by_his_side_of_the_ball, test_the_styles_given_are_the_coordinators_and_a_style_the_table_does_not_know_is_classic, test_the_goal_follows_the_rank_at_the_seasons_start_and_every_kind_is_judged_by_its_own_number, test_the_job_rating_moves_by_the_goal_the_wins_and_the_finish_and_stays_in_0_to_100, test_the_verdicts_change_nothing_and_applying_them_keeps_the_season_for_the_firing_rule, test_a_coach_is_never_fired_after_a_winning_season_nor_after_his_first_and_only_under_the_line and 27 more
+
+### N6.9
+
+Requirement: History: a spoken history menu (records, champions by year, the coach's record).
+
+Tests:
+- test_fr_history.py: test_the_entry_of_a_season_is_worked_out_from_the_results_and_the_records, test_ties_for_the_best_and_the_worst_record_go_to_the_lower_team_number, test_a_season_with_no_recorded_super_bowl_still_has_a_champion, test_the_entry_passes_the_whole_file_check_and_a_bad_one_does_not, test_the_coach_s_career_adds_the_seasons_up, test_the_league_records_keep_the_first_of_equal_values_and_name_the_season, test_the_spoken_lines_are_the_texts_of_the_table_newest_season_first, test_nothing_is_said_when_there_is_nothing_yet and 3 more
+- test_fr_honors.py: test_a_players_value_is_his_weight_his_rating_over_the_base_his_games_and_his_teams_wins, test_the_most_valuable_player_comes_from_a_play_off_team_and_the_others_by_their_sides, test_a_player_who_missed_games_counts_less_and_under_the_least_games_not_at_all, test_a_season_counted_from_a_later_week_scales_the_least_games_and_the_share, test_equal_values_go_to_the_higher_rating_then_the_lower_id, test_nobody_qualifies_no_award_but_the_coach, test_the_coach_of_the_year_won_the_most_over_his_ranks_expectation, test_the_expectation_is_by_bands_of_four_ranks and 13 more
+
+### N6.10
+
+Requirement: Everything is spoken, short and numbered, with F1 to F4 and F9 as elsewhere; long lists are paged (nine items) with the same keys.
+
+Tests:
+- test_fr_week.py: test_a_week_speaks_the_news_then_the_to_do_list_then_the_coachs_select_and_none_of_them_again_on_f1, test_week_1_has_no_news_and_no_extra_work_but_says_the_season_line, test_the_news_lines_are_the_lines_of_the_record_told_once, test_the_first_answer_gives_the_first_candidate_a_point, test_nobody_this_week_gives_no_point, test_later_keeps_the_item_and_the_kick_off_closes_it_without_a_point_and_says_so, test_an_item_put_off_stays_waiting_until_the_kick_off, test_an_item_asked_again_at_the_kick_off_can_be_answered and 34 more
+- test_fr_todo.py: test_the_two_candidates_are_the_highest_potential_then_the_youngest_then_the_best_rated_then_the_lower_id, test_age_potential_and_points_decide_who_is_a_candidate, test_a_team_with_fewer_than_two_candidates_has_none, test_a_released_or_retired_player_is_not_a_candidate, test_the_computer_teams_give_their_first_candidate_a_point_in_the_four_weeks_and_never_the_players_team, test_a_team_stops_at_three_points_a_season_and_a_team_without_two_candidates_gives_none, test_the_candidates_come_from_the_same_rule_for_the_player_and_the_computer, test_no_item_when_the_players_team_has_fewer_than_two_candidates and 20 more
+- test_fr_news_list.py: test_the_fifteen_pools_are_the_lines_of_strings_nx_with_their_exact_spaces, test_every_default_line_uses_only_the_placeholders_of_its_pool, test_the_file_of_the_defaults_lists_every_default_line, test_news_ids, test_a_line_is_changed_switched_off_added_or_kept_when_it_is_bad, test_the_banter_names_are_not_allowed_in_the_news_and_the_default_or_nothing_is_used, test_an_unknown_placeholder_of_the_pool_is_counted_and_spoken_as_written, test_ids_that_are_not_news_twice_or_empty_are_problems and 15 more
+
+### N6.11
+
+Requirement: The franchise in the first Windows release (OWNER DECISION 2026-10-16, D-062, which replaces D-041's split of 2026-10-14): ALL of N6, the core (N6.1 to N6.5, N6.9, N6....
+
+Tests:
+- test_sx9_switches.py: test_the_switches_in_the_programs_classic_season_and_franchise_games
+- test_fr_format8.py: test_format_8_round_trips_every_new_value_through_the_real_store, test_a_draft_with_compensatory_picks_and_undrafted_signings_round_trips, test_a_format_7_file_loads_by_the_migration_and_is_saved_as_format_8, test_a_format_7_market_in_progress_keeps_its_offers_and_gets_no_moves, test_a_format_7_draft_in_progress_gets_no_compensatory_picks_and_no_undrafted_and_keeps_its_picks, test_a_format_8_file_without_its_new_values_is_damage
+- test_fr_store.py: test_a_write_is_the_new_text_to_the_temporary_file_the_copy_of_the_present_file_and_the_rename, test_a_saved_league_opens_equal_to_the_one_in_memory, test_no_folder_means_no_franchise_and_no_notice_while_the_kind_is_classic, test_a_crash_at_any_step_of_the_second_write_leaves_a_usable_file, test_a_crash_while_the_previous_copy_is_half_written_leaves_league_sav_whole, test_a_stale_temporary_file_is_deleted_unread, test_a_damaged_league_sav_uses_the_copy_and_keeps_the_damaged_file, test_a_missing_league_sav_uses_the_copy_and_says_so and 23 more
+
+### N7.1
+
+Requirement: The foul table is data, with a permanent ID per foul: name, spoken text, who commits it, the phases it can happen in (before the snap, run, pass, kick), yards, automat...
+
+Tests:
+- test_nx_fouls.py: test_the_ids_are_the_designs_rows_and_p27_to_p32_are_kept_free
+- test_nx_fouls.py: test_each_row_has_the_designs_offender_and_yards
+- test_sx10d_kicks.py: test_the_new_fouls_have_names_that_penalties_txt_can_hold
+
+### N7.2
+
+Requirement: When: pre-snap fouls (the play is not run), fouls during a run, a pass or a kick (the play is run and spoken as now, then the foul is announced at H2's hook). The anno...
+
+Tests:
+- test_nx_penalties.py: test_a_false_start_stops_the_snap_after_hut_1_and_the_down_is_not_counted
+- test_nx_penalties.py: test_an_offside_at_the_snap_waits_for_the_end_of_the_play
+- test_nx_penalty_review.py: test_1_the_run_off_prompt_says_the_time_left_after_the_run_off_and_the_clock_running_out
+
+### N7.3
+
+Requirement: The choice. When the player's team is the offended team: the prompt (in the style of 4.16 and 4.17) speaks the foul and the two outcomes in full ("if you accept: first...
+
+Tests:
+- test_nx_penalties.py: test_the_player_accepts_defensive_holding_with_enter_and_gets_the_first_down
+- test_nx_penalties.py: test_the_player_declines_with_down_and_the_play_stands
+- test_nx_penalties.py: test_the_prompt_starts_at_decline_when_the_play_was_better_and_a_d_and_a_keys_set_the_answer
+
+### N7.4
+
+Requirement: Enforcement is exact for the foul table: the half-distance rule, the spot, automatic first down, loss of down, replay, the touchdown and safety edge cases (a foul in t...
+
+Tests:
+- test_nx_enforcement.py: test_example_1_defensive_holding_on_an_incomplete_pass
+- test_nx_enforcement.py: test_example_4_a_fifteen_yard_foul_at_the_defenses_ten_is_half_the_distance
+- test_nx_enforcement.py: test_half_the_distance_cuts_a_penalty_to_half_of_the_way_to_the_offenders_goal_line
+
+### N7.5
+
+Requirement: Customization: the foul table's spoken texts and the on/off and weight of each foul are in `penalties.txt` in the `customize` folder (C5, 7.9).
+
+Tests:
+- test_nx_penalty_list.py: test_a_line_renames_switches_off_or_weighs_a_foul
+- test_nx_penalty_list.py: test_the_yards_are_not_in_the_file_and_cannot_be_given_there
+
+### N7.6
+
+Requirement: Interactions are listed and tested: timeouts (NX1: the clone refuses a timeout it cannot grant, so no timeout foul arises), challenges (NX2: judgment fouls are never r...
+
+Tests:
+- test_nx_penalty_review.py: test_1_the_run_off_prompt_says_the_time_left_after_the_run_off_and_the_clock_running_out, test_4_a_foul_before_the_snap_of_a_two_point_try_leaves_nothing_waiting, test_5_a_defense_foul_on_a_good_try_is_not_offered_and_said_declined, test_6_off_wins_over_a_weight_in_penalties_txt, test_7_delay_of_game_after_the_warning_gets_the_run_off, test_8_after_a_penalty_the_runoff_is_bounded_by_the_play_clock_of_25, test_9_a_personal_foul_by_the_offense_before_a_fumble_lets_the_defense_keep_the_ball, test_10_a_foul_not_offered_is_said_declined and 3 more
+- test_nx_review_penalties.py: test_the_player_declines_a_flag_the_review_changes_the_ruling_and_the_flag_is_offered_again_and_accepted, test_the_flag_declined_twice_leaves_the_corrected_play_as_it_is, test_a_flag_accepted_at_first_takes_the_play_over_and_the_play_is_not_ruled, test_a_ruling_that_stands_after_a_declined_flag_does_not_offer_the_flag_again, test_the_extras_never_lose_a_flag_in_whole_games_and_a_play_a_foul_took_over_is_never_ruled
+- test_nx_qb_penalties.py: test_plays_8_to_10_draw_the_foul_before_the_snap_like_plays_1_to_5, test_a_false_start_on_a_keeper_stops_the_snap_after_hut_1, test_a_late_hit_on_the_slider_is_unnecessary_roughness_15_yards_and_a_first_down, test_the_player_may_decline_the_penalty_on_the_late_hit, test_no_late_hit_is_drawn_without_a_slide_and_the_ordinary_draw_follows, test_a_slide_without_a_hit_draws_the_ordinary_foul_chance_at_the_end, test_a_late_hit_does_not_add_a_second_flag_when_a_foul_is_already_waiting, test_an_accepted_offside_erases_the_run_and_its_counts and 5 more
+- test_nx_onside_fouls.py: test_the_players_offside_on_a_kick_the_receivers_recovered_gives_them_five_more_yards, test_the_computers_kick_is_recovered_with_an_offside_and_the_player_chooses_to_have_it_kicked_again, test_illegal_touching_on_a_recovered_kick_gives_the_receivers_the_ball_at_the_spot, test_the_player_may_decline_and_the_kickers_keep_a_recovery, test_a_foul_by_the_kicking_team_on_a_return_is_the_original_kick_off_machinery, test_a_kick_made_again_after_offsetting_fouls_keeps_a_normal_kick_normal, test_an_onside_kick_with_penalties_off_draws_no_foul, test_the_foul_names_of_the_kick_are_in_the_foul_table_and_the_prompt_says_the_kick_again and 19 more
+
+### N7.7
+
+Requirement: Calibration target (D-042): 12.8 accepted fouls per game, band 12.0 to 13.6 (the 2024 and 2025 seasons; the early-2026 value of 15.1 is a 79-game sample) [SRC-SECONDAR...
+
+Tests:
+- test_nx_penalty_games.py: test_the_sample_falls_near_the_nfl_rates
+
+
+## NFL_EXTRA_FEATURES, the owner's later requirements: the T key, the saved games, every real play, the 2026 rules (nfl4 only; added to this matrix in SX.10e)
+
+### NX-T1
+
+Requirement: (no text found)
+
+Tests:
+- test_nx_tkey.py: test_t_calls_the_timeout_in_the_offense_menu_with_no_enter_and_the_menu_comes_again
+- test_nx_tkey.py: test_t_calls_the_timeout_in_the_defense_menu
+- test_nx_tkey.py: test_t_calls_the_timeout_in_the_two_point_menu_before_the_try
+- test_nx_tkey.py: test_t_in_the_onside_question_calls_the_timeout_and_the_question_is_asked_again
+- test_nx_tkey.py: test_t_in_the_accept_or_decline_question_calls_the_timeout_and_asks_again
+- test_nx_tkey.py: test_t_in_the_choice_of_the_extra_point_is_a_timeout_before_the_try_and_the_choice_is_asked_again
+- test_nx_tkey.py: test_the_time_out_item_still_works_by_its_number_and_enter
+- test_nx_tkey.py: test_t_is_never_the_letter_of_an_item_in_any_play_menu
+
+### NX-T2
+
+Requirement: (no text found)
+
+Tests:
+- test_nx_tkey.py: test_t_in_the_snap_count_withdraws_the_play_and_the_menu_comes_again
+- test_nx_tkey.py: test_t_in_the_snap_count_does_not_count_a_repeat_of_the_computers_choice
+- test_nx_tkey.py: test_the_whole_run_goes_back_to_the_menu_and_the_next_snap_is_a_new_one
+- test_nx_tkey.py: test_t_in_the_set_up_of_a_field_goal_withdraws_the_kick
+- test_nx_tkey.py: test_t_in_the_set_up_of_the_extra_point_goes_back_to_the_choice
+- test_nx_tkey.py: test_t_in_the_set_up_of_a_kick_off_calls_the_timeout_and_the_kick_off_goes_on
+- test_nx_tkey.py: test_the_speech_is_cut_the_moment_t_is_posted_by_the_window_thread
+- test_nx_tkey.py: test_a_text_is_not_started_while_a_t_key_waits_to_be_taken
+
+### NX-T3
+
+Requirement: (no text found)
+
+Tests:
+- test_nx_tkey.py: test_t_during_a_live_play_is_kept_and_granted_when_the_play_ends_not_before
+- test_nx_tkey.py: test_a_request_kept_during_a_play_is_granted_at_the_start_of_the_next_menu
+- test_nx_tkey.py: test_a_timeout_between_the_end_of_a_play_and_the_next_menu_stops_the_whole_runoff
+- test_nx_tkey.py: test_a_refused_t_says_one_sentence_and_the_snap_count_goes_on
+- test_nx_tkey.py: test_t_before_a_try_at_0_00_calls_the_timeout
+- test_sx13_rules_audit.py: test_a_timeout_may_be_called_before_a_try_at_0_00_and_not_after_it
+- test_nx_tkey.py: test_a_time_out_called_by_t_during_the_run_out_question_is_kept_because_the_ball_is_live
+- test_nx_tkey.py: test_f5_is_not_the_t_key_it_looks_like_in_this_key_model
+- test_nx_tkey.py: test_t_in_a_typed_box_is_a_letter
+- test_nx_tkey.py: test_t_before_the_game_is_in_play_is_a_plain_key
+- test_nx_tkey.py: test_t_closes_the_help_menu_and_calls_the_timeout
+- test_nx_tkey.py: test_t_closes_f9_during_a_game_and_calls_the_timeout
+- test_nx_tkey.py: test_the_log_names_the_moment_the_result_and_the_reason
+- test_nx_tkey.py: test_classic_keeps_the_key_of_the_original
+- test_nx_tkey.py: test_the_resumed_marker_of_a_wait_is_cleared_by_the_next_wait
+- test_nx_tkey_games.py: test_whole_games_with_t_pressed_at_random_keep_every_limit, test_the_sample_exercises_every_way_a_t_key_can_end
+
+### NX-S1
+
+Requirement: (no text found)
+
+Tests:
+- test_sx14_startup.py: test_a_saved_game_is_said_in_one_sentence_and_enter_continues_it
+- test_sx14_startup.py: test_a_season_alone_is_a_question_whose_first_item_continues_it
+- test_sx14_startup.py: test_the_digits_and_f1_work_like_the_originals_menus
+- test_sx14_startup.py: test_the_game_that_was_not_finished_is_offered_first_when_it_is_newer_than_the_saved_game
+- test_sx14_startup.py: test_a_saved_game_newer_than_the_automatic_save_is_first
+- test_sx14_startup.py: test_several_saved_games_are_each_a_sentence_and_one_item_opens_the_list
+- test_sx14_startup.py: test_with_no_key_pressed_nothing_is_loaded_deleted_or_replaced
+- test_sx14_program.py: test_the_franchise_is_a_sentence_and_an_item_and_continuing_it_puts_it_in_use
+- test_sx14_program.py: test_a_classic_program_never_touches_the_franchise_folder
+
+### NX-S2
+
+Requirement: (no text found)
+
+Tests:
+- test_sx14_startup.py: test_delete_asks_again_starting_at_no_and_enter_deletes_nothing
+- test_sx14_startup.py: test_yes_moves_the_save_to_the_backup_and_the_menu_offers_to_restore_it
+- test_sx14_startup.py: test_a_restore_when_every_slot_is_full_changes_nothing
+- test_sx14_startup.py: test_delete_the_season_asks_again_and_its_yes_leaves_the_season_in_the_backup
+- test_sx14_shelf.py: test_delete_moves_the_file_to_the_backup_and_restore_brings_it_back_to_its_slot
+- test_sx14_shelf.py: test_restore_takes_the_first_free_slot_when_its_own_is_taken_and_refuses_when_all_are_taken
+- test_sx14_stores.py: test_the_season_goes_to_the_backup_with_its_saved_games_and_comes_back
+- test_sx14_program.py: test_deleting_the_franchise_asks_again_moves_it_to_the_backup_and_restoring_brings_it_back
+- test_sx14_shelf.py: test_every_save_delete_restore_and_retirement_is_in_the_debug_log
+
+### NX-S3
+
+Requirement: (no text found)
+
+Tests:
+- test_sx14_startup.py: test_a_loaded_game_that_is_played_out_moves_its_save_to_the_backup_and_says_so
+- test_sx14_startup.py: test_a_loaded_game_that_is_saved_again_keeps_every_save
+- test_sx14_startup.py: test_the_window_closing_in_the_game_loses_no_save
+- test_sx14_stores.py: test_a_saved_game_is_kept_when_it_is_read_and_a_slot_is_a_file_of_its_own
+- test_sx14_shelf.py: test_the_saves_of_an_ended_game_move_to_the_backup_three_deep_and_the_automatic_save_goes
+- test_files_store.py: test_a_saved_game_is_written_found_at_the_next_start_and_read_but_never_deleted_by_reading
+
+### NX-S4
+
+Requirement: (no text found)
+
+Tests:
+- test_sx14_resume.py: test_a_game_killed_at_a_play_and_started_again_ends_as_the_unbroken_game_does
+- test_sx14_resume.py: test_the_automatic_save_changes_no_draw_and_no_result
+- test_sx14_resume.py: test_an_automatic_save_is_the_game_file_with_the_summary_and_the_resume_sections
+- test_sx14_saveui.py: test_the_play_menu_writes_the_automatic_save_whole_with_the_summary_and_the_resume_state
+- test_sx14_program.py: test_a_game_killed_at_a_play_is_offered_at_the_next_start_and_ends_as_a_game_ends
+- test_sx14_shelf.py: test_the_shelf_over_a_real_folder_is_atomic_and_keeps_its_backup
+- test_sx14_stores.py: test_the_automatic_save_is_written_whole_and_found
+
+### NX-S5
+
+Requirement: (no text found)
+
+Tests:
+- test_sx14_saveui.py: test_enter_at_every_question_saves_in_slot_one_and_quits_as_the_original_did
+- test_sx14_saveui.py: test_keep_playing_goes_back_to_the_same_play_menu_and_the_game_is_not_over
+- test_sx14_program.py: test_save_game_inside_the_program_asks_the_place_and_ends_or_goes_on
+
+### NX-S6
+
+Requirement: (no text found)
+
+Tests:
+- test_sx14_saveui.py: test_the_places_name_what_they_hold_and_the_games_own_place_is_first
+- test_sx14_saveui.py: test_another_games_place_is_replaced_only_after_a_yes
+- test_sx14_saveui.py: test_a_yes_replaces_the_other_game
+- test_sx14_saveui.py: test_escape_at_the_places_saves_nothing_and_the_game_goes_on
+- test_sx14_startup.py: test_several_saved_games_are_each_a_sentence_and_one_item_opens_the_list
+- test_sx14_stores.py: test_a_saved_game_is_kept_when_it_is_read_and_a_slot_is_a_file_of_its_own
+
+### NX-S7
+
+Requirement: (no text found)
+
+Tests:
+- test_sx14_startup.py: test_a_new_season_asks_before_it_replaces_the_season_and_keeps_it_in_the_backup
+- test_sx14_startup.py: test_a_new_season_takes_nothing_without_a_key
+- test_sx14_program.py: test_a_new_franchise_is_started_from_the_menu_with_the_last_kind_first_and_the_classic_season_is_kept
+- test_sx14_program.py: test_the_new_game_question_starts_on_the_last_kind_a_franchise
+
+### NX-S8
+
+Requirement: (no text found)
+
+Tests:
+- test_sx14_startup.py: test_a_damaged_save_is_named_not_loaded_and_the_menu_offers_to_delete_it
+- test_sx14_startup.py: test_deleting_a_damaged_save_moves_it_to_the_backup
+- test_sx14_startup.py: test_a_save_of_a_week_that_is_over_is_named_and_cannot_be_continued
+- test_sx14_shelf.py: test_a_damaged_save_is_named_not_loaded_and_not_removed
+- test_sx14_stores.py: test_a_save_of_another_week_is_old_and_a_save_with_no_season_is_an_orphan_and_neither_is_removed
+- test_sx14_stores.py: test_a_damaged_save_is_neither_set_aside_nor_announced_by_the_store_it_waits_for_the_menu
+- test_files_store.py: test_a_saved_game_that_cannot_be_read_is_named_by_the_shelf_and_left_where_it_is
+
+### NX-P1
+
+Requirement: (no text found)
+
+Tests:
+- test_pag_golden.py: test_the_classic_game_gives_the_golden_transcript, test_the_golden_game_is_a_whole_game_with_the_main_events
+- test_sx10e_games.py: test_classic_answers_the_try_hook_no_with_no_draw
+- test_sx10e_games.py: test_a_game_whose_player_plays_the_classic_books_calls_nothing_over_the_catalog
+- test_sx10d_kicks.py: test_the_kicks_of_2026_need_a_playbook_and_classic_never_draws_or_speaks
+
+### NX-P2
+
+Requirement: (no text found)
+
+Tests:
+- test_sx10b_catalog.py: test_the_research_names_are_all_in_the_game_merged_or_left_out_with_a_reason
+- test_sx10b_catalog.py: test_every_offense_concept_has_a_known_model_and_valid_inputs
+- test_sx10b_catalog.py: test_every_defense_call_is_a_valid_call
+- test_sx10e_calling.py: test_every_offense_play_but_the_clock_plays_can_be_called_and_the_goal_line_plays_only_near_the_goal
+- test_sx10e_calling.py: test_every_neutral_call_can_be_drawn
+
+### NX-P3
+
+Requirement: (no text found)
+
+Tests:
+- test_sx10b_model.py: test_league_passing_matches_2024_and_2025
+- test_sx10c_games.py: test_the_catalogs_games_score_like_football
+- test_sx10e_games.py: test_a_sample_of_games_comes_out_near_the_leagues_numbers
+
+### NX-P4
+
+Requirement: (no text found)
+
+Tests:
+- test_sx10b_menus.py: test_the_original_items_stay_first_in_their_places_with_their_digits
+- test_sx10b_menus.py: test_every_listed_offense_play_and_kick_is_at_most_six_keys_away
+- test_sx10e_calling.py: test_a_style_leans_on_its_lists_and_its_own_plays_count_double
+- test_sx10e_games.py: test_whole_games_of_two_team_playbooks_call_over_the_catalog_and_end_with_the_scores_the_statistics_hold
+
+### NX-P5
+
+Requirement: (no text found)
+
+Tests:
+- test_sx10e_games.py: test_a_sample_of_games_comes_out_near_the_leagues_numbers
+- test_sx9_switches.py: test_every_combination_of_the_switches_in_a_quick_game
+- test_sx10e_games.py: test_the_same_seed_is_the_same_game
+
+### NX-P7
+
+Requirement: (no text found)
+
+Tests:
+- test_sx10b_menus.py: test_the_usual_call_is_the_originals_two_keys
+- test_sx10c_offense_menus.py: test_enter_on_a_family_is_the_playbooks_pick_said_before_the_snap
+- test_sx10d_defense_menus.py: test_enter_on_one_of_the_six_calls_is_the_styles_pick_said_before_the_snap
+
+### NX-P8
+
+Requirement: (no text found)
+
+Tests:
+- test_sx10b2_descriptions.py: test_every_play_of_the_catalog_has_a_description_row_by_the_designs_scheme
+- test_sx10b2_descriptions.py: test_every_description_is_one_or_two_plain_sentences_of_at_most_35_words
+- test_sx10b2_descriptions.py: test_a_football_word_in_a_description_is_explained_by_f7
+
+### NX-N1
+
+Requirement: (no text found)
+
+Tests:
+- test_sx11_names.py: test_a_new_player_chooses_the_team_and_keeps_the_real_coach_pressing_only_enter
+- test_sx11_names.py: test_the_coach_of_another_team_is_the_one_offered
+- test_sx11_names.py: test_another_real_coach_is_chosen_from_the_list_of_the_32
+- test_sx11_names.py: test_a_name_can_still_be_typed_and_is_the_originals_prompt
+- test_sx11_names.py: test_enter_takes_the_real_quarterbacks_and_the_draws_are_the_same
+- test_sx11_names.py: test_typing_a_quarterback_still_works
+
+### NX-N2
+
+Requirement: (no text found)
+
+Tests:
+- test_sx11_names.py: test_the_shipped_files_have_a_coach_for_every_team_and_players_for_every_team
+- test_sx11_names.py: test_the_set_up_has_a_real_player_in_every_place_of_every_team
+- test_sx11_names.py: test_each_group_takes_its_own_positions_first
+- test_sx11_names.py: test_a_short_position_takes_the_players_left_over_and_a_team_with_no_player_for_a_place_keeps_the_drawn_name
+- test_sx11_names.py: test_a_new_leagues_players_and_coaches_are_the_real_ones_with_the_same_ratings_ages_and_draws
+- test_sx11_names.py: test_the_receivers_are_wide_receivers_and_tight_ends_in_the_order_of_the_depth_chart
+
+### NX-N3
+
+Requirement: (no text found)
+
+Tests:
+- test_sx11_names.py: test_every_shipped_name_passes_the_name_rules_and_the_numbers_are_numbers
+
+### NX-N4
+
+Requirement: (no text found)
+
+Tests:
+- test_sx11_names.py: test_the_player_gets_the_three_files_and_a_missing_one_comes_back
+- test_sx11_names.py: test_a_damaged_file_is_copied_aside_and_made_again_from_the_built_in_names
+- test_sx11_names.py: test_a_bad_line_keeps_the_built_in_value_and_is_counted_once_per_file
+- test_sx11_names.py: test_the_player_changes_a_coach_and_a_new_season_replaces_a_teams_players
+- test_sx11_names.py: test_a_file_that_cannot_be_read_keeps_the_names_already_loaded
+- test_sx11_names.py: test_with_the_classic_rules_no_name_file_is_read_made_or_checked
+
+### NX-N5
+
+Requirement: (no text found)
+
+Tests:
+- test_sx11_names.py: test_the_player_and_the_opponent_are_the_real_teams_and_the_draws_are_the_same_as_without
+- test_sx11_names.py: test_a_footplay_file_the_player_has_is_the_players
+- test_sx11_names.py: test_a_franchise_opponent_is_the_leagues_not_the_real_roster
+- test_sx11_names.py: test_a_new_leagues_players_and_coaches_are_the_real_ones_with_the_same_ratings_ages_and_draws
+- test_sx11_names.py: test_the_players_own_footplay_names_win_in_a_new_league
+- test_sx11_names.py: test_pag_asks_for_the_real_names_only_with_the_nfl_rules
+
+### NX-N6
+
+Requirement: (no text found)
+
+Tests:
+- test_sx11_names.py: test_the_respellings_say_a_suffix_as_words_and_only_as_a_whole_word
+- test_sx11_names.py: test_a_players_respelling_replaces_a_shipped_one_and_off_switches_it_off
+
+### NX-N7
+
+Requirement: (no text found)
+
+Tests:
+- test_sx11_names.py: test_a_new_player_chooses_the_team_and_keeps_the_real_coach_pressing_only_enter
+- test_sx11_names.py: test_enter_takes_the_real_quarterbacks_and_the_draws_are_the_same
+- test_sx11_names.py: test_a_damaged_file_is_copied_aside_and_made_again_from_the_built_in_names
+- test_sx11_names.py: test_the_classic_rules_and_a_game_without_the_names_draw_the_original_surnames
+- test_sx11_names.py: test_classic_and_a_missing_file_ask_for_the_typed_coach_first_as_the_original
+- test_sx11_names.py: test_the_player_and_the_opponent_are_the_real_teams_and_the_draws_are_the_same_as_without
+
+### NX-R7
+
+Requirement: (no text found)
+
+Tests:
+- test_sx10d_kicks.py: test_the_kicks_of_2026_need_a_playbook_and_classic_never_draws_or_speaks, test_enter_takes_the_deep_kick_and_the_menu_names_the_four_kicks, test_the_digit_four_declares_the_onside_kick_and_d_describes_the_short_kick, test_after_a_safety_the_menu_adds_the_safety_punt_and_without_onside_kicks_it_has_no_onside, test_the_computer_draws_its_kick_from_its_mix_and_a_kick_made_again_keeps_its_call, test_the_computer_kicks_onside_by_its_rule_late_and_behind, test_a_kick_off_nobody_runs_back_leaves_the_ball_where_2026_puts_it, test_a_kick_off_caught_in_the_field_is_returned_to_the_models_line and 25 more
+- test_sx10e_games.py: test_the_computers_two_point_try_is_said_played_and_scored
+- test_sx10e_calling.py: test_the_two_point_chart_in_the_last_ten_minutes_has_no_draw
+- test_sx10e_games.py: test_the_computer_kneels_spikes_and_throws_the_hail_mary_by_its_rules
+- test_sx12_overtime.py: test_the_first_kick_off_of_overtime_starts_the_rule_with_its_receivers_first, test_a_first_drive_touchdown_no_longer_ends_the_game_the_try_is_played, test_a_safety_on_the_first_possession_wins_for_the_kicking_team, test_a_defensive_touchdown_on_the_first_possession_wins_at_once_with_no_try, test_the_second_team_answers_a_field_goal_with_a_touchdown_and_wins_with_no_try, test_a_touchdown_answered_by_a_touchdown_and_extra_point_turns_into_sudden_death, test_a_missed_try_after_the_answering_touchdown_loses, test_the_second_possession_ending_without_points_ends_the_game and 34 more
+- test_sx13_rules_audit.py: test_a_touchdown_as_the_fourth_quarter_runs_out_has_a_try_only_when_the_try_can_change_the_result, test_a_return_touchdown_as_time_runs_out_has_no_try_when_it_cannot_matter, test_a_last_second_touchdown_of_another_quarter_keeps_its_try, test_the_regular_seasons_overtime_period_has_the_fourth_quarters_rule, test_the_rule_reads_the_margin_after_the_six_points, test_the_player_who_lost_the_toss_chooses_to_receive_or_kick_at_the_third_period, test_the_computer_that_lost_the_toss_chooses_with_its_toss_share, test_the_overtime_toss_records_its_loser_and_the_save_keeps_it and 31 more
+

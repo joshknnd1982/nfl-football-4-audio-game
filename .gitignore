@@ -8,10 +8,13 @@
 /observations/
 /work/
 /CLAUDE.md
+/CLAUDE.part*.md
 /playbook-*.md
 /NEXT_PROMPT.txt
 /PROJECT_STATE.md
+/PROJECT_STATE.part*.md
 /SESSION_LOG.md
+/SESSION_LOG.part*.md
 /PLAYTEST_LIST.md
 # Build output and release files (attached to the GitHub release, not committed)
 /release/*.exe
@@ -26,4 +29,5 @@ venv/
 /release/checksums.txt
 /release/nfl4-portable-*/
 /fixesforgames.md
+/fixesforgames.part*.md
 /release/checksums_test_*.txt

@@ -7,7 +7,7 @@ modifiers (Classic) change nothing.
 import re
 
 from nfl4.game import playtables as T
-from specfiles import SPEC, need
+from specfiles import SPEC, read_spec
 
 PLAYS = {"Line Plunge": 1, "End Run": 2, "Screen Pass": 3, "Short Pass": 4, "Long Pass": 5}
 DEFENSES = {"Goal Line": 1, "Short Run": 2, "Long Run": 3, "Blitz": 4, "Short Pass": 5, "Long Pass": 6}
@@ -15,7 +15,7 @@ SOUND_OF = {"foot4": 1, "foot5": 2, "foot6": 3}
 
 
 def spec_section_59():
-    text = need(SPEC / "GAME_SPEC.md").read_text(encoding="utf-8")
+    text = read_spec(SPEC / "GAME_SPEC.md")
     start = text.index("### 5.9 Results of runs and passes")
     return text[start:text.index("### 5.10", start)]
 
