@@ -86,18 +86,19 @@ def test_the_franchise_object_gives_the_backs_on_a_run_and_the_receivers_on_a_pa
     assert m.carrier_weights(s) == [base] * 6
 
 
-def test_without_ratings_the_nfl_rules_draw_by_depth_and_classic_draws_rnd6(tmp_path):
-    """Outside the Franchise the N. F. L. rules weigh the six places by depth (T.DEPTH_CARRY_WEIGHT, tester 2026-10-23); Classic keeps rnd(6)."""
+def test_without_ratings_the_nfl_rules_draw_by_the_usage_shares_and_classic_draws_rnd6(tmp_path):
+    """NX-D2 (D-147): outside the Franchise the N. F. L. rules draw one below(100) over T.USAGE_RUN (the lead back most, like Madden's depth chart);
+    Classic keeps rnd(6)."""
     from nflrig import RecordingRules
     from pagrig import named_roster
     from nfl4.extras import tuning as TU
     rules = RecordingRules()
     s = state_with(named_roster(""), named_roster("O"), offense_play=1)
     rules.modifiers.bind(s)
-    for value, place in zip(range(1, 7), (1, 1, 2, 2, 3, 4)):
-        rnd = Script(("rnd", 6, value))                                       # the same one rnd(6) as ever, read through the depth chart
-        assert rules.draw_carrier(s, rnd) == place and rnd.trace == [6]
-    assert TU.DEPTH_CARRY_SLOTS == (1, 1, 2, 2, 3, 4)
+    edges = [sum(TU.USAGE_RUN[:k]) for k in range(4)]                       # 0, 60, 85, 95: the first value of each back's band
+    for value, place in zip(edges, (1, 2, 3, 4)):
+        rnd = Script(("below", 100, value))
+        assert rules.draw_carrier(s, rnd) == place and rnd.trace == [100]
     rnd = Script(("rnd", 6, 5))
     assert CLASSIC.draw_carrier(s, rnd) == 5 and rnd.trace == [6]
 
@@ -107,8 +108,8 @@ def test_a_franchise_game_draws_its_carrier_by_the_weights(tmp_path):
     rules = RecordingRules()
     s = state_with(rated_roster("", 70, rb3=90), rated_roster("O"), offense_play=2)
     rules.modifiers.bind(s)
-    weights = W.weights([70, 70, 90, 70, 70, 70])
-    assert weights[2] > weights[0]
+    weights = [share * w for share, w in zip(T.USAGE_RUN, W.weights([70, 70, 90, 70, 70, 70]))]      # NX-D2: the shares times the rating weights
+    assert W.weights([70, 70, 90, 70, 70, 70])[2] > W.weights([70] * 6)[0]
     rnd = Script(("below", sum(weights), weights[0] + weights[1]))
     assert rules.draw_carrier(s, rnd) == 3 and rnd.trace == [sum(weights)]
 
@@ -144,20 +145,28 @@ def table_of(ratings_rb, ratings_wr=(70,) * 6, ids=None):
     return table
 
 
-def test_equal_weights_share_the_runs_evenly_and_the_game_part_keeps_its_table():
+def expected(share_weights, k):
+    total = sum(share_weights)
+    return (2 * T.FR_WORKLOAD_RUNS * share_weights[k] + total) // (2 * total)
+
+
+def test_equal_ratings_share_the_runs_by_the_usage_shares_and_the_game_part_by_the_same():
+    """NX-D2: with equal ratings the backs' expected carries are the usage shares (the lead back most; the fifth and sixth none)."""
     table = table_of((70,) * 6)
     carries = W.expected_carries(table)
-    assert set(carries.values()) == {(2 * T.FR_WORKLOAD_RUNS + 6) // 12} and len(carries) == 6
-    assert W.place_weights(table) == [T.FR_INJ_GAME_WEIGHT[D.POSITION_OF_PLACE[i]] for i in range(D.PLACE_COUNT)]
+    shares = [s * W.carry_weight(70) for s in T.USAGE_RUN]
+    assert [carries.get(1000 + i, 0) for i in D.PLACES_OF["RB"]] == [expected(shares, k) for k in range(6)]
+    assert carries[1000 + D.PLACES_OF["RB"][0]] > carries[1000 + D.PLACES_OF["RB"][1]]
+    places = W.place_weights(table)
+    others = [i for i in range(D.PLACE_COUNT) if D.POSITION_OF_PLACE[i] not in ("RB", "WR")]
+    assert all(places[i] == T.FR_INJ_GAME_WEIGHT[D.POSITION_OF_PLACE[i]] for i in others)
 
 
 def test_the_runs_follow_the_carry_weights_and_a_man_who_plays_two_places_gets_both():
     table = table_of((90, 70, 70, 70, 70, 50), ids=[1, 2, 3, 4, 5, 2])
     carries = W.expected_carries(table)
-    weights = [W.carry_weight(r) for r in (90, 70, 70, 70, 70, 50)]
-    total = sum(weights)
-    share = lambda w: (2 * T.FR_WORKLOAD_RUNS * w + total) // (2 * total)       # noqa: E731
-    assert carries[1] == share(weights[0]) and carries[2] == share(weights[1]) + share(weights[5]) and carries[5] == share(weights[4])
+    weights = [s * W.carry_weight(r) for s, r in zip(T.USAGE_RUN, (90, 70, 70, 70, 70, 50))]     # NX-D2: shares times ratings
+    assert carries[1] == expected(weights, 0) and carries[2] == expected(weights, 1) + expected(weights, 5) and carries.get(5, 0) == expected(weights, 4)
     places = W.place_weights(table)
     rb = [places[i] for i in D.PLACES_OF["RB"]]
     assert rb[0] > rb[1] > rb[5] and abs(sum(rb) - 6 * T.FR_INJ_GAME_WEIGHT["RB"]) <= 6
@@ -273,7 +282,8 @@ def test_with_the_rules_percent_at_zero_the_weeks_draws_are_the_old_ones(monkeyp
     monkeypatch.setattr(W, "game_chance", lambda tenths, extra: asked.append((tenths, extra)) or 0)    # drawn, never a hit
     a = Counting(GameRandomFromSeed(9))
     I.after_games(league_a, 2, a, SURNAMES)
-    assert asked == [((2 * T.FR_WORKLOAD_RUNS + 6) // 12, T.FR_WORKLOAD_MAX)]      # one back past his carries: one draw in the league
+    shares = [s * W.carry_weight(70) for s in T.USAGE_RUN]
+    assert asked == [(expected(shares, 0), T.FR_WORKLOAD_MAX)]           # team 2's lead back past his carries: one draw in the league (NX-D2: his share)
     monkeypatch.setattr(T, "FR_WORKLOAD_PCT", 0)
     b = Counting(GameRandomFromSeed(9))
     I.after_games(league_b, 2, b, SURNAMES)

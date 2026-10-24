@@ -853,9 +853,17 @@ FR_PTAG_VETERAN = 31
 # H8 a rating can weight that draw"; the weights are this game's own, UNVERIFIED): in a franchise game the snap's draw of who carries (a run: the six backs;
 # a pass: the six receivers) weighs each place by base + step(rating - 70, per, cap) of the rating the game's roster gives it (the lineup with the morale).
 # Equal weights are the original's draw itself, rnd(6) (every game outside a franchise, and a franchise game of equal ratings: N2).
-DEPTH_CARRY_SLOTS = (1, 1, 2, 2, 3, 4)   # the N. F. L. rules outside the Franchise: the place each value of the one rnd(6) draw gives, so the first
-#                                          back (a run) or receiver (a pass) gets the ball a third of the time, the fifth and sixth never (a tester,
-#                                          2026-10-23: with rnd(6) itself the made-up 4th to 6th backs carried half the runs); the draw is unchanged
+# NX-D2 (D-147, the owner's second report of 2026-10-24: "the top players should play more. It should take it from like Madden"): with the N. F. L.
+# rules who carries, who is thrown to and who tackles is one below(total) draw over these shares (percent of the plays; UNVERIFIED first values, the
+# NFL's usage and Madden's depth chart as the model: the lead back carries most of the runs, the first receivers and the first tight end get most of the
+# passes, the starters make most of the tackles). They replace D-135's DEPTH_CARRY_SLOTS and the original's even rnd(6) and rnd(17); Classic keeps those.
+USAGE_RUN = (60, 25, 10, 5, 0, 0)                 # the six backs of a run (places 1 to 6 in depth order)
+USAGE_PASS = (26, 21, 16, 18, 10, 9)              # the six receivers of a pass: WR1, WR2, WR3, TE1, WR4, TE2
+USAGE_TACKLE = (6, 6, 5, 5, 2, 1,                  # the six linemen
+                13, 11, 7, 2, 1,                   # the five linebackers
+                9, 8, 4, 1,                        # the four cornerbacks
+                10, 9)                             # the two safeties
+KEY_PLAYER_SHARE = 60                             # NX-D4: the player's man for a key down or moment gets 60 percent of his group's draw there
 FR_CARRY_WEIGHT = (4, 4, 1)       # (base, per, cap): 3 to 5, so the best of six can carry 5/3 times as often as the weakest (calibrated, see below)
 # SX.8o CALIBRATION of the carry weights and the returners (work/sx8o/played_sx8o.py centering 6000: the same 6,000 played games of drawn rosters against
 # rosters of 70s, design 5.4 C-F3 (B-P62: within 2 percent), with the items, with cap 1, and without them (FR_CARRY_WEIGHT (4, 4, 0), FR_RETURN_STEP (4, 0))):

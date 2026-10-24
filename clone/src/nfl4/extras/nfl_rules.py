@@ -393,15 +393,27 @@ class NflRules(ClassicRules):
         return False
 
     def draw_carrier(self, state, rnd) -> int:
-        """H17 (SX.8o): the ball carrier; a Franchise game weighs the places by the players' ratings; every other game draws rnd(6) and reads
-        it through the depth chart (T.DEPTH_CARRY_SLOTS, a tester 2026-10-23: the first back carries most)."""
-        values = self.modifiers.carrier_weights(state) if hasattr(self.modifiers, "carrier_weights") else None
+        """H17: the ball carrier of a run (the six backs) or the receiver of a pass (the six receivers). NX-D2 (D-147): one below(total) draw over the
+        usage shares (the starters most, like Madden's depth chart), a franchise's rating weights multiplied in (SX.8o), the player's man for a key
+        down or moment given KEY_PLAYER_SHARE of it (NX-D4)."""
+        from . import usage
         from .franchise import workload
-        if values is None or workload.even(values):     # no rating decides (equal weights draw rnd(6) as ever): the depth chart does
-            drawn = T.DEPTH_CARRY_SLOTS[rnd(6) - 1]
-        else:
-            drawn = workload.draw(rnd, values)
+        values = self.modifiers.carrier_weights(state) if hasattr(self.modifiers, "carrier_weights") else None
+        kind = workload.kind_of(state.offense_play)
+        weights = usage.combine(usage.shares(kind), values)
+        weights = usage.with_key_player(weights, self.key_place(state, kind))
+        drawn = usage.weighted_place(rnd, weights)
         return self.choices.carrier(state, drawn)        # SY.4: the receiver the player chose takes the drawn one's place (the draw is made)
+
+    def key_place(self, state, kind) -> int | None:
+        """NX-D4: the place (1 to 6) of the player's man for this key down or moment, or None. Set by the game (extras/key_players.py)."""
+        finder = getattr(self.game, "key_place", None) if self.game is not None else None
+        return finder(state, kind) if finder is not None else None
+
+    def draw_defenders(self, state, rnd) -> tuple:
+        """NX-D2 (D-147): the two tacklers by the tackle shares (the starters most), two different men."""
+        from . import usage
+        return usage.defenders(rnd)
 
     def sack_defenders(self, state) -> tuple[int, int]:
         return self.choices.sack_defenders(state)        # H24 (SY.5)

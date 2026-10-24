@@ -90,9 +90,7 @@ class ScrimmageSteps:
         s.yards = 0
         g.empty_replay()
         s.carrier = self.rules.draw_carrier(s, rnd)      # H17 (nfl4 only, SX.8o): rnd(6), weighted by ratings in a Franchise game only
-        s.defender1 = rnd(17)
-        s.defender2 = rnd.redraw(lambda: rnd(17), lambda d: d != s.defender1,
-                                 lambda: 2 if s.defender1 == 1 else 1, "second defender")
+        s.defender1, s.defender2 = self.rules.draw_defenders(s, rnd)     # NX-D2: Classic rnd(17) and its redraw; the N. F. L. rules the tackle shares
         self.rules.after_draws(s)                        # H16 (nfl4 only, SX.8k): a Franchise game's injuries; Classic: nothing
         s.text = ""
         s.tackle_sentence = " tackle string "

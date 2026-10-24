@@ -233,6 +233,12 @@ class ClassicRules:
     def draw_carrier(self, state, rnd) -> int:
         return rnd(6)
 
+    def draw_defenders(self, state, rnd) -> tuple:
+        """NX-D2's hook: the snap's two different defenders. The original: rnd(17), and rnd(17) again until it is another one."""
+        first = rnd(17)
+        second = rnd.redraw(lambda: rnd(17), lambda d: d != first, lambda: 2 if first == 1 else 1, "second defender")
+        return first, second
+
     def start_sounds(self) -> bool:
         """The original's sounds at the start of a game (the crowd to full, foot0 waited): Classic plays them."""
         return True

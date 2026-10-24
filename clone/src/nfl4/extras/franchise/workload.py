@@ -76,8 +76,10 @@ def rated_table(league, team: int, table: list) -> list:
 
 
 def group_shares(table: list, position: str) -> list:
-    """(identity, weight) of the group's places in the lineup `table`, in place order."""
-    return [(table[i][0], carry_weight(table[i][2])) for i in D.PLACES_OF[position]]
+    """(identity, weight) of the group's places in the lineup `table`, in place order: NX-D2's usage share of the place (a run's for the backs, a
+    pass's for the receivers) times its carry weight, as a played game's draw weighs them."""
+    shares = T.USAGE_PASS if position == "WR" else T.USAGE_RUN
+    return [(table[i][0], share * carry_weight(table[i][2])) for share, i in zip(shares, D.PLACES_OF[position])]
 
 
 def expected_carries(table: list) -> dict:
