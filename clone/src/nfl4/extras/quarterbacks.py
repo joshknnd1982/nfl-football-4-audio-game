@@ -62,7 +62,7 @@ def quarterbacks_of(real, team: int) -> list:
     """The team's quarterbacks of the loaded rosters (RealPlayer), in depth order: the first one starts."""
     if real is None or not 1 <= team <= TEAMS:
         return []
-    return [player for player in real.rosters[team - 1] if player.pos == "QB"]
+    return [player for player in real.rosters[team - 1] if player.pos == "QB" and not player.squad]      # NX-B2: never the practice squad
 
 
 def with_starters(real, choices: dict):
@@ -73,7 +73,7 @@ def with_starters(real, choices: dict):
     rosters = list(real.rosters)
     for team, name in sorted(choices.items()):
         roster = list(rosters[team - 1])
-        slots = [index for index, player in enumerate(roster) if player.pos == "QB"]
+        slots = [index for index, player in enumerate(roster) if player.pos == "QB" and not player.squad]
         chosen = next((index for index in slots if roster[index].name.casefold() == name.casefold()), None)
         if chosen is None:
             log.info("quarterbacks: the chosen starter %r is not a quarterback of team %d in the rosters; the first one starts", name, team)

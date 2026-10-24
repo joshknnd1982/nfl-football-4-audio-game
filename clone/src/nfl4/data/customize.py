@@ -59,6 +59,7 @@ NEWS = "news"               # nfl4 only (rule 0.13): the Franchise's news lines,
 INJURIES = "injuries"       # nfl4 only (rule 0.13): the Franchise's injury words, read only with the N. F. L. rules (SX.8k)
 FAVOURITES = "favourite plays"   # the header word of favourites.txt; nfl4 only (rule 0.13): the player's favourite plays in `playbooks` (SX.10c, extras/plays/favourites.py)
 PLAYBOOKS_FOLDER = "playbooks"
+FREE_AGENTS = "freeagents"      # nfl4 only (NX-B3, D-145): free_agents.txt, the real free agents of a new franchise
 COACHES, ROSTERS, RESPELLINGS = "coaches", "rosters", "respellings"   # nfl4 only (rule 0.13, SX.11, NX-N4): the real coaches and rosters and how they are said
 
 
@@ -83,6 +84,7 @@ EXTRA_SPECS: tuple[ListSpec, ...] = (
     ListSpec(COACHES, "coaches.txt", "coach names", "the original coach names"),       # SX.11: first, so the older tests that count from the end still do
     ListSpec(ROSTERS, "rosters.txt", "players", "the original players"),
     ListSpec(RESPELLINGS, "respellings.txt", "respellings", "the original respellings"),
+    ListSpec(FREE_AGENTS, "free_agents.txt", "free agents", "the original free agents"),       # NX-B3
     ListSpec(REMARKS, "remarks.txt", "remarks", "the original remarks"),
     ListSpec(PENALTIES, "penalties.txt", "penalty names", "the original penalty names"),
     ListSpec(PLAYS, "plays.txt", "play names", "the original play names", PLAYBOOKS_FOLDER),
@@ -180,6 +182,46 @@ def migrate_team_names(folder: str) -> str:
         return "renamed" if renamed else "noted"
     except Exception:                                         # a file that cannot be used here is healed or kept by the list loader as always
         log.exception("teams.txt could not be migrated")
+        return ""
+
+
+# NX-B2 (D-144, the owner 2026-10-24: "it should be using the current 53 man rosters for each team"): the rosters.txt that the program copied into the
+# customize folder is a whole copy of the built-in file, and a team's lines in it replace the built-in team (NX-N4), so a newer built-in roster would never
+# be heard by a player who already has the file. A file that is EXACTLY an older shipped copy (the SHA-256 of its text with LF line ends) is the program's
+# own, never the player's edit: it is replaced by the new built-in text once, the old one kept as rosters.txt.before-2026-10-24. A file the player changed
+# in any way is his and stays (the README says how to get the new players: delete the file). Add the hash of the file a release ships here when the
+# next roster refresh replaces it.
+OLD_SHIPPED_ROSTERS = {
+    "962870e5691d6f7fe622d275d037334b59418f260742a27b98006ac50099c17e",     # 0.10.0 to 0.13.0: season 2026, as of 2026-10-22 (SX.11)
+}
+ROSTERS_BEFORE_REFRESH = ".before-2026-10-24"
+
+
+def refresh_old_rosters(folder: str) -> str:
+    """Replace a rosters.txt that is exactly an older shipped copy with the built-in text (once, the old copy kept). Returns "refreshed" or "" (nothing
+    to do: no file, the player's own file, the new one already, or it could not be read or written). Never raises."""
+    import hashlib
+    path = os.path.join(folder, "rosters.txt")
+    try:
+        if not os.path.isfile(path):
+            return ""
+        try:
+            text = read_player_text(path)
+        except (ValueError, UnicodeError):
+            return ""                                             # a damaged file: the list loader heals it as always
+        digest = hashlib.sha256(text.replace("\r\n", "\n").encode("utf-8")).hexdigest()
+        if digest not in OLD_SHIPPED_ROSTERS:
+            return ""
+        from ..extras import real_names
+        new = real_names.shipped_text(real_names.ROSTERS)
+        if save_backup_copy(path, ROSTERS_BEFORE_REFRESH) is None:
+            return ""                                             # never replace a file whose copy could not be made
+        if not write_text_atomic(path, new):
+            return ""
+        debuglog.event("file", "rosters_refreshed", path=path, old=digest[:12], copy=path + ROSTERS_BEFORE_REFRESH)     # rule 0.15
+        return "refreshed"
+    except Exception:
+        log.exception("rosters.txt could not be refreshed")
         return ""
 
 
@@ -312,6 +354,7 @@ class Customization:
         self._notices: list[str] = []
         self._unwritable_told: set[str] = set()
         migrate_team_names(folder)                    # Q-026: a teams.txt of an older version says Redskins for T24; once, before it is read
+        refresh_old_rosters(folder)                   # NX-B2: a rosters.txt that is an older shipped copy gets the 53-man rosters; once, before it is read
         self.snapshot = self._load()
         self._notices.extend(self.snapshot.notices)
 
@@ -416,7 +459,7 @@ class Customization:
         if key == FAVOURITES:
             from ..extras.plays import favourites
             return favourites.text_of()
-        if key in (COACHES, ROSTERS, RESPELLINGS):
+        if key in (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS):
             from ..extras import real_names
             return real_names.shipped_text(key)         # raises when the asset cannot be read: the file is then not made, the built-in names are used
         raise KeyError(key)
@@ -499,11 +542,11 @@ class Customization:
             if previous.favourites is None:
                 return
             snapshot.favourites = previous.favourites
-        elif key in (COACHES, ROSTERS, RESPELLINGS):
+        elif key in (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS):
             if previous.real_names is None or snapshot.real_names is None:
                 return
             # the three files make one set of names: the part the held file makes is the earlier one's, the others stay as read
-            part = {COACHES: ("version", "coaches"), ROSTERS: ("rosters",), RESPELLINGS: ("respellings",)}[key]
+            part = {COACHES: ("version", "coaches"), ROSTERS: ("rosters",), RESPELLINGS: ("respellings",), FREE_AGENTS: ("free_agents",)}[key]
             snapshot.real_names = dataclasses.replace(snapshot.real_names, **{name: getattr(previous.real_names, name) for name in part})
         elif key in (PLAYS, STYLES, TEAMSTYLES):
             if previous.playbooks is None:
@@ -569,7 +612,7 @@ class Customization:
         elif key == FAVOURITES:
             from ..extras.plays import favourites
             snapshot.favourites = favourites.parse(entries, problems)
-        elif key in (COACHES, ROSTERS, RESPELLINGS):
+        elif key in (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS):
             from ..extras import real_names
             if snapshot.real_names is not None:
                 snapshot.real_names = real_names.apply_kind(snapshot.real_names, key, entries, problems)

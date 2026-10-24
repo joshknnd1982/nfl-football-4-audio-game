@@ -124,6 +124,40 @@ def form(league) -> int:
 
 
 TEMPLATE = (("QB", 1), ("RB", 2), ("WR", 3), ("DL", 3), ("LB", 3), ("CB", 2), ("S", 2))     # 16 places of a squad filled with young players
+REAL_GROUP = {"QB": "QB", "RB": "RB", "FB": "RB", "WR": "WR", "TE": "WR", "DL": "DL", "LB": "LB", "CB": "CB", "S": "S", "K": "K", "P": "P"}   # NX-B2
+
+
+def real_squads(league, real) -> int:
+    """NX-B2 (the owner 2026-10-24: "it should be using the current 53 man rosters for each team"): a new franchise's practice squads are each team's real
+    squad (the PS lines of rosters.txt), in the file's order, up to SIZE, the offensive linemen and long snappers left out (the Franchise has no place for
+    them yet). No real rating or age: a hash of the league's ID and the name gives a rating in FR_PRACTICE_RATING and an age of 22 to 25 (rookies and
+    second-year men, so the veterans' limit holds), as the made-up young players have. No draw. `top_up` fills what is left. Returns how many joined."""
+    from .league import Player
+    from .signings import _mix
+    if real is None or not hasattr(real, "squad"):
+        return 0
+    known = {p.name.casefold() for p in league.players.values()}
+    base, span = T.FR_PRACTICE_RATING
+    joined = 0
+    for team in range(1, D.TEAMS + 1):
+        for agent in real.squad(team):
+            position = REAL_GROUP.get(agent.pos)
+            name = real.spoken(agent.name)
+            if position is None or name.casefold() in known or len(squad(league, team)) >= SIZE:
+                continue
+            h = _mix(league.league_id, "real practice squad", team, agent.name)
+            seasons = (h >> 8) % 2
+            age = 22 + seasons + (h >> 12) % 3
+            rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
+            if CT.cap_used(league, team) + PRACTICE_SALARY > T.FR_CAP:
+                break
+            player = Player(league.next_id, name, position, rating, "average", age, seasons, rating, None, 0, STATUS, 0, team, -1, PRACTICE_SALARY, 1)
+            league.players[player.id] = player
+            league.next_id += 1
+            known.add(name.casefold())
+            joined += 1
+    league.practice["season"] = league.season
+    return joined
 
 
 def top_up(league, surnames: list | None = None) -> int:

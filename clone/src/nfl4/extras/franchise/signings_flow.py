@@ -61,7 +61,7 @@ def free_agents_menu(g, speech, keys, store, words) -> None:
         speech.stop()
         speech.say_async(reason)
         return
-    S.ensure_pool(league, _surnames(g))                           # the first look adds the veterans to the league (nothing is written until something is signed or the next save)
+    S.ensure_pool(league, _surnames(g), getattr(g, "real_names", None))      # NX-B3: the real free agents in season 1; the first look adds the veterans to the league (nothing is written until something is signed or the next save)
 
     def say(text: str) -> None:
         speech.stop()

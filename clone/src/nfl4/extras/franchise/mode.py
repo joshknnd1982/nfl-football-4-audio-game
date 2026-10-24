@@ -13,6 +13,7 @@ import copy
 import logging
 import time
 
+from ...data import debuglog
 from ...game.season import DEFAULT_COACH, SeasonState
 from ...game.season_engine import CLASSIC_SEASON_HOOKS, ClassicSeasonHooks
 from ...game.season_mode import ClassicSeason, SeasonMode
@@ -377,7 +378,9 @@ def start_new(p) -> None:
                         real=getattr(g, "real_names", None))                         # SX.11: the real coaches and players (None: drawn surnames)
     if getattr(store, "practice_squads", True):
         from . import practice
-        practice.top_up(league, list(g.pool.original))       # D-136: the practice squads of season 1 (young made-up players, no draw)
+        joined = practice.real_squads(league, getattr(g, "real_names", None))     # NX-B2: the real practice squads first (no draw)
+        practice.top_up(league, list(g.pool.original))       # D-136: the practice squads of season 1 (young made-up players for what is left, no draw)
+        debuglog.event("franchise", "practice_squads_formed", real=joined)            # rule 0.15
     store.create(league)
     set_kind(g, "franchise")                             # only now: a window closed before this leaves no franchise to look for
     g.say2(X.text("NXF-07"))

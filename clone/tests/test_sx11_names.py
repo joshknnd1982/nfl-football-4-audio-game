@@ -83,7 +83,7 @@ def test_the_set_up_has_a_real_player_in_every_place_but_the_back_places_the_tea
     fillers = 0
     for team in range(1, 33):
         roster = real.roster(team, None)
-        backs = [p.name for p in real.rosters[team - 1] if p.pos in ("RB", "FB")]
+        backs = [p.name for p in real.active(team) if p.pos in ("RB", "FB")]                # NX-B2: not the practice squad
         real_backs = [n for n in roster.running_backs if n != "player"]
         assert real_backs == [real.spoken(n) for n in backs][:6], team          # every real back, in depth order, none lost to the returners
         fillers += 6 - len(real_backs)

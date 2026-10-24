@@ -17,3 +17,4 @@ R011 = Piñeiro => Pineiro
 R012 = Jevón => Jevon
 R013 = Nuñez-Roches => Nunez-Roches
 R014 = Estimé => Estime
+R015 = Peña => Pena

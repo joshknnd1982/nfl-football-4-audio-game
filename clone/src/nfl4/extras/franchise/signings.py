@@ -53,10 +53,41 @@ def price(player) -> tuple:
     return R.asking(player)
 
 
-def ensure_pool(league, surnames: list) -> int:
+# NX-B3 (D-145): the real free agents' positions in the Franchise's groups (the offensive line and the long snapper have no place in it yet)
+REAL_GROUP = {"QB": "QB", "RB": "RB", "FB": "RB", "WR": "WR", "TE": "WR", "DL": "DL", "LB": "LB", "CB": "CB", "S": "S", "K": "K", "P": "P"}
+
+
+def add_real_free_agents(league, real) -> int:
+    """NX-B3 (the owner 2026-10-24: "it should have all current free agents"): in the first season of a franchise the free agents of free_agents.txt join
+    the pool, once each (a name the league already has, signed, released or retired, is never made again). No real rating: a hash of the league's ID and the
+    name gives a rating in FR_FA_SEASON_RATING, as the made-up veterans have; the real age when the file has it. No draw. Returns how many joined."""
+    if real is None or league.season != 1 or not getattr(real, "free_agents", ()):
+        return 0
+    known = {p.name.casefold() for p in league.players.values()}
+    base, span = T.FR_FA_SEASON_RATING
+    age_base, age_span = T.FR_FA_SEASON_AGE
+    added = 0
+    for _ident, agent in real.free_agents:
+        position = REAL_GROUP.get(agent.pos)
+        name = real.spoken(agent.name) if hasattr(real, "spoken") else agent.name
+        if position is None or name.casefold() in known:
+            continue
+        h = _mix(league.league_id, "real free agent", agent.name)
+        rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
+        age = agent.age if agent.age is not None else age_base + (h >> 8) % age_span
+        player = _new_player(league, name, position, rating, max(D.AGE_MIN, min(D.AGE_MAX, age)))
+        league.players[player.id] = player
+        league.next_id += 1
+        known.add(name.casefold())
+        added += 1
+    return added
+
+
+def ensure_pool(league, surnames: list, real=None) -> int:
     """Make the veterans the pool lacks: for every position group the pool holds at least FR_FA_SEASON_PER_GROUP free agents (the veterans made earlier, the players released
-    this season and these). Returns how many were made. Adds players to the league (status "free"); the caller saves."""
-    made = 0
+    this season and these). In a franchise's first season the real free agents come first (NX-B3, `add_real_free_agents`), so the made-up veterans only fill a group they
+    leave short. Returns how many were made. Adds players to the league (status "free"); the caller saves."""
+    made = add_real_free_agents(league, real)
     used = FN.name_keys(league.league_id, {p.name for p in league.players.values() if p.status == "active"} | {p.name for p in pool(league)})
     base, span = T.FR_FA_SEASON_RATING
     age_base, age_span = T.FR_FA_SEASON_AGE

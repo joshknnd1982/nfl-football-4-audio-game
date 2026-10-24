@@ -123,8 +123,10 @@ continue the franchise, start a new game, delete the saved game, the season or t
 With the N. F. L. rules you type no names. When you choose your team the game offers that team's real head coach (Enter keeps him, or pick
 another real coach from the list of 32, or type one). The players of your team and of the other team, and the two quarterbacks, are the real
 players of the two teams; Enter takes the quarterbacks. A new franchise starts with the real players and the real head coaches of all 32 teams.
-The names are from the teams' own websites on 2026-10-22 (the 2026 season, week 7) and live in three files you can edit (coaches.txt,
-rosters.txt, respellings.txt; CUSTOMIZE.md says how, and how a new season's names are put in). The Classic rules keep the original's random
+The coaches are from the teams' own websites on 2026-10-22 and the rosters on 2026-10-24 (the 2026 season, week 8: every team's active roster
+of up to 53 and its practice squad), and the real free agents are in free_agents.txt; they live in four files you can edit (coaches.txt,
+rosters.txt, respellings.txt, free_agents.txt; CUSTOMIZE.md says how, and how a new season's names are put in). A new franchise's practice
+squads are the real ones and its first season's free agents are the real ones. The Classic rules keep the original's random
 surnames and the typed coach.
 
 The names are facts (names, positions, numbers), used descriptively; this project is not made, endorsed or supported by any team or by the

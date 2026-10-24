@@ -10,6 +10,36 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.14.0 (2026-10-24, test build)
+
+### Trades: choose the team first, then the position
+"Ask a team for a player" (F9, Franchise, trades, the third item) asks which team you want to trade with, then which position, then which of its players, then whom you give. The old list of every team's players of a position is still there as the fourth item, "the league's best at a position".
+- How to test: in a franchise season before the trade deadline, F9, Franchise, trades, "ask a team for a player". In the list of teams, type the first letters of a team's name (or use Up and Down) and press Enter. Choose a position, a player, then one of your own players of that position. Then comes the picks menu (next item): Enter on its first item, "send the proposal", sends it, and the other team answers.
+- Tell us: is the order team, position, player, your player easy to follow?
+
+### Add your draft picks to a trade, and ask for theirs
+After you choose whom you give, a short menu lets you add your own picks of the coming draft and ask for the other team's, as the computer teams do. Each pick is said with its round and whose pick it was ("your round 2 pick", "their round 1 pick", "the round 3 pick of the Bears"). A side adds at most 2 picks. The other team answers by the same rule it uses for its own trades: when your offer is not enough, it says "the Bears want more than that" and names the picks of yours it asks for, and you accept with Enter or say no with Escape. From the draft to week 1 a trade is player for player, and the game says so.
+- How to test: in the picks menu, "add one of your picks", "ask for one of their picks" and "take a pick out" each open a list. The first item says the picks so far. Try asking for their first-round pick and offering nothing: they should ask for picks of yours. Then F9, Franchise, trades, "your draft picks" should show the picks that moved.
+- Tell us: are the pick names clear? Does the other team's answer feel fair?
+
+### You choose who starts for an injured player
+When one of your players will not play the week's game (he is out, or he is doubtful or questionable and rests), the week's to-do list asks who starts in his place: the staff's choice first, so Enter keeps it, then every other fit player of his position, the best first, each with his position, rating and age. For a kick returner the choices are your running backs and receivers. Your choice holds until he is fit again. F9, Franchise, injury report has a line "who starts for" under each such player: Enter on it lets you choose or change. With the staff handling the to-do list (F9, Franchise, settings) nothing is asked and the staff chooses.
+- How to test: play a franchise season until one of your players is hurt (the injury report after the news names him). In the next week's to-do list, choose the second answer: the game says who starts in his place, and the play-by-play names him in that place. Also try F9, Franchise, injury report, the "who starts for" line.
+- Note: the man you choose takes the hurt player's place and its plays; the place is still played at the backup level, so your choice changes who is named, not the team's strength.
+- Tell us: does the question come at the right moment in the week?
+
+### The real NFL rosters of 2026-10-24, with the practice squads
+rosters.txt now holds every team's whole active roster as the teams' own sites showed it on 2026-10-24 (up to 53 players, the offensive linemen and the long snapper too) and each team's practice squad (the lines that start with PS). A game plays the same positions as before, from these players. A new franchise's practice squads are the real ones; made-up young players only fill places still open.
+- Your rosters.txt (in the customize folder) is replaced once if you never changed it; the old one is kept as `rosters.txt.before-2026-10-24`. If you changed it, it is yours and stays: delete it to get the new players.
+- Not yet: a franchise still keeps 34 players a team (the places the game plays). Keeping all 53 on the team (the backups, the offensive line, the long snapper) comes in a later build.
+- How to test: F9, Rules, Quarterbacks lists each team's quarterbacks with no practice squad players. Start a new franchise: F9, Franchise, practice squad, "hear the practice squad" names real players (for the Bengals, Sean Clifford is the squad's quarterback). Open rosters.txt in the customize folder: each team ends with its PS lines.
+- Tell us: did you hear any name said wrongly?
+
+### The real free agents in a new franchise
+The new file `free_agents.txt` lists 155 real NFL free agents (researched 2026-10-24 from free agent lists; no ratings are copied from anywhere: the game makes up each free agent's rating). In the first season of a new franchise they are the free agents of F9, Franchise, free agents; the game makes up a free agent only for a position the list has too few of. Offensive linemen on the list wait for the later build that keeps all 53. You can change the list like the other customize files.
+- How to test: start a new franchise, F9, Franchise, free agents, "sign a free agent", choose a position: the names are real (Tyreek Hill is among the receivers).
+- Tell us: has anyone on the list signed with a team since?
+
 ## 0.13.0 (2026-10-23, test build)
 
 ### Get the latest NFL calendar

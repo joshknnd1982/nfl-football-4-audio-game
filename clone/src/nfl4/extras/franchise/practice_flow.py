@@ -111,7 +111,7 @@ def practice_menu(g, speech, keys, store, words) -> None:
         reason = closed_reason(g, league)
         if reason is not None:
             return reason
-        S.ensure_pool(league, _surnames(g))
+        S.ensure_pool(league, _surnames(g), getattr(g, "real_names", None))      # NX-B3
         agents = [p for p in S.pool(league) if p.age <= P.T.FR_PRACTICE_MAX_AGE]
         if not agents:
             return X.text("NXJ-S14")

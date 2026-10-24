@@ -6,12 +6,19 @@ customize folder:
 
     coaches.txt       VERSION = season 2026, as of 2026-10-22      T01 = Zac Taylor      (one head coach for each of T01 to T32)
     rosters.txt       T01P01 = QB 9 Joe Burrow                      (a team's players in depth order, then its returners as RET)
+                      T01P70 = PS WR 14 Jordan Moore                (since 2026-10-24, NX-B2: the practice squad; OL and LS are on the active roster)
     respellings.txt   R001 = Jr. => Junior                          (how the voice says a written name or a word of it)
+    free_agents.txt   F001 = WR 32 Tyreek Hill                      (NX-B3: the real free agents a new franchise starts with: position, age, name)
 
 Facts only: names, teams, positions and numbers (no ratings, no photographs, no logos); the numbers are kept in the file and are never spoken.
 A team's lines in the player's rosters.txt replace that team's built-in lines as a whole (a new season is a new file, an old player must not come
 back from the built-in copy); a coach, the VERSION line and a respelling replace the built-in one with the same ID. Nothing here raises: a line the
 rules refuse is a problem (one spoken summary per file) and the built-in value is used.
+
+The 53-man file (2026-10-24, D-144, NX-B2; "it should be using the current 53 man rosters for each team"): every player of the active 53, the offensive
+linemen (OL) and the long snapper (LS) too, then the practice squad, each line marked PS. The game plays no OL or LS place and no practice squad player:
+`_assemble`, `quarterback` and the quarterbacks' list read the active players of the positions the game plays, exactly as with the older file, so a game
+draws and names the same with either file; the Franchise reads the practice squads (`squad`). An older file (the player's own) is read as it always was; the list syntax is the same (format 1).
 
 `RealNames.roster(team, fallback)` makes the 33 names of the set-up (the original's sections: 6 running backs, 6 receivers, 17 defensive players,
 2 returners, 2 kickers) from a team's real players; a place with no real player keeps the name of `fallback` (the names the original's draw has made,
@@ -33,15 +40,20 @@ log = logging.getLogger("nfl4.extras")
 
 GAME = "NFL Football 4"
 COACHES, ROSTERS, RESPELLINGS = "coaches", "rosters", "respellings"
-FILE_NAMES = {COACHES: "coaches.txt", ROSTERS: "rosters.txt", RESPELLINGS: "respellings.txt"}
+FREE_AGENTS = "freeagents"            # NX-B3 (D-145): free_agents.txt
+FILE_NAMES = {COACHES: "coaches.txt", ROSTERS: "rosters.txt", RESPELLINGS: "respellings.txt", FREE_AGENTS: "free_agents.txt"}
+KINDS = (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS)
 TEAMS = 32
-POSITIONS = ("QB", "RB", "FB", "WR", "TE", "DL", "LB", "CB", "S", "K", "P", "RET")
+POSITIONS = ("QB", "RB", "FB", "WR", "TE", "DL", "LB", "CB", "S", "K", "P", "RET", "OL", "LS")      # OL and LS: the 53-man file (NX-B2), no place in a game
+SQUAD_MARK = "PS"                     # the 53-man file: a practice squad player's line starts with it
 NAME_MIN, NAME_MAX = 1, 30
 
 _COACH_ID = re.compile(r"T(\d{1,2})", re.IGNORECASE)
 _PLAYER_ID = re.compile(r"T(\d{1,2})P(\d{1,3})", re.IGNORECASE)
-_PLAYER_VALUE = re.compile(r"^(%s)\s+(\d{1,2}|-)\s+(.+)$" % "|".join(POSITIONS), re.IGNORECASE)
+_PLAYER_VALUE = re.compile(r"^(?:(%s)\s+)?(%s)\s+(\d{1,2}|-)\s+(.+)$" % (SQUAD_MARK, "|".join(POSITIONS)), re.IGNORECASE)
 _RESPELL_ID = re.compile(r"R(\d{1,4})", re.IGNORECASE)
+_FREE_ID = re.compile(r"F(\d{1,4})", re.IGNORECASE)
+_FREE_VALUE = re.compile(r"^(%s)\s+(\d{1,2}|-)\s+(.+)$" % "|".join(p for p in POSITIONS if p != "RET"), re.IGNORECASE)
 _ARROW = "=>"
 
 # what a short group takes from the players left over, in this order (the set-up needs 6 running backs, 6 receivers, 6 + 5 + 4 + 2 defenders)
@@ -66,6 +78,15 @@ class RealPlayer:
     pos: str
     number: str          # digits, or "-" when the player has none; kept for the file, never spoken
     name: str
+    squad: bool = False  # the 53-man file: a player of the practice squad (no place in a game; the Franchise's squad)
+
+
+@dataclass(frozen=True)
+class RealFreeAgent:
+    """NX-B3: a real free agent of free_agents.txt (facts only: no rating)."""
+    pos: str
+    age: int | None      # None when no source gave it
+    name: str
 
 
 @dataclass(frozen=True)
@@ -74,6 +95,7 @@ class RealNames:
     coaches: tuple                      # 32 names ("" when a team has none)
     rosters: tuple                      # 32 tuples of RealPlayer, in file order
     respellings: tuple                  # ((ID, written, spoken), ...) in the order of the IDs
+    free_agents: tuple = ()             # NX-B3: ((ID, RealFreeAgent), ...) in the order of the IDs
 
     # ----- how a name is said -----
 
@@ -104,17 +126,26 @@ class RealNames:
         return 1 <= team <= TEAMS and bool(self.rosters[team - 1])
 
     def quarterback(self, team: int) -> str:
-        """The spoken name of the team's first quarterback ("" when it has none)."""
+        """The spoken name of the team's first quarterback ("" when it has none); never a practice squad player."""
         for player in self.rosters[team - 1] if 1 <= team <= TEAMS else ():
-            if player.pos == "QB":
+            if player.pos == "QB" and not player.squad:
                 return self.spoken(player.name)
         return ""
+
+    def active(self, team: int) -> list:
+        """The team's players of the active roster (the 53, not the practice squad), in file order."""
+        return [player for player in self.rosters[team - 1] if not player.squad] if 1 <= team <= TEAMS else []
+
+    def squad(self, team: int) -> list:
+        """The team's practice squad players (the 53-man file), in file order; [] for an older file."""
+        return [player for player in self.rosters[team - 1] if player.squad] if 1 <= team <= TEAMS else []
 
     def _assemble(self, team: int) -> dict:
         """The sections of a team's real players: lists of names, None where the team has no player for the place."""
         by: dict[str, list] = {pos: [] for pos in POSITIONS}
         for player in self.rosters[team - 1]:
-            by[player.pos].append(player.name)
+            if not player.squad:                                 # NX-B2: the practice squad has no place in a game (OL and LS are never taken)
+                by[player.pos].append(player.name)
         used: set[str] = set()
 
         def free(names):
@@ -218,7 +249,7 @@ def parse_entries(text: str, kind: str):
     return cl.parse_list(text, GAME, kind)
 
 
-def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames | None", problems: dict) -> "RealNames":
+def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames | None", problems: dict, free_entries=()) -> "RealNames":
     """The values of the three files. `defaults` is the built-in RealNames (None for the built-in one itself); `problems` maps each kind to
     a customlists.Problems. A bad line keeps the built-in value."""
     base_version = defaults.version if defaults else ""
@@ -263,12 +294,16 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
         if parts is None:
             bad.add(entry.id, "a player is a position, a number and a name, like QB 9 Joe Burrow, the line is ignored")
             continue
-        reason = name_problem(parts.group(3).strip())
+        squad = parts.group(1) is not None
+        if squad and parts.group(2).upper() == "RET":
+            bad.add(entry.id, "a practice squad player is not a returner, the line is ignored")
+            continue
+        reason = name_problem(parts.group(4).strip())
         if reason:
             bad.add(entry.id, "%s, the line is ignored" % reason)
             continue
-        lines.setdefault(team, []).append((int(match.group(2)), entry.line, RealPlayer(parts.group(1).upper(), parts.group(2),
-                                                                                       parts.group(3).strip())))
+        lines.setdefault(team, []).append((int(match.group(2)), entry.line, RealPlayer(parts.group(2).upper(), parts.group(3),
+                                                                                       parts.group(4).strip(), squad)))
     for team, rows in lines.items():
         rows.sort(key=lambda row: (row[0], row[1]))          # by the number of the ID, then by the line: the file's own order is the depth order
         rosters[team - 1] = tuple(player for _, _, player in rows)
@@ -289,7 +324,31 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
                 bad.add(entry.id, "a respelling needs both the written text and what the voice speaks, the line is ignored")
             else:
                 respell[entry.id.upper()] = (entry.id.upper(), written, said)
-    return RealNames(version, tuple(coaches), tuple(rosters), tuple(sorted(respell.values())))
+    free = {row[0]: row for row in defaults.free_agents} if defaults else {}
+    bad = problems.get(FREE_AGENTS)
+    for entry in free_entries:                                    # NX-B3: laid over the built-in list by ID, "off" leaves one out
+        if entry.id == "VERSION":
+            continue
+        match = _FREE_ID.fullmatch(entry.id)
+        if match is None:
+            bad.add("line %d" % entry.line, "the ID %s is not a free agent ID, F001 and up, the line is ignored" % entry.id)
+            continue
+        ident = "F%03d" % int(match.group(1))
+        if entry.value.casefold() == "off":
+            free.pop(ident, None)
+            continue
+        parts = _FREE_VALUE.match(entry.value)
+        if parts is None:
+            bad.add(entry.id, "a free agent is a position, an age and a name, like WR 32 Tyreek Hill, the line is ignored")
+            continue
+        reason = name_problem(parts.group(3).strip())
+        if reason:
+            bad.add(entry.id, "%s, the line is ignored" % reason)
+            continue
+        age = int(parts.group(2)) if parts.group(2).isdigit() else None
+        free[ident] = (ident, RealFreeAgent(parts.group(1).upper(), age, parts.group(3).strip()))
+    return RealNames(version, tuple(coaches), tuple(rosters), tuple(sorted(respell.values())),
+                     tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))))
 
 
 def apply_kind(current: "RealNames", kind: str, entries, problems: "cl.Problems") -> "RealNames":
@@ -297,7 +356,7 @@ def apply_kind(current: "RealNames", kind: str, entries, problems: "cl.Problems"
     mine = {k: cl.Problems(FILE_NAMES[k]) for k in FILE_NAMES}
     mine[kind] = problems
     return build(entries if kind == COACHES else [], entries if kind == ROSTERS else [], entries if kind == RESPELLINGS else [],
-                 current, mine)
+                 current, mine, entries if kind == FREE_AGENTS else [])
 
 
 _DEFAULTS: "RealNames | None | bool" = False        # False: not read yet
@@ -309,8 +368,13 @@ def defaults() -> "RealNames | None":
     if _DEFAULTS is False:
         try:
             problems = {kind: cl.Problems(FILE_NAMES[kind]) for kind in FILE_NAMES}
-            parsed = {kind: parse_entries(shipped_text(kind), kind).entries for kind in FILE_NAMES}
-            _DEFAULTS = build(parsed[COACHES], parsed[ROSTERS], parsed[RESPELLINGS], None, problems)
+            parsed = {kind: parse_entries(shipped_text(kind), kind).entries for kind in (COACHES, ROSTERS, RESPELLINGS)}
+            try:
+                parsed[FREE_AGENTS] = parse_entries(shipped_text(FREE_AGENTS), FREE_AGENTS).entries
+            except Exception:                                    # NX-B3: no free agents file never costs the names (made-up free agents, as before)
+                log.exception("the shipped free agents file could not be read")
+                parsed[FREE_AGENTS] = []
+            _DEFAULTS = build(parsed[COACHES], parsed[ROSTERS], parsed[RESPELLINGS], None, problems, parsed[FREE_AGENTS])
             if sum(p.count for p in problems.values()):
                 log.warning("the shipped name files have problems: %s", [m for p in problems.values() for m in p.messages][:5])
         except Exception:
