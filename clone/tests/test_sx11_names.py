@@ -87,14 +87,14 @@ def test_the_set_up_has_a_real_player_in_every_place_but_the_back_places_the_tea
         real_backs = [n for n in roster.running_backs if n != "player"]
         assert real_backs == [real.spoken(n) for n in backs][:6], team          # every real back, in depth order, none lost to the returners
         fillers += 6 - len(real_backs)
-        others = roster.receivers + roster.defense + roster.special_teams + roster.kickers
-        assert "player" not in others, team
+        others = [n for n in roster.receivers + roster.defense + roster.special_teams + roster.kickers if n != "player"]
+        fillers += sum(1 for n in roster.receivers + roster.defense + roster.special_teams if n == "player")     # NX-D1: a made-up man of the position
+        assert "player" not in roster.kickers, team
         assert len(set(real_backs + others)) == len(real_backs) + len(others), team     # nobody twice
         places = real.places(team)
-        assert len(places) == D.PLACE_COUNT and all(places[6:]), team
-        assert places[-1] == real.quarterback(team)
+        assert len(places) == D.PLACE_COUNT and places[-1] == real.quarterback(team)
         assert [p or "player" for p in places[:33]] == roster.names(), team      # the Franchise's places are the set-up's names in the same order
-    assert fillers < 100                                                         # before the fix: 100 of 192 back places held another position
+    assert fillers < 150                                                         # NX-D1: the made-up men of short groups, never another position's
 
 
 def test_no_back_place_holds_a_player_of_another_position_and_the_draw_fills_the_rest():

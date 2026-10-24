@@ -687,6 +687,50 @@ def fix_real_backs(league: "LeagueRecord", real) -> int:
     return changed
 
 
+# NX-D1 (D-147): the families of positions an older league's place may hold a real player of; a real name of another family is at a wrong position
+POSITION_FAMILY = {"QB": {"QB"}, "RB": {"RB", "FB"}, "WR": {"WR", "TE"}, "DL": {"DL", "LB"}, "LB": {"LB", "DL"}, "CB": {"CB", "S"}, "S": {"S", "CB"},
+                   "K": {"K"}, "P": {"P"}}
+
+
+def fix_real_positions(league: "LeagueRecord", real) -> int:
+    """NX-D1 (the owner 2026-10-24: "A backup quarterback should not be playing wide receiver"): a league made before it may hold a real player in a
+    place of another family of position (a quarterback in a receiver's place, a linebacker or a safety where the old rule filled a short group; a
+    lineman and a linebacker, or a cornerback and a safety, are near enough for a league already played). Each such player of another team gets a
+    made-up name of the place's position, as `fix_real_backs` does for the backs (no draw, ratings and contract kept, idempotent, in memory). The
+    player's own team is left (his names are his, and F9's depth chart lets him place them). Returns how many were renamed."""
+    if real is None:
+        return 0
+    listed: dict = {}
+    for roster in getattr(real, "rosters", ()):
+        for p in roster:
+            if p.pos != "RET" and not getattr(p, "squad", False):
+                listed.setdefault(real.spoken(p.name).casefold(), set()).add(p.pos)
+    try:
+        from ...game.names import load_surnames
+        surnames = load_surnames()
+    except (OSError, ValueError, UnicodeError):
+        return 0
+    used = FN.name_keys(league.league_id, (p.name for p in league.players.values()))
+    changed = 0
+    for player in sorted(league.players.values(), key=lambda p: p.id):
+        family = POSITION_FAMILY.get(player.pos)
+        positions = listed.get(player.name.casefold())
+        if (family is None or positions is None or positions & family or player.team == league.team or player.status != "active"
+                or player.place < 0):
+            continue
+        start = zlib.crc32(("%s|%d|pos" % (league.league_id, player.id)).encode("utf-8")) % len(surnames)
+        surname = next((surnames[(start + k) % len(surnames)] for k in range(len(surnames)) if surnames[(start + k) % len(surnames)] not in used), None)
+        if surname is None:
+            break
+        used.add(surname)
+        old, player.name = player.name, FN.full_name(league.league_id, surname)
+        used.add(player.name)
+        changed += 1
+        debuglog.event("franchise", "position_renamed", logging.INFO, player=player.id, place=player.pos, before=old, real=sorted(positions),
+                       after=player.name)
+    return changed
+
+
 def _clamp(value: int) -> int:
     return max(D.RATING_MIN, min(D.RATING_MAX, value))
 

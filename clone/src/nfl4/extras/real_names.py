@@ -56,8 +56,6 @@ _FREE_ID = re.compile(r"F(\d{1,4})", re.IGNORECASE)
 _FREE_VALUE = re.compile(r"^(%s)\s+(\d{1,2}|-)\s+(.+)$" % "|".join(p for p in POSITIONS if p != "RET"), re.IGNORECASE)
 _ARROW = "=>"
 
-# what a short group takes from the players left over, in this order (the set-up needs 6 running backs, 6 receivers, 6 + 5 + 4 + 2 defenders)
-_DEFENSE_TAKES = {"DL": ("DL", "LB"), "LB": ("LB", "DL", "S", "CB"), "CB": ("CB", "S", "LB"), "S": ("S", "CB", "LB")}
 
 
 def name_problem(name: str) -> str | None:
@@ -164,8 +162,12 @@ class RealNames:
         kickers = [(take(by["K"], 1) or [None])[0], (take(by["P"], 1) or [None])[0]]
         # the running backs and fullbacks first (tester, 2026-10-23: "wrong position players are still playing at running back"): a returner is
         # listed again as RET with the name of his RB line, so taking the returners first cost 23 teams' backs one of their real backs
+        # NX-D1 (D-147, the owner 2026-10-24: "A backup quarterback should not be playing wide receiver"): every place takes only players of its own
+        # position, in depth order; a place the team has no more real players for stays None, so the set-up keeps the draw's name there (a made-up
+        # player of that position). The returners come last: the chart's returners not already in a place, then the backs, receivers and cornerbacks
+        # left over (a returner is a role of those positions), else made-up. Before: the returners were taken first and a short group was filled
+        # from other positions (the Bears' backup quarterback at receiver, linebackers at defensive line, safeties at cornerback).
         backs = take(by["RB"] + by["FB"], COUNTS[0])
-        returners = take(by["RET"], 2)
         wide, tight = list(by["WR"]), list(by["TE"])
         mixed = []                                               # WR1, WR2, WR3, TE1, WR4, TE2, WR5, TE3, ...
         while wide or tight:
@@ -175,22 +177,13 @@ class RealNames:
             if tight:
                 mixed.append(tight.pop(0))
         receivers = take(mixed, COUNTS[1])
-        # a back place with no real running back stays None: the set-up keeps the draw's name there (a made-up running back), never a tight
-        # end, a quarterback, a receiver or a defender (before: 100 of the 192 back places of the league held another position)
         defenders = {pos: take(by[pos], count) for pos, count in (("DL", 6), ("LB", 5), ("CB", 4), ("S", 2))}
-        for pos, count in (("DL", 6), ("LB", 5), ("CB", 4), ("S", 2)):
-            for other in _DEFENSE_TAKES[pos][1:]:
-                if len(defenders[pos]) >= count:
-                    break
-                defenders[pos] += take(by[other], count - len(defenders[pos]))
+        returners = take(by["RET"], COUNTS[3])
         if len(returners) < COUNTS[3]:
-            returners += take(free(mixed) + free(by["RB"]) + free(by["CB"]), COUNTS[3] - len(returners))
-        while len(receivers) < COUNTS[1]:
-            receivers += take(free(mixed) + free(by["RB"]) + free(by["QB"][1:]), COUNTS[1] - len(receivers)) or [None]
-        spare = free(by["WR"] + by["TE"] + by["RB"] + by["FB"] + by["CB"] + by["S"] + by["LB"] + by["DL"])      # the last resort, after the defense has its own
-        for names, count in ((receivers, COUNTS[1]), (returners, COUNTS[3])):
-            names[:] = [n for n in names if n] + take(spare, count - len([n for n in names if n]))
-        defense = defenders["DL"] + defenders["LB"] + defenders["CB"] + defenders["S"]
+            returners += take(free(by["RB"] + by["FB"]) + free(mixed) + free(by["CB"]), COUNTS[3] - len(returners))
+        defense = []
+        for pos, count in (("DL", 6), ("LB", 5), ("CB", 4), ("S", 2)):
+            defense += defenders[pos] + [None] * (count - len(defenders[pos]))
         quarterback = (by["QB"] or [""])[0]
 
         def pad(names, count):

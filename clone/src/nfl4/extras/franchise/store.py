@@ -140,10 +140,11 @@ class FranchiseStore:
 
     def _fix_backs(self) -> None:
         """A league made before 2026-10-23 may have real tight ends, quarterbacks or defenders in running back places: renamed in memory."""
-        from .league import fix_real_backs
+        from .league import fix_real_backs, fix_real_positions
         try:
             real = self.real_names_of() if self.real_names_of is not None else None
             fix_real_backs(self.league, real)
+            fix_real_positions(self.league, real)          # NX-D1: no real player of another family of position in a place of another team
         except Exception:                        # a fix of names must never cost the player his franchise
             log.exception("the running backs of the franchise could not be checked")
 
