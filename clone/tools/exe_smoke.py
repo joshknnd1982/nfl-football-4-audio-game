@@ -242,7 +242,8 @@ stadium = os.path.join(os.path.dirname(exe), "assets", "sounds_nx")
 count = len([f for f in os.listdir(stadium) if f.lower().endswith(".wav")]) if os.path.isdir(stadium) else 0
 check("22 stadium wavs beside the exe (SY.2, SY.3, the tester of 2026-10-23)", count == 22, f"{count}")
 data = os.path.join(os.path.dirname(exe), "assets", "data")
-check("the names data beside the exe", all(os.path.exists(os.path.join(data, n)) for n in ("rosters.txt", "coaches.txt", "surnames.txt", "respellings.txt", "schedule_2026.txt")))
+check("the names data beside the exe", all(os.path.exists(os.path.join(data, n)) for n in ("rosters.txt", "coaches.txt", "surnames.txt", "respellings.txt", "schedule_2026.txt",
+                                                                                         "free_agents.txt")))
 check("CHANGELOG.md beside the exe (rule 0.29)", os.path.isfile(os.path.join(os.path.dirname(exe), "CHANGELOG.md")))
 print("ALL PASS" if all(results) else "SOME FAILED")
 sys.exit(0 if all(results) else 1)
