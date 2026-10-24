@@ -161,7 +161,7 @@ def test_two_other_teams_trade_and_the_news_tells_it_within_the_weeks_lines(tmp_
 # ----- F9, franchise, trades -----
 
 def test_the_franchise_menu_has_trades_and_its_draft_picks_and_season_lists(tmp_path):
-    rig = run(tmp_path, TRADES_MENU + [DOWN, DOWN, DOWN, ENTER, ESC, DOWN, ENTER, ESC, ESC, ESC, ESC])
+    rig = run(tmp_path, TRADES_MENU + [DOWN, DOWN, DOWN, DOWN, ENTER, ESC, DOWN, ENTER, ESC, ESC, ESC, ESC])      # NX-B5: draft picks is the 5th item
     text = spoken(rig)
     assert any(X.text("NXX-28", n=T.FR_TRADE_LAST_WEEK).strip() in t for t in text)     # the menu's title says the deadline's week
     assert any(X.text("NXX-P04", round=1) in t for t in text)                # your draft picks: your round 1 pick ...
@@ -207,11 +207,12 @@ def test_escape_at_the_confirmation_keeps_the_player(tmp_path, monkeypatch):
 def test_asking_for_a_player_hears_the_other_teams_answer_and_enter_makes_it(tmp_path, monkeypatch):
     calls = []
 
-    def ask(league, team, give, get, records, week):
+    def propose(league, team, give, get, offered, asked, records, week):
         calls.append((give.id, get.id))
-        return TR.Trade(team, get.team, give.id, get.id, ((2, team),), ())
-    monkeypatch.setattr(TR, "ask", ask)
-    rig = run(tmp_path, TRADES_MENU + [DOWN, DOWN, ENTER, ENTER, ENTER, ENTER, ENTER, ESC, ESC, ESC])     # ask, quarterback, the best one, give mine, yes
+        return TR.Trade(team, get.team, give.id, get.id, ((2, team),), ()), ((2, team),)
+    monkeypatch.setattr(TR, "propose", propose)
+    # NX-B5: the league's best is the 4th item; ask, quarterback, the best one, give mine, send (NX-B4's picks menu), yes
+    rig = run(tmp_path, TRADES_MENU + [DOWN, DOWN, DOWN, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ESC, ESC, ESC])
     league = league_of(rig)
     (give, get), = calls
     assert qb(league, PLAYER).id == get and league.players[give].team != PLAYER
@@ -221,8 +222,8 @@ def test_asking_for_a_player_hears_the_other_teams_answer_and_enter_makes_it(tmp
 
 
 def test_asking_for_a_player_the_other_team_will_not_give(tmp_path, monkeypatch):
-    monkeypatch.setattr(TR, "ask", lambda *a: None)
-    rig = run(tmp_path, TRADES_MENU + [DOWN, DOWN, ENTER, ENTER, ENTER, ENTER, ESC, ESC, ESC])
+    monkeypatch.setattr(TR, "propose", lambda *a: (None, ()))
+    rig = run(tmp_path, TRADES_MENU + [DOWN, DOWN, DOWN, ENTER, ENTER, ENTER, ENTER, ENTER, ESC, ESC, ESC])
     league = league_of(rig)
     assert any(t.endswith(" say no to that trade. ") for t in spoken(rig)) and league.trades["log"] == []
 
@@ -248,7 +249,7 @@ def test_trades_are_closed_inside_a_game():
 
 def test_the_season_list_names_a_trade_of_the_season(tmp_path, monkeypatch):
     offer_in_week(monkeypatch, teams=(3, 4), picks_a=((5, 3),))
-    rig = run(tmp_path, GAME + [ENTER] + TRADES_MENU + [DOWN, DOWN, DOWN, DOWN, ENTER, ESC, ESC, ESC, ESC])
+    rig = run(tmp_path, GAME + [ENTER] + TRADES_MENU + [DOWN] * 5 + [ENTER, ESC, ESC, ESC, ESC])     # NX-B5: the 6th item
     league = league_of(rig)
     row = league.trades["log"][0]
     line = trade_flow.log_line(league_words(rig), league, row)

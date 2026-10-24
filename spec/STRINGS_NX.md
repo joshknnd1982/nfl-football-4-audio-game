@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2121.
+- Texts: 2139.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 828.
 - Menus and settings (design 10.4, 12): 58.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 644.
+- Franchise (design section 11): 662.
 - The real coaches and players (NX-N, SX.11): 7.
 - The radio broadcast: banter and Ghip (SY.1, rule 0.27): 362.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
@@ -1510,7 +1510,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXF-43 (menu, say5): "trades". F9 Franchise item (SX.8j)
 - NXX-10 (menu, say5): "offers waiting". F9 trades
 - NXX-11 (menu, say5): "offer one of your players". F9 trades: the trade block
-- NXX-12 (menu, say5): "ask for a player". F9 trades
+- NXX-12 (menu, say5): "the league's best at a position". F9 trades: the league's best of a position, every team's in one list (the second way to ask, NX-B5)
 - NXX-13 (menu, say5): "your draft picks". F9 trades
 - NXX-14 (menu, say5): "trades this season". F9 trades
 - NXX-15 (sentence, say5): " trades are closed. they open again in free agency and stay open until the kick-off of week <n> of the next regular season. ". F9 trades outside the window (D-130: open from free agency to the deadline)
@@ -1527,7 +1527,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXX-27 (sentence, say5): " a player traded this season cannot be traded again until the next season. ". F9 trades
 - NXK-14 (sentence, say2): " the draft has 7 rounds. your picks: <list>. ". stage 4 when a trade moved a pick of the player's team (SX.8j)
 - NXK-15 (piece, piece): "round <round> pick <pick>". stage 4: one of the player's picks
-- NXH-41 (help, say5): " Trades: from free agency to the trade deadline, teams swap players of the same position, with picks to even the value; from the draft to week 1 without picks. F9 has trades. ". F6 while the franchise is in use (SX.8j; D-130: the window from free agency to the deadline)
+- NXH-41 (help, say5): " Trades: from free agency to the deadline, players of one position, with picks both ways, none from the draft to week 1. F9, trades: choose a team, a position, a player, then the picks. ". F6 while the franchise is in use (SX.8j; D-130: the window from free agency to the deadline)
 - NWX01 (remark, say2): " the <team> traded <player>, <position>, to the <other>. ". a trade between two other teams (news)
 - NWX02 (remark, say2): " a trade: <player> goes from the <team> to the <other>. ". a trade between two other teams (news)
 - NWX03 (remark, say2): " the <other> got <player>, <position>, from the <team> in a trade. ". a trade between two other teams (news)
@@ -1542,6 +1542,24 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXX-35 (sentence, say5): " in the offseason: the <team> traded <give> to the <other> for <get>. <picks> ". F9 trades: a trade of the offseason (SZ.8), the season's list otherwise says the week
 - NXX-36 (sentence, say5): " from the draft to week 1 a trade is player for player: draft picks can be traded again when the regular season begins. ". F9 trades, your draft picks, after the draft has begun and before week 1 (D-130)
 - NXX-37 (sentence, say5): " trades are closed while the draft is under way and while the roster cut is decided. they open again when it is done. ". F9 trades in the offseason during the draft or the roster cut (D-130)
+- NXX-38 (menu, say5): "ask a team for a player". F9 trades: the team first, then the position and the player (NX-B5)
+- NXX-39 (sentence, say5): " which team do you want to trade with? the letters find a team. ". F9 trades: the list of teams (NX-B5)
+- NXX-40 (sentence, say5): " which position of the <team>? ". F9 trades: the positions of the chosen team (NX-B5)
+- NXX-41 (sentence, say5): " the <group> of the <team>, the best first. ". F9 trades: the chosen team's players of a position (NX-B5)
+- NXX-42 (sentence, say5): " <player>, rating <r>, age <a>, <contract>. ". F9 trades: one player of the chosen team (NX-B5)
+- NXX-43 (sentence, say5): " the <team> have no <group> you can ask for. ". F9 trades: nobody of that position (NX-B5)
+- NXX-44 (sentence, say5): " the <team> want more than that. ". F9 trades: said before NXX-22 when the other team added picks of the player's (NX-B4)
+- NXX-45 (sentence, say5): " the picks. you give <give> for <get>. ". F9 trades: the title of the picks menu of a proposal (NX-B4)
+- NXX-46 (menu, say5): "send the proposal. <picks>". F9 trades: the first item of the picks menu, with the picks so far (NX-B4)
+- NXX-47 (piece, piece): "no picks.". F9 trades: a proposal with no picks (NX-B4)
+- NXX-48 (menu, say5): "add one of your picks". F9 trades: the picks menu (NX-B4)
+- NXX-49 (menu, say5): "ask for one of their picks". F9 trades: the picks menu (NX-B4)
+- NXX-50 (menu, say5): "take a pick out". F9 trades: the picks menu (NX-B4)
+- NXX-51 (sentence, say5): " you ask for <list>. ". F9 trades: a pick of the other team asked for (NX-B4)
+- NXX-52 (sentence, say5): " <list> is taken out of the proposal. ". F9 trades: a pick taken out (NX-B4)
+- NXX-53 (sentence, say5): " there are no picks in the proposal. ". F9 trades: take a pick out with none (NX-B4)
+- NXX-54 (sentence, say5): " a side can add at most <n> picks. ". F9 trades: the limit FR_TRADE_PICKS_MAX (NX-B4)
+- NXX-55 (sentence, say5): " the <team> have no picks of the coming draft to trade. ". F9 trades: the other team has no pick (NX-B4)
 - NXI-10 (sentence, say2): " <player>, <position>, is out with <injury>, <lo> to <hi> weeks. ". a new injury, out, the range (SX.8k)
 - NXI-11 (sentence, say2): " <player>, <position>, is out with <injury>, <n> weeks. ". a new injury, out, the range is one number (SX.8k)
 - NXI-12 (sentence, say2): " <player>, <position>, is out with <injury> for the season. ". a new injury that lasts past week 16 (SX.8k)

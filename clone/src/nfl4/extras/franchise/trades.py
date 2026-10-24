@@ -297,13 +297,14 @@ def execute(league, trade: Trade, week: int, kind: int) -> None:
 
 # ----- the picks that even a trade -----
 
-def cover(gap: int, picks: list, how: str) -> tuple | None:
+def cover(gap: int, picks: list, how: str, limit: int = T.FR_TRADE_PICKS_MAX) -> tuple | None:
     """The picks (of `picks`, the giver's) that give the receiver, valued in the receiver's situation `how`, at least `gap` more: the cheapest single pick that is
-    enough; else the most valuable pick and again for what is left, at most FR_TRADE_PICKS_MAX picks. None when they cannot. () when nothing is needed."""
+    enough; else the most valuable pick and again for what is left, at most `limit` picks (FR_TRADE_PICKS_MAX, less the picks the giver has already put in a
+    proposal, NX-B4). None when they cannot. () when nothing is needed."""
     chosen: list = []
     left = list(picks)
     while gap > 0:
-        if len(chosen) >= T.FR_TRADE_PICKS_MAX or not left:
+        if len(chosen) >= limit or not left:
             return None
         cheapest_first = sorted(left, key=lambda p: (pick_value(p[0], how), -p[0], p[1]))
         enough = [p for p in cheapest_first if pick_value(p[0], how) >= gap]
@@ -456,21 +457,36 @@ def block_offers(league, team: int, player, records: list, week: int) -> list:
 
 
 def ask(league, team: int, give, get, records: list, week: int) -> Trade | None:
-    """The player asks for `get` (another team's player) and offers `give` (his own of the same position): the other team agrees when it gains the margin,
-    asking the player's picks to make it up when it does not (`cover`, valued in its situation). None when it says no."""
+    """The player asks for `get` (another team's player) and offers `give` (his own of the same position), with no picks of his own choosing: `propose`."""
+    return propose(league, team, give, get, (), (), records, week)[0]
+
+
+def propose(league, team: int, give, get, offered: tuple, asked: tuple, records: list, week: int) -> tuple:
+    """The player's proposal (NX-B4, NX-B5): he gives `give` and the picks `offered` (his own), and asks for `get` and the picks `asked` (the other team's).
+    The other team answers by the value rule, as for its own trades: it agrees when it gains the margin of the position; when it does not, it asks for more
+    of the player's picks (`cover`, valued in its situation, never more than FR_TRADE_PICKS_MAX of his picks in all). Returns (the trade it agrees to, or None
+    when it says no; the picks it added to the player's side, () when it took the proposal as it was)."""
+    offered, asked = tuple(sorted(tuple(p) for p in offered)), tuple(sorted(tuple(p) for p in asked))
     if give.pos != get.pos or give.team != team or get.team == team:
-        return None
+        return None, ()
     how = situations(records)
     other = get.team
-    plain = Trade(team, other, give.id, get.id)
-    short = margin_of(get.pos) - gain(league, plain, other, how[other])
-    picks = cover(short, picks_of(league, team), how[other]) if short > 0 else ()
-    if picks is None:
-        return None
-    trade = Trade(team, other, give.id, get.id, picks, ())
-    if problems(league, trade, week) is not None or gain(league, trade, other, how[other]) < margin_of(get.pos):
-        return None
-    return trade
+    trade = Trade(team, other, give.id, get.id, offered, asked)
+    if problems(league, trade, week) is not None:
+        return None, ()
+    margin = margin_of(get.pos)
+    short = margin - gain(league, trade, other, how[other])
+    added: tuple = ()
+    if short > 0:
+        left = [pick for pick in picks_of(league, team) if pick not in offered]
+        extra = cover(short, left, how[other], T.FR_TRADE_PICKS_MAX - len(offered))
+        if extra is None:
+            return None, ()
+        added = extra
+        trade = Trade(team, other, give.id, get.id, tuple(sorted(offered + extra)), asked)
+    if problems(league, trade, week) is not None or gain(league, trade, other, how[other]) < margin:
+        return None, ()
+    return trade, added
 
 
 # ----- the season's end and the whole-file check -----
