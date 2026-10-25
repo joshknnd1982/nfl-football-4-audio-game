@@ -157,4 +157,6 @@ Source: a tester's report the owner made his own, 2026-10-25: "In franchise mode
 - SOURCES: the NFL's terms bar systematic retrieval, so NX-L8's script reads nflverse and Sleeper data (D-154), the official pages are hand-checked samples, and NX-L9's second item (the pull inside the game) is DROPPED; the in-game update only downloads the maintainer's checked file. NX-L1's "official sources, compared with a second source" is met by the hand checks and the web-search settlement of every difference, and the research file says where it does not reach. Owner-needed, not blocking: Q-075.
 - The plan of 21.3 changes in SR.2 only: build update_rosters.py as D-154, tests with saved pages, the full run, differences settled by search, six teams hand-checked against their pages, rosters.txt in the new format (the 22 positions, status, number, depth order, KR and PR) and free_agents.txt; SR.3 settles Q-077.
 
-Status 2026-10-25: REQUIRED, NOT BUILT (D-151). SR.1 DONE (D-152 to D-155). Next: SR.2.
+- OWNER'S AMENDMENT of the same day (D-156): the maintainer's script MAY read the teams' official pages (gently, robots.txt obeyed, a pause between requests, the project's User-Agent, pages not republished, the risk the owner's); they are the official primary source and nflverse and Sleeper the comparison; the player's copy still only downloads the checked file. NX-L1's "official sources, compared with a second source" is met in full again.
+
+Status 2026-10-25: REQUIRED, NOT BUILT (D-151). SR.1 DONE (D-152 to D-156). Next: SR.2.

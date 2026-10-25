@@ -40,6 +40,10 @@ EA's Madden NFL 27 ratings pages (https://www.ea.com/games/madden-nfl/ratings an
 
 Findings that decide the plan: (1) no source is both official, raw, granular and free to read by script: the official pages are the best truth and their terms bar the script; (2) the aggregators (nflverse, Sleeper, ESPN) are all fed from the same few providers, so their agreement is not independent proof; (3) every pair of sources disagrees by a few men a team, so the script's report of differences and a web search per difference (rule 0.8, NX-L1) is the real method.
 
+## 5b. Amendment of the owner (D-156, same day)
+
+After reading section 5 the owner decided that the maintainer's script may read the official team pages ("the nfl won't care" about a free game for a small group of blind players). Section 5's row for the teams' sites is therefore: READ BY THE MAINTAINER'S SCRIPT, gently (robots.txt obeyed, a pause between requests, the project's User-Agent, nothing republished, facts only), the risk being the owner's and the terms clause still standing as quoted; the official pages are the primary source of SR.2, nflverse and Sleeper the comparison, and the reader is the first thing switched off if anyone objects. D-154's other parts stand.
+
 ## 6. Decisions of SR.1 (spec\DECISIONS D-152 to D-155)
 
 - **D-152 The position list.** The game's positions are Madden NFL 27's 22 (section 3): QB, HB, FB, WR, TE, LT, LG, C, RG, RT, LEDG, REDG, DT, SAM, MIKE, WILL, CB, FS, SS, K, P, LS, with KR and PR as depth-chart roles. NX-L2 and playbook 7.23 are corrected (they named LE, RE, LOLB, MLB, ROLB). The file's new position words are these codes; the speech says them in full words (halfback, left tackle, left edge, tackle, strong-side backer, ...), SR.6.
