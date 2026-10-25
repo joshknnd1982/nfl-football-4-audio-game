@@ -42,6 +42,11 @@ A team with three running backs now runs with those three: the game no longer ma
 - How to test: with the N. F. L. rules, play a quick game as the Bears and listen to the running plays: only D'Andre Swift, Kyle Monangai and Roschon Johnson carry the ball. Play a quick game as the Dolphins: Zane Gonzalez kicks.
 - Tell us: a ball carrier, tackler or returner who is not on the team, or a player said at a position he does not play.
 
+### The colour commentator speaks less often
+You said he talks too much. With the N. F. L. rules and the broadcast on, the colour commentator now says about half as many lines in a game: about 15 instead of about 26. He still opens the game, speaks at half time and after the final whistle, and still answers the big moments most of the time.
+- How to test: play a whole game with the N. F. L. rules. He should feel like an occasional voice, not one after almost every play.
+- Tell us: if he is now too quiet, or still too often.
+
 ### An older franchise is brought to the real positions when it is opened
 A franchise saved by an older version is changed once when you open it: every real player gets his real position and number, and a franchise from before 0.16.0 (one quarterback a team) gets its teams' missing real players at once, so the Bears have their backup quarterbacks. The old file is kept as `league.sav.before-format-18` in the franchise folder. Who starts in your games does not change yet.
 - How to test: open a franchise you saved with 0.15.0 or older, then F9, Franchise, your roster: your backup quarterbacks are there. The franchise folder (in your files, `franchise`) has `league.sav.before-format-18`.

@@ -39,3 +39,9 @@ Status 2026-10-25: NX-L1, NX-L2 (the data), NX-L8 BUILT; NX-L3 to NX-L7, NX-L9 D
 - Tests: tests\test_real_roster_sr4.py (14); 21 older pins moved, each with its reason (format 18, the view's covers, the returner on top of a place, the real roster for the player's own team; the bench tests run on the older shape of the names).
 
 Status 2026-10-25: NX-L1, NX-L2, NX-L8 BUILT; NX-L3, NX-L4, NX-L7 BUILT (SR.4, with the bridge); NX-L5 IN PART (the quick game and a new franchise; the blocks in SR.5); NX-L11 DATA BUILT (menus SR.6); NX-L6, NX-L9 DESIGNED, NOT BUILT; NX-L10 REQUIRED. Next: SR.5.
+
+### 21.9 Owner requirement of 2026-10-25 (c): real NFL surnames for made-up players (NX-L12, D-163)
+
+The owner, answering Q-016: "claude must research the last names of real nfl players and use those."
+- **NX-L12 Real surnames.** With the N. F. L. rules every made-up player (later draft classes, the undrafted, stand-ins, squad top-ups, a quick game's last-resort name) takes the last name of a real NFL player: researched (rule 0.19, facts only, sources and date recorded) from the game's real rosters and a larger public table of NFL players (nflverse's players table, CC BY 4.0), a first name from the game's own first-name list, never a full name a real man of the league has (no made-up man is taken for a real one). A customizable file with the healing and refresh path of the other name files; `update_rosters.py` refreshes it. Classic keeps Jim Kitchen's 1,708 surnames (its golden transcript). Done when: a test makes 20 seasons of draft classes in the N. F. L. rules and finds every made-up surname in the researched list and no full name equal to a real player's; Classic's draws and names unchanged.
+- Session: SR.5 (the draft classes and the undrafted are made again there).

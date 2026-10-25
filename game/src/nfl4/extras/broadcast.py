@@ -33,11 +33,14 @@ from . import remarks
 log = logging.getLogger("nfl4.extras")
 
 # The chance in percent of Ghip at each kind of moment (his pool), and how often the announcer turns to him first.
-CHANCE = {"CKO": 100, "CTD": 85, "CFG": 55, "CFM": 70, "CTV": 80, "CBG": 60, "CSK": 40, "CTC": 15, "CTS": 15, "CFD": 70, "CRZ": 35, "CPN": 30,
-          "CTM": 75, "CQE": 60, "CHT": 100, "CFN": 100, "CFT": 100, "CTT": 60, "CBO": 50}
-ASK_CHANCE = 40
+# The owner, 2026-10-25 (Q-043): "Talks too much". Measured 26.5 lines a game (work\sr4\ghip_rate.py, 12 games); the ordinary moments' chances,
+# the gap and the announcer's turn to him were lowered to about half that (the kick-off, half time and the final whistle stay). Was: CTD 85, CFG 55,
+# CFM 70, CTV 80, CBG 60, CSK 40, CTC 15, CTS 15, CFD 70, CRZ 35, CPN 30, CTM 75, CQE 60, CTT 60, CBO 50; ASK_CHANCE 40; MIN_GAP 2.
+CHANCE = {"CKO": 100, "CTD": 60, "CFG": 30, "CFM": 40, "CTV": 45, "CBG": 30, "CSK": 20, "CTC": 8, "CTS": 8, "CFD": 40, "CRZ": 15, "CPN": 15,
+          "CTM": 45, "CQE": 35, "CHT": 100, "CFN": 100, "CFT": 100, "CTT": 35, "CBO": 25}
+ASK_CHANCE = 25
 MAJOR = frozenset(("CKO", "CTD", "CHT", "CFN", "CFT"))        # these never wait for the gap below
-MIN_GAP = 2                                                    # plays between two ordinary lines of Ghip
+MIN_GAP = 4                                                    # plays between two ordinary lines of Ghip
 BIG_GAIN = 20                                                  # yards: CBG
 CLOSE_MARGIN, DECIDED_MARGIN = 3, 21                           # CTT in the fourth quarter, CBO in the second half
 SEED_MIX = 0x6B1B_0C0F                                         # the broadcast's seed is the game's seed mixed with this
