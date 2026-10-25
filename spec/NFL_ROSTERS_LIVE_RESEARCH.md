@@ -92,3 +92,7 @@ The Bears', Dolphins', Ravens', Falcons', Rams' and Cowboys' roster pages were r
 ### 9.5 Not done in SR.2, said plainly
 
 The 3-4 calls (Q-077) and which side an unnamed lineman takes are still D-153's defaults, UNVERIFIED; the Franchise still stores the original's places (SR.3, SR.4); nobody has heard 0.16.2 (no build); the hand check covers six teams, the other 26 rest on the script and the two comparisons; no lawyer has read any source's terms.
+
+## 10. SR.3: the 3-4 calls checked against EA's own saved pages (2026-10-25; Q-077, D-159)
+
+`work\sr3\ea_positions_3_4.py` read the two EA pages SR.1 saved raw (`work\pr\raw\ea_ratings.html`, `ea_pos_wr.html`; EA's robots.txt reserves text and data mining, so no new request was made) and found 187 players with a position, 28 of the front seven. All 28 are in rosters.txt of 2026-10-25 in the same family as EA has them (3-4 ends Cameron Heyward, Leonard Williams, Quinnen Williams and Dexter Lawrence II as DT; 3-4 outside backers T.J. Watt, Nik Bonitto and Micah Parsons as edge men; inside backers as MIKE or WILL); 24 have the same code; Nick Bosa and Brian Burns differ by side, Zack Baun and Demario Davis by MIKE and WILL. The groups of D-153 are therefore SRC-OFFICIAL, the sides and the inside backer's role SRC-SECONDARY (design 21.2). Report: `work\sr3\ea_positions_report.txt`. The counts that shaped the design (positions, places short, namesakes): `work\sr3\view_counts_report.txt`.
