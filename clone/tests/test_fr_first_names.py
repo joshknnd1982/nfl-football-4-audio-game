@@ -142,7 +142,7 @@ def test_a_format_12_league_gets_first_names_once_and_the_players_own_team_keeps
     assert all(made_up(loaded, p.name) for p in S.pool(loaded))
     again = LeagueRecord.from_json(loaded.to_json())                                    # format 13 now: nothing more changes
     assert [p.name for p in again.players.values()] == [p.name for p in loaded.players.values()]
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 16
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 17
 
 
 def test_a_one_word_name_the_player_gave_in_a_format_13_league_is_never_changed():

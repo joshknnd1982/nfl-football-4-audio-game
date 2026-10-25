@@ -35,7 +35,7 @@ def check_name(league, player, name: str):
     key = name.strip().casefold()
     if key == player.name.strip().casefold():
         return "NXU-43"
-    taken = {p.name.strip().casefold() for p in league.players.values() if p.status == "active" and p.id != player.id}
+    taken = {p.name.strip().casefold() for p in league.players.values() if p.status in ("active", "reserve") and p.id != player.id}
     if league.draft is not None:                          # the class of a draft in progress keeps its names too (design 7.4: no duplicate while names are free)
         taken |= {row[1].strip().casefold() for row in league.draft["class"]}
     if key in taken:

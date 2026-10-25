@@ -24,7 +24,9 @@ from . import first_names as FN
 log = logging.getLogger("nfl4.extras")
 
 SEASON, OFFSEASON, DRAFT = "season", "offseason", "draft"
-STATUSES = ("active", "retired", "released", "free", "practice")      # D-136: "practice", a player of a practice squad (practice.py)      # SX.8h: "free", a player whose contract ended and who was not signed again
+STATUSES = ("active", "retired", "released", "free", "practice", "reserve")      # D-149 (NX-B2b): "reserve", a player of a team's bench (reserves.py)
+ON_TEAM = ("active", "reserve")      # a player of a team's 53: one of its 34 places (or a rookie waiting for the cut), or its bench
+# D-136: "practice", a player of a practice squad (practice.py)      # SX.8h: "free", a player whose contract ended and who was not signed again
 
 
 class LeagueError(ValueError):
@@ -119,6 +121,10 @@ class LeagueRecord:
     depth: dict = field(default_factory=lambda: {"order": {}, "key": {}})   # NX-D3, NX-D4, format 16: the player's depth chart and key players (depth.py)
     calendar: dict | None = None                       # SZ.8, format 12: {"label": str, "weeks": [[[visitor, home], ...], ...]} the real calendar of this season; None: the original's 16 weeks
     cut_deciding: bool = field(default=False, repr=False, compare=False)   # D-130: the roster cut's plans are made and not yet applied (never saved)
+    # D-149 (NX-B2b): the league carries the 53-man roster, a bench of up to 19 a team (reserves.py): the program's store sets it on every league it opens or
+    # makes, so a league of format 16 or older carries benches from its next cut; never saved. False (the older tests' leagues, made without the store): the
+    # cut releases every man over the 34 places and the cap is FR_CAP, as before.
+    reserves_on: bool = field(default=False, repr=False, compare=False)
 
     # ----- the calendar (SZ.8) -----
 
@@ -167,6 +173,13 @@ class LeagueRecord:
     def group_of(self, team: int, position: str) -> list:
         """The players of one position group, in place order (None for an empty place)."""
         return [self.player_at(team, i) for i in D.PLACES_OF[position]]
+
+    def bench(self, team: int, position: str | None = None) -> list:
+        """D-149: the team's bench (status "reserve"), of one position or all, each group the best first (rating, then the lower ID), the groups in
+        D.BENCH_ORDER."""
+        order = {pos: n for n, pos in enumerate(D.BENCH_ORDER)}
+        return sorted((p for p in self.players.values() if p.status == "reserve" and p.team == team and (position is None or p.pos == position)),
+                      key=lambda p: (order.get(p.pos, 99), -p.rating, p.id))
 
     def strength_sum(self, team: int) -> int:
         """The weighted sum of the 34 ratings (design 4.4); an empty place counts as the lowest rating."""
@@ -443,8 +456,10 @@ class LeagueRecord:
                 raise LeagueError("player ID %r is out of order" % (p.id,))
             if not isinstance(p.name, str) or not 1 <= len(p.name) <= 40 or any(ord(c) < 32 for c in p.name):
                 raise LeagueError("player %d has the name %r" % (p.id, p.name))
-            if p.pos not in D.POSITIONS or p.potential not in D.POTENTIALS or p.status not in STATUSES:
+            if p.pos not in D.ALL_POSITIONS or p.potential not in D.POTENTIALS or p.status not in STATUSES:
                 raise LeagueError("player %d has position %r, potential %r, status %r" % (p.id, p.pos, p.potential, p.status))
+            if p.pos in D.RESERVE_POSITIONS and p.status in ("active", "practice"):      # D-149: a lineman or a snapper is on a bench, never in a place
+                raise LeagueError("player %d is a %s with status %s" % (p.id, p.pos, p.status))
             whole(p.rating, D.RATING_MIN, D.RATING_MAX, "the rating of player %d" % p.id)
             whole(p.peak, D.RATING_MIN, D.RATING_MAX, "the peak of player %d" % p.id)
             whole(p.age, D.AGE_MIN, D.AGE_MAX, "the age of player %d" % p.id)
@@ -482,6 +497,8 @@ class LeagueRecord:
         for pid, player in self.players.items():
             if (player.status == "active") != (pid in placed or pid in waiting):
                 raise LeagueError("player %d is %s but %s" % (pid, player.status, "placed" if pid in placed else "not placed"))
+        from . import reserves
+        reserves.check(self, whole)                        # D-149: the benches
 
     def _check_history(self, whole) -> None:
         if not isinstance(self.history, list) or len(self.history) > D.MAX_HISTORY:
@@ -607,6 +624,10 @@ def draw_name(rnd, surnames: list, used: set) -> str:
                 return number
         return 1
 
+    if used.issuperset(surnames):
+        # D-149: a league of 53-man rosters can hold more made-up men than the pool has surnames. Every redraw would fail (10,000 draws, then the
+        # first of the pool): one draw gives a surname in use, as the fallback does, without the wasted draws. A league of 34 places never gets here.
+        return surnames[rnd(len(surnames)) - 1]
     number = rnd.redraw(lambda: rnd(len(surnames)), lambda n: surnames[n - 1] not in used, scan, "a franchise player's name")
     return surnames[number - 1]
 

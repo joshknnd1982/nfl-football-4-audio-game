@@ -477,3 +477,7 @@
 - NWJ01 (remark, say2): " the <team> will be without <player>, their <position>, for up to <n> weeks. ". another team's injury (news)
 - NWJ02 (remark, say2): " bad news for the <team>: <player> is out for up to <n> weeks. ". another team's injury (news)
 - NWJ03 (remark, say2): " <player> of the <team> is hurt and will miss up to <n> weeks. ". another team's injury (news)
+- NWJ04 (remark, say2): " an injury report from the <team>: their <position> <player> is out for up to <n> weeks. ". another team's injury (news)
+- NXI-01 (sentence, say2): " the injury report. ". before the week's injury report of the player's team (SX.8k, INJ-4)
+- NXI-A01 (answer, say2): "play him". an answer of the injury item (the staff's recommendation for a questionable player)
+- NXI-A02 (answer, say2): "rest him". an answer of the injury item (the staff's for a doubtful player, and the do-nothing answer)

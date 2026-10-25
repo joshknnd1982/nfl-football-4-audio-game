@@ -1,6 +1,3 @@
-- NXZ-R31 (help, say5): " Six linemen and two linebackers fill the line. Strong against runs near the goal line; weak against passes. ". description of D031 Goal Line Six Two (NX-P8; heard with D)
-- NXZ-R32 (help, say5): " Five linemen and three linebackers fill the line. Strong against runs near the goal line; weak against passes. ". description of D032 Goal Line Five Three (NX-P8; heard with D)
-- NXZ-R33 (help, say5): " Four linemen and four linebackers crowd the line. Strong against runs for a yard or two; weak against passes. ". description of D033 Short Yardage Four Four (NX-P8; heard with D)
 - NXZ-R34 (help, say5): " Defenders cover each receiver man for man while others rush. Strong against passes near the goal line; weak against runs. ". description of D034 Goal Line Man (NX-P8; heard with D)
 - NXZ-R04 (help, say5): " The normal defense with four linemen, three linebackers and four defensive backs, each stopping part of the line. Strong against runs; weak against play action passes. ". description of D004 Base Run Fit (NX-P8; heard with D)
 - NXZ-R06 (help, say5): " Defenders squeeze inward to stop runs up the middle and force the runner toward the sideline. Strong against runs; weak against bootlegs. ". description of D006 Inside Run Force (NX-P8; heard with D)

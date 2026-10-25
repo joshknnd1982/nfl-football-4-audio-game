@@ -49,7 +49,7 @@ def closed_reason(g, league) -> str | None:
 
 
 def cap_room(league) -> int:
-    return T.FR_CAP - CT.cap_used(league, league.team)
+    return CT.cap_of(league) - CT.cap_used(league, league.team)
 
 
 # ----- F9, franchise, free agents -----

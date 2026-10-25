@@ -59,11 +59,18 @@ def filled(league, team: int, position: str) -> int:
     return sum(1 for i in D.PLACES_OF[position] if roster[i])
 
 
-def open_places(league, team: int) -> list:
-    """The positions with empty places and how many, in the roster menu's order: [(position, count)]."""
+def ready_bench(league, team: int, position: str) -> int:
+    """D-149: the men of the team's bench of the position rated FR_FA_MIN_RATING or more: the cut will put them in the group's empty places, so the staff
+    does not chase a free agent for those (a weaker bench man does not stop it)."""
+    return sum(1 for p in league.bench(team, position) if p.rating >= T.FR_FA_MIN_RATING)
+
+
+def open_places(league, team: int, staff: bool = True) -> list:
+    """The positions with empty places and how many, in the roster menu's order: [(position, count)]; D-149: for the staff (the computer's teams), less the
+    bench men ready to take them (the player's own offers, `staff=False`, see every empty place: who moves up is his choice)."""
     out = []
     for position in D.ROSTER_ORDER:
-        free = D.GROUP_SIZE[position] - filled(league, team, position)
+        free = D.GROUP_SIZE[position] - filled(league, team, position) - (ready_bench(league, team, position) if staff else 0)
         if free > 0:
             out.append((position, free))
     return out
@@ -186,18 +193,17 @@ class Round:
 
 
 def can_sign(league, bid: Bid) -> bool:
-    """The team still has an empty place at his position and the room under the cap for his salary."""
+    """The team still has an empty place at his position, or room on its bench (D-149), and the room under the cap for his salary."""
+    from . import reserves
     player = league.players[bid.player]
-    return (player.status == "free" and filled(league, bid.team, player.pos) < D.GROUP_SIZE[player.pos]
+    return (player.status == "free" and reserves.can_join(league, bid.team, player.pos)
             and bid.salary <= room(league, bid.team))
 
 
 def sign(league, player, bid: Bid) -> None:
-    """The free agent joins the team in its first empty place of his position, on the contract of the offer."""
-    roster = league.rosters[bid.team - 1]
-    index = next(i for i in D.PLACES_OF[player.pos] if not roster[i])
-    roster[index] = player.id
-    player.status, player.team, player.place, player.left, player.points = "active", bid.team, index, 0, 0
+    """The free agent joins the team in its first empty place of his position, else on its bench (D-149), on the contract of the offer."""
+    from . import reserves
+    reserves.join(league, bid.team, player)
     CT.sign(player, bid.salary, bid.years)
 
 

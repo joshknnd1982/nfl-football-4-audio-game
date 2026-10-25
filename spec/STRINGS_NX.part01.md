@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2197.
+- Texts: 2208.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -16,7 +16,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Playbooks (design section 10): 828.
 - Menus and settings (design 10.4, 12): 108.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 669.
+- Franchise (design section 11): 680.
 - The real coaches and players (NX-N, SX.11): 7.
 - The radio broadcast: banter and Ghip (SY.1, rule 0.27): 363.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
@@ -508,3 +508,5 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXZ-67 (menu, say5): "Cover Three Sky". defense call D067 of the catalog (call, list dg07, SRC-SECONDARY)
 - NXZ-68 (menu, say5): "Cover Three Cloud". defense call D068 of the catalog (call, list dg07, SRC-SECONDARY)
 - NXZ-69 (menu, say5): "Cover Three Buzz". defense call D069 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-70 (menu, say5): "Cover Three Match". defense call D070 of the catalog (call, list dg07, SRC-SECONDARY)
+- NXZ-71 (menu, say5): "Drop Eight". defense call D071 of the catalog (call, list dg07, SRC-SECONDARY)

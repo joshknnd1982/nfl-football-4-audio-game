@@ -291,7 +291,8 @@ FR_RETIRE_PER_YEAR = 110          # per mille of retirement chance for each year
 FR_RETIRE_PER_POINT = 6           # per mille taken off for each rating point over 70 (and put on for each under it)
 # Progression and regression (stage 3): change = base(position, age, potential) + below(5) - 2 + the development points.
 FR_PEAK = {"RB": (24, 28), "WR": (25, 29), "QB": (24, 30), "DL": (25, 29), "LB": (25, 29), "CB": (25, 28), "S": (25, 29),
-           "RET": (24, 28), "K": (24, 34), "P": (24, 34)}     # the first and the last age of a group's peak window
+           "RET": (24, 28), "K": (24, 34), "P": (24, 34),
+           "OL": (25, 30), "LS": (24, 36)}                    # the first and the last age of a group's peak window (OL, LS: NX-B2b, D-149, the bench only; UNVERIFIED)
 #                                 (design start values: RB 24-27, QB 26-32, RET 24-27, K and P 26-34; see the history below)
 FR_GROWTH = (4, 2, 1)             # before the window, by potential (high, average, low) (design start value (5, 3, 1))
 # FR_IN_WINDOW and FR_PROGRESS_NOISE are design RULES (6.2 gives them no start-value mark), not calibration knobs; FR_DECLINE is a start value
@@ -439,8 +440,18 @@ FR_MAX_SALARY = 280               # 28 million: about 14.5 percent of the cap, t
 # The pay of a position follows, roughly, how much it matters (design 4.4's weights): the quarterback most (two and a half times a lineman, three
 # times a receiver), the kicker, the punter and the returners least (the NFL pays a kicker far less than a back, so the kicker is paid less than his
 # weight of 4 suggests).
-FR_PAY = {"QB": 300, "RB": 90, "WR": 100, "DL": 120, "LB": 100, "CB": 100, "S": 80, "RET": 40, "K": 50, "P": 40}
+FR_PAY = {"QB": 300, "RB": 90, "WR": 100, "DL": 120, "LB": 100, "CB": 100, "S": 80, "RET": 40, "K": 50, "P": 40,
+          "OL": 60, "LS": 20}     # NX-B2b (D-149): a lineman and a snapper play no place of the game, so they are paid as backups (UNVERIFIED first values)
 FR_PAY_DIVISOR = 2400
+# THE BENCH (NX-B2b, D-149, Q-072): a team of 53 pays 19 more men than the 34 places. FR_CAP stays the cap of the 34 places (the 34/53 share of the
+# NFL's 301.2 million); a league that carries benches (reserves.py) plays under FR_CAP + FR_CAP_RESERVES (contracts.cap_of), the bench's payroll at the
+# market prices of a new franchise of the real 53 (measured by work/nxb2b/measure_bench_cap.py), so the money the places had is the same as before.
+FR_CAP_RESERVES = 540             # 54.0 million: the bench payroll's mean of 320 teams (10 new leagues), 53.4 million, up to the next tenth of 10
+#                                   (range 33.4 to 88.4; a team over FR_CAP + this at the start has its salaries over the minimum lowered, contracts.fit_to_cap)
+# A bench player of a new franchise of the real 53 has no real rating (facts only): a hash gives it, below the team's places of his position
+# (the first man of a group's bench 1 to 4 under its weakest place, each next man 1 or 2 lower) or, for the line and the snapper, from this range.
+FR_RESERVE_RATING = (56, 10)      # OL and LS: 56 to 65 (UNVERIFIED first values, the fill's rookies are 45 to 55)
+FR_RESERVE_AGE = (23, 9)          # 23 to 31
 # A drafted rookie's salary is fixed by his pick (research B3: the NFL's wage scale is unknown, so the league invents one that keeps its
 # shape: the first pick earns about three times the 32nd, who earns about three times the last): straight lines between these (pick, salary)
 # points. Four years for a drafted rookie, three for an undrafted one (the fill of the roster cut); a rookie contract has no fifth-year

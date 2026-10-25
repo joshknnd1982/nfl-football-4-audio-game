@@ -72,7 +72,7 @@ def make_class(league: LeagueRecord, rnd, surnames: list, comp_count: int = 0) -
     `below(100)`, the age `below(3)` and the scouting offset `below(7)`. Nothing of the league is changed."""
     weights = T.FR_CLASS_WEIGHTS
     total = sum(weight for _, weight in weights)
-    used = FN.name_keys(league.league_id, (player.name for player in league.players.values() if player.status == "active"))   # D-131
+    used = FN.name_keys(league.league_id, (player.name for player in league.players.values() if player.status in ("active", "reserve")))   # D-131, D-149
     base, span = T.FR_ROOKIE_RATING
     high, average = T.FR_ROOKIE_POTENTIAL_SHARES
     age_base, age_span = T.FR_ROOKIE_AGE
@@ -364,10 +364,10 @@ def waiting_by_team(league: LeagueRecord) -> dict:
 
 
 def group_players(league: LeagueRecord, team: int, position: str, waiting: dict) -> list:
-    """The team's players of one group: those in its places and the rookies waiting for it."""
+    """The team's players of one group: those in its places, the rookies waiting for it and (D-149) the men of its bench."""
     roster = league.rosters[team - 1]
     players = [league.players[roster[i]] for i in D.PLACES_OF[position] if roster[i]]
-    return players + [w for w in waiting.get(team, ()) if w.pos == position]
+    return players + [w for w in waiting.get(team, ()) if w.pos == position] + league.bench(team, position)
 
 
 def surplus(league: LeagueRecord, team: int, waiting: dict) -> dict:
@@ -396,7 +396,10 @@ def floor_releases(kept: list, position: str) -> list:
 
 def plan_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
     """The players the staff releases from the team: in each group (in the roster menu's order) the surplus, the worst to keep first,
-    then the players of a small group who are under the floor."""
+    then the players of a small group who are under the floor. A league that carries benches (D-149) keeps the surplus on the bench: see `plan_bench_cut`."""
+    from . import reserves
+    if reserves.on(league):
+        return plan_bench_cut(league, team, waiting)
     released = []
     for position in D.ROSTER_ORDER:
         players = group_players(league, team, position, waiting)
@@ -405,6 +408,32 @@ def plan_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
         gone = {player.id for player in cut}
         released += cut + floor_releases([player for player in players if player.id not in gone], position)
     return released
+
+
+def bench_candidates(league: LeagueRecord, team: int, waiting: dict) -> tuple:
+    """D-149: (the men over the places of their groups, who are the bench's candidates; the floor's releases of the small groups). The men a group keeps for
+    its places are its best by `keep_order`; the line and the snapper are all candidates."""
+    surplus, floor = [], []
+    for position in D.ROSTER_ORDER:
+        players = keep_order(group_players(league, team, position, waiting))
+        size = D.GROUP_SIZE[position]
+        kept = players[:size]
+        floor += floor_releases(kept, position)
+        surplus += players[size:]
+    for position in D.RESERVE_POSITIONS:
+        surplus += group_players(league, team, position, waiting)
+    return surplus, floor
+
+
+def plan_bench_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
+    """D-149 (NX-B2b): the cut of a league that carries benches keeps 53: each group's places as before (the floor of the small groups too), then the bench,
+    `reserves.bench_order` of the men over the places (a backup quarterback, the long snapper and five linemen first, then one backup of each group, then by
+    the keep value) up to `reserves.MAX`; the rest are released, the worst to keep first."""
+    from . import reserves
+    surplus, floor = bench_candidates(league, team, waiting)
+    bench = reserves.bench_order(surplus, keep_order)
+    room = reserves.MAX - reserves.line_missing(surplus)          # room is kept for the snapper and the linemen the bench lacks (reserves.fill_line)
+    return release_order(bench[room:]) + floor
 
 
 def staff_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
@@ -419,16 +448,26 @@ def apply_cut(league: LeagueRecord, releases: dict, waiting: dict) -> int:
     dead money of their contracts charged to the team: SX.8g); the rest of each group take its places best first, the rookies among
     them (their true rating is known now); a group with fewer players than places keeps its empty places last. Returns the number
     released."""
+    from . import reserves
+    from .depth import player_order
     count = 0
+    benches = reserves.on(league)
     for team in range(1, D.TEAMS + 1):
         gone = {player.id for player in releases.get(team, ())}
         roster = league.rosters[team - 1]
-        for position in D.POSITIONS:
+        for position in (D.ALL_POSITIONS if benches else D.POSITIONS):
             places = D.PLACES_OF[position]
             players = group_players(league, team, position, waiting)
             kept = sorted((p for p in players if p.id not in gone), key=lambda p: (-p.rating, p.id))
-            if len(kept) > len(places):
+            if team == league.team:
+                kept = player_order(league, position, kept)              # NX-D3: the men the player put first keep their places
+            if len(kept) > len(places) and not benches:
                 raise ValueError("the %s group of team %d keeps %d players for %d places" % (position, team, len(kept), len(places)))
+            for player in kept[len(places):]:
+                player.status, player.place = reserves.STATUS, -1         # D-149: the men over the places are on the bench
+            kept = kept[:len(places)]
+            for player in kept:
+                player.status = "active"
             for player in players:
                 if player.id in gone:
                     if contracts.released_free(player):

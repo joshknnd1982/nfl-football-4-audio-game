@@ -26,12 +26,18 @@ from .league import LeagueRecord, Player, draw_name
 
 
 def league_order(league: LeagueRecord):
-    """The active players, team 1 to 32 and each team's places in order."""
+    """The active players, team 1 to 32 and each team's places in order, then (D-149) the team's bench by player ID (a league with no bench draws
+    exactly as before)."""
     players = league.players
-    for roster in league.rosters:
+    bench: dict = {}
+    for player in players.values():
+        if player.status == "reserve":
+            bench.setdefault(player.team, []).append(player)
+    for team, roster in enumerate(league.rosters, start=1):
         for pid in roster:
             if pid:
                 yield players[pid]
+        yield from sorted(bench.get(team, ()), key=lambda p: p.id)
 
 
 def aged(player: Player) -> int:
@@ -93,7 +99,8 @@ def apply_aging(league: LeagueRecord, retiring: list) -> None:
         player.age = aged(player)
         player.seasons = min(99, player.seasons + 1)
     for player in retiring:
-        league.rosters[player.team - 1][player.place] = 0
+        if player.place >= 0:                                # (a bench man has no place, D-149)
+            league.rosters[player.team - 1][player.place] = 0
         player.status, player.left, player.place, player.points = "retired", league.season, -1, 0     # points are of no use now
         contracts.leave(player)
     contracts.turn_the_year(league)
@@ -174,7 +181,7 @@ def fill_places(league: LeagueRecord, rnd, surnames: list) -> int:
     """The fill of the roster cut (design 7.6, stage 5): every empty place gets an undrafted rookie, in team order and place order,
     the name, the rating, the potential as design 12 item 6 draws them for the fill. Returns how many. The places are then put in
     rating order. (SX.8c used it as a stand-in at the end of stage 3, before the draft existed.)"""
-    used = FN.name_keys(league.league_id, (player.name for player in league.players.values() if player.status == "active"))   # D-131
+    used = FN.name_keys(league.league_id, (player.name for player in league.players.values() if player.status in ("active", "reserve")))   # D-131, D-149
     high, average = T.FR_ROOKIE_POTENTIAL_SHARES
     count = 0
     for team in range(1, D.TEAMS + 1):
@@ -206,7 +213,7 @@ def drop_the_unkept(league: LeagueRecord) -> int:
     from . import honors
     kept = honors.keeps(league)
     gone = [pid for pid, p in league.players.items()
-            if p.status not in ("active", "practice") and p.team != league.team and p.peak < D.STAR_PEAK and pid not in kept]   # D-136: the squads stay
+            if p.status not in ("active", "practice", "reserve") and p.team != league.team and p.peak < D.STAR_PEAK and pid not in kept]   # D-136: the squads stay
     for pid in gone:
         del league.players[pid]
     return len(gone)

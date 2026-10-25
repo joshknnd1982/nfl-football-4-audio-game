@@ -1,5 +1,3 @@
-- NXZ-70 (menu, say5): "Cover Three Match". defense call D070 of the catalog (call, list dg07, SRC-SECONDARY)
-- NXZ-71 (menu, say5): "Drop Eight". defense call D071 of the catalog (call, list dg07, SRC-SECONDARY)
 - NXZ-72 (menu, say5): "Cover One Robber". defense call D072 of the catalog (call, list dg08, SRC-SECONDARY)
 - NXZ-73 (menu, say5): "Two Man". defense call D073 of the catalog (call, list dg08, SRC-SECONDARY)
 - NXZ-74 (menu, say5): "Off Man". defense call D074 of the catalog (call, list dg08, SRC-SECONDARY)
@@ -315,3 +313,6 @@
 - NXZ-R01 (help, say5): " Eight defenders crowd the line and the rest cover man for man with no deep help. Strong against runs near the goal line; a pass over their heads can score. ". description of D001 Goal Line Eight Up (NX-P8; heard with D)
 - NXZ-R02 (help, say5): " A packed line with five rushers. Strong against runs near the goal line; weak against play action passes. ". description of D002 Goal Line Stack (NX-P8; heard with D)
 - NXZ-R03 (help, say5): " Eight defenders close to the line, with extra rushers coming. Strong against runs; weak against screens. ". description of D003 Bear Front (NX-P8; heard with D)
+- NXZ-R31 (help, say5): " Six linemen and two linebackers fill the line. Strong against runs near the goal line; weak against passes. ". description of D031 Goal Line Six Two (NX-P8; heard with D)
+- NXZ-R32 (help, say5): " Five linemen and three linebackers fill the line. Strong against runs near the goal line; weak against passes. ". description of D032 Goal Line Five Three (NX-P8; heard with D)
+- NXZ-R33 (help, say5): " Four linemen and four linebackers crowd the line. Strong against runs for a yard or two; weak against passes. ". description of D033 Short Yardage Four Four (NX-P8; heard with D)

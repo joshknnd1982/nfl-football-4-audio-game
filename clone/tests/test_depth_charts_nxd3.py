@@ -185,7 +185,7 @@ def test_the_league_file_keeps_the_depth_chart_and_checks_it():
     FD.set_key(record, "redzone", "receiver", record.player_at(BILLS, D.PLACES_OF["WR"][3]).id)
     FD.put_first(record, "WR", record.player_at(BILLS, D.PLACES_OF["WR"][2]).id)
     data = json.loads(record.to_json())
-    assert data["format"] == 16 == D.FORMAT and data["depth"]["key"]["redzone"]["receiver"] == record.player_at(BILLS, D.PLACES_OF["WR"][3]).id
+    assert data["format"] == 17 == D.FORMAT and data["depth"]["key"]["redzone"]["receiver"] == record.player_at(BILLS, D.PLACES_OF["WR"][3]).id
     whole = lambda value, lo, hi, what: None if isinstance(value, int) and lo <= value <= hi else (_ for _ in ()).throw(LeagueError(what))  # noqa: E731
     FD.check(record, whole)
     record.depth["key"]["nowhere"] = {}

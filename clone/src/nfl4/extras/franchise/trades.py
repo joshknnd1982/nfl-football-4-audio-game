@@ -249,7 +249,8 @@ def problems(league, trade: Trade, week: int) -> str | None:
         return "the teams"
     pa, pb = league.players.get(trade.give_a), league.players.get(trade.give_b)
     for player, team in ((pa, trade.a), (pb, trade.b)):
-        if player is None or player.status != "active" or player.team != team or player.place < 0:
+        if (player is None or player.status not in ("active", "reserve") or player.team != team
+                or (player.status == "active" and player.place < 0)):          # D-149: a man of the bench may be traded; a rookie waiting for the cut not
             return "a player who is not on his team"
     if pa.pos != pb.pos:
         return "players of different positions"
@@ -268,7 +269,7 @@ def problems(league, trade: Trade, week: int) -> str | None:
         if any(tuple(pick) not in owned for pick in picks):
             return "a pick the team does not own"
     for team in (trade.a, trade.b):
-        if cap_after(league, trade, team) > T.FR_CAP:
+        if cap_after(league, trade, team) > CT.cap_of(league):
             return "over the cap"
     return None
 
@@ -278,11 +279,11 @@ def execute(league, trade: Trade, week: int, kind: int) -> None:
     season's log and the teams' strengths for the computer's games are brought up to date (design 5.2: the computer's results follow the rosters as they
     are). The caller has checked `problems` and writes league.sav."""
     pa, pb = league.players[trade.give_a], league.players[trade.give_b]
-    index_a, index_b = pa.place, pb.place
-    league.rosters[trade.a - 1][index_a] = pb.id
-    league.rosters[trade.b - 1][index_b] = pa.id
-    pa.team, pa.place = trade.b, index_b
-    pb.team, pb.place = trade.a, index_a
+    slot_a, slot_b = (pa.status, pa.place), (pb.status, pb.place)          # D-149: each man takes the other's slot, a place or a spot on the bench
+    for player, team, (status, index) in ((pb, trade.a, slot_a), (pa, trade.b, slot_b)):
+        player.team, player.status, player.place = team, status, index
+        if index >= 0:
+            league.rosters[team - 1][index] = player.id
     for pick in trade.picks_a:
         move_pick(league, pick, trade.b)
     for pick in trade.picks_b:
@@ -335,8 +336,11 @@ def build(league, a: int, b: int, give_a, give_b, how: dict) -> Trade | None:
     return trade
 
 
-def group(league, team: int, position: str) -> list:
-    return [p for p in league.group_of(team, position) if p is not None]
+def group(league, team: int, position: str, bench: bool = False) -> list:
+    """The team's men of the position in its places; with `bench` (the player's own trades, D-149) then the men of its bench. The computer's own search
+    looks at the places only, as before."""
+    out = [p for p in league.group_of(team, position) if p is not None]
+    return out + league.bench(team, position) if bench else out
 
 
 def rotation(season: int, week: int) -> list:

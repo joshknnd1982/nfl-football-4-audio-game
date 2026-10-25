@@ -6,7 +6,7 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 16                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 17                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
@@ -31,6 +31,9 @@ FORMAT = 16                                  # league.sav's format; a higher one
 #                                                format 14 or older has no choice (the staff's next man up, as before)
 #                                              16 (2026-10-24, D-147, NX-D3 and NX-D4) the player's depth chart and his players for the key downs and moments
 #                                                (`LeagueRecord.depth`); a file of format 15 or older has none (the staff's order, the starters)
+#                                              17 (2026-10-25, D-149, NX-B2b) the 53-man roster: the players of a team's 53 without one of the 34 places are on
+#                                                the bench (status "reserve", reserves.py); a file of format 16 or older has nobody on a bench, and its next roster
+#                                                cut fills the benches from the draft, the undrafted and the free agents (no made-up history, no draw)
 COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the end of rounds 3 to 7 (NFL, SRC-OFFICIAL)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
@@ -71,12 +74,24 @@ PLACES: tuple[tuple[str, int, str], ...] = tuple(
     + [("Quarterback:", 1, "QB")])
 PLACE_COUNT = len(PLACES)                    # 34
 POSITION_OF_PLACE = tuple(position for _, _, position in PLACES)
-PLACES_OF = {position: tuple(i for i, p in enumerate(POSITION_OF_PLACE) if p == position) for position in POSITIONS}
-GROUP_SIZE = {position: len(places) for position, places in PLACES_OF.items()}
-ROSTER_ORDER = ("QB", "RB", "WR", "DL", "LB", "CB", "S", "RET", "K", "P")      # the order the groups are listed and spoken in
 
-# the weights of a team's strength (design 4.4): they follow how often the engine reads each place; the sum is 78
-WEIGHT = {"QB": 12, "RB": 2, "WR": 2, "DL": 2, "LB": 2, "CB": 2, "S": 2, "K": 4, "P": 2, "RET": 1}
+# NX-B2b (D-149, the owner 2026-10-24: "it should be using the current 53 man rosters for each team"): a team is its 34 places and a bench of the
+# other players of its 53 (reserves.py). The offensive linemen and the long snapper are on a bench only: the game plays no place of theirs.
+ROSTER_MAX = 53
+RESERVE_MAX = ROSTER_MAX - PLACE_COUNT       # 19
+RESERVE_POSITIONS = ("OL", "LS")
+ALL_POSITIONS = POSITIONS + RESERVE_POSITIONS
+POSITION_TEXT.update({"OL": "NXM-D41", "LS": "NXM-D42"})
+GROUP_TEXT.update({"OL": "NXL-50", "LS": "NXL-51"})
+
+PLACES_OF = {position: tuple(i for i, p in enumerate(POSITION_OF_PLACE) if p == position) for position in ALL_POSITIONS}   # OL, LS: ()
+GROUP_SIZE = {position: len(places) for position, places in PLACES_OF.items()}                                           # OL, LS: 0
+ROSTER_ORDER = ("QB", "RB", "WR", "DL", "LB", "CB", "S", "RET", "K", "P")      # the order the groups are listed and spoken in
+BENCH_ORDER = ROSTER_ORDER + RESERVE_POSITIONS                                  # the bench's groups, in the same order, then the line and the snapper
+
+# the weights of a team's strength (design 4.4): they follow how often the engine reads each place; the sum is 78. OL and LS have no place, so they
+# add nothing to a strength; their weight 1 only gives a bench lineman a value in a trade or a release (trades.worth, contracts.release_value).
+WEIGHT = {"QB": 12, "RB": 2, "WR": 2, "DL": 2, "LB": 2, "CB": 2, "S": 2, "K": 4, "P": 2, "RET": 1, "OL": 1, "LS": 1}
 WEIGHT_SUM = sum(WEIGHT[position] for position in POSITION_OF_PLACE)
 WEIGHT_OF_KEY = {(heading, number): WEIGHT[position] for heading, number, position in PLACES}   # the key of Roster.ratings
 

@@ -161,7 +161,7 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
     words = store.words
 
     def members(group: str) -> list:
-        return FD.group_of(league, FRANCHISE_GROUP[group])
+        return FD.chart_of(league, FRANCHISE_GROUP[group])                             # D-149: the places, then the bench
 
     def first_label(group: str) -> str:
         found = members(group)
@@ -173,16 +173,19 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         found = members(group)
         if not found:
             return X.text("NXM-D14")
-        lines = [X.text("NXM-D07", player=p.name, position=words.position(p.pos), r=p.rating, a=p.age) for p in found]
+        lines = [X.text("NXM-D07", player=p.name, position=words.position_of(p), r=p.rating, a=p.age) for p in found]
         chosen = ListPicker(speech, keys, X.text("NXM-D05", group=group_word(group), team=words.team_name(league.team)), len(lines),
                             lambda i: lines[i]).run()
         if chosen is None:
             return None
         pick = found[chosen]
+        placed = [p for p in found if p.status == "active"]
         FD.put_first(league, FRANCHISE_GROUP[group], pick.id)
-        debuglog.event("franchise", "depth_set", group=group, first=pick.id)            # rule 0.15
+        benched = [p for p in placed if p.status == "reserve"]                          # D-149: the man a bench player pushed out of the places
+        debuglog.event("franchise", "depth_set", group=group, first=pick.id, benched=[p.id for p in benched])            # rule 0.15
         store.save()                                                                    # written, then told (B-X53)
-        return X.text("NXM-D08", player=pick.name, group=group_word(group))
+        told = X.text("NXM-D08", player=pick.name, group=group_word(group))
+        return told + "".join(X.text("NXL-55", player=p.name) for p in benched)
 
     def keys_menu():
         def label(situation: str, role: str) -> str:

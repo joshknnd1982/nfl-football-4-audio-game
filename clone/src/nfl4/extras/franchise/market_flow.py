@@ -179,7 +179,7 @@ def _ask_round(g, words, store, league, state: dict, number: int, preface: list)
         if settings.nx_fr_auto:
             return SETTING
         pool = M.pool(league)
-        needs = M.open_places(league, team)
+        needs = M.open_places(league, team, staff=False)
         space = M.room(league, team)
         lines = list(preface) + notice
         preface, notice = [], []

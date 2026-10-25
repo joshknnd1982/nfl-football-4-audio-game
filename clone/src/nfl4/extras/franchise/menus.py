@@ -22,7 +22,7 @@ from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
 HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45", "NXH-46", "NXH-72", "NXH-74",
-                "NXH-76", "NXH-77", "NXH-78"),
+                "NXH-76", "NXH-77", "NXH-78", "NXH-82"),
               "118": ("NXH-36", "NXH-38", "NXH-73")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
@@ -217,6 +217,7 @@ def franchise_menu(g, speech, keys) -> None:
         word = _words(g)
         league = store.league
         players = [p for p in league.group_of(league.team, position) if p is not None]
+        players += league.bench(league.team, position)          # D-149 (NX-B2b): then the men of the bench, each said "on the bench"
         lines = [roster_line(word, league, p) for p in players]      # SX.8b: the rating and the potential are spoken; SX.8g: and the contract; SX.8n: the tag, morale, word
         rookies = rookies_of(position)
         for rookie in rookies:                                 # a rookie is told by his range until the cut (design 7.6, 11)
@@ -243,10 +244,17 @@ def franchise_menu(g, speech, keys) -> None:
 
         def count(position: str) -> int:               # the players in the group now: fewer than its places while places are empty
             return (sum(1 for player in league.group_of(league.team, position) if player is not None)
-                    + len(rookies_of(position)))
+                    + len(rookies_of(position)) + len(league.bench(league.team, position)))
+        from . import reserves
+        groups = list(ROSTER_ORDER)
+        title = X.text("NXF-13")
+        if reserves.on(league) or league.bench(league.team):       # D-149: the line and the snapper, and the size of the 53
+            groups += [position for position in D.RESERVE_POSITIONS if league.bench(league.team, position)]
+            placed = sum(1 for player in league.active_of(league.team) if player is not None)
+            title += X.text("NXL-54", n=placed + len(league.bench(league.team)), p=placed, k=len(league.bench(league.team)), m=D.ROSTER_MAX)
         items = [Item(lambda position=position: X.text("NXL-30", group=word.group(position), n=count(position)),
-                      enter=lambda position=position: group_picker(position)) for position in ROSTER_ORDER]
-        SpokenMenu(speech, keys, X.text("NXF-13"), items, space_enters=True, digits_jump=True).run()
+                      enter=lambda position=position: group_picker(position)) for position in groups]
+        SpokenMenu(speech, keys, title, items, space_enters=True, digits_jump=True).run()
 
     # ----- the history -----
 

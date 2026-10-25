@@ -33,8 +33,9 @@ KEYS = ("pending", "tag_used", "signed", "let_go", "league_gone", "stars")
 # ----- who, in what order -----
 
 def expiring(league, team: int) -> list:
-    """The team's active players whose contract ran out, the most valuable first (`value`)."""
+    """The team's active players whose contract ran out, the most valuable first (`value`); D-149: the men of its bench too."""
     out = [league.players[pid] for pid in league.rosters[team - 1] if pid and league.players[pid].years == 0]
+    out += [p for p in league.bench(team) if p.years == 0]
     return sorted(out, key=value)
 
 
@@ -70,20 +71,31 @@ def running_count(league, team: int) -> int:
     return sum(1 for player in CT.team_players(league, team, {}) if CT.running(player))
 
 
-def room_after(payroll: int, count: int, dead: int) -> int:
+def room_after(payroll: int, count: int, dead: int, cap: int | None = None, slots: int | None = None) -> int:
     """The most a player who is signed now may be paid: what is left of the cap after the contracts that run (`payroll`, `count` of them), the
-    dead money, the reserve for the rookies, and the minimum for every other place still without a contract (each will be filled at least)."""
-    return T.FR_CAP - T.FR_RESIGN_RESERVE - dead - payroll - T.FR_MIN_SALARY * (D.PLACE_COUNT - count - 1)
+    dead money, the reserve for the rookies, and the minimum for every other place still without a contract (each will be filled at least).
+    D-149: a league that carries benches gives its cap and its 53 slots (`league_terms`); else FR_CAP and the 34 places."""
+    cap = T.FR_CAP if cap is None else cap
+    slots = D.PLACE_COUNT if slots is None else slots
+    return cap - T.FR_RESIGN_RESERVE - dead - payroll - T.FR_MIN_SALARY * (slots - count - 1)
+
+
+def league_terms(league) -> tuple:
+    """The extra arguments of `room_after` for a league that carries benches (its cap, 53 slots); () for one that does not, so the calls stay the old ones."""
+    from . import reserves
+    return (CT.cap_of(league), reserves.slots(league)) if reserves.on(league) else ()
 
 
 def room(league, team: int) -> int:
-    return room_after(running_payroll(league, team), running_count(league, team), league.dead[team - 1])
+    return room_after(running_payroll(league, team), running_count(league, team), league.dead[team - 1], *league_terms(league))
 
 
-def target_payroll() -> int:
+def target_payroll(*league) -> int:
     """The most the staff lets the contracts of the coming season (the ones that run, the new ones and the dead money) come to when it signs players again:
-    `FR_RESIGN_TARGET` of the cap. The rest of the cap is for the market, the draft and the cut. The player's own talks are held only to the cap (`room`)."""
-    return int(T.FR_RESIGN_TARGET * T.FR_CAP)
+    `FR_RESIGN_TARGET` of the cap. The rest of the cap is for the market, the draft and the cut. The player's own talks are held only to the cap (`room`).
+    D-149: given a league that carries benches, of that league's cap."""
+    cap = CT.cap_of(league[0]) if league and league_terms(league[0]) else T.FR_CAP
+    return int(T.FR_RESIGN_TARGET * cap)
 
 
 # ----- the staff's and the computer teams' rule -----
@@ -100,10 +112,11 @@ def plan_team(league, team: int) -> Plan:
     signed again at his price when he is worth it and the cap has room, else let go. No draw; nothing is changed."""
     plan = Plan(team)
     payroll, count, dead = running_payroll(league, team), running_count(league, team), league.dead[team - 1]
-    target = target_payroll()
+    terms = league_terms(league)
+    target = target_payroll(league) if terms else target_payroll()
     for player in expiring(league, team):
         salary, years = asking(player)
-        if worth_keeping(player) and salary <= room_after(payroll, count, dead) and payroll + dead + salary <= target:
+        if worth_keeping(player) and salary <= room_after(payroll, count, dead, *terms) and payroll + dead + salary <= target:
             plan.signed.append((player, salary, years))
             payroll += salary
             count += 1
@@ -119,7 +132,8 @@ def sign_again(league, player, salary: int, years: int) -> None:
 def let_go(league, player) -> None:
     """The player's contract is over and nobody signs him: he leaves his place and is a free agent of this offseason (status "free", the team
     he last played for kept, the season he left). Dead money is not charged: a contract that ran out costs nothing."""
-    league.rosters[player.team - 1][player.place] = 0
+    if player.place >= 0:                                  # (a bench man has no place, D-149)
+        league.rosters[player.team - 1][player.place] = 0
     player.status, player.left, player.place, player.points = "free", league.season, -1, 0
     CT.leave(player)
 

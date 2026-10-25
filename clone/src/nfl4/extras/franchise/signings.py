@@ -88,7 +88,7 @@ def ensure_pool(league, surnames: list, real=None) -> int:
     this season and these). In a franchise's first season the real free agents come first (NX-B3, `add_real_free_agents`), so the made-up veterans only fill a group they
     leave short. Returns how many were made. Adds players to the league (status "free"); the caller saves."""
     made = add_real_free_agents(league, real)
-    used = FN.name_keys(league.league_id, {p.name for p in league.players.values() if p.status == "active"} | {p.name for p in pool(league)})
+    used = FN.name_keys(league.league_id, {p.name for p in league.players.values() if p.status in ("active", "reserve")} | {p.name for p in pool(league)})
     base, span = T.FR_FA_SEASON_RATING
     age_base, age_span = T.FR_FA_SEASON_AGE
     for position in D.ROSTER_ORDER:
@@ -119,12 +119,15 @@ def roster_group(league, team: int, position: str) -> list:
 
 
 def open_place(league, team: int, position: str) -> bool:
-    return market.filled(league, team, position) < D.GROUP_SIZE[position]
+    """The team can take a man of the position without a release: an empty place of the group, or (D-149) room on its bench."""
+    from . import reserves
+    return market.filled(league, team, position) < D.GROUP_SIZE[position] or reserves.room(league, team) > 0
 
 
 def releasable(league, team: int, position: str, week: int) -> list:
-    """The players of the group the team may release to make room: not hurt (an injury is a record of the league that follows its player, so a hurt man stays until he is fit)."""
-    return [p for p in roster_group(league, team, position) if injuries.healthy(league, p.id, week)]
+    """The players of the group the team may release to make room, its places then (D-149) its bench: not hurt (an injury is a record of the league that
+    follows its player, so a hurt man stays until he is fit)."""
+    return [p for p in roster_group(league, team, position) + league.bench(team, position) if injuries.healthy(league, p.id, week)]
 
 
 def cap_after(league, team: int, player, release=None) -> int:
@@ -149,11 +152,11 @@ def problems(league, player, release, week: int) -> str | None:
     else:
         if release is None:
             return "no place and no release"
-        if release.status != "active" or release.team != team or release.place < 0 or release.pos != player.pos:
+        if release.status not in ("active", "reserve") or release.team != team or (release.status == "active" and release.place < 0) or release.pos != player.pos:
             return "a release who is not a player of the group"
         if not injuries.healthy(league, release.id, week):
             return "a release who is hurt"
-    if cap_after(league, team, player, release) > T.FR_CAP:
+    if cap_after(league, team, player, release) > CT.cap_of(league):
         return "over the cap"
     return None
 
@@ -164,17 +167,25 @@ def sign(league, player, release, week: int) -> tuple:
     team = league.team
     roster = league.rosters[team - 1]
     dead = 0
+    slot = None
     if release is not None:
-        index = release.place
-        roster[index] = 0
+        slot = release.place                                 # -1: a man of the bench (D-149)
+        if slot >= 0:
+            roster[slot] = 0
         dead = CT.release(league, release)
         release.status, release.left, release.place, release.points, release.team = "free", league.season, -1, 0, 0       # (team 0: nobody lost him, so no compensatory pick)
         _forget(league, release.id)
-    else:
-        index = next(i for i in D.PLACES_OF[player.pos] if not roster[i])
     salary, years = price(player)
-    roster[index] = player.id
-    player.status, player.team, player.place, player.left, player.points = "active", team, index, 0, 0
+    if slot is not None and slot >= 0:
+        from . import reserves
+        player.team, player.left, player.points = team, 0, 0
+        reserves.to_place(league, player, slot)
+    elif slot is not None:
+        from . import reserves
+        player.team, player.left, player.points, player.status, player.place = team, 0, 0, reserves.STATUS, -1
+    else:
+        from . import reserves
+        reserves.join(league, team, player)
     CT.sign(player, salary, years)
     aging.place_by_rating(league, team)
     if len(league.sums) == D.TEAMS:

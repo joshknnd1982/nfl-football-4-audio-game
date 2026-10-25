@@ -2205,6 +2205,17 @@ TEXTS: dict[str, str] = {
     'NXJ-Q18': ' the staff of the <team> chooses its own starter. ',
     'NXJ-Q19': ' your practice squad has no quarterback. F9, Franchise, practice squad, add a free agent, can sign one. ',
     'NXJ-Q20': ' the real players are used with the N. F. L. rules. choose the N. F. L. rules in this menu to hear and choose the quarterbacks. ',
+    'NXL-50': 'offensive linemen',
+    'NXL-51': 'long snappers',
+    'NXL-52': '<position> on the bench',
+    'NXL-53': ' your roster has <n> players and room for <m>. choose who is released. ',
+    'NXL-54': ", <n> of <m> players: <p> in the game's places and <k> on the bench",
+    'NXL-55': ' <player> goes to the bench. ',
+    'NXL-56': ' your quarterbacks, the starter first, then the bench, then the practice squad. Enter on a backup makes him the starter, and the starter goes to the bench. ',
+    'NXL-57': '<player>, rating <r>, age <a>, on the bench',
+    'NXL-58': ' <player> starts now, and <other> goes to the bench. ',
+    'NXL-59': ' on the bench: <list>. ',
+    'NXH-82': " Every team keeps its real 53 players: 34 play in the game's places, the rest are on the bench and start for a hurt player. F9, Rules, Depth charts moves them. ",
 }
 
 SPEAKERS: dict[str, str] = {
@@ -4405,6 +4416,17 @@ SPEAKERS: dict[str, str] = {
     'NXJ-Q18': 'say5',
     'NXJ-Q19': 'say5',
     'NXJ-Q20': 'say5',
+    'NXL-50': 'piece',
+    'NXL-51': 'piece',
+    'NXL-52': 'piece',
+    'NXL-53': 'say5',
+    'NXL-54': 'piece',
+    'NXL-55': 'say5',
+    'NXL-56': 'say5',
+    'NXL-57': 'piece',
+    'NXL-58': 'say5',
+    'NXL-59': 'say5',
+    'NXH-82': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -6605,6 +6627,17 @@ KINDS: dict[str, str] = {
     'NXJ-Q18': 'sentence',
     'NXJ-Q19': 'sentence',
     'NXJ-Q20': 'sentence',
+    'NXL-50': 'piece',
+    'NXL-51': 'piece',
+    'NXL-52': 'piece',
+    'NXL-53': 'sentence',
+    'NXL-54': 'piece',
+    'NXL-55': 'sentence',
+    'NXL-56': 'sentence',
+    'NXL-57': 'piece',
+    'NXL-58': 'sentence',
+    'NXL-59': 'sentence',
+    'NXH-82': 'help',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

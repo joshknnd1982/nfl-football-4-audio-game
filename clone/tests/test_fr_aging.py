@@ -287,7 +287,8 @@ def test_history_keeps_the_players_team_and_the_stars_and_drops_the_rest():
 CALIBRATED = dict(FR_RETIRE_PER_YEAR=110, FR_RETIRE_PER_POINT=6, FR_GROWTH=(4, 2, 1), FR_IN_WINDOW=(1, 0, 0),
                   FR_DECLINE=(2, 3, 4, 5, 6, 6), FR_PROGRESS_NOISE=(5, -2),
                   FR_PEAK={"RB": (24, 28), "WR": (25, 29), "QB": (24, 30), "DL": (25, 29), "LB": (25, 29), "CB": (25, 28),
-                           "S": (25, 29), "RET": (24, 28), "K": (24, 34), "P": (24, 34)})        # the quarterback's end, K and P: D-061 (SX.8f)
+                           "S": (25, 29), "RET": (24, 28), "K": (24, 34), "P": (24, 34),
+                           "OL": (25, 30), "LS": (24, 36)})        # the quarterback's end, K and P: D-061 (SX.8f); OL and LS: the bench only (D-149)
 
 
 def test_the_tuning_file_holds_the_values_the_calibration_settled_on():
@@ -309,7 +310,7 @@ def test_the_shipped_windows_keep_the_researchs_shape_where_it_matters():
 
 def test_the_tables_are_whole_numbers_and_cover_every_position():
     assert all(isinstance(x, int) and x > 0 for x in T.FR_DECLINE) and len(T.FR_DECLINE) >= 1
-    assert all(len(w) == 2 and w[0] <= w[1] for w in T.FR_PEAK.values()) and set(T.FR_PEAK) == set(D.POSITIONS)
+    assert all(len(w) == 2 and w[0] <= w[1] for w in T.FR_PEAK.values()) and set(T.FR_PEAK) == set(D.ALL_POSITIONS)     # (D-149: the bench's OL and LS too)
     assert len(T.FR_GROWTH) == 3 == len(T.FR_IN_WINDOW)
 
 

@@ -153,7 +153,7 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         position = choose_group(X.text("NXX-11"))
         if position is None:
             return None
-        own = TR.group(league, league.team, position)
+        own = TR.group(league, league.team, position, bench=True)
         index = pick_from(words.group(position), [words.player(pl) for pl in own])
         if index is None:
             return None
@@ -242,7 +242,7 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         by the value rule, to confirm."""
         league = store.league
         traded = TR.traded_this_season(league)
-        own = [pl for pl in TR.group(league, league.team, position) if pl.id not in traded]
+        own = [pl for pl in TR.group(league, league.team, position, bench=True) if pl.id not in traded]
         if not own:
             return X.text("NXX-27")
         index = pick_from(X.text("NXX-19", group=words.group(position), get=get.name), [words.player(pl) for pl in own])
@@ -291,7 +291,7 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         if position is None:
             return None
         traded = TR.traded_this_season(league)
-        theirs = [pl for pl in TR.group(league, other, position) if pl.id not in traded]
+        theirs = [pl for pl in TR.group(league, other, position, bench=True) if pl.id not in traded]
         if not theirs:
             return X.text("NXX-43", team=words.team_name(other), group=words.group(position))
         target = pick_from(X.text("NXX-41", group=words.group(position), team=words.team_name(other)),
@@ -311,7 +311,7 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         if position is None:
             return None
         traded = TR.traded_this_season(league)
-        others = sorted((pl for team in range(1, D.TEAMS + 1) if team != league.team for pl in TR.group(league, team, position)
+        others = sorted((pl for team in range(1, D.TEAMS + 1) if team != league.team for pl in TR.group(league, team, position, bench=True)
                          if pl.id not in traded), key=lambda pl: (-pl.rating, pl.id))
         target = pick_from(X.text("NXX-20", group=words.group(position)),
                            [X.text("NXX-21", player=pl.name, team=words.team_name(pl.team), r=pl.rating, a=pl.age, contract=words.contract(pl))

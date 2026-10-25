@@ -159,7 +159,7 @@ def stand_in_rating(position: str) -> int:
 
 
 def used_names(league: LeagueRecord, extra=()) -> set:
-    names = {p.name for p in league.players.values() if p.status == "active"}
+    names = {p.name for p in league.players.values() if p.status in ("active", "reserve")}      # D-149: the bench's names are in use
     names |= {row[2] for row in list(extra) + league.injuries["stand_ins"]}
     return FN.name_keys(league.league_id, names)            # D-131: a made-up full name keeps its surname in use
 
@@ -168,6 +168,11 @@ def make_stand_in(league: LeagueRecord, team: int, position: str, rnd, surnames:
     """A stand-in for the group: a name (the league's own name rule: `rnd(len(surnames))` again while it is in use) and the stand-in rating."""
     surname = draw_name(rnd, surnames, used_names(league, extra))
     return [team, position, FN.full_name(league.league_id, surname), stand_in_rating(position)]   # D-131
+
+
+def bench_covers(league: LeagueRecord, team: int, position: str, week: int) -> bool:
+    """D-149: a man of the team's bench of the position is fit this week, so he, not a stand-in, plays a place nobody of the group can play."""
+    return any(healthy(league, man.id, week) for man in league.bench(team, position))
 
 
 def needs_stand_in(league: LeagueRecord, team: int, position: str, week: int, out=frozenset()) -> bool:
@@ -191,7 +196,12 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
 
     D-143 (NX-B1, the owner: "I should get to determine what player will start at the beginning of the week if a player is injured"): on the player's
     own team with the staff setting off, the man the player chose (`choose`) plays the injured man's place when he plays this week and may cover it (a
-    player of the group, a back or a receiver for a returner); else the staff's rule above. The place is still played at replacement level (INJ-2)."""
+    player of the group, a back or a receiver for a returner); else the staff's rule above. The place is still played at replacement level (INJ-2).
+
+    D-149 (NX-B2b, the 53-man roster): the staff's first choice for a hurt man's place is the best man of the team's bench of his position who plays (for a
+    returner, a returner of the bench), each bench man once; he plays at his own rating but never above the hurt man's (no injury is a gain). A hurt
+    quarterback's place so goes to the backup quarterback before any stand-in. The player may choose a bench man too. Only then the next man up, then the
+    stand-in (whose draw is still made in `settle`, so the league's draws stay the same)."""
     places: list = [None] * D.PLACE_COUNT
     chosen = chosen_map(league) if use_chosen and team == league.team and not staff else {}
     playing: dict = {}
@@ -204,10 +214,23 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
             raise LeagueError("team %d has an empty place %d" % (team, index))
         if plays(league, player, week, staff, out, known):
             playing[player.id] = max(D.RATING_MIN, player.rating - (0 if player.id in out else penalty(league, player.id, week, known)))
+    bench_men: dict = {}                                       # D-149: the bench men who play this week, by position, the best first
+    for man in league.bench(team):
+        if plays(league, man, week, staff, out, known):
+            playing[man.id] = max(D.RATING_MIN, man.rating - (0 if man.id in out else penalty(league, man.id, week, known)))
+            bench_men.setdefault(man.pos, []).append(man)
+    used_bench: set = set()
 
     def entry(player, hurt=None):
         rating = playing[player.id]
         return player.id, player.name, rating if hurt is None else min(rating, stand_in_rating(hurt.pos))
+
+    def bench_entry(man, hurt):
+        used_bench.add(man.id)
+        return man.id, man.name, min(playing[man.id], max(D.RATING_MIN, hurt.rating))
+
+    def from_bench(position):
+        return next((man for man in bench_men.get(position, ()) if man.id not in used_bench), None)
 
     def substitute(position, hurt):
         row = stand_in(league, team, position, extra_stand_ins)
@@ -233,6 +256,13 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
             if pick is not None and pick.id in playing and pick in group:
                 places[index] = entry(pick, player)                    # D-143: the player's choice
                 continue
+            if pick is not None and pick.id in playing and pick in bench_men.get(position, ()) and pick.id not in used_bench:
+                places[index] = bench_entry(pick, player)              # D-143, D-149: the player's choice, a man of his bench
+                continue
+            man = from_bench(position)
+            if man is not None:
+                places[index] = bench_entry(man, player)               # D-149: the staff's choice, the best man of the bench
+                continue
             rank = depth.index(player)
             below = [q for q in depth[rank + 1:] if q.id in playing]
             above = [q for q in reversed(depth[:rank]) if q.id in playing]
@@ -248,6 +278,13 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
         if pick is not None and pick.id in playing and pick.id not in taken and pick in depths["RB"] + depths["WR"]:
             taken.add(pick.id)
             places[index] = entry(pick, player)                        # D-143: the player's choice
+            continue
+        if pick is not None and pick.id in playing and pick in bench_men.get("RET", ()) and pick.id not in used_bench:
+            places[index] = bench_entry(pick, player)                  # D-149: the player's choice, a returner of his bench
+            continue
+        man = from_bench("RET")
+        if man is not None:
+            places[index] = bench_entry(man, player)                   # D-149: a returner of the bench first
             continue
         backs = [q for q in list(reversed(depths["RB"])) + list(reversed(depths["WR"])) if q.id in playing and q.id not in taken]
         if backs:
@@ -295,6 +332,7 @@ def cover_choices(league: LeagueRecord, pid: int, week: int) -> list:
         group = [q for q in league.group_of(team, "RB") + league.group_of(team, "WR") if q is not None and q.id not in returners]
     else:
         group = [q for q in league.group_of(team, player.pos) if q is not None]
+    group += league.bench(team, player.pos)                       # D-149: the men of his bench may start in his place too
     others = sorted((q for q in group if q.id not in (pid, first) and plays(league, q, week, staff=False)), key=lambda q: (-q.rating, q.place))
     choices = [league.players[first]] + others
     return choices if len(choices) > 1 else []
@@ -601,7 +639,7 @@ def check_injuries(league: LeagueRecord, whole) -> None:
             raise LeagueError("an injury is %r" % (row,))
         whole(row[0], 1, 10 ** 9, "an injured player")
         player = league.players.get(row[0])
-        if player is None or player.status != "active" or row[0] in seen:
+        if player is None or player.status not in ("active", "reserve") or row[0] in seen:
             raise LeagueError("the injured player %r is not an active player, or is there twice" % (row[0],))
         seen.add(row[0])
         if row[1] not in KIND_IDS:

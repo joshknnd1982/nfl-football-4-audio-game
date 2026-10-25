@@ -304,7 +304,8 @@ def new_contract(player) -> tuple:
 def can_pay(league, team: int, player, salary: int) -> bool:
     """The raise fits under the cap: his new salary within the room of stage 7's rule with him counted as unsigned (`resign.room_after`)."""
     from . import resign
-    return salary <= resign.room_after(resign.running_payroll(league, team) - player.salary, resign.running_count(league, team) - 1, league.dead[team - 1])
+    return salary <= resign.room_after(resign.running_payroll(league, team) - player.salary, resign.running_count(league, team) - 1, league.dead[team - 1],
+                                       *resign.league_terms(league))
 
 
 def staff_pays(league, team: int, player) -> bool:
@@ -315,7 +316,7 @@ def staff_pays(league, team: int, player) -> bool:
         return False
     salary, _years = new_contract(player)
     payroll = resign.running_payroll(league, team) - player.salary + salary + league.dead[team - 1]
-    return can_pay(league, team, player, salary) and payroll <= resign.target_payroll()
+    return can_pay(league, team, player, salary) and payroll <= (resign.target_payroll(league) if resign.league_terms(league) else resign.target_payroll())
 
 
 def pay(league, player) -> tuple:

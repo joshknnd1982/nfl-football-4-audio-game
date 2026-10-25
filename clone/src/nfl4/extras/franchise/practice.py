@@ -71,7 +71,7 @@ def can_take(league, team: int, player) -> bool:
     members = squad(league, team)
     if len(members) >= SIZE:
         return False
-    if CT.cap_used(league, team) + salary_of(player) > T.FR_CAP:
+    if CT.cap_used(league, team) + salary_of(player) > CT.cap_of(league):
         return False
     return not veteran(player) or sum(1 for p in members if veteran(p)) < VETERANS
 
@@ -87,7 +87,7 @@ def candidates(league) -> list:
     over or this one), the best first."""
     season = league.season
     return sorted((p for p in league.players.values() if p.status in ("released", "free") and p.left in (season, season - 1)
-                   and p.age <= T.FR_PRACTICE_MAX_AGE),
+                   and p.age <= T.FR_PRACTICE_MAX_AGE and p.pos in D.POSITIONS),          # (D-149: a lineman or a snapper let go is no squad player)
                   key=lambda p: (-p.rating, p.id))
 
 
@@ -149,7 +149,7 @@ def real_squads(league, real) -> int:
             seasons = (h >> 8) % 2
             age = 22 + seasons + (h >> 12) % 3
             rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
-            if CT.cap_used(league, team) + PRACTICE_SALARY > T.FR_CAP:
+            if CT.cap_used(league, team) + PRACTICE_SALARY > CT.cap_of(league):
                 break
             player = Player(league.next_id, name, position, rating, "average", age, seasons, rating, None, 0, STATUS, 0, team, -1, PRACTICE_SALARY, 1)
             league.players[player.id] = player
@@ -170,7 +170,7 @@ def top_up(league, surnames: list | None = None) -> int:
     if surnames is None:
         from ...game.names import load_surnames
         surnames = load_surnames()
-    used = FN.name_keys(league.league_id, (p.name for p in league.players.values() if p.status in ("active", STATUS, "free")))
+    used = FN.name_keys(league.league_id, (p.name for p in league.players.values() if p.status in ("active", STATUS, "free", "reserve")))
     made = 0
     base, span = T.FR_PRACTICE_RATING
     for team in range(1, D.TEAMS + 1):
@@ -188,7 +188,7 @@ def top_up(league, surnames: list | None = None) -> int:
             rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
             player = Player(league.next_id, FN.full_name(league.league_id, surname), position, rating, "average", age, seasons, rating,
                             None, 0, STATUS, 0, team, -1, PRACTICE_SALARY, 1)
-            if CT.cap_used(league, team) + PRACTICE_SALARY > T.FR_CAP:
+            if CT.cap_used(league, team) + PRACTICE_SALARY > CT.cap_of(league):
                 break
             league.players[player.id] = player
             league.next_id += 1
@@ -256,8 +256,8 @@ def count_week(league, week: int) -> int:
             by_name[(p.team, p.name)] = p
     for row in list(league.injuries["stand_ins"]):
         player = by_name.get((row[0], row[2]))
-        if player is None or not injuries.needs_stand_in(league, row[0], row[1], week):
-            continue
+        if player is None or not injuries.needs_stand_in(league, row[0], row[1], week) or injuries.bench_covers(league, row[0], row[1], week):
+            continue                                       # (D-149: a man of the bench plays the place, the squad man is not elevated)
         key = str(player.id)
         league.practice["elevations"][key] = league.practice["elevations"].get(key, 0) + 1
         charged += 1
@@ -304,7 +304,8 @@ def promote_problem(league, player, release, week: int) -> str | None:
     else:
         if release is None:
             return "no place and no release"
-        if release.status != "active" or release.team != team or release.pos != player.pos or release.place < 0:
+        if (release.status not in ("active", "reserve") or release.team != team or release.pos != player.pos
+                or (release.status == "active" and release.place < 0)):
             return "a release who is not a player of the group"
         if not injuries.healthy(league, release.id, week):
             return "a release who is hurt"
@@ -312,7 +313,7 @@ def promote_problem(league, player, release, week: int) -> str | None:
     used = CT.cap_used(league, team) - player.salary + salary
     if release is not None:
         used += CT.dead_money(release) - (release.salary if CT.running(release) else 0)
-    if used > T.FR_CAP:
+    if used > CT.cap_of(league):
         return "over the cap"
     return None
 
@@ -322,20 +323,26 @@ def promote(league, player, release) -> tuple:
     Returns (the salary, the dead money)."""
     from . import aging
     from . import signings as S
+    from . import reserves
     team = league.team
     roster = league.rosters[team - 1]
     dead = 0
+    slot = None
     if release is not None:
-        index = release.place
-        roster[index] = 0
+        slot = release.place                              # -1: a man of the bench (D-149)
+        if slot >= 0:
+            roster[slot] = 0
         dead = CT.release(league, release)
         release.status, release.left, release.place, release.points, release.team = "free", league.season, -1, 0, 0
         S._forget(league, release.id)
-    else:
-        index = next(i for i in D.PLACES_OF[player.pos] if not roster[i])
     salary = CT.min_salary(player.seasons)
-    roster[index] = player.id
-    player.status, player.team, player.place, player.left, player.points = "active", team, index, 0, 0
+    player.team, player.left, player.points = team, 0, 0
+    if slot is not None and slot >= 0:
+        reserves.to_place(league, player, slot)
+    elif slot is not None:
+        player.status, player.place = reserves.STATUS, -1
+    else:
+        reserves.join(league, team, player)               # an empty place of his group, else the bench (D-149)
     CT.sign(player, salary, 1)
     league.practice["elevations"].pop(str(player.id), None)
     for row in league.injuries["stand_ins"]:
@@ -353,9 +360,11 @@ def sign_problem(league, player) -> str | None:
     from . import signings as S
     if player is None or player not in S.pool(league):
         return "not a free agent"
+    if player.pos not in D.POSITIONS:
+        return "not a position of the squad"                   # D-149: the squads keep no lineman and no snapper
     if not can_take(league, league.team, player):
         return "the practice squad is full" if len(squad(league, league.team)) >= SIZE else "too many veterans"
-    if CT.cap_used(league, league.team) + salary_of(player) > T.FR_CAP:
+    if CT.cap_used(league, league.team) + salary_of(player) > CT.cap_of(league):
         return "over the cap"
     return None
 

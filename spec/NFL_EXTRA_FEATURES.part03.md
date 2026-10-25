@@ -94,6 +94,15 @@ The owner's words: "Claude must fix these issues." and "You must add the followi
   6. The cap (Q-072): FR_CAP scaled by the reserves' payroll and the calibration of the cap run again; the 20-season soaks on both calendars.
   7. league.sav format 17 (format 16 went to NX-D3's depth chart, 2026-10-24); a league of format 16 or older starts with no reserves (its next cut fills them from the draft, the undrafted and the free agents), never with made-up history.
   8. Tests: a new franchise has 53 a team with the real names; the places and the sums are as before; the cut, the injuries' backups, the trades of reserves, the migration; the soaks.
+- NX-B2b BUILT (2026-10-25, D-149, version 0.16.0): as designed above, with these readings. The status is "reserve" and is SAID "on the bench" (NXL-52 after the
+  position word in every player line); the switch is `LeagueRecord.reserves_on` (never saved), set by the store on every league it opens or makes, so the
+  older tests' leagues play as before. The bench of a new franchise: every other real man of the active 53 (RET lines are repeats), the deepest of the largest
+  groups left out when a team has more than 19 (never a quarterback or the snapper); rating 1 to 4 under the weakest place of his group (the line and the snapper
+  FR_RESERVE_RATING), age FR_RESERVE_AGE, from a hash. The cap: FR_CAP + FR_CAP_RESERVES (54.0 million, the bench payroll's mean of 320 measured teams,
+  work/nxb2b/measure_bench_cap.py); `contracts.cap_of`. The cut keeps a backup quarterback, the snapper and five linemen first (reserves.COVER_FIRST), and a bench
+  short of them gets young made-up ones (reserves.fill_line, no draw: the draft makes no OL or LS). The computer's market counts its bench men rated 60 or more
+  as filling an empty place (market.ready_bench); the player's own offers see every empty place. The computer's trade search looks at the places only; the
+  player's trades list the benches. Q-069 answered: the backup quarterback is a bench man and the player swaps him with the starter (no release).
 
 ## 20. Owner requirements of 2026-10-24 (second report): depth charts, playing time, the music and celebration slots (NX-D, NX-M)
 

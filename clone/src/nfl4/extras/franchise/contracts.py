@@ -117,11 +117,17 @@ def draft_overall(player) -> int:
 
 # ----- a team's money -----
 
+def cap_of(league) -> int:
+    """The salary cap a team of this league plays under: FR_CAP for the 34 places, and FR_CAP_RESERVES more when the league carries benches (D-149,
+    NX-B2b, Q-072: the bench's payroll of a new franchise of the real 53, so the places have the money they had)."""
+    return T.FR_CAP + (T.FR_CAP_RESERVES if getattr(league, "reserves_on", False) else 0)
+
+
 def team_players(league, team: int, waiting: dict | None = None) -> list:
-    """The team's players that are paid: the 34 places and the rookies waiting for the cut (`waiting` is draft.waiting_by_team's table; when
-    it is None the draft record's own picks are used)."""
+    """The team's players that are paid: the 34 places, the bench (D-149), the practice squad and the rookies waiting for the cut (`waiting` is
+    draft.waiting_by_team's table; when it is None the draft record's own picks are used)."""
     placed = [league.players[pid] for pid in league.rosters[team - 1] if pid]
-    placed += [p for p in league.players.values() if p.status == "practice" and p.team == team]     # D-136: the practice squad is paid too
+    placed += [p for p in league.players.values() if p.status in ("reserve", "practice") and p.team == team]     # D-136, D-149: the squad and the bench are paid too
     if waiting is None:
         return placed + league.waiting_rookies(team)          # (the drafted rookies and, SX.8m, the undrafted free agents in camp)
     return placed + list(waiting.get(team, ()))
@@ -141,7 +147,7 @@ def payrolls(league) -> list:
     """The 32 payrolls (team 1 first) of every active player, placed or waiting."""
     totals = [0] * D.TEAMS
     for player in league.players.values():
-        if player.status in ("active", "practice") and running(player):          # D-136: the practice squads are paid too
+        if player.status in ("active", "practice", "reserve") and running(player):          # D-136, D-149: the practice squads and the benches are paid too
             totals[player.team - 1] += player.salary
     return totals
 
@@ -152,13 +158,13 @@ def cap_used(league, team: int, waiting: dict | None = None) -> int:
 
 
 def cap_space(league, team: int, waiting: dict | None = None) -> int:
-    return T.FR_CAP - cap_used(league, team, waiting)
+    return cap_of(league) - cap_used(league, team, waiting)
 
 
 def cap_ranking(league) -> list:
     """The teams 1 to 32 with the most cap space first, equal space to the lower team number."""
     totals = payrolls(league)
-    space = [T.FR_CAP - totals[t] - league.dead[t] for t in range(D.TEAMS)]
+    space = [cap_of(league) - totals[t] - league.dead[t] for t in range(D.TEAMS)]
     return sorted(range(1, D.TEAMS + 1), key=lambda team: (-space[team - 1], team))
 
 
@@ -171,7 +177,7 @@ def turn_the_year(league) -> int:
     league.dead = [0] * D.TEAMS
     expired = 0
     for player in league.players.values():
-        if player.status != "active":
+        if player.status not in ("active", "reserve"):           # D-149: a bench man's contract runs too
             continue
         player.years -= 1
         if player.years <= 0:
@@ -197,7 +203,7 @@ def release(league, player) -> int:
 
 def replacement_rating(position: str) -> int:
     """The middle rating of an undrafted rookie of the fill in this group (design 7.6), what a released player's place is filled with."""
-    base, span = T.FR_FILL_RATING if D.GROUP_SIZE[position] >= 3 else T.FR_FILL_RATING_SMALL
+    base, span = T.FR_FILL_RATING if D.GROUP_SIZE.get(position, 0) >= 3 else T.FR_FILL_RATING_SMALL
     return base + span // 2
 
 
@@ -206,17 +212,17 @@ def cap_after_cut(league, team: int, waiting: dict, released: list) -> int:
     paid the minimum, so the figure is exact): the salaries of the rest, the fill, the dead money held and the dead money of the release."""
     gone = {player.id for player in released}
     kept = [player for player in team_players(league, team, waiting) if player.id not in gone]
-    held = {position: 0 for position in D.POSITIONS}
+    held = {position: 0 for position in D.ALL_POSITIONS}
     for player in kept:
         held[player.pos] += 1
-    empty = sum(max(0, D.GROUP_SIZE[position] - count) for position, count in held.items())
+    empty = sum(max(0, D.GROUP_SIZE[position] - count) for position, count in held.items())     # (a bench man fills an empty place of his group first)
     return (sum(player.salary for player in kept) + empty * T.FR_MIN_SALARY + league.dead[team - 1]
             + sum(release_cost(player) for player in released))
 
 
 def cap_over(league, team: int, waiting: dict, released: list) -> int:
     """How far over the cap the team would be after the cut and the fill (0 or less: it is under)."""
-    return cap_after_cut(league, team, waiting, released) - T.FR_CAP
+    return cap_after_cut(league, team, waiting, released) - cap_of(league)
 
 
 def release_value(player) -> tuple:
@@ -226,6 +232,8 @@ def release_value(player) -> tuple:
     money as large as the salary) is no candidate."""
     saved = player.salary - T.FR_MIN_SALARY - dead_money(player)
     loss = D.WEIGHT[player.pos] * (player.rating - replacement_rating(player.pos))
+    if player.status == "reserve" or player.pos in D.RESERVE_POSITIONS:
+        loss = 0                                        # D-149: a bench man adds nothing to the strength: he is let go first for the money
     if loss <= 0:
         return (0, -saved, -player.salary, player.id)
     return (1, loss * 1000 // saved, -player.salary, player.id)
@@ -258,7 +266,7 @@ def fit_to_cap(league) -> int:
     down, so the sum fits). Returns how many teams were changed."""
     changed = 0
     for team in range(1, D.TEAMS + 1):
-        over = cap_used(league, team) - T.FR_CAP
+        over = cap_used(league, team) - cap_of(league)
         if over <= 0:
             continue
         players = [player for player in team_players(league, team)           # a rookie's pay is fixed by his pick: it is not lowered
@@ -324,7 +332,7 @@ def check_contracts(league, whole) -> None:
     longest = max(years for _age, years in T.FR_CONTRACT_YEARS)
     pending = _years_may_be_zero(league)
     for player in league.players.values():
-        if player.status == "active":
+        if player.status in ("active", "reserve"):                  # D-149: a bench man has a contract as a man of the places
             whole(player.salary, T.FR_MIN_SALARY, T.FR_MAX_SALARY, "the salary of player %d" % player.id)
             whole(player.years, 0 if pending is None or player.id in pending else 1, longest, "the contract years of player %d" % player.id)
         else:

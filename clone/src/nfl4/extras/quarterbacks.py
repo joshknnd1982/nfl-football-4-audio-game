@@ -200,6 +200,9 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
     def starter(team: int):
         return league.player_at(team, D.PLACES_OF["QB"][0])
 
+    def bench(team: int) -> list:
+        return league.bench(team, "QB")                                   # D-149 (Q-069): the backup quarterbacks of the 53
+
     def backups(team: int) -> list:
         return [p for p in P.squad(league, team) if p.pos == "QB"]
 
@@ -209,6 +212,8 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         if first is None:
             return X.text("NXJ-Q04", team=name)
         line = X.text("NXJ-Q12", team=name, player=first.name, r=first.rating, a=first.age)
+        if bench(team):
+            line += X.text("NXL-59", list=", ".join(X.text("NXJ-Q14", player=p.name, r=p.rating) for p in bench(team)))
         behind = backups(team)
         if behind:
             line += X.text("NXJ-Q13", list=", ".join(X.text("NXJ-Q14", player=p.name, r=p.rating) for p in behind))
@@ -219,25 +224,62 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         return next((team - 1 for team in range(1, TEAMS + 1) if words.team_name(team).casefold().startswith(text)), None)
 
     def own_team() -> str | None:
+        from .franchise import reserves
         team = league.team
         first = starter(team)
+        seconds = bench(team)
         behind = backups(team)
         labels = ([X.text("NXJ-Q16", player=first.name, r=first.rating, a=first.age)] if first is not None else [])
+        labels += [X.text("NXL-57", player=p.name, r=p.rating, a=p.age) for p in seconds]
         labels += [X.text("NXJ-Q17", player=p.name, r=p.rating, a=p.age) for p in behind]
         if not labels:
             return X.text("NXJ-Q04", team=words.team_name(team))
-        chosen = ListPicker(speech, keys, X.text("NXJ-Q15"), len(labels), lambda i: labels[i]).run()
+        header = X.text("NXL-56") if reserves.on(league) else X.text("NXJ-Q15")
+        chosen = ListPicker(speech, keys, header, len(labels), lambda i: labels[i]).run()
         if chosen is None:
             return team_line(team)
         offset = 1 if first is not None else 0
         if chosen < offset:
-            return X.text("NXJ-Q07", player=first.name) if behind else X.text("NXJ-Q19")
-        player = behind[chosen - offset]
+            return X.text("NXJ-Q07", player=first.name) if behind or seconds else X.text("NXJ-Q19")
         reason = closed_reason(game, league)
         if reason is not None:
             return reason
         week = league.gtp
+        if chosen - offset < len(seconds):                               # D-149 (Q-069): the backup of the bench starts, the starter goes to the bench
+            player = seconds[chosen - offset]
+            if first is None:
+                reserves.to_place(league, player, D.PLACES_OF["QB"][0])
+            else:
+                reserves.swap(league, first, player)
+            if len(league.sums) == D.TEAMS:
+                league.sums[team - 1] = league.strength_sum(team)
+            debuglog.event("franchise", "quarterback_benched", week=week, season=league.season, starts=player.id,
+                           benched=first.id if first is not None else None)                # rule 0.15
+            store.save()                                   # made and written, then told (B-X53)
+            return X.text("NXL-58", player=player.name, other=first.name) if first is not None else X.text("NXJ-P08", player=player.name)
+        player = behind[chosen - offset - len(seconds)]
         release = None
+        if reserves.room(league, team) > 0 and first is not None:
+            # D-149: a squad quarterback signs to the bench, then starts; the starter goes to the bench (nobody is released)
+            problem = P.promote_problem(league, player, None, week)
+            if problem == "over the cap":
+                return X.text("NXJ-S16", room=words.amount(max(0, CT.cap_space(league, team))))
+            if problem is not None:
+                return X.text("NXJ-S18")
+            contract = words.contract_of(CT.min_salary(player.seasons), 1)
+            say(X.text("NXJ-P06", player=player.name, contract=contract))
+            if keys.read_key() != KEY_ENTER:
+                return X.text("NXJ-S17", player=player.name)
+            names = (player.name, first.name)
+            salary, dead = P.promote(league, player, None)
+            if player.status == "reserve":
+                reserves.swap(league, first, player)
+            if len(league.sums) == D.TEAMS:
+                league.sums[team - 1] = league.strength_sum(team)
+            debuglog.event("franchise", "quarterback_starter", week=week, season=league.season, player=player.id, rating=player.rating, salary=salary,
+                           released=None, benched=first.id, dead_money=dead)                  # rule 0.15
+            store.save()
+            return X.text("NXJ-P08", player=names[0]) + X.text("NXL-58", player=names[0], other=names[1])
         if not S.open_place(league, team, "QB"):
             release = first
             if release is None or not injuries.healthy(league, release.id, week):

@@ -54,6 +54,7 @@ class FranchiseStore:
         self.game_injuries = None               # SX.8k: the injuries of the player's game in progress (injury_flow.GameInjuries), until its result
         self.strict = False                     # tests: a record that fails its own check raises instead of being refused
         self.practice_squads = True             # D-136: the practice squads are formed at the new season (False: the older tests' leagues)
+        self.reserves = True                    # D-149 (NX-B2b): every league opened or made carries the 53-man roster, its benches (False: the older tests' leagues)
         self.real_names_of = None               # 2026-10-23: a callable that gives the program's real names (flow.franchise), for fix_real_backs
         self.real_calendar = True               # SZ.8: a season plays the league's real calendar (fixtures.py); False (the tests of the original's 16 weeks): the original's `makes`
         self.unwritable = False
@@ -113,6 +114,7 @@ class FranchiseStore:
             return
         if sav_state == "ok":
             self.league = sav
+            self._benches()
             self._fix_backs()
             return
         if prev_state == "ok":
@@ -124,6 +126,7 @@ class FranchiseStore:
                 self._notice("NXF-36")
                 self.problem = "missing"
             self.league = prev
+            self._benches()
             self._fix_backs()
             self.save()                          # the copy is league.sav again
             return
@@ -137,6 +140,13 @@ class FranchiseStore:
         if kind_is_franchise:                    # nothing there although the setting says there is a franchise
             self.problem, self.force_classic = "missing", True
             self._notice("NXF-37")
+
+    def _benches(self) -> None:
+        """D-149: the league carries the 53-man roster (a league of format 16 or older has nobody on a bench yet; its next cut fills them)."""
+        if self.league is not None and self.reserves:
+            self.league.reserves_on = True
+            from . import reserves
+            debuglog.event("franchise", "benches", on=True, players=sum(reserves.count(self.league, t) for t in range(1, D.TEAMS + 1)))   # rule 0.15
 
     def _fix_backs(self) -> None:
         """A league made before 2026-10-23 may have real tight ends, quarterbacks or defenders in running back places: renamed in memory."""
@@ -271,6 +281,8 @@ class FranchiseStore:
         """The new league replaces the franchise (which `archive_current` kept); league.sav and history.txt are written."""
         archived = self.archive_current()
         self.league = league
+        if self.reserves:
+            league.reserves_on = True              # D-149
         self.pending, self.creating = None, False
         if not archived:                         # the old franchise could not be kept: it stays where it is, the new one is in memory
             self.keep_old = True

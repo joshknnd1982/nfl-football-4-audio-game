@@ -93,7 +93,7 @@ def offer_sheet(league):
     the cap for his market price (the length of his age), both of their first-round picks, and a value of him at that contract of at least the two picks'
     (each by the team's situation), the team that values him most, equal values by the market's tie rule; the offer pays at least his tag. No draw; nothing
     is changed."""
-    from . import market, trades
+    from . import market, reserves, trades
     player = tagged(league)
     if player is None:
         return None
@@ -103,7 +103,7 @@ def offer_sheet(league):
     for team in range(1, D.TEAMS + 1):
         if team == player.team:
             continue
-        if market.filled(league, team, player.pos) >= D.GROUP_SIZE[player.pos] or salary > market.room(league, team):
+        if not reserves.can_join(league, team, player.pos) or salary > market.room(league, team):          # D-149: a place or a bench spot
             continue
         if not owns_both_firsts(league, team):
             continue
@@ -119,7 +119,7 @@ def offer_sheet(league):
 
 def can_match(league, player, salary: int) -> bool:
     """His team can keep him at the offer: the offer pays him no more than the tag, or its cap with the offer in place of the tag's salary stays under it."""
-    return salary <= player.salary or CT.cap_used(league, player.team) - player.salary + salary <= T.FR_CAP
+    return salary <= player.salary or CT.cap_used(league, player.team) - player.salary + salary <= CT.cap_of(league)
 
 
 def should_match(league, player, salary: int, years: int) -> bool:
@@ -134,15 +134,13 @@ def match(league, player, salary: int, years: int) -> None:
 
 
 def let_go(league, player, team: int, salary: int, years: int) -> None:
-    """He joins the team of the sheet on its contract, in its first empty place of his position; his team gets that team's first-round pick of the coming
-    draft and of the draft after it (`future_picks`)."""
-    from . import aging, trades
+    """He joins the team of the sheet on its contract, in its first empty place of his position (else its bench, D-149); his team gets that team's first-round
+    pick of the coming draft and of the draft after it (`future_picks`)."""
+    from . import aging, reserves, trades
     old = player.team
-    league.rosters[old - 1][player.place] = 0
-    roster = league.rosters[team - 1]
-    index = next(i for i in D.PLACES_OF[player.pos] if not roster[i])
-    roster[index] = player.id
-    player.team, player.place = team, index
+    if player.place >= 0:
+        league.rosters[old - 1][player.place] = 0
+    reserves.join(league, team, player)                  # his first empty place there, else its bench (D-149)
     CT.sign(player, salary, years)
     trades.move_pick(league, (1, team), old)
     league.future_picks.append([league.season + 1, 1, team, old])

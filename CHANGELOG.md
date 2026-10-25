@@ -10,6 +10,34 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.0 (2026-10-25, test build)
+
+### A franchise keeps every team's real 53 players
+A franchise team used to carry only the 34 players the game plays. Now every team carries its real 53-man roster of 2026-10-24: the 34 who play in the game's places and up to 19 more on the bench, the backup quarterbacks, the extra receivers and defenders, the offensive line and the long snapper too. The bench plays no snaps and does not change a team's strength, so games come out as before; it is paid, grows older, improves, retires, and is signed again or let go like everyone else. In every player list a bench player is said as "quarterback on the bench" (or his own position). The salary cap is 54 million higher (247.2 million in all), so the bench's pay leaves the players in the places the money they had. The ratings and ages of real players are the game's own, not real ones (the game keeps facts only: names and positions).
+- How to test: start a new franchise with the N. F. L. rules. F9, Franchise, your roster: the title says how many players you have, how many play in the places and how many are on the bench, for example "53 of 53 players: 34 in the game's places and 19 on the bench". Open the quarterbacks, the receivers and the offensive linemen: the bench players are the real backups of your team, each said "on the bench".
+- Tell us: are the bench players the right men for your team? Is the roster list easy to move through with 53 names?
+
+### A hurt player's place goes to the bench first
+When a player of a franchise team is hurt, the staff now puts the best healthy man of the bench at his position in his place, so a hurt quarterback is played by the backup quarterback, never by a made-up stand-in while the team has one. The bench man plays at his own rating, but never better than the hurt man. In the week's to-do list and in F9, Franchise, injury report, "who starts for" now lists the bench players of that position too.
+- How to test: play franchise weeks until one of your players is out. Open "who starts for" in the injury report: the bench players of his position are in the list, the staff's choice first. Choose one; in the game, listen for his name.
+
+### The roster cut keeps 53
+At the roster cut the best players of each position take the 34 places, as before, and up to 19 more stay on the bench: a backup quarterback, the long snapper and five offensive linemen first, then one backup at each position, then the best of the rest. Only the players beyond 53 are released. The draft's rookies and the undrafted free agents join the bench when they do not win a place. Since the draft makes no linemen and no long snappers, a bench that has fewer than one long snapper and five linemen gets young made-up ones at the cut. If you choose your cut yourself, the game asks "your roster has 58 players and room for 53. choose who is released." until your roster fits, the staff's choices first.
+- How to test: play a franchise into the offseason, through the draft, to the roster cut. Choose "choose yourself" and release players until it stops asking. Then F9, Franchise, your roster: 53 players.
+- Tell us: did the staff keep the players you would have kept?
+
+### Bench players in trades, signings and the depth chart
+- Trades: in F9, Franchise, trades, the lists of players now include the bench of each team; a bench player you trade away takes the other man's spot, in a place or on the bench.
+- Free agents in the season: when your bench has room, a free agent you sign joins it and nobody has to be released; when the bench is full, you may release a bench player of the same position for him.
+- Depth charts (F9, Rules, Depth charts in a franchise): each position lists its bench players after its starters and backups. Enter on a bench player makes him the starter, and the last man of the places goes to the bench; the game says so.
+- Quarterbacks (F9, Rules, Quarterbacks, your own team): your backup quarterbacks of the bench come after the starter. Enter on one makes him the starter and the starter goes to the bench, with no release. A practice squad quarterback you make the starter signs to the bench first, and the starter goes to the bench.
+- How to test: F9, Rules, Quarterbacks, your team, Down, Enter on the backup: the game says he starts now and the starter goes to the bench. Play the next game and listen for his name. F9, Rules, Depth charts, your team, a position, Enter on a bench player: the game says he is first and who went to the bench.
+- Tell us: did you ever expect someone to be released who was not, or the other way round?
+
+### A franchise saved by an older build
+A franchise saved by 0.15.0 or older opens as it was, with nobody on a bench yet; its next roster cut fills the benches from the draft, the undrafted rookies and the free agents. Nothing is made up for its past. The cap is the new one from the moment it opens.
+- How to test: keep a copy of a franchise from 0.15.0 (the `franchise` folder in your files), open it in 0.16.0 and play to the next cut: F9, Franchise, your roster then shows the bench.
+
 ## 0.15.0 (2026-10-24, test build)
 
 ### Every player at his real position

@@ -16,6 +16,7 @@ league.sav, in the way `offseason.py` does for the other stages:
 """
 from __future__ import annotations
 
+from ...data import debuglog
 from .. import nx_texts as X
 from .. import tuning as T
 from . import aging
@@ -184,10 +185,14 @@ def stage_cut(p, n: int, m: int, short: bool) -> None:
                 plans[team] += _own_cap_choice(g, words, league, waiting, plans[team])
         first_new = league.next_id
         DR.apply_cut(league, plans, waiting)
+        debuglog.event("franchise", "cut_applied", season=league.season, released=sum(len(v) for v in plans.values()), own_released=len(plans[team]),
+                       own_bench=len(league.bench(team)), benches=bool(league.reserves_on))          # rule 0.15 (D-149: the bench after the cut)
     finally:
         league.cut_deciding = False
     filled = aging.fill_places(league, g.rnd, list(g.pool.original))
-    own_filled = [pl for pl in league.players.values() if pl.id >= first_new and pl.team == team]
+    from . import reserves
+    reserves.fill_line(league, list(g.pool.original))        # D-149: a long snapper and five linemen on every bench (no draw)
+    own_filled = [pl for pl in league.players.values() if pl.id >= first_new and pl.team == team and pl.place >= 0]     # (D-149: the bench's new linemen are not the fill)
     league.draft = None
     league.pick_no = 0
     told, recent = news.render(league, [news.cap_event(league)], g.news_pools or DEFAULT_POOLS, words, g.rnd)      # NWK, after the fill
@@ -229,6 +234,9 @@ def _own_cap_choice(g, words, league, waiting: dict, released: list) -> list:
 def _own_choice(g, words, league, waiting: dict) -> list:
     """The player releases the players himself: for each group with too many players a question over the group's players, the staff's
     choices first, Enter releases the current one until the group fits (design 7.6). Returns the players released."""
+    from . import reserves
+    if reserves.on(league):
+        return _own_bench_choice(g, words, league, waiting)
     team = league.team
     released = []
     for position in D.ROSTER_ORDER:
@@ -242,6 +250,43 @@ def _own_choice(g, words, league, waiting: dict) -> list:
             g.say2(X.text("NXE-55", player=choice.name))
         if not chose:                                              # a group he was not asked about: the staff's floor still applies
             released += DR.floor_releases(remaining, position)     # (in a group he chose from, the players he kept are his decision)
+    return released
+
+
+def roster_size(league, team: int, waiting: dict, released) -> int:
+    """D-149: the men the team carries after the cut and the fill once `released` are gone: every group of places at least its places (the fill makes the
+    rest), the line and the snapper as they are."""
+    gone = {p.id for p in released}
+    total = 0
+    for position in D.ALL_POSITIONS:
+        held = sum(1 for p in DR.group_players(league, team, position, waiting) if p.id not in gone)
+        total += max(held, D.GROUP_SIZE[position])
+    return total
+
+
+def _own_bench_choice(g, words, league, waiting: dict) -> list:
+    """D-149 (NX-B2b): the player of a league that carries benches releases players himself until his roster fits the 53: one question over every man of
+    his team (the places, the rookies, the bench), the staff's choices first, Enter releases the current one. The floor of the small groups then applies to
+    the men he kept, as the staff's cut does. Returns the players released."""
+    from . import reserves
+    team = league.team
+    released: list = []
+    staff_first = [p for p in DR.plan_bench_cut(league, team, waiting)]
+    while roster_size(league, team, waiting, released) > D.ROSTER_MAX:
+        gone = {p.id for p in released}
+        everyone = [p for position in D.ALL_POSITIONS for p in DR.group_players(league, team, position, waiting) if p.id not in gone]
+        first = [p for p in staff_first if p.id not in gone]
+        chosen_ids = {p.id for p in first}
+        remaining = first + [p for p in DR.release_order(everyone) if p.id not in chosen_ids]
+        situation = X.text("NXL-53", n=roster_size(league, team, waiting, released), m=D.ROSTER_MAX)
+        choice = remaining[FranchiseQuestion(g, situation, [words.player(pl) for pl in remaining]).ask()]
+        released.append(choice)
+        g.say2(X.text("NXE-55", player=choice.name))
+    gone = {p.id for p in released}
+    for position in D.ROSTER_ORDER:
+        kept = DR.keep_order([p for p in DR.group_players(league, team, position, waiting) if p.id not in gone])[:D.GROUP_SIZE[position]]
+        released += [p for p in DR.floor_releases(kept, position) if p.id not in gone]
+    debuglog.event("franchise", "cut_own_choice", released=[p.id for p in released], bench_max=reserves.MAX)     # rule 0.15
     return released
 
 

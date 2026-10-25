@@ -36,7 +36,7 @@ def complete_roster(prefix="Own"):
 
 def test_a_team_has_34_places_in_the_originals_order_with_a_position_each():
     assert D.PLACE_COUNT == 34 and len(D.PLACES) == 34
-    assert D.GROUP_SIZE == {"RB": 6, "WR": 6, "QB": 1, "DL": 6, "LB": 5, "CB": 4, "S": 2, "RET": 2, "K": 1, "P": 1}
+    assert D.GROUP_SIZE == {"RB": 6, "WR": 6, "QB": 1, "DL": 6, "LB": 5, "CB": 4, "S": 2, "RET": 2, "K": 1, "P": 1, "OL": 0, "LS": 0}   # (D-149: the bench only)
     assert D.PLACES[0] == ("Running Backs:", 1, "RB") and D.PLACES[6] == ("Receivers:", 1, "WR")
     assert D.PLACES[12] == ("Defensive Players:", 1, "DL") and D.PLACES[28] == ("Defensive Players:", 17, "S")
     assert D.PLACES[29] == ("Special Teams Players:", 1, "RET") and D.PLACES[31] == ("Kickers:", 1, "K")
@@ -131,7 +131,8 @@ def test_a_names_redraw_is_bounded_when_the_pool_is_used_up():
     tiny = ["A", "B", "C"]                                              # 1,088 players cannot have 3 different names
     league = new_league(rnd, tiny, "Kim", 1, "20260101-000000")
     league.check()                                                      # a duplicate is allowed only when the pool is used up
-    assert len(league.players) == 1088 and rnd.fallbacks > 0
+    assert len(league.players) == 1088
+    assert rnd.fallbacks == 0 and rnd.draws < 1088 * 12                # D-149: a pool all in use costs one draw a name, not 10,000 (B-P162)
 
 
 # ----- the strength and the rank (design 4.4) -----

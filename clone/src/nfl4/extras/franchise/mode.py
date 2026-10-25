@@ -376,6 +376,9 @@ def start_new(p) -> None:
     league = new_league(g.rnd, list(g.pool.original), season.coach, team, new_league_id(g), own_names(g),
                         team_styles=table.teams if table is not None else None,      # SX.8l: the coordinators start with the teams' styles
                         real=getattr(g, "real_names", None))                         # SX.11: the real coaches and players (None: drawn surnames)
+    if getattr(store, "reserves", True):
+        from . import reserves
+        reserves.real_reserves(league, getattr(g, "real_names", None))   # D-149 (NX-B2b): the rest of every team's real 53 on its bench (no draw)
     if getattr(store, "practice_squads", True):
         from . import practice
         joined = practice.real_squads(league, getattr(g, "real_names", None))     # NX-B2: the real practice squads first (no draw)

@@ -194,6 +194,11 @@ class Words:
     def position(self, position: str) -> str:
         return X.text(D.POSITION_TEXT[position])
 
+    def position_of(self, player) -> str:
+        """His position word; D-149: "<position> on the bench" (NXL-52) for a man of a team's bench."""
+        word = self.position(player.pos)
+        return X.text("NXL-52", position=word) if getattr(player, "status", "") == "reserve" else word
+
     def group(self, position: str) -> str:
         return X.text(D.GROUP_TEXT[position])
 
@@ -205,7 +210,7 @@ class Words:
 
     def player(self, player) -> str:
         """NXL-31: a player in a list (SX.8b: the rating and the potential are spoken)."""
-        return X.text("NXL-31", player=player.name, position=self.position(player.pos), r=player.rating, a=player.age,
+        return X.text("NXL-31", player=player.name, position=self.position_of(player), r=player.rating, a=player.age,
                       potential=self.potential(player.potential))
 
     def amount(self, units: int) -> str:
@@ -241,12 +246,12 @@ class Words:
 
     def player_with_contract(self, player) -> str:
         """NXL-33: a player in the roster with his contract (SX.8g)."""
-        return X.text("NXL-33", player=player.name, position=self.position(player.pos), r=player.rating, a=player.age,
+        return X.text("NXL-33", player=player.name, position=self.position_of(player), r=player.rating, a=player.age,
                       potential=self.potential(player.potential), contract=self.contract(player))
 
     def released_for_the_cap(self, player) -> str:
         """NXA-12: a player the team would release to get under the cap, with what he costs."""
-        return X.text("NXA-12", player=player.name, position=self.position(player.pos), a=player.age, r=player.rating,
+        return X.text("NXA-12", player=player.name, position=self.position_of(player), a=player.age, r=player.rating,
                       contract=self.contract(player))
 
     def prospect_line(self, name: str, position: str, low: int, high: int, age: int, potential: str) -> str:
@@ -275,7 +280,7 @@ def team_rating_lines(league: LeagueRecord, words: Words) -> list:
 def cap_text(league: LeagueRecord, words: Words) -> str:
     """NXA-01: the cap, the player's payroll, dead money and cap space (SX.8g)."""
     team = league.team
-    return X.text("NXA-01", cap=words.amount(T.FR_CAP), payroll=words.amount(contracts.payroll(league, team)),
+    return X.text("NXA-01", cap=words.amount(contracts.cap_of(league)), payroll=words.amount(contracts.payroll(league, team)),
                   dead=words.amount(league.dead[team - 1]), space=words.amount(contracts.cap_space(league, team)))
 
 

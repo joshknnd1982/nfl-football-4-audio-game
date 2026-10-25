@@ -205,7 +205,8 @@ def test_twenty_offseasons_keep_every_place_filled_every_group_whole_and_no_grou
         assert all(pid for roster in league.rosters for pid in roster)                 # I3: every place is filled
         for team in range(1, 33):
             roster = league.rosters[team - 1]
-            for pos, places in D.PLACES_OF.items():
+            for pos in D.POSITIONS:                                                      # (D-149: OL and LS have no places)
+                places = D.PLACES_OF[pos]
                 ratings = [league.players[roster[i]].rating for i in places]
                 assert sum(ratings) / len(ratings) >= 50, (season, team, pos, ratings)   # I5
                 assert all(league.players[roster[i]].pos == pos for i in places)

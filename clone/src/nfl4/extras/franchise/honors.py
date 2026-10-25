@@ -155,7 +155,7 @@ def hall_candidates(league) -> list:
     """The kept players who left the league FR_HOF_WAIT or more seasons before this one and are not in the hall, by hall value (the highest first)."""
     out = []
     for player in league.players.values():
-        if player.status == "active" or player.left == 0 or league.season - player.left < T.FR_HOF_WAIT or in_hall(league, player.id):
+        if player.status in ("active", "reserve") or player.left == 0 or league.season - player.left < T.FR_HOF_WAIT or in_hall(league, player.id):
             continue
         if player.peak < D.STAR_PEAK and not awards_of(league, player.id):
             continue                       # the kept players of every team alike (the player's own team keeps all of its players for history)
@@ -229,6 +229,6 @@ def check_honors(league, whole) -> None:
         whole(row[0], 1, 10 ** 9, "a member of the hall")
         whole(row[1], 1, D.MAX_SEASONS, "the season he entered the hall")
         player = league.players.get(row[0])
-        if player is None or player.status == "active" or row[0] in members:
+        if player is None or player.status in ("active", "reserve") or row[0] in members:
             raise LeagueError("the member %r of the hall is not a former player of the league, or is there twice" % (row[0],))
         members.add(row[0])

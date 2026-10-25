@@ -32,10 +32,16 @@ def group_of(league, position: str) -> list:
     return [p for p in league.group_of(league.team, position) if p is not None]
 
 
+def chart_of(league, position: str) -> list:
+    """D-149: the depth chart of a group: its places in order, then the men of the bench of the position."""
+    return group_of(league, position) + league.bench(league.team, position)
+
+
 def put_first(league, position: str, pid: int) -> list:
-    """The player makes `pid` the first of his group: the order becomes he, then the group's others as they stand; the places follow at once. Returns
-    the group's new order (players)."""
-    current = group_of(league, position)
+    """The player makes `pid` the first of his group: the order becomes he, then the group's others as they stand; the places follow at once. D-149: `pid`
+    may be a man of the bench: he takes the first place and the last man of the places goes to the bench. Returns the group's new order (players)."""
+    from . import reserves
+    current = chart_of(league, position)
     if pid not in [p.id for p in current]:
         raise LeagueError("player %r is not in the group %s of the player's team" % (pid, position))
     order = [pid] + [p.id for p in current if p.id != pid]
@@ -43,9 +49,12 @@ def put_first(league, position: str, pid: int) -> list:
     roster = league.rosters[league.team - 1]
     places = D.PLACES_OF[position]
     players = [league.players[i] for i in order]
+    for player in players[len(places):]:
+        if player.status == "active":
+            reserves.to_bench(league, player)                  # D-149: pushed out of the places
     for index, player in zip(places, players):
         roster[index] = player.id
-        player.place = index
+        player.status, player.place = "active", index
     if len(league.sums) == D.TEAMS:
         league.sums[league.team - 1] = league.strength_sum(league.team)
     return players
