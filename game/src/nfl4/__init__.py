@@ -11,5 +11,5 @@ Packages:
   data    per-user paths, settings, logging, the voice crash guard, the process's start and end
 """
 
-VERSION = "0.16.1"         # P8, 2026-10-25 (b): the tenth test installer (D-133, D-150: the source folder is game\, the word "clone" retired, nothing new to play); 2026-10-25: the ninth test installer (NX-B2b, D-149: the 53-man Franchise, its benches); 2026-10-24: the eighth test installer (the owner's second report NX-D1 to NX-D5, NX-M1, NX-M2: real positions, starters who play the most, depth charts, key downs, no original music or celebrations); 1.0.0 is the first release (P11)
+VERSION = "0.16.2"         # PR SR.2, 2026-10-25: the real rosters of 2026-10-25 with Madden NFL's positions (rosters.txt layout 2, D-152 to D-158), not built yet (SR.7); 0.16.1, P8, 2026-10-25 (b): the tenth test installer (D-133, D-150: the source folder is game\, the word "clone" retired, nothing new to play); 2026-10-25: the ninth test installer (NX-B2b, D-149: the 53-man Franchise, its benches); 2026-10-24: the eighth test installer (the owner's second report NX-D1 to NX-D5, NX-M1, NX-M2: real positions, starters who play the most, depth charts, key downs, no original music or celebrations); 1.0.0 is the first release (P11)
 TITLE = "NFL Football 4"

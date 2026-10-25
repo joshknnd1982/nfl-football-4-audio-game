@@ -198,7 +198,7 @@ def test_a_damaged_file_is_copied_aside_and_made_again_from_the_built_in_names(t
     assert any("rosters.txt" in n and "damaged" in n for n in notices)
     assert any(name.startswith("rosters.txt.damaged") for name in os.listdir(tmp_path))
     assert c.snapshot.real_names.has_players(1) and len(c.snapshot.real_names.rosters[0]) > 30
-    assert (tmp_path / "rosters.txt").read_text(encoding="utf-8").startswith("# NFL Football 4 rosters, format 1.")
+    assert (tmp_path / "rosters.txt").read_text(encoding="utf-8").startswith("# NFL Football 4 rosters, format 1")
 
 
 def test_a_bad_line_keeps_the_built_in_value_and_is_counted_once_per_file(tmp_path):

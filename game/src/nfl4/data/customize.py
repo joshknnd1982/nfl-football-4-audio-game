@@ -188,20 +188,34 @@ def migrate_team_names(folder: str) -> str:
 # NX-B2 (D-144, the owner 2026-10-24: "it should be using the current 53 man rosters for each team"): the rosters.txt that the program copied into the
 # customize folder is a whole copy of the built-in file, and a team's lines in it replace the built-in team (NX-N4), so a newer built-in roster would never
 # be heard by a player who already has the file. A file that is EXACTLY an older shipped copy (the SHA-256 of its text with LF line ends) is the program's
-# own, never the player's edit: it is replaced by the new built-in text once, the old one kept as rosters.txt.before-2026-10-24. A file the player changed
+# own, never the player's edit: it is replaced by the new built-in text once, the old one kept as rosters.txt + ROSTERS_BEFORE_REFRESH. A file the player changed
 # in any way is his and stays (the README says how to get the new players: delete the file). Add the hash of the file a release ships here when the
 # next roster refresh replaces it.
 OLD_SHIPPED_ROSTERS = {
     "962870e5691d6f7fe622d275d037334b59418f260742a27b98006ac50099c17e",     # 0.10.0 to 0.13.0: season 2026, as of 2026-10-22 (SX.11)
+    "e77caff85373148b9fe39fc9951b59d5ef6661ef49208d94ac937572fd273960",     # 0.14.0: as of 2026-10-24, format 1 (NX-B2; missed in 0.15.0, added in SR.2)
+    "4ea4f247acd43e6698ea3cab300dcca8039d65e912a19b4b009020ab1732edc4",     # 0.15.0 to 0.16.1: as of 2026-10-24, format 1 with NX-D1's positions
 }
-ROSTERS_BEFORE_REFRESH = ".before-2026-10-24"
+ROSTERS_BEFORE_REFRESH = ".before-layout-2"    # SR.2: the copy of the player's old file when the layout-2 rosters replace it (was .before-2026-10-24)
+
+
+# SR.2: free_agents.txt in the same way (a player's copy lays every one of its IDs over the built-in list, so a man who has signed since would stay free)
+OLD_SHIPPED_FREE_AGENTS = {
+    "016328cf7ab998d2fe3f8763756871b03e02fcd196942d6e758c0da741ba892d",     # 0.14.0 to 0.16.1: as of 2026-10-24 (NX-B3)
+}
 
 
 def refresh_old_rosters(folder: str) -> str:
-    """Replace a rosters.txt that is exactly an older shipped copy with the built-in text (once, the old copy kept). Returns "refreshed" or "" (nothing
-    to do: no file, the player's own file, the new one already, or it could not be read or written). Never raises."""
+    """Replace a rosters.txt (and a free_agents.txt) that is exactly an older shipped copy with the built-in text (once, the old copy kept). Returns
+    "refreshed" when rosters.txt was replaced, else "" (nothing to do: no file, the player's own file, the new one already, or it could not be read or
+    written). Never raises."""
+    _refresh_old_copy(folder, "free_agents.txt", OLD_SHIPPED_FREE_AGENTS, "freeagents")
+    return _refresh_old_copy(folder, "rosters.txt", OLD_SHIPPED_ROSTERS, "rosters")
+
+
+def _refresh_old_copy(folder: str, file_name: str, hashes: set, kind: str) -> str:
     import hashlib
-    path = os.path.join(folder, "rosters.txt")
+    path = os.path.join(folder, file_name)
     try:
         if not os.path.isfile(path):
             return ""
@@ -210,18 +224,19 @@ def refresh_old_rosters(folder: str) -> str:
         except (ValueError, UnicodeError):
             return ""                                             # a damaged file: the list loader heals it as always
         digest = hashlib.sha256(text.replace("\r\n", "\n").encode("utf-8")).hexdigest()
-        if digest not in OLD_SHIPPED_ROSTERS:
+        if digest not in hashes:
             return ""
         from ..extras import real_names
-        new = real_names.shipped_text(real_names.ROSTERS)
+        new = real_names.shipped_text(kind)
         if save_backup_copy(path, ROSTERS_BEFORE_REFRESH) is None:
             return ""                                             # never replace a file whose copy could not be made
         if not write_text_atomic(path, new):
             return ""
-        debuglog.event("file", "rosters_refreshed", path=path, old=digest[:12], copy=path + ROSTERS_BEFORE_REFRESH)     # rule 0.15
+        debuglog.event("file", "%s_refreshed" % ("rosters" if kind == "rosters" else "free_agents"), path=path, old=digest[:12],
+                       copy=path + ROSTERS_BEFORE_REFRESH)        # rule 0.15
         return "refreshed"
     except Exception:
-        log.exception("rosters.txt could not be refreshed")
+        log.exception("%s could not be refreshed", file_name)
         return ""
 
 

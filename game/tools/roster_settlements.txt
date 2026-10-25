@@ -1,0 +1,12 @@
+# roster_settlements.txt: the maintainer's decisions for update_rosters.py (nfl4, SR.2, rule 0.8 and NX-L1). This is inspired by Jim Kitchen.
+# When the sources disagree and a web search settles who is where, the answer goes here with its source, and every later run applies it.
+# Each line: an ID, an equals sign, then four parts separated by " | ": the team (T01 to T32), the man's name as the team's page writes it,
+# what is true (active, PS, IR, IRD, PUP, NFI, SUS, PSI, EXM, or off = not on this team), and the source with its date.
+# A settlement that no longer finds its man is said in the report: then the pages have caught up and the line can go.
+
+S001 = T18 | Thomas Harper | IR | nflverse status RES (R01) and Sleeper "Inactive" on 2026-10-25; ESPN's Lions injuries page: placed on injured reserve (ankle). The Lions' page still lists him active.
+S002 = T26 | Ogbo Okoronkwo | PS | 49ers re-signed him to the practice squad and elevated him with Jalen Graham for week 7 (Yardbarker "49ers make five moves, activate WR Christian Kirk"; Yahoo Sports, 2026-10). The 49ers' page still lists both active.
+S003 = T26 | Jalen Graham | PS | the same: elevated from the practice squad for week 7, reverted after the game (49ers' page lists him active).
+S005 = T17 | Montez Sweat | active | suspended two games on 2026-10-14 (the Falcons game and the Patriots game of 2026-10-22; Chicago Sun-Times 2026-10-14): back after them; nflverse still says RES. The Bears' page is right.
+S006 = T27 | Terrance Ferguson | active | on injured reserve from week 4, eligible to return in week 8 against the Chargers (NBC Sports, The Fantasy Footballers); the Rams' page lists him active: activated. nflverse still says RES.
+S004 =T24 | Charles Snowden | off | the Falcons signed him off the Commanders' practice squad to their 53 on 2026-10-21 (Field Level Media; Yardbarker; Ian Rapoport, NFL Network). The Commanders' page still lists him.

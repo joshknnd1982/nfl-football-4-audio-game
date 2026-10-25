@@ -31,3 +31,5 @@ venv/
 /fixesforgames.md
 /fixesforgames.part*.md
 /release/checksums_test_*.txt
+# Excerpts of the teams' pages and of Sleeper's feed, the fixtures of the roster script's tests: kept local, never published (D-156, D-157)
+/game/tests/data/rosters_sr2/

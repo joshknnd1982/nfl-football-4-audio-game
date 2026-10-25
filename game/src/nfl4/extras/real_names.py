@@ -20,12 +20,20 @@ linemen (OL) and the long snapper (LS) too, then the practice squad, each line m
 `_assemble`, `quarterback` and the quarterbacks' list read the active players of the positions the game plays, exactly as with the older file, so a game
 draws and names the same with either file; the Franchise reads the practice squads (`squad`). An older file (the player's own) is read as it always was; the list syntax is the same (format 1).
 
+Layout 2 (SR.2, D-152, NX-L1 and NX-L2; extras/roster_file.py): the positions are Madden NFL's 22 (QB HB FB WR TE LT LG C RG RT LEDG REDG DT SAM MIKE
+WILL CB FS SS K P LS), a line may start with a list (PS, or a reserve list such as IR), and the return roles are lines of their own (T17KR1 = a name).
+Until SR.4 builds the real roster model the engine still plays the original's groups: `RealPlayer.pos` is the group (HB is RB, LT is OL, LEDG is DL,
+SAM is LB, FS is S) and `RealPlayer.madden` keeps the real position; a team's active men are put in the order its groups take them (the starters of
+every position first, roster_file.group_order), its returners become RET lines after the active roster as in format 1, and the men of a reserve
+list are kept apart in `RealNames.reserves` (on the team, never in a game). A format-1 file is read as it always was.
+
 `RealNames.roster(team, fallback)` makes the 33 names of the set-up (the original's sections: 6 running backs, 6 receivers, 17 defensive players,
 2 returners, 2 kickers) from a team's real players; a place with no real player keeps the name of `fallback` (the names the original's draw has made,
 so the draws of a game are the same with or without real names). `places(team)` is the same for the Franchise's 34 places.
 """
 from __future__ import annotations
 
+import dataclasses
 import logging
 import os
 import re
@@ -34,6 +42,7 @@ from dataclasses import dataclass
 from ..data import customlists as cl
 from ..data import paths
 from ..game.setup import COUNTS, Roster
+from . import roster_file as RF
 from .franchise import data as D
 
 log = logging.getLogger("nfl4.extras")
@@ -50,7 +59,10 @@ NAME_MIN, NAME_MAX = 1, 30
 
 _COACH_ID = re.compile(r"T(\d{1,2})", re.IGNORECASE)
 _PLAYER_ID = re.compile(r"T(\d{1,2})P(\d{1,3})", re.IGNORECASE)
-_PLAYER_VALUE = re.compile(r"^(?:(%s)\s+)?(%s)\s+(\d{1,2}|-)\s+(.+)$" % (SQUAD_MARK, "|".join(POSITIONS)), re.IGNORECASE)
+_ALL_POSITIONS = tuple(sorted(set(POSITIONS) | set(RF.MADDEN), key=len, reverse=True))       # format 1's words and layout 2's positions
+_PLAYER_VALUE = re.compile(r"^(?:(%s)\s+)?(%s)\s+(\d{1,2}|-)\s+(.+)$" % ("|".join(sorted(RF.STATUSES, key=len, reverse=True)), "|".join(_ALL_POSITIONS)),
+                           re.IGNORECASE)
+_ROLE_ID = re.compile(r"T(\d{1,2})(KR|PR)(\d)", re.IGNORECASE)
 _RESPELL_ID = re.compile(r"R(\d{1,4})", re.IGNORECASE)
 _FREE_ID = re.compile(r"F(\d{1,4})", re.IGNORECASE)
 _FREE_VALUE = re.compile(r"^(%s)\s+(\d{1,2}|-)\s+(.+)$" % "|".join(p for p in POSITIONS if p != "RET"), re.IGNORECASE)
@@ -77,6 +89,8 @@ class RealPlayer:
     number: str          # digits, or "-" when the player has none; kept for the file, never spoken
     name: str
     squad: bool = False  # the 53-man file: a player of the practice squad (no place in a game; the Franchise's squad)
+    madden: str = ""     # layout 2: the real position (roster_file.MADDEN); "" for a format-1 line of a group word
+    status: str = ""     # layout 2: "" active, "PS" the practice squad, or a reserve list (IR, PUP, ...): then the man is in RealNames.reserves
 
 
 @dataclass(frozen=True)
@@ -94,6 +108,11 @@ class RealNames:
     rosters: tuple                      # 32 tuples of RealPlayer, in file order
     respellings: tuple                  # ((ID, written, spoken), ...) in the order of the IDs
     free_agents: tuple = ()             # NX-B3: ((ID, RealFreeAgent), ...) in the order of the IDs
+    reserves: tuple = ()                # layout 2: 32 tuples of RealPlayer on a reserve list (injured reserve and the like), never in a game
+
+    def reserve(self, team: int) -> list:
+        """The team's men on a reserve list (layout 2), in file order; [] for a format-1 file."""
+        return list(self.reserves[team - 1]) if self.reserves and 1 <= team <= TEAMS else []
 
     # ----- how a name is said -----
 
@@ -273,10 +292,20 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
                 coaches[number - 1] = entry.value
 
     rosters = list(base_rosters)
+    reserves = list(defaults.reserves) if defaults and defaults.reserves else [()] * TEAMS
     lines: dict[int, list] = {}
+    roles: dict[int, dict] = {}
     bad = problems[ROSTERS]
     for entry in roster_entries:
         if entry.id == "VERSION":
+            continue
+        role = _ROLE_ID.fullmatch(entry.id)
+        if role is not None and 1 <= int(role.group(1)) <= TEAMS:
+            reason = name_problem(entry.value.strip())
+            if reason:
+                bad.add(entry.id, "%s, the line is ignored" % reason)
+            else:
+                roles.setdefault(int(role.group(1)), {}).setdefault(role.group(2).upper(), []).append((int(role.group(3)), entry.value.strip()))
             continue
         match = _PLAYER_ID.fullmatch(entry.id)
         team = int(match.group(1)) if match else 0
@@ -287,19 +316,27 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
         if parts is None:
             bad.add(entry.id, "a player is a position, a number and a name, like QB 9 Joe Burrow, the line is ignored")
             continue
-        squad = parts.group(1) is not None
-        if squad and parts.group(2).upper() == "RET":
+        status = (parts.group(1) or "").upper()
+        squad = status == SQUAD_MARK
+        code = parts.group(2).upper()
+        if status and code == "RET":
             bad.add(entry.id, "a practice squad player is not a returner, the line is ignored")
             continue
         reason = name_problem(parts.group(4).strip())
         if reason:
             bad.add(entry.id, "%s, the line is ignored" % reason)
             continue
-        lines.setdefault(team, []).append((int(match.group(2)), entry.line, RealPlayer(parts.group(2).upper(), parts.group(3),
-                                                                                       parts.group(4).strip(), squad)))
+        madden = code if code in RF.MADDEN else ""
+        lines.setdefault(team, []).append((int(match.group(2)), entry.line, RealPlayer(RF.GROUP_OF.get(code, code), parts.group(3),
+                                                                                       parts.group(4).strip(), squad, madden, status)))
     for team, rows in lines.items():
         rows.sort(key=lambda row: (row[0], row[1]))          # by the number of the ID, then by the line: the file's own order is the depth order
-        rosters[team - 1] = tuple(player for _, _, player in rows)
+        players = [player for _, _, player in rows]
+        rosters[team - 1], reserves[team - 1] = _team_lines(players, roles.get(team))
+    for team, given in roles.items():                         # role lines alone: the returners of a built-in (or earlier) team
+        if team not in lines:
+            kept = [p for p in rosters[team - 1] if p.pos != "RET" or p.squad]
+            rosters[team - 1], _ = _team_lines(kept, given)
 
     respell = dict(base_respell)
     bad = problems[RESPELLINGS]
@@ -341,7 +378,48 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
         age = int(parts.group(2)) if parts.group(2).isdigit() else None
         free[ident] = (ident, RealFreeAgent(parts.group(1).upper(), age, parts.group(3).strip()))
     return RealNames(version, tuple(coaches), tuple(rosters), tuple(sorted(respell.values())),
-                     tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))))
+                     tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))), tuple(reserves))
+
+
+def _team_lines(players: list, roles: "dict | None"):
+    """(the team's lines as the engine reads them, its reserve men). Layout 2 (a real position, roles): the active men in the order of the groups,
+    the returners as RET lines after them (KR1, PR1, KR2, PR2, ...; each once, the number of his own line), then the practice squad."""
+    reserve = tuple(p for p in players if p.status not in ("", SQUAD_MARK))
+    playing = [p for p in players if p.status in ("", SQUAD_MARK)]
+    real = any(p.madden and p.madden not in POSITIONS for p in playing) or bool(roles)
+    if not real:
+        return tuple(playing), reserve
+    active = [p for p in playing if not p.squad and p.pos != "RET"]
+    old_returners = [p for p in playing if not p.squad and p.pos == "RET"]
+    squad = [p for p in playing if p.squad]
+    if any(p.madden and p.madden not in POSITIONS for p in active):
+        men = [RF.Man(p.madden or p.pos, p.number, p.name) for p in active]
+        lookup = {id(m): p for m, p in zip(men, active)}
+        active = [lookup[id(m)] for m in RF.group_order(men)]
+        # a 3-4 team's outside backers are edge men (D-153), so the engine's 5 linebacker places can be short while its 6 line places have men
+        # to spare: until SR.4's real model, a spare edge man (the deepest first) plays a linebacker place, his real position kept in `madden`
+        need = 5 - sum(1 for p in active if p.pos == "LB")
+        spare = sum(1 for p in active if p.pos == "DL") - 6
+        if need > 0 and spare > 0:
+            lend = [p for p in reversed(active) if p.madden in ("LEDG", "REDG")][:min(need, spare)]
+            active = [dataclasses.replace(p, pos="LB") if p in lend else p for p in active]
+    for pos in ("K", "P"):                # a team with no active kicker (the Dolphins of 2026-10-25) elevates its squad kicker every game day:
+        if not any(p.pos == pos for p in active):           # he plays (as SX.11 had it), off the squad list, so no made-up kicker takes the place
+            first = next((p for p in squad if p.pos == pos), None)
+            if first is not None:
+                squad.remove(first)
+                active.append(dataclasses.replace(first, squad=False))
+    returners = old_returners
+    if roles:
+        numbers = {p.name.casefold(): p for p in active}
+        ordered = {r: [name for _, name in sorted(roles.get(r, []))] for r in ("KR", "PR")}
+        names: list = []
+        for i in range(max(len(ordered["KR"]), len(ordered["PR"]))):
+            for r in ("KR", "PR"):
+                if i < len(ordered[r]) and ordered[r][i].casefold() in numbers and ordered[r][i].casefold() not in {n.casefold() for n in names}:
+                    names.append(ordered[r][i])
+        returners = [RealPlayer("RET", numbers[n.casefold()].number, numbers[n.casefold()].name) for n in names[:2]]   # the engine's 2 places
+    return tuple(active + returners + squad), reserve
 
 
 def apply_kind(current: "RealNames", kind: str, entries, problems: "cl.Problems") -> "RealNames":

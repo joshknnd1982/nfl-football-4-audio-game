@@ -60,8 +60,8 @@ def test_the_bears_backup_quarterback_is_not_a_receiver_any_more():
 
 def test_the_depth_chart_decides_a_players_position():
     real = R.defaults()
-    pos = positions_of(real, 15)                                           # the Texans: Jalen Pitre is a safety on the page, the nickel back on the chart
-    assert pos["Jalen Pitre"] == {"CB"}
+    pos = positions_of(real, 15)                                           # the Texans: Jalen Pitre is a safety on the page, the nickel back on the chart:
+    assert pos["Jalen Pitre"] == {"S"}                                     # SR.2, D-157: the nickel is a role, so he stays a safety (Madden's FS)
     assert positions_of(real, 3)["Kyle Hamilton"] == {"S"}                 # a generic DB row does not move a safety (the Ravens)
     assert positions_of(real, 10)["Khalil Mack"] == {"DL"}                 # an edge rusher of an EDGE row is a lineman (the Chargers)
 

@@ -25,16 +25,16 @@ def fresh_defaults():
 
 def test_the_shipped_file_is_the_53_man_rosters_of_2026_10_24():
     real = R.defaults()
-    assert "VERSION = season 2026, as of 2026-10-24" in R.shipped_text(R.ROSTERS)        # (RealNames.version is coaches.txt's: the coaches of 2026-10-22)
+    assert "VERSION = season 2026, as of 2026-10-25" in R.shipped_text(R.ROSTERS)     # SR.2: the real rosters of 2026-10-25        # (RealNames.version is coaches.txt's: the coaches of 2026-10-22)
     for team in range(1, 33):
         active, squad = real.active(team), real.squad(team)
         playing = [p for p in active if p.pos != "RET"]
-        assert 50 <= len(playing) <= 53, team                          # the pages showed 50 to 53 (spec/NFL_NAMES_RESEARCH.md section 6)
+        assert 50 <= len(playing) <= 55, team                          # SR.2: 53 and the game day's elevations (the Dolphins' squad kicker)                         # the pages showed 50 to 53 (spec/NFL_NAMES_RESEARCH.md section 6)
         assert 15 <= len(squad) <= 19, team
         positions = {p.pos for p in playing}
         assert {"QB", "OL", "LS", "K", "P", "DL", "LB", "CB", "S", "WR"} <= positions, team
         assert sum(1 for p in playing if p.pos == "OL") >= 7, team
-        assert len([p for p in active if p.pos == "RET"]) == 2, team
+        assert 1 <= len([p for p in active if p.pos == "RET"]) <= 2, team         # SR.2: the chart's returners (the Chiefs name one man for both)
         names = [p.name.casefold() for p in playing] + [p.name.casefold() for p in squad]
         assert len(names) == len(set(names)), team                     # nobody twice (a returner's RET line repeats his own)
         assert all(p.pos != "RET" for p in squad), team
@@ -81,7 +81,7 @@ def test_an_older_shipped_copy_is_refreshed_once_and_kept_aside(tmp_path, monkey
     assert C.refresh_old_rosters(str(tmp_path)) == "refreshed"
     assert C.refresh_old_rosters(str(tmp_path)) == ""                  # once
     now = (tmp_path / "rosters.txt").read_text(encoding="utf-8")
-    assert "as of 2026-10-24" in now and " = PS " in now
+    assert "as of 2026-10-25" in now and " = PS " in now
     assert (tmp_path / ("rosters.txt" + C.ROSTERS_BEFORE_REFRESH)).read_text(encoding="utf-8").replace("\r\n", "\n") == old
 
 

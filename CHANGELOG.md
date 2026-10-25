@@ -10,6 +10,28 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.2 (2026-10-25, test build)
+
+Not built yet: this test build comes when the real rosters are in the Franchise too (later sessions). Until then the items below are in the source.
+
+### The real rosters of 2026-10-25, read from each team's own pages
+The rosters were read again, this time from the raw pages of all 32 teams (their roster and depth chart pages), and compared with two other sources (nflverse and Sleeper); where the sources disagreed, a search of the news settled it. The old file had missed some real players (for example Josh Jacobs, Brian Branch, Christian Kirk and Dre Greenlaw), and every practice squad now has at most 17 men, as the NFL allows. A player called up from the practice squad for one game day stays on the practice squad, as in the real NFL.
+- How to test: with the N. F. L. rules, start a quick game as the Bears. Listen to the players named in the game: the quarterback is Caleb Williams; the tight ends Colston Loveland and Sam Roush are said as tight ends, not as wide receivers. Then try your favourite team.
+- Tell us: a player who is on the wrong team, missing, or no longer on the team (rosters change every week; say which team and which player).
+
+### Every player has his real position
+rosters.txt now writes each player's real position as a real roster lists it: halfback, fullback, left and right tackle, left and right guard, center, left and right edge, defensive tackle, strong-side, middle and weak-side linebacker, free and strong safety, besides quarterback, receiver, tight end, cornerback, kicker, punter and long snapper. The kick and punt returners are written as returners of their own position. The men on injured reserve and other reserve lists are on the team but never play. A game still uses the game's places as before; the full real depth charts come to the Franchise in later sessions.
+- How to test: press F9, choose Customize, then "Open the folder with the names and banter files" (it is `%APPDATA%\Kitchensinc Revival\NFL Football 4\customize`), and open rosters.txt: the Bears' lines start with `T17P01 = QB 18 Caleb Williams`, and you find `LT`, `LEDG`, `SAM` and `FS` lines, `IR` lines, and `T17KR1 =` and `T17PR1 =` lines.
+- Tell us: if your own changed rosters.txt from an older version is still read as you wrote it (it should be).
+
+### Your old rosters.txt and free_agents.txt are brought up to date once
+If the rosters.txt or free_agents.txt in your customize folder is exactly a copy the game made earlier, and you never changed it, the game replaces it once with the new one and keeps yours beside it as `rosters.txt.before-format-2` (and `free_agents.txt.before-format-2`). A file you changed is yours and stays.
+- How to test: install over 0.16.1, start the game with the N. F. L. rules, then look in the customize folder: the two old copies are there, and rosters.txt is the new one.
+
+### The free agents of 2026-10-25
+free_agents.txt was checked again: a player who has signed with a team since 2026-10-24 is no longer a free agent, a few men released since then are new free agents, and the ages are worked out from the birth dates.
+- How to test: start a new franchise with the N. F. L. rules, then F9, Franchise, free agents: Tyreek Hill is there, age 32.
+
 ## 0.16.1 (2026-10-25, test build)
 
 Nothing new to play in this build: it is the same game as 0.16.0 after a tidy-up of the project. The source folder of the project, which had an older name, is now called `game`, and the old word is gone from the texts of the program and from its log.
