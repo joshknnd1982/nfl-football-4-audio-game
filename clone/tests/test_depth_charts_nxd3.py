@@ -1,6 +1,6 @@
 """NX-D3 and NX-D4 (the owner's second report of 2026-10-24, D-147, CLAUDE.md 0.30): set your starters, and your players for the key downs and moments
 (nfl4 only, rule 0.13). F9, Rules, Depth charts: any team outside a franchise (the settings nx_depth and nx_key_players), the player's own team in a
-franchise (league.sav format 16). The named man of a key situation takes KEY_PLAYER_SHARE of his group's draw there.
+franchise (league.sav format 16). The named man of a key situation takes CHOSEN_PLAYER_SHARE of his group's draw there.
 """
 import json
 import random

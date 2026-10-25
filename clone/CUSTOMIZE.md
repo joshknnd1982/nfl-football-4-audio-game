@@ -64,6 +64,8 @@ The names in these files are facts, used descriptively. They are not endorsed by
 
 The first quarterback of a team in rosters.txt starts. To make another of its quarterbacks the starter without changing the file, use F9, Rules, Quarterbacks: Enter on the team, then Enter on the quarterback. The choice is kept in settings.txt as `nx_qb_starters = T01=Joe Flacco` (one `Tnn=name` for each team you changed, separated by semicolons); when a new rosters.txt no longer has that player on the team, the first quarterback starts again.
 
+The other positions have their order too: F9, Rules, Depth charts. Enter on a team, then on a group (running backs, wide receivers, tight ends, defensive linemen, linebackers, cornerbacks, safeties, kickers, punters, returners), then on a player makes him the first of his group from the next game; the starters get most of the plays. The same team menu has "key downs and moments": a back and a receiver for third and fourth down, the red zone and the last two minutes of a half, who then gets the ball about 60 times in 100 there. Outside a franchise the choices are kept in settings.txt as `nx_depth = T05 RB=Ray Davis; T05 WR=Khalil Shakir,DJ Moore` and `nx_key_players = T05 redzone receiver=Dalton Kincaid` (the situations are down, redzone and twominute, the roles back and receiver); a name that is not on the team is left out. In a franchise they are kept in the franchise file, for your own team. "Back to the real order" (in a franchise "back to the staff's order") clears a team's choices.
+
 To put in a new season's names: replace the lines of the teams that changed in rosters.txt and coaches.txt, change the VERSION line, save, and choose Reload in the Customize menu. If you write any line for a team in rosters.txt, your lines replace all the built-in lines of that team, so an old player does not come back. A coach is replaced by writing his line again. Delete a whole file to get the built-in names back. Your own team's players are the names in footplay.txt: the game writes it from the real roster at the first game of a season, and your changes to it are kept.
 
 ## The real NFL calendar of a franchise
@@ -250,6 +252,17 @@ Wav, ogg, flac and mp3 files work. Capital letters do not matter, and the number
 To take one of the original sounds out of the draw, put a line such as `foot15 = off` in sounds.txt in the same folder. A file that cannot be read is skipped, and the game tells you once. Your added sounds are drawn with the same chances as the original ones, so if you add ten files the original ten are heard half as often.
 
 Your announcer's comments are text, not numbered sound files: for your own comments and your own sounds in them, see banter.txt above.
+
+With the N. F. L. rules the original's ten celebration sounds are not played (next section): only your added celebration files are drawn.
+
+## Your own music and celebrations (N. F. L. rules)
+
+With the N. F. L. rules the game plays none of the original game's music (foot0: the start, the exit, half time, the volume test) and none of its celebration sounds (foot15 to foot24, and the sound that closed a celebration). There are two slots for your own sounds instead, in the sounds folder above:
+
+- `music.wav` (or .ogg, .flac, .mp3): plays at the start, repeating until the welcome sentence ends, and once at the exit, at half time and in the volume test of the Sounds menu.
+- `celebration1.wav`, `celebration2.wav` and so on: drawn after a touchdown (8 to 15 of them), at half time and after the Super Bowl, each at its own pitch as the original did.
+
+With no file the game plays nothing there; the game's random numbers are the same with or without your files, so a game is the same game. The maintainer may later put his own music.wav and celebration files in the program's assets\sounds_nx folder; a file of yours with the same name comes first. Classic keeps the original's music and celebrations.
 
 ## Commercials
 

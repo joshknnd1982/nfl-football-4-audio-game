@@ -10,6 +10,40 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.15.0 (2026-10-24, test build)
+
+### Every player at his real position
+A tester heard a backup quarterback playing wide receiver. That is fixed: every player in a game and in a franchise now plays only his own position, taken from the teams' real depth charts of 2026-10-24. A quarterback is never a receiver, a safety is never a cornerback, a receiver is never a running back. When a team has too few real players of a position for the game's places, the game makes up a player for that place instead of moving someone from another position. In a franchise saved by an older build, a real player who sits at another position's place is given a made-up name there once, and the log says so.
+- How to test: start a game with the N. F. L. rules between two teams, for example the Bears and the Bills. Listen to who catches the passes and who carries the ball: receivers and tight ends catch, running backs run, and no quarterback but the starter is named. F9, Rules, Depth charts (next item) lets you hear each team's players by position.
+- Tell us: did you hear any player at a position that is not his?
+
+### The starters play the most, like Madden
+The original game picked the ball carrier and the tacklers at random, every player alike, so a fourth receiver caught as many passes as the first. Now the starters get most of the plays, as in a real game and in Madden: on a run the first running back carries about 60 times in 100, the second 25; on a pass the first receiver is thrown to most, then the second, the tight end and the third; the starting defenders make most of the tackles. In a franchise, a better-rated player also plays a little more. Classic keeps the original's draws.
+- How to test: play a whole game with the N. F. L. rules and listen to the names: the first running back and the first two receivers should be heard much more often than the others, and the backups now and then.
+- Tell us: does the share feel right? Too many plays for the starter, or too few?
+
+### Set your starters: depth charts
+F9, Rules, Depth charts (the item after Quarterbacks) lists the teams. Enter on a team gives its groups (running backs, wide receivers, tight ends, defensive linemen, linebackers, cornerbacks, safeties, kickers, punters, returners), each said with its first man. Enter on a group lists its players in order; Enter on a player makes him the first, and the next game plays him as the starter. "Back to the real order" undoes the team's changes. In a franchise the menu works on your own team, each player with his rating and age, and your order is kept in the franchise file; "back to the staff's order" gives it back to the staff. A new franchise gives each position's best rating to its real starter.
+- How to test: F9, Rules, Depth charts, Enter on the Bengals, Enter on running backs, Down, Enter: the game says the second back "is now the first of the running backs". Start a game with the Bengals: that back carries most of the runs. Then choose "back to the real order".
+- Tell us: are the groups and their names easy to move through?
+
+### Your players for the key downs and moments
+In the same team menu, "key downs and moments" lets you name who gets the ball on third and fourth down, in the red zone (inside the other team's 20) and in the last two minutes of a half, a back for the runs and a receiver for the passes. The man you name gets the ball about 60 times in 100 in that situation, the others share the rest. "The starter" (the first item of each list) clears your choice.
+- How to test: F9, Rules, Depth charts, a team, "key downs and moments", choose "third and fourth down, the receiver", choose a receiver. The game says "on third and fourth down," then his name, "gets the ball most of the time". Play a game with that team: on third downs listen for his name.
+- Tell us: does he get the ball too often or not enough?
+
+### No music and no celebration sounds of the original
+With the N. F. L. rules the game no longer plays the original game's start-up music (also heard at the exit, at half time and in the volume test) or its touchdown celebration sounds. The game starts with the welcome sentence at once, a touchdown is the announcer and the crowd. Classic keeps the original's music and celebrations.
+- How to test: start the game with the N. F. L. rules: no music before or under the welcome. Score a touchdown: no celebration sounds after it. Switch to Classic (F9, Rules) and start again: the original's music is back.
+
+### Your own music and celebrations
+Put your own files in the sounds folder (F9, Sounds, "Open the sounds folder"):
+- `music.wav` plays at the start (repeating until the welcome ends), at the exit, at half time and in the volume test.
+- `celebration1.wav`, `celebration2.wav` and so on play after a touchdown, at half time and after the Super Bowl, 8 to 15 of them each time, as the original did with its own.
+Wav, ogg, flac and mp3 work. Without these files the game plays nothing there. A later build may ship the maintainer's own music and celebrations; yours always come first.
+- How to test: copy any short sound file into the sounds folder as `celebration1.wav` and score a touchdown with the N. F. L. rules: you hear it several times. Copy a longer one as `music.wav` and start the game: it plays under the start and stops when the welcome ends.
+- Tell us: did anything sound cut off or too loud?
+
 ## 0.14.0 (2026-10-24, test build)
 
 ### Trades: choose the team first, then the position

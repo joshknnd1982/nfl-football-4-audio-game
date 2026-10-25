@@ -129,6 +129,13 @@ rosters.txt, respellings.txt, free_agents.txt; CUSTOMIZE.md says how, and how a 
 squads are the real ones and its first season's free agents are the real ones. The Classic rules keep the original's random
 surnames and the typed coach.
 
+Every player plays only his own position, as the teams' depth charts of 2026-10-24 list it: a quarterback is never a receiver, a safety
+never a cornerback; a place a team has too few real players for gets a made-up player of that position. The starters play the most, as in
+Madden: the first running back carries about 60 runs in 100, the first receivers are thrown to most, the starting defenders make most of the
+tackles (in a franchise a better rating adds a little). F9, Rules, Depth charts sets any team's order position by position (in a franchise,
+your own team's) and, under "key downs and moments", the back and the receiver who get the ball on third and fourth down, in the red zone
+and in the last two minutes of a half (about 60 plays in 100 there). The Classic rules keep the original's draws.
+
 The names are facts (names, positions, numbers), used descriptively; this project is not made, endorsed or supported by any team or by the
 National Football League, and uses no ratings, photographs or logos. The names were collected from the teams' public websites, whose terms
 limit how their content is copied; see spec/NFL_NAMES_RESEARCH.md for the sources and the terms.
@@ -146,4 +153,4 @@ With the N. F. L. rules the game sounds like a radio broadcast. The announcer's 
 
 ## The stadium sounds and the referee
 
-The crowd cheers, groans and boos at what happens (it roars for your big plays, cheers a flag on the other team and boos one on yours, as the flag is thrown), hits and catches sound, the first down chain clanks, a flag is thrown, the referee announces the flags, then the result after the penalty is accepted or declined (the yards and the next down), the time outs and the reviews over a microphone in a voice of their own, and the whistles are an NFL official's whistles. A game of the N. F. L. rules starts, or a saved one goes on, without the intro jingle and without the crowd surge of the original. The sounds are generated (not recordings); you can replace any of them with your own wav, ogg, flac or mp3 file, and one file named whistle.wav replaces every whistle: F9, Sounds, Stadium and referee sounds lists the twenty-two sounds with the file name each one takes, plays them, and says whether you have replaced them; F9, Sounds, Put the stadium sounds back moves your files aside (CUSTOMIZE.md). F9, Rules, Stadium sounds and Broadcast switch them off.
+The crowd cheers, groans and boos at what happens (it roars for your big plays, cheers a flag on the other team and boos one on yours, as the flag is thrown), hits and catches sound, the first down chain clanks, a flag is thrown, the referee announces the flags, then the result after the penalty is accepted or declined (the yards and the next down), the time outs and the reviews over a microphone in a voice of their own, and the whistles are an NFL official's whistles. A game of the N. F. L. rules starts, or a saved one goes on, without the intro jingle and without the crowd surge of the original, and the program plays none of the original's music and none of its touchdown celebration sounds: put your own music.wav and celebration1.wav, celebration2.wav ... in the sounds folder and they play in those places (CUSTOMIZE.md, "Your own music and celebrations"). The sounds are generated (not recordings); you can replace any of them with your own wav, ogg, flac or mp3 file, and one file named whistle.wav replaces every whistle: F9, Sounds, Stadium and referee sounds lists the twenty-two sounds with the file name each one takes, plays them, and says whether you have replaced them; F9, Sounds, Put the stadium sounds back moves your files aside (CUSTOMIZE.md). F9, Rules, Stadium sounds and Broadcast switch them off.

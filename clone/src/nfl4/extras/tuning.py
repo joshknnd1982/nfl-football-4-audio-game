@@ -863,7 +863,7 @@ USAGE_TACKLE = (6, 6, 5, 5, 2, 1,                  # the six linemen
                 13, 11, 7, 2, 1,                   # the five linebackers
                 9, 8, 4, 1,                        # the four cornerbacks
                 10, 9)                             # the two safeties
-KEY_PLAYER_SHARE = 60                             # NX-D4: the player's man for a key down or moment gets 60 percent of his group's draw there
+CHOSEN_PLAYER_SHARE = 60                             # NX-D4: the player's man for a key down or moment gets 60 percent of his group's draw there
 FR_CARRY_WEIGHT = (4, 4, 1)       # (base, per, cap): 3 to 5, so the best of six can carry 5/3 times as often as the weakest (calibrated, see below)
 # SX.8o CALIBRATION of the carry weights and the returners (work/sx8o/played_sx8o.py centering 6000: the same 6,000 played games of drawn rosters against
 # rosters of 70s, design 5.4 C-F3 (B-P62: within 2 percent), with the items, with cap 1, and without them (FR_CARRY_WEIGHT (4, 4, 0), FR_RETURN_STEP (4, 0))):

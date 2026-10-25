@@ -102,6 +102,7 @@ def extra_ids() -> list[str]:
     ids += re.findall(r"^- (NX-P\d) ", text, re.M)               # SX.10e: every real NFL play and Madden concept (section 18; no NX-P6)
     ids += re.findall(r"^- (NX-N\d) ", text, re.M)               # SX.11: the real coaches and players, no typing of names (owner rule 0.19; no NX-N8)
     ids += re.findall(r"^- \*\*(NX-B\d) ", text, re.M)          # the owner's bug report of 2026-10-24 (section 19, D-142 to D-146)
+    ids += re.findall(r"^- \*\*(NX-[DM]\d) ", text, re.M)       # the owner's second report of 2026-10-24 (section 20, D-147, D-148)
     ids += sorted(set(re.findall(r"^- (NX-R7) ", text, re.M)))   # SX.10e: the 2026 rules (D-085); the id is used twice in the file
     #                                                              (section 1's style rule and section 18's 2026 rules): one row covers both
     return ids
@@ -120,7 +121,8 @@ def test_the_spec_parts_have_the_counts_the_map_was_written_for():
     assert len([i for i in extra_ids() if re.match(r"N\d\.", i)]) == 47
     assert [i for i in extra_ids() if i.startswith("NX-")] == (["NX-T1", "NX-T2", "NX-T3"] + ["NX-S%d" % n for n in range(1, 9)]
                                                                + ["NX-P%d" % n for n in (1, 2, 3, 4, 5, 7, 8)] + ["NX-N%d" % n for n in range(1, 8)]
-                                                               + ["NX-B%d" % n for n in range(1, 6)] + ["NX-R7"])
+                                                               + ["NX-B%d" % n for n in range(1, 6)] + ["NX-D%d" % n for n in range(1, 6)]
+                                                               + ["NX-M1", "NX-M2"] + ["NX-R7"])
     assert "S5.17" in section_ids() and "S4.19" in section_ids() and "S14" in section_ids() and "S15" not in section_ids()
 
 

@@ -112,6 +112,7 @@ def main(argv=None) -> int:
         audio = start_audio(settings)
     rnd = GameRandom()                      # ONE random function for the game and the sounds (G-D2); its seed is in the log
     sounds = GameSounds(audio, keys, settings.audio, rng=rnd)
+    sounds.own_mode = lambda: settings.game.rules == "nfl"          # NX-M1 (D-148): the start's music follows the Rules setting (no music by default)
     sounds.commercials = Commercials(paths.commercials_dir())   # the player's own commercials (rule 0.14): none shipped, off by default
     # what the hot keys change, saved to settings.txt where the original wrote footbal0.dat or football.vol (S7.4a);
     # the voice list for F12 is read the first time F12 is pressed

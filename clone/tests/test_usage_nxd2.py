@@ -65,7 +65,7 @@ def test_classic_keeps_the_original_even_draws():
 
 def test_a_key_player_takes_his_share():
     weights = usage.with_key_player(list(T.USAGE_PASS), 4)                 # the first tight end on a key down
-    assert abs(weights[3] / sum(weights) - T.KEY_PLAYER_SHARE / 100) < 1e-9
+    assert abs(weights[3] / sum(weights) - T.CHOSEN_PLAYER_SHARE / 100) < 1e-9
     rest = [w for i, w in enumerate(weights) if i != 3]
     others = [w for i, w in enumerate(T.USAGE_PASS) if i != 3]
     assert [x / sum(rest) for x in rest] == pytest.approx([x / sum(others) for x in others])

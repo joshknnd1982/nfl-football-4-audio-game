@@ -97,7 +97,7 @@ def properties(rig, engine, rules, result) -> list[str]:
     seen = set()
     for entry in used.dead_balls:
         if entry in seen:
-            problems.append("two timeouts by side %d in one dead-ball period (quarter %d, play %d)" % entry)
+            problems.append("two timeouts by side %d in one dead-ball period (quarter %d, play %d, live ball %d)" % entry)
         seen.add(entry)
     if used.live_grants:
         problems.append("%d timeouts granted while the ball was live" % used.live_grants)

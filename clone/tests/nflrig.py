@@ -75,7 +75,8 @@ class RecordingRules(NflRules):
         self.periods = []           # (quarter, counted plays, seconds left) at each period end
         self.warnings = []          # (quarter, seconds left) when the warning was said
         self.lefts = []             # every time left seen at H10
-        self.dead_balls = []        # (side, quarter, the play count) of every timeout: never twice in one dead-ball period
+        self.dead_balls = []        # (side, quarter, the play count, the live balls) of every timeout: never twice in one dead-ball period
+        self.live_balls = 0         # every snap and kick (ball_live): a try or a kick-off ends a dead-ball period without counting as a play
         self.used = None            # the game's own object (Game.play_game calls for_game): what a test must read
         self.forced = None          # SX.7: ((offense, defense) of side 1, (offense, defense) of side 2) style keys, whatever the
         #                             settings and the teams say (the balance test puts one style against Classic)
@@ -96,7 +97,11 @@ class RecordingRules(NflRules):
         super().grant(state, side)
         x = state.extras
         self.timeouts.append((state.quarter, side, x.left, x.timeouts_of(side), x.unit))
-        self.dead_balls.append((side, state.quarter, x.plays))
+        self.dead_balls.append((side, state.quarter, x.plays, self.live_balls))
+
+    def ball_live(self, state):
+        self.live_balls += 1
+        return super().ball_live(state)
 
     def between_plays(self, state):
         then = super().between_plays(state)            # a computer's won challenge answers the step of the corrected play (SX.6)

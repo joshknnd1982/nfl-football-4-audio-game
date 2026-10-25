@@ -144,10 +144,11 @@ class Audio:
         """The member's own sample rate (GetFrequency of its buffer); None when nothing is playable."""
         return self.library.pick_for(member).rate
 
-    def play_file(self, slot: int, path: str, volume: int = 0, pan: int = 0) -> float:
-        """The same for a sound file of the player's named by its place (the banter's [sound file.wav], D-048): once, at the
-        file's own rate. A file that cannot be used plays nothing (the library logs it and speaks its one notice)."""
-        return self._start(slot, self.library.pick_file(path), volume, pan, None, False, "file named in a line")
+    def play_file(self, slot: int, path: str, volume: int = 0, pan: int = 0, loop: bool = False) -> float:
+        """The same for a sound file of the player's named by its place (the banter's [sound file.wav], D-048): once (or looping: the music
+        slot's file at the start, NX-M1), at the file's own rate. A file that cannot be used plays nothing (the library logs it and speaks its one
+        notice)."""
+        return self._start(slot, self.library.pick_file(path), volume, pan, None, loop, "file named in a line")
 
     def _start(self, slot: int, pick: Pick, volume: int, pan: int, freq: int | None, loop: bool, via: str = "id") -> float:
         self.stop(slot, log_it=False)

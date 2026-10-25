@@ -395,7 +395,7 @@ class NflRules(ClassicRules):
     def draw_carrier(self, state, rnd) -> int:
         """H17: the ball carrier of a run (the six backs) or the receiver of a pass (the six receivers). NX-D2 (D-147): one below(total) draw over the
         usage shares (the starters most, like Madden's depth chart), a franchise's rating weights multiplied in (SX.8o), the player's man for a key
-        down or moment given KEY_PLAYER_SHARE of it (NX-D4)."""
+        down or moment given CHOSEN_PLAYER_SHARE of it (NX-D4)."""
         from . import usage
         values = self.modifiers.carrier_weights(state) if hasattr(self.modifiers, "carrier_weights") else None
         kind = usage.kind_of(state.offense_play)

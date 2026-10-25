@@ -266,3 +266,10 @@ NX-B2	rosters_53_nxb2::.*	sx11_names::the_set_up_has_a_real_player_in_every_plac
 NX-B3	free_agents_nxb3::.*
 NX-B4	trades_nxb::(with_no_picks|a_pick_the_player_adds|asking_for_their_pick|too_much_asked|after_the_draft|adding_your_pick|a_pick_taken_out|the_limit_of_picks|when_the_other_team_wants_more|the_leagues_best_of_a_position_also)
 NX-B5	trades_nxb::(the_trades_menu_lists_the_team_first|the_team_then_the_position|the_letters_find_the_team|a_no_is_said)	fr_trade_flow::asking_for_a_player
+NX-D1	positions_nxd1::.*
+NX-D2	usage_nxd2::.*	fr_workload::.*
+NX-D3	depth_charts_nxd3::(the_settings|a_chosen_order|put_first|enter_on_a_player|the_real_order|a_new_franchise|the_players_order|the_league_file|in_a_franchise)
+NX-D4	depth_charts_nxd3::(the_key_situations|the_player_named_for_a_key|key_downs_and_moments)
+NX-D5	usage_nxd2::.*	positions_nxd1::.*
+NX-M1	music_celebration_nxm::(the_intro|the_volume_demo|the_music_file|classic_keeps|the_game_and_the_program)
+NX-M2	music_celebration_nxm::(a_touchdown|the_celebration_files|the_draws_are_the_same|classic_keeps)

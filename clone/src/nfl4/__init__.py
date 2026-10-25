@@ -11,5 +11,5 @@ Packages:
   data    per-user paths, settings, logging, the voice crash guard, the process's start and end
 """
 
-VERSION = "0.14.0"         # P8, 2026-10-24: the seventh test installer (the owner's bug report NX-B1 to NX-B5: who starts for the injured, the 53-man rosters file, real free agents, picks and the team first in trades); 1.0.0 is the first release (P11)
+VERSION = "0.15.0"         # P8, 2026-10-24: the eighth test installer (the owner's second report NX-D1 to NX-D5, NX-M1, NX-M2: real positions, starters who play the most, depth charts, key downs, no original music or celebrations); 1.0.0 is the first release (P11)
 TITLE = "NFL Football 4"

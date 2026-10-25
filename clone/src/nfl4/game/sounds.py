@@ -12,6 +12,7 @@ The game logic (S7.3) and the menus (S7.4) call these; they never touch a slot t
 from __future__ import annotations
 
 import logging
+import os
 import random
 import time
 from typing import Callable
@@ -54,6 +55,11 @@ class GameSounds:
         self._commercial_breaks = 0   # the breaks seen while the setting is on, for "every second / third break"
         self.crwd1 = -1200       # crowd 1's base level: -1200 in the menus (Form_Load), -100 during a game (pag)
         self.st4 = 0.0           # PlayRan: no ambient sound starts before this time
+        # NX-M1, NX-M2 (D-148, the owner 2026-10-24: "remove the startup music and touchdown celebration sounds, allowing the user to insert their
+        # own sounds"): True while the owner's own mode is in use (the N. F. L. rules; set by the Game and the program). Then the original's music
+        # (foot0) and celebration sounds (foot15 to foot24, playcel's foot12) are not played: the slots `music` and `celebration` play the player's
+        # file (sounds folder), else a developer's file of that name in the program's sounds_nx, else nothing, with the same random draws.
+        self.own_mode: Callable[[], bool] = lambda: False
 
     @property
     def wavol(self) -> int:
@@ -73,9 +79,44 @@ class GameSounds:
 
     # ----- start-up, the crowd beds and their ramps -----
 
+    # ----- NX-M1, NX-M2: the music and celebration slots -----
+
+    def slot_files(self, name: str) -> list:
+        """The files of a slot: the player's (sounds folder) first, then the developer's (the program's sounds_nx), as the stadium's families
+        are found (extras/stadium.family); [] when there is none or the folders cannot be read."""
+        try:
+            from ..extras import stadium
+            return stadium.family(name, (stadium.player_folder(), stadium.shipped_folder()))
+        except Exception as exc:                      # a slot never stops the game
+            log.debug("the %s slot could not be read: %s", name, exc)
+            return []
+
+    def music_file(self) -> str | None:
+        files = self.slot_files("music")
+        return files[0] if files else None
+
+    def intro_name(self) -> str:
+        """What the start's loop is, for the log (rule 0.15): the original's foot0, the music slot's file, or the empty slot (NX-M1)."""
+        if not self._own():
+            return "intro foot0"
+        path = self.music_file()
+        return "music " + os.path.basename(path) if path else "music slot empty (no file, nothing plays)"
+
+    def _own(self) -> bool:
+        try:
+            return bool(self.own_mode())
+        except Exception:
+            return False
+
     def intro(self) -> None:
         """Form_Load: clk, foot0 once at 0 + wavol, waited to its end, then looped at the same level until the first
-        announcement stops it (stop_oneshot)."""
+        announcement stops it (stop_oneshot). NX-M1: in the owner's mode the music slot's file instead, else nothing."""
+        if self._own():
+            self.keys.clk()
+            path = self.music_file()
+            if path is not None:
+                self.audio.play_file(SLOT_ONESHOT, path, self.wavol, loop=True)       # looped until the welcome stops it (rule 0.21)
+            return
         self.keys.clk()
         self.audio.play(SLOT_ONESHOT, foot_id(0), self.wavol)
         self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT))
@@ -83,7 +124,12 @@ class GameSounds:
         self.audio.play(SLOT_ONESHOT, foot_id(0), self.wavol, loop=True)
 
     def loop_foot0(self) -> None:
-        """ChangeVoice (F12): foot0 looped at wavol while a voice loads; stop_oneshot ends it."""
+        """ChangeVoice (F12): foot0 looped at wavol while a voice loads; stop_oneshot ends it. NX-M1: the music slot's file, else nothing."""
+        if self._own():
+            path = self.music_file()
+            if path is not None:
+                self.audio.play_file(SLOT_ONESHOT, path, self.wavol, loop=True)
+            return
         self.audio.play(SLOT_ONESHOT, foot_id(0), self.wavol, loop=True)
 
     def stop_oneshot(self) -> None:
@@ -212,7 +258,14 @@ class GameSounds:
     # ----- the one-shot slot: play, play2, the celebration -----
 
     def play(self, n, v: int) -> None:
-        """play(n, v): clk, foot<n> once at v + wavol, waited to its end (a key does not stop it), stop."""
+        """play(n, v): clk, foot<n> once at v + wavol, waited to its end (a key does not stop it), stop. NX-M1: foot0, the original's music, is the
+        music slot's file in the owner's mode (the exit, the halftime show), else nothing."""
+        if int(n) == 0 and self._own():
+            self.keys.clk()
+            path = self.music_file()
+            if path is not None:
+                self.play_file(path)
+            return
         self.keys.clk()
         self.audio.play(SLOT_ONESHOT, foot_id(int(n)), int(v) + self.wavol)
         self._wait_while(lambda: self.audio.busy(SLOT_ONESHOT))
@@ -242,6 +295,13 @@ class GameSounds:
         """play2(stem): clk, <stem>.wav once at wavol and the file's own rate, until it ends or a key comes (the key is
         left in g for the caller, who clears it), stop."""
         self.keys.clk()
+        if stem == "foot0" and self._own():           # NX-M1: the volume demo is the music slot's file, else the officials' whistle
+            path = self.music_file() or next(iter(self.slot_files("whistle")), None)
+            if path is not None:
+                self.audio.play_file(SLOT_ONESHOT, path, self.wavol)
+                self._wait_while(lambda: self.keys.code_text == "" and self.audio.busy(SLOT_ONESHOT))
+                self.audio.stop(SLOT_ONESHOT)
+            return
         self.audio.play(SLOT_ONESHOT, stem, self.wavol)
         self._wait_while(lambda: self.keys.code_text == "" and self.audio.busy(SLOT_ONESHOT))
         self.audio.stop(SLOT_ONESHOT)
@@ -260,9 +320,22 @@ class GameSounds:
         k = Int(Rnd * 40) - 20 drawn again while 0, at least 8000 Hz, waited, stop. The draw is Int(Rnd * count) with the
         pool's count, 10 while nothing is added, so the original's draws are unchanged (rule 0.14, D-068)."""
         members = self._members("celebration")
+        silent = False
+        if self._own():                             # NX-M2: the player's added files and the developer's, never foot15 to foot24
+            own = [m for m in members if m.added]
+            same = lambda path: os.path.normcase(os.path.abspath(path))      # noqa: E731  (the player's file is in both lists once)
+            known = {same(m.path) for m in own}
+            own += [Member(None, path, 1000 + n) for n, path in enumerate(self.slot_files("celebration")) if same(path) not in known]
+            silent = not own
+            members = own if own else members       # silent: the original's count for the draws, nothing played
         index = int(self._rnd() * max(len(members), 1))
         if not members:
             return                                  # every member switched off: nothing to play (7.7.1)
+        if silent:
+            for _ in range(REDRAW_LIMIT):           # the same pitch draws as the original, so a seeded game is the same game
+                if int(self._rnd() * 40) - 20 != 0:
+                    break
+            return
         member = members[min(index, len(members) - 1)]
         rate = self.audio.member_rate(member) or 0
         for _ in range(REDRAW_LIMIT):           # G-D1: the original's loop has no bound; a stuck source must end
@@ -289,6 +362,9 @@ class GameSounds:
         """The touchdown celebration: c2uf, 8 to 15 celebration sounds (Int(Rnd * 8) + 8), 0.4 s, play(12, -500), c2df."""
         self.c2uf()
         self.celebration_run()
+        if self._own():                             # NX-M2: no closing foot12 and no pause after a celebration that is the slot's
+            self.c2df()
+            return
         self.keys.dy(CELEBRATION_PAUSE)
         self.play(12, -500)
         self.c2df()

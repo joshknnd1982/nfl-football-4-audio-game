@@ -83,6 +83,9 @@ class Game(Speakers):
                 settings.audio = sounds.settings
             options = Options(settings, speech)
         self.options = options
+        if sounds is not None and hasattr(sounds, "own_mode"):
+            # NX-M1, NX-M2 (D-148): the owner's own mode is the N. F. L. rules: no original music, no celebration sounds unless a slot's file is there
+            sounds.own_mode = lambda: getattr(self.options.settings.game, "rules", "classic") == "nfl"
         self.vr_source = lambda: self.options.vr       # rady's rate counter (Ctrl changes it)
         self.comtog_source: Callable[[], int] = lambda: self.options.comtog   # F8: 1 = the comments (banter) are off
         self.rules = rules if rules is not None else CLASSIC   # the program's rules (H12 reads them; pag gets them)

@@ -10,7 +10,7 @@ key moments again basing it off Madden". The rules part (no speech, no files):
   franchise's) follow it. The returners (RET) may be any back, receiver or cornerback of the team: a name chosen there becomes a returner's line.
 * The key situations: "down" (third and fourth down), "redzone" (the ball inside the other team's 20) and "twominute" (the last two minutes of the second
   or fourth quarter); for each, the "back" of a run and the "receiver" of a pass. The setting `nx_key_players` keeps them: "T05 redzone receiver=Dalton
-  Kincaid; T05 down back=James Cook III". In the game the named man takes KEY_PLAYER_SHARE of his group's draw there (`usage.with_key_player`).
+  Kincaid; T05 down back=James Cook III". In the game the named man takes CHOSEN_PLAYER_SHARE of his group's draw there (`usage.with_key_player`).
 * IN A FRANCHISE the player's own team's order and key players are the league's (`LeagueRecord.depth`, league.sav format 16): `order` {group: [player
   ids]} (the men he put first), `key` {situation: {role: player id}}; the other teams follow the staff's order (the best first).
 """
@@ -179,7 +179,7 @@ def place_of(names: list, spoken: str) -> int | None:
 
 
 def key_share() -> int:
-    return T.KEY_PLAYER_SHARE
+    return T.CHOSEN_PLAYER_SHARE
 
 
 def key_names(game) -> dict:

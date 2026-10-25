@@ -305,7 +305,9 @@ def test_f11_sets_the_five_voice_volumes_each_in_its_own_voice_then_the_sound_vo
     assert ("role_volume", "own_quarterback=90") in rig.sapi.events
     assert options.wavol == -100 and rig.sounds.wavol == -100      # the sound procedures read the same setting
     assert saves.count == 1
-    assert [e.sound_id for e in rig.slot_log if e.action == "play"].count("snd_foot0") == 2   # the demo, each change
+    # the demo, each change: the original's foot0 in Classic; with the N. F. L. rules (NX-M1, D-148) the music slot's file, else the whistle
+    demo = "snd_foot0" if options.settings.game.rules == "classic" else "file whistle.wav"
+    assert [e.sound_id for e in rig.slot_log if e.action == "play"].count(demo) == 2
 
 
 def test_a_voice_volume_reaches_its_minimum_at_zero():

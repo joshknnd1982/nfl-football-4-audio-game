@@ -86,7 +86,7 @@ class Program:
         of the same sound while the player answers. Safe to call twice; the log says why it stopped."""
         if not self.intro_playing:
             return
-        debuglog.event("sound", "loop_stop", sound="intro foot0", reason=reason)
+        debuglog.event("sound", "loop_stop", sound=getattr(self, "intro_name", "intro foot0"), reason=reason)
         if self.sounds is not None:
             self.sounds.stop_oneshot()                          # Me.m220.Stop
         self.keys.pump()                                        # DoEvents (0x487c65, 0x488636, 0x4888f7)
@@ -155,7 +155,8 @@ class Program:
             sounds.start_crowds()                               # 0x4876f0 crowd1, crwd1 = -1200 0x48772c, crowd2 0x487731
             sounds.intro()                                      # clk 0x48778d, foot0 once, then looped (L68 = 1)
             self.intro_playing = True                           # 0x487b05
-            debuglog.event("sound", "loop_start", sound="intro foot0")
+            self.intro_name = getattr(sounds, "intro_name", lambda: "intro foot0")()     # NX-M1: the music slot with the N. F. L. rules
+            debuglog.event("sound", "loop_start", sound=self.intro_name)
         keys.pump()                                             # 0x487b0b DoEvents
         if sounds is not None:
             sounds.make_hike()                                  # 0x487b14

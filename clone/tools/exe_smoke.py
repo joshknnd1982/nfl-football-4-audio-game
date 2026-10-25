@@ -56,6 +56,11 @@ if DAMAGE != "none":
             handle.write(bytes(range(256)) * 40)
     else:
         raise SystemExit("unknown damage " + DAMAGE)
+# NX-M1 (D-148): the N. F. L. rules (the default) play no music of the original at the start; a player's music.wav in the sounds folder plays
+# there instead. The check copies the shipped foot0.wav as the player's music.wav, so the sound check hears the music slot of the built exe.
+sounds_dir = os.path.join(scratch, "sounds")
+os.makedirs(sounds_dir, exist_ok=True)
+shutil.copyfile(os.path.join(os.path.dirname(exe), "assets", "sounds", "foot0.wav"), os.path.join(sounds_dir, "music.wav"))
 with open(os.path.join(scratch, "settings.txt"), "w", encoding="utf-8") as handle:
     handle.write("# NFL Football 4 settings, format 1\n" + "".join(f"volume_{role} = 0\n" for role in (
         "announcer", "own_quarterback", "own_punter", "opponent_quarterback", "opponent_punter")) +
@@ -135,6 +140,8 @@ WELCOME = "Welcome to Josh Kennedy's N. F. L. football, loosely inspired by Jim 
 check("speaks the welcome sentence once", text.count(" welcome_spoken ") == 1 and WELCOME in text)
 check("the window title is the caption", "NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen" in text)
 check("speaks the first prompt", FIRST_PROMPT in text)
+check("the start plays the player's music.wav, not the original's music (NX-M1)",
+      'loop_start sound="music music.wav"' in text and "file=foot0.wav" not in text)
 time.sleep(1.5)
 
 # ----- the intro sound (foot0) played while the game started and the welcome was said; no key is typed ---------------------

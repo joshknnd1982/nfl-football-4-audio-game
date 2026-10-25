@@ -317,6 +317,28 @@ def test_a_safety_by_penalty_makes_the_next_kick_a_kick_from_the_twenty(tmp_path
 
 # ----- whole games through the menus: the player's question at every kick-off -----
 
+class KickOffsRecorded:
+    """RecordingRules whose game's rules record (kicking side, kind) of every kick-off, so the test counts the player's kick-offs (the seeded
+    games' scores, and so the number of kick-offs, changed with NX-D2's usage draws)."""
+
+    def __new__(cls, **kwargs):
+        rules = RecordingRules(**kwargs)
+        made = rules.for_game
+
+        def for_game():
+            used = made()
+            before = used.before_kickoff
+            used.kick_offs = []
+
+            def before_kickoff(state, side):
+                kind = before(state, side)
+                used.kick_offs.append((side, kind))
+                return kind
+            used.before_kickoff = before_kickoff
+            return used
+        rules.for_game = for_game
+        return rules
+
 def test_whole_games_through_the_menus_ask_the_player_at_every_kick_off_and_keep_the_statistics(tmp_path):
     import random
     from pagrig import make_rig, play
@@ -343,12 +365,13 @@ def test_whole_games_through_the_menus_ask_the_player_at_every_kick_off_and_keep
                 return DOWN
             return rng.choice((112, 113, 114, 115))
         rig.keys.policy = policy
-        program_rules = RecordingRules(auto_sides=(2,), penalties_on=True, onside_on=True, onside_always=True)
+        program_rules = KickOffsRecorded(auto_sides=(2,), penalties_on=True, onside_on=True, onside_always=True)
         result = play(rig, rules=program_rules)
         rules = program_rules.used
         assert result.scores is not None and result.scores[0] != result.scores[1] and rig.rnd.fallbacks == 0
         said = [t for t, _, _ in rig.said]
-        assert said.count(QUESTION) >= 3                                  # "always": at every kick-off the player makes
+        mine_kicks = [k for k in rules.kick_offs if k[0] == 1 and k[1] != "period over"]
+        assert mine_kicks and said.count(QUESTION) >= len(mine_kicks)        # "always": at every kick-off the player makes
         x = rules.state.extras
         x.check()
         mine = [e for e in rules.onsides if e[1] == 1]

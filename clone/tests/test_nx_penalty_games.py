@@ -37,7 +37,10 @@ def test_every_game_ends_with_a_winner_and_no_safety_net_was_needed(games):
 
 def test_every_period_still_ends_at_zero_with_no_negative_clock(games):
     for _, engine, rules, _ in games:
-        assert len([p for p in rules.periods if p[0] <= 4]) == 4
+        quarters = [p for p in rules.periods if p[0] <= 4]
+        # a touchdown in the down in which the fourth period expired, with no try (4-8-2 (c)), ends the game before the period check:
+        # then the game's own clock says the period ended at 0 (NX-D2's usage draws gave seed 332 one)
+        assert len(quarters) == 4 or (len(quarters) == 3 and engine.s.quarter >= 5 and engine.s.extras.left == 0)
         assert all(left == 0 for _, _, left in rules.periods)
         assert all(left >= 0 and pending >= 0 for _, left, pending in rules.lefts)
 

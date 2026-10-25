@@ -27,7 +27,9 @@ def games(tmp_path_factory):
 
 def test_every_game_ends_with_a_winner_and_no_safety_net_was_needed(games):
     for rig, engine, rules, result in games:
-        assert result.scores is not None and result.scores[0] != result.scores[1]
+        assert result.scores is not None
+        # a level score only as the regular season's tie after its one overtime period (16-1-3 (d)); NX-D2's usage draws gave seed 144 one
+        assert result.scores[0] != result.scores[1] or (engine.s.overtime >= 1 and not engine.s.extras.postseason)
         assert rig.rnd.fallbacks == 0 and engine.noise_net == 0
 
 
