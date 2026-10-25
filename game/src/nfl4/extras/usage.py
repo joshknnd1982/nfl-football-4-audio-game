@@ -36,6 +36,20 @@ def combine(base: list, rating_weights: list | None) -> list:
     return [share * weight for share, weight in zip(base, rating_weights)]
 
 
+RUNNING_BACKS, RECEIVERS = "Running Backs:", "Receivers:"
+
+
+def without_empty(weights: list, empty, heading: str) -> list:
+    """SR.4 (design 21.4 (2)): an EMPTY place of the real roster's view (Roster.empty: a team with three backs has no fourth) carries its cover's name
+    and gets no share: the team runs with its three backs, in their own proportions. The draw is still one below(total). Nothing changes for a roster
+    with no empty place (every original roster), or when every share would be gone."""
+    gone = {number for section, number in (empty or ()) if section == heading}
+    if not gone:
+        return list(weights)
+    out = [0 if number in gone else weight for number, weight in enumerate(weights, start=1)]
+    return out if sum(out) > 0 else list(weights)
+
+
 def with_key_player(weights: list, place: int | None) -> list:
     """NX-D4: the key situation's man (place 1 to 6, or None) gets CHOSEN_PLAYER_SHARE percent of the draw, the others share the rest in their own
     proportions (a place of no share keeps none)."""

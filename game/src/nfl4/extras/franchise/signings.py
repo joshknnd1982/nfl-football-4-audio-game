@@ -121,7 +121,9 @@ def roster_group(league, team: int, position: str) -> list:
 def open_place(league, team: int, position: str) -> bool:
     """The team can take a man of the position without a release: an empty place of the group, or (D-149) room on its bench."""
     from . import reserves
-    return market.filled(league, team, position) < D.GROUP_SIZE[position] or reserves.room(league, team) > 0
+    if reserves.on(league):                    # SR.4: while the team has fewer than 53 (an empty back place of the real roster is no open spot)
+        return reserves.room(league, team) > 0
+    return market.filled(league, team, position) < D.GROUP_SIZE[position]
 
 
 def releasable(league, team: int, position: str, week: int) -> list:

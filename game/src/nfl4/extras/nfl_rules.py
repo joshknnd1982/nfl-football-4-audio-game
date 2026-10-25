@@ -400,6 +400,9 @@ class NflRules(ClassicRules):
         values = self.modifiers.carrier_weights(state) if hasattr(self.modifiers, "carrier_weights") else None
         kind = usage.kind_of(state.offense_play)
         weights = usage.combine(usage.shares(kind), values)
+        roster = state.rosters.get(state.wisoff) if isinstance(getattr(state, "rosters", None), dict) else None
+        if roster is not None:                           # SR.4: an empty place of the real roster carries nothing
+            weights = usage.without_empty(weights, getattr(roster, "empty", ()), usage.RECEIVERS if kind == usage.PASS else usage.RUNNING_BACKS)
         weights = usage.with_key_player(weights, self.key_place(state, kind))
         drawn = usage.weighted_place(rnd, weights)
         return self.choices.carrier(state, drawn)        # SY.4: the receiver the player chose takes the drawn one's place (the draw is made)

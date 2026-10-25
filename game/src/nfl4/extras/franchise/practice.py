@@ -406,5 +406,6 @@ def check(league, whole) -> None:
             raise LeagueError("practice squad player %d has team %r and place %r" % (p.id, p.team, p.place))
         counts[p.team - 1] += 1
         vets[p.team - 1] += veteran(p)
-    if max(counts) > SIZE or max(vets) > VETERANS + 1:     # +1: a squad player who turned a veteran during the season stays
+    if max(counts) > SIZE + 1 or max(vets) > VETERANS + 1:     # +1: a squad player who turned a veteran during the season stays; SR.4: a real squad
+        #                                                       has 16 and one International Pathway man (roster_file.SQUAD_MAX)
         raise LeagueError("a practice squad of %d players, %d veterans" % (max(counts), max(vets)))

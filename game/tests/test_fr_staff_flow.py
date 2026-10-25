@@ -344,8 +344,8 @@ def test_a_new_franchise_says_the_owners_goal_of_season_one(tmp_path):
 
 def test_an_empty_roster_place_at_the_stage_of_the_staff_is_damage():
     league = staff_league()
-    gone = league.player_at(4, 0)
-    league.rosters[3][0] = 0
+    gone = league.player_at(4, 6)                                        # a receiver's place (SR.4: an empty back place is allowed)
+    league.rosters[3][6] = 0
     gone.status, gone.team, gone.place, gone.left, gone.salary, gone.years = "retired", 0, -1, league.season, 0, 0
     league.stage_no = D.STAGE_AGING                                      # stage 2 may have empty places: the file loads ...
     LeagueRecord.from_json(league.to_json())

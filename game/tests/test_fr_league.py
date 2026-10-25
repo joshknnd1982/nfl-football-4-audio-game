@@ -174,9 +174,9 @@ def test_while_places_are_empty_the_rating_and_the_rank_are_those_kept_at_the_st
     league.sums = [league.strength_sum(t) for t in range(1, 33)]
     league.sums[8] += 500                                                # team 9 was the best at the start of the season
     assert league.ranking()[0] == 1 and not league.has_empty_place()      # whole rosters: the exact sums rule (all equal: team order)
-    pid = league.rosters[2][0]                                            # a running back of team 3 retires
-    league.players[pid].status, league.players[pid].place = "retired", -1
-    league.rosters[2][0] = 0
+    pid = league.rosters[2][6]                                            # a receiver of team 3 retires (SR.4: an empty BACK place is the real
+    league.players[pid].status, league.players[pid].place = "retired", -1     # roster's, never a wait: design 21.4 (2))
+    league.rosters[2][6] = 0
     assert league.has_empty_place()
     assert league.ranking()[0] == 9 and league.strength(3) == 70 and league.rank_of(3) == 4    # the kept sums: after 9, 1 and 2
     assert league.strength_sum(3) == 5460 - 2 * 30                       # the exact sum counts the empty place as 40
@@ -240,7 +240,7 @@ def test_a_place_must_hold_an_active_player_of_that_team_in_that_place_with_that
 
 
 def test_a_season_needs_every_place_filled_and_a_schedule_and_matching_records():
-    broken(lambda l: l.rosters[3].__setitem__(5, 0), "empty place")
+    broken(lambda l: l.rosters[3].__setitem__(7, 0), "empty place")         # SR.4: a receiver's place (an empty back place is allowed)
     broken(lambda l: setattr(l, "schedule", [[2, 1, 1]] * 15), "schedule")
     broken(lambda l: (setattr(l, "gtp", 3)), "wins and")                                      # week 3: 2 games should be played
     league = season_league()
@@ -256,9 +256,9 @@ def test_a_record_in_an_offseason_stage_with_empty_places_is_not_damage(monkeypa
     for stage_no in (1, 6):
         league.stage_no = stage_no
         LeagueRecord.from_json(league.to_json())
-    pid = league.rosters[3][5]
+    pid = league.rosters[3][7]                                        # SR.4: a receiver's place (an empty back place is allowed in every stage)
     league.players[pid].status, league.players[pid].team, league.players[pid].place = "retired", 0, -1
-    league.rosters[3][5] = 0
+    league.rosters[3][7] = 0
     for stage_no in (2, 3, 4, 5):                                     # places may be empty while the offseason is going on
         league.stage_no = stage_no
         LeagueRecord.from_json(league.to_json())

@@ -132,10 +132,17 @@ class Choices:
             return MENU_QUIET
         roster = state.rosters[1]
         rows = []
+        listed: set = set()              # SR.4: an empty place of the real roster repeats its cover's name; the list says each man once
         for slot, name in enumerate(roster.receivers[:RECEIVER_SLOTS], start=1):
+            if name.casefold() in listed:
+                continue
+            listed.add(name.casefold())
             rows.append((slot, X.text("NXB-T05", player=name, position=X.text(KIND_WORDS[self.receiver_kind(slot)]))))
         if not self.franchise() and (concept is None or self.has_back_route(concept)):
             for code, name in zip(BACK_CODES, roster.running_backs):
+                if name.casefold() in listed:
+                    continue
+                listed.add(name.casefold())
                 rows.append((code, X.text("NXB-T05", player=name, position=X.text(KIND_WORDS["RB"]))))
         chosen = self.choose(state, "NXB-T01", "NXB-T02", rows, self.target)
         if chosen is None:

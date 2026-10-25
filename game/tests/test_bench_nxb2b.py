@@ -30,8 +30,16 @@ def fresh_defaults():
     R.reset_defaults_cache()
 
 
+def older_names(real):
+    """SR.4 (D-161): the real names without their real positions (a format-1 style file), so a new league is made as 0.16 made it (34 places, the
+    rest of the 53 on a bench by `real_reserves`): the bench rules of D-149 that the bridge keeps for every league until SR.5 are tested on it."""
+    import dataclasses
+    rosters = tuple(tuple(dataclasses.replace(p, madden="") for p in roster) for roster in real.rosters)
+    return dataclasses.replace(real, rosters=rosters)
+
+
 def real_league(seed=3, team=1):
-    real = R.defaults()
+    real = older_names(R.defaults())
     league = new_league(GameRandom(random.Random(seed)), SURNAMES, "Kim", team, "20260101-000000", real=real)
     return league, real
 
@@ -101,7 +109,7 @@ def test_the_cap_of_a_league_with_benches_has_the_benchs_share_and_every_team_st
 def test_format_17_round_trips_and_an_older_file_loads_with_nobody_on_a_bench():
     league, _ = benched_league()
     text = league.to_json()
-    assert json.loads(text)["format"] == D.FORMAT == 17
+    assert json.loads(text)["format"] == D.FORMAT == 18                               # SR.4: the bench of a format-17 league is kept in format 18
     again = LeagueRecord.from_json(text)
     assert sum(1 for p in again.players.values() if p.status == "reserve") == sum(1 for p in league.players.values() if p.status == "reserve")
     plain, _ = real_league()
@@ -109,7 +117,7 @@ def test_format_17_round_trips_and_an_older_file_loads_with_nobody_on_a_bench():
     data["format"] = 16
     old = LeagueRecord.from_json(json.dumps(data))
     assert not old.reserves_on and all(p.status != "reserve" for p in old.players.values())
-    data["format"] = 18
+    data["format"] = 19
     with pytest.raises(Exception):
         LeagueRecord.from_json(json.dumps(data))
 

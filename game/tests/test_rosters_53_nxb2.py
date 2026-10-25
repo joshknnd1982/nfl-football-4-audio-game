@@ -31,10 +31,10 @@ def test_the_shipped_file_is_the_53_man_rosters_of_2026_10_24():
         playing = [p for p in active if p.pos != "RET"]
         assert 50 <= len(playing) <= 55, team                          # SR.2: 53 and the game day's elevations (the Dolphins' squad kicker)                         # the pages showed 50 to 53 (spec/NFL_NAMES_RESEARCH.md section 6)
         assert 15 <= len(squad) <= 19, team
-        positions = {p.pos for p in playing}
+        positions = {p.pos for p in playing} | {p.pos for p in squad if p.pos in ("K", "P")}     # SR.4: the Dolphins' kicker is on the squad
         assert {"QB", "OL", "LS", "K", "P", "DL", "LB", "CB", "S", "WR"} <= positions, team
         assert sum(1 for p in playing if p.pos == "OL") >= 7, team
-        assert 1 <= len([p for p in active if p.pos == "RET"]) <= 2, team         # SR.2: the chart's returners (the Chiefs name one man for both)
+        assert 1 <= len([p for p in active if p.pos == "RET"]) <= 2 * 9, team     # SR.4: every man of the KR and PR roles, in turn (the view takes two)
         names = [p.name.casefold() for p in playing] + [p.name.casefold() for p in squad]
         assert len(names) == len(set(names)), team                     # nobody twice (a returner's RET line repeats his own)
         assert all(p.pos != "RET" for p in squad), team
@@ -43,7 +43,8 @@ def test_the_shipped_file_is_the_53_man_rosters_of_2026_10_24():
 def test_the_practice_squad_and_the_line_never_take_a_place_in_a_game():
     real = R.defaults()
     for team in range(1, 33):
-        squad = {p.name for p in real.squad(team)}
+        kickers = {p.pos for p in real.active(team)}
+        squad = {p.name for p in real.squad(team) if not (p.pos in ("K", "P") and p.pos not in kickers)}   # SR.4: a squad kicker the view elevates
         line = {p.name for p in real.active(team) if p.pos in ("OL", "LS")}
         names = set(real.places(team)) | set(real.roster(team, None).names())
         assert not (names & {real.spoken(n) for n in squad | line}), team
@@ -114,18 +115,14 @@ def test_a_new_franchise_has_the_real_practice_squads_and_made_up_players_only_f
     from nfl4.game.rnd import GameRandom
     real = R.defaults()
     league = new_league(GameRandom(random.Random(3)), SURNAMES, "Kim", 1, "20260101-000000", real=real)
-    joined = P.real_squads(league, real)
-    assert joined > 300
+    assert P.real_squads(league, real) == 0                                       # SR.4 (NX-L4): the new league has its real squads already
     for team in range(1, 33):
         names = {p.name for p in P.squad(league, team)}
-        wanted = [real.spoken(p.name) for p in real.squad(team) if p.pos not in ("OL", "LS")][:P.SIZE]
-        elsewhere = {p.name for p in league.players.values() if not (p.status == P.STATUS and p.team == team)}
-        assert set(wanted) - elsewhere <= names and len(names) <= P.SIZE, team       # (a name the league has already, as the two Marcus Harris, is left out)
-        assert all(p.pos in D.POSITIONS for p in P.squad(league, team))
+        wanted = {real.spoken(p.name) for p in real.squad(team)}                  # every position now, the line and the snappers too
+        elevated = {p.name for p in league.players.values() if p.team == team and p.status == "active" and p.name in wanted}
+        assert names == wanted - elevated and len(names) <= P.SIZE + 1, team      # no made-up man fills a squad
     assert "Sean Clifford" in {p.name for p in P.squad(league, 1)}               # the Bengals' squad quarterback
     assert P.real_squads(league, real) == 0                                         # once
-    made = P.top_up(league, SURNAMES)                                                # the made-up young players fill the TEMPLATE's places still empty
-    assert all(len(P.squad(league, team)) <= P.SIZE for team in range(1, 33))
-    assert sum(len(P.squad(league, team)) for team in range(1, 33)) == joined + made
+    # SR.4: a new franchise of the real rosters runs no top_up (mode.start_new): its squads are the real ones, 15 to 17 men
     veterans = [p for team in range(1, 33) for p in P.squad(league, team) if p.seasons >= P.VETERAN_SEASONS]
     assert veterans == []

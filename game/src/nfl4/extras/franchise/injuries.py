@@ -52,6 +52,7 @@ from .league import LeagueError, LeagueRecord, draw_name
 
 HURT_FIELDS = 7
 STAND_IN = "stand-in"
+EMPTY = ("empty", "RB")          # SR.4 (design 21.4 (2)): the identity of an empty back place of the real roster in a lineup (its cover's name, no share)
 KIND_IDS = tuple(kind[0] for kind in T.FR_INJ_KINDS)
 
 
@@ -211,6 +212,8 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
     for index in range(D.PLACE_COUNT):
         player = league.player_at(team, index)
         if player is None:
+            if index in D.BACK_PLACES:                             # SR.4: an empty back place of the real roster (filled by its cover below)
+                continue
             raise LeagueError("team %d has an empty place %d" % (team, index))
         if plays(league, player, week, staff, out, known):
             playing[player.id] = max(D.RATING_MIN, player.rating - (0 if player.id in out else penalty(league, player.id, week, known)))
@@ -244,11 +247,13 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
     for position in D.POSITIONS:
         indices = D.PLACES_OF[position]
         group = [league.player_at(team, i) for i in indices]
-        depth = group                                          # the depth order is the place order (the cut places the best first; season 1: as drawn)
+        depth = [p for p in group if p is not None]            # the depth order is the place order (the cut places the best first; season 1: as drawn)
         depths[position] = depth
         if position == "RET":
             continue
         for index, player in zip(indices, group):
+            if player is None:
+                continue                                       # SR.4: an empty back place (below)
             if player.id in playing:
                 places[index] = entry(player)
                 continue
@@ -292,6 +297,11 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
             places[index] = entry(backs[0], player)
         else:
             places[index] = substitute("RET", player)
+    for index in D.BACK_PLACES:                                # SR.4 (design 21.4 (2), (7)): an empty back place plays as the nearest filled back
+        if places[index] is None:                              # place; its name repeats, so it has no share of the carries (workload, usage)
+            cover = next((places[o] for d in range(1, len(D.BACK_PLACES)) for o in (index - d, index + d)
+                          if o in D.BACK_PLACES and places[o] is not None and league.player_at(team, o) is not None), None)
+            places[index] = (EMPTY, cover[1], cover[2]) if cover is not None else substitute("RB", None)
     return places
 
 

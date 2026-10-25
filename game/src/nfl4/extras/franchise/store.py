@@ -30,6 +30,8 @@ from .. import nx_texts as X
 from . import data as D
 from . import history
 from .files import TMP
+
+BEFORE_FORMAT_18 = ".before-format-18"     # SR.4: the copy of a league of format 17 or older, kept when it is converted (design 21.6 item 1)
 from .league import SEASON, LeagueError, LeagueRecord, NewerFormat, team_index
 
 log = logging.getLogger("nfl4.data")
@@ -116,6 +118,7 @@ class FranchiseStore:
             self.league = sav
             self._benches()
             self._fix_backs()
+            self._convert(D.LEAGUE_FILE)
             return
         if prev_state == "ok":
             if sav_state == "damaged":
@@ -128,6 +131,7 @@ class FranchiseStore:
             self.league = prev
             self._benches()
             self._fix_backs()
+            self._convert(D.PREVIOUS_FILE)
             self.save()                          # the copy is league.sav again
             return
         damaged = [name for name, state in ((D.LEAGUE_FILE, sav_state), (D.PREVIOUS_FILE, prev_state)) if state == "damaged"]
@@ -147,6 +151,21 @@ class FranchiseStore:
             self.league.reserves_on = True
             from . import reserves
             debuglog.event("franchise", "benches", on=True, players=sum(reserves.count(self.league, t) for t in range(1, D.TEAMS + 1)))   # rule 0.15
+
+    def _convert(self, name: str) -> None:
+        """SR.4 (NX-L7, design 21.6): a league of format 17 or older, once: the file is kept as league.sav.before-format-18, then every man gets his
+        real position and number by his name, a league without benches its teams' missing real men, the depth charts (real_roster.convert). Saved
+        at the next save; `league.converted` tells SR.6's sentence what was done. A failure never costs the player his franchise (it is logged)."""
+        league = self.league
+        if league is None or not league.loaded_format or league.loaded_format >= D.FORMAT:
+            return
+        try:
+            self.files.copy(name, D.LEAGUE_FILE + BEFORE_FORMAT_18)
+            real = self.real_names_of() if self.real_names_of is not None else None
+            from . import real_roster
+            real_roster.convert(league, real)
+        except Exception:
+            log.exception("the franchise could not be brought to the real rosters' positions")
 
     def _fix_backs(self) -> None:
         """A league made before 2026-10-23 may have real tight ends, quarterbacks or defenders in running back places: renamed in memory."""

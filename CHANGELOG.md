@@ -32,6 +32,21 @@ If the rosters.txt or free_agents.txt in your customize folder is exactly a copy
 free_agents.txt was checked again: a player who has signed with a team since 2026-10-24 is no longer a free agent, a few men released since then are new free agents, and the ages are worked out from the birth dates.
 - How to test: start a new franchise with the N. F. L. rules, then F9, Franchise, free agents: Tyreek Hill is there, age 32.
 
+### A new franchise has every team's real roster, man for man
+A new franchise with the N. F. L. rules now has exactly the players of the rosters: every team's active roster at the players' real positions and numbers, its practice squad, and its men on injured reserve and the other reserve lists (on the team, never in a game). Nobody is made up and nobody is left off. Your own team is its real roster too. The ratings and ages are still the game's own.
+- How to test: start a new franchise as the Bears, then F9, Franchise, your roster: Caleb Williams, Tyson Bagent and Case Keenum are your quarterbacks, Colston Loveland and Sam Roush your tight ends, and Miller Moss is on the practice squad.
+- Tell us: any made-up name on any team at the start of a new franchise, or a real player missing from his team.
+
+### A team plays with the players it has
+A team with three running backs now runs with those three: the game no longer makes up a fourth, fifth and sixth back. A team that plays a 3-4 defense fills its linebacker places with its outside rushers (its edge players), who keep their own position. The Dolphins, who have no kicker on the active roster, play the practice squad's kicker. In a quick game a team's real kick returner returns kicks even when he also plays receiver.
+- How to test: with the N. F. L. rules, play a quick game as the Bears and listen to the running plays: only D'Andre Swift, Kyle Monangai and Roschon Johnson carry the ball. Play a quick game as the Dolphins: Zane Gonzalez kicks.
+- Tell us: a ball carrier, tackler or returner who is not on the team, or a player said at a position he does not play.
+
+### An older franchise is brought to the real positions when it is opened
+A franchise saved by an older version is changed once when you open it: every real player gets his real position and number, and a franchise from before 0.16.0 (one quarterback a team) gets its teams' missing real players at once, so the Bears have their backup quarterbacks. The old file is kept as `league.sav.before-format-18` in the franchise folder. Who starts in your games does not change yet.
+- How to test: open a franchise you saved with 0.15.0 or older, then F9, Franchise, your roster: your backup quarterbacks are there. The franchise folder (in your files, `franchise`) has `league.sav.before-format-18`.
+- Tell us: a franchise that will not open, or a team that lost a player when it was opened.
+
 ## 0.16.1 (2026-10-25, test build)
 
 Nothing new to play in this build: it is the same game as 0.16.0 after a tidy-up of the project. The source folder of the project, which had an older name, is now called `game`, and the old word is gone from the texts of the program and from its log.

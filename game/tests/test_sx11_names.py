@@ -84,13 +84,14 @@ def test_the_set_up_has_a_real_player_in_every_place_but_the_back_places_the_tea
     for team in range(1, 33):
         roster = real.roster(team, None)
         backs = [p.name for p in real.active(team) if p.pos in ("RB", "FB")]                # NX-B2: not the practice squad
-        real_backs = [n for n in roster.running_backs if n != "player"]
+        real_backs = list(dict.fromkeys(n for n in roster.running_backs if n != "player"))  # SR.4: an empty back place repeats its cover's name
         assert real_backs == [real.spoken(n) for n in backs][:6], team          # every real back, in depth order, none lost to the returners
-        fillers += 6 - len(real_backs)
-        others = [n for n in roster.receivers + roster.defense + roster.special_teams + roster.kickers if n != "player"]
+        assert len(roster.empty) == 6 - len(real_backs), team                   # ... and its place carries nothing (Roster.empty)
+        assert "player" not in roster.running_backs, team                       # SR.4 (NX-L4): no made-up back while the team has real ones
+        others = [n for n in roster.receivers + roster.defense + roster.kickers if n != "player"]
         fillers += sum(1 for n in roster.receivers + roster.defense + roster.special_teams if n == "player")     # NX-D1: a made-up man of the position
         assert "player" not in roster.kickers, team
-        assert len(set(real_backs + others)) == len(real_backs) + len(others), team     # nobody twice
+        assert len(set(real_backs + others)) == len(real_backs) + len(others), team     # nobody twice (a returner may also play elsewhere)
         places = real.places(team)
         assert len(places) == D.PLACE_COUNT and places[-1] == real.quarterback(team)
         assert [p or "player" for p in places[:33]] == roster.names(), team      # the Franchise's places are the set-up's names in the same order
@@ -392,23 +393,28 @@ def make_league(real, seed=1, team=4):
 def test_a_new_leagues_players_and_coaches_are_the_real_ones_with_the_same_ratings_ages_and_draws():
     names = R.defaults()
     real, old = make_league(names), make_league(None)
-    assert [(p.pos, p.age, p.team, p.place) for p in real.players.values()] == [(p.pos, p.age, p.team, p.place) for p in old.players.values()]
-    for team in range(1, 33):                                                    # NX-D2/D3: the same drawn ratings, the best to the real starter
+    for team in range(1, 33):                                                    # NX-D2/D3: the same drawn values, the best to the real starter
+        for index in range(D.PLACE_COUNT):                                       # SR.4 (design 21.5): a place's drawn age goes to the view's man
+            mine = real.player_at(team, index)
+            if mine is not None:
+                assert mine.age == old.player_at(team, index).age and mine.id == old.player_at(team, index).id, (team, index)
         for position, places in D.PLACES_OF.items():
-            mine = [(real.player_at(team, i).rating, real.player_at(team, i).potential) for i in places]
-            drawn = [(old.player_at(team, i).rating, old.player_at(team, i).potential) for i in places]
-            assert sorted(mine) == sorted(drawn) and [r for r, _p in mine] == sorted((r for r, _p in drawn), reverse=True), (team, position)
-    for team in range(1, 33):
-        expected = names.places(team)
-        got = [real.player_at(team, i).name for i in range(D.PLACE_COUNT)]
-        replaced = sum(1 for a, b in zip(expected, got) if a == b)
-        assert replaced >= 33 - expected[:6].count(None), (team, replaced)       # a name another team's player has already stays with the first
-        assert all(got[i] == expected[i] or expected[i] is None or expected[i] in got for i in range(6))      # a back place: a real back or the drawn name
+            filled = [i for i in places if real.player_at(team, i) is not None]
+            mine = [(real.player_at(team, i).rating, real.player_at(team, i).potential) for i in filled]
+            drawn = [(old.player_at(team, i).rating, old.player_at(team, i).potential) for i in filled]
+            assert sorted(mine) == sorted(drawn), (team, position)              # the values of the filled places, moved within the group
+            assert [r for r, _p in mine] == sorted((r for r, _p in mine), reverse=True), (team, position)
+    for team in range(1, 33):                                                    # SR.4 (NX-L4): the places are the view of the team's real chart
+        view = names.view(team)
+        got = [real.player_at(team, i).name if real.player_at(team, i) else None for i in range(29)]
+        assert got == [names.spoken(n) if n else None for n in view.places[:29]], team
     assert real.player_at(1, 33).name == "Joe Burrow"
     coaches = [c["name"] for c in real.staff["coaches"]]
     assert coaches[0] == "Zac Taylor" and coaches[1] == "Todd Monken" and coaches[3] == "Kim"       # the player's own team: the player
     assert [c for i, c in enumerate(coaches) if i != 3] == [names.coach(t) for t in range(1, 33) if t != 4]
-    assert len({p.name for p in real.players.values()}) == len(real.players)       # unique across the league
+    for team in range(1, 33):                                                    # SR.4 (design 21.5): nobody renamed; two real men of one name are on two teams
+        on_team = [p.name for p in real.players.values() if p.team == team]
+        assert len(on_team) == len(set(on_team)), team
 
 
 def test_the_players_own_footplay_names_win_in_a_new_league():
@@ -416,8 +422,9 @@ def test_the_players_own_footplay_names_win_in_a_new_league():
     mine = Roster(["a%d" % n for n in range(6)], ["b%d" % n for n in range(6)], ["c%d" % n for n in range(17)], ["d0", "d1"], ["e0", "e1"], "My Quarterback")
     rnd = GameRandom(random.Random(1))
     league = new_league(rnd, load_surnames(), "Kim", 4, "test", mine, None, R.defaults())
-    assert [league.player_at(4, i).name for i in range(34)] == mine.names() + ["My Quarterback"]
-    assert league.player_at(1, 0).name != "a0" and league.player_at(1, 33).name == "Joe Burrow"
+    # SR.4 (NX-L4, D-161): with the real rosters every team is its real roster, the player's too (footplay.txt held the real names anyway)
+    assert not {league.player_at(4, i).name for i in range(34) if league.player_at(4, i)} & set(mine.names() + ["My Quarterback"])
+    assert league.player_at(4, 33).name == R.defaults().quarterback(4) and league.player_at(1, 33).name == "Joe Burrow"
 
 
 # ----- a whole game (NX-N7) -----
@@ -452,7 +459,7 @@ def test_an_older_franchise_with_real_non_backs_in_running_back_places_gets_made
     from nfl4.extras.franchise import first_names as FN
     from nfl4.extras.franchise.league import fix_real_backs
     names = R.defaults()
-    league = make_league(names)
+    league = make_league(None)                                                    # SR.4: an older league (its 34 places drawn, as 0.16 made them)
     flacco, kelce = league.player_at(9, 4), league.player_at(4, 5)              # team 9's 5th back, the player's own team's 6th
     flacco.name, kelce.name = "Joe Flacco", "Bubba"                              # as the older league had it; his own back, a typed name
     rating = flacco.rating

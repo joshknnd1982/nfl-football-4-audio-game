@@ -24,7 +24,8 @@ from . import first_names as FN
 log = logging.getLogger("nfl4.extras")
 
 SEASON, OFFSEASON, DRAFT = "season", "offseason", "draft"
-STATUSES = ("active", "retired", "released", "free", "practice", "reserve")      # D-149 (NX-B2b): "reserve", a player of a team's bench (reserves.py)
+STATUSES = ("active", "retired", "released", "free", "practice", "reserve", "list")   # D-149 (NX-B2b): "reserve", a player of a team's bench (reserves.py)
+# SR.4 (D-161): "list", a man of a team on one of its real reserve lists (injured reserve and the like, Player.roster_list): on the team, never in a game
 ON_TEAM = ("active", "reserve")      # a player of a team's 53: one of its 34 places (or a rookie waiting for the cut), or its bench
 # D-136: "practice", a player of a practice squad (practice.py)      # SX.8h: "free", a player whose contract ended and who was not signed again
 
@@ -64,15 +65,21 @@ class Player:
     place: int = -1                      # his index in the team's roster while active
     salary: int = 0                      # the contract (SX.8g, format 2): tenths of a million dollars, 0 for a retired or released player
     years: int = 0                       # the seasons left on it, the coming one included
+    # SR.4 (format 18, D-161, NX-L2): his real position (one of roster_model.MADDEN; `pos` stays the group word of the Franchise's tables and places
+    # until SR.5), his jersey number ("-" for none) and his list ("" the active roster, "PS" the practice squad, a reserve list code of roster_file.RESERVE)
+    position: str = ""
+    number: str = "-"
+    roster_list: str = ""
 
     def to_list(self) -> list:
         return [self.id, self.name, self.pos, self.rating, self.potential, self.age, self.seasons, self.peak, self.drafted,
-                self.points, self.status, self.left, self.team, self.place, self.salary, self.years]
+                self.points, self.status, self.left, self.team, self.place, self.salary, self.years, self.position, self.number, self.roster_list]
 
     @classmethod
     def from_list(cls, row, contracts: bool = True) -> "Player":
-        """A player from a row of the file: 16 values in format 2, 14 (no contract) in format 1."""
-        if not isinstance(row, list) or len(row) != (16 if contracts else 14):
+        """A player from a row of the file: 19 values in format 18, 16 in formats 2 to 17 (a test's downgraded file may keep 19), 14 (no contract)
+        in format 1."""
+        if not isinstance(row, list) or len(row) not in ((16, 19) if contracts else (14,)):
             raise LeagueError("a player is %r" % (row,))
         return cls(*row)
 
@@ -125,6 +132,13 @@ class LeagueRecord:
     # makes, so a league of format 16 or older carries benches from its next cut; never saved. False (the older tests' leagues, made without the store): the
     # cut releases every man over the 34 places and the cap is FR_CAP, as before.
     reserves_on: bool = field(default=False, repr=False, compare=False)
+    # SR.4 (format 18, D-161, design 21.6): each team's depth chart on the 22 positions ({position: [player ids], "KR": [...], "PR": [...]}; real_roster.py),
+    # the VERSION of the rosters.txt the league was made from or brought up to, and the VERSION whose offer of the newer rosters was answered (SR.6)
+    chart: list = field(default_factory=lambda: [{} for _ in range(D.TEAMS)])
+    roster_version: str = ""
+    roster_offer: str = ""
+    loaded_format: int = field(default=0, repr=False, compare=False)      # the format the file was read from (0: made in memory); never saved
+    converted: dict | None = field(default=None, repr=False, compare=False)   # what real_roster.convert did when the league was opened (SR.6 says it)
 
     # ----- the calendar (SZ.8) -----
 
@@ -182,12 +196,20 @@ class LeagueRecord:
                       key=lambda p: (order.get(p.pos, 99), -p.rating, p.id))
 
     def strength_sum(self, team: int) -> int:
-        """The weighted sum of the 34 ratings (design 4.4); an empty place counts as the lowest rating."""
-        total = 0
+        """The weighted sum of the 34 ratings (design 4.4); an empty place counts as the lowest rating. SR.4 (design 21.7 (8)): an empty BACK place
+        counts for nothing and the sum is scaled back to the whole weight (a team with three backs is not weaker for the places that carry nothing);
+        with every place filled it is the plain sum, as before."""
+        total = weight = 0
         for index, pid in enumerate(self.rosters[team - 1]):
             player = self.players.get(pid) if pid else None
-            total += D.WEIGHT[D.POSITION_OF_PLACE[index]] * (player.rating if player is not None else D.RATING_MIN)
-        return total
+            if player is None and index in D.BACK_PLACES:
+                continue
+            w = D.WEIGHT[D.POSITION_OF_PLACE[index]]
+            total += w * (player.rating if player is not None else D.RATING_MIN)
+            weight += w
+        if weight == D.WEIGHT_SUM or weight == 0:
+            return total
+        return (total * D.WEIGHT_SUM + weight // 2) // weight
 
     def waiting_rookies(self, team: int) -> list:
         """The team's rookies waiting for the cut (stages 4 and 5): drafted, active, without a place, in pick order."""
@@ -205,7 +227,23 @@ class LeagueRecord:
         raise LeagueError("player %d is no rookie of this draft" % player.id)
 
     def has_empty_place(self) -> bool:
-        return any(pid == 0 for roster in self.rosters for pid in roster)
+        """A place of a team waits for a man (stages 2 to 5 of an offseason). SR.4: an empty BACK place is the real roster's (a team with three backs
+        has no fourth, design 21.4 (2)), never a wait."""
+        return any(pid == 0 for roster in self.rosters for index, pid in enumerate(roster) if index not in D.BACK_PLACES)
+
+    def team_men(self, team: int) -> list:
+        """SR.4 (design 21.6): the men of the team's active roster (its places, its bench, its rookies waiting for the cut), by player ID."""
+        return sorted((p for p in self.players.values() if p.team == team and p.status in ("active", "reserve")), key=lambda p: p.id)
+
+    def cover_place(self, team: int, index: int):
+        """SR.4 (design 21.4 (7)): the nearest filled back place to an empty one (the lower of two equally near), or None when the team has no back."""
+        roster = self.rosters[team - 1]
+        places = D.BACK_PLACES
+        for distance in range(1, len(places)):
+            for other in (index - distance, index + distance):
+                if other in places and roster[other]:
+                    return other
+        return None
 
     def shown_sums(self) -> list:
         """The 32 sums the player is told of (the rating, the rank): the exact sums of the rosters, except while places are empty
@@ -237,6 +275,9 @@ class LeagueRecord:
         quarterback = ""
         for index, (heading, number, _) in enumerate(D.PLACES):
             player = self.player_at(team, index)
+            if player is None and index in D.BACK_PLACES:          # SR.4: an empty back place plays as its cover (no share: usage.without_repeats)
+                cover = self.cover_place(team, index)
+                player = self.player_at(team, cover) if cover is not None else None
             if player is None:
                 raise LeagueError("team %d has an empty place %d" % (team, index))
             ratings[(heading, number)] = player.rating
@@ -247,11 +288,14 @@ class LeagueRecord:
         roster = Roster(sections["Running Backs:"], sections["Receivers:"], sections["Defensive Players:"],
                         sections["Special Teams Players:"], sections["Kickers:"], quarterback=quarterback)
         roster.ratings = ratings
+        roster.empty = [(D.PLACES[i][0], D.PLACES[i][1]) for i in D.BACK_PLACES if not self.rosters[team - 1][i]]     # SR.4: no share
         return roster
 
     # ----- the record in a file -----
 
     def to_json(self) -> str:
+        from . import real_roster
+        real_roster.sync_chart(self)                          # SR.4: the charts follow what the blocks did to the places (the bridge of D-161)
         data = {"format": D.FORMAT, "game": D.GAME_MARKER, "league_id": self.league_id, "season": self.season,
                 "stage": self.stage, "stage_no": self.stage_no, "pick_no": self.pick_no, "coach": self.coach,
                 "team": self.team, "rosters": self.rosters,
@@ -262,7 +306,8 @@ class LeagueRecord:
                 "dead": self.dead, "resign": self.resign, "market": self.market, "trades": self.trades,
                 "injuries": self.injuries, "staff": self.staff, "comp": self.comp, "future_picks": self.future_picks, "tags": self.tags,
                 "people": self.people, "honors": self.honors, "usage": self.usage, "ties": self.ties, "calendar": self.calendar,
-                "practice": self.practice, "depth": self.depth}
+                "practice": self.practice, "depth": self.depth,
+                "chart": self.chart, "roster_version": self.roster_version, "roster_offer": self.roster_offer}
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     @classmethod
@@ -329,6 +374,10 @@ class LeagueRecord:
                 record.practice = data["practice"]                  # D-136; a file of format 13 or older: no squads yet (formed below in its season)
             if version >= 16:
                 record.depth = data["depth"]                        # NX-D3; a file of format 15 or older: the staff's order and the starters (the default)
+            if version >= 18:
+                record.chart = data["chart"]                        # SR.4; a file of format 17 or older: no chart yet (real_roster.convert makes it)
+                record.roster_version, record.roster_offer = data["roster_version"], data["roster_offer"]
+            record.loaded_format = version
         except KeyError as exc:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
@@ -369,6 +418,9 @@ class LeagueRecord:
             from . import practice
             practice.form(record)                               # D-136: a league in its season gets its practice squads at once (no draw)
             record.check()
+        if version < 18:
+            from . import real_roster
+            real_roster.give_positions(record, None)            # SR.4: every man a position by the conversion table (the store's convert names them by the file)
         return record
 
     # ----- the whole-file check, by stage (design 10.1, B-X49) -----
@@ -458,8 +510,12 @@ class LeagueRecord:
                 raise LeagueError("player %d has the name %r" % (p.id, p.name))
             if p.pos not in D.ALL_POSITIONS or p.potential not in D.POTENTIALS or p.status not in STATUSES:
                 raise LeagueError("player %d has position %r, potential %r, status %r" % (p.id, p.pos, p.potential, p.status))
-            if p.pos in D.RESERVE_POSITIONS and p.status in ("active", "practice"):      # D-149: a lineman or a snapper is on a bench, never in a place
-                raise LeagueError("player %d is a %s with status %s" % (p.id, p.pos, p.status))
+            if p.pos in D.RESERVE_POSITIONS and p.status == "active" and p.place >= 0:      # D-149: a lineman or a snapper is never in a place
+                raise LeagueError("player %d is a %s in place %d" % (p.id, p.pos, p.place))   # (SR.4: a squad may hold them, design 21.7 (11))
+            from .real_roster import check_player
+            check_player(p)                                            # SR.4: the position, the number, the list
+            if p.status == "list" and (isinstance(p.team, bool) or not isinstance(p.team, int) or not 1 <= p.team <= D.TEAMS or p.place != -1):
+                raise LeagueError("player %d on a reserve list has team %r and place %r" % (p.id, p.team, p.place))
             whole(p.rating, D.RATING_MIN, D.RATING_MAX, "the rating of player %d" % p.id)
             whole(p.peak, D.RATING_MIN, D.RATING_MAX, "the peak of player %d" % p.id)
             whole(p.age, D.AGE_MIN, D.AGE_MAX, "the age of player %d" % p.id)
@@ -483,7 +539,7 @@ class LeagueRecord:
             for index, pid in enumerate(roster):
                 whole(pid, 0, 10 ** 9, "a place of team %d" % team)
                 if pid == 0:
-                    if self.must_be_whole():
+                    if self.must_be_whole() and index not in D.BACK_PLACES:     # SR.4: an empty back place is the real roster's (design 21.4 (2))
                         raise LeagueError("team %d has an empty place %d" % (team, index))
                     continue
                 player = self.players.get(pid)
@@ -491,14 +547,17 @@ class LeagueRecord:
                     raise LeagueError("place %d of team %d holds player %d, who is not active there" % (index, team, pid))
                 if pid in placed:
                     raise LeagueError("player %d is in two places" % pid)
-                if player.pos != D.POSITION_OF_PLACE[index]:
-                    raise LeagueError("player %d plays %s in a %s place" % (pid, player.pos, D.POSITION_OF_PLACE[index]))
+                group = D.POSITION_OF_PLACE[index]
+                if player.pos != group and player.pos not in D.PLACE_COVERS.get(group, ()):    # SR.4: a 3-4 edge man at linebacker, a returner
+                    raise LeagueError("player %d plays %s in a %s place" % (pid, player.pos, group))
                 placed.add(pid)
         for pid, player in self.players.items():
             if (player.status == "active") != (pid in placed or pid in waiting):
                 raise LeagueError("player %d is %s but %s" % (pid, player.status, "placed" if pid in placed else "not placed"))
         from . import reserves
         reserves.check(self, whole)                        # D-149: the benches
+        from . import real_roster
+        real_roster.check_charts(self, whole)              # SR.4: the depth charts (their shape; real_roster.sync_chart keeps them in step)
 
     def _check_history(self, whole) -> None:
         if not isinstance(self.history, list) or len(self.history) > D.MAX_HISTORY:
@@ -826,8 +885,10 @@ def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_n
             league.rosters[t - 1][index] = player.id
             league.next_id += 1
     if real is not None:
-        use_real_names(league, real, team, given)               # SX.11: the real players, after the draws
-        from . import depth
+        from . import depth, real_roster
+        if not real_roster.make_real(league, real, [team] + [other for other in range(1, D.TEAMS + 1) if other != team]):
+            use_real_names(league, real, team, given)           # SX.11: the real players, after the draws (an older rosters.txt of the player's)
+        # SR.4 (NX-L4): a layout-2 rosters.txt makes every team its real roster, the player's too (his footplay.txt names were the real ones)
         depth.real_starters_first(league)                       # NX-D2, NX-D3: each group's best drawn rating to its real starter (no draw)
     from . import contracts
     contracts.give_initial_contracts(league)                    # SX.8g: the market price of each player; no draw

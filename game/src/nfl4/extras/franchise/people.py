@@ -124,9 +124,16 @@ def has_morale(league) -> bool:
 
 def plain_table(league, team: int) -> list:
     """The 34 places as their own players play them (nobody hurt): (identity, name, rating)."""
+    from .injuries import EMPTY
     out = []
     for index in range(D.PLACE_COUNT):
         player = league.player_at(team, index)
+        if player is None and index in D.BACK_PLACES:          # SR.4: an empty back place plays as its cover, with no share (injuries.lineup)
+            cover = league.cover_place(team, index)
+            player = league.player_at(team, cover) if cover is not None else None
+            if player is not None:
+                out.append((EMPTY, player.name, player.rating))
+                continue
         out.append((player.id, player.name, player.rating))
     return out
 

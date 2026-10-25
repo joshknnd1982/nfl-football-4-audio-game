@@ -382,7 +382,8 @@ def start_new(p) -> None:
     if getattr(store, "practice_squads", True):
         from . import practice
         joined = practice.real_squads(league, getattr(g, "real_names", None))     # NX-B2: the real practice squads first (no draw)
-        practice.top_up(league, list(g.pool.original))       # D-136: the practice squads of season 1 (young made-up players for what is left, no draw)
+        if not league.roster_version:                        # SR.4 (NX-L4): a league of the real rosters has its real squads and no made-up man
+            practice.top_up(league, list(g.pool.original))   # D-136: the practice squads of season 1 (young made-up players for what is left, no draw)
         debuglog.event("franchise", "practice_squads_formed", real=joined)            # rule 0.15
     store.create(league)
     set_kind(g, "franchise")                             # only now: a window closed before this leaves no franchise to look for

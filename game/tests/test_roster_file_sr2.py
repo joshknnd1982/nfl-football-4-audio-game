@@ -41,13 +41,11 @@ def test_the_loader_gives_the_engine_the_groups_and_keeps_the_reserve_lists_apar
     for t in range(1, 33):
         active = [p for p in real.active(t) if p.pos != "RET"]
         squad = [m.name for m in teams[t].squad()]
-        elevated = [m.name for m in teams[t].squad() if m.pos in ("K", "P") and not any(a.pos == m.pos for a in teams[t].active())][:1]
-        assert [p.name for p in active] == [m.name for m in RF.group_order(teams[t].active())] + elevated, t      # the Dolphins' squad kicker plays
-        for p in active:                                                       # each man plays his own group, or a spare edge man a linebacker place
-            assert p.pos == RF.GROUP_OF[p.madden] or (p.pos == "LB" and p.madden in ("LEDG", "REDG")), (t, p)
-        lent += sum(1 for p in active if p.pos == "LB" and p.madden in ("LEDG", "REDG"))
-        assert sum(1 for p in active if p.pos == "LB") >= 5 or sum(1 for p in active if p.pos == "DL") <= 6, t
-        assert [p.name for p in real.squad(t)] == [n for n in squad if n not in elevated], t
+        assert [p.name for p in active] == [m.name for m in RF.group_order(teams[t].active())], t
+        for p in active:                                                       # SR.4 (D-161): each line keeps his own group; the VIEW lends a 3-4
+            assert p.pos == RF.GROUP_OF[p.madden], (t, p)                      # team's spare edge men to its backer places (design 21.4 (4))
+        lent += sum(1 for i, position in real.view(t).covered.items() if 18 <= i <= 22 and position in ("LEDG", "REDG"))
+        assert [p.name for p in real.squad(t)] == squad, t                     # the Dolphins' squad kicker stays on the squad (the view elevates him)
         assert [p.name for p in real.reserve(t)] == [m.name for m in teams[t].reserves()], t
         names = {p.name for p in real.active(t)} | {p.name for p in real.squad(t)}
         assert not names & {p.name for p in real.reserve(t)}, t                 # a man on injured reserve never plays
@@ -56,7 +54,8 @@ def test_the_loader_gives_the_engine_the_groups_and_keeps_the_reserve_lists_apar
         assert set(returners) <= set(teams[t].roles["KR"]) | set(teams[t].roles["PR"]), t
     assert real.quarterback(17) == "Caleb Williams"
     assert lent > 0                                                             # the 3-4 teams (the Vikings among them)
-    assert "Zane Gonzalez" in [p.name for p in real.active(6)]                  # the Dolphins' kicker, as SX.11 had him
+    assert real.roster(6).kickers[0] == "Zane Gonzalez"                        # the Dolphins' kicker plays, elevated for the game (design 21.4 (6))
+    assert "Zane Gonzalez" in [p.name for p in real.squad(6)]
 
 
 def test_group_order_takes_every_starter_first():

@@ -308,9 +308,9 @@ def test_a_record_written_at_stage_1_with_an_empty_place_is_damage_but_at_a_late
     folder = tmp_path / "franchise"
     league = a_league()
     league.stage, league.gtp, league.records = OFFSEASON, 0, [8, 8] * 32
-    pid = league.rosters[2][4]
+    pid = league.rosters[2][7]                                        # a receiver's place (SR.4: an empty back place is allowed)
     league.players[pid].status, league.players[pid].team, league.players[pid].place = "retired", 0, -1
-    league.rosters[2][4] = 0
+    league.rosters[2][7] = 0
     for stage_no, usable in ((2, True), (1, False)):
         league.stage_no = stage_no
         raw = league.to_json().encode("utf-8")

@@ -31,3 +31,11 @@ The owner, during SR.3: "Claude must add the ability for the user to choose who 
 - Sessions: the data (the chart order, nx_depth on the 22 positions and the roles, an older nx_depth by group read through the conversion table of design 21.6 (2)) in SR.4; the menus, the lineup item, speech and keys in SR.6; checked in SR.7.
 
 Status 2026-10-25: NX-L1, NX-L2 (the data), NX-L8 BUILT; NX-L3 to NX-L7, NX-L9 DESIGNED (SR.3); NX-L11 REQUIRED, designed (design 21.13), NOT BUILT; NX-L10 REQUIRED. Next: SR.4.
+
+### 21.8 SR.4 done (2026-10-25; D-161; design 21.14)
+
+- BUILT: the roster model (`extras\roster_model.py`: the chart on the 22 positions and the return roles, the view of the engine's 34 places, the conversion table, the starter's swap); quick games and seasons play the view of the file's chart (empty back places with no share, the 3-4 covers, the squad kicker elevated, a returner may also play elsewhere); league.sav format 18 (position, number, list, status "list", the charts, the rosters' version); a new franchise is exactly rosters.txt (every man, his position, number and list, nobody made up, nobody left off, the same draws); a league of format 17 or older is converted when it is opened (positions by name, the missing real men of a league without benches, the backup file); the data of choosing who starts at all 22 positions and both roles (a franchise: the league's chart; a quick game or a season: nx_depth by position and role, the older group entries read through the table).
+- THE BRIDGE (D-161): the Franchise's blocks (the cut, the draft, the fill, signings, trades, injuries, aging) still store and read the 34 places and the bench; the charts follow them at every save. SR.5 moves every block onto the chart (NX-L6) and drops the stored places.
+- Tests: tests\test_real_roster_sr4.py (14); 21 older pins moved, each with its reason (format 18, the view's covers, the returner on top of a place, the real roster for the player's own team; the bench tests run on the older shape of the names).
+
+Status 2026-10-25: NX-L1, NX-L2, NX-L8 BUILT; NX-L3, NX-L4, NX-L7 BUILT (SR.4, with the bridge); NX-L5 IN PART (the quick game and a new franchise; the blocks in SR.5); NX-L11 DATA BUILT (menus SR.6); NX-L6, NX-L9 DESIGNED, NOT BUILT; NX-L10 REQUIRED. Next: SR.5.

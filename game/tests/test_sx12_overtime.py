@@ -470,7 +470,7 @@ def test_league_sav_format_11_keeps_the_ties_and_format_10_has_none():
     from nfl4.extras.franchise import data as D
     from nfl4.extras.franchise.league import LeagueRecord
     league = _league_with_a_tie()
-    assert D.FORMAT == 17                                    # (17 since D-149: the benches)
+    assert D.FORMAT == 18                                    # (18 since SR.4, D-161: the real roster)
     data = json.loads(league.to_json())
     assert data["ties"] == [0] * 32
     data["format"] = 10

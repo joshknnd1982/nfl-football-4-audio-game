@@ -186,7 +186,7 @@ def test_an_older_league_in_its_season_gets_its_squads_when_it_is_opened():
     del data["practice"]
     loaded = LeagueRecord.from_json(json.dumps(data))
     assert any(p.status == P.STATUS for p in loaded.players.values())
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 17
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 18
 
 
 @pytest.mark.parametrize("bad", [None, [], {"season": 1}, {"season": -1, "elevations": {}}, {"season": 1, "elevations": {"x": 1}},

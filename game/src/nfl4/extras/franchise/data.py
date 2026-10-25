@@ -6,7 +6,7 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 17                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 18                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
@@ -34,6 +34,12 @@ FORMAT = 17                                  # league.sav's format; a higher one
 #                                              17 (2026-10-25, D-149, NX-B2b) the 53-man roster: the players of a team's 53 without one of the 34 places are on
 #                                                the bench (status "reserve", reserves.py); a file of format 16 or older has nobody on a bench, and its next roster
 #                                                cut fills the benches from the draft, the undrafted and the free agents (no made-up history, no draw)
+#                                              18 (2026-10-25, SR.4, D-161, NX-L3 to NX-L7) the real roster: every player has his real POSITION (one of Madden
+#                                                NFL's 22), his jersey NUMBER and his LIST ("" the active roster, "PS" the practice squad, or a reserve list such as
+#                                                IR: status "list"); each team has its depth CHART (position -> player IDs, and the KR and PR roles), and the league
+#                                                its `roster_version` (the rosters.txt it was made from) and `roster_offer`. A player row has 19 values (the 16 of
+#                                                format 17, then position, number, list). The 34 places are still stored until SR.5 moves every block onto the chart
+#                                                (the bridge of D-161). A file of format 17 or older is converted once when it is opened (real_roster.convert)
 COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the end of rounds 3 to 7 (NFL, SRC-OFFICIAL)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
@@ -85,6 +91,13 @@ POSITION_TEXT.update({"OL": "NXM-D41", "LS": "NXM-D42"})
 GROUP_TEXT.update({"OL": "NXL-50", "LS": "NXL-51"})
 
 PLACES_OF = {position: tuple(i for i, p in enumerate(POSITION_OF_PLACE) if p == position) for position in ALL_POSITIONS}   # OL, LS: ()
+# SR.4 (D-161, design 21.4): the real roster's view leaves a back place EMPTY when a team has fewer than six backs (it carries nothing); the game day may
+# add up to two men to the 53 (the NFL's game-day elevations: a team with no active kicker plays its practice squad's)
+BACK_PLACES = PLACES_OF["RB"]
+GAME_DAY_EXTRA = 2
+# the families a place of the view may hold besides its own group (design 21.4 (4) and (5)): a 3-4 team's edge men at linebacker, a safety at corner, a
+# corner at safety, a backer on the line; a returner is a man of any group that returns kicks
+PLACE_COVERS = {"LB": ("DL",), "DL": ("LB",), "CB": ("S",), "S": ("CB",), "RET": ("RB", "WR", "CB", "S", "LB", "DL")}
 GROUP_SIZE = {position: len(places) for position, places in PLACES_OF.items()}                                           # OL, LS: 0
 ROSTER_ORDER = ("QB", "RB", "WR", "DL", "LB", "CB", "S", "RET", "K", "P")      # the order the groups are listed and spoken in
 BENCH_ORDER = ROSTER_ORDER + RESERVE_POSITIONS                                  # the bench's groups, in the same order, then the line and the snapper

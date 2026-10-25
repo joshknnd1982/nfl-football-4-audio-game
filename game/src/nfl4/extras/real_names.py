@@ -109,6 +109,7 @@ class RealNames:
     respellings: tuple                  # ((ID, written, spoken), ...) in the order of the IDs
     free_agents: tuple = ()             # NX-B3: ((ID, RealFreeAgent), ...) in the order of the IDs
     reserves: tuple = ()                # layout 2: 32 tuples of RealPlayer on a reserve list (injured reserve and the like), never in a game
+    roles: tuple = ()                   # layout 2 (SR.4): 32 dicts {"KR": [names], "PR": [names]}, the return roles in order (the player's choice laid over)
 
     def reserve(self, team: int) -> list:
         """The team's men on a reserve list (layout 2), in file order; [] for a format-1 file."""
@@ -157,8 +158,38 @@ class RealNames:
         """The team's practice squad players (the 53-man file), in file order; [] for an older file."""
         return [player for player in self.rosters[team - 1] if player.squad] if 1 <= team <= TEAMS else []
 
+    def is_layout2(self, team: int) -> bool:
+        """The team's lines carry the real positions (rosters.txt layout 2, SR.2): the view of the real roster plays them (SR.4)."""
+        return 1 <= team <= TEAMS and any(p.madden for p in self.rosters[team - 1])
+
+    def chart(self, team: int) -> tuple:
+        """SR.4 (design 21.3, NX-L3): (the depth chart {position: [written names]} of the team's active men in line order, the return roles
+        {"KR": [names in turn], "PR": []}, the practice squad's chart) of a layout-2 team. The order of the lines is the file's, with the player's
+        chosen starters and depth charts laid over it (quarterbacks.with_starters, depth_chart.with_depth)."""
+        from . import roster_model as RM
+        lines = self.rosters[team - 1]
+        active = [p for p in lines if not p.squad and p.pos != "RET"]
+        squad = [p for p in lines if p.squad]
+        position = {p.name: (p.madden or RM.WORD_POSITIONS.get(p.pos, ("",))[0]) for p in active + squad}
+        chart = RM.ordered_positions([p.name for p in active], position.get)
+        squad_chart = RM.ordered_positions([p.name for p in squad], position.get)
+        given = self.roles[team - 1] if self.roles and isinstance(self.roles[team - 1], dict) else None
+        if given:
+            roles = {r: [n for n in given.get(r, ()) if n in position] for r in RM.ROLES}
+        else:
+            roles = {"KR": [p.name for p in lines if p.pos == "RET" and not p.squad], "PR": []}
+        return chart, roles, squad_chart
+
+    def view(self, team: int):
+        """SR.4 (design 21.4): the engine's 34 places of a layout-2 team at full health (roster_model.View, the written names)."""
+        from . import roster_model as RM
+        chart, roles, squad = self.chart(team)
+        return RM.make_view(chart, roles, squad=squad)
+
     def _assemble(self, team: int) -> dict:
         """The sections of a team's real players: lists of names, None where the team has no player for the place."""
+        if self.is_layout2(team):
+            return self._assemble_view(team)
         by: dict[str, list] = {pos: [] for pos in POSITIONS}
         for player in self.rosters[team - 1]:
             if not player.squad:                                 # NX-B2: the practice squad has no place in a game (OL and LS are never taken)
@@ -211,6 +242,23 @@ class RealNames:
         return {"running_backs": pad(backs, COUNTS[0]), "receivers": pad(receivers, COUNTS[1]), "defense": pad(defense, COUNTS[2]),
                 "special_teams": pad(returners, COUNTS[3]), "kickers": pad(kickers, COUNTS[4]), "quarterback": quarterback}
 
+    def _assemble_view(self, team: int) -> dict:
+        """SR.4 (NX-L3, design 21.4 and 21.5): the sections from the view of the team's chart. An empty place (a team with three backs has no fourth)
+        takes the name of the nearest filled place of its section, so the original's uniform draws name a real man of the team and the usage draw
+        gives the repeated name no share (usage.without_repeats); a section with nobody at all keeps None (the drawn name stands in for that game)."""
+        from . import roster_model as RM
+        view = self.view(team)
+        names = []
+        for index, man in enumerate(view.places):
+            man = man if man is not None else view.cover(index)
+            names.append(man)
+        if view.empty or view.covered or view.elevated:
+            from ..data import debuglog
+            debuglog.event("names", "roster_view", logging.DEBUG, team=team, empty=view.empty, covered=sorted(view.covered.items()),
+                           elevated=view.elevated)                       # design 21.11 (rule 0.15)
+        return {"running_backs": names[0:6], "receivers": names[6:12], "defense": names[12:29], "special_teams": names[29:31],
+                "kickers": [names[RM.KICKER], names[RM.PUNTER]], "quarterback": names[RM.QUARTERBACK] or ""}
+
     def roster(self, team: int, fallback: Roster | None = None) -> Roster | None:
         """The 33 names of the set-up from a team's real players, spoken forms; a place with no real player keeps `fallback`'s name (the one
         the draw made). None when the team has no players. The quarterback is not set (Getqbs asks for him, with `quarterback` as its default)."""
@@ -218,6 +266,9 @@ class RealNames:
             return None
         sections = self._assemble(team)
         result = Roster()
+        if self.is_layout2(team):                       # SR.4: the view's empty places (their cover's name, no share of the usage draw)
+            view = self.view(team)
+            result.empty = [(("Running Backs:", "Receivers:")[i >= 6], i % 6 + 1) for i in view.empty if i < 12]
         for attribute, count in zip(("running_backs", "receivers", "defense", "special_teams", "kickers"), COUNTS):
             drawn = getattr(fallback, attribute) if fallback is not None else []
             names = []
@@ -293,6 +344,7 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
 
     rosters = list(base_rosters)
     reserves = list(defaults.reserves) if defaults and defaults.reserves else [()] * TEAMS
+    team_roles = list(defaults.roles) if defaults and defaults.roles else [{} for _ in range(TEAMS)]
     lines: dict[int, list] = {}
     roles: dict[int, dict] = {}
     bad = problems[ROSTERS]
@@ -333,10 +385,12 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
         rows.sort(key=lambda row: (row[0], row[1]))          # by the number of the ID, then by the line: the file's own order is the depth order
         players = [player for _, _, player in rows]
         rosters[team - 1], reserves[team - 1] = _team_lines(players, roles.get(team))
+        team_roles[team - 1] = {r: [name for _, name in sorted(roles.get(team, {}).get(r, []))] for r in ("KR", "PR")} if roles.get(team) else {}
     for team, given in roles.items():                         # role lines alone: the returners of a built-in (or earlier) team
         if team not in lines:
             kept = [p for p in rosters[team - 1] if p.pos != "RET" or p.squad]
             rosters[team - 1], _ = _team_lines(kept, given)
+            team_roles[team - 1] = {r: [name for _, name in sorted(given.get(r, []))] for r in ("KR", "PR")}
 
     respell = dict(base_respell)
     bad = problems[RESPELLINGS]
@@ -378,7 +432,7 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
         age = int(parts.group(2)) if parts.group(2).isdigit() else None
         free[ident] = (ident, RealFreeAgent(parts.group(1).upper(), age, parts.group(3).strip()))
     return RealNames(version, tuple(coaches), tuple(rosters), tuple(sorted(respell.values())),
-                     tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))), tuple(reserves))
+                     tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))), tuple(reserves), tuple(team_roles))
 
 
 def _team_lines(players: list, roles: "dict | None"):
@@ -396,19 +450,8 @@ def _team_lines(players: list, roles: "dict | None"):
         men = [RF.Man(p.madden or p.pos, p.number, p.name) for p in active]
         lookup = {id(m): p for m, p in zip(men, active)}
         active = [lookup[id(m)] for m in RF.group_order(men)]
-        # a 3-4 team's outside backers are edge men (D-153), so the engine's 5 linebacker places can be short while its 6 line places have men
-        # to spare: until SR.4's real model, a spare edge man (the deepest first) plays a linebacker place, his real position kept in `madden`
-        need = 5 - sum(1 for p in active if p.pos == "LB")
-        spare = sum(1 for p in active if p.pos == "DL") - 6
-        if need > 0 and spare > 0:
-            lend = [p for p in reversed(active) if p.madden in ("LEDG", "REDG")][:min(need, spare)]
-            active = [dataclasses.replace(p, pos="LB") if p in lend else p for p in active]
-    for pos in ("K", "P"):                # a team with no active kicker (the Dolphins of 2026-10-25) elevates its squad kicker every game day:
-        if not any(p.pos == pos for p in active):           # he plays (as SX.11 had it), off the squad list, so no made-up kicker takes the place
-            first = next((p for p in squad if p.pos == pos), None)
-            if first is not None:
-                squad.remove(first)
-                active.append(dataclasses.replace(first, squad=False))
+    # SR.4 (D-161): the lent linebacker and the squad kicker moved to the active lines of SR.2 are gone: the view (roster_model.make_view) fills a 3-4
+    # team's backer places with its spare edge men and elevates the squad's kicker for the game, each keeping his own position and list
     returners = old_returners
     if roles:
         numbers = {p.name.casefold(): p for p in active}
@@ -418,7 +461,7 @@ def _team_lines(players: list, roles: "dict | None"):
             for r in ("KR", "PR"):
                 if i < len(ordered[r]) and ordered[r][i].casefold() in numbers and ordered[r][i].casefold() not in {n.casefold() for n in names}:
                     names.append(ordered[r][i])
-        returners = [RealPlayer("RET", numbers[n.casefold()].number, numbers[n.casefold()].name) for n in names[:2]]   # the engine's 2 places
+        returners = [RealPlayer("RET", numbers[n.casefold()].number, numbers[n.casefold()].name) for n in names]   # every role man, in turn (SR.4)
     return tuple(active + returners + squad), reserve
 
 

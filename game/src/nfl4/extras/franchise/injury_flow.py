@@ -50,6 +50,7 @@ def write_roster(roster: Roster, table: list) -> None:
             sections[SECTIONS[heading]].append(name)
     for attribute, names in sections.items():
         getattr(roster, attribute)[:] = names
+    roster.empty = [(heading, number) for index, (heading, number, _position) in enumerate(D.PLACES) if table[index][0] == I.EMPTY]   # SR.4
 
 
 def lineup_roster(league: LeagueRecord, team: int, week: int, staff: bool) -> Roster:

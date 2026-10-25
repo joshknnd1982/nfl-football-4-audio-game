@@ -69,7 +69,7 @@ def test_a_chosen_order_reaches_the_set_up():
     roster = moved.roster(BILLS, None)
     assert roster.running_backs[0] == "Ray Davis" and roster.running_backs[1] == names.spoken("James Cook III")
     assert roster.receivers[0] == "Khalil Shakir"
-    assert names.spoken("James Cook III") not in roster.special_teams          # (he is a back already: a returner holds no second place)
+    assert roster.special_teams[0] == names.spoken("James Cook III")         # SR.4 (D-161): a returner may also hold his back place in a game
     assert DC.with_depth(names, {}) is names
     assert DC.group_players(moved, BILLS, "RB")[0].name == "Ray Davis"
 
@@ -161,7 +161,7 @@ def test_a_new_franchise_gives_each_groups_best_rating_to_its_real_starter():
     record = league()
     for team in (1, 5, 17):
         for position, places in D.PLACES_OF.items():
-            ratings = [record.player_at(team, i).rating for i in places]
+            ratings = [record.player_at(team, i).rating for i in places if record.player_at(team, i) is not None]   # SR.4: empty back places
             assert ratings == sorted(ratings, reverse=True), (team, position)
     assert record.player_at(BILLS, D.PLACES_OF["RB"][0]).name == real().spoken("James Cook III")
 
@@ -185,7 +185,7 @@ def test_the_league_file_keeps_the_depth_chart_and_checks_it():
     FD.set_key(record, "redzone", "receiver", record.player_at(BILLS, D.PLACES_OF["WR"][3]).id)
     FD.put_first(record, "WR", record.player_at(BILLS, D.PLACES_OF["WR"][2]).id)
     data = json.loads(record.to_json())
-    assert data["format"] == 17 == D.FORMAT and data["depth"]["key"]["redzone"]["receiver"] == record.player_at(BILLS, D.PLACES_OF["WR"][3]).id
+    assert data["format"] == 18 == D.FORMAT and data["depth"]["key"]["redzone"]["receiver"] == record.player_at(BILLS, D.PLACES_OF["WR"][3]).id
     whole = lambda value, lo, hi, what: None if isinstance(value, int) and lo <= value <= hi else (_ for _ in ()).throw(LeagueError(what))  # noqa: E731
     FD.check(record, whole)
     record.depth["key"]["nowhere"] = {}

@@ -22,7 +22,7 @@ def fresh_defaults():
 
 def positions_of(real, team):
     out = {}
-    for p in real.active(team):
+    for p in real.active(team) + real.squad(team):                  # SR.4: a squad kicker the view elevates for the game (the Dolphins')
         if p.pos != "RET":
             out.setdefault(real.spoken(p.name), set()).add(p.pos)
     return out
@@ -43,8 +43,9 @@ def test_no_team_has_a_player_at_another_position():
             for name, want in zip(names, wanted):
                 if name != "player" and not pos.get(name, set()) & want:
                     wrong.append((team, section, name, pos.get(name)))
-        for name, want in zip(roster.defense, DEFENSE):
-            if name != "player" and want not in pos.get(name, set()):
+        for name, want in zip(roster.defense, DEFENSE):               # SR.4 (design 21.4 (4)): a short section takes the nearest family's spare man
+            allowed = {want} | set(D.PLACE_COVERS.get(want, ()))         # (a 3-4 team's edge men at linebacker), never a man of another family
+            if name != "player" and not pos.get(name, set()) & allowed:
                 wrong.append((team, "defense", name, pos.get(name)))
     assert wrong == []
 
@@ -73,7 +74,7 @@ def test_the_franchise_places_follow_the_same_rule():
         for name, (_heading, _number, position) in zip(real.places(team), D.PLACES):
             if name is None or position in ("RET", "QB"):
                 continue
-            want = {"RB": {"RB", "FB"}, "WR": {"WR", "TE"}}.get(position, {position})
+            want = {"RB": {"RB", "FB"}, "WR": {"WR", "TE"}}.get(position, {position} | set(D.PLACE_COVERS.get(position, ())))   # SR.4 covers
             assert pos.get(name, set()) & want, (team, position, name, pos.get(name))
 
 

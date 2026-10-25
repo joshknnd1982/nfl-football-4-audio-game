@@ -26,12 +26,15 @@ TEAMS = 32
 GROUPS = (("RB", ("RB", "FB")), ("WR", ("WR",)), ("TE", ("TE",)), ("DL", ("DL",)), ("LB", ("LB",)), ("CB", ("CB",)), ("S", ("S",)),
           ("K", ("K",)), ("P", ("P",)), ("RET", ("RET",)))
 GROUP_POSITIONS = dict(GROUPS)
+# SR.4 (NX-L11, D-160, design 21.13): the setting also keeps the real positions and the return roles, "T17 LT=Theo Benedet; T17 KR=Kalif Raymond"
+from .roster_file import MADDEN as POSITIONS_22, ROLES as RETURN_ROLES
+ENTRY_KEYS = tuple(GROUP_POSITIONS) + tuple(p for p in POSITIONS_22 if p not in GROUP_POSITIONS) + RETURN_ROLES
 RETURN_FROM = ("RB", "FB", "WR", "CB")           # a returner is a role of a back, a receiver or a cornerback
 SITUATIONS = ("down", "redzone", "twominute")
 ROLES = ("back", "receiver")
 RED_ZONE = 20
 TWO_MINUTES = 120
-_DEPTH = re.compile(r"^T(\d{1,2})\s+([A-Z]{1,3})\s*=\s*(.+)$", re.IGNORECASE)
+_DEPTH = re.compile(r"^T(\d{1,2})\s+([A-Z]{1,4})\s*=\s*(.+)$", re.IGNORECASE)
 _KEY = re.compile(r"^T(\d{1,2})\s+(down|redzone|twominute)\s+(back|receiver)\s*=\s*(.+)$", re.IGNORECASE)
 
 
@@ -51,14 +54,14 @@ def parse_depth(text: str) -> dict:
             continue
         team, group = int(found.group(1)), found.group(2).upper()
         names = [n.strip() for n in found.group(3).split(",") if n.strip()]
-        if 1 <= team <= TEAMS and group in GROUP_POSITIONS and names and _names_ok(names):
+        if 1 <= team <= TEAMS and group in ENTRY_KEYS and names and _names_ok(names):
             out.setdefault(team, {})[group] = names
     return out
 
 
 def render_depth(depth: dict) -> str:
     return "; ".join("T%02d %s=%s" % (team, group, ",".join(depth[team][group]))
-                     for team in sorted(depth) for group in [g for g, _p in GROUPS if g in depth[team]])
+                     for team in sorted(depth) for group in [g for g in ENTRY_KEYS if g in depth[team]])
 
 
 def parse_keys(text: str) -> dict:
@@ -125,6 +128,8 @@ def with_depth(real, depth: dict):
             continue
         roster = list(rosters[team - 1])
         for group, names in groups.items():
+            if group not in GROUP_POSITIONS:
+                continue                                         # SR.4: a real position or a return role (_with_positions)
             if group == "RET":
                 candidates = {p.name.casefold(): p for p in reversed(return_candidates(dataclasses.replace(real, rosters=tuple(rosters)), team))}
                 chosen = [candidates[n.casefold()] for n in names if n.casefold() in candidates]
@@ -140,7 +145,90 @@ def with_depth(real, depth: dict):
             for slot, player in zip(slots, players):
                 roster[slot] = player
         rosters[team - 1] = tuple(roster)
-    return dataclasses.replace(real, rosters=tuple(rosters))
+    out = dataclasses.replace(real, rosters=tuple(rosters))
+    return _with_positions(out, depth)
+
+
+def _with_positions(real, depth: dict):
+    """SR.4 (NX-L11 5): the entries by real position (layout 2) and by return role laid over the lines: at a position the named men first, a named man
+    of the other side or role of the family moved to it (roster_model.may_start_at; never another family); a role's named men first. A group entry RET
+    (the older menu's) is a kick returner's. A name no longer on the team is left out."""
+    from . import roster_model as RM
+    if not getattr(real, "roles", None):
+        return real
+    rosters, roles = list(real.rosters), [dict(r) if isinstance(r, dict) else {} for r in real.roles]
+    for team, groups in depth.items():
+        if not 1 <= team <= TEAMS or not real.is_layout2(team):
+            continue
+        roster = list(rosters[team - 1])
+        for position in RM.MADDEN:
+            names = groups.get(position) if position not in GROUP_POSITIONS else None     # WR, TE, CB, K, P: the group entry above did it
+            if not names:
+                continue
+            for name in names:                                  # a man moved from the other side or role takes the position
+                index = next((i for i, p in enumerate(roster) if not p.squad and p.pos != "RET" and p.name.casefold() == name.casefold()), None)
+                if index is not None and roster[index].madden != position and RM.may_start_at(position, roster[index].madden):
+                    roster[index] = dataclasses.replace(roster[index], madden=position)
+            slots = [i for i, p in enumerate(roster) if not p.squad and p.pos != "RET" and p.madden == position]
+            players = ordered([roster[i] for i in slots], names)
+            for slot, player in zip(slots, players):
+                roster[slot] = player
+        rosters[team - 1] = tuple(roster)
+        current = roles[team - 1] or {"KR": [p.name for p in roster if p.pos == "RET" and not p.squad], "PR": []}
+        for role in RM.ROLES:
+            names = list(groups.get(role, ())) + (list(groups.get("RET", ())) if role == "KR" else [])
+            if names:
+                active = {p.name.casefold(): p.name for p in roster if not p.squad and p.pos != "RET"}
+                chosen = [active[n.casefold()] for n in names if n.casefold() in active]
+                current = dict(current)
+                current[role] = chosen + [n for n in current.get(role, []) if n.casefold() not in {c.casefold() for c in chosen}]
+        roles[team - 1] = current
+    return dataclasses.replace(real, rosters=tuple(rosters), roles=tuple(roles))
+
+
+def migrate_depth(depth: dict, real) -> dict:
+    """SR.4 (design 21.13): an older entry by group read through the conversion table: each named man to his own real position in the rosters (a
+    halfback's RB entry to HB, a tackle's DL entry to DT, ...), RET to KR; the entries by position are kept and come first. A team whose rosters are not
+    layout 2, or a name not on the team, is left as it was."""
+    out: dict = {}
+    for team, groups in depth.items():
+        if real is None or not real.is_layout2(team):
+            out[team] = dict(groups)
+            continue
+        position_of = {p.name.casefold(): p.madden for p in real.rosters[team - 1] if not p.squad and p.pos != "RET" and p.madden}
+        new: dict = {key: list(names) for key, names in groups.items() if key not in GROUP_POSITIONS}
+        for group, names in groups.items():
+            if group not in GROUP_POSITIONS:
+                continue
+            for name in names:
+                key = "KR" if group == "RET" else position_of.get(name.casefold())
+                if key is None:
+                    continue
+                if name.casefold() not in {n.casefold() for n in new.setdefault(key, [])}:
+                    new[key].append(name)
+        out[team] = {key: names for key, names in new.items() if names}
+    return {team: groups for team, groups in out.items() if groups}
+
+
+def choose_starter(depth: dict, real, team: int, position: str, name: str, slot: int = 0) -> dict:
+    """NX-L11 (design 21.13) in a quick game or a season: the setting after the player made `name` the starter at `position` (or a return role) of
+    `team` (slot 1 for the second of three receivers, two tackles or two corners): the position's order of the rosters with him in the slot, the man
+    who was there in his old place (roster_model.put_first). ValueError when he may not start there (another family, not on the active roster)."""
+    from . import roster_model as RM
+    current = with_depth(real, migrate_depth(depth, real))
+    chart, roles, _squad = current.chart(team)
+    if position in RM.ROLES:
+        order = roles.get(position) or []
+        if name not in {n for p in RM.MADDEN for n in chart.get(p, ())}:
+            raise ValueError("%s is not on the active roster" % name)
+    else:
+        own = next((p for p in RM.MADDEN if name in chart.get(p, ())), None)
+        if own is None or not RM.may_start_at(position, own):
+            raise ValueError("%s cannot start at %s" % (name, position))
+        order = chart.get(position, [])
+    out = {t: dict(g) for t, g in migrate_depth(depth, real).items()}
+    out.setdefault(team, {})[position] = RM.put_first(order, name, slot)
+    return out
 
 
 def put_first(depth: dict, team: int, group: str, name: str, current: list) -> dict:

@@ -79,7 +79,12 @@ def group_shares(table: list, position: str) -> list:
     """(identity, weight) of the group's places in the lineup `table`, in place order: NX-D2's usage share of the place (a run's for the backs, a
     pass's for the receivers) times its carry weight, as a played game's draw weighs them."""
     shares = T.USAGE_PASS if position == "WR" else T.USAGE_RUN
-    return [(table[i][0], share * carry_weight(table[i][2])) for share, i in zip(shares, D.PLACES_OF[position])]
+    from .injuries import EMPTY
+    out = [(table[i][0], 0 if table[i][0] == EMPTY else share * carry_weight(table[i][2]))      # SR.4: an empty place carries nothing
+           for share, i in zip(shares, D.PLACES_OF[position])]
+    if out and sum(w for _i, w in out) == 0:
+        return [(table[i][0], share * carry_weight(table[i][2])) for share, i in zip(shares, D.PLACES_OF[position])]
+    return out
 
 
 def expected_carries(table: list) -> dict:

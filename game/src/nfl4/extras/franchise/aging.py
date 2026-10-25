@@ -213,7 +213,7 @@ def drop_the_unkept(league: LeagueRecord) -> int:
     from . import honors
     kept = honors.keeps(league)
     gone = [pid for pid, p in league.players.items()
-            if p.status not in ("active", "practice", "reserve") and p.team != league.team and p.peak < D.STAR_PEAK and pid not in kept]   # D-136: the squads stay
+            if p.status not in ("active", "practice", "reserve", "list") and p.team != league.team and p.peak < D.STAR_PEAK and pid not in kept]   # D-136: the squads stay; SR.4 the reserve lists
     for pid in gone:
         del league.players[pid]
     return len(gone)

@@ -57,6 +57,9 @@ class Roster:
     # NFL_EXTRAS_DESIGN 3 H7 (nfl4 only): a rating per slot, keyed (section heading, number 1 to n), for the Franchise
     # mode (SX.8). Empty, and never read, in Classic.
     ratings: dict = field(default_factory=dict)
+    # nfl4 only (SR.4, design 21.4 (2)): the places of the real roster's view that have nobody (a team with three backs has no fourth), keyed like
+    # `ratings`; such a place carries its cover's name and gets no share of the usage draw. Empty, and never read, in Classic.
+    empty: list = field(default_factory=list)
 
     def sections(self) -> list[tuple[str, list[str]]]:
         """(heading, names) in the order of footplay.txt."""

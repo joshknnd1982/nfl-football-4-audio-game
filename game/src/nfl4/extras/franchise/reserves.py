@@ -47,9 +47,14 @@ def count(league, team: int) -> int:
     return sum(1 for p in league.players.values() if p.status == STATUS and p.team == team)
 
 
+def filled(league, team: int) -> int:
+    return sum(1 for pid in league.rosters[team - 1] if pid)
+
+
 def room(league, team: int) -> int:
-    """How many more men the team's bench takes (0 when the league carries no benches)."""
-    return max(0, MAX - count(league, team)) if on(league) else 0
+    """How many more men the team's 53 takes (0 when the league carries no benches). SR.4: the places and the bench together, so a team of the real
+    roster whose view leaves back places empty has a longer bench (with every place filled it is MAX less the bench, as before)."""
+    return max(0, D.ROSTER_MAX - filled(league, team) - count(league, team)) if on(league) else 0
 
 
 def slots(league) -> int:
@@ -90,8 +95,11 @@ def join(league, team: int, player) -> str:
 
 
 def can_join(league, team: int, position: str) -> bool:
-    """The team has an open place of the position, or room on its bench."""
-    return open_index(league, team, position) is not None or room(league, team) > 0
+    """The team has an open place of the position, or room on its bench. SR.4: with the 53-man roster only while the team has fewer than 53 (an empty
+    back place of the real roster is no open spot of a full team)."""
+    if on(league):
+        return room(league, team) > 0
+    return open_index(league, team, position) is not None
 
 
 def swap(league, starter, backup) -> None:
@@ -252,5 +260,6 @@ def check(league, whole) -> None:
         if isinstance(p.team, bool) or not isinstance(p.team, int) or not 1 <= p.team <= D.TEAMS or p.place != -1:
             raise LeagueError("bench player %d has team %r and place %r" % (p.id, p.team, p.place))
         counts[p.team - 1] += 1
-    if max(counts) > MAX:
-        raise LeagueError("a bench of %d players" % max(counts))
+    for team in range(1, D.TEAMS + 1):                    # SR.4: the places and the bench, the 53 and the game day's two (a squad kicker signed)
+        if counts[team - 1] + filled(league, team) > D.ROSTER_MAX + D.GAME_DAY_EXTRA:
+            raise LeagueError("team %d has %d players on its 53" % (team, counts[team - 1] + filled(league, team)))
