@@ -32,13 +32,13 @@ How to read it: section 0 is every decision in one line; sections 2 to 4 say how
 ## 1. What SX.10b built and what it did not
 
 Built (pure modules, read by nothing in the engine yet):
-- `clone\src\nfl4\extras\plays\catalog.py`: 282 plays (167 offense, 92 defense calls, 23 special-teams plays), 35 lists, the merged names, what is left out and why, the settings.
+- `game\src\nfl4\extras\plays\catalog.py`: 282 plays (167 offense, 92 defense calls, 23 special-teams plays), 35 lists, the merged names, what is left out and why, the settings.
 - `extras\plays\model_data.py`: every number the models use, with its source and seasons.
 - `extras\plays\model.py`: the outcome models and the named start values.
 - `extras\plays\play_menus.py`: the menus, the kick-off menu, favourites, the search.
 - `extras\plays\favourites.py`: the player's `customize\playbooks\favourites.txt` read, healed (the list format and healing of playbook 7.9) and written whole; the game reads it from SX.10c.
 - `spec\strings_nx.tsv`: 302 new rows (the play names, the lists, the menu words, the settings and their values) and the regenerated `extras\nx_texts.py` and `spec\STRINGS_NX.md`.
-- Tests `clone\tests\test_sx10b_catalog.py`, `test_sx10b_model.py`, `test_sx10b_menus.py`, `test_sx10b_favourites.py`; `test_sx9_about.py` checks the reworded notice.
+- Tests `game\tests\test_sx10b_catalog.py`, `test_sx10b_model.py`, `test_sx10b_menus.py`, `test_sx10b_favourites.py`; `test_sx9_about.py` checks the reworded notice.
 - The README and About notice reworded (D-088 item 4): "The plays are football concepts named in plain football words; many of them are also in the playbooks of Madden NFL. No text, play name, play list, ratings, art or sound of Madden NFL is copied."
 - Work files (not committed): `work\sx10b\fetch_data.py`, `analyze_data.py` and its output `data_numbers_sx10b.txt`, `probe_model.py` and `probe_sx10b.txt`, `key_counts.py`.
 
@@ -96,7 +96,7 @@ Kneel (K) appears when the offense leads in the fourth quarter and the clock can
 ### 2.8 Keys, T and the help
 
 - T is never an item's letter (tests); S and C stay NflRules'; D is reserved for the description of the current item (D-091); the letters F, A, M, K, P, O, N and B are unique in each level (tests).
-- Every key in three places (NX-H1, CLAUDE.md 0.24, D-091): SX.10b2 makes the master key list `game\key_list.py` with every key that exists then, and generates from it the added lines of F5 (the special keys) and F6 (the help) in every mode and the draft `clone\README_keys.md` for the GitHub README; SX.10c adds the play menus' keys to the list (Right, Left, Backspace, plus, minus, F, A, M, K, P, O, N, B, D) the same session it wires them; F7 gets the new football words (personnel, formations, coverages, fronts, the reads).
+- Every key in three places (NX-H1, CLAUDE.md 0.24, D-091): SX.10b2 makes the master key list `game\key_list.py` with every key that exists then, and generates from it the added lines of F5 (the special keys) and F6 (the help) in every mode and the draft `game\README_keys.md` for the GitHub README; SX.10c adds the play menus' keys to the list (Right, Left, Backspace, plus, minus, F, A, M, K, P, O, N, B, D) the same session it wires them; F7 gets the new football words (personnel, formations, coverages, fronts, the reads).
 - The description of the current item (NX-P8, D-091): D in any play menu of the N. F. L. mode says the item's description (a play's, a family item's, a list's, a setting's) and the menu stays on the item; it is heard once per press, in the menu's voice, and not written to the game's speech log.
 
 ## 3. The catalog (NX-P2)
@@ -106,7 +106,7 @@ Kneel (K) appears when the offense leads in the fourth quarter and the clock can
 - Every name the research's sections 2 to 6 gives is a play, MERGED into a named play (for example Texas into Angle Route, slip screen into Running Back Screen, dollar into Dime Short Coverage) or LEFT_OUT with its reason (the fumblerooski, the drop kick, the quick kick, the sky kick, a surprise onside kick, a fair catch of a kick-off, follow and hank, the audible, the hot route, the kick-off return choices, the punt return direction); a test checks the list of 230 research names.
 - No EA name (MADDEN_PLAYBOOK_RESEARCH List B and NFL_PLAYS_RESEARCH 6.4); "Roll Coverage" is on that list, so the concept is "Safety Rotation".
 - The pre-snap tools of Madden's playbooks are settings, not plays: formation, personnel, motion, the side (flip), tempo, protection, the defense's personnel and press or off.
-- Descriptions (NX-P8, D-091, written in SX.10b2): every play, every original item, every list and every setting has one or two plain sentences, at most 35 words, saying what it tries to do and when it works or is risky, for a person who has never watched football (the play's stated strength and weakness, section 4.8, in everyday words: "good when the defense sends extra players after the quarterback, risky when ..."). They are rows of `spec\strings_nx.tsv`: the description rows follow a fixed scheme so a test can find each (offense O001 to O099 NXY-R01 to NXY-R99 and O100 on NXY-S00 on; defense D001 on NXZ-R01 on; kicks K001 to K036 NXB-D01 to NXB-D36; the original's items, the lists and the settings NXB-E and NXB-F rows; SX.10b2 writes the exact rows). A football word (from a glossary in the test) used in a description is explained in it or in F7. `clone\PLAYS_GUIDE.md` (for GitHub) is generated from the rows, list by list.
+- Descriptions (NX-P8, D-091, written in SX.10b2): every play, every original item, every list and every setting has one or two plain sentences, at most 35 words, saying what it tries to do and when it works or is risky, for a person who has never watched football (the play's stated strength and weakness, section 4.8, in everyday words: "good when the defense sends extra players after the quarterback, risky when ..."). They are rows of `spec\strings_nx.tsv`: the description rows follow a fixed scheme so a test can find each (offense O001 to O099 NXY-R01 to NXY-R99 and O100 on NXY-S00 on; defense D001 on NXZ-R01 on; kicks K001 to K036 NXB-D01 to NXB-D36; the original's items, the lists and the settings NXB-E and NXB-F rows; SX.10b2 writes the exact rows). A football word (from a glossary in the test) used in a description is explained in it or in F7. `game\PLAYS_GUIDE.md` (for GitHub) is generated from the rows, list by list.
 
 ## 4. The outcome models (NX-P3)
 
@@ -252,7 +252,7 @@ Built: `test_sx10b_catalog.py` (IDs, names, text rows, lists, models' inputs, ca
 
 ## 10. The sessions
 
-- SX.10b2 (BUILT 2026-10-20, D-092) The play descriptions and every key in three places (D-091; NX-P8, NX-H1): the descriptions of section 3, the D key in today's play menus and in `play_menus.py`, F7's descriptions of the original's items in Classic, `game\key_list.py`, F5's and F6's added lines, `clone\README_keys.md` and `clone\PLAYS_GUIDE.md`, the tests. Sonnet 5.5 at high. Before SX.10c.
+- SX.10b2 (BUILT 2026-10-20, D-092) The play descriptions and every key in three places (D-091; NX-P8, NX-H1): the descriptions of section 3, the D key in today's play menus and in `play_menus.py`, F7's descriptions of the original's items in Classic, `game\key_list.py`, F5's and F6's added lines, `game\README_keys.md` and `game\PLAYS_GUIDE.md`, the tests. Sonnet 5.5 at high. Before SX.10c.
 - SX.10c (BUILT 2026-10-21, D-093) The offense in the game: the hook, the narration, the menus with Right, plus and minus, favourites and settings saved, kneel and spike, turnovers returned (G26-8, G26-9, G26-12), the ratings door, plays.txt and favourites.txt, F5 and F7 rows. Ran on Opus 5.5.
 - SX.10d (BUILT 2026-10-21, D-094) The defense calls and special teams in the game: the defense menus, the 2026 kick-off menu and model, punts, field goals, the extra point, the fair catch kick, the safety kick, the kick defense, the kick fouls (G26-1, G26-4 to G26-7, G26-11, G26-13, G26-14). Ran on Opus 5.5.
 - SX.10e (BUILT 2026-10-21, D-095) The computer's calling over the catalog, the playbook's pick, the two-point chart (G26-10), SACK_SCALE, the team's playbook as the default, the bands of SX.2 to SX.9, 10,000 games, the 20-season Franchise test, the conformance rows NX-P1 to NX-P8 and NX-R7, the owner's listening list (item 12). Ran on Opus 5.5.

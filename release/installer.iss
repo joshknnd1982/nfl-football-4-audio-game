@@ -1,8 +1,8 @@
-; Inno Setup 6 script: NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen (nfl4 clone).
+; Inno Setup 6 script: NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen (nfl4).
 ; Phase 10 (playbook 8.2); this file is nfl4's since S8.2 (a test installer). Compile (from anywhere):
 ;   "C:\Users\joshk\AppData\Local\Programs\Inno Setup 6\ISCC.exe" "<game folder>\release\installer.iss"
 ; Optional defines: /DAppVersion=0.9.0  /DBuild64=<dist\nfl4 folder>  /DBuild32=<dist\nfl4 folder>
-; Run clone\tools\build.ps1 first so the build folders are fresh. Output: nfl4-setup-<version>.exe in this folder.
+; Run game\tools\build.ps1 first so the build folders are fresh. Output: nfl4-setup-<version>.exe in this folder.
 ;
 ; Design decisions (DECISIONS.md, P10):
 ;  - One installer holds both builds and installs the one that fits the Windows (64-bit or 32-bit).

@@ -2,7 +2,7 @@
 
 The owner asked on 2026-10-22: "The user should be able to change Ghip's name or pick from among popular sports podcaster names that Claude
 researches and puts into the game." The game offers the default (Ghip), the names below and the player's own typed name (F9, Rules, Commentator).
-The list is in `clone/src/nfl4/extras/commentators.py` (`NAMES`, alphabetical, 28 names). Facts only: a name is the host of a sports podcast or
+The list is in `game/src/nfl4/extras/commentators.py` (`NAMES`, alphabetical, 28 names). Facts only: a name is the host of a sports podcast or
 show that a source below lists. Nothing is a recording or a quotation: the game's commentator is a computer voice that says the game's own lines, and
 the README, the About text and CUSTOMIZE.md say that the names are used descriptively and that nobody named has anything to do with the game.
 Claude is not a lawyer; the owner can empty the list or ask for a name to be removed at any time (one line of `commentators.py`).

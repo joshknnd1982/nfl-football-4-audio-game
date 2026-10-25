@@ -10,6 +10,19 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.1 (2026-10-25, test build)
+
+Nothing new to play in this build: it is the same game as 0.16.0 after a tidy-up of the project. The source folder of the project, which had an older name, is now called `game`, and the old word is gone from the texts of the program and from its log.
+
+### The log and the problem report say the game's name
+The debug log used to carry an extra old word between the name and the version, and again at its end. It now says "NFL Football 4 <version> starting" and "NFL Football 4 closed". Nothing else in the log changed.
+- How to test: play a minute, close the game with the usual exit, then F9, Speech settings, "Save a problem report" (or open the newest file in the `logs` folder of your files): near the start of the log you find "NFL Football 4 0.16.1 starting" and near its end "NFL Football 4 closed", with nothing between the name and the version.
+- Tell us: only if the installed game does not behave exactly like 0.16.0. Anything that sounds or plays differently is a mistake of this tidy-up.
+
+### Folder names in the documents
+The guides that come with the game (`docs` folder: keys, N. F. L. rules and Franchise, plays, customize, problem reports) and the README on GitHub name the folders `game/src`, `game/tests` and `game/tools`. The keys and the plays are the same.
+- How to test: open `docs\README_keys.md` in the program folder: the keys are the same as in 0.16.0 and as F5 lists them.
+
 ## 0.16.0 (2026-10-25, test build)
 
 ### A franchise keeps every team's real 53 players

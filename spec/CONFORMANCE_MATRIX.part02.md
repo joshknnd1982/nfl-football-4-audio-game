@@ -122,7 +122,7 @@ Tests:
 
 ### X6
 
-Requirement: The value order of the original's files as far as the clone keeps them (12; D-024 item 4).
+Requirement: The value order of the original's files as far as the game keeps them (12; D-024 item 4).
 
 Tests:
 - test_files_savedgame.py: test_the_values_are_in_the_originals_order_and_the_name_is_a_long_then_codes

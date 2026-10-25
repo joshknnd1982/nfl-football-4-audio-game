@@ -26,7 +26,7 @@ Main menu, welcome, week announcements, exit and error text (p_486990, the start
 
 ## ERROR-MESSAGE (1)
 
-The wave-corrupt error text "Sorry but one or more of the wave files seem to be corrupt" (a length-prefixed text with no leading or trailing space). DEAD STRING (S4.4, scripted scan of the whole 581,632-byte exe for the address of its characters 0x41a578, its length prefix 0x41a574 and the two neighbors: no reference anywhere; P3 read all 64 procedures and found none either). The clone reuses the sentence as the one spoken notice when a sound file cannot be used (spec/SOUND_DESIGN.md 5, GAP_REGISTER G-A6). [CODE]
+The wave-corrupt error text "Sorry but one or more of the wave files seem to be corrupt" (a length-prefixed text with no leading or trailing space). DEAD STRING (S4.4, scripted scan of the whole 581,632-byte exe for the address of its characters 0x41a578, its length prefix 0x41a574 and the two neighbors: no reference anywhere; P3 read all 64 procedures and found none either). The game reuses the sentence as the one spoken notice when a sound file cannot be used (spec/SOUND_DESIGN.md 5, GAP_REGISTER G-A6). [CODE]
 
 - `2568` @0x1a578 []: "Sorry but one or more of the wave files seem to be corrupt"
 

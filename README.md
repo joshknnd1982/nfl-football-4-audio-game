@@ -20,7 +20,7 @@ This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many 
   - a radio-style broadcast: the announcer's banter and a color commentator in a voice of their own, stadium sounds, and a referee who announces over a microphone;
   - a Franchise: a league of 32 teams that lasts from season to season, with the real 2026 schedule and bye weeks, the NFL's 14-team play-offs, ratings, aging, the draft, contracts and the salary cap, free agency, trades from free agency to the deadline, practice squads, injuries, coaches and history.
 
-Choose the rules in the game: press F9, then Rules. The full description is in [clone/README_nfl_rules_and_franchise.md](clone/README_nfl_rules_and_franchise.md).
+Choose the rules in the game: press F9, then Rules. The full description is in [game/README_nfl_rules_and_franchise.md](game/README_nfl_rules_and_franchise.md).
 
 ## Getting the latest NFL calendar
 
@@ -29,13 +29,13 @@ A franchise plays the real 2026 NFL schedule in its first season. The NFL releas
 - **From the game:** press F9, then Franchise, then the last item, "get the latest calendar". The game asks this repository for the newest calendar after the newest one it has, checks that it is a whole NFL calendar (18 weeks, 17 games and one bye for every team), saves it in your customize folder and tells you in one sentence what it got, or why not (no connection, nothing newer yet, a damaged file). It goes on the internet only when you choose this item, never by itself. Escape stops it.
 - **By hand:** download the file `schedule_<year>.txt` from the [calendars](calendars) folder and put it in your customize folder, `%APPDATA%\Kitchensinc Revival\NFL Football 4\customize` (F9, Customize, open the folder). Keep its name.
 
-Your franchise plays a year's calendar from the season of that year (a season already begun keeps its calendar). Until a newer calendar is there, a later season plays the newest calendar the game has with the teams relabeled, so every team meets other opponents. The file's format is explained at its top and in [clone/CUSTOMIZE.md](clone/CUSTOMIZE.md).
+Your franchise plays a year's calendar from the season of that year (a season already begun keeps its calendar). Until a newer calendar is there, a later season plays the newest calendar the game has with the teams relabeled, so every team meets other opponents. The file's format is explained at its top and in [game/CUSTOMIZE.md](game/CUSTOMIZE.md).
 
 ## Requirements
 
 - Windows 10 or 11, 64-bit or 32-bit.
 - A screen reader (NVDA or JAWS) or the Windows speech voices (SAPI 5), and speakers or headphones.
-- To run it from source: Python 3.14. The libraries are listed in [clone/requirements.txt](clone/requirements.txt).
+- To run it from source: Python 3.14. The libraries are listed in [game/requirements.txt](game/requirements.txt).
 
 Speech output is automatic: NVDA when it runs, else JAWS, else the game's own Windows voices. When a screen reader runs and you have not chosen yet, the game asks once whether to speak through it. The maintainer plays it with NVDA. The Windows voices (SAPI 5) are covered by automatic tests. JAWS support is built and tested against a stand-in; it has not yet been checked with the real JAWS in the built game.
 
@@ -43,7 +43,7 @@ Speech output is automatic: NVDA when it runs, else JAWS, else the game's own Wi
 
 In a Command Prompt or PowerShell:
 
-1. `cd clone`
+1. `cd game`
 2. `py -3.14 -m venv .venv`
 3. `.venv\Scripts\python -m pip install -r requirements.txt`
 4. `cd src`
@@ -56,21 +56,21 @@ The game opens a small window that receives the keys, and speaks its welcome.
 - F9 opens the added functions: the speech settings (engine, voice, rate, pitch, volume), the sounds, the names and the banter, the rules, the Franchise and the about text.
 - F11 adjusts the volumes of the voices and the sounds. F12 changes the voices. The Control key adjusts the rate of speech.
 - Your settings, saved games, own sounds, customization files and logs are in `%APPDATA%\Kitchensinc Revival\NFL Football 4`. The program folder holds only program files.
-- You can change team names, division names, surnames and the announcer's banter, add banter lines of your own, add sounds to the numbered families of sounds the game draws among, and replace the stadium, referee and whistle sounds with your own files. [clone/CUSTOMIZE.md](clone/CUSTOMIZE.md) says how.
+- You can change team names, division names, surnames and the announcer's banter, add banter lines of your own, add sounds to the numbered families of sounds the game draws among, and replace the stadium, referee and whistle sounds with your own files. [game/CUSTOMIZE.md](game/CUSTOMIZE.md) says how.
 
 ## Documents
 
-- [clone/README_keys.md](clone/README_keys.md): every key, as below.
-- [clone/README_nfl_rules_and_franchise.md](clone/README_nfl_rules_and_franchise.md): the N. F. L. rules, the Franchise, saved games, the real names, the broadcast.
-- [clone/PLAYS_GUIDE.md](clone/PLAYS_GUIDE.md): every play with a short plain description.
-- [clone/CUSTOMIZE.md](clone/CUSTOMIZE.md): names, banter and sounds.
-- [clone/README_if_something_goes_wrong.md](clone/README_if_something_goes_wrong.md): problem reports.
+- [game/README_keys.md](game/README_keys.md): every key, as below.
+- [game/README_nfl_rules_and_franchise.md](game/README_nfl_rules_and_franchise.md): the N. F. L. rules, the Franchise, saved games, the real names, the broadcast.
+- [game/PLAYS_GUIDE.md](game/PLAYS_GUIDE.md): every play with a short plain description.
+- [game/CUSTOMIZE.md](game/CUSTOMIZE.md): names, banter and sounds.
+- [game/README_if_something_goes_wrong.md](game/README_if_something_goes_wrong.md): problem reports.
 - [spec/](spec/): the specification, the decisions and the research the game is built from.
 
 <!-- keys:start -->
 ## Keys
 
-Every key the game handles, where it works and what it does. This list is made from the game's master list of keys (`clone/src/nfl4/game/key_list.py`); the same keys are spoken by F5 (the special keys) and F6 (the game instructions). Keys marked "N. F. L. rules" work only with the N. F. L. rules; Classic is the original game exactly.
+Every key the game handles, where it works and what it does. This list is made from the game's master list of keys (`game/src/nfl4/game/key_list.py`); the same keys are spoken by F5 (the special keys) and F6 (the game instructions). Keys marked "N. F. L. rules" work only with the N. F. L. rules; Classic is the original game exactly.
 
 - **F1**: Anywhere. Repeats the current prompt, then says where the help is. (original game)
 - **F2**: Anywhere, and in questions and lists. Plays the instant replay of what was just said. (original game)
@@ -122,13 +122,13 @@ NFL Football 4 writes down what it does, so that a problem on your computer can 
 4. If the game does not start at all, run `nfl4.exe --problem-report` (or `python -m nfl4 --problem-report` from source). It makes the same zip without opening the game.
 5. Open a new issue in this repository, say in a few words what happened and what you pressed, which screen reader and version you use, and attach the zip.
 
-The report holds the newest logs, a description of your Windows, voices and sound device, your settings and the names of your customization files. It does not hold your Windows account name (it is replaced by `<user>`), your computer name, e-mail addresses, passwords or the text you type. More in [clone/README_if_something_goes_wrong.md](clone/README_if_something_goes_wrong.md).
+The report holds the newest logs, a description of your Windows, voices and sound device, your settings and the names of your customization files. It does not hold your Windows account name (it is replaced by `<user>`), your computer name, e-mail addresses, passwords or the text you type. More in [game/README_if_something_goes_wrong.md](game/README_if_something_goes_wrong.md).
 
 ## Sounds and rights
 
-- The 26 sound files `foot0.wav` to `foot25.wav` in `clone/assets/sounds` are Jim Kitchen's original wav files from his game "NFL football version 4", copied unchanged (each checked by its SHA-256 fingerprint against the original). The maintainer, Josh Kennedy, says that Jim Kitchen gave him permission to use the wav files of his games, but the original e-mail is lost, so that permission cannot be shown to anyone. The files are included on the maintainer's own responsibility. If a rights holder asks for them to be removed, they will be removed.
-- The 22 stadium, crowd and whistle sounds in `clone/assets/sounds_nx` are generated by this project's own code. They are new work under the MIT license.
-- The program code, tests and documents are new and under the MIT license (file `LICENSE`). The license does not cover Jim Kitchen's wav files. Third-party parts keep their own licenses: see [clone/THIRD_PARTY_NOTICES.txt](clone/THIRD_PARTY_NOTICES.txt) and [SOUNDS_NOTICE.txt](SOUNDS_NOTICE.txt).
+- The 26 sound files `foot0.wav` to `foot25.wav` in `game/assets/sounds` are Jim Kitchen's original wav files from his game "NFL football version 4", copied unchanged (each checked by its SHA-256 fingerprint against the original). The maintainer, Josh Kennedy, says that Jim Kitchen gave him permission to use the wav files of his games, but the original e-mail is lost, so that permission cannot be shown to anyone. The files are included on the maintainer's own responsibility. If a rights holder asks for them to be removed, they will be removed.
+- The 22 stadium, crowd and whistle sounds in `game/assets/sounds_nx` are generated by this project's own code. They are new work under the MIT license.
+- The program code, tests and documents are new and under the MIT license (file `LICENSE`). The license does not cover Jim Kitchen's wav files. Third-party parts keep their own licenses: see [game/THIRD_PARTY_NOTICES.txt](game/THIRD_PARTY_NOTICES.txt) and [SOUNDS_NOTICE.txt](SOUNDS_NOTICE.txt).
 
 ## Names, trademarks and the NFL
 
@@ -137,8 +137,8 @@ The report holds the newest logs, a description of your Windows, voices and soun
 
 ## Tests and building
 
-- The tests are in `clone/tests`: more than 6,000, run in both the 64-bit and the 32-bit Python. From the `clone` folder: `.venv\Scripts\python -m pytest`.
-- `clone/tools/build.ps1` builds the 64-bit and 32-bit programs with PyInstaller. `release/installer.iss` is the Inno Setup script for one installer that holds both. No installer is published yet.
+- The tests are in `game/tests`: more than 6,000, run in both the 64-bit and the 32-bit Python. From the `game` folder: `.venv\Scripts\python -m pytest`.
+- `game/tools/build.ps1` builds the 64-bit and 32-bit programs with PyInstaller. `release/installer.iss` is the Inno Setup script for one installer that holds both. No installer is published yet.
 - The Classic mode has a recorded transcript of the original's behavior that the tests compare with, so a change cannot alter the original game.
 
 ## License and credits

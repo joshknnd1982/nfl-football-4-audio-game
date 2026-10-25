@@ -150,7 +150,7 @@ Each build session writes its draws again in its tests with the strict scripted 
 
 ## 13. Hooks and seams in the classic code (each a no-op or an identity in Classic; why each is needed)
 
-The franchise lives in the package `clone\src\nfl4\extras\franchise\` (`data.py`, `league.py`, `ratings.py`, `aging.py`, `draft.py`, `todo.py`, `news.py`, `history.py`, `store.py`, `mode.py`, `question.py`, `menus.py`). It reaches the classic code only through these seams; SX.8a (H15 and H14's `game_played`) and SX.8b (H14's `computer_index` and `playoff_first_wins`, the H7 extension with `opponent_names`, the GameRandom method) build them, each tested to leave Classic unchanged (the golden transcript, the trace of draw sizes and every existing season, program and app test).
+The franchise lives in the package `game\src\nfl4\extras\franchise\` (`data.py`, `league.py`, `ratings.py`, `aging.py`, `draft.py`, `todo.py`, `news.py`, `history.py`, `store.py`, `mode.py`, `question.py`, `menus.py`). It reaches the classic code only through these seams; SX.8a (H15 and H14's `game_played`) and SX.8b (H14's `computer_index` and `playoff_first_wins`, the H7 extension with `opponent_names`, the GameRandom method) build them, each tested to leave Classic unchanged (the golden transcript, the trace of draw sizes and every existing season, program and app test).
 
 - H14 (new) Season hooks, `Game.season_hooks` (Classic: `CLASSIC_SEASON_HOOKS`), read by `SeasonEngine` and handed to `playoffs.computer_game`:
   - `computer_index(team, index) -> index` in `_regular_week` after each team's score index is drawn (Classic: the index unchanged), with the redraw's test and scan on the returned values;

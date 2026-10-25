@@ -1,4 +1,4 @@
-# MADDEN_PLAYBOOK_RESEARCH (nfl4 only): Madden NFL 27 playbooks as a model for the clone's optional playbooks
+# MADDEN_PLAYBOOK_RESEARCH (nfl4 only): Madden NFL 27 playbooks as a model for the game's optional playbooks
 
 Status: RESEARCH, version 1.0 (2026-10-14, session SX.0), for `spec\NFL_EXTRA_FEATURES.md` section 10 (NX5, playbooks). nfl4 only (CLAUDE.md rule 0.13). Research only: no code, no other file changed. Plain headings and lists, no tables. The last section lists what SX.1 should take from it.
 
@@ -39,7 +39,7 @@ Audibles and hot routes, one sentence each:
 - An audible changes the called play at the line to one of a few preset alternatives; each formation in a book has four preset audible plays that the player can edit in the Creation Center (SRC-SECONDARY, ClutchPoints). EA tells players to practice their audibles and hot routes (SRC-OFFICIAL).
 - A hot route changes the route of one receiver before the snap; in Madden 27 hot routes, formation shifts, coverage changes and per-player assignments can be saved inside "custom adjustments" (SRC-OFFICIAL, Gameplay Deep Dive 2026-06-04). In Coach Mode the pre-play menu closes with 15 seconds left on the play clock, which ends audibles and hot routes (SRC-OFFICIAL).
 
-What the clone may take: formation family, set and play as three levels, the offensive and defensive book chosen separately (EA does this too), four preset audible alternatives. Nothing else.
+What the game may take: formation family, set and play as three levels, the offensive and defensive book chosen separately (EA does this too), four preset audible alternatives. Nothing else.
 
 ## 2. The 32 team playbooks and Madden 27 changes
 
@@ -50,7 +50,7 @@ Playbooks:
 - EA does not list the 32 books with labels on any page I could reach (UNVERIFIED). Community pages agree there are 32 team books "plus a few custom ones" (ClutchPoints, SRC-SECONDARY).
 - Non-team books: "Shotgun Classic", a shotgun-only generic book, is named by games.gg and timesaver.gg (SRC-SECONDARY). "Pistol" and "Multiple D" are named as books by one ranking site (maddenprodigy.com, SRC-SECONDARY, one source only). The settings menu offers the team books "or custom options" (SRC-OFFICIAL). Player-built books come from the Creation Center, starting from a team book (SRC-SECONDARY).
 - EA's official starting points (SRC-OFFICIAL): offense: balanced = Pittsburgh Steelers; pass-heavy = Kansas City Chiefs or Los Angeles Rams; power run = Tennessee Titans or Pittsburgh; mobile quarterback = Baltimore Ravens or Buffalo Bills. Defense: balanced = Kansas City; pressure = Pittsburgh; coverage = Green Bay Packers; run-stopping = Baltimore. EA says there is no single best book.
-- EA's own four offense playstyles and four defense playstyles (above) are a good official skeleton for the clone's styles.
+- EA's own four offense playstyles and four defense playstyles (above) are a good official skeleton for the game's styles.
 - A community scheme taxonomy exists (madden.tools "Schemes", SRC-SECONDARY): 11 offensive schemes (Air Raid, Multiple Power Run, Multiple Zone Run, Pistol, Run and Shoot, Spread, Vertical Power Run, Vertical Zone Run, West Coast Power Run, West Coast Spread, West Coast Zone Run) and 10 defensive schemes (3-4 Storm, 3-4 Under, 4-3 Cover 3, 4-3 Quarters, 4-3 Under, 46, Base 3-4, Base 4-3, Disguise 3-4, Tampa 2). EA's Madden 27 pages that I read do not name these; they are the scheme labels of Franchise (archetype fit). The site's "example teams" on scheme pages disagree with its own team pages (for example Tampa 2 shows no example team but six team pages list it), so I used the team pages and mark that as weak.
 - Not Madden: College Football 27 has 31 defensive playbooks in six Defensive Styles (Man, Man Pressure, Shell, Zone, Zone Pressure, Multiple) (SRC-OFFICIAL, same deep dive). This is not a Madden fact; I only note it because some pages mix the two.
 
@@ -63,7 +63,7 @@ Madden 27 changes (SRC-OFFICIAL, Gameplay Deep Dive 2026-06-04, ea.com pages; pa
 
 Playbooks in Franchise, staff and coordinators (SRC-OFFICIAL, Franchise Deep Dive 2026-06-04 and help page FAQ):
 - Playbooks and scheme choice can directly affect player development (XP), team performance and computer behavior, especially in Franchise and Superstar; EA advises a playbook that fits the team's archetypes and scheme.
-- EA says playbooks had too much influence on sim outcomes (SuperSim), so SuperSim was retuned: roster quality should matter more than the playbook choice. A clone should keep playbook modifiers small (this matches NX5 N5.2).
+- EA says playbooks had too much influence on sim outcomes (SuperSim), so SuperSim was retuned: roster quality should matter more than the playbook choice. A game should keep playbook modifiers small (this matches NX5 N5.2).
 - Teams adapt their playbooks to personnel: if a team replaces the quarterback who defined its offense with one of a different style, the team changes how it plays, and the user is asked; the computer teams do the same.
 - Franchise coaching staffs include real NFL coordinators (offensive and defensive) with defined identities; a coordinator hired away for a head job changes the team's identity. Coach abilities, playsheets and weekly strategy (from Madden 26) remain part of Franchise.
 - Idea for NX6, not an EA fact: tie a team's style to its head coach or coordinator and let it change when the starting quarterback or the coordinator changes.
@@ -81,7 +81,7 @@ List A, plain football vocabulary the game may use:
 - The names of the styles themselves in section 4 come from here (Pro Style, West Coast, Air Raid, Power Run, Zone Run, Option, Pressure).
 
 List B, EA's own naming or branding, not used (NX-R6):
-- Brand and modes: Madden, Madden NFL, Ultimate Team and MUT, Superstar, Franchise as a Madden feature name (the clone's mode name is the owner's word; keep it generic if possible), Madden Championship Series.
+- Brand and modes: Madden, Madden NFL, Ultimate Team and MUT, Superstar, Franchise as a Madden feature name (the game's mode name is the owner's word; keep it generic if possible), Madden Championship Series.
 - Systems: Persona Engine, Persona DNA, Coach DNA, Coach Mode, CoachSpeak, Coach Suggestions, Coach Vision, Custom Adjustments, macros, Formation Shifts as a menu feature, Play Call Substitutions, Dynamic Subs, Playsheets, Weekly Strategy, Coach Abilities, SuperSim, Franchise Points, Staff Points.
 - Mechanics: QB Sneak Meter, Timing Based Catching and the catch meter, Tackle Stick, Hot and Cold, Wear and Tear, Home Field Advantage as a rated feature, Smart Zones, Plaster, Look For Work, Red Zone Awareness, Focus, Roll Coverage, Gap Integrity, Defensive Aggression, ID Mike, Chip Block as a setting, jostle.
 - Ratings and abilities: X-Factor and its ability names (Unstoppable Force, Ankle Breaker, Double Me, Universal Coverage, Bottleneck, Brick Wall, Pro Reads, Slot-O-Matic, Momentum Shift and similar), Superstar abilities, Zone Ability, "99 Club", OVR ratings, archetype names (Field General, Elusive Back, Power Back, Improviser and similar), team ratings.
@@ -148,13 +148,13 @@ Size rule for SX.1 (matches N5.2): each style gets at most three small bonus ent
    - Defense strong: the Blitz call gains sack chance and lowers completion; weak: Screen Pass and runs against the Blitz gain more yards, Long Pass beats it when it is picked up.
 
 Notes for SX.1:
-- EA lets the player choose the offensive book and the defensive book separately (SRC-OFFICIAL). Recommend the same in the clone: each style has an offense part and a default defense part, and the menu offers "Offense: <style>" and "Defense: <style>", defaulting both to the team's style. This costs little and lets the table in section 5 name an exception where EA states a different defensive identity.
+- EA lets the player choose the offensive book and the defensive book separately (SRC-OFFICIAL). Recommend the same in the game: each style has an offense part and a default defense part, and the menu offers "Offense: <style>" and "Defense: <style>", defaulting both to the team's style. This costs little and lets the table in section 5 name an exception where EA states a different defensive identity.
 - "Classic" stays first and equals the original tables (N5.4, C3).
 - Computer play choice for a style: a weighted draw over its plays by down, distance, field position and score (N5.6); the weights are part of each style's data file (for example Power Run calls Line Plunge more on first and second down).
 
 ## 5. Assignment of the 32 teams
 
-Method: EA statements first (SRC-OFFICIAL, help page 2026-10-14 and Week 1 breakdown 2026-09-08, listed as "EA:"); then community scheme labels for the team (SRC-SECONDARY, madden.tools team pages, "in-game offense / defense scheme", read 2026-10-14, listed as "labels:"); then 2026 coaching reports (SRC-SECONDARY, RotoWire "Previewing Schemes of 2026 NFL Offenses", 2026-07-24, listed as "RW:"; FanSided 2026-09-23 for the Vikings). Each EA book is named after the team (for example the Steelers book). Used game nicknames; Redskins is Washington. If the clone keeps one style per team, the style named first is the team's playbook; "defense:" notes a different defensive identity that SX.1 may use if it splits offense and defense.
+Method: EA statements first (SRC-OFFICIAL, help page 2026-10-14 and Week 1 breakdown 2026-09-08, listed as "EA:"); then community scheme labels for the team (SRC-SECONDARY, madden.tools team pages, "in-game offense / defense scheme", read 2026-10-14, listed as "labels:"); then 2026 coaching reports (SRC-SECONDARY, RotoWire "Previewing Schemes of 2026 NFL Offenses", 2026-07-24, listed as "RW:"; FanSided 2026-09-23 for the Vikings). Each EA book is named after the team (for example the Steelers book). Used game nicknames; Redskins is Washington. If the game keeps one style per team, the style named first is the team's playbook; "defense:" notes a different defensive identity that SX.1 may use if it splits offense and defense.
 
 Tag per team: OFFICIAL means EA's page states at least the offensive or defensive style used; SECONDARY means only community or news sources; where only one side is official, I say which.
 
@@ -224,7 +224,7 @@ Defense, per style:
 
 Totals: one shared catalog of about 50 offense plays and 30 defense plays with permanent IDs, and seven style lists of about 30 and 18 entries each with their modifiers and weights, about 340 data rows in all. The playbook text files in the customize folder (N5.7) hold them.
 
-Scale check: Madden's game-wide pool is about 10,700 plays (SRC-SECONDARY); a clone style is under half a percent of it, in line with EA's advice that a small book you know well can be better than a large one (SRC-OFFICIAL). EA's practice routine needs 8 situation slots (inside run, outside run, quick pass, middle pass, sideline pass, deep shot, red zone, blitz answer); every style covers all 8.
+Scale check: Madden's game-wide pool is about 10,700 plays (SRC-SECONDARY); a game style is under half a percent of it, in line with EA's advice that a small book you know well can be better than a large one (SRC-OFFICIAL). EA's practice routine needs 8 situation slots (inside run, outside run, quick pass, middle pass, sideline pass, deep shot, red zone, blitz answer); every style covers all 8.
 
 ## Could not settle
 
@@ -264,7 +264,7 @@ SRC-SECONDARY:
 ## 7. What SX.1 should take from this research (summary and effects on NFL_EXTRA_FEATURES.md)
 
 - N5.1 is met: the structure of a playbook, the two vocabulary lists, the seven styles with their mapping and the assignment of all 32 teams are above. Madden's own list of the 32 team books and their play counts is not published by EA, so the "32 separate team books" alternative of NQ5 is not supported by evidence; the accepted default (a handful of style playbooks plus an assignment of each team to the closest style) stands.
-- N5.4 (selection): EA lets the player pick the offensive and the defensive book separately. Recommended for the clone: two menu items, "Offense: <style>" and "Defense: <style>", both defaulting to the team's style, "Classic" always first. This also lets a team keep a different defensive identity where EA states one (section 5 notes the cases: Bengals, Colts, Jaguars, Packers, Steelers).
+- N5.4 (selection): EA lets the player pick the offensive and the defensive book separately. Recommended for the game: two menu items, "Offense: <style>" and "Defense: <style>", both defaulting to the team's style, "Classic" always first. This also lets a team keep a different defensive identity where EA states one (section 5 notes the cases: Bengals, Colts, Jaguars, Packers, Steelers).
 - N5.2 (mapping and balance): each style is a bounded set of changes to the original's table (section 4): at most three small bonus entries and three small penalty entries, equal budgets, the neutral style (Pro Style) equal to Classic in numbers. EA itself reports that playbooks had too much influence on simulated results and retuned them, which supports small modifiers. The strengths and weaknesses written here are read from the original's 5 by 6 table and are untested; SX.1's seeded 10,000-game simulation decides the final numbers (the balance test of NX5's done-when).
 - N5.5 (menus): about 30 offense plays and 18 defense plays per style fit the limits (at most 12 items per menu level, at most six words per item); the top offense menu has 10 items (inside runs, outside runs, screens, short passes, deep passes, play action, quarterback runs, field goal, punt, save game) and the defense top menu keeps the original's six calls plus Save game. Classic keeps the original's 8 and 7 items unchanged.
 - N5.7 (customization): the shared catalog of about 50 offense and 30 defense plays with permanent IDs, the seven style lists with weights and modifiers, and the team assignment (32 rows) are data in the `customize` folder, about 340 rows in all. The player may rename or disable plays and change the assignment.

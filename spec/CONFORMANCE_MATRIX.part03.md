@@ -215,7 +215,7 @@ Tests:
 
 ### N7.6
 
-Requirement: Interactions are listed and tested: timeouts (NX1: the clone refuses a timeout it cannot grant, so no timeout foul arises), challenges (NX2: judgment fouls are never r...
+Requirement: Interactions are listed and tested: timeouts (NX1: the game refuses a timeout it cannot grant, so no timeout foul arises), challenges (NX2: judgment fouls are never r...
 
 Tests:
 - test_nx_penalty_review.py: test_1_the_run_off_prompt_says_the_time_left_after_the_run_off_and_the_clock_running_out, test_4_a_foul_before_the_snap_of_a_two_point_try_leaves_nothing_waiting, test_5_a_defense_foul_on_a_good_try_is_not_offered_and_said_declined, test_6_off_wins_over_a_weight_in_penalties_txt, test_7_delay_of_game_after_the_warning_gets_the_run_off, test_8_after_a_penalty_the_runoff_is_bounded_by_the_play_clock_of_25, test_9_a_personal_foul_by_the_offense_before_a_fumble_lets_the_defense_keep_the_ball, test_10_a_foul_not_offered_is_said_declined and 3 more
