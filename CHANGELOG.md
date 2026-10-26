@@ -48,9 +48,23 @@ You said he talks too much. With the N. F. L. rules and the broadcast on, the co
 - Tell us: if he is now too quiet, or still too often.
 
 ### An older franchise is brought to the real positions when it is opened
-A franchise saved by an older version is changed once when you open it: every real player gets his real position and number, and a franchise from before 0.16.0 (one quarterback a team) gets its teams' missing real players at once, so the Bears have their backup quarterbacks. The old file is kept as `league.sav.before-format-18` in the franchise folder. Who starts in your games does not change yet.
+A franchise saved by an older version is changed once when you open it: every real player gets his real position and number, and a franchise from before 0.16.0 (one quarterback a team) gets its teams' missing real players at once, so the Bears have their backup quarterbacks. The old file is kept as `league.sav.before-format-18` in the franchise folder. Since the later items of this version, who plays is made from each team's real roster (below).
 - How to test: open a franchise you saved with 0.15.0 or older, then F9, Franchise, your roster: your backup quarterbacks are there. The franchise folder (in your files, `franchise`) has `league.sav.before-format-18`.
 - Tell us: a franchise that will not open, or a team that lost a player when it was opened.
+
+### Every part of a franchise works on the real roster
+A franchise team is now its real roster of up to 53 players at their real positions, and everything in the franchise works on it: the roster cut keeps 53 (always two or three quarterbacks, a kicker, a punter, a long snapper, at least eight offensive linemen and enough of every other position, then the most valuable players), the draft has prospects of every real position (offensive linemen and long snappers too, never a "returner"), free agents and practice squad players sign while a team has room on its 53, a trade may swap players of different positions as long as both teams keep enough of every position, a hurt player's place goes first to a fit player of his position who is not starting, and the players on injured reserve and the other reserve lists come back to their teams at the next roster cut. Who starts each game is made from the depth chart: the best of each position first, or your own choice for your team. A franchise saved by 0.16.1 or older is brought to the real roster when it is opened, as above.
+- How to test: start a new franchise with the N. F. L. rules and play (or let the staff play) a whole season and an offseason; at the roster cut, listen to who your staff would release, then F9, Franchise, your roster after the cut: 53 players or fewer, at least two quarterbacks, and offensive linemen and a long snapper among them. In the draft, listen for prospects at offensive tackle, guard, center, edge and long snapper.
+- Tell us: a team that is short of a position after the cut (no kicker, one quarterback), a roster over 53 in the season, or a draft with no linemen.
+
+### The salary cap of a real 53-man roster
+The salary cap is now the cap of a whole real roster for every franchise: 244.2 million (it was 193.2 million for a franchise that kept only 34 players). It was measured so that a new franchise uses the same share of its cap as before (about 86 percent).
+- How to test: start a new franchise, then F9, Franchise: your cap space is said in the same way as before; no team starts over the cap.
+
+### Made-up players have the last names of real NFL players
+With the N. F. L. rules, every player the game makes up (the draft classes after the first season, the undrafted rookies, the rookies of the roster cut, the stand-ins of injured players, the new young players of the practice squads) now has the last name of a real NFL player, with a first name of the game's own list, and never the full name of a real player of the rosters. The 9,504 last names are in nfl_surnames.txt in your customize folder, where you can change them or add your own. The Classic rules keep the original game's names.
+- How to test: in a franchise, reach the draft of the first offseason and listen to the prospects' names; or F9, Customize, open the folder, and open nfl_surnames.txt.
+- Tell us: a made-up player whose full name is a real player's name.
 
 ## 0.16.1 (2026-10-25, test build)
 

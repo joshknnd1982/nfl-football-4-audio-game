@@ -7,12 +7,13 @@ import json
 import random
 
 import pytest
-from drrig import SURNAMES
+from drrig import SURNAMES, legacy_data
 from test_fr_cut_flow import cut_league
 
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import aging
 from nfl4.extras.franchise import contracts as CT
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import draft as DR
 from nfl4.extras.franchise.league import LeagueError, LeagueRecord, NewerFormat, Player, new_league
@@ -84,15 +85,15 @@ def test_the_cap_is_the_nfls_scaled_to_34_places_and_the_scale_leaves_room_under
 def test_a_new_league_has_a_contract_for_every_player_that_is_the_market_price_and_a_length_of_his_age():
     league = fresh()
     market = {t: sum(CT.market_salary(p.pos, p.rating) for p in league.active_of(t)) for t in range(1, D.TEAMS + 1)}
-    assert any(total <= T.FR_CAP for total in market.values())
+    assert any(total <= CT.cap_of(league) for total in market.values())
     for player in league.players.values():
-        if market[player.team] <= T.FR_CAP:
+        if market[player.team] <= CT.cap_of(league):
             assert player.salary == CT.market_salary(player.pos, player.rating)
         else:                                                                        # a team that would start over the cap is lowered by one share
             assert T.FR_MIN_SALARY <= player.salary <= CT.market_salary(player.pos, player.rating)
         assert 1 <= player.years <= CT.years_for_age(player.age) and player.years == 1 + player.id % CT.years_for_age(player.age)
     assert league.dead == [0] * D.TEAMS
-    assert all(CT.cap_used(league, t) <= T.FR_CAP for t in range(1, D.TEAMS + 1))
+    assert all(CT.cap_used(league, t) <= CT.cap_of(league) for t in range(1, D.TEAMS + 1))      # SR.5: the cap of a real 53
     league.check()                                                                  # and the league record accepts them
 
 
@@ -109,9 +110,10 @@ def test_a_team_that_would_start_over_the_cap_is_lowered_by_one_share_and_the_ot
         player.rating = 99
         player.salary = CT.market_salary(player.pos, 99)
     others = {pid: p.salary for pid, p in league.players.items() if p.team != 3}
-    assert CT.cap_used(league, 3) > T.FR_CAP
+    cap = CT.cap_of(league)
+    assert CT.cap_used(league, 3) > cap
     assert CT.fit_to_cap(league) == 1
-    assert T.FR_CAP - 34 < CT.cap_used(league, 3) <= T.FR_CAP                        # the sum fits and nothing is wasted by more than a tenth a player
+    assert cap - 34 < CT.cap_used(league, 3) <= cap                                  # the sum fits and nothing is wasted by more than a tenth a player
     team = sorted(league.active_of(3), key=lambda p: p.id)
     assert all(p.salary >= T.FR_MIN_SALARY for p in team)
     assert {pid: p.salary for pid, p in league.players.items() if p.team != 3} == others
@@ -166,12 +168,12 @@ def test_a_drafted_rookie_has_the_scale_of_his_pick_for_four_years_and_an_undraf
         assert (player.salary, player.years) == (CT.rookie_salary(number), T.FR_ROOKIE_YEARS), number
         assert CT.draft_overall(player) == number
     start = league.next_id
-    for index in (0, 1):
-        league.rosters[4][index] = 0                                                  # two empty places on the player's team
+    for man in [p for p in RR.members(league, 5) if p.pos == "RB"][:2]:              # SR.5: two backs gone of three: the fill makes two
+        RR.leave(league, man, "retired")
     filled = aging.fill_places(league, rnd(), SURNAMES)
     assert filled == 2
     new = [p for p in league.players.values() if p.id >= start]
-    assert len(new) == 2 and all((p.salary, p.years) == (T.FR_MIN_SALARY, T.FR_FILL_YEARS) for p in new)
+    assert len(new) == filled and all((p.salary, p.years) == (T.FR_MIN_SALARY, T.FR_FILL_YEARS) for p in new)
 
 
 def test_the_cut_charges_the_dead_money_of_every_release_to_its_team_and_ends_the_contract():
@@ -194,17 +196,17 @@ def test_the_cap_after_the_cut_and_the_fill_is_exactly_what_the_team_then_uses()
     aging.fill_places(league, rnd(), SURNAMES)
     league.draft = None
     assert all(CT.cap_used(league, t) == predicted[t] for t in plans)
-    assert all(CT.cap_used(league, t) <= T.FR_CAP for t in plans)                    # the staff's list leaves every team under the cap
+    assert all(CT.cap_used(league, t) <= CT.cap_of(league) for t in plans)           # the staff's list leaves every team under the cap
 
 
 # ----- the cap rule of the cut -----
 
 def over_the_cap(team=1):
-    """A league whose team is 448 tenths over the cap with every player on a one-year contract (so a release costs little dead money) and a
+    """A league whose team is over the cap of a real 53 (SR.5) with every player on a one-year contract (so a release costs little dead money) and a
     different rating for every place, so the staff's order is one order."""
     league = fresh()
     for index, player in enumerate(league.active_of(team)):
-        player.salary, player.years, player.rating = 70, 1, 50 + index
+        player.salary, player.years, player.rating = 80, 1, 50 + index
     return league
 
 
@@ -216,23 +218,23 @@ def test_a_team_under_the_cap_after_the_cut_releases_nobody_for_it():
 def test_a_team_over_the_cap_releases_in_the_staffs_order_until_the_cap_is_met_and_no_more():
     league = over_the_cap()
     over = CT.cap_over(league, 1, {}, [])
-    assert over == 34 * 70 - T.FR_CAP == 448
+    missing = sum(max(0, n - sum(1 for p in league.active_of(1) if p is not None and p.pos == g)) for g, n in T.FR_FAMILY_MIN.items())
+    assert over == 34 * 80 + missing * T.FR_MIN_SALARY - CT.cap_of(league) > 0      # SR.5: the fill of the families' minimums is counted
     extra = CT.cap_releases(league, 1, {}, [])
-    saved = 70 - T.FR_MIN_SALARY - CT.dead_money(league.player_at(1, 0))            # a release saves the salary less the minimum and the dead money
-    assert saved == 43 and len(extra) == -(-over // saved) == 11
+    assert len(extra) >= 2
     assert CT.cap_over(league, 1, {}, extra) <= 0 < CT.cap_over(league, 1, {}, extra[:-1])      # the last one was needed
     assert [CT.release_value(p) for p in extra] == sorted(CT.release_value(p) for p in extra)       # the staff's order
     assert extra == CT.cap_candidates(league, 1, {}, [])[:len(extra)]
     predicted = CT.cap_after_cut(league, 1, {}, extra)
     DR.apply_cut(league, {1: extra}, {})
     aging.fill_places(league, rnd(), SURNAMES)
-    assert CT.cap_used(league, 1) == predicted <= T.FR_CAP
+    assert CT.cap_used(league, 1) == predicted <= CT.cap_of(league)
 
 
 def exactly_at_the_cap(offset=0):
     """Team 1 uses the cap plus `offset` tenths of a million after the cut and the fill (raising salaries one by one)."""
     league = fresh()
-    todo = T.FR_CAP + offset - CT.cap_after_cut(league, 1, {}, [])
+    todo = CT.cap_of(league) + offset - CT.cap_after_cut(league, 1, {}, [])
     assert todo > 0
     for player in league.active_of(1):
         step = min(todo, T.FR_MAX_SALARY - player.salary)
@@ -261,7 +263,7 @@ def test_the_staff_lets_go_first_of_those_who_give_least_for_what_they_cost():
     assert cheap_and_poor in CT.cap_candidates(league, 1, {}, [])[:2]                # with the one player of exactly his replacement's rating
     assert CT.release_value(cheap_and_poor)[0] == 0                                 # no better than his replacement: before everybody else
     worse_and_dearer = league.player_at(1, 3)
-    worse_and_dearer.rating, worse_and_dearer.salary = 44, 75
+    worse_and_dearer.rating, worse_and_dearer.salary = 44, 85                       # (dearer than the others' 80)
     first = CT.cap_candidates(league, 1, {}, [])
     assert first[0] is worse_and_dearer and cheap_and_poor in first[:3]       # of such players the one who saves most goes first
 
@@ -295,7 +297,8 @@ def test_the_dead_money_a_team_already_holds_counts_in_what_it_uses_after_the_cu
     base = CT.cap_after_cut(league, 1, {}, [])
     league.dead[0] = 60
     assert CT.cap_after_cut(league, 1, {}, []) == base + 60
-    assert CT.cap_over(league, 1, {}, []) == CT.cap_used(league, 1) - T.FR_CAP
+    missing = sum(max(0, n - sum(1 for p in league.active_of(1) if p is not None and p.pos == g)) for g, n in T.FR_FAMILY_MIN.items())
+    assert CT.cap_over(league, 1, {}, []) == CT.cap_used(league, 1) + missing * T.FR_MIN_SALARY - CT.cap_of(league)      # SR.5: and the fill
 
 
 def test_the_cuts_own_list_is_counted_before_the_cap_rule_looks_at_the_team():
@@ -312,7 +315,7 @@ def test_the_cuts_own_list_is_counted_before_the_cap_rule_looks_at_the_team():
 # ----- a format-1 league -----
 
 def as_format_one(league):
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     data["format"] = 1
     del data["dead"], data["resign"], data["market"], data["trades"], data["injuries"], data["staff"]   # what formats 2 to 7 added (SX.8j review: a draft of format 1 has no owners)
     del data["comp"], data["future_picks"], data["tags"]                                               # and format 8 (SX.8m)
@@ -344,10 +347,10 @@ def test_a_format_one_file_still_loads_and_gets_its_contracts_by_the_rules_with_
     for player in loaded.players.values():
         if player.status == "active" and player.id not in {y.id for y in young}:
             assert 1 <= player.years <= CT.years_for_age(player.age)
-            if market[player.team] <= T.FR_CAP:
+            if market[player.team] <= CT.cap_of(league):
                 assert player.salary == CT.market_salary(player.pos, player.rating)
-    assert all(CT.cap_used(loaded, t) <= T.FR_CAP for t in range(1, D.TEAMS + 1))
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 18                    # the next save is format 11 (SX.12)
+    assert all(CT.cap_used(loaded, t) <= CT.cap_of(loaded) for t in range(1, D.TEAMS + 1))
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 19                    # the next save is format 11 (SX.12)
     again = LeagueRecord.from_json(text)
     assert again.to_json() == loaded.to_json()                                        # a migration draws nothing: the same file, the same answer
     assert LeagueRecord.from_json(loaded.to_json()).to_json() == loaded.to_json()
@@ -359,7 +362,7 @@ def test_a_format_one_team_that_would_be_over_the_cap_is_lowered_when_it_is_read
         player.rating = 99
     loaded = LeagueRecord.from_json(as_format_one(league))
     squad7 = sum(p.salary for p in loaded.players.values() if p.status == "practice" and p.team == 7)     # D-136: the squads formed at the load
-    assert CT.cap_used(loaded, 8) <= T.FR_CAP and CT.cap_used(loaded, 7) - squad7 == CT.cap_used(league, 7)
+    assert CT.cap_used(loaded, 8) <= CT.cap_of(loaded) and CT.cap_used(loaded, 7) - squad7 == CT.cap_used(league, 7)
     assert all(p.salary >= T.FR_MIN_SALARY for p in loaded.active_of(8))
 
 
@@ -371,7 +374,7 @@ def test_a_format_one_team_over_the_cap_keeps_the_scale_of_its_rookies_and_the_l
     rookie.drafted, rookie.seasons = [1, 1, 1], 1
     loaded = LeagueRecord.from_json(as_format_one(league))
     assert (loaded.players[rookie.id].salary, loaded.players[rookie.id].years) == (CT.rookie_salary(1), 3)
-    assert CT.cap_used(loaded, 4) <= T.FR_CAP
+    assert CT.cap_used(loaded, 4) <= CT.cap_of(loaded)
     assert all(loaded.players[p.id].salary <= CT.market_salary(p.pos, p.rating) for p in league.active_of(4) if p.id != rookie.id)
 
 

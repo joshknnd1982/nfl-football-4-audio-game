@@ -53,7 +53,7 @@ def test_in_the_first_season_the_real_free_agents_join_the_pool_once_and_made_up
     pool = S.pool(record)
     real_names = {real.spoken(a.name) for _i, a in real.free_agents if a.pos in S.REAL_GROUP}
     assert real_names <= {p.name for p in pool}
-    for position in D.POSITIONS:
+    for position in D.ROSTER_ORDER:                                                   # SR.5: the 11 families (no RET; the line and the snapper)
         group = S.pool_of(record, position)
         reals = [p for p in group if p.name in real_names]
         assert len(group) == max(T.FR_FA_SEASON_PER_GROUP, len(reals)), position       # made-up ones only up to the group's minimum
@@ -63,7 +63,7 @@ def test_in_the_first_season_the_real_free_agents_join_the_pool_once_and_made_up
     base, span = T.FR_FA_SEASON_RATING
     assert hill.pos == "WR" and hill.age == 32 and base <= hill.rating < base + span and hill.status == "free" and hill.team == 0
     assert made == len(pool)
-    assert not [p for p in pool if p.pos == "OL"]                                     # no offensive line in the Franchise yet
+    assert [p for p in pool if p.pos == "OL"] and [p for p in pool if p.pos == "LS"]  # SR.5: the line and the snapper are families of the Franchise now
 
 
 def test_a_later_season_and_a_league_without_real_names_get_no_real_free_agents():
@@ -72,11 +72,12 @@ def test_a_later_season_and_a_league_without_real_names_get_no_real_free_agents(
     record.season = 2
     assert S.add_real_free_agents(record, real) == 0
     other = league()
-    assert S.ensure_pool(other, SURNAMES) == 3 * len(D.POSITIONS)                     # as before: three made-up veterans a group
+    assert S.ensure_pool(other, SURNAMES) == 3 * len(D.ROSTER_ORDER)                  # as before: three made-up veterans a family (SR.5: 11 families)
 
 
 def test_a_tight_end_is_a_receiver_and_a_fullback_a_running_back():
-    assert S.REAL_GROUP["TE"] == "WR" and S.REAL_GROUP["FB"] == "RB" and "OL" not in S.REAL_GROUP and "LS" not in S.REAL_GROUP
+    assert S.REAL_GROUP["TE"] == "WR" and S.REAL_GROUP["FB"] == "RB"
+    assert S.REAL_GROUP["OL"] == "OL" and S.REAL_GROUP["LS"] == "LS"                  # SR.5: the line and the snapper join the Franchise's families
 
 
 def custom(tmp_path):

@@ -801,7 +801,37 @@ def main(argv=None):
         (DATA / "rosters.txt").write_bytes(text.encode("utf-8"))
         (DATA / "free_agents.txt").write_bytes(fa_text.encode("utf-8"))
         print("written:", DATA / "rosters.txt", DATA / "free_agents.txt")
+        refresh_surnames(out, bool(a.saved), text, fa_text)
     return 1 if failures else 0
+
+
+def refresh_surnames(out: Path, offline: bool, text: str, fa_text: str) -> None:
+    """NX-L12 (SR.5, D-164): the surnames of real NFL players follow the rosters: nflverse's players table (saved in this run's raw folder, or one request)
+    and the new files make nfl_surnames.txt (update_surnames.py's rule); a table that gives too few names leaves the shipped file as it is."""
+    if str(Path(__file__).resolve().parent) not in sys.path:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))      # (-I leaves the script's folder out of the path)
+    import update_surnames as US
+    saved = out / "raw" / "nflverse_players.csv"
+    try:
+        if saved.exists():
+            data = saved.read_bytes()
+        elif offline:
+            print("nfl_surnames.txt: no saved players table, kept as it is")
+            return
+        else:
+            req = urllib.request.Request(US.URL, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=120) as r:
+                data = r.read()
+            saved.write_bytes(data)
+        surnames, count, _counts = US.build_from(data, text, fa_text)
+    except Exception as exc:                                  # noqa: BLE001 (the maintainer reads it)
+        print("nfl_surnames.txt: kept as it is (%s)" % exc)
+        return
+    if count < US.MIN_COUNT:
+        print("nfl_surnames.txt: kept as it is (only %d surnames)" % count)
+        return
+    (DATA / "nfl_surnames.txt").write_bytes(surnames.encode("utf-8"))
+    print("written:", DATA / "nfl_surnames.txt", "(%d surnames)" % count)
 
 
 if __name__ == "__main__":

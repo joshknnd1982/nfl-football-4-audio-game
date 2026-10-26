@@ -309,7 +309,7 @@ def report_lines(league: LeagueRecord, week: int, back: list, words, pools, rnd,
     for player, _state in older:
         lines.append(_status_line(words, player, I.row_of(league, player.id), week, None, league))
     table = I.lineup(league, team, week, staff)
-    for position in D.ROSTER_ORDER:                             # the stand-ins who play this week as the decisions stand (rested players rest); nobody plays in a bye week
+    for position in D.PLACE_GROUPS:                             # the stand-ins who play this week as the decisions stand (rested players rest); nobody plays in a bye week
         if not league.has_bye(team, week) and any(table[i][0] == (I.STAND_IN, position) for i in D.PLACES_OF[position]):
             row = I.stand_in(league, team, position)
             lines.append(X.text("NXI-21", player=_plain(row[2]), position=words.position(position)))

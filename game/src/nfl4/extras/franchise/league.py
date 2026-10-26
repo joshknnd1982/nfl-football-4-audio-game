@@ -12,10 +12,8 @@ from __future__ import annotations
 
 import json
 import logging
-import zlib
 from dataclasses import dataclass, field
 
-from ...data import debuglog
 from ...game.setup import Roster
 from .. import tuning as T
 from . import data as D
@@ -24,9 +22,10 @@ from . import first_names as FN
 log = logging.getLogger("nfl4.extras")
 
 SEASON, OFFSEASON, DRAFT = "season", "offseason", "draft"
-STATUSES = ("active", "retired", "released", "free", "practice", "reserve", "list")   # D-149 (NX-B2b): "reserve", a player of a team's bench (reserves.py)
+STATUSES = ("active", "retired", "released", "free", "practice", "list")
 # SR.4 (D-161): "list", a man of a team on one of its real reserve lists (injured reserve and the like, Player.roster_list): on the team, never in a game
-ON_TEAM = ("active", "reserve")      # a player of a team's 53: one of its 34 places (or a rookie waiting for the cut), or its bench
+# SR.5 (D-164): the status "reserve" of D-149 (the bench) is gone: a man of the team's roster is "active", in a place of the view or not
+ON_TEAM = ("active",)                # a player of a team's roster (its chart; the draft's rookies wait outside it for the cut)
 # D-136: "practice", a player of a practice squad (practice.py)      # SX.8h: "free", a player whose contract ended and who was not signed again
 
 
@@ -189,11 +188,19 @@ class LeagueRecord:
         return [self.player_at(team, i) for i in D.PLACES_OF[position]]
 
     def bench(self, team: int, position: str | None = None) -> list:
-        """D-149: the team's bench (status "reserve"), of one position or all, each group the best first (rating, then the lower ID), the groups in
-        D.BENCH_ORDER."""
+        """The men of the team's active roster who have no place in the view (SR.5: no status of their own; the draft's rookies apart), of one group or
+        all, each group in its chart's order (the staff's: the best first), the groups in D.BENCH_ORDER."""
         order = {pos: n for n, pos in enumerate(D.BENCH_ORDER)}
-        return sorted((p for p in self.players.values() if p.status == "reserve" and p.team == team and (position is None or p.pos == position)),
-                      key=lambda p: (order.get(p.pos, 99), -p.rating, p.id))
+        chart = self.chart[team - 1] if isinstance(self.chart, list) and len(self.chart) == D.TEAMS and isinstance(self.chart[team - 1], dict) else {}
+        found = []
+        for key, ids in chart.items():                    # (the chart holds every man of the roster once; real_roster.refresh_view keeps it so)
+            if key in ("KR", "PR"):
+                continue
+            for n, pid in enumerate(ids):
+                p = self.players.get(pid)
+                if p is not None and p.status == "active" and p.team == team and p.place < 0 and (position is None or p.pos == position):
+                    found.append((order.get(p.pos, 99), n, -p.rating, p.id, p))
+        return [row[-1] for row in sorted(found, key=lambda row: row[:4])]
 
     def strength_sum(self, team: int) -> int:
         """The weighted sum of the 34 ratings (design 4.4); an empty place counts as the lowest rating. SR.4 (design 21.7 (8)): an empty BACK place
@@ -233,7 +240,7 @@ class LeagueRecord:
 
     def team_men(self, team: int) -> list:
         """SR.4 (design 21.6): the men of the team's active roster (its places, its bench, its rookies waiting for the cut), by player ID."""
-        return sorted((p for p in self.players.values() if p.team == team and p.status in ("active", "reserve")), key=lambda p: p.id)
+        return sorted((p for p in self.players.values() if p.team == team and p.status == "active"), key=lambda p: p.id)
 
     def cover_place(self, team: int, index: int):
         """SR.4 (design 21.4 (7)): the nearest filled back place to an empty one (the lower of two equally near), or None when the team has no back."""
@@ -249,7 +256,7 @@ class LeagueRecord:
         """The 32 sums the player is told of (the rating, the rank): the exact sums of the rosters, except while places are empty
         (stages 2 to 5 of an offseason), when the strength is not used (design 4.4, review finding 4 of SX.8c) and the sums kept at
         the start of the season stand in."""
-        if self.sums and self.has_empty_place():
+        if self.sums and (self.has_empty_place() or not self.must_be_whole()):     # SR.5: the view fills the places in every stage now
             return list(self.sums)
         return [self.strength_sum(team) for team in range(1, D.TEAMS + 1)]
 
@@ -294,12 +301,16 @@ class LeagueRecord:
     # ----- the record in a file -----
 
     def to_json(self) -> str:
-        from . import real_roster
-        real_roster.sync_chart(self)                          # SR.4: the charts follow what the blocks did to the places (the bridge of D-161)
+        """SR.5 (format 19): the charts are the teams; the places are the view of them, not saved (a player row's place is -1)."""
+        rows = []
+        for pid in sorted(self.players):
+            row = self.players[pid].to_list()
+            row[13] = -1
+            rows.append(row)
         data = {"format": D.FORMAT, "game": D.GAME_MARKER, "league_id": self.league_id, "season": self.season,
                 "stage": self.stage, "stage_no": self.stage_no, "pick_no": self.pick_no, "coach": self.coach,
-                "team": self.team, "rosters": self.rosters,
-                "players": [self.players[pid].to_list() for pid in sorted(self.players)], "next_id": self.next_id,
+                "team": self.team,
+                "players": rows, "next_id": self.next_id,
                 "gtp": self.gtp, "schedule": self.schedule, "records": self.records, "pairings": self.pairings,
                 "byes": self.byes, "results": self.results, "sums": self.sums, "history": self.history, "told": self.told,
                 "prepared": self.prepared, "todo": self.todo, "news": self.news, "news_recent": self.news_recent, "draft": self.draft,
@@ -330,7 +341,8 @@ class LeagueRecord:
             record.season, record.stage = data["season"], data["stage"]
             record.stage_no, record.pick_no = data["stage_no"], data["pick_no"]
             record.coach, record.team = data["coach"], data["team"]
-            record.rosters = data["rosters"]
+            if version < 19:
+                record.rosters = data["rosters"]                    # SR.5: a file of format 18 or older stores its places (from_places reads them)
             rows = data["players"]
             if not isinstance(rows, list):
                 raise LeagueError("the players are %r" % (type(rows).__name__,))
@@ -382,6 +394,33 @@ class LeagueRecord:
             raise LeagueError("the franchise file lacks %s" % exc) from exc
         except TypeError as exc:
             raise LeagueError("a player of the franchise file is not a record: %s" % exc) from exc
+        from . import real_roster
+        try:
+            if version < 19:
+                from . import draft
+                draft.migrate_class(record)                     # SR.5: a draft in progress, its prospects' positions (a rookie waiting keeps his)
+                real_roster.from_places(record, version)        # SR.5: the stored places and bench become the chart (after their own check)
+            if not isinstance(record.chart, list) or len(record.chart) != D.TEAMS or not all(isinstance(c, dict) for c in record.chart):
+                raise LeagueError("the depth charts are %r" % (type(record.chart).__name__,))
+            for p in record.players.values():
+                if not isinstance(p, Player) or not isinstance(p.team, int) or isinstance(p.team, bool) or not isinstance(p.status, str):
+                    raise LeagueError("a player of the franchise file is not a record")
+                if p.status == "active" and not 1 <= p.team <= D.TEAMS:
+                    raise LeagueError("active player %r has the team %r" % (p.id, p.team))
+                if p.position and p.position not in real_roster.RM.MADDEN:
+                    raise LeagueError("player %r has the position %r" % (p.id, p.position))
+                if not p.position and p.status in ("active", "practice", "list"):
+                    real_roster.give_positions(record)
+            if version >= 19:                                   # the file's charts as written: damage is refused, never cleaned silently
+                def whole(value, low, high, what):
+                    if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
+                        raise LeagueError("%s is %r" % (what, value))
+                real_roster.check_charts(record, whole)
+                from . import draft as draft_rules
+                real_roster.check_teams(record, draft_rules.check_draft(record, whole))     # (a damaged draft is told as itself first)
+            real_roster.refresh_all(record)                     # SR.5: the 34 places of every team, made from its chart
+        except (TypeError, AttributeError, KeyError, IndexError) as exc:
+            raise LeagueError("the franchise's rosters are not whole: %r" % (exc,)) from exc
         if version < 12:                                                 # SZ.8: the offseason's news lines were week 16; 16 is a regular week of the calendar now
             for line in record.news if isinstance(record.news, list) else ():
                 if isinstance(line, dict) and line.get("week") == 16:
@@ -418,9 +457,6 @@ class LeagueRecord:
             from . import practice
             practice.form(record)                               # D-136: a league in its season gets its practice squads at once (no draw)
             record.check()
-        if version < 18:
-            from . import real_roster
-            real_roster.give_positions(record, None)            # SR.4: every man a position by the conversion table (the store's convert names them by the file)
         return record
 
     # ----- the whole-file check, by stage (design 10.1, B-X49) -----
@@ -510,8 +546,6 @@ class LeagueRecord:
                 raise LeagueError("player %d has the name %r" % (p.id, p.name))
             if p.pos not in D.ALL_POSITIONS or p.potential not in D.POTENTIALS or p.status not in STATUSES:
                 raise LeagueError("player %d has position %r, potential %r, status %r" % (p.id, p.pos, p.potential, p.status))
-            if p.pos in D.RESERVE_POSITIONS and p.status == "active" and p.place >= 0:      # D-149: a lineman or a snapper is never in a place
-                raise LeagueError("player %d is a %s in place %d" % (p.id, p.pos, p.place))   # (SR.4: a squad may hold them, design 21.7 (11))
             from .real_roster import check_player
             check_player(p)                                            # SR.4: the position, the number, the list
             if p.status == "list" and (isinstance(p.team, bool) or not isinstance(p.team, int) or not 1 <= p.team <= D.TEAMS or p.place != -1):
@@ -530,6 +564,12 @@ class LeagueRecord:
                 whole(p.drafted[2], 1, 400, "the draft pick")
 
     def _check_rosters(self, whole, waiting=frozenset()) -> None:
+        """SR.5 (D-164): the charts are the teams (real_roster.check_teams: every active man once at his own position, the roles on the team, at most
+        the camp's limit); the places are their view in memory: a place holds an active man of the team with that place, of a group the place may hold,
+        in no other place, never a rookie waiting for the cut; in the stages that must be whole only an empty BACK place is allowed (design 21.4 (2))."""
+        from . import real_roster
+        real_roster.check_charts(self, whole)
+        real_roster.check_teams(self, waiting)
         if not isinstance(self.rosters, list) or len(self.rosters) != D.TEAMS:
             raise LeagueError("the league has %r rosters" % (len(self.rosters) if isinstance(self.rosters, list) else None))
         placed: set = set()
@@ -539,25 +579,21 @@ class LeagueRecord:
             for index, pid in enumerate(roster):
                 whole(pid, 0, 10 ** 9, "a place of team %d" % team)
                 if pid == 0:
-                    if self.must_be_whole() and index not in D.BACK_PLACES:     # SR.4: an empty back place is the real roster's (design 21.4 (2))
+                    if self.must_be_whole() and index not in D.BACK_PLACES:
                         raise LeagueError("team %d has an empty place %d" % (team, index))
                     continue
                 player = self.players.get(pid)
-                if player is None or player.status != "active" or player.team != team or player.place != index:
+                if player is None or player.status != "active" or player.team != team or player.place != index or pid in waiting:
                     raise LeagueError("place %d of team %d holds player %d, who is not active there" % (index, team, pid))
                 if pid in placed:
                     raise LeagueError("player %d is in two places" % pid)
                 group = D.POSITION_OF_PLACE[index]
-                if player.pos != group and player.pos not in D.PLACE_COVERS.get(group, ()):    # SR.4: a 3-4 edge man at linebacker, a returner
+                if player.pos != group and player.pos not in D.PLACE_COVERS.get(group, ()):    # a 3-4 edge man at linebacker, a returner
                     raise LeagueError("player %d plays %s in a %s place" % (pid, player.pos, group))
                 placed.add(pid)
         for pid, player in self.players.items():
-            if (player.status == "active") != (pid in placed or pid in waiting):
-                raise LeagueError("player %d is %s but %s" % (pid, player.status, "placed" if pid in placed else "not placed"))
-        from . import reserves
-        reserves.check(self, whole)                        # D-149: the benches
-        from . import real_roster
-        real_roster.check_charts(self, whole)              # SR.4: the depth charts (their shape; real_roster.sync_chart keeps them in step)
+            if player.place >= 0 and pid not in placed:
+                raise LeagueError("player %d has the place %d but holds none" % (pid, player.place))
 
     def _check_history(self, whole) -> None:
         if not isinstance(self.history, list) or len(self.history) > D.MAX_HISTORY:
@@ -735,87 +771,6 @@ def give_first_names(league: "LeagueRecord", skip_team: int | None = None) -> in
     return changed
 
 
-def fix_real_backs(league: "LeagueRecord", real) -> int:
-    """Tester 2026-10-23 ("wrong position players are still playing at running back"): a league made before this fix put real tight ends,
-    quarterbacks, receivers and defenders into running back places (real_names filled short back groups with them). Each such player of the
-    league (place of a running back, a real name that the real rosters list at no RB or FB line) gets a made-up running back's name: a surname
-    not in use, chosen from a hash (no draw), with its first name. His ratings and contract stay. Idempotent; in memory (the next save keeps it).
-    The player's own team is left (his names are his). Returns how many were renamed."""
-    if real is None:
-        return 0
-    backs, others = set(), set()
-    for roster in getattr(real, "rosters", ()):
-        for p in roster:
-            (backs if p.pos in ("RB", "FB") else others).add(real.spoken(p.name).casefold())
-    wrong = others - backs
-    if not wrong:
-        return 0
-    try:
-        from ...game.names import load_surnames
-        surnames = load_surnames()
-    except (OSError, ValueError, UnicodeError):
-        return 0
-    used = FN.name_keys(league.league_id, (p.name for p in league.players.values()))
-    changed = 0
-    for player in sorted(league.players.values(), key=lambda p: p.id):
-        if player.pos != "RB" or player.team == league.team or player.name.casefold() not in wrong:
-            continue
-        start = zlib.crc32(("%s|%d" % (league.league_id, player.id)).encode("utf-8")) % len(surnames)
-        surname = next((surnames[(start + k) % len(surnames)] for k in range(len(surnames)) if surnames[(start + k) % len(surnames)] not in used), None)
-        if surname is None:
-            break
-        used.add(surname)
-        old, player.name = player.name, FN.full_name(league.league_id, surname)
-        used.add(player.name)
-        changed += 1
-        debuglog.event("franchise", "back_renamed", logging.INFO, player=player.id, before=old, after=player.name)
-    return changed
-
-
-# NX-D1 (D-147): the families of positions an older league's place may hold a real player of; a real name of another family is at a wrong position
-POSITION_FAMILY = {"QB": {"QB"}, "RB": {"RB", "FB"}, "WR": {"WR", "TE"}, "DL": {"DL", "LB"}, "LB": {"LB", "DL"}, "CB": {"CB", "S"}, "S": {"S", "CB"},
-                   "K": {"K"}, "P": {"P"}}
-
-
-def fix_real_positions(league: "LeagueRecord", real) -> int:
-    """NX-D1 (the owner 2026-10-24: "A backup quarterback should not be playing wide receiver"): a league made before it may hold a real player in a
-    place of another family of position (a quarterback in a receiver's place, a linebacker or a safety where the old rule filled a short group; a
-    lineman and a linebacker, or a cornerback and a safety, are near enough for a league already played). Each such player of another team gets a
-    made-up name of the place's position, as `fix_real_backs` does for the backs (no draw, ratings and contract kept, idempotent, in memory). The
-    player's own team is left (his names are his, and F9's depth chart lets him place them). Returns how many were renamed."""
-    if real is None:
-        return 0
-    listed: dict = {}
-    for roster in getattr(real, "rosters", ()):
-        for p in roster:
-            if p.pos != "RET" and not getattr(p, "squad", False):
-                listed.setdefault(real.spoken(p.name).casefold(), set()).add(p.pos)
-    try:
-        from ...game.names import load_surnames
-        surnames = load_surnames()
-    except (OSError, ValueError, UnicodeError):
-        return 0
-    used = FN.name_keys(league.league_id, (p.name for p in league.players.values()))
-    changed = 0
-    for player in sorted(league.players.values(), key=lambda p: p.id):
-        family = POSITION_FAMILY.get(player.pos)
-        positions = listed.get(player.name.casefold())
-        if (family is None or positions is None or positions & family or player.team == league.team or player.status != "active"
-                or player.place < 0):
-            continue
-        start = zlib.crc32(("%s|%d|pos" % (league.league_id, player.id)).encode("utf-8")) % len(surnames)
-        surname = next((surnames[(start + k) % len(surnames)] for k in range(len(surnames)) if surnames[(start + k) % len(surnames)] not in used), None)
-        if surname is None:
-            break
-        used.add(surname)
-        old, player.name = player.name, FN.full_name(league.league_id, surname)
-        used.add(player.name)
-        changed += 1
-        debuglog.event("franchise", "position_renamed", logging.INFO, player=player.id, place=player.pos, before=old, real=sorted(positions),
-                       after=player.name)
-    return changed
-
-
 def _clamp(value: int) -> int:
     return max(D.RATING_MIN, min(D.RATING_MAX, value))
 
@@ -884,12 +839,18 @@ def new_league(rnd, surnames: list, coach: str, team: int, league_id: str, own_n
             league.players[player.id] = player
             league.rosters[t - 1][index] = player.id
             league.next_id += 1
+    from . import real_roster
+    made = False
     if real is not None:
-        from . import depth, real_roster
-        if not real_roster.make_real(league, real, [team] + [other for other in range(1, D.TEAMS + 1) if other != team]):
+        made = bool(real_roster.make_real(league, real, [team] + [other for other in range(1, D.TEAMS + 1) if other != team]))
+        if not made:
             use_real_names(league, real, team, given)           # SX.11: the real players, after the draws (an older rosters.txt of the player's)
         # SR.4 (NX-L4): a layout-2 rosters.txt makes every team its real roster, the player's too (his footplay.txt names were the real ones)
-        depth.real_starters_first(league)                       # NX-D2, NX-D3: each group's best drawn rating to its real starter (no draw)
+    if not made:
+        real_roster.from_places(league, D.FORMAT)               # SR.5: the drawn places become the charts (an older rosters.txt, or no real names)
+        if real is not None:
+            real_roster.starters_first(league)                  # NX-D2, NX-D3: each position's best drawn rating to its real starter (no draw)
+    real_roster.refresh_all(league)                             # SR.5: the 34 places are the view of the charts
     from . import contracts
     contracts.give_initial_contracts(league)                    # SX.8g: the market price of each player; no draw
     league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]

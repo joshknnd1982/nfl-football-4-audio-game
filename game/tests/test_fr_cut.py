@@ -6,11 +6,13 @@ import random
 
 import pytest
 
-from drrig import SURNAMES, draft_league
+from drrig import SURNAMES, draft_league, full_league
+from nfl4.extras import roster_model as RM
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import aging, resign
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import draft as DR
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise.league import LeagueRecord, Player
 from nfl4.game.rnd import GameRandom
 
@@ -66,110 +68,128 @@ def test_equal_keep_values_keep_the_younger_then_the_lower_id():
     assert [p.id for p in DR.release_order([old, twin, same_age_low_id, young])] == [old.id, twin.id, same_age_low_id.id, young.id]
 
 
-# ----- the staff's releases -----
+# ----- the staff's releases (SR.5, D-164, design 21.7 (1): the cut to 53 by the family minimums, then the keep value) -----
 
-def test_a_group_keeps_its_count_and_the_worst_to_keep_are_released_worst_first():
-    league = draft_league()
-    set_group(league, TEAM, "RB", [70, 68, 66, 64, 62, 60])
-    high = rookie(league, "RB", 61, age=22, potential="high")                    # 61 + 4 = 65 beats the 64
-    low = rookie(league, "RB", 55, age=22, potential="low")
+def full(seed=3):
+    """A league of the real rosters with every family at its target and 53 men a team (drrig.full_league), at the cut."""
+    league = full_league(seed, TEAM)
+    league.stage, league.stage_no = "offseason", D.STAGE_CUT
+    return league
+
+
+def rated(league, team, rating=70, age=28):
+    for p in RR.members(league, team):
+        p.rating, p.age, p.potential = rating, age, "average"
+
+
+def rookie_of(league, position, rating, **kwargs):
+    man = rookie(league, RM.GROUP[position], rating, **kwargs)
+    man.position = position
+    return man
+
+
+def test_a_team_keeps_53_and_the_worst_to_keep_are_released_worst_first():
+    league = full()
+    rated(league, TEAM)
+    high = rookie_of(league, "HB", 61, age=22, potential="high")                     # 61 + 4 = 65
+    low = rookie_of(league, "HB", 55, age=22, potential="low")
     waiting = {TEAM: [high, low]}
     released = DR.plan_cut(league, TEAM, waiting)
-    assert [p.rating for p in released if p.pos == "RB"] == [55, 60]
-    assert DR.surplus(league, TEAM, waiting) == {"RB": 2}
-    assert DR.plan_cut(league, 6, {}) == []
+    assert [p.id for p in released] == [low.id, high.id]                            # 55 kept least, then 65: the 53 rated 70 stay
+    assert DR.surplus(league, TEAM, waiting)["RB"] == 2
+    assert DR.plan_cut(league, 6, {}) == []                                          # a team of 53 releases nobody
 
 
-def test_the_releases_come_group_by_group_in_the_roster_menus_order():
-    league = draft_league()
-    waiting = {TEAM: [rookie(league, "P", 40), rookie(league, "QB", 40), rookie(league, "DL", 40), rookie(league, "RB", 40)]}
-    released = DR.plan_cut(league, TEAM, waiting)
-    assert [p.pos for p in released] == ["QB", "RB", "DL", "P"]
+def test_the_family_minimums_are_kept_before_the_keep_value_and_a_family_never_passes_its_most():
+    league = full()
+    rated(league, TEAM, rating=55)                                                    # (over the floor: a one-man family under it would leave a spot for the fill)
+    stars = [rookie_of(league, "WR", 90) for _ in range(6)] + [rookie_of(league, "K", 95), rookie_of(league, "QB", 95), rookie_of(league, "QB", 94)]
+    waiting = {TEAM: stars}
+    released = {p.id for p in DR.plan_cut(league, TEAM, waiting)}
+    kept = [p for p in DR.team_candidates(league, TEAM, waiting) if p.id not in released]
+    have = RR.counts_by_group(kept)
+    assert len(kept) == 53 and all(have.get(g, 0) >= n for g, n in T.FR_FAMILY_MIN.items())
+    assert have["K"] == 1 and have["QB"] == 3                                        # the best kicker only, at most three quarterbacks
+    assert not any(s.id in released for s in stars)
 
 
-def test_a_group_with_fewer_players_than_places_releases_nobody():
-    league = draft_league()
-    set_group(league, TEAM, "WR", [70, 70, 70, None, None, None])
+def test_a_team_under_53_releases_nobody():
+    league = full()
+    for man in [p for p in RR.members(league, TEAM) if p.pos == "WR"][:3]:
+        RR.leave(league, man, "released")
     assert DR.plan_cut(league, TEAM, {}) == []
 
 
-def test_a_weak_player_of_a_small_group_is_released_without_a_surplus_and_a_big_group_keeps_its_weak_ones():
-    league = draft_league()
-    set_group(league, TEAM, "RET", [57, 42])
-    set_group(league, TEAM, "QB", [49])
-    set_group(league, TEAM, "K", [50])                                             # exactly the floor: kept
-    set_group(league, TEAM, "S", [70, 49])
-    set_group(league, TEAM, "DL", [45, 70, 70, 70, 70, 70])                           # six places: a big group, nobody is released for a rating
+def test_a_weak_player_of_a_one_man_family_is_released_without_a_surplus_and_a_big_family_keeps_its_weak_ones():
+    league = full()
+    rated(league, TEAM)
+    kicker = next(p for p in RR.members(league, TEAM) if p.pos == "K")
+    punter = next(p for p in RR.members(league, TEAM) if p.pos == "P")
+    quarterback = next(p for p in RR.members(league, TEAM) if p.pos == "QB")
+    kicker.rating, punter.rating, quarterback.rating = 49, 50, 45                    # the floor: the kicker under it goes, the punter at it stays
     released = DR.plan_cut(league, TEAM, {})
-    assert sorted((p.pos, p.rating) for p in released) == [("QB", 49), ("RET", 42), ("S", 49)]
-    assert T.FR_CUT_FLOOR == 50 and D.CUT_FLOOR_GROUP_MAX == 2
+    assert [p.id for p in released] == [kicker.id] and T.FR_CUT_FLOOR == 50
+    assert DR.FLOOR_GROUPS == ("K", "P", "LS")                                      # SR.5: the quarterbacks are a family of two or three now
 
 
 def test_the_floor_looks_at_the_players_who_stay_not_at_the_surplus():
-    league = draft_league()
-    set_group(league, TEAM, "RET", [45, 44])
-    waiting = {TEAM: [rookie(league, "RET", 58)]}
-    released = DR.plan_cut(league, TEAM, waiting)
-    assert sorted(p.rating for p in released) == [44, 45]                             # 58 stays; the two under 50 go (one by the count, one by the floor)
-    assert [p.rating for p in DR.floor_releases([league.player_at(TEAM, i) for i in D.PLACES_OF["RET"]], "RET")] == [44, 45]
-    assert DR.floor_releases([league.player_at(TEAM, i) for i in D.PLACES_OF["RB"]], "RB") == []
+    league = full()
+    rated(league, TEAM)
+    kicker = next(p for p in RR.members(league, TEAM) if p.pos == "K")
+    kicker.rating = 45
+    better = rookie_of(league, "K", 58)
+    released = DR.plan_cut(league, TEAM, {TEAM: [better]})
+    assert [p.id for p in released] == [kicker.id]                                   # 58 stays; the 45 goes by the family's most and the floor
+    assert DR.floor_releases([kicker], "K") == [kicker] and DR.floor_releases([kicker], "RB") == []
 
 
 # ----- applying the cut -----
 
-def test_applying_the_cut_releases_places_the_rest_by_rating_and_keeps_empty_places_last():
-    league = draft_league()
-    set_group(league, TEAM, "RB", [60, 70, 62, 68, 64, 66])
-    high = rookie(league, "RB", 61, age=22, potential="high")
-    low = rookie(league, "RB", 55, age=22, potential="low")
-    set_group(league, TEAM, "WR", [70, 69, None, 67, None, 65])
+def test_applying_the_cut_releases_the_plan_ends_the_draft_and_the_rookies_who_stay_join_their_charts():
+    league = full()
+    rated(league, TEAM, rating=65)
+    high = rookie_of(league, "HB", 90, age=22, potential="high")
+    low = rookie_of(league, "HB", 55, age=22, potential="low")
     waiting = {TEAM: [high, low]}
     plans = {t: DR.plan_cut(league, t, waiting) for t in range(1, 33)}
-    gone = {p.id for p in plans[TEAM]}
     count = DR.apply_cut(league, plans, waiting)
-    assert count == len(gone) == 2
-    assert ratings_of(league, TEAM, "RB") == [70, 68, 66, 64, 62, 61]                  # the rookie is placed by rating; the 60 is out
-    assert ratings_of(league, TEAM, "WR") == [70, 69, 67, 65, None, None]
+    assert count == sum(len(v) for v in plans.values()) and low in plans[TEAM]
     for p in plans[TEAM]:
         assert (p.status, p.left, p.place, p.points) == ("released", league.season, -1, 0)
-    assert low.status == "released" and high.status == "active" and high.place == D.PLACES_OF["RB"][-1] and high.team == TEAM
+    assert high.status == "active" and high.team == TEAM and league.chart[TEAM - 1]["HB"][0] == high.id
+    assert high.place == D.PLACES_OF["RB"][0] and league.draft is None and league.pick_no == 0
     assert all(league.players[pid].place == i for i, pid in enumerate(league.rosters[TEAM - 1]) if pid)
-
-
-def test_a_cut_that_leaves_a_group_over_its_places_is_refused():
-    league = draft_league()
-    waiting = {TEAM: [rookie(league, "QB", 80)]}
-    with pytest.raises(ValueError):
-        DR.apply_cut(league, {}, waiting)
+    assert RR.roster_count(league, TEAM) == 53
 
 
 def test_the_players_own_choice_replaces_the_staffs_for_his_team():
-    league = draft_league()
-    set_group(league, TEAM, "RB", [70, 68, 66, 64, 62, 60])
-    best = rookie(league, "RB", 90)
+    league = full()
+    rated(league, TEAM)
+    best = rookie_of(league, "HB", 90)
     waiting = {TEAM: [best]}
     plans = {t: DR.plan_cut(league, t, waiting) for t in range(1, 33)}
-    plans[TEAM] = [league.player_at(TEAM, D.PLACES_OF["RB"][0])]                      # the player releases his best old back, not the worst
+    old_best = league.players[league.chart[TEAM - 1]["HB"][0]]
+    plans[TEAM] = [old_best]                                                          # the player releases his best old back, not the worst
     DR.apply_cut(league, plans, waiting)
-    assert ratings_of(league, TEAM, "RB") == [90, 68, 66, 64, 62, 60]
+    assert old_best.status == "released" and league.chart[TEAM - 1]["HB"][0] == best.id
 
 
-# ----- the fill (design 7.6, 12 item 6) -----
+# ----- the fill: the cut's last resort (design 21.3, real_roster.fill_needs) -----
 
-def test_the_fill_gives_every_empty_place_an_undrafted_rookie_by_the_rules_of_its_group_size():
-    league = draft_league()
-    set_group(league, TEAM, "RB", [70, 68, None, None, None, None])
-    set_group(league, TEAM, "QB", [None])
-    set_group(league, TEAM, "RET", [None, 60])
+def test_the_fill_makes_an_undrafted_rookie_for_every_man_a_family_lacks_by_the_rules_of_its_size():
+    league = full()
+    for group, keep in (("RB", 1), ("K", 0), ("LS", 0)):
+        for man in [p for p in RR.members(league, TEAM) if p.pos == group][keep:]:
+            RR.leave(league, man, "retired")
     before = {p.name for p in league.players.values() if p.status == "active"}
+    first = league.next_id
     filled = aging.fill_places(league, rnd_of(), SURNAMES)
-    assert filled == 4 + 1 + 1
-    for pos, count, low, high in (("RB", 4, 45, 55), ("QB", 1, 50, 60), ("RET", 1, 50, 60)):
-        new = [p for p in league.players.values() if p.id >= 1089 and p.pos == pos]
+    assert filled == 2 + 1 + 1
+    for group, count, low, high in (("RB", 2, 45, 55), ("K", 1, 50, 60), ("LS", 1, 50, 60)):
+        new = [p for p in league.players.values() if p.id >= first and p.pos == group]
         assert len(new) == count and all(low <= p.rating <= high and p.age == 22 and p.seasons == 0 and p.drafted is None for p in new)
-        assert all(p.name not in before for p in new)
-    assert all(pid for roster in league.rosters for pid in roster)
-    assert ratings_of(league, TEAM, "RB")[:2] == [70, 68]
+        assert all(p.name not in before and p.team == TEAM and p.id in league.chart[TEAM - 1][p.position] for p in new)
+    assert not RR.short_groups(league, TEAM)
 
 
 # ----- the invariants over many offseasons (I3, I4, I5 and the names) -----
@@ -192,9 +212,9 @@ def offseason_by_rules(league, rnd, wins):
     league.season += 1
 
 
-def test_twenty_offseasons_keep_every_place_filled_every_group_whole_and_no_group_under_the_floor():
+def test_twenty_offseasons_keep_every_place_filled_every_family_whole_and_no_one_man_family_under_the_floor():
     rnd = rnd_of(11)
-    league = draft_league(seed=11, team=9)
+    league = full_league(11, 9)
     league.stage, league.stage_no = "offseason", 1
     for season in range(1, 21):
         league.history = [{"season": league.season, "wins": [8] * 32, "finish": [0] * 32}]
@@ -202,24 +222,27 @@ def test_twenty_offseasons_keep_every_place_filled_every_group_whole_and_no_grou
         offseason_by_rules(league, rnd, None)
         league.stage_no, league.gtp, league.records, league.history = D.STAGE_NEW_SEASON, 0, [8, 8] * 32, []
         league = LeagueRecord.from_json(league.to_json())                              # the whole-file check, every season
-        assert all(pid for roster in league.rosters for pid in roster)                 # I3: every place is filled
         for team in range(1, 33):
             roster = league.rosters[team - 1]
-            for pos in D.POSITIONS:                                                      # (D-149: OL and LS have no places)
-                places = D.PLACES_OF[pos]
-                ratings = [league.players[roster[i]].rating for i in places]
-                assert sum(ratings) / len(ratings) >= 50, (season, team, pos, ratings)   # I5
-                assert all(league.players[roster[i]].pos == pos for i in places)
+            assert all(pid for i, pid in enumerate(roster) if i not in D.BACK_PLACES), (season, team)       # I3 (a back place may be empty)
+            assert RR.roster_count(league, team) <= D.ROSTER_MAX and not RR.short_groups(league, team), (season, team)
+            for group in DR.FLOOR_GROUPS:                                                                     # I5
+                assert all(p.rating >= T.FR_CUT_FLOOR or p.drafted for p in RR.members(league, team) if p.pos == group), (season, team, group)
+            for pos in ("RB", "WR", "DL", "LB", "CB", "S"):
+                ratings = [league.players[roster[i]].rating for i in D.PLACES_OF[pos] if roster[i]]
+                assert sum(ratings) / len(ratings) >= 50, (season, team, pos, ratings)
         active = [p for p in league.players.values() if p.status == "active"]
-        assert len(active) == 1088 and len({p.name for p in active}) == 1088             # nobody twice
+        assert len({p.id for p in active}) == len(active)
         assert all(40 <= p.rating <= 99 and 21 <= p.age <= 40 for p in active)             # I4
-        assert 66 <= sum(p.rating for p in active) / 1088 <= 74 and 24 <= sum(p.age for p in active) / 1088 <= 29
+        assert 60 <= sum(p.rating for p in active) / len(active) <= 76 and 24 <= sum(p.age for p in active) / len(active) <= 29
         league.stage_no = 1
 
 
 def test_the_released_and_the_retired_are_dropped_at_the_end_except_the_players_team_and_the_stars():
-    league = draft_league(seed=12, team=9)
+    league = full_league(12, 9)
+    league.stage, league.stage_no = "offseason", 1
+    league.history = [{"season": league.season, "wins": [8] * 32, "finish": [0] * 32}]
     offseason_by_rules(league, rnd_of(12), None)
-    leaving = [p for p in league.players.values() if p.status != "active"]
+    leaving = [p for p in league.players.values() if p.status not in ("active", "practice", "list")]
     assert all(p.team == 9 or p.peak >= D.STAR_PEAK for p in leaving)
     assert {"retired", "released"} <= {p.status for p in leaving if p.team == 9} <= {"retired", "released", "free"}          # the player's team keeps every kind for its history

@@ -184,6 +184,19 @@ def test_the_potential_words_are_high_average_and_low():
     assert [X.text(i) for i in ("NXK-20", "NXK-21", "NXK-22")] == ["high", "average", "low"]
 
 
+def place_sum(record, team):
+    """SR.5: the weighted sum of a team's 34 places, each weighted by its PLACE's group (D.WEIGHT; a return place holds a man of any family); an
+    empty back place (a team with fewer than six backs, SR.4) carries nothing and the sum is scaled back to the whole weight of 78, rounded half up."""
+    total = weight = 0
+    for index, pid in enumerate(record.rosters[team - 1]):
+        if not pid:
+            assert index in D.BACK_PLACES
+            continue
+        w = D.WEIGHT[D.POSITION_OF_PLACE[index]]
+        total, weight = total + w * record.players[pid].rating, weight + w
+    return total if weight == 78 else (total * 78 + weight // 2) // weight
+
+
 def test_the_team_ratings_item_lists_the_32_teams_best_first_and_names_the_players_rank(tmp_path):
     rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + [DOWN] * 4 + [ENTER, DOWN],
                                   policy=quit_policy))
@@ -196,9 +209,8 @@ def test_the_team_ratings_item_lists_the_32_teams_best_first_and_names_the_playe
     title = "your team is number %d of 32. 32 items." % record.rank_of(record.team)
     assert any(title in t for t in text)
     # what is SPOKEN (the first item when the list opens, the second after Down), worked out from the players alone: the weighted
-    # sum of each team's 34 active players (design 4.4), highest first, ties by team number, the rating the sum over 78 rounded up
-    sums = {t: sum(D.WEIGHT[p.pos] * p.rating for p in record.players.values() if p.status == "active" and p.team == t)
-            for t in range(1, 33)}
+    # sum of each team's 34 places (design 4.4), highest first, ties by team number, the rating the sum over 78 rounded up
+    sums = {t: place_sum(record, t) for t in range(1, 33)}          # SR.5: a team is 53 men; the 34 places of its view carry the weights
     order = sorted(sums, key=lambda t: (-sums[t], t))
     for rank in (1, 2):
         team = order[rank - 1]
@@ -210,8 +222,7 @@ def test_the_strength_of_a_team_is_the_weighted_mean_of_its_34_ratings_and_the_r
     rig = first_game(tmp_path)
     record = league(rig)
     for team in (1, 9, 32):
-        players = record.active_of(team)
-        total = sum(D.WEIGHT[p.pos] * p.rating for p in players)
+        total = place_sum(record, team)                             # SR.5: the weight is the place's (a returner is a man of any family)
         assert record.strength_sum(team) == total and record.strength(team) == (total + 39) // 78
     ranking = record.ranking()
     sums = [record.strength_sum(t) for t in ranking]

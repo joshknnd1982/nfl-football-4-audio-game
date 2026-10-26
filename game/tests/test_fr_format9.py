@@ -6,7 +6,7 @@ its own players' values and gets the empty people, never another league's.
 import json
 
 import pytest
-from drrig import draft_league
+from drrig import draft_league, legacy_data
 
 from nfl4.extras.franchise import contracts as CT
 from nfl4.extras.franchise import data as D
@@ -31,7 +31,7 @@ def through_store(league):
 
 
 def as_format_8(league):
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     data.pop("people")
     data["format"] = 8
     return data
@@ -55,7 +55,7 @@ def test_format_9_round_trips_every_people_value_through_the_real_store():
         P.set_morale(league, pid, value)
     league.people["holdouts"].append([ids[0], 1, league.season, P.WAITED])
     loaded, files = through_store(league)
-    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 18
+    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 19     # SR.5: format 19 (no places stored)
     assert loaded.people == league.people and loaded.to_json() == league.to_json()
 
 

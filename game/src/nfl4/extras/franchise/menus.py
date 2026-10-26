@@ -213,11 +213,28 @@ def franchise_menu(g, speech, keys) -> None:
         league = store.league
         return [r for r in league.waiting_rookies(league.team) if r.pos == position]
 
+    def family_men(position: str) -> list:
+        """SR.5 (D-164): the men of the player's roster of one family: the men of its places in place order, then the rest of its men in chart order (a
+        man of the family in a return place, or in another family's place, is one of them; the men without a place are said "on the bench")."""
+        league = store.league
+        men = [p for p in league.group_of(league.team, position) if p is not None] if position in D.PLACES_OF else []
+        seen = {p.id for p in men}
+        chart = league.chart[league.team - 1]
+        from ..roster_model import MADDEN, GROUP
+        for key in MADDEN:
+            if GROUP[key] != position:
+                continue
+            for pid in chart.get(key, ()):
+                p = league.players.get(pid)
+                if p is not None and p.id not in seen and p.status == "active" and p.team == league.team:
+                    men.append(p)
+                    seen.add(p.id)
+        return [p for p in men if p.pos == position] + [p for p in men if p.pos != position and p.place < 0]
+
     def group_picker(position: str) -> None:
         word = _words(g)
         league = store.league
-        players = [p for p in league.group_of(league.team, position) if p is not None]
-        players += league.bench(league.team, position)          # D-149 (NX-B2b): then the men of the bench, each said "on the bench"
+        players = family_men(position)                          # SR.5: every man of the family (D-149: those without a place said "on the bench")
         lines = [roster_line(word, league, p) for p in players]      # SX.8b: the rating and the potential are spoken; SX.8g: and the contract; SX.8n: the tag, morale, word
         rookies = rookies_of(position)
         for rookie in rookies:                                 # a rookie is told by his range until the cut (design 7.6, 11)
@@ -242,16 +259,12 @@ def franchise_menu(g, speech, keys) -> None:
         word = _words(g)
         league = store.league
 
-        def count(position: str) -> int:               # the players in the group now: fewer than its places while places are empty
-            return (sum(1 for player in league.group_of(league.team, position) if player is not None)
-                    + len(rookies_of(position)) + len(league.bench(league.team, position)))
-        from . import reserves
-        groups = list(ROSTER_ORDER)
+        def count(position: str) -> int:               # the men of the family now (SR.5: from the roster, whatever place they hold) and its rookies
+            return len(family_men(position)) + len(rookies_of(position))
+        groups = list(ROSTER_ORDER)          # SR.5: every family, a family with nobody said with 0 (a team with no quarterback hears it; SR.6: positions)
         title = X.text("NXF-13")
-        if reserves.on(league) or league.bench(league.team):       # D-149: the line and the snapper, and the size of the 53
-            groups += [position for position in D.RESERVE_POSITIONS if league.bench(league.team, position)]
-            placed = sum(1 for player in league.active_of(league.team) if player is not None)
-            title += X.text("NXL-54", n=placed + len(league.bench(league.team)), p=placed, k=len(league.bench(league.team)), m=D.ROSTER_MAX)
+        placed = sum(1 for player in league.active_of(league.team) if player is not None)
+        title += X.text("NXL-54", n=placed + len(league.bench(league.team)), p=placed, k=len(league.bench(league.team)), m=D.ROSTER_MAX)
         items = [Item(lambda position=position: X.text("NXL-30", group=word.group(position), n=count(position)),
                       enter=lambda position=position: group_picker(position)) for position in groups]
         SpokenMenu(speech, keys, title, items, space_enters=True, digits_jump=True).run()

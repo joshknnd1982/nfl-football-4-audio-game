@@ -140,14 +140,19 @@ def test_in_a_franchise_the_list_has_the_rosters_starter_and_the_practice_squads
     assert any(line in text for text in spoken(rig))
 
 
-def test_on_his_own_team_the_player_makes_a_squad_quarterback_the_starter_and_the_starter_is_released(tmp_path):
+def test_on_his_own_team_the_player_makes_a_squad_quarterback_the_starter_and_the_starter_goes_to_the_bench(tmp_path):
+    # SR.5 (D-164, D-149): a team has room under 53 in every league now (no "reserves_on" switch), so the squad quarterback signs to the roster
+    # for the minimum and starts (the first of the QB chart) and the old starter is the second of the chart, on the bench: nobody is released
     rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + FRANCHISE_QBS + [ENTER, DOWN, ENTER, ENTER, ESC, ESC, ESC, ESC],
                         practice=True, policy=quit_policy)
     run_until(rig)
     league = rig.fstore.league
     now = league.player_at(league.team, D.PLACES_OF["QB"][0])
     assert now.status == "active" and now.years == 1 and not [p for p in P.squad(league, league.team) if p.id == now.id]
-    released = [p for p in league.players.values() if p.status == "free" and p.left == league.season and p.pos == "QB"]
-    assert released, "the old starter is a free agent of the season"
-    assert any(X.text("NXJ-P09", give=p.name, get=now.name) in spoken(rig) for p in released)
+    chart = league.chart[league.team - 1]["QB"]
+    assert chart[0] == now.id and len(chart) >= 2
+    old = league.players[chart[1]]
+    assert old.status == "active" and old.team == league.team and old in league.bench(league.team, "QB")
+    assert not [p for p in league.players.values() if p.status == "free" and p.left == league.season and p.pos == "QB"]
+    assert any(X.text("NXJ-P08", player=now.name) + X.text("NXL-58", player=now.name, other=old.name) in t for t in spoken(rig))
     league.check()

@@ -19,12 +19,10 @@ from __future__ import annotations
 import hashlib
 
 from .. import tuning as T
-from . import aging
 from . import contracts as CT
 from . import data as D
 from . import first_names as FN
 from . import injuries
-from . import market
 from . import resign as R
 
 
@@ -53,8 +51,9 @@ def price(player) -> tuple:
     return R.asking(player)
 
 
-# NX-B3 (D-145): the real free agents' positions in the Franchise's groups (the offensive line and the long snapper have no place in it yet)
-REAL_GROUP = {"QB": "QB", "RB": "RB", "FB": "RB", "WR": "WR", "TE": "WR", "DL": "DL", "LB": "LB", "CB": "CB", "S": "S", "K": "K", "P": "P"}
+# NX-B3 (D-145): the real free agents' words in the Franchise's families (SR.5: the offensive line and the long snapper too)
+REAL_GROUP = {"QB": "QB", "RB": "RB", "FB": "RB", "WR": "WR", "TE": "WR", "DL": "DL", "LB": "LB", "CB": "CB", "S": "S", "K": "K", "P": "P",
+              "OL": "OL", "LS": "LS"}
 
 
 def add_real_free_agents(league, real) -> int:
@@ -76,6 +75,9 @@ def add_real_free_agents(league, real) -> int:
         rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
         age = agent.age if agent.age is not None else age_base + (h >> 8) % age_span
         player = _new_player(league, name, position, rating, max(D.AGE_MIN, min(D.AGE_MAX, age)))
+        from .. import roster_model as RM
+        player.position = RM.WORD_POSITIONS.get(agent.pos.upper(), (RM.WORD_POSITIONS[position][0],))[0]   # the file's position (a TE stays a TE)
+        player.pos = RM.GROUP[player.position]
         league.players[player.id] = player
         league.next_id += 1
         known.add(name.casefold())
@@ -88,7 +90,7 @@ def ensure_pool(league, surnames: list, real=None) -> int:
     this season and these). In a franchise's first season the real free agents come first (NX-B3, `add_real_free_agents`), so the made-up veterans only fill a group they
     leave short. Returns how many were made. Adds players to the league (status "free"); the caller saves."""
     made = add_real_free_agents(league, real)
-    used = FN.name_keys(league.league_id, {p.name for p in league.players.values() if p.status in ("active", "reserve")} | {p.name for p in pool(league)})
+    used = FN.name_keys(league.league_id, {p.name for p in league.players.values() if p.status == "active"} | {p.name for p in pool(league)})
     base, span = T.FR_FA_SEASON_RATING
     age_base, age_span = T.FR_FA_SEASON_AGE
     for position in D.ROSTER_ORDER:
@@ -102,6 +104,8 @@ def ensure_pool(league, surnames: list, real=None) -> int:
             rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
             age = age_base + (h >> 8) % age_span
             player = _new_player(league, FN.full_name(league.league_id, name), position, rating, age)   # D-131: first and last name
+            from .. import roster_model as RM
+            player.position = RM.WORD_POSITIONS[position][(h >> 40) % len(RM.WORD_POSITIONS[position])]   # SR.5: a position of the family (no draw)
             league.players[player.id] = player
             league.next_id += 1
             made += 1
@@ -114,20 +118,18 @@ def _new_player(league, name: str, position: str, rating: int, age: int):
 
 
 def roster_group(league, team: int, position: str) -> list:
-    """The team's players of the position, in place order (the empty places left out)."""
-    return [p for p in league.group_of(team, position) if p is not None]
+    """The team's players of the family who play (the view's places, in place order)."""
+    return [p for p in league.group_of(team, position) if p is not None] if position in D.PLACES_OF else []
 
 
 def open_place(league, team: int, position: str) -> bool:
-    """The team can take a man of the position without a release: an empty place of the group, or (D-149) room on its bench."""
-    from . import reserves
-    if reserves.on(league):                    # SR.4: while the team has fewer than 53 (an empty back place of the real roster is no open spot)
-        return reserves.room(league, team) > 0
-    return market.filled(league, team, position) < D.GROUP_SIZE[position]
+    """The team can take a man without a release: a spot on its 53 (SR.5)."""
+    from . import real_roster
+    return real_roster.room(league, team) > 0
 
 
 def releasable(league, team: int, position: str, week: int) -> list:
-    """The players of the group the team may release to make room, its places then (D-149) its bench: not hurt (an injury is a record of the league that
+    """The players of the family the team may release to make room, the men who play then the others: not hurt (an injury is a record of the league that
     follows its player, so a hurt man stays until he is fit)."""
     return [p for p in roster_group(league, team, position) + league.bench(team, position) if injuries.healthy(league, p.id, week)]
 
@@ -154,7 +156,8 @@ def problems(league, player, release, week: int) -> str | None:
     else:
         if release is None:
             return "no place and no release"
-        if release.status not in ("active", "reserve") or release.team != team or (release.status == "active" and release.place < 0) or release.pos != player.pos:
+        from . import real_roster
+        if release.status != "active" or release.team != team or release.id in real_roster.waiting_ids(league) or release.pos != player.pos:
             return "a release who is not a player of the group"
         if not injuries.healthy(league, release.id, week):
             return "a release who is hurt"
@@ -166,30 +169,18 @@ def problems(league, player, release, week: int) -> str | None:
 def sign(league, player, release, week: int) -> tuple:
     """The signing is made (the caller has checked `problems` and writes league.sav): the released player, when there is one, becomes a free agent of this season and his dead
     money is charged; the free agent joins the team in the place and on the contract of the price. Returns (the salary, the years, the dead money)."""
+    from . import real_roster
     team = league.team
-    roster = league.rosters[team - 1]
     dead = 0
-    slot = None
     if release is not None:
-        slot = release.place                                 # -1: a man of the bench (D-149)
-        if slot >= 0:
-            roster[slot] = 0
         dead = CT.release(league, release)
-        release.status, release.left, release.place, release.points, release.team = "free", league.season, -1, 0, 0       # (team 0: nobody lost him, so no compensatory pick)
+        release.left, release.points = league.season, 0
+        real_roster.leave(league, release, "free", refresh=False)
+        release.team = 0                                     # (team 0: nobody lost him, so no compensatory pick)
         _forget(league, release.id)
     salary, years = price(player)
-    if slot is not None and slot >= 0:
-        from . import reserves
-        player.team, player.left, player.points = team, 0, 0
-        reserves.to_place(league, player, slot)
-    elif slot is not None:
-        from . import reserves
-        player.team, player.left, player.points, player.status, player.place = team, 0, 0, reserves.STATUS, -1
-    else:
-        from . import reserves
-        reserves.join(league, team, player)
+    real_roster.join(league, team, player)                   # SR.5: onto the chart; the places are made again
     CT.sign(player, salary, years)
-    aging.place_by_rating(league, team)
     if len(league.sums) == D.TEAMS:
         league.sums[team - 1] = league.strength_sum(team)
     return salary, years, dead

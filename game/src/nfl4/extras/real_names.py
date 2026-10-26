@@ -50,8 +50,10 @@ log = logging.getLogger("nfl4.extras")
 GAME = "NFL Football 4"
 COACHES, ROSTERS, RESPELLINGS = "coaches", "rosters", "respellings"
 FREE_AGENTS = "freeagents"            # NX-B3 (D-145): free_agents.txt
-FILE_NAMES = {COACHES: "coaches.txt", ROSTERS: "rosters.txt", RESPELLINGS: "respellings.txt", FREE_AGENTS: "free_agents.txt"}
-KINDS = (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS)
+NFL_SURNAMES = "nflsurnames"          # NX-L12 (D-163, D-164): nfl_surnames.txt, the real NFL players' last names of the made-up players
+FILE_NAMES = {COACHES: "coaches.txt", ROSTERS: "rosters.txt", RESPELLINGS: "respellings.txt", FREE_AGENTS: "free_agents.txt",
+              NFL_SURNAMES: "nfl_surnames.txt"}
+KINDS = (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS, NFL_SURNAMES)
 TEAMS = 32
 POSITIONS = ("QB", "RB", "FB", "WR", "TE", "DL", "LB", "CB", "S", "K", "P", "RET", "OL", "LS")      # OL and LS: the 53-man file (NX-B2), no place in a game
 SQUAD_MARK = "PS"                     # the 53-man file: a practice squad player's line starts with it
@@ -65,6 +67,7 @@ _PLAYER_VALUE = re.compile(r"^(?:(%s)\s+)?(%s)\s+(\d{1,2}|-)\s+(.+)$" % ("|".joi
 _ROLE_ID = re.compile(r"T(\d{1,2})(KR|PR)(\d)", re.IGNORECASE)
 _RESPELL_ID = re.compile(r"R(\d{1,4})", re.IGNORECASE)
 _FREE_ID = re.compile(r"F(\d{1,4})", re.IGNORECASE)
+_SURNAME_ID = re.compile(r"S(\d{1,5})", re.IGNORECASE)
 _FREE_VALUE = re.compile(r"^(%s)\s+(\d{1,2}|-)\s+(.+)$" % "|".join(p for p in POSITIONS if p != "RET"), re.IGNORECASE)
 _ARROW = "=>"
 
@@ -110,6 +113,17 @@ class RealNames:
     free_agents: tuple = ()             # NX-B3: ((ID, RealFreeAgent), ...) in the order of the IDs
     reserves: tuple = ()                # layout 2: 32 tuples of RealPlayer on a reserve list (injured reserve and the like), never in a game
     roles: tuple = ()                   # layout 2 (SR.4): 32 dicts {"KR": [names], "PR": [names]}, the return roles in order (the player's choice laid over)
+    surnames: tuple = ()                # NX-L12: ((ID, last name), ...) of nfl_surnames.txt in the order of the IDs
+
+    def surname_pool(self) -> list:
+        """NX-L12: the last names of real NFL players the made-up players take ([] when the file gives none)."""
+        return [name for _ident, name in self.surnames]
+
+    def real_full_names(self) -> frozenset:
+        """NX-L12: the casefolded full names of the real men of the files (the rosters, their lists, the free agents): no made-up man takes one."""
+        written = [p.name for roster in self.rosters for p in roster] + [p.name for team in self.reserves for p in team]
+        written += [agent.name for _ident, agent in self.free_agents]
+        return frozenset(n.casefold() for name in written for n in (name, self.spoken(name)))     # as written and as the league says it
 
     def reserve(self, team: int) -> list:
         """The team's men on a reserve list (layout 2), in file order; [] for a format-1 file."""
@@ -274,9 +288,21 @@ class RealNames:
             names = []
             for index in range(count):
                 real = sections[attribute][index]
-                names.append(self.spoken(real) if real else (drawn[index] if index < len(drawn) else "player"))
+                names.append(self.spoken(real) if real else self.last_resort(drawn[index] if index < len(drawn) else "player"))
             getattr(result, attribute).extend(names)
         return result
+
+    def last_resort(self, drawn: str) -> str:
+        """NX-L12 (D-164): the name of a place no real man of the team can play (a family with nobody, design 21.4 (8)): the draw made the original's
+        surname as ever (the same draws); the name said is a real NFL player's last name chosen from it (no draw) with a first name of the game's list
+        that makes no real player's full name."""
+        pool = self.surname_pool()
+        if not pool or not drawn:
+            return drawn
+        import zlib
+        from .franchise import first_names as FN
+        surname = pool[zlib.crc32(drawn.encode("utf-8", "surrogatepass")) % len(pool)]
+        return FN.full_name("quick game", surname)
 
     def places(self, team: int) -> list:
         """The names of the Franchise's 34 places (franchise.data.PLACES: the sections, then the quarterback) from a team's real players, spoken
@@ -312,7 +338,8 @@ def parse_entries(text: str, kind: str):
     return cl.parse_list(text, GAME, kind)
 
 
-def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames | None", problems: dict, free_entries=()) -> "RealNames":
+def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames | None", problems: dict, free_entries=(),
+          surname_entries=()) -> "RealNames":
     """The values of the three files. `defaults` is the built-in RealNames (None for the built-in one itself); `problems` maps each kind to
     a customlists.Problems. A bad line keeps the built-in value."""
     base_version = defaults.version if defaults else ""
@@ -431,8 +458,30 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
             continue
         age = int(parts.group(2)) if parts.group(2).isdigit() else None
         free[ident] = (ident, RealFreeAgent(parts.group(1).upper(), age, parts.group(3).strip()))
+    surnames = {row[0]: row for row in defaults.surnames} if defaults else {}
+    bad = problems.get(NFL_SURNAMES)
+    for entry in surname_entries:                                 # NX-L12: laid over the built-in list by ID, "off" leaves one out
+        if entry.id == "VERSION":
+            continue
+        match = _SURNAME_ID.fullmatch(entry.id)
+        if match is None:
+            if bad is not None:
+                bad.add("line %d" % entry.line, "the ID %s is not a surname ID, S00001 and up, the line is ignored" % entry.id)
+            continue
+        ident = "S%05d" % int(match.group(1))
+        if entry.value.casefold() == "off":
+            surnames.pop(ident, None)
+            continue
+        name = entry.value.strip()
+        reason = name_problem(name) or (None if len(name) >= 2 else "a last name has at least 2 characters")
+        if reason:
+            if bad is not None:
+                bad.add(entry.id, "%s, the line is ignored" % reason)
+            continue
+        surnames[ident] = (ident, name)
     return RealNames(version, tuple(coaches), tuple(rosters), tuple(sorted(respell.values())),
-                     tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))), tuple(reserves), tuple(team_roles))
+                     tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))), tuple(reserves), tuple(team_roles),
+                     tuple(sorted(surnames.values(), key=lambda row: int(row[0][1:]))))
 
 
 def _team_lines(players: list, roles: "dict | None"):
@@ -470,7 +519,7 @@ def apply_kind(current: "RealNames", kind: str, entries, problems: "cl.Problems"
     mine = {k: cl.Problems(FILE_NAMES[k]) for k in FILE_NAMES}
     mine[kind] = problems
     return build(entries if kind == COACHES else [], entries if kind == ROSTERS else [], entries if kind == RESPELLINGS else [],
-                 current, mine, entries if kind == FREE_AGENTS else [])
+                 current, mine, entries if kind == FREE_AGENTS else [], entries if kind == NFL_SURNAMES else [])
 
 
 _DEFAULTS: "RealNames | None | bool" = False        # False: not read yet
@@ -488,7 +537,12 @@ def defaults() -> "RealNames | None":
             except Exception:                                    # NX-B3: no free agents file never costs the names (made-up free agents, as before)
                 log.exception("the shipped free agents file could not be read")
                 parsed[FREE_AGENTS] = []
-            _DEFAULTS = build(parsed[COACHES], parsed[ROSTERS], parsed[RESPELLINGS], None, problems, parsed[FREE_AGENTS])
+            try:
+                parsed[NFL_SURNAMES] = parse_entries(shipped_text(NFL_SURNAMES), NFL_SURNAMES).entries
+            except Exception:                                    # NX-L12: no surnames file never costs the names (the original's surnames, as before)
+                log.exception("the shipped NFL surnames file could not be read")
+                parsed[NFL_SURNAMES] = []
+            _DEFAULTS = build(parsed[COACHES], parsed[ROSTERS], parsed[RESPELLINGS], None, problems, parsed[FREE_AGENTS], parsed[NFL_SURNAMES])
             if sum(p.count for p in problems.values()):
                 log.warning("the shipped name files have problems: %s", [m for p in problems.values() for m in p.messages][:5])
         except Exception:

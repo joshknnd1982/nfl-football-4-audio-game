@@ -393,17 +393,19 @@ def make_league(real, seed=1, team=4):
 def test_a_new_leagues_players_and_coaches_are_the_real_ones_with_the_same_ratings_ages_and_draws():
     names = R.defaults()
     real, old = make_league(names), make_league(None)
+    from nfl4.extras import roster_model as RM
     for team in range(1, 33):                                                    # NX-D2/D3: the same drawn values, the best to the real starter
-        for index in range(D.PLACE_COUNT):                                       # SR.4 (design 21.5): a place's drawn age goes to the view's man
-            mine = real.player_at(team, index)
-            if mine is not None:
-                assert mine.age == old.player_at(team, index).age and mine.id == old.player_at(team, index).id, (team, index)
-        for position, places in D.PLACES_OF.items():
-            filled = [i for i in places if real.player_at(team, i) is not None]
-            mine = [(real.player_at(team, i).rating, real.player_at(team, i).potential) for i in filled]
-            drawn = [(old.player_at(team, i).rating, old.player_at(team, i).potential) for i in filled]
-            assert sorted(mine) == sorted(drawn), (team, position)              # the values of the filled places, moved within the group
-            assert [r for r, _p in mine] == sorted((r for r, _p in mine), reverse=True), (team, position)
+        # SR.5 (D-164): the view is made from the chart in the staff's order, so a drawn man is no longer pinned to his place index: every drawn
+        # man the real team keeps (an empty back place's man is dropped) is the same ID of the same team with his drawn age
+        drawn = [p for p in old.players.values() if p.team == team and p.status == "active"]
+        kept = [p for p in drawn if p.id in real.players]
+        assert len(kept) >= len(drawn) - 6, team
+        for p in kept:
+            assert real.players[p.id].team == team and real.players[p.id].age == p.age, (team, p.id)
+        chart = real.chart[team - 1]                                             # SR.5: the best rating of each position to its real starter
+        for position in RM.MADDEN:
+            ratings = [real.players[pid].rating for pid in chart.get(position, ())]
+            assert ratings == sorted(ratings, reverse=True), (team, position)
     for team in range(1, 33):                                                    # SR.4 (NX-L4): the places are the view of the team's real chart
         view = names.view(team)
         got = [real.player_at(team, i).name if real.player_at(team, i) else None for i in range(29)]
@@ -453,18 +455,5 @@ def test_a_whole_game_with_only_enter_has_the_real_players_and_quarterbacks(tmp_
     assert "Eddy" not in spoken
 
 
-def test_an_older_franchise_with_real_non_backs_in_running_back_places_gets_made_up_backs_once():
-    """Tester 2026-10-23: a league made before the fix put real tight ends and quarterbacks in running back places; opening it renames them (the
-    ratings stay), the player's own team keeps its names, and a second pass changes nothing."""
-    from nfl4.extras.franchise import first_names as FN
-    from nfl4.extras.franchise.league import fix_real_backs
-    names = R.defaults()
-    league = make_league(None)                                                    # SR.4: an older league (its 34 places drawn, as 0.16 made them)
-    flacco, kelce = league.player_at(9, 4), league.player_at(4, 5)              # team 9's 5th back, the player's own team's 6th
-    flacco.name, kelce.name = "Joe Flacco", "Bubba"                              # as the older league had it; his own back, a typed name
-    rating = flacco.rating
-    assert fix_real_backs(league, names) == 1
-    assert FN.surname_of(league.league_id, flacco.name) is not None and flacco.rating == rating and flacco.pos == "RB"
-    assert kelce.name == "Bubba"
-    assert fix_real_backs(league, names) == 0 and fix_real_backs(league, None) == 0
-    assert len({p.name for p in league.players.values()}) == len(league.players)
+# SR.5 (D-164): test_an_older_franchise_with_real_non_backs_in_running_back_places_gets_made_up_backs_once went with league.fix_real_backs: an
+# older league's real men now get their real positions back by name through real_roster.convert, never a made-up name (NX-L5, NX-L7).

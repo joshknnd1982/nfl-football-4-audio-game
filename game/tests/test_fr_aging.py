@@ -10,6 +10,7 @@ import random
 
 import pytest
 
+from drrig import full_league
 from frrig import enter_until, franchise_rig, run_until, spoken
 from nfl4.extras import nx_texts as X
 from nfl4.extras import tuning as T
@@ -17,6 +18,7 @@ from nfl4.extras.franchise import aging, resign
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import first_names as FN
 from nfl4.extras.franchise import offseason
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise.files import MemoryFiles
 from nfl4.extras.franchise.league import OFFSEASON, LeagueRecord, new_league, team_ref
 from nfl4.extras.franchise.store import FranchiseStore
@@ -62,12 +64,13 @@ def with_all_aged(league, age):
 
 
 def retire(league, team, place, peak=None):
-    """The player of a place retired (as the offseason leaves him)."""
+    """The player of a place retired (as the offseason leaves him). SR.5: he leaves the chart (real_roster.leave) and the view follows, so the next
+    man of his position takes the place."""
     player = league.player_at(team, place)
-    player.status, player.place, player.left = "retired", -1, league.season
+    player.left = league.season
+    RR.leave(league, player, "retired")
     if peak is not None:
         player.peak = peak
-    league.rosters[team - 1][place] = 0
     return player
 
 
@@ -177,10 +180,13 @@ def test_applying_makes_everybody_a_year_older_and_the_retired_leave_their_place
 
 def test_nobody_goes_over_forty_even_when_a_record_has_a_forty_year_old(design):
     league = with_all_aged(made(), 25)
-    league.player_at(1, 0).age = 40
+    old = league.player_at(1, 0)
+    old.age = 40
     rnd, _ = scripted()
     aging.apply_aging(league, aging.plan_retirements(league, rnd))
-    assert league.player_at(1, 0) is None and max(p.age for p in league.players.values()) == 40
+    # SR.5: he leaves the chart and the next back takes his place (the view), so the check is on him, not on the place
+    assert old.status == "retired" and old.id not in league.chart[0][old.position] and old.id not in league.rosters[0]
+    assert max(p.age for p in league.players.values()) == 40
 
 
 # ----- stage 3 on a strict script -----
@@ -247,7 +253,7 @@ def test_the_best_player_of_a_group_takes_its_first_place_and_an_empty_place_goe
     ids = [league.rosters[team - 1][i] for i in D.PLACES_OF["WR"]]
     for rating, pid in zip((50, 90, 70, 90, 60, 80), ids):
         league.players[pid].rating = rating
-    league.rosters[team - 1][D.PLACES_OF["WR"][2]] = 0                        # the 70 is gone
+    RR.leave(league, league.players[ids[2]], "retired", refresh=False)         # the 70 is gone (SR.5: he leaves the chart; no place emptied by hand)
     aging.place_by_rating(league, team)
     ratings = [league.player_at(team, i).rating if league.player_at(team, i) else None for i in D.PLACES_OF["WR"]]
     assert ratings == [90, 90, 80, 60, 50, None]
@@ -256,19 +262,23 @@ def test_the_best_player_of_a_group_takes_its_first_place_and_an_empty_place_goe
 
 
 def test_the_stand_in_fill_gives_every_empty_place_an_undrafted_rookie_by_the_designs_rules(design):
-    league = with_all_aged(made(), 25)
-    retire(league, 5, D.PLACES_OF["QB"][0])                                     # a group of one place
-    retire(league, 11, D.PLACES_OF["RB"][2])                                    # a group of six
-    active = FN.name_keys(league.league_id, (p.name for p in league.players.values() if p.status == "active"))   # D-131
+    # SR.5: the fill makes a rookie for each man a FAMILY is short of its minimum (FR_FAMILY_MIN), so the league is the full one of the real rosters
+    # (every family at its target, drrig.full_league); a team of two quarterbacks and one of three backs each lose one and fall one short
+    league = with_all_aged(full_league(seed=1, team=5), 25)
+    retire(league, 5, D.PLACES_OF["QB"][0])                                     # the family of the quarterbacks (2, its minimum)
+    retire(league, 11, D.PLACES_OF["RB"][2])                                    # the backs (3, their minimum)
+    first_new = league.next_id
+    active = FN.name_keys(league.league_id, (p.name for p in league.players.values() if p.status in ("active", "practice")))   # D-131
     free = [i for i, name in enumerate(SURNAMES, start=1) if name not in active]
     # a name is rnd(1708) = below(1708) + 1; the rating below(11); the potential below(100); team 5 comes before team 11
     rnd, source = scripted((len(SURNAMES), free[0] - 1), (11, 3), (100, 10), (len(SURNAMES), free[1] - 1), (11, 4), (100, 80))
     assert aging.fill_places(league, rnd, SURNAMES) == 2 and source.left == 0
-    qb = league.player_at(5, D.PLACES_OF["QB"][0])
-    rb = [p for p in league.group_of(11, "RB") if p.age == 22]
+    [qb] = [p for p in league.players.values() if p.id >= first_new and p.team == 5]          # SR.5: the rookie joins the chart (the view
+    rb = [p for p in league.players.values() if p.id >= first_new and p.team == 11]           # puts the best man of the position first)
+    assert qb.pos == "QB" and qb.id in league.chart[4]["QB"]
     assert qb.name == FN.full_name(league.league_id, SURNAMES[free[0] - 1]) and qb.rating == 50 + 3 and qb.potential == "high" and qb.age == 22 and qb.seasons == 0
-    assert len(rb) == 1 and rb[0].name == FN.full_name(league.league_id, SURNAMES[free[1] - 1]) and rb[0].rating == 45 + 4 and rb[0].potential == "low"
-    assert qb.peak == qb.rating and qb.drafted is None and qb.id >= 1089 and qb.team == 5
+    assert len(rb) == 1 and rb[0].pos == "RB" and rb[0].name == FN.full_name(league.league_id, SURNAMES[free[1] - 1]) and rb[0].rating == 45 + 4 and rb[0].potential == "low"
+    assert qb.peak == qb.rating and qb.drafted is None and qb.team == 5
     league.stage, league.stage_no, league.gtp, league.records = OFFSEASON, 6, 0, [8, 8] * 32
     LeagueRecord.from_json(league.to_json())                                    # whole again: stage 6 is valid
 
@@ -330,10 +340,14 @@ def test_twenty_offseasons_keep_every_place_filled_every_value_in_range_and_nobo
         league.season += 1
         league.stage, league.stage_no, league.gtp, league.records = OFFSEASON, 6, 0, [8, 8] * 32
         league = LeagueRecord.from_json(league.to_json())                       # the whole-file check, every season
-        assert all(pid for roster in league.rosters for pid in roster)
+        assert not league.has_empty_place()                                     # SR.5: only a back place may be empty (a team with fewer backs)
         assert all(40 <= p.rating <= 99 and 21 <= p.age <= 40 for p in league.players.values() if p.status == "active")
         names = [p.name for p in league.players.values() if p.status == "active"]
-        assert len(names) == len(set(names)) == 1088
+        assert len(names) == len(set(names))
+        # SR.5: the fill brings every family of every team to its minimum (a drawn league starts with no line and no snapper), never past 53
+        for team in range(1, 33):
+            have = RR.counts_by_group(RR.members(league, team))
+            assert all(have.get(group, 0) >= least for group, least in T.FR_FAMILY_MIN.items()) and len(RR.members(league, team)) <= D.ROSTER_MAX
 
 
 # ----- the spoken stages on the program rig -----
@@ -524,7 +538,8 @@ def test_the_draws_of_stage_three_come_in_leagues_order_and_the_points_count_exa
         points = 3 if p.team == 5 else 0
         expected = aging.clamp_rating(p.rating + aging.base_change(p.pos, p.age, p.potential) + points)
         assert after.players[p.id].rating == expected and after.players[p.id].points == 0, p.id
-    assert sum(1 for pid in after.rosters[4] if pid == 0) == 1 and after.rosters[4][0] == 0        # the retired back place waits for the cut
+    # SR.5: the other five backs move up (the view), so the LAST back place is the empty one, and it stays so (an empty back place is the real roster's)
+    assert sum(1 for pid in after.rosters[4] if pid == 0) == 1 and after.rosters[4][D.BACK_PLACES[-1]] == 0
     assert after.stage_no == 7 and after.draft is None                                           # and the draft class is not made yet
 
 
@@ -549,8 +564,11 @@ def test_the_roster_of_f9_counts_the_players_it_has_while_places_are_empty(tmp_p
     monkeypatch.setattr(spoken_menu.SpokenMenu, "__init__", spy)
     from frrig import DOWN, ENTER, ESC, F9
     stage_rig(tmp_path, Veterans(), keys=[F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, ESC, ESC, ESC])
-    roster = [labels for title, labels in seen if title == "your roster"][0]
-    assert roster[:3] == [" quarterback: 0 ", " running backs: 5 ", " receivers: 5 "] and roster[3] == " defensive linemen: 6 "
+    # SR.5: the title counts the roster (NXL-54: the men, those in the game's places, those on the bench) and every family is an item, so the retired
+    # quarterback's family (none left until the cut's fill) is said with 0
+    [(title, roster)] = [(title, labels) for title, labels in seen if title.startswith("your roster")]
+    assert title.startswith("your roster, 31 of 53 players: 31 in the game's places and 0 on the bench")
+    assert roster[:3] == [" quarterback: 0 ", " running backs: 5 ", " receivers: 5 "] and roster[4] == " defensive linemen: 6 "
 
 
 def test_the_development_points_are_not_counted_in_a_retired_players_file(tmp_path):
@@ -566,9 +584,9 @@ def test_the_file_after_stage_two_has_empty_places_and_the_file_after_stage_thre
     rig = stage_rig(tmp_path, Veterans())
     assert any(pid == 0 for roster in rig.kept[3].rosters for pid in roster)         # stage 3's file: written when stage 2 ended
     assert any(pid == 0 for roster in rig.kept[7].rosters for pid in roster)         # stage 7's: written when stage 3 ended
-    assert rig.kept[6].stage_no == 6 and all(pid for roster in rig.kept[6].rosters for pid in roster)     # stage 6's: after the cut and the fill
+    assert rig.kept[6].stage_no == 6 and not rig.kept[6].has_empty_place()     # stage 6's: after the cut and the fill (SR.5: a back place may stay empty)
     final = rig.fstore.league
-    assert final.stage == "season" and final.season == 2 and all(pid for roster in final.rosters for pid in roster)
+    assert final.stage == "season" and final.season == 2 and not final.has_empty_place()
     assert len(final.sums) == 32 and final.sums == [final.strength_sum(t) for t in range(1, 33)]
     assert all(p.points == 0 for p in final.players.values())
 
@@ -628,7 +646,7 @@ def test_stage_three_leaves_the_empty_places_to_the_roster_cut_which_fills_them(
     retired = sum(1 for player in rig.kept[3].players.values() if player.status == "retired")
     assert empty(rig.kept[7]) == retired >= 4                                    # stage 3's file: the retired players' places
     assert empty(rig.kept[4]) >= retired and empty(rig.kept[5]) == empty(rig.kept[4])      # stage 7 lets some go (SX.8h); the draft changes no place
-    assert empty(rig.kept[6]) == 0
+    assert not rig.kept[6].has_empty_place()                                    # SR.5: only back places may stay empty (fewer than six backs)
 
 
 def test_the_offseason_news_lines_are_sx8es_and_nothing_is_said_for_them_yet(tmp_path):

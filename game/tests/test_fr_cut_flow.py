@@ -1,39 +1,62 @@
 """The Franchise's roster cut and fill as stage 5 on the program rig (nfl4 only, rule 0.13): the staff's releases and the player's answers, the
 questions of his own choice, the fill, the settings, a window closed at the question and the file the stage writes
-(NFL_FRANCHISE_DESIGN 7.6, 3.3 item 4, 16 SX.8d).
+(NFL_FRANCHISE_DESIGN 7.6, 3.3 item 4, 16 SX.8d; SR.5, D-164, design 21.7 (1): the cut to 53 of the real roster, the fill of a family's minimum).
 """
-from drrig import at_stage, default_until, draft_league, offseason_rig, saved_league
+import random
+
+from drrig import SURNAMES, at_stage, default_until, draft_league, offseason_rig, saved_league
 from frrig import DOWN, ENTER, ESC, F9, spoken
 from nfl4.extras import nx_texts as X
+from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import draft as DR
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise.league import LeagueRecord
-from test_fr_draft import mid_draft
+from nfl4.game.rnd import GameRandom
 
 TEAM = 5
 
 
-def cut_league(seed=3, retire=(), picks=224):
-    """A league at the start of stage 5: a whole draft made, the rookies waiting; `retire` are places of the player's team that are empty."""
-    league, draft = mid_draft(seed=seed, picks=picks, team=TEAM)
+def cut_league(seed=3, picks=224):
+    """A league of full real teams (drrig.full_league) at the start of stage 5: a whole draft made by the computer's rule, the rookies waiting."""
+    league = draft_league(seed=seed, team=TEAM, real=True)
+    draft = DR.Draft.create(league, GameRandom(random.Random(seed)), SURNAMES)
+    for _ in range(picks):
+        _, _, who = draft.next_slot()
+        draft.make_pick(who, draft.best_for(who))
     league.stage_no = D.STAGE_CUT
-    for index in retire:
-        player = league.player_at(TEAM, index)
-        player.status, player.place, player.left = "retired", -1, league.season
-        league.rosters[TEAM - 1][index] = 0
     return league
+
+
+def plain_cut(seed=3):
+    """A league of full real teams at stage 5 without a draft: nobody to release (the player's men of a reserve list were let go, so none comes back)."""
+    def drop_lists(league):
+        for man in league.players.values():
+            if man.status == "list" and man.team == TEAM:
+                man.status, man.roster_list, man.left = "released", "", league.season
+    return draft_league(seed=seed, team=TEAM, stage_no=D.STAGE_CUT, real=True, mutate=drop_lists)
 
 
 def run(tmp_path, league, keys=(), until=None, **kwargs):
     return offseason_rig(tmp_path, league, keys=keys, until=until or default_until, picks_told="mine", **kwargs)
 
 
+def at_cut(league):
+    """The league as the stage sees it: the men of the real reserve lists back on their rosters (Q-079, real_roster.return_lists)."""
+    copy = LeagueRecord.from_json(league.to_json())
+    RR.return_lists(copy)
+    return copy
+
+
 def staffs_releases(league):
+    league = at_cut(league)
     return DR.plan_cut(league, TEAM, DR.waiting_by_team(league))
 
 
-def player_line(words, player):
-    return words.player(player)
+def retire(league, men):
+    for man in men:
+        man.left = league.season
+        RR.leave(league, man, "retired")
 
 
 # ----- the staff's releases -----
@@ -43,7 +66,7 @@ def test_the_stage_names_itself_lists_what_the_staff_would_release_and_asks_rele
     rig = run(tmp_path, league)
     text = spoken(rig)
     expected = staffs_releases(rig.start if rig.start.draft else LeagueRecord.from_json(league.to_json()))
-    assert len(expected) >= 7
+    assert len(expected) >= 7                                                          # 53 men and seven rookies or more: seven go
     at = text.index(" stage 8 of 9. the roster cut. ")
     assert text[at + 1] == X.text("NXE-50")
     lines = [X.text("NXE-51", player=p.name, position=rig.fstore.words.position(p.pos), a=p.age, r=p.rating) for p in expected]
@@ -51,21 +74,24 @@ def test_the_stage_names_itself_lists_what_the_staff_would_release_and_asks_rele
     assert text[at + 2 + len(lines)] == " 1. release them "
 
 
-def test_release_them_releases_exactly_those_players_and_the_rookies_who_stay_take_their_places_by_rating(tmp_path):
+def test_release_them_releases_exactly_those_players_and_the_rookies_who_stay_join_their_charts_by_rating(tmp_path):
     league = cut_league()
     expected = {p.id for p in staffs_releases(LeagueRecord.from_json(league.to_json()))}
     rig = run(tmp_path, league)
     final = rig.fstore.league
-    released = {p.id for p in final.players.values() if p.status in ("released", "practice") and p.left in (0, 1)}
+    before = at_cut(league)
+    released = {p.id for p in final.players.values() if p.status in ("released", "practice") and p.id in before.players
+                and before.players[p.id].status == "active" and before.players[p.id].team == TEAM}
     assert released == expected
     after_cut = LeagueRecord.from_json(rig.kept[D.STAGE_NEW_SEASON].decode("utf-8"))
     assert after_cut.stage_no == 6 and after_cut.draft is None and after_cut.pick_no == 0
-    assert all(pid for roster in after_cut.rosters for pid in roster)
-    mine = [p for p in after_cut.players.values() if p.team == TEAM and p.status == "active"]
-    assert len(mine) == 34 and any(p.drafted is not None for p in mine) and all(p.place >= 0 for p in mine)
-    for position, places in D.PLACES_OF.items():                                       # the best of a group is in its first place
-        ratings = [after_cut.player_at(TEAM, i).rating for i in places]
-        assert ratings == sorted(ratings, reverse=True)
+    assert all(pid for i, pid in enumerate(after_cut.rosters[TEAM - 1]) if i not in D.BACK_PLACES)
+    mine = RR.members(after_cut, TEAM)
+    assert len(mine) == 53 and any(p.drafted is not None for p in mine)
+    for position, ids in after_cut.chart[TEAM - 1].items():                             # the staff's order: the best of a position first
+        if position not in ("KR", "PR"):
+            ratings = [after_cut.players[pid].rating for pid in ids]
+            assert ratings == sorted(ratings, reverse=True), position
 
 
 def test_the_rookies_true_ratings_are_known_from_the_cut_on(tmp_path):
@@ -79,101 +105,53 @@ def test_the_rookies_true_ratings_are_known_from_the_cut_on(tmp_path):
                           r=rookie.rating) in text
 
 
-# ----- the player's own choice -----
+# ----- the player's own choice (one question a release, over his whole roster: D-149, SR.5) -----
 
-def surplus_groups(league):
-    waiting = DR.waiting_by_team(league)
-    return [(position, over) for position, over in ((p, DR.surplus(league, TEAM, waiting).get(p, 0)) for p in D.ROSTER_ORDER) if over]
-
-
-def test_choosing_yourself_asks_one_question_for_each_release_of_a_group_over_its_places_with_the_staffs_choices_first(tmp_path):
+def test_choosing_yourself_asks_one_question_for_each_release_over_the_roster_with_the_staffs_choices_first(tmp_path):
     league = cut_league()
     start = LeagueRecord.from_json(league.to_json())
-    groups = surplus_groups(start)
-    assert len(groups) >= 3
+    over = len(staffs_releases(start))
     rig = run(tmp_path, league, keys=[DOWN, ENTER])                                    # choose yourself, then Enter at every question
     text = spoken(rig)
-    words = rig.fstore.words
-    waiting = DR.waiting_by_team(start)
-    asked = [t for t in text if t.endswith(" choose who is released. ")]
-    expected = []
-    for position, over in groups:
-        players = DR.group_players(start, TEAM, position, waiting)
-        for k in range(over):
-            expected.append(X.text("NXE-54", position=words.group(position), n=len(players) - k, m=D.GROUP_SIZE[position]))
-    assert asked == expected
+    asked = [t for t in text if t.startswith(X.text("NXL-53", n=60, m=53)[:12])]
+    seen = at_cut(start)
+    sizes = [len(DR.team_candidates(seen, TEAM, DR.waiting_by_team(seen))) - k for k in range(over)]
+    assert asked == [X.text("NXL-53", n=n, m=D.ROSTER_MAX) for n in sizes]
     gone = [t for t in text if t.endswith(" is released. ") and not t.endswith(" choose who is released. ")]
-    assert len(gone) == sum(over for _, over in groups)
-    # Enter on every question releases the worst first: the same players as release them (the floor releases are the staff's too)
+    assert len(gone) == over
+    # Enter on every question releases the staff's first: the same players as release them
     again = run(tmp_path / "again", cut_league())
     key = lambda lg: sorted((p.id, p.status) for p in lg.players.values() if p.team == TEAM)
     assert key(rig.fstore.league) == key(again.fstore.league)
 
 
-def test_choosing_a_player_other_than_the_staffs_first_releases_him_and_keeps_the_one_the_staff_would_have_released(tmp_path):
+def test_choosing_a_player_other_than_the_staffs_first_releases_him(tmp_path):
     league = cut_league()
     start = LeagueRecord.from_json(league.to_json())
-    position, over = surplus_groups(start)[0]
-    players = DR.group_players(start, TEAM, position, DR.waiting_by_team(start))
-    order = DR.release_order(players)
-    rig = run(tmp_path, league, keys=[DOWN, ENTER, DOWN, ENTER])                       # choose yourself; in the first group the second of the list
+    order = staffs_releases(start)
+    rig = run(tmp_path, league, keys=[DOWN, ENTER, DOWN, ENTER])                       # choose yourself; at the first question the second of the list
     final = rig.fstore.league
     assert final.players[order[1].id].status in ("released", "practice")
-    if over == 1:
-        assert final.players[order[0].id].status == "active"                           # the staff's first choice stays
     assert X.text("NXE-55", player=order[1].name) in spoken(rig)
 
 
-def retool(league, rookie, pos, rating):
-    """Make a waiting rookie a player of another position and rating, in his record and in the draft's prospect row."""
-    for _, index, pid in league.draft["picks"]:
-        if pid == rookie.id:
-            row = league.draft["class"][index]
-            row[0], row[2], row[5] = pos, rating, rating
-            rookie.pos, rookie.rating, rookie.peak = pos, rating, rating
-            return
-    raise AssertionError("not a rookie of this draft")
-
-
-def test_a_weak_player_of_a_small_group_the_player_was_not_asked_about_still_goes_and_the_fill_replaces_him(tmp_path):
-    league = draft_league(seed=3, team=TEAM, stage_no=D.STAGE_CUT)
-    for index in D.PLACES_OF["RET"]:
-        league.player_at(TEAM, index).rating = 45
-    rig = run(tmp_path, league, keys=[DOWN, ENTER])                                      # choose yourself: no group is over its places
+def test_a_weak_kicker_the_player_was_not_asked_about_still_goes_and_the_fill_replaces_him(tmp_path):
+    league = plain_cut()
+    kicker = next(p for p in RR.members(league, TEAM) if p.pos == "K")
+    kicker.rating = 45
+    rig = run(tmp_path, league, keys=[DOWN, ENTER])                                      # choose yourself: the roster is not over 53
     final = rig.fstore.league
-    assert all(final.player_at(TEAM, i).rating >= 50 for i in D.PLACES_OF["RET"])
-    assert X.text("NXE-57", n=2) in spoken(rig)
-    assert not [t for t in spoken(rig) if t.endswith(" choose who is released. ")]
-
-
-def test_what_the_player_keeps_by_his_own_choice_in_a_group_he_was_asked_about_stays_even_when_it_is_weak(tmp_path):
-    """The staff would release the 48 (under the floor of a small group) and the first rookie; the player keeps the 48 and releases all
-    seven rookies one by one, so the floor does not take back a player he chose to keep."""
-    league = cut_league()
-    for rookie in league.waiting_rookies(TEAM):
-        retool(league, rookie, "RET", 60 + rookie.id % 7)
-        rookie.potential = "low"                             # no youth bonus: every rookie keeps under the 70 (the test is about the floor, not the bonus)
-        for _, index, pid in league.draft["picks"]:
-            if pid == rookie.id:
-                league.draft["class"][index][3] = "low"      # (the class row keeps the prospect's potential too)
-    league.player_at(TEAM, D.PLACES_OF["RET"][0]).rating = 48
-    league.player_at(TEAM, D.PLACES_OF["RET"][1]).rating = 70
-    weak = league.player_at(TEAM, D.PLACES_OF["RET"][0])
-    rig = run(tmp_path, league, keys=[DOWN, ENTER] + [DOWN, ENTER] * 7)
-    final = rig.fstore.league
-    assert final.players[weak.id].status == "active" and final.players[weak.id].team == TEAM
-    assert sorted(final.player_at(TEAM, i).rating for i in D.PLACES_OF["RET"]) == [48, 70]
-    staff = rig.fstore.words.player(weak)
-    text = spoken(rig)
-    assert X.text("NXE-51", player=weak.name, position="returner", a=weak.age, r=48) in text         # the staff's list named him
-    assert X.text("NXE-55", player=weak.name) not in text
+    assert final.players[kicker.id].status in ("released", "practice")
+    kickers = [p for p in RR.members(final, TEAM) if p.pos == "K"]
+    assert len(kickers) == 1 and kickers[0].rating >= 50 and kickers[0].drafted is None
+    assert X.text("NXE-57", n=1) in spoken(rig)
+    assert not [t for t in spoken(rig) if t.startswith(X.text("NXL-53", n=60, m=53)[:12])]
 
 
 # ----- nothing to release, the setting, the short offseason -----
 
 def test_a_team_with_nobody_to_release_is_told_so_and_is_not_asked(tmp_path):
-    league = draft_league(seed=3, team=TEAM, stage_no=D.STAGE_CUT)
-    rig = run(tmp_path, league)
+    rig = run(tmp_path, plain_cut())
     text = spoken(rig)
     at = text.index(" stage 8 of 9. the roster cut. ")
     assert text[at + 1] == X.text("NXE-58") and text[at + 2].startswith(" your cap space is ")          # SX.8g: the cap space follows
@@ -182,7 +160,8 @@ def test_a_team_with_nobody_to_release_is_told_so_and_is_not_asked(tmp_path):
 
 def test_with_the_staff_handling_the_cut_one_sentence_counts_the_releases_and_nothing_is_asked(tmp_path):
     league = cut_league()
-    count = len(staffs_releases(LeagueRecord.from_json(league.to_json())))
+    count = len(staffs_releases(league)) + sum(len(DR.staff_cut(at_cut(league), TEAM, DR.waiting_by_team(at_cut(league)))) for _ in [0]) * 0
+    count = len(DR.staff_cut(at_cut(league), TEAM, DR.waiting_by_team(at_cut(league))))       # the cut's list and the cap's releases
     rig = run(tmp_path, league, auto=True)
     text = spoken(rig)
     at = text.index(" stage 8 of 9. the roster cut. ")
@@ -191,17 +170,17 @@ def test_with_the_staff_handling_the_cut_one_sentence_counts_the_releases_and_no
 
 
 def test_the_fill_is_told_for_the_players_team_with_each_new_players_line(tmp_path):
-    league = draft_league(seed=3, team=TEAM, stage_no=D.STAGE_CUT)
-    for index in (0, 1, 31, 33):                                                          # two backs, the kicker, the quarterback
-        player = league.player_at(TEAM, index)
-        player.status, player.place, player.left = "retired", -1, league.season
-        league.rosters[TEAM - 1][index] = 0
+    league = plain_cut()
+    men = RR.members(league, TEAM)
+    backs = [p for p in men if p.pos == "RB"]
+    retire(league, backs[:2] + [p for p in men if p.pos in ("K", "QB")])               # one back left of three, no kicker, no quarterback
     rig = run(tmp_path, league)
     text = spoken(rig)
-    at = text.index(X.text("NXE-57", n=4))
+    at = text.index(X.text("NXE-57", n=2 + 1 + 2))
     final = rig.fstore.league
-    new = sorted((p for p in final.players.values() if p.team == TEAM and p.id >= league.next_id), key=lambda p: p.place)
-    assert [p.pos for p in new] == ["RB", "RB", "K", "QB"] and text[at + 1:at + 5] == [rig.fstore.words.player(p) for p in new]
+    new = [p for p in final.players.values() if p.team == TEAM and p.id >= league.next_id]
+    assert sorted(p.pos for p in new) == ["K", "QB", "QB", "RB", "RB"]
+    assert sorted(text[at + 1:at + 6]) == sorted(rig.fstore.words.player(p) for p in new)
     assert all(45 <= p.rating <= 55 for p in new if p.pos == "RB") and all(50 <= p.rating <= 60 for p in new if p.pos != "RB")
     assert all(p.age == 22 and p.drafted is None for p in new)
 
@@ -216,11 +195,8 @@ def test_the_short_offseason_still_asks_the_cut_and_goes_on_without_a_wait(tmp_p
 
 
 def test_the_short_offseason_says_the_fill_in_one_sentence_without_the_players(tmp_path):
-    league = draft_league(seed=3, team=TEAM, stage_no=D.STAGE_CUT)
-    for index in (0, 1):
-        player = league.player_at(TEAM, index)
-        player.status, player.place, player.left = "retired", -1, league.season
-        league.rosters[TEAM - 1][index] = 0
+    league = plain_cut()
+    retire(league, [p for p in RR.members(league, TEAM) if p.pos == "RB"][:2])
     rig = run(tmp_path, league, short=True)
     text = spoken(rig)
     at = text.index(X.text("NXE-58"))
@@ -247,6 +223,7 @@ def test_the_stage_writes_the_cut_the_fill_and_the_end_of_the_draft_in_one_save(
     assert saves[0][:3] == (D.STAGE_NEW_SEASON, 0, -1)                                    # the first write after the question: stage 6, no draft
     after = LeagueRecord.from_json(rig.kept[D.STAGE_NEW_SEASON].decode("utf-8"))
     assert after.draft is None and not after.has_empty_place()
+    assert all(RR.roster_count(after, team) <= D.ROSTER_MAX and not RR.short_groups(after, team) for team in range(1, D.TEAMS + 1))
 
 
 def test_f9_at_the_cut_question_tells_the_waiting_rookies_by_their_ranges_as_the_draft_did(tmp_path, monkeypatch):
@@ -262,7 +239,7 @@ def test_f9_at_the_cut_question_tells_the_waiting_rookies_by_their_ranges_as_the
     start = LeagueRecord.from_json(league.to_json())
     rookie = DR.waiting_by_team(start)[TEAM][0]
     low, high = start.rookie_range(rookie)
-    steps = D.ROSTER_ORDER.index(rookie.pos)
+    steps = D.ROSTER_ORDER.index(rookie.pos)                                               # (every family of a full team has men: no item is left out)
     keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER] + [DOWN] * steps + [ENTER, ESC, ESC, ESC, ESC]
     rig = run(tmp_path, league, keys=keys, until=lambda r: bool(lists))
     words = rig.fstore.words

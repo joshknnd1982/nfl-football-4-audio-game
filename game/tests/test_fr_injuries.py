@@ -7,7 +7,7 @@ import json
 import random
 
 import pytest
-from drrig import SURNAMES
+from drrig import SURNAMES, legacy_data
 
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
@@ -532,14 +532,14 @@ def test_format_6_round_trips_with_injuries_and_stand_ins():
     I.settle(league, 2, FakeRnd(), SURNAMES)
     league.injuries["report"] = {"season": 1, "week": 2, "lines": [" the line. "], "told": 0}
     text = league.to_json()
-    assert json.loads(text)["format"] == 18 == D.FORMAT     # (12 since SZ.8: the injuries are format 6's)
+    assert json.loads(text)["format"] == 19 == D.FORMAT     # (12 since SZ.8: the injuries are format 6's; SR.5: 19, no places stored)
     again = LeagueRecord.from_json(text)
     assert again.injuries == league.injuries and again.to_json() == text
 
 
 def test_a_format_5_file_loads_with_nobody_hurt():
     league = fresh()
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     data["format"] = 5
     del data["injuries"]
     again = LeagueRecord.from_json(json.dumps(data))

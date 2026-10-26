@@ -23,7 +23,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .. import tuning as T
-from . import aging
 from . import contracts as CT
 from . import data as D
 from . import injuries
@@ -248,12 +247,14 @@ def problems(league, trade: Trade, week: int) -> str | None:
     if trade.a == trade.b or not (1 <= trade.a <= D.TEAMS and 1 <= trade.b <= D.TEAMS):
         return "the teams"
     pa, pb = league.players.get(trade.give_a), league.players.get(trade.give_b)
+    from . import real_roster
+    waiting = real_roster.waiting_ids(league)
     for player, team in ((pa, trade.a), (pb, trade.b)):
-        if (player is None or player.status not in ("active", "reserve") or player.team != team
-                or (player.status == "active" and player.place < 0)):          # D-149: a man of the bench may be traded; a rookie waiting for the cut not
+        if player is None or player.status != "active" or player.team != team or player.id in waiting:   # a rookie waiting for the cut is not traded
             return "a player who is not on his team"
-    if pa.pos != pb.pos:
-        return "players of different positions"
+    if pa.pos != pb.pos and (real_roster.breaks_minimum(league, trade.a, [pa], [pb], waiting)
+                             or real_roster.breaks_minimum(league, trade.b, [pb], [pa], waiting)):
+        return "a team would be short of a position"          # SR.5 (design 21.7 (4)): any position for any, the family minimums kept
     if not (injuries.healthy(league, pa.id, week) and injuries.healthy(league, pb.id, week)):
         return "a player who is hurt"                          # SX.8k: a hurt player is not traded
     if {pa.id, pb.id} & traded_this_season(league):
@@ -279,18 +280,16 @@ def execute(league, trade: Trade, week: int, kind: int) -> None:
     season's log and the teams' strengths for the computer's games are brought up to date (design 5.2: the computer's results follow the rosters as they
     are). The caller has checked `problems` and writes league.sav."""
     pa, pb = league.players[trade.give_a], league.players[trade.give_b]
-    slot_a, slot_b = (pa.status, pa.place), (pb.status, pb.place)          # D-149: each man takes the other's slot, a place or a spot on the bench
-    for player, team, (status, index) in ((pb, trade.a, slot_a), (pa, trade.b, slot_b)):
-        player.team, player.status, player.place = team, status, index
-        if index >= 0:
-            league.rosters[team - 1][index] = player.id
+    from . import real_roster
+    real_roster.join(league, trade.b, pa, refresh=False)                 # SR.5: each man joins the other team's chart (the staff's order puts him)
+    real_roster.join(league, trade.a, pb, refresh=False)
     for pick in trade.picks_a:
         move_pick(league, pick, trade.b)
     for pick in trade.picks_b:
         move_pick(league, pick, trade.a)
     league.trades["log"].append([week, trade.a, trade.b, pa.id, pb.id, [list(p) for p in trade.picks_a], [list(p) for p in trade.picks_b], kind])
-    aging.place_by_rating(league, trade.a)
-    aging.place_by_rating(league, trade.b)
+    real_roster.refresh_view(league, trade.a)
+    real_roster.refresh_view(league, trade.b)
     if len(league.sums) == D.TEAMS:
         league.sums[trade.a - 1] = league.strength_sum(trade.a)
         league.sums[trade.b - 1] = league.strength_sum(trade.b)

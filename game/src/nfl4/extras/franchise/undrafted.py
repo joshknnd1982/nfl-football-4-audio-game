@@ -68,8 +68,9 @@ def sign(draft, team: int, prospect):
     `FR_FILL_YEARS`."""
     from .league import Player
     league = draft.league
+    from .draft import free_number
     player = Player(league.next_id, prospect.name, prospect.pos, prospect.true, prospect.potential, prospect.age, 0, prospect.true, None, 0, "active", 0,
-                    team, -1, CT.min_salary(0), T.FR_FILL_YEARS)
+                    team, -1, CT.min_salary(0), T.FR_FILL_YEARS, position=prospect.position, number=free_number(league, team, prospect.position))
     league.next_id += 1
     league.players[player.id] = player
     draft.data["undrafted"].append([team, prospect.index, player.id])

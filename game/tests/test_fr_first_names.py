@@ -10,7 +10,7 @@ import logging
 import random
 
 import pytest
-from drrig import SURNAMES, draft_league
+from drrig import SURNAMES, draft_league, legacy_data
 from frrig import COACH_AND_TEAM, ENTER, WANT_FRANCHISE, franchise_rig, quit_policy, run_until, spoken
 from test_fr_signings import FREE_AGENTS, quarterback_of
 
@@ -19,6 +19,7 @@ from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import draft as DR
 from nfl4.extras.franchise import first_names as FN
 from nfl4.extras.franchise import injuries as I
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise import signings as S
 from nfl4.extras.franchise.league import SEASON, LeagueRecord, new_league
 from nfl4.game.rnd import GameRandom
@@ -76,9 +77,14 @@ def test_the_draft_class_the_cut_and_the_stand_ins_have_a_first_and_a_last_name(
     row = I.make_stand_in(league, 9, "QB", GameRandom(random.Random(8)), SURNAMES)
     assert made_up(league, row[2])
     fresh = league_of()
-    for team in (2, 11):
-        fresh.rosters[team - 1][D.PLACES_OF["QB"][0]] = 0
-    assert aging.fill_places(fresh, GameRandom(random.Random(9)), SURNAMES) == 2
+    for team in (2, 11):                                    # SR.5: the quarterback leaves the chart (a place cannot be emptied by hand)
+        RR.leave(fresh, fresh.player_at(team, D.PLACES_OF["QB"][0]), "retired")
+    first_new = fresh.next_id
+    made = aging.fill_places(fresh, GameRandom(random.Random(9)), SURNAMES)
+    rookies = [p for pid, p in fresh.players.items() if pid >= first_new]
+    # SR.5: the fill makes a rookie for every family under its minimum (a drawn league has no line or snapper either), so more than the two quarterbacks
+    assert made == len(rookies) > 2 and all(made_up(fresh, p.name) for p in rookies)
+    assert all(fresh.player_at(team, D.PLACES_OF["QB"][0]).id >= first_new for team in (2, 11))      # the new quarterbacks play the place
     assert all(made_up(fresh, fresh.player_at(team, D.PLACES_OF["QB"][0]).name) for team in (2, 11))
 
 
@@ -118,7 +124,7 @@ def as_format_12(league):
         surname = FN.surname_of(league.league_id, player.name)
         if surname is not None:
             player.name = surname
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     data["format"] = 12
     return json.dumps(data)
 
@@ -142,7 +148,7 @@ def test_a_format_12_league_gets_first_names_once_and_the_players_own_team_keeps
     assert all(made_up(loaded, p.name) for p in S.pool(loaded))
     again = LeagueRecord.from_json(loaded.to_json())                                    # format 13 now: nothing more changes
     assert [p.name for p in again.players.values()] == [p.name for p in loaded.players.values()]
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 18
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 19     # SR.5: format 19
 
 
 def test_a_one_word_name_the_player_gave_in_a_format_13_league_is_never_changed():
@@ -174,10 +180,12 @@ def test_a_format_12_stand_in_gets_a_first_name():
 # ----- what the player hears -----
 
 def test_the_signing_sentence_says_the_free_agents_first_and_last_name(tmp_path):
-    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + FREE_AGENTS + [ENTER] * 5, policy=quit_policy)
+    # SR.5: the team has room on its 53, so no release is asked (sign, the group, the man, Enter) and the sentence is "you signed ..."
+    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + FREE_AGENTS + [ENTER] * 4, policy=quit_policy)
     run_until(rig)
     league = rig.fstore.league
-    signed = [t for t in spoken(rig) if t.startswith(" you released ")]
-    new = quarterback_of(league)
-    assert len(signed) == 1 and made_up(league, new.name) and new.name.split(" ")[0] in FN.FIRST_NAMES
+    signed = [t for t in spoken(rig) if t.startswith(" you signed ")]
+    assert len(signed) == 1
+    new = next(p for p in RR.members(league, league.team) if " you signed %s, " % p.name in signed[0])
+    assert made_up(league, new.name) and new.name.split(" ")[0] in FN.FIRST_NAMES
     assert new.name.lower() in signed[0].lower()

@@ -7,8 +7,10 @@ import random
 import pytest
 
 from drrig import SURNAMES, draft_league
+from nfl4.extras import roster_model as RM
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise import first_names as FN
 from nfl4.extras.franchise import draft as DR
 from nfl4.extras.franchise.league import SEASON, LeagueError, LeagueRecord, Player
@@ -32,32 +34,40 @@ def mid_draft(seed=3, picks=40, team=5):
 
 # ----- the class (design 7.1, 12 item 6) -----
 
-WEIGHTS = [("RB", 6), ("WR", 6), ("QB", 2), ("DL", 6), ("LB", 5), ("CB", 4), ("S", 2), ("RET", 2), ("K", 1), ("P", 1)]
-POSITION_OF_ROLL = [position for position, weight in WEIGHTS for _ in range(weight)]
+# SR.5 (D-164, design 21.7 (2)): the class is drawn by POSITION, the league's active mix of the shipped rosters.txt (1,686 men), in place of the 34
+# places' ten group weights (35); there is no returner prospect
+WEIGHTS = list(T.FR_CLASS_POSITIONS)
+TOTAL = sum(weight for _, weight in WEIGHTS)
+ROLLS = []                                                   # the first and the last roll of every position
+_start = 0
+for _position, _weight in WEIGHTS:
+    ROLLS += [(_start, _position), (_start + _weight - 1, _position)]
+    _start += _weight
 
 
-def test_the_positions_are_drawn_by_the_weights_of_the_design():
-    assert len(POSITION_OF_ROLL) == 35 == sum(weight for _, weight in T.FR_CLASS_WEIGHTS)
-    assert tuple(WEIGHTS) == tuple(T.FR_CLASS_WEIGHTS)
+def test_the_positions_are_drawn_by_the_leagues_mix_of_the_real_rosters():
+    assert TOTAL == 1686 and dict(WEIGHTS) == RM.LEAGUE_MIX and "RET" not in dict(WEIGHTS)
 
 
-@pytest.mark.parametrize("roll", range(35))
-def test_the_first_prospects_position_follows_the_roll_below_35(roll):
+@pytest.mark.parametrize("roll,position", ROLLS)
+def test_the_first_prospects_position_follows_the_roll_below_the_mix(roll, position):
     league = draft_league()
-    source = ScriptedRandom([below_value(35, roll)], strict=False)
-    assert DR.make_class(league, GameRandom(source), SURNAMES)[0].pos == POSITION_OF_ROLL[roll]
+    source = ScriptedRandom([below_value(TOTAL, roll)], strict=False)
+    prospect = DR.make_class(league, GameRandom(source), SURNAMES)[0]
+    assert prospect.position == position and prospect.pos == RM.GROUP[position]
 
 
 def test_one_prospect_is_drawn_in_the_order_position_name_rating_twice_potential_age_offset():
     league = draft_league()
     active = FN.name_keys(league.league_id, (p.name for p in league.players.values()))     # D-131: the draw compares the surnames
     free = next(i for i, name in enumerate(SURNAMES, start=1) if name not in active)
-    script = [below_value(35, 14), value_for(len(SURNAMES), free), below_value(15, 7), below_value(15, 9), below_value(100, 10),
+    roll = next(r for r, position in ROLLS if position == "DT")          # SR.5: a roll of the mix that gives a defensive tackle
+    script = [below_value(TOTAL, roll), value_for(len(SURNAMES), free), below_value(15, 7), below_value(15, 9), below_value(100, 10),
               below_value(3, 1), below_value(7, 4)]
     prospect = DR.make_class(league, GameRandom(ScriptedRandom(script, strict=False)), SURNAMES)[0]
     base = T.FR_ROOKIE_RATING[0]                                       # 45 since SX.8m (46 before: the design's)
-    assert (prospect.pos, prospect.name, prospect.true, prospect.potential, prospect.age, prospect.low) == (
-        "DL", FN.full_name(league.league_id, SURNAMES[free - 1]), base + 7 + 9, "high", 22, base + 16 - 4)
+    assert (prospect.pos, prospect.name, prospect.true, prospect.potential, prospect.age, prospect.low, prospect.position) == (
+        "DL", FN.full_name(league.league_id, SURNAMES[free - 1]), base + 7 + 9, "high", 22, base + 16 - 4, "DT")
     assert (prospect.middle, prospect.high) == (base + 15, base + 18)
 
 
@@ -66,7 +76,7 @@ def test_a_name_in_use_by_an_active_player_is_drawn_again():
     taken = FN.surname_of(league.league_id, league.players[1].name)                         # D-131: his drawn surname
     free = next(i for i, name in enumerate(SURNAMES, start=1)
                 if name not in FN.name_keys(league.league_id, (p.name for p in league.players.values())))
-    script = [below_value(35, 0), value_for(len(SURNAMES), SURNAMES.index(taken) + 1), value_for(len(SURNAMES), free)]
+    script = [below_value(TOTAL, 0), value_for(len(SURNAMES), SURNAMES.index(taken) + 1), value_for(len(SURNAMES), free)]
     prospect = DR.make_class(league, GameRandom(ScriptedRandom(script, strict=False)), SURNAMES)[0]
     assert prospect.name == FN.full_name(league.league_id, SURNAMES[free - 1])
 
@@ -85,9 +95,11 @@ def test_the_class_has_the_designs_size_ranges_ages_and_unique_new_names(seed):
         base, span = T.FR_ROOKIE_RATING
         assert base <= prospect.true <= base + 2 * (span - 1) and 21 <= prospect.age <= 23
         assert prospect.low <= prospect.true <= prospect.low + 6 and prospect.high - prospect.low == 6
-        assert prospect.potential in D.POTENTIALS and prospect.pos in D.POSITIONS
-    shares = {pos: sum(1 for p in prospects if p.pos == pos) / 260 for pos in D.POSITIONS}
-    assert 0.10 < shares["RB"] < 0.26 and shares["K"] < 0.08 and shares["P"] < 0.08 and shares["DL"] > 0.08
+        assert prospect.potential in D.POTENTIALS and prospect.pos in D.GROUPS and prospect.pos == RM.GROUP[prospect.position]
+    shares = {pos: sum(1 for p in prospects if p.pos == pos) / 260 for pos in D.GROUPS}
+    # SR.5: the shares of the real league's mix (backs 7 percent, the line 17, the defensive line 19, one kicker, punter and snapper a team)
+    assert 0.02 < shares["RB"] < 0.14 and 0.09 < shares["OL"] < 0.27 and shares["DL"] > 0.10
+    assert shares["K"] < 0.06 and shares["P"] < 0.06 and shares["LS"] < 0.06
 
 
 def test_the_potentials_follow_the_shares_of_the_design_over_many_classes():
@@ -152,7 +164,7 @@ def test_the_order_is_the_same_in_all_seven_rounds_and_has_no_draw():
 # ----- what a pick is worth (design 7.3) -----
 
 def crafted(rows, seed=3, team=5, mutate=None):
-    """A draft whose first prospects are `rows` ([pos, name, true, potential, age, low]) and a league made by `mutate`."""
+    """A draft whose first prospects are `rows` ([group, name, true, potential, age, low, position]) and a league made by `mutate`."""
     league = draft_league(seed=seed, team=team)
     if mutate is not None:
         mutate(league)
@@ -166,12 +178,12 @@ def crafted(rows, seed=3, team=5, mutate=None):
 
 def set_team(league, team, **ratings):
     """Ratings of the team's places: place index -> rating; a rating of None retires the player of the place."""
+    men = {index: league.player_at(team, int(index[1:])) for index in ratings}     # SR.5: the men first (a departure remakes the places)
     for index, rating in ratings.items():
-        place = int(index[1:])
-        player = league.player_at(team, place)
+        player = men[index]
         if rating is None:
-            player.status, player.place, player.left = "retired", -1, league.season
-            league.rosters[team - 1][place] = 0
+            player.left = league.season
+            RR.leave(league, player, "retired")              # SR.5: off the chart, the places made again
         else:
             player.rating = player.peak = rating
 
@@ -180,13 +192,16 @@ def team_five(league):
     set_team(league, 5, **{"p%d" % i: 70 for i in range(6)}, p31=None, p32=70, p33=55, p29=60, p30=70)     # backs 70; no kicker; punter 70; QB 55; returners 60 and 70
 
 
-def test_a_teams_needs_are_open_places_and_the_weakest_starter():
+def test_a_teams_needs_are_its_families_under_their_targets_and_the_weakest_starter():
+    # SR.5 (D-164): a family is open under its roster target (FR_ROSTER_TARGET, the real league's mean), the bar is its weakest starter
     league, draft = crafted([], mutate=team_five)
     needs = draft.needs(5)
-    assert needs["RB"] == (False, 70)                     # six backs for six places
-    assert needs["QB"] == (True, 55)                      # one place, held by a 55: under the weak mark of 60
+    assert needs["RB"] == (False, 70)                     # six backs over a target of three; two start, both 70
+    assert needs["QB"] == (True, 55)                      # one quarterback for a target of two, a 55
     assert needs["K"] == (True, None)                     # no kicker
-    assert needs["P"] == (False, 70) and needs["RET"] == (False, 60)
+    assert needs["P"] == (False, 70)
+    assert needs["OL"] == (True, None) and needs["LS"] == (True, None)        # a drawn league has no lineman and no snapper
+    assert "RET" not in needs                             # a returner is a role, never a family
 
 
 def test_the_value_of_a_prospect_adds_the_middle_the_potential_and_the_need_parts():
@@ -194,53 +209,58 @@ def test_the_value_of_a_prospect_adds_the_middle_the_potential_and_the_need_part
             ["QB", "Bb", 63, "high", 22, 60],             # middle 63, high: +5
             ["K", "Cc", 53, "average", 22, 50],           # middle 53
             ["P", "Dd", 80, "low", 22, 77],               # middle 80, low: -4
-            ["RET", "Ee", 65, "average", 22, 62]]         # middle 65
+            ["LS", "Ee", 65, "average", 22, 62]]          # middle 65 (SR.5: a snapper; there is no returner prospect)
+    rows = [row + [{"RB": "HB", "QB": "QB", "K": "K", "P": "P", "LS": "LS"}[row[0]]] for row in rows]
     league, draft = crafted(rows, mutate=team_five)
     needs = draft.needs(5)
     value = lambda i: draft.value(draft.prospects[i], needs)
-    assert value(0) == 60                                 # no open place, 60 does not beat the lowest 70
-    assert value(1) == 63 + 5 + 12 + 3                    # quarterback: open place +12, beats the 55 by +3
-    assert value(2) == 53 + 8                             # a kicker: open place +8, nobody to beat
-    assert value(3) == 80 - 4 - 10 + 3                    # a punter for a full group: -10, but beats the 70: +3
-    assert value(4) == 65 - 10 + 3                        # a returner for a full group
+    assert value(0) == 60                                 # no need, 60 does not beat the lowest starter 70
+    assert value(1) == 63 + 5 + 12 + 3                    # quarterback: under his target +12, beats the 55 by +3
+    assert value(2) == 53 + 8                             # a kicker: open +8, nobody to beat
+    assert value(3) == 80 - 4 - 10 + 3                    # a punter for a full family: -10, but beats the 70: +3
+    assert value(4) == 65 + 8                             # SR.5: a snapper for a team without one: open +8, nobody to beat
 
 
 def test_a_rookie_already_drafted_fills_the_place_and_raises_the_bar_by_the_middle_of_his_range():
-    rows = [["QB", "Bb", 63, "high", 22, 60], ["RB", "Aa", 75, "average", 22, 72]]
+    rows = [["QB", "Bb", 63, "high", 22, 60, "QB"], ["RB", "Aa", 75, "average", 22, 72, "HB"]]
     league, draft = crafted(rows, mutate=team_five)
-    rookie = Player(10 ** 6, "Rookie", "QB", 66, "average", 22, 0, 66, [1, 1, 1], 0, "active", 0, 5, -1)
+    rookie = Player(10 ** 6, "Rookie", "QB", 66, "average", 22, 0, 66, [1, 1, 1], 0, "active", 0, 5, -1, position="QB")
     league.players[rookie.id] = rookie
     draft.rookies[5] = [rookie]
     draft.middle_of[rookie.id] = 65
-    assert draft.needs(5)["QB"] == (False, 65)            # the place is held by the rookie (65 by his range): no longer open or weak
+    # SR.5: the rookie (65 by his range) is the starter now, and two quarterbacks meet the target of two: no longer open
+    assert draft.needs(5)["QB"] == (False, 65)
     assert draft.value(draft.prospects[0], draft.needs(5)) == 63 + 5                      # 63 does not beat 65
-    back = Player(10 ** 6 + 1, "Back", "RB", 74, "average", 22, 0, 74, [1, 2, 1], 0, "active", 0, 5, -1)
+    back = Player(10 ** 6 + 1, "Back", "RB", 74, "average", 22, 0, 74, [1, 2, 1], 0, "active", 0, 5, -1, position="HB")
     league.players[back.id] = back
     draft.rookies[5] = [rookie, back]
     draft.middle_of[back.id] = 72
     needs = draft.needs(5)
-    assert needs["RB"] == (False, 70)                     # seven backs for six places: the sixth best is still a 70
-    assert draft.value(draft.prospects[1], needs) == 75 + 3                               # 75 beats the sixth starter
+    assert needs["RB"] == (False, 70)                     # seven backs: the two starters are the rookie's 72 and a 70
+    assert draft.value(draft.prospects[1], needs) == 75 + 3                               # 75 beats the second starter
 
 
-def test_a_group_with_a_rookie_for_its_last_place_is_full():
-    league, draft = crafted([], mutate=lambda lg: set_team(lg, 5, p0=None))
+def test_a_family_with_a_rookie_for_its_last_spot_under_the_target_is_full():
+    league, draft = crafted([], mutate=lambda lg: set_team(lg, 5, p0=None, p1=None, p2=None, p3=None))     # SR.5: two backs for a target of three
     assert draft.needs(5)["RB"][0] is True
-    rookie = Player(10 ** 6, "Rookie", "RB", 60, "average", 22, 0, 60, [1, 1, 1], 0, "active", 0, 5, -1)
+    rookie = Player(10 ** 6, "Rookie", "RB", 60, "average", 22, 0, 60, [1, 1, 1], 0, "active", 0, 5, -1, position="HB")
     league.players[rookie.id] = rookie
     draft.rookies[5] = [rookie]
     draft.middle_of[rookie.id] = 58
     assert draft.needs(5)["RB"][0] is False
 
 
-def test_the_open_places_are_listed_in_the_roster_menus_order_and_a_drafted_rookie_closes_one():
-    league, draft = crafted([], mutate=lambda lg: set_team(lg, 5, p33=None, p0=None, p1=None, p31=None))
-    assert DR.open_places(draft, 5) == [("QB", 1), ("RB", 2), ("K", 1)]
-    rookie = Player(10 ** 6, "Rookie", "RB", 60, "average", 22, 0, 60, [1, 1, 1], 0, "active", 0, 5, -1)
+def test_the_open_spots_are_listed_in_the_roster_menus_order_and_a_drafted_rookie_closes_one():
+    # SR.5: the families under their roster targets (a drawn league of 34 places is under many: it has no lineman and no snapper)
+    league, draft = crafted([], mutate=lambda lg: set_team(lg, 5, p33=None, p0=None, p1=None, p2=None, p3=None, p31=None))
+    spots = DR.open_places(draft, 5)
+    assert [group for group, _ in spots] == [g for g in D.ROSTER_ORDER if g in dict(spots)]
+    assert dict(spots)["QB"] == 2 and dict(spots)["RB"] == 1 and dict(spots)["K"] == 1 and dict(spots)["OL"] == 9 and "P" not in dict(spots)
+    rookie = Player(10 ** 6, "Rookie", "RB", 60, "average", 22, 0, 60, [1, 1, 1], 0, "active", 0, 5, -1, position="HB")
     league.players[rookie.id] = rookie
     draft.rookies[5] = [rookie]
-    assert DR.open_places(draft, 5) == [("QB", 1), ("RB", 1), ("K", 1)]
-    assert DR.open_places(draft, 6) == []
+    assert "RB" not in dict(DR.open_places(draft, 5)) and dict(DR.open_places(draft, 5))["QB"] == 2
+    assert "RB" not in dict(DR.open_places(draft, 6))
 
 
 def test_equal_values_go_to_the_prospect_with_the_lower_number():
@@ -378,7 +398,8 @@ def pick_player(league, number=0):
     ("a prospect of an unknown position", lambda lg: lg.draft["class"][0].__setitem__(0, "TE"), "a prospect is"),
     ("a class that is too small", lambda lg: lg.draft.__setitem__("class", lg.draft["class"][:100]), "class holds"),
     ("a rookie who is not his prospect", lambda lg: setattr(pick_player(lg), "name", "Someoneelse"), "not the prospect"),
-    ("a waiting rookie with a place", lambda lg: setattr(pick_player(lg), "place", 3), "not a rookie waiting"),
+    ("a waiting rookie on a chart", lambda lg: lg.chart[pick_player(lg).team - 1][pick_player(lg).position].append(pick_player(lg).id),
+     "the depth chart of team"),                                                    # SR.5: a rookie waits outside the chart (places are not saved)
     ("a rookie who was drafted in another round", lambda lg: setattr(pick_player(lg), "drafted", [1, 7, 7]), "not a rookie waiting"),
     ("a rookie who is not active", lambda lg: setattr(pick_player(lg), "status", "released"), "not a rookie waiting"),
     ("a prospect aged 26", lambda lg: lg.draft["class"][0].__setitem__(4, 26), "a prospect.s age"),
@@ -404,7 +425,8 @@ def test_a_pick_number_without_a_draft_is_damage_and_so_is_a_player_without_a_pl
         LeagueRecord.from_json(league.to_json())                                   # pick_no is 1 and there is no draft
     league.pick_no = 0
     LeagueRecord.from_json(league.to_json())                                       # at stage 4 before the class: fine
-    league.players[5].place = -1                                                    # an active player outside every place
+    man = league.players[5]                                                         # SR.5: an active player on no chart (a man without a
+    league.chart[man.team - 1][man.position].remove(man.id)                          # place is the roster's, not damage)
     with pytest.raises(LeagueError):
         LeagueRecord.from_json(league.to_json())
 

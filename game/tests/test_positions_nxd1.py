@@ -78,22 +78,5 @@ def test_the_franchise_places_follow_the_same_rule():
             assert pos.get(name, set()) & want, (team, position, name, pos.get(name))
 
 
-def test_an_older_franchise_with_a_quarterback_at_receiver_gets_a_made_up_receiver_once():
-    """A league made before NX-D1 had the Bears' backup quarterback in a receiver's place; opening it renames such a player of another team (the
-    ratings stay), keeps a lineman at linebacker (near enough for a league already played) and the player's own team's names."""
-    import random
-    from drrig import SURNAMES
-    from nfl4.extras.franchise import first_names as FN
-    from nfl4.extras.franchise.league import fix_real_positions, new_league
-    from nfl4.game.rnd import GameRandom
-    names = R.defaults()
-    league = new_league(GameRandom(random.Random(3)), SURNAMES, "Kim", 4, "20260101-000000", real=names)
-    receiver = league.player_at(17, D.PLACES_OF["WR"][5])
-    lineman_at_lb = league.player_at(17, D.PLACES_OF["LB"][4])
-    own = league.player_at(4, D.PLACES_OF["WR"][5])
-    receiver.name, lineman_at_lb.name, own.name = "Tyson Bagent", "Montez Sweat", "Case Keenum"
-    rating = receiver.rating
-    assert fix_real_positions(league, names) == 1
-    assert FN.surname_of(league.league_id, receiver.name) is not None and receiver.rating == rating and receiver.pos == "WR"
-    assert lineman_at_lb.name == "Montez Sweat" and own.name == "Case Keenum"
-    assert fix_real_positions(league, names) == 0 and fix_real_positions(league, None) == 0
+# SR.5 (D-164): test_an_older_franchise_with_a_quarterback_at_receiver_gets_a_made_up_receiver_once went with league.fix_real_positions: an older
+# league's real men now get their real positions back by name through real_roster.convert, never a made-up name (NX-L5, NX-L7).

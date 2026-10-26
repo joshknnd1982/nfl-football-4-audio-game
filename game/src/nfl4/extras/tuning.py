@@ -452,6 +452,34 @@ FR_CAP_RESERVES = 540             # 54.0 million: the bench payroll's mean of 32
 # (the first man of a group's bench 1 to 4 under its weakest place, each next man 1 or 2 lower) or, for the line and the snapper, from this range.
 FR_RESERVE_RATING = (56, 10)      # OL and LS: 56 to 65 (UNVERIFIED first values, the fill's rookies are 45 to 55)
 FR_RESERVE_AGE = (23, 9)          # 23 to 31
+# THE REAL ROSTER (SR.5, D-164, NFL_FRANCHISE_DESIGN 21.7): a team is its depth chart on the 22 positions; these are by FAMILY (the group word of a
+# position: QB, RB = HB and FB, WR = WR and TE, OL, DL = LEDG, REDG and DT, LB = SAM, MIKE and WILL, CB, S = FS and SS, K, P, LS).
+# The family minimums (design 21.7 (12), Q-081; UNVERIFIED first values from the file's smallest real teams): the staff's cut keeps them, the draft and the
+# market chase them, a trade may not leave a team under one it holds, and the cut's last resort makes an undrafted man for a family still under it.
+FR_FAMILY_MIN = {"QB": 2, "RB": 3, "WR": 7, "OL": 8, "LS": 1, "DL": 8, "LB": 3, "CB": 4, "S": 3, "K": 1, "P": 1}
+# The most of a family the staff's cut keeps (a real 53 carries two or three quarterbacks and one kicker, punter and snapper; SRC-OFFICIAL, the
+# shipped rosters.txt of 2026-10-25: QB 2 to 4, K 0 to 1 (the Dolphins' is on the squad), P 1, LS 1)
+FR_FAMILY_MAX = {"QB": 3, "K": 1, "P": 1, "LS": 1}
+# A team's roster target by family (the league's mean of the shipped rosters.txt, 1,686 active men over 32 teams, rounded DOWN: QB 2.7, backs 3.7,
+# receivers 9.2, line 9.2, defensive line 10.1, backers 4.7, corners 5.6, safeties 4.6; SRC-OFFICIAL counts): the draft's and the market's "need" is a family
+# under it (it replaces the 34 places' group sizes). Rounded down, so a real team of the file is at or above it in nearly every family (seven of the 32 have
+# no family under it, the others one or two men short) and a team chases what it lost, not a third quarterback it never carries.
+FR_ROSTER_TARGET = {"QB": 2, "RB": 3, "WR": 9, "OL": 9, "DL": 10, "LB": 4, "CB": 5, "S": 4, "K": 1, "P": 1, "LS": 1}
+# How many of a family start (roster_file.STARTERS summed by family: QB 1, HB 1 + FB 1, WR 3 + TE 1, five linemen, LEDG + REDG + 2 DT, 3 backers,
+# 2 corners, 2 safeties): a prospect or a free agent "would start" when he beats the family's starter of this rank
+FR_GROUP_STARTERS = {"QB": 1, "RB": 2, "WR": 4, "OL": 5, "DL": 4, "LB": 3, "CB": 2, "S": 2, "K": 1, "P": 1, "LS": 1}
+# The draft class by POSITION (design 21.7 (2)): the league's active mix of the shipped rosters.txt (design 21.1, SRC-OFFICIAL counts), in place of the
+# 34 places' FR_CLASS_WEIGHTS; there is no returner prospect (a returner is a role of a man of his own position)
+FR_CLASS_POSITIONS = (("QB", 86), ("HB", 105), ("FB", 13), ("WR", 174), ("TE", 119), ("LT", 61), ("LG", 62), ("C", 62), ("RG", 54), ("RT", 54),
+                      ("LEDG", 77), ("REDG", 75), ("DT", 172), ("SAM", 22), ("MIKE", 66), ("WILL", 63), ("CB", 180), ("FS", 75), ("SS", 71),
+                      ("K", 31), ("P", 32), ("LS", 32))
+FR_CAMP_MAX = 90                  # the most men a team's roster may hold (the NFL's offseason limit, SRC-OFFICIAL); the cut brings it to 53
+# THE CAP OF A REAL 53 (design 21.7 (10)): contracts.cap_of is FR_CAP + FR_CAP_ROSTER for every league (SR.5: every team pays its whole roster). The first
+# value was NX-B2b's FR_CAP_RESERVES (540); work\sr5\measure_cap.py (report measure_cap.txt) measured 320 teams (10 seeds): 0.16.1's new league used 86.59
+# percent of its cap (payroll of the 53 at the market prices, mean 214.06 million, cap 247.2); a new franchise of the real rosters pays its 53 a mean of
+# 210.84 million, so the cap for the same use is 243.5 million: FR_CAP_ROSTER = 510 (cap 244.2 million, mean use 86.3 percent; 23 of 320 teams start over
+# it and contracts.fit_to_cap lowers their salaries over the minimum, as before). The soaks are its check (work\sr5\soak_*.txt).
+FR_CAP_ROSTER = 510
 # A drafted rookie's salary is fixed by his pick (research B3: the NFL's wage scale is unknown, so the league invents one that keeps its
 # shape: the first pick earns about three times the 32nd, who earns about three times the last): straight lines between these (pick, salary)
 # points. Four years for a drafted rookie, three for an undrafted one (the fill of the roster cut); a rookie contract has no fifth-year

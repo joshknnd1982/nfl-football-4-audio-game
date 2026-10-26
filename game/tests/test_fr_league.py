@@ -10,6 +10,7 @@ import random
 import pytest
 
 from nfl4.extras import tuning as T
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise.league import (OFFSEASON, SEASON, LeagueError, LeagueRecord, NewerFormat, Player, new_league,
                                           team_index, team_ref)
@@ -58,7 +59,8 @@ def test_a_new_league_has_32_full_teams_with_every_value_in_range():
     for team in range(1, 33):
         assert all(pid for pid in league.rosters[team - 1])
         for index, player in enumerate(league.active_of(team)):
-            assert player.pos == D.POSITION_OF_PLACE[index] and player.team == team and player.place == index
+            group = D.POSITION_OF_PLACE[index]                             # SR.5: a return place holds a man of any family (RET is no pos)
+            assert (player.pos == group or player.pos in D.PLACE_COVERS.get(group, ())) and player.team == team and player.place == index
             assert D.RATING_MIN <= player.rating <= D.RATING_MAX and player.peak == player.rating
             assert 21 <= player.age <= (36 if player.pos in ("K", "P") else 32)
             assert player.seasons == max(0, player.age - 22) and player.potential in D.POTENTIALS
@@ -89,9 +91,10 @@ def test_the_players_team_is_made_first_with_the_names_of_the_file_and_its_quart
     own = complete_roster()
     league, _ = make(team=9, own=own)
     names = [p.name for p in league.active_of(9)]
-    assert names == own.names() + ["Quincy"]
+    assert sorted(names) == sorted(own.names() + ["Quincy"])          # SR.5: the view orders each position by rating, not by the file's order
+    assert league.player_at(9, 33).name == "Quincy"
     first_ids = [league.rosters[8][i] for i in range(34)]
-    assert first_ids == list(range(1, 35))                              # the player's team got the first IDs
+    assert sorted(first_ids) == list(range(1, 35))                      # the player's team got the first IDs
     others = [p.name for t in range(1, 33) if t != 9 for p in league.active_of(t)]
     assert not set(others) & set(names)                                 # nobody else has a name of the file
 
@@ -106,7 +109,7 @@ def test_a_file_that_is_not_complete_is_not_used_and_a_missing_quarterback_is_dr
     league, _ = make(team=2, own=no_qb)
     qb = league.player_at(2, 33)
     assert qb.name != "" and not qb.name.startswith("Own") and qb.pos == "QB"
-    assert [p.name for p in league.active_of(2)][:33] == no_qb.names()
+    assert sorted(p.name for p in league.active_of(2)[:33]) == sorted(no_qb.names())     # SR.5: the view's order is by rating
 
 
 def test_the_draws_of_a_new_league_come_in_the_order_of_design_12():
@@ -230,17 +233,32 @@ def test_a_value_out_of_range_is_damage_never_clamped():
     broken(lambda l: setattr(l, "league_id", ""), "league ID")
 
 
+def broken_view(mutate, text_part):
+    """SR.5: the places are a view made in memory (never in the file), so damage to them is found by the record's own check."""
+    league = season_league()
+    mutate(league)
+    with pytest.raises(LeagueError) as excinfo:
+        league.check()
+    assert text_part in str(excinfo.value), str(excinfo.value)
+
+
 def test_a_place_must_hold_an_active_player_of_that_team_in_that_place_with_that_position():
     def swap_teams(l):
         l.rosters[0][0], l.rosters[1][0] = l.rosters[1][0], l.rosters[0][0]
-    broken(swap_teams, "not active there")
-    broken(lambda l: l.rosters[0].__setitem__(1, l.rosters[0][0]), "not active there")      # in the wrong place
-    broken(lambda l: l.rosters[0].__setitem__(0, 99999), "not active there")                 # a player who does not exist
-    broken(lambda l: setattr(l.players[1], "status", "retired"), "")                          # retired but still placed
+    broken_view(swap_teams, "not active there")                                               # SR.5: the view's check, in memory
+    broken_view(lambda l: l.rosters[0].__setitem__(1, l.rosters[0][0]), "not active there")   # in the wrong place
+    broken_view(lambda l: l.rosters[0].__setitem__(0, 99999), "not active there")             # a player who does not exist
+    broken(lambda l: setattr(l.players[1], "status", "retired"), "")                          # retired but still in the chart
+
+    def swap_charts(l):                                                                       # SR.5: the file's chart holds a man of another team
+        a, b = l.chart[0]["QB"][0], l.chart[1]["QB"][0]
+        l.chart[0]["QB"][0], l.chart[1]["QB"][0] = b, a
+    broken(swap_charts, "depth chart")
 
 
 def test_a_season_needs_every_place_filled_and_a_schedule_and_matching_records():
-    broken(lambda l: l.rosters[3].__setitem__(7, 0), "empty place")         # SR.4: a receiver's place (an empty back place is allowed)
+    broken(lambda l: RR.leave(l, l.players[l.rosters[3][7]], "retired"), "empty place")      # SR.5: a receiver leaves a team of six (no bench)
+    broken_view(lambda l: l.rosters[3].__setitem__(7, 0), "empty place")    # SR.4: a receiver's place (an empty back place is allowed)
     broken(lambda l: setattr(l, "schedule", [[2, 1, 1]] * 15), "schedule")
     broken(lambda l: (setattr(l, "gtp", 3)), "wins and")                                      # week 3: 2 games should be played
     league = season_league()
@@ -257,8 +275,8 @@ def test_a_record_in_an_offseason_stage_with_empty_places_is_not_damage(monkeypa
         league.stage_no = stage_no
         LeagueRecord.from_json(league.to_json())
     pid = league.rosters[3][7]                                        # SR.4: a receiver's place (an empty back place is allowed in every stage)
-    league.players[pid].status, league.players[pid].team, league.players[pid].place = "retired", 0, -1
-    league.rosters[3][7] = 0
+    RR.leave(league, league.players[pid], "retired")                  # SR.5: he leaves the chart; a team of six receivers has an empty place
+    assert league.has_empty_place()
     for stage_no in (2, 3, 4, 5):                                     # places may be empty while the offseason is going on
         league.stage_no = stage_no
         LeagueRecord.from_json(league.to_json())

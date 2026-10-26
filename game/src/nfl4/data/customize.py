@@ -61,6 +61,7 @@ FAVOURITES = "favourite plays"   # the header word of favourites.txt; nfl4 only 
 PLAYBOOKS_FOLDER = "playbooks"
 FREE_AGENTS = "freeagents"      # nfl4 only (NX-B3, D-145): free_agents.txt, the real free agents of a new franchise
 COACHES, ROSTERS, RESPELLINGS = "coaches", "rosters", "respellings"   # nfl4 only (rule 0.13, SX.11, NX-N4): the real coaches and rosters and how they are said
+NFL_SURNAMES = "nflsurnames"    # nfl4 only (NX-L12, D-164): nfl_surnames.txt, the real NFL players' last names of the made-up players
 
 
 @dataclass(frozen=True)
@@ -85,6 +86,7 @@ EXTRA_SPECS: tuple[ListSpec, ...] = (
     ListSpec(ROSTERS, "rosters.txt", "players", "the original players"),
     ListSpec(RESPELLINGS, "respellings.txt", "respellings", "the original respellings"),
     ListSpec(FREE_AGENTS, "free_agents.txt", "free agents", "the original free agents"),       # NX-B3
+    ListSpec(NFL_SURNAMES, "nfl_surnames.txt", "surnames of real players", "the original surnames of real players"),     # NX-L12
     ListSpec(REMARKS, "remarks.txt", "remarks", "the original remarks"),
     ListSpec(PENALTIES, "penalties.txt", "penalty names", "the original penalty names"),
     ListSpec(PLAYS, "plays.txt", "play names", "the original play names", PLAYBOOKS_FOLDER),
@@ -474,7 +476,7 @@ class Customization:
         if key == FAVOURITES:
             from ..extras.plays import favourites
             return favourites.text_of()
-        if key in (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS):
+        if key in (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS, NFL_SURNAMES):
             from ..extras import real_names
             return real_names.shipped_text(key)         # raises when the asset cannot be read: the file is then not made, the built-in names are used
         raise KeyError(key)
@@ -557,12 +559,12 @@ class Customization:
             if previous.favourites is None:
                 return
             snapshot.favourites = previous.favourites
-        elif key in (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS):
+        elif key in (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS, NFL_SURNAMES):
             if previous.real_names is None or snapshot.real_names is None:
                 return
             # the three files make one set of names: the part the held file makes is the earlier one's, the others stay as read
             part = {COACHES: ("version", "coaches"), ROSTERS: ("rosters", "reserves", "roles"), RESPELLINGS: ("respellings",),
-                    FREE_AGENTS: ("free_agents",)}[key]                    # SR.4: a roster's reserve lists and return roles go with it
+                    FREE_AGENTS: ("free_agents",), NFL_SURNAMES: ("surnames",)}[key]     # SR.4: a roster's reserve lists and return roles go with it
             snapshot.real_names = dataclasses.replace(snapshot.real_names, **{name: getattr(previous.real_names, name) for name in part})
         elif key in (PLAYS, STYLES, TEAMSTYLES):
             if previous.playbooks is None:
@@ -628,7 +630,7 @@ class Customization:
         elif key == FAVOURITES:
             from ..extras.plays import favourites
             snapshot.favourites = favourites.parse(entries, problems)
-        elif key in (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS):
+        elif key in (COACHES, ROSTERS, RESPELLINGS, FREE_AGENTS, NFL_SURNAMES):
             from ..extras import real_names
             if snapshot.real_names is not None:
                 snapshot.real_names = real_names.apply_kind(snapshot.real_names, key, entries, problems)

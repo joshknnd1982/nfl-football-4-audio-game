@@ -275,7 +275,9 @@ def test_the_draft_says_the_players_picks_when_a_trade_moved_one(tmp_path):
     expected = X.text("NXK-14", list=", ".join(X.text("NXK-15", round=r, pick=k) for r, k in picks))
     assert expected in spoken(rig) and X.text("NXK-01", n=order.index(5) + 1) not in spoken(rig)
     assert [row[0] for row in draft["picks"]] == draft["owners"] and record.trades["picks"] == []
-    assert len(record.waiting_rookies(5)) == 7 and len(record.waiting_rookies(9)) == 7
+    # SR.5: a team of a drawn league has room under its 53, so an undrafted rookie may wait in camp too (SX.8m): the draft's own picks are counted
+    drafted = lambda team: [p for p in record.waiting_rookies(team) if p.drafted is not None]
+    assert len(drafted(5)) == 7 and len(drafted(9)) == 7
 
 
 def test_the_draft_says_the_one_line_when_no_pick_moved(tmp_path):

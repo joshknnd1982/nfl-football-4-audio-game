@@ -54,7 +54,9 @@ def test_stage_seven_keeps_the_history_once_when_it_begins():
 # ----- the offer sheet -----
 
 def tagged_league(rating=78, buyer_open=True, mutate=None):
-    """A league at the start of free agency with the player's quarterback under the non-exclusive tag and team BUYER's quarterback place empty."""
+    """A league at the start of free agency with the player's quarterback under the non-exclusive tag and team BUYER's quarterback place empty.
+    SR.5: the full teams of the real rosters (drrig.full_league, 53 men each), so only a team that let a man go has a spot for him (a drawn league of 34
+    places has room on every 53)."""
     def change(league):
         qb = league.player_at(TEAM, 33)
         qb.rating = qb.peak = rating
@@ -67,7 +69,7 @@ def tagged_league(rating=78, buyer_open=True, mutate=None):
                     player.salary = T.FR_MIN_SALARY
         if mutate is not None:
             mutate(league)
-    return draft_league(seed=3, team=TEAM, stage_no=D.STAGE_FREE_AGENCY, wins=[8] * 32, finish=[D.FINISH_MISSED] * 32, mutate=change)
+    return draft_league(seed=3, team=TEAM, stage_no=D.STAGE_FREE_AGENCY, wins=[8] * 32, finish=[D.FINISH_MISSED] * 32, mutate=change, real=True)
 
 
 def test_a_team_with_an_empty_place_room_and_both_first_round_picks_makes_the_sheet_at_the_market_price_or_his_tag():
@@ -110,7 +112,8 @@ def test_letting_him_go_moves_him_and_gives_the_two_first_round_picks():
     team, salary, years = tags.offer_sheet(league)
     tags.let_go(league, qb, team, salary, years)
     tags.close(league)
-    assert (qb.team, qb.salary, qb.years) == (BUYER, salary, years) and league.player_at(BUYER, 33) is qb and league.player_at(TEAM, 33) is None
+    assert (qb.team, qb.salary, qb.years) == (BUYER, salary, years) and league.player_at(BUYER, 33) is qb
+    assert qb.id in league.chart[BUYER - 1]["QB"] and qb.id not in league.chart[TEAM - 1]["QB"]      # SR.5: his team's next quarterback takes the place
     assert trades.owner(league, 1, BUYER) == TEAM
     assert league.future_picks == [[league.season + 1, 1, BUYER, TEAM]]
     league.check()

@@ -19,7 +19,6 @@ from __future__ import annotations
 from ...data import debuglog
 from .. import nx_texts as X
 from .. import tuning as T
-from . import aging
 from . import contracts as CT
 from . import data as D
 from . import draft as DR
@@ -55,7 +54,7 @@ def stage_draft(p, n: int, m: int, short: bool) -> None:
     league = store.league
     words = store.words
     if league.draft is None:                     # the class, written at once: the draws are made once
-        DR.Draft.create(league, g.rnd, list(g.pool.original))
+        DR.Draft.create(league, g.rnd, franchise_surnames(g))
         store.save()
     draft = DR.Draft(league)
     g.say2(off._stage_line(n, m, "NXE-14"))
@@ -159,6 +158,8 @@ def stage_cut(p, n: int, m: int, short: bool) -> None:
     settings = g.options.settings.game
     team = league.team
     league.cut_deciding = True                   # D-130: no trade while the plans below wait for the player's answers (F9 is open at a question)
+    from . import real_roster
+    real_roster.return_lists(league)             # Q-079: the real reserve lists' men come back before the cut decides
     try:
         waiting = DR.waiting_by_team(league)
         plans = {t: DR.staff_cut(league, t, waiting) for t in range(1, D.TEAMS + 1)}
@@ -183,16 +184,13 @@ def stage_cut(p, n: int, m: int, short: bool) -> None:
             if FranchiseQuestion(g, situation, [X.text("NXE-52"), X.text("NXE-53")]).ask() == 1:
                 plans[team] = _own_choice(g, words, league, waiting)
                 plans[team] += _own_cap_choice(g, words, league, waiting, plans[team])
-        first_new = league.next_id
-        DR.apply_cut(league, plans, waiting)
+        DR.apply_cut(league, plans, waiting)                  # (the draft ends here: its rookies who stay join their charts)
         debuglog.event("franchise", "cut_applied", season=league.season, released=sum(len(v) for v in plans.values()), own_released=len(plans[team]),
-                       own_bench=len(league.bench(team)), benches=bool(league.reserves_on))          # rule 0.15 (D-149: the bench after the cut)
+                       own_roster=real_roster.roster_count(league, team))          # rule 0.15
     finally:
         league.cut_deciding = False
-    filled = aging.fill_places(league, g.rnd, list(g.pool.original))
-    from . import reserves
-    reserves.fill_line(league, list(g.pool.original))        # D-149: a long snapper and five linemen on every bench (no draw)
-    own_filled = [pl for pl in league.players.values() if pl.id >= first_new and pl.team == team and pl.place >= 0]     # (D-149: the bench's new linemen are not the fill)
+    made = real_roster.fill_needs(league, g.rnd, franchise_surnames(g))      # SR.5: a family under its minimum (NX-L12: real NFL surnames)
+    own_filled = [pl for pl in made if pl.team == team]
     league.draft = None
     league.pick_no = 0
     told, recent = news.render(league, [news.cap_event(league)], g.news_pools or DEFAULT_POOLS, words, g.rnd)      # NWK, after the fill
@@ -231,50 +229,27 @@ def _own_cap_choice(g, words, league, waiting: dict, released: list) -> list:
     return extra
 
 
-def _own_choice(g, words, league, waiting: dict) -> list:
-    """The player releases the players himself: for each group with too many players a question over the group's players, the staff's
-    choices first, Enter releases the current one until the group fits (design 7.6). Returns the players released."""
-    from . import reserves
-    if reserves.on(league):
-        return _own_bench_choice(g, words, league, waiting)
-    team = league.team
-    released = []
-    for position in D.ROSTER_ORDER:
-        remaining = DR.release_order(DR.group_players(league, team, position, waiting))
-        size = D.GROUP_SIZE[position]
-        chose = len(remaining) > size                              # the player is asked about this group
-        while len(remaining) > size:
-            situation = X.text("NXE-54", position=words.group(position), n=len(remaining), m=size)
-            choice = remaining.pop(FranchiseQuestion(g, situation, [words.player(pl) for pl in remaining]).ask())
-            released.append(choice)
-            g.say2(X.text("NXE-55", player=choice.name))
-        if not chose:                                              # a group he was not asked about: the staff's floor still applies
-            released += DR.floor_releases(remaining, position)     # (in a group he chose from, the players he kept are his decision)
-    return released
-
-
 def roster_size(league, team: int, waiting: dict, released) -> int:
-    """D-149: the men the team carries after the cut and the fill once `released` are gone: every group of places at least its places (the fill makes the
-    rest), the line and the snapper as they are."""
+    """The men the team carries after the cut and the fill once `released` are gone: its roster and rookies, and a man for each one a family is short of
+    its minimum (the fill makes them, real_roster.fill_needs)."""
     gone = {p.id for p in released}
-    total = 0
-    for position in D.ALL_POSITIONS:
-        held = sum(1 for p in DR.group_players(league, team, position, waiting) if p.id not in gone)
-        total += max(held, D.GROUP_SIZE[position])
-    return total
+    kept = [p for p in DR.team_candidates(league, team, waiting) if p.id not in gone]
+    held: dict = {}
+    for p in kept:
+        held[p.pos] = held.get(p.pos, 0) + 1
+    return len(kept) + sum(max(0, least - held.get(group, 0)) for group, least in T.FR_FAMILY_MIN.items())
 
 
-def _own_bench_choice(g, words, league, waiting: dict) -> list:
-    """D-149 (NX-B2b): the player of a league that carries benches releases players himself until his roster fits the 53: one question over every man of
-    his team (the places, the rookies, the bench), the staff's choices first, Enter releases the current one. The floor of the small groups then applies to
-    the men he kept, as the staff's cut does. Returns the players released."""
-    from . import reserves
+def _own_choice(g, words, league, waiting: dict) -> list:
+    """D-149, SR.5: the player releases players himself until his roster fits the 53: one question over every man of his team (the roster and the
+    rookies), the staff's choices first, Enter releases the current one. The floor of the one-man families then applies to the men he kept, as the
+    staff's cut does. Returns the players released."""
     team = league.team
     released: list = []
-    staff_first = [p for p in DR.plan_bench_cut(league, team, waiting)]
+    staff_first = [p for p in DR.plan_cut(league, team, waiting)]
     while roster_size(league, team, waiting, released) > D.ROSTER_MAX:
         gone = {p.id for p in released}
-        everyone = [p for position in D.ALL_POSITIONS for p in DR.group_players(league, team, position, waiting) if p.id not in gone]
+        everyone = [p for p in DR.team_candidates(league, team, waiting) if p.id not in gone]
         first = [p for p in staff_first if p.id not in gone]
         chosen_ids = {p.id for p in first}
         remaining = first + [p for p in DR.release_order(everyone) if p.id not in chosen_ids]
@@ -283,11 +258,17 @@ def _own_bench_choice(g, words, league, waiting: dict) -> list:
         released.append(choice)
         g.say2(X.text("NXE-55", player=choice.name))
     gone = {p.id for p in released}
-    for position in D.ROSTER_ORDER:
-        kept = DR.keep_order([p for p in DR.group_players(league, team, position, waiting) if p.id not in gone])[:D.GROUP_SIZE[position]]
-        released += [p for p in DR.floor_releases(kept, position) if p.id not in gone]
-    debuglog.event("franchise", "cut_own_choice", released=[p.id for p in released], bench_max=reserves.MAX)     # rule 0.15
+    for group in DR.FLOOR_GROUPS:
+        kept = DR.keep_order([p for p in DR.group_players(league, team, group, waiting) if p.id not in gone])
+        released += [p for p in DR.floor_releases(kept, group) if p.id not in gone]
+    debuglog.event("franchise", "cut_own_choice", released=[p.id for p in released], roster_max=D.ROSTER_MAX)     # rule 0.15
     return released
+
+
+def franchise_surnames(g) -> list:
+    """NX-L12 (D-163, D-164): the surnames a made-up man of the Franchise takes: real NFL players' (extras.nfl_surnames), else the original's."""
+    from .. import nfl_surnames
+    return nfl_surnames.pool(g)
 
 
 # ----- stage 4: the undrafted free agents (SX.8m) -----

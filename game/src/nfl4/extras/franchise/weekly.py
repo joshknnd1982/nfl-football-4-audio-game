@@ -94,12 +94,10 @@ def prepare(p, league, week: int) -> None:
 
 
 def surnames_of(g) -> list:
-    """The surname pool the league names its players from (the player's surnames.txt), for a stand-in's name."""
-    pool = getattr(g, "pool", None)
-    if pool is not None:
-        return list(pool.original)
-    from ...game.names import load_surnames
-    return load_surnames()
+    """The surname pool the league names its made-up players from, for a stand-in's name and the like: NX-L12 (D-164), the last names of real NFL
+    players (nfl_surnames.txt; the original's surnames only when it cannot be read)."""
+    from .. import nfl_surnames
+    return nfl_surnames.pool(g)
 
 
 def played_teams(league, week: int) -> tuple:

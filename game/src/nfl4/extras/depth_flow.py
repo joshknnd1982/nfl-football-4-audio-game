@@ -179,9 +179,9 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         if chosen is None:
             return None
         pick = found[chosen]
-        placed = [p for p in found if p.status == "active"]
+        placed = [p for p in found if p.place >= 0]
         FD.put_first(league, FRANCHISE_GROUP[group], pick.id)
-        benched = [p for p in placed if p.status == "reserve"]                          # D-149: the man a bench player pushed out of the places
+        benched = [p for p in placed if p.place < 0]                                    # D-149, SR.5: the man pushed out of the places
         debuglog.event("franchise", "depth_set", group=group, first=pick.id, benched=[p.id for p in benched])            # rule 0.15
         store.save()                                                                    # written, then told (B-X53)
         told = X.text("NXM-D08", player=pick.name, group=group_word(group))

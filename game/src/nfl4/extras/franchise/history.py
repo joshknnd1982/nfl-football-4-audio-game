@@ -197,7 +197,7 @@ class Words:
     def position_of(self, player) -> str:
         """His position word; D-149: "<position> on the bench" (NXL-52) for a man of a team's bench."""
         word = self.position(player.pos)
-        return X.text("NXL-52", position=word) if getattr(player, "status", "") == "reserve" else word
+        return X.text("NXL-52", position=word) if getattr(player, "status", "") == "active" and getattr(player, "place", 0) < 0 else word
 
     def group(self, position: str) -> str:
         return X.text(D.GROUP_TEXT[position])

@@ -158,24 +158,30 @@ def league():
 
 
 def test_a_new_franchise_gives_each_groups_best_rating_to_its_real_starter():
+    # SR.5 (D-164): the order is the chart's, by POSITION (a group of places such as DL mixes edges and tackles, each in its own chart's order)
+    from nfl4.extras.roster_model import MADDEN
     record = league()
     for team in (1, 5, 17):
-        for position, places in D.PLACES_OF.items():
-            ratings = [record.player_at(team, i).rating for i in places if record.player_at(team, i) is not None]   # SR.4: empty back places
+        for position in MADDEN:
+            ratings = [record.players[pid].rating for pid in record.chart[team - 1].get(position, ())]
             assert ratings == sorted(ratings, reverse=True), (team, position)
     assert record.player_at(BILLS, D.PLACES_OF["RB"][0]).name == real().spoken("James Cook III")
+    assert record.players[record.chart[BILLS - 1]["HB"][0]].name == real().spoken("James Cook III")
 
 
 def test_the_players_order_holds_through_the_staffs_sort():
+    # SR.5 (D-164): the player's order is kept by POSITION (the running backs' item puts a halfback first of the HB chart)
     record = league()
-    backs = FD.group_of(record, "RB")
-    FD.put_first(record, "RB", backs[2].id)
-    assert FD.group_of(record, "RB")[0].id == backs[2].id and record.depth["order"]["RB"][0] == backs[2].id
+    halfbacks = list(record.chart[BILLS - 1]["HB"])
+    assert len(halfbacks) >= 3
+    FD.put_first(record, "RB", halfbacks[2])
+    assert FD.group_of(record, "RB")[0].id == halfbacks[2] and record.depth["order"]["HB"][0] == halfbacks[2]
+    assert record.chart[BILLS - 1]["HB"][0] == halfbacks[2]
     aging.place_by_rating(record, BILLS)
-    assert FD.group_of(record, "RB")[0].id == backs[2].id                     # the staff's sort keeps the player's order
+    assert FD.group_of(record, "RB")[0].id == halfbacks[2]                     # the staff's sort keeps the player's order
     aging.place_by_rating(record, 1)                                           # another team: the best first
     FD.reset(record)
-    assert record.depth == {"order": {}, "key": {}} and FD.group_of(record, "RB")[0].id == backs[0].id
+    assert record.depth == {"order": {}, "key": {}} and FD.group_of(record, "RB")[0].id == halfbacks[0]
     with pytest.raises(LeagueError):
         FD.put_first(record, "RB", record.player_at(1, 0).id)
 
@@ -185,7 +191,7 @@ def test_the_league_file_keeps_the_depth_chart_and_checks_it():
     FD.set_key(record, "redzone", "receiver", record.player_at(BILLS, D.PLACES_OF["WR"][3]).id)
     FD.put_first(record, "WR", record.player_at(BILLS, D.PLACES_OF["WR"][2]).id)
     data = json.loads(record.to_json())
-    assert data["format"] == 18 == D.FORMAT and data["depth"]["key"]["redzone"]["receiver"] == record.player_at(BILLS, D.PLACES_OF["WR"][3]).id
+    assert data["format"] == 19 == D.FORMAT and data["depth"]["key"]["redzone"]["receiver"] == record.player_at(BILLS, D.PLACES_OF["WR"][3]).id      # SR.5: format 19
     whole = lambda value, lo, hi, what: None if isinstance(value, int) and lo <= value <= hi else (_ for _ in ()).throw(LeagueError(what))  # noqa: E731
     FD.check(record, whole)
     record.depth["key"]["nowhere"] = {}
@@ -202,7 +208,7 @@ def test_in_a_franchise_the_menu_orders_the_players_own_team_and_saves_it(tmp_pa
     run_until(rig)
     record = rig.fstore.league
     first = FD.group_of(record, "RB")[0]
-    assert record.depth["order"]["RB"][0] == first.id
+    assert record.depth["order"][first.position][0] == first.id              # SR.5 (D-164): the order is kept by position (HB)
     assert X.text("NXM-D08", player=first.name, group=X.text("NXM-D20")) in spoken(rig)
     from nfl4.extras.franchise.league import LeagueRecord
     saved = LeagueRecord.from_json(rig.files.data["league.sav"].decode("utf-8"))

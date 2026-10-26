@@ -6,10 +6,14 @@ import json
 import random
 
 import pytest
-from drrig import SURNAMES
+from drrig import SURNAMES, full_league, legacy_data
 
+from nfl4.extras import nfl_surnames
+from nfl4.extras import real_names as R
+from nfl4.extras import roster_model as RM
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import contracts as CT
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import market as M
 from nfl4.extras.franchise import resign
@@ -20,7 +24,8 @@ TEAM = 5
 
 
 def fresh(seed=3, team=TEAM):
-    return new_league(GameRandom(random.Random(seed)), SURNAMES, "Kim", team, "20260101-000000")
+    """SR.5 (D-164): a full league of the real rosters (drrig.full_league: every family at its target, 53 men), so a team needs exactly what a test takes."""
+    return full_league(seed, team)
 
 
 def make_free(league, team, index):
@@ -31,12 +36,21 @@ def make_free(league, team, index):
 
 
 def retire(league, team, index):
-    """The place is empty because its player retired."""
+    """The player of the place retired (SR.5: he leaves the chart; the next man of it takes the place)."""
     player = league.player_at(team, index)
-    league.rosters[team - 1][index] = 0
-    player.status, player.left, player.place = "retired", league.season, -1
+    player.left = league.season
+    RR.leave(league, player, "retired")
     CT.leave(player)
     return player
+
+
+def trim(league, team, group, to):
+    """The team's family `group` is brought down to `to` men by retirements (its weakest first), so it is `target - to` men short of its target."""
+    while RR.family_count(league, team, group) > to:
+        man = min((p for p in RR.members(league, team) if p.pos == group), key=lambda p: (p.rating, -p.id))
+        man.left = league.season
+        RR.leave(league, man, "retired")
+        CT.leave(man)
 
 
 def at_stage_eight(league, market=None):
@@ -61,10 +75,8 @@ def with_rating(player, rating, seasons=6, age=26):
 
 
 def open_group(league, team, position, count=1):
-    """The first `count` places of the team's group are empty (retired)."""
-    for index in D.PLACES_OF[position][:count]:
-        if league.rosters[team - 1][index]:
-            retire(league, team, index)
+    """SR.5: the team's family is `count` men under its roster target (retirements, the weakest first): `count` open spots."""
+    trim(league, team, position, T.FR_ROSTER_TARGET[position] - count)
 
 
 def squeeze(league, team, left):
@@ -100,7 +112,7 @@ def test_the_pool_is_the_free_agents_of_this_offseason_best_first_and_no_one_els
     stale = league.player_at(4, 0)
     resign.let_go(league, stale)
     stale.left = league.season - 1                                  # a star of an earlier offseason, kept for history
-    retired = retire(league, 6, 3)
+    retired = retire(league, 6, 6)                                 # (SR.5: a receiver's place; a back place may be empty)
     order = M.pool(league)
     assert {p.id for p in order} == {p.id for p in free}
     assert stale not in order and retired not in order
@@ -136,11 +148,16 @@ def test_offering_more_is_ten_percent_over_rounded_half_up_and_never_over_the_ma
 
 # ----- what a team can still sign -----
 
-def test_open_places_are_the_empty_places_by_position_in_the_rosters_order():
-    league, _ = market_league(free=((2, 0), (2, 1)), empty_for=((2, 33), (2, 22)))          # two running backs, the quarterback, a linebacker
+def test_open_spots_are_the_families_under_their_targets_in_the_rosters_order():
+    # SR.5 (design 21.7 (3)): a team needs the families it holds fewer of than their roster targets, never more than its 53 has room for
+    league = fresh()
+    open_group(league, 2, "QB", 1)
+    open_group(league, 2, "RB", 2)
+    open_group(league, 2, "LB", 1)
+    at_stage_eight(league)
     assert M.open_places(league, 2) == [("QB", 1), ("RB", 2), ("LB", 1)]
     assert M.open_places(league, 1) == []
-    assert M.filled(league, 2, "RB") == D.GROUP_SIZE["RB"] - 2 and M.filled(league, 2, "QB") == 0
+    assert M.filled(league, 2, "RB") == T.FR_ROSTER_TARGET["RB"] - 2 and M.filled(league, 2, "QB") == T.FR_ROSTER_TARGET["QB"] - 1
 
 
 def test_the_room_is_the_cap_room_of_stage_seven_less_the_reserve_for_the_rookies(monkeypatch):
@@ -150,15 +167,20 @@ def test_the_room_is_the_cap_room_of_stage_seven_less_the_reserve_for_the_rookie
     assert M.room(league, 2) == resign.room(league, 2) - 40
 
 
+def starters(league, team, group):
+    """SR.5: the family's starters (FR_GROUP_STARTERS of its best men), the men a free agent's fit is measured against."""
+    return sorted((p for p in RR.members(league, team) if p.pos == group), key=lambda p: -p.rating)[:T.FR_GROUP_STARTERS[group]]
+
+
 def test_the_fit_is_two_for_the_best_of_the_group_one_for_a_better_than_the_weakest_and_zero_otherwise():
     league, free = market_league(free=((2, 0),))
     team = 2
-    group = [league.player_at(team, i) for i in D.PLACES_OF["RB"] if league.rosters[team - 1][i]]
+    group = [p for p in RR.members(league, team) if p.pos == "RB"]
     for k, p in enumerate(group):
         p.rating = 60 + 3 * k
     candidate = free[0]                                              # a running back
     assert candidate.pos == "RB"
-    best, weakest = max(p.rating for p in group), min(p.rating for p in group)
+    best, weakest = max(p.rating for p in starters(league, team, "RB")), min(p.rating for p in starters(league, team, "RB"))
     assert M.fit_level(league, team, with_rating(candidate, best + 1)) == 2
     assert M.fit_level(league, team, with_rating(candidate, best)) == 1
     assert M.fit_level(league, team, with_rating(candidate, weakest + 1)) == 1
@@ -169,8 +191,8 @@ def test_the_fit_is_two_for_the_best_of_the_group_one_for_a_better_than_the_weak
 def test_a_group_with_no_player_left_fits_the_free_agent_as_its_best():
     league = fresh()
     stray = with_rating(make_free(league, 3, D.PLACES_OF["K"][0]), 55)
-    open_group(league, 2, "K", D.GROUP_SIZE["K"])
-    assert [league.rosters[1][i] for i in D.PLACES_OF["K"]] == [0] * D.GROUP_SIZE["K"]
+    open_group(league, 2, "K", 1)
+    assert M.filled(league, 2, "K") == 0
     assert M.fit_level(league, 2, stray) == 2
 
 
@@ -199,11 +221,11 @@ def test_a_team_chases_one_more_free_agent_for_each_open_place_in_every_later_ro
 def test_the_fit_raises_the_score_by_zero_two_or_four_percent_of_the_salary():
     league, free = market_league(free=((2, 0),))
     team = 2
-    group = [league.player_at(team, i) for i in D.PLACES_OF["RB"] if league.rosters[team - 1][i]]
+    group = [p for p in RR.members(league, team) if p.pos == "RB"]
     for k, p in enumerate(group):
         p.rating = 60 + 3 * k
     candidate = free[0]
-    best, weakest = max(p.rating for p in group), min(p.rating for p in group)
+    best, weakest = max(p.rating for p in starters(league, team, "RB")), min(p.rating for p in starters(league, team, "RB"))
     assert M.score(league, team, with_rating(candidate, weakest), 100) == 10000
     assert M.score(league, team, with_rating(candidate, weakest + 1), 100) == 10200
     assert M.score(league, team, with_rating(candidate, best + 1), 100) == 10400
@@ -215,8 +237,10 @@ def one_open(position, rating=70, team=2):
     """A league in which `team` has one open place at `position` and four other teams each lost a player of that position to the market (the free agents rated
     `rating`, `rating` - 2 ...). Returns the league, the free agents and the teams they came from."""
     league = fresh()
-    retire(league, team, D.PLACES_OF[position][0])
+    open_group(league, team, position, 1)                         # SR.5: one man under the family's target
     origins = [t for t in range(1, D.TEAMS + 1) if t != team][:4]
+    for t in origins:
+        trim(league, t, position, T.FR_ROSTER_TARGET[position])   # exactly at the target, so the man it loses is one open spot
     pool = [with_rating(make_free(league, t, D.PLACES_OF[position][0]), rating - 2 * k) for k, t in enumerate(origins)]
     at_stage_eight(league)
     return league, pool, origins
@@ -238,7 +262,7 @@ def test_a_team_offers_only_for_a_position_with_an_open_place_and_a_full_team_of
     bids = M.computer_bids(league, 1)
     assert {b.team for b in bids} == {2} | set(origins)             # the origins each have the one open place of the player they lost
     for bid in bids:
-        assert league.players[bid.player].pos == "QB" and M.filled(league, bid.team, "QB") == 0
+        assert league.players[bid.player].pos == "QB" and M.filled(league, bid.team, "QB") == T.FR_ROSTER_TARGET["QB"] - 1
     full = fresh()
     at_stage_eight(full)
     assert M.computer_bids(full, 1) == []
@@ -278,8 +302,7 @@ def test_the_offers_skip_the_teams_asked_to_be_skipped():
 
 def test_an_offer_chases_as_many_free_agents_as_the_open_places_times_the_chase():
     league = fresh()
-    for index in D.PLACES_OF["WR"][:2]:
-        retire(league, 2, index)
+    open_group(league, 2, "WR", 2)
     for t in (3, 4, 5, 6, 7, 8):
         with_rating(make_free(league, t, D.PLACES_OF["WR"][0]), 72)
     at_stage_eight(league)
@@ -383,11 +406,11 @@ def test_a_signed_player_joins_the_first_empty_place_of_his_position_on_the_cont
     offer = bid(league, 2, player, salary=M.price(player, 1)[0] + 3)
     M.resolve(league, [offer], 1)
     assert (player.status, player.team, player.left, player.points) == ("active", 2, 0, 0)
-    assert (player.salary, player.years) == (offer.salary, offer.years) and league.rosters[1][player.place] == player.id
-    assert player.place in D.PLACES_OF[player.pos]
-    group = [league.players[league.rosters[1][i]].rating for i in D.PLACES_OF[player.pos] if league.rosters[1][i]]
-    assert group == sorted(group, reverse=True)                      # the places are put in rating order, an empty place last
-    assert player not in M.pool(league)
+    assert (player.salary, player.years) == (offer.salary, offer.years)
+    assert player.place < 0 or league.rosters[1][player.place] == player.id
+    chart = league.chart[1][player.position]
+    assert player.id in chart and [league.players[i].rating for i in chart] == sorted((league.players[i].rating for i in chart), reverse=True)
+    assert player not in M.pool(league)                              # SR.5: he joins his position's chart in the staff's order
 
 
 def test_a_round_signs_nobody_without_offers_and_leaves_the_league_as_it_was():
@@ -417,11 +440,14 @@ def test_a_price_that_exactly_fills_the_room_is_signed_and_one_tenth_more_is_not
         assert bool(M.resolve(league, [offer], 1).signed) is signed
 
 
-def test_a_team_cannot_sign_a_player_into_a_group_that_is_full():
+def test_a_team_cannot_sign_a_player_onto_a_full_53_and_a_computer_team_not_past_its_need():
     league, free = market_league(free=((9, 12),))
     player = with_rating(free[0], 75)
-    assert M.filled(league, 2, player.pos) == D.GROUP_SIZE[player.pos]
+    assert RR.room(league, 2) == 0                                   # SR.5: a full 53 signs nobody
     assert not M.can_sign(league, bid(league, 2, player))
+    open_group(league, 3, "OL", 1)                                   # room on team 3's 53, but for a lineman: his own family is at its target
+    other = bid(league, 3, player)
+    assert M.can_sign(league, other) and M.resolve(league, [other], 1).signed == []
 
 
 # ----- an independent worked-out judgement (the best offer wins, research G) -----
@@ -430,15 +456,21 @@ def oracle(league, bids):
     """Who signs whom, worked out again from the raw numbers (not from `market.can_sign` or `resign.room`): the free agents in the order of the value over the
     replacement rating, each to the highest score among the offers whose team has an empty place at his position and the room under the cap."""
     def replacement(position):
-        base, span = T.FR_FILL_RATING if D.GROUP_SIZE[position] >= 3 else T.FR_FILL_RATING_SMALL
+        base, span = T.FR_FILL_RATING_SMALL if position in ("QB", "K", "P", "LS") else T.FR_FILL_RATING
         return base + span // 2
+    # SR.5: a team's open spots are its families under their targets (FR_ROSTER_TARGET), its roster's room the 53, its money the cap of a real 53
     empty, payroll, count = {}, {}, {}
     for team in range(1, D.TEAMS + 1):
-        for position in D.POSITIONS:
-            empty[team, position] = sum(1 for i in D.PLACES_OF[position] if league.rosters[team - 1][i] == 0)
-        placed = [league.players[pid] for pid in league.rosters[team - 1] if pid]
-        payroll[team] = sum(p.salary for p in placed if p.years > 0)
-        count[team] = len(placed)
+        men = [p for p in league.players.values() if p.team == team and p.status == "active"]
+        for position in D.GROUPS:
+            empty[team, position] = max(0, T.FR_ROSTER_TARGET[position] - sum(1 for p in men if p.pos == position))
+            best = sorted((p.rating for p in men if p.pos == position), reverse=True)[:T.FR_GROUP_STARTERS[position]]
+            if (not empty[team, position] and position not in ("OL", "LS") and len(best) == T.FR_GROUP_STARTERS[position]
+                    and best[-1] < T.FR_DRAFT_WEAK):
+                empty[team, position] = 1                       # a starter under 60 is a need (the draft's rule)
+        squad = [p for p in league.players.values() if p.team == team and p.status == "practice"]
+        payroll[team] = sum(p.salary for p in men + squad if p.years > 0)
+        count[team] = len(men)
     by_player = {}
     for b in bids:
         by_player.setdefault(b.player, []).append(b)
@@ -450,8 +482,9 @@ def oracle(league, bids):
     for pid in sorted(by_player, key=value_key):
         p = league.players[pid]
         for b in sorted(by_player[pid], key=lambda b: (-b.score, (b.team * (1 + pid % 36)) % 37)):
-            room = T.FR_CAP - T.FR_RESIGN_RESERVE - T.FR_FA_RESERVE - league.dead[b.team - 1] - payroll[b.team] - T.FR_MIN_SALARY * (D.PLACE_COUNT - count[b.team] - 1)
-            if empty[b.team, p.pos] > 0 and b.salary <= room:
+            room = (T.FR_CAP + T.FR_CAP_ROSTER - T.FR_RESIGN_RESERVE - T.FR_FA_RESERVE - league.dead[b.team - 1] - payroll[b.team]
+                    - T.FR_MIN_SALARY * (D.ROSTER_MAX - count[b.team] - 1))
+            if (empty[b.team, p.pos] > 0 or b.team == league.team) and count[b.team] < D.ROSTER_MAX and b.salary <= room:
                 empty[b.team, p.pos] -= 1
                 payroll[b.team] += b.salary
                 count[b.team] += 1
@@ -497,14 +530,13 @@ def test_the_whole_market_keeps_every_team_under_the_cap_and_every_group_within_
     assert len(signed) == len({p.id for p in signed}) > 0
     assert sum(1 for p in league.players.values() if p.status == "active") == active_before + len(signed)
     for team in range(1, D.TEAMS + 1):
-        assert CT.cap_used(league, team) <= T.FR_CAP
-        for position in D.POSITIONS:
-            assert M.filled(league, team, position) <= D.GROUP_SIZE[position]
+        assert CT.cap_used(league, team) <= CT.cap_of(league)
+        assert RR.roster_count(league, team) <= D.ROSTER_MAX                     # SR.5: never past the 53
     for player in league.players.values():
         if player.status == "free":
             assert (player.salary, player.years, player.place) == (0, 0, -1)
-        if player.status == "active":
-            assert D.POSITION_OF_PLACE[player.place] == player.pos and league.rosters[player.team - 1][player.place] == player.id
+        if player.status == "active" and player.place >= 0:
+            assert league.rosters[player.team - 1][player.place] == player.id
     for player in signed:
         assert 1 <= player.years <= CT.years_for_age(player.age) and CT.min_salary(player.seasons) <= player.salary <= T.FR_MAX_SALARY
     league.check()
@@ -514,7 +546,7 @@ def test_the_whole_market_is_the_same_every_time():
     def run():
         league = fresh(5)
         for team in range(2, 12):
-            make_free(league, team, team % D.PLACE_COUNT)
+            make_free(league, team, 6 + team % 23)                 # SR.5: a receiver or a defender (a back place may be empty)
         at_stage_eight(league)
         M.run_market(league)
         return league.to_json()
@@ -547,15 +579,15 @@ def stage_record(**change):
 def test_a_market_in_progress_round_trips_through_the_file_and_is_format_four():
     league, free = market_league()
     league.market = stage_record(round=2, offers=[[free[0].id, 40], [free[1].id, 55]], signed=1, lost=2)
-    data = json.loads(league.to_json())
-    assert data["format"] == D.FORMAT == 18 and data["market"] == league.market      # (format 12 since SZ.8: the market is format 4's)
+    data = legacy_data(league)
+    assert data["format"] == D.FORMAT == 19 and data["market"] == league.market      # (format 12 since SZ.8: the market is format 4's)
     again = LeagueRecord.from_json(league.to_json())
     assert again.market == league.market and again.to_json() == league.to_json()
 
 
 def test_a_format_three_file_loads_with_no_market_and_the_next_save_is_format_four():
     league, _ = market_league()
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     del data["market"]
     data["format"] = 3
     again = LeagueRecord.from_json(json.dumps(data))
@@ -564,7 +596,7 @@ def test_a_format_three_file_loads_with_no_market_and_the_next_save_is_format_fo
 
 def test_a_format_four_file_without_the_market_is_damage_and_a_newer_format_is_left_alone():
     league, _ = market_league()
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     del data["market"]
     with pytest.raises(LeagueError):
         LeagueRecord.from_json(json.dumps(data))
@@ -575,7 +607,7 @@ def test_a_format_four_file_without_the_market_is_damage_and_a_newer_format_is_l
 
 def test_a_format_two_file_still_loads_with_no_market():
     league = fresh()
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     del data["market"], data["resign"]
     data["format"] = 2
     assert LeagueRecord.from_json(json.dumps(data)).market is None

@@ -23,7 +23,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .. import tuning as T
-from . import aging
 from . import contracts as CT
 from . import data as D
 from . import resign as R
@@ -55,24 +54,35 @@ def more(salary: int) -> int:
 # ----- what a team can still sign -----
 
 def filled(league, team: int, position: str) -> int:
-    roster = league.rosters[team - 1]
-    return sum(1 for i in D.PLACES_OF[position] if roster[i])
-
-
-def ready_bench(league, team: int, position: str) -> int:
-    """D-149: the men of the team's bench of the position rated FR_FA_MIN_RATING or more: the cut will put them in the group's empty places, so the staff
-    does not chase a free agent for those (a weaker bench man does not stop it)."""
-    return sum(1 for p in league.bench(team, position) if p.rating >= T.FR_FA_MIN_RATING)
+    """SR.5: the men of the family on the team's roster."""
+    from . import real_roster
+    return real_roster.family_count(league, team, position)
 
 
 def open_places(league, team: int, staff: bool = True) -> list:
-    """The positions with empty places and how many, in the roster menu's order: [(position, count)]; D-149: for the staff (the computer's teams), less the
-    bench men ready to take them (the player's own offers, `staff=False`, see every empty place: who moves up is his choice)."""
+    """SR.5 (design 21.7 (3)): the families the team holds fewer of than its roster target (FR_ROSTER_TARGET) and how many, in the roster menu's order:
+    [(group, count)]; for the staff (the computer's teams) at most the room the 53 has left, the families under their minimum first. The player's own
+    offers (`staff=False`) see every family under its target."""
+    from . import real_roster
     out = []
-    for position in D.ROSTER_ORDER:
-        free = D.GROUP_SIZE[position] - filled(league, team, position) - (ready_bench(league, team, position) if staff else 0)
+    men = real_roster.members(league, team)
+    for group in D.ROSTER_ORDER:
+        free = T.FR_ROSTER_TARGET[group] - filled(league, team, group)
+        starters = sorted((p.rating for p in men if p.pos == group), reverse=True)[:T.FR_GROUP_STARTERS[group]]
+        if free <= 0 and group not in D.RESERVE_POSITIONS and len(starters) == T.FR_GROUP_STARTERS[group] and starters[-1] < T.FR_DRAFT_WEAK:
+            free = 1                                       # a starter under FR_DRAFT_WEAK: one man of the family is wanted (the draft's own rule)
         if free > 0:
-            out.append((position, free))
+            out.append((group, free))
+    if staff:
+        room_left = real_roster.room(league, team)
+        out.sort(key=lambda row: (filled(league, team, row[0]) >= T.FR_FAMILY_MIN[row[0]], D.ROSTER_ORDER.index(row[0])))
+        trimmed = []
+        for group, free in out:
+            take = min(free, room_left)
+            if take > 0:
+                trimmed.append((group, take))
+                room_left -= take
+        out = sorted(trimmed, key=lambda row: D.ROSTER_ORDER.index(row[0]))
     return out
 
 
@@ -85,8 +95,8 @@ def room(league, team: int) -> int:
 def fit_level(league, team: int, player) -> int:
     """0 when the player would not be better than the weakest of the team's players at his position, 1 when he would, 2 when he would be the best (also
     when the group is empty)."""
-    roster = league.rosters[team - 1]
-    ratings = [league.players[roster[i]].rating for i in D.PLACES_OF[player.pos] if roster[i]]
+    from . import real_roster
+    ratings = sorted((p.rating for p in real_roster.members(league, team) if p.pos == player.pos), reverse=True)[:T.FR_GROUP_STARTERS[player.pos]]
     if not ratings or player.rating > max(ratings):
         return 2
     return 1 if player.rating > min(ratings) else 0
@@ -193,17 +203,16 @@ class Round:
 
 
 def can_sign(league, bid: Bid) -> bool:
-    """The team still has an empty place at his position, or room on its bench (D-149), and the room under the cap for his salary."""
-    from . import reserves
+    """The team has a spot on its 53 (SR.5) and the room under the cap for his salary."""
+    from . import real_roster
     player = league.players[bid.player]
-    return (player.status == "free" and reserves.can_join(league, bid.team, player.pos)
-            and bid.salary <= room(league, bid.team))
+    return player.status == "free" and real_roster.room(league, bid.team) > 0 and bid.salary <= room(league, bid.team)
 
 
 def sign(league, player, bid: Bid) -> None:
-    """The free agent joins the team in its first empty place of his position, else on its bench (D-149), on the contract of the offer."""
-    from . import reserves
-    reserves.join(league, bid.team, player)
+    """The free agent joins the team's chart (SR.5) on the contract of the offer."""
+    from . import real_roster
+    real_roster.join(league, bid.team, player, refresh=False)
     CT.sign(player, bid.salary, bid.years)
 
 
@@ -216,12 +225,20 @@ def resolve(league, bids: list, round_no: int) -> Round:
         by_player.setdefault(bid.player, []).append(bid)
     result = Round(round_no)
     touched: set = set()
+    # SR.5: a computer team signs only for the needs it bid for (its families under their targets, at most its roster's room): an offer for a family whose
+    # need is met by an earlier signing of the round lapses (the player's own offers are his choice, held only to his room and his cap)
+    spots = {team: dict(open_places(league, team)) for team in {b.team for b in bids} if team != league.team}
     for pid in sorted(by_player, key=lambda pid: R.value(league.players[pid])):
         player = league.players[pid]
         ranked = sorted(by_player[pid], key=lambda b: (-b.score, tie_key(b.team, pid)))
         decision = Decision(player, ranked)
         for bid in ranked:
+            if bid.team in spots and spots[bid.team].get(player.pos, 0) <= 0:
+                decision.passed.append(bid)
+                continue
             if can_sign(league, bid):
+                if bid.team in spots:
+                    spots[bid.team][player.pos] -= 1
                 decision.winner = bid
                 if player.team:                                                          # (a player the player released in the season has no team: nobody lost him)
                     result.moves.append([player.id, player.team, bid.team, bid.salary])     # (a free agent keeps the team he last played for until he signs)
@@ -231,8 +248,9 @@ def resolve(league, bids: list, round_no: int) -> Round:
                 break
             decision.passed.append(bid)
         result.decisions.append(decision)
+    from . import real_roster
     for team in sorted(touched):
-        aging.place_by_rating(league, team)
+        real_roster.refresh_view(league, team)
     return result
 
 

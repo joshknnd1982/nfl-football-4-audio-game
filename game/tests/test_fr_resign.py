@@ -6,7 +6,7 @@ import json
 import random
 
 import pytest
-from drrig import SURNAMES
+from drrig import SURNAMES, legacy_data
 
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import aging, resign
@@ -256,7 +256,7 @@ def test_the_room_is_the_cap_less_the_running_contracts_the_dead_money_and_the_m
 def test_the_room_of_a_league_counts_only_the_contracts_that_run():
     league = fresh()
     base = resign.room(league, TEAM)
-    assert base == resign.room_after(CT.payroll(league, TEAM), 34, 0)                           # all 34 places hold a running contract
+    assert base == resign.room_after(CT.payroll(league, TEAM), 34, 0, CT.cap_of(league), D.ROSTER_MAX)      # SR.5: the cap of a real 53, 53 spots
     player = expire(league, TEAM, [3])[0]
     assert resign.running_count(league, TEAM) == 33
     assert resign.running_payroll(league, TEAM) == CT.payroll(league, TEAM) == sum(p.salary for p in league.active_of(TEAM) if p is not player)
@@ -295,7 +295,7 @@ def test_the_staff_signs_the_valuable_first_at_the_market_price_for_the_length_o
     resign.apply_plan(league, plan)
     assert (qb.years, back.years) == (CT.years_for_age(qb.age), CT.years_for_age(back.age)) and qb.status == back.status == "active"
     assert receiver.status == "free" and receiver.team == 3 and receiver.place == -1 and receiver.left == league.season
-    assert (receiver.salary, receiver.years) == (0, 0) and league.rosters[2][7] == 0
+    assert (receiver.salary, receiver.years) == (0, 0) and receiver.id not in league.chart[2].get(receiver.position, [])
     assert league.dead == [0] * D.TEAMS                                              # a contract that ran out costs no dead money
 
 
@@ -324,22 +324,23 @@ def test_a_player_is_worth_keeping_from_the_draft_classes_mean_rating_in_every_g
 
 
 def test_a_player_is_let_go_when_the_cap_has_no_room_for_his_price_even_if_he_is_worth_it():
-    league, players = team_with([85, 70], filler_salary=55, positions=[33, 0])      # 32 running contracts of 5.5 million
+    league, players = team_with([85, 70], filler_salary=65, positions=[33, 0])      # 32 running contracts of 6.5 million (SR.5: the cap of a 53)
     qb, back = players
     assert resign.room(league, 3) < CT.market_salary("QB", 85)
     plan = resign.plan_team(league, 3)
     assert [p.id for p in plan.gone] == [qb.id] and [p.id for p, _, _ in plan.signed] == [back.id]      # the cheaper one still fits
     resign.apply_plan(league, plan)
-    assert CT.cap_used(league, 3) <= T.FR_CAP
+    assert CT.cap_used(league, 3) <= CT.cap_of(league)
 
 
 def test_the_room_shrinks_with_every_signing_so_a_team_that_began_under_the_cap_never_ends_over_it():
-    league, players = team_with([85] * 10, positions=list(range(10)), filler_salary=60)         # ten backs and receivers rated 85, each of whom fits alone
+    league, players = team_with([85] * 10, positions=list(range(10)), filler_salary=70)         # ten backs and receivers rated 85, each of whom fits alone
     asks = [resign.asking(p)[0] for p in players]
-    assert min(asks) > 80 and sum(asks) + 24 * 60 > T.FR_CAP and T.FR_CAP - 24 * 60 - 9 * T.FR_MIN_SALARY > max(asks)      # all fit one by one, not together
+    cap = CT.cap_of(league)                                                          # SR.5: the cap of a real 53, the minimum for its other 28 spots
+    assert min(asks) > 80 and sum(asks) + 24 * 70 > cap and cap - T.FR_RESIGN_RESERVE - 24 * 70 - 28 * T.FR_MIN_SALARY > max(asks)
     plan = resign.plan_team(league, 3)
-    # worked out by hand: the room starts at the cap less 24 contracts of 6.0 million less the minimum for 9 other places, and falls by each price
-    room, count, expected = T.FR_CAP - 24 * 60 - T.FR_MIN_SALARY * 9, 0, []
+    # worked out by hand: the room starts at the cap less 24 contracts of 7.0 million less the minimum for 28 other spots, and falls by each price
+    room, count, expected = cap - T.FR_RESIGN_RESERVE - 24 * 70 - T.FR_MIN_SALARY * 28, 0, []
     for player in sorted(players, key=resign.value):
         price = resign.asking(player)[0]
         if price <= room:
@@ -349,22 +350,26 @@ def test_the_room_shrinks_with_every_signing_so_a_team_that_began_under_the_cap_
     assert 0 < len(expected) < 10
     assert [p.id for p, _, _ in plan.signed] == expected and len(plan.gone) == 10 - len(expected)
     resign.apply_plan(league, plan)
-    assert CT.cap_used(league, 3) <= T.FR_CAP
+    assert CT.cap_used(league, 3) <= CT.cap_of(league)
 
 
 def test_a_price_that_exactly_fills_the_room_is_signed_and_one_tenth_more_is_not():
     for extra, signed in ((0, True), (1, False)):
         league, (qb,) = team_with([85], positions=[33])
         ask = resign.asking(qb)[0]
-        filler = next(p for p in league.active_of(3) if p.years > 0)
-        filler.salary = 60
-        filler.salary += (T.FR_CAP - ask + extra) - resign.running_payroll(league, 3)          # the room is exactly his price (or a tenth short)
-        assert resign.room(league, 3) == ask - extra and T.FR_MIN_SALARY <= filler.salary <= T.FR_MAX_SALARY
+        spots = D.ROSTER_MAX - resign.running_count(league, 3) - 1                    # SR.5: the minimum kept for the 53's other spots
+        todo = (CT.cap_of(league) - T.FR_RESIGN_RESERVE - T.FR_MIN_SALARY * spots - ask + extra) - resign.running_payroll(league, 3)
+        for filler in [p for p in league.active_of(3) if p is not None and p.years > 0]:
+            step = max(-(filler.salary - T.FR_MIN_SALARY), min(todo, T.FR_MAX_SALARY - filler.salary))
+            filler.salary += step
+            todo -= step
+        assert todo == 0                                                                # the room is exactly his price (or a tenth short)
+        assert resign.room(league, 3) == ask - extra
         plan = resign.plan_team(league, 3)
         assert bool(plan.signed) is signed and bool(plan.gone) is not signed
         if signed:
             resign.apply_plan(league, plan)
-            assert CT.cap_used(league, 3) == T.FR_CAP                                      # exactly at the cap, not over it
+            assert CT.cap_used(league, 3) == CT.cap_of(league) - T.FR_RESIGN_RESERVE - T.FR_MIN_SALARY * spots     # the cap less the other spots' minimum
 
 
 def test_planning_draws_nothing_and_is_the_same_twice():
@@ -435,7 +440,7 @@ def test_a_star_the_staff_lets_go_from_the_players_own_team_is_not_named_among_t
     qb.rating, qb.years, qb.seasons = 95, 0, 8
     for player in league.active_of(TEAM):
         if player.years > 0:
-            player.salary = 60                                                           # no room for a quarterback's price
+            player.salary = 67                                                           # no room for a quarterback's price (SR.5: the cap of a 53)
     state = resign.begin(league, True)
     assert qb.status == "free" and state["let_go"] >= 1 and qb.id not in state["stars"]
 
@@ -465,7 +470,7 @@ def test_twelve_offseasons_by_the_rules_keep_every_contract_in_its_bounds_and_ev
         assert all(p.years > 0 for p in league.players.values() if p.status == "active")
         assert all(1 <= p.years <= CT.years_for_age(p.age) for p in league.players.values() if p.status == "active")
         assert all(T.FR_MIN_SALARY <= p.salary <= T.FR_MAX_SALARY for p in league.players.values() if p.status == "active")
-        assert all(CT.cap_used(league, t) <= T.FR_CAP for t in range(1, D.TEAMS + 1))
+        assert all(CT.cap_used(league, t) <= CT.cap_of(league) for t in range(1, D.TEAMS + 1))
         assert all((p.salary, p.years) == (0, 0) for p in out.gone)
         aging.fill_places(league, rnd, SURNAMES)
         aging.drop_the_unkept(league)
@@ -476,7 +481,7 @@ def test_twelve_offseasons_by_the_rules_keep_every_contract_in_its_bounds_and_ev
 
 def target_for(payroll):
     """The FR_RESIGN_TARGET whose payroll in tenths of a million is exactly `payroll`."""
-    return (payroll + 0.5) / T.FR_CAP
+    return (payroll + 0.5) / (T.FR_CAP + T.FR_CAP_ROSTER)                              # SR.5: of the league's cap (contracts.cap_of)
 
 
 def test_the_target_payroll_is_the_share_of_the_cap(monkeypatch):
@@ -502,7 +507,7 @@ def test_a_signing_that_exactly_fills_the_target_is_made_and_one_tenth_more_is_n
         league, (qb,) = team_with([85], positions=[33])
         payroll = resign.running_payroll(league, 3)
         monkeypatch.setattr(T, "FR_RESIGN_TARGET", target_for(payroll + resign.asking(qb)[0] - extra))
-        assert resign.target_payroll() == payroll + resign.asking(qb)[0] - extra
+        assert resign.target_payroll(league) == payroll + resign.asking(qb)[0] - extra       # (SR.5: of the league's cap)
         plan = resign.plan_team(league, 3)
         assert bool(plan.signed) is signed and bool(plan.gone) is not signed
 
@@ -539,7 +544,7 @@ def test_the_stage_in_progress_round_trips_through_the_file():
 
 def test_a_format_two_file_loads_with_no_stage_in_progress_and_the_next_save_is_the_newest_format():
     league = fresh()
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     data["format"] = 2
     del data["resign"]
     loaded = LeagueRecord.from_json(json.dumps(data))
@@ -551,7 +556,7 @@ def test_a_format_two_file_loads_with_no_stage_in_progress_and_the_next_save_is_
 def test_a_format_two_file_saved_after_stage_two_has_signed_contracts_and_the_expiring_stage_finds_nobody():
     league = at_stage_seven(fresh())
     league.stage_no = D.STAGE_DEVELOPMENT                                             # the file as SX.8g wrote it after stage 2: the stand-in had signed everybody
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     data["format"] = 2
     del data["resign"]
     loaded = LeagueRecord.from_json(json.dumps(data))
@@ -652,7 +657,7 @@ def test_a_free_agent_has_no_contract_no_place_and_is_a_valid_player_of_the_file
     resign.let_go(league, player)
     assert player.status == "free" and player.place == -1 and (player.salary, player.years) == (0, 0) and player.team == 3
     again = LeagueRecord.from_json(league.to_json())
-    assert again.players[player.id].status == "free" and again.rosters[2][4] == 0
+    assert again.players[player.id].status == "free" and player.id not in again.chart[2].get(player.position, [])
 
 
 def test_the_free_agents_of_other_teams_are_dropped_at_the_new_season_but_the_players_own_stay_for_history():

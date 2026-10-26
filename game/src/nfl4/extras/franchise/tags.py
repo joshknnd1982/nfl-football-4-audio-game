@@ -93,7 +93,7 @@ def offer_sheet(league):
     the cap for his market price (the length of his age), both of their first-round picks, and a value of him at that contract of at least the two picks'
     (each by the team's situation), the team that values him most, equal values by the market's tie rule; the offer pays at least his tag. No draw; nothing
     is changed."""
-    from . import market, reserves, trades
+    from . import market, real_roster, trades
     player = tagged(league)
     if player is None:
         return None
@@ -103,7 +103,7 @@ def offer_sheet(league):
     for team in range(1, D.TEAMS + 1):
         if team == player.team:
             continue
-        if not reserves.can_join(league, team, player.pos) or salary > market.room(league, team):          # D-149: a place or a bench spot
+        if real_roster.room(league, team) <= 0 or salary > market.room(league, team):          # SR.5: a spot on the 53
             continue
         if not owns_both_firsts(league, team):
             continue
@@ -136,16 +136,12 @@ def match(league, player, salary: int, years: int) -> None:
 def let_go(league, player, team: int, salary: int, years: int) -> None:
     """He joins the team of the sheet on its contract, in its first empty place of his position (else its bench, D-149); his team gets that team's first-round
     pick of the coming draft and of the draft after it (`future_picks`)."""
-    from . import aging, reserves, trades
+    from . import real_roster, trades
     old = player.team
-    if player.place >= 0:
-        league.rosters[old - 1][player.place] = 0
-    reserves.join(league, team, player)                  # his first empty place there, else its bench (D-149)
+    real_roster.join(league, team, player)               # SR.5: onto the other team's chart; both teams' places are made again
     CT.sign(player, salary, years)
     trades.move_pick(league, (1, team), old)
     league.future_picks.append([league.season + 1, 1, team, old])
-    aging.place_by_rating(league, team)
-    aging.place_by_rating(league, old)
 
 
 def close(league) -> None:

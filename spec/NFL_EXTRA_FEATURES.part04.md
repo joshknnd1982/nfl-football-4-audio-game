@@ -45,3 +45,20 @@ Status 2026-10-25: NX-L1, NX-L2, NX-L8 BUILT; NX-L3, NX-L4, NX-L7 BUILT (SR.4, w
 The owner, answering Q-016: "claude must research the last names of real nfl players and use those."
 - **NX-L12 Real surnames.** With the N. F. L. rules every made-up player (later draft classes, the undrafted, stand-ins, squad top-ups, a quick game's last-resort name) takes the last name of a real NFL player: researched (rule 0.19, facts only, sources and date recorded) from the game's real rosters and a larger public table of NFL players (nflverse's players table, CC BY 4.0), a first name from the game's own first-name list, never a full name a real man of the league has (no made-up man is taken for a real one). A customizable file with the healing and refresh path of the other name files; `update_rosters.py` refreshes it. Classic keeps Jim Kitchen's 1,708 surnames (its golden transcript). Done when: a test makes 20 seasons of draft classes in the N. F. L. rules and finds every made-up surname in the researched list and no full name equal to a real player's; Classic's draws and names unchanged.
 - Session: SR.5 (the draft classes and the undrafted are made again there).
+
+### 21.10 SR.5 done (2026-10-25; D-164; design 21.15)
+
+- BUILT (NX-L6, NX-L5 in full, NX-L12): the chart is the team in every block of the Franchise. league.sav format 19 stores the charts and no places (the
+  34 places are the view made in memory after every change); the bench status of D-149 is gone; one join and one leave for every block (signings, the
+  market, the tag's sheet, trades of any position for any position within the family minimums, practice promotions, re-signing, retirements, the cut);
+  the cut keeps 53 by the family minimums and the keep value, the fill makes only a family's missing minimum, the reserve lists come back at the cut; the
+  draft of the 22 positions by the league's mix with needs by family (the real league's mean rounded down, or a starter under 60) and the NFL's jersey
+  ranges; the market and the signings by the 53's room and the families' needs; injuries by the chart; `is_starter` by the chart; the cap of a real 53
+  (FR_CAP_ROSTER 510, measured); the squads of any position. NX-L12: nfl_surnames.txt (9,504 real NFL last names, nflverse CC BY 4.0 and the rosters),
+  customizable, refreshed by update_rosters.py; no made-up man has a real player's full name; a quick game's last-resort name is a real surname.
+- Tests: tests\test_real_roster_sr5.py (22) and the older franchise tests moved to the new model, each pin with an "SR.5" comment (see D-164).
+- NOT YET (SR.6): the speech of the roster by positions, the lineup item and the menus of NX-L11, the trade menus' other positions, the conversion's
+  sentence, the in-game update (NX-L9), a returner on top of his place in a franchise game (Q-082).
+
+Status 2026-10-25: NX-L1 to NX-L8, NX-L10's tests of the model, NX-L12 BUILT; NX-L11 DATA BUILT (menus SR.6); NX-L9 DESIGNED, NOT BUILT; nothing heard
+(SR.7). Next: SR.6.

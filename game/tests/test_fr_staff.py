@@ -7,7 +7,7 @@ import json
 import random
 
 import pytest
-from drrig import SURNAMES, draft_league
+from drrig import SURNAMES, draft_league, legacy_data
 from randsources import ScriptedRandom, below_value, value_for
 
 from nfl4.extras import playbook_data as PD
@@ -337,19 +337,19 @@ def test_format_7_round_trips_with_a_stage_in_progress():
     judged(league, TEAM, 20, 4)
     S.begin(league)
     text = league.to_json()
-    assert json.loads(text)["format"] == D.FORMAT == 18          # (12 since SZ.8)
+    assert json.loads(text)["format"] == D.FORMAT == 19          # (12 since SZ.8; SR.5: 19, no places stored)
     again = LeagueRecord.from_json(text)
     assert again.staff == league.staff and again.to_json() == text
 
 
 def test_a_format_6_file_gets_a_new_leagues_staff_by_the_migration_with_no_draw():
     league = league_of()
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     del data["staff"]
     data["format"] = 6
     loaded = LeagueRecord.from_json(json.dumps(data))
     fresh = league_of()
-    assert loaded.staff == fresh.staff and json.loads(loaded.to_json())["format"] == D.FORMAT == 18
+    assert loaded.staff == fresh.staff and json.loads(loaded.to_json())["format"] == D.FORMAT == 19      # SR.5: format 19
 
 
 def test_a_format_7_file_without_its_staff_is_damage():

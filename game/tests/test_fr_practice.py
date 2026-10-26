@@ -9,7 +9,7 @@ import json
 import random
 
 import pytest
-from drrig import SURNAMES
+from drrig import SURNAMES, legacy_data
 from frrig import COACH_AND_TEAM, DOWN, ENTER, ESC, F9, WANT_FRANCHISE, enter_until, franchise_rig, quit_policy, run_until, spoken
 
 from nfl4.extras import nx_texts as X
@@ -19,6 +19,7 @@ from nfl4.extras.franchise import contracts as CT
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import injuries as I
 from nfl4.extras.franchise import practice as P
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise import signings as S
 from nfl4.extras.franchise.league import SEASON, LeagueRecord, new_league
 from nfl4.game.rnd import GameRandom
@@ -35,19 +36,20 @@ def season_league(seed=3):
 def let_go(league, count=200, seed=1):
     """Make `count` players of the league free agents of this season, as an offseason's cuts and market leave them (no team, no contract)."""
     rng = random.Random(seed)
-    made = 0
+    chosen = []                                   # SR.5: the men are chosen by place first, then taken off their charts (the places shift after a removal)
     for team in range(1, D.TEAMS + 1):
         for index in range(D.PLACE_COUNT):
-            if made >= count:
-                return made
+            if len(chosen) >= count:
+                break
             if rng.random() < 0.2:
                 player = league.player_at(team, index)
                 if player is None:
                     continue
-                league.rosters[team - 1][index] = 0
-                player.status, player.left, player.team, player.place, player.salary, player.years = "released", league.season, team, -1, 0, 0
-                made += 1
-    return made
+                chosen.append(player)
+    for player in chosen:
+        RR.leave(league, player, "released")
+        player.left, player.salary, player.years = league.season, 0, 0
+    return len(chosen)
 
 
 def refill(league):
@@ -71,7 +73,7 @@ def test_every_squad_keeps_the_limits_and_takes_only_players_let_go():
         squad = P.squad(league, team)
         assert len(squad) <= P.SIZE and sum(P.veteran(p) for p in squad) <= P.VETERANS
         assert all(p.place == -1 and p.salary in (P.PRACTICE_SALARY, P.PRACTICE_SALARY_VETERAN) for p in squad)
-        assert CT.cap_used(league, team) <= T.FR_CAP
+        assert CT.cap_used(league, team) <= CT.cap_of(league)                       # SR.5: the cap of every league (FR_CAP + FR_CAP_ROSTER)
     assert sum(len(P.squad(league, t)) for t in range(1, 33)) > 100
     league.check()
     again = LeagueRecord.from_json(league.to_json())
@@ -106,8 +108,8 @@ def test_the_squads_end_with_the_season_and_survive_the_drop_of_the_offseason():
 # ----- the elevations -----
 
 def hurt_whole_group(league, team, position, week=2):
-    for player in league.group_of(team, position):
-        if player is not None:
+    for player in RR.members(league, team):              # SR.5: the whole family, the men without a place too (the fill keeps two quarterbacks)
+        if player.pos == position:
             I.injure(league, player.id, "IJB", 5, 0, week - 1)
 
 
@@ -181,12 +183,12 @@ def test_an_older_league_in_its_season_gets_its_squads_when_it_is_opened():
     league = season_league()
     let_go(league)
     refill(league)
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     data["format"] = 13
     del data["practice"]
     loaded = LeagueRecord.from_json(json.dumps(data))
     assert any(p.status == P.STATUS for p in loaded.players.values())
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 18
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 19                 # SR.5: format 19
 
 
 @pytest.mark.parametrize("bad", [None, [], {"season": 1}, {"season": -1, "elevations": {}}, {"season": 1, "elevations": {"x": 1}},

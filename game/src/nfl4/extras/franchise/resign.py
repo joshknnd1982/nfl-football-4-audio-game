@@ -68,7 +68,8 @@ def running_payroll(league, team: int) -> int:
 
 
 def running_count(league, team: int) -> int:
-    return sum(1 for player in CT.team_players(league, team, {}) if CT.running(player))
+    """The men of the team's roster whose contracts run (SR.5: the practice squad's are paid, `running_payroll`, but hold no spot of the 53)."""
+    return sum(1 for player in CT.team_players(league, team, {}) if CT.running(player) and player.status != "practice")
 
 
 def room_after(payroll: int, count: int, dead: int, cap: int | None = None, slots: int | None = None) -> int:
@@ -77,13 +78,12 @@ def room_after(payroll: int, count: int, dead: int, cap: int | None = None, slot
     D-149: a league that carries benches gives its cap and its 53 slots (`league_terms`); else FR_CAP and the 34 places."""
     cap = T.FR_CAP if cap is None else cap
     slots = D.PLACE_COUNT if slots is None else slots
-    return cap - T.FR_RESIGN_RESERVE - dead - payroll - T.FR_MIN_SALARY * (slots - count - 1)
+    return cap - T.FR_RESIGN_RESERVE - dead - payroll - T.FR_MIN_SALARY * max(0, slots - count - 1)    # (SR.5: never a negative reserve)
 
 
 def league_terms(league) -> tuple:
-    """The extra arguments of `room_after` for a league that carries benches (its cap, 53 slots); () for one that does not, so the calls stay the old ones."""
-    from . import reserves
-    return (CT.cap_of(league), reserves.slots(league)) if reserves.on(league) else ()
+    """The extra arguments of `room_after`: the league's cap and the 53 slots of a roster (SR.5: every league)."""
+    return (CT.cap_of(league), D.ROSTER_MAX)
 
 
 def room(league, team: int) -> int:
@@ -132,9 +132,9 @@ def sign_again(league, player, salary: int, years: int) -> None:
 def let_go(league, player) -> None:
     """The player's contract is over and nobody signs him: he leaves his place and is a free agent of this offseason (status "free", the team
     he last played for kept, the season he left). Dead money is not charged: a contract that ran out costs nothing."""
-    if player.place >= 0:                                  # (a bench man has no place, D-149)
-        league.rosters[player.team - 1][player.place] = 0
-    player.status, player.left, player.place, player.points = "free", league.season, -1, 0
+    from . import real_roster
+    player.left, player.points = league.season, 0
+    real_roster.leave(league, player, "free")              # SR.5: off the chart; the team's places are made again
     CT.leave(player)
 
 
@@ -276,20 +276,21 @@ def check_resign(league, whole) -> None:
     if not isinstance(data, dict) or set(data) != set(KEYS):
         raise LeagueError("the stage of the expiring contracts holds %r" % (sorted(data) if isinstance(data, dict) else type(data).__name__,))
     pending = data["pending"]
-    if not isinstance(pending, list) or len(pending) > D.PLACE_COUNT:
+    if not isinstance(pending, list) or len(pending) > T.FR_CAMP_MAX:            # SR.5: a roster of up to 53 (90 in camp), not 34 places
         raise LeagueError("the players still to be asked are %r" % (pending if not isinstance(pending, list) else len(pending),))
     seen: set = set()
     for pid in pending:
         whole(pid, 1, 10 ** 9, "a player still to be asked")
         player = league.players.get(pid)
-        if (pid in seen or player is None or player.status != "active" or player.team != league.team or player.place < 0
-                or player.years != 0):
+        from .real_roster import waiting_ids
+        if (pid in seen or player is None or player.status != "active" or player.team != league.team or pid in waiting_ids(league)
+                or player.years != 0):                     # SR.5: a man of the roster without a place is the player's own too (D-164)
             raise LeagueError("player %r is not one of the player's own whose contract has run out" % (pid,))
         seen.add(pid)
     whole(data["tag_used"], 0, 1, "the franchise tag used")
     for key in ("signed", "let_go"):
-        whole(data[key], 0, D.PLACE_COUNT * 2, "the players " + key)
-    whole(data["league_gone"], 0, D.TEAMS * D.PLACE_COUNT, "the players of the league let go")
+        whole(data[key], 0, T.FR_CAMP_MAX * 2, "the players " + key)
+    whole(data["league_gone"], 0, D.TEAMS * T.FR_CAMP_MAX, "the players of the league let go")
     stars = data["stars"]
     if not isinstance(stars, list) or len(stars) > D.STARS_NAMED:
         raise LeagueError("the stars let go are %r" % (stars if not isinstance(stars, list) else len(stars),))

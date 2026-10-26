@@ -25,10 +25,11 @@ def market_league(seed=3, own=OWN, others=OTHERS, wins=8, mutate=None, broke=())
     """A league at the start of free agency (stage 6 of 9): the player's own players of these places and the other teams' players of `others` are free agents
     (the ones stage 7 did not sign again), their places empty."""
     def change(league):
-        for index in own:
-            resign.let_go(league, league.player_at(TEAM, index))
-        for team, index, rating in others:
-            player = league.player_at(team, index)
+        own_men = [league.player_at(TEAM, index) for index in own]                    # SR.5: the men first (a departure remakes the places)
+        other_men = [(league.player_at(team, index), rating) for team, index, rating in others]
+        for man in own_men:
+            resign.let_go(league, man)
+        for player, rating in other_men:
             player.rating, player.peak = rating, max(player.peak, rating)
             resign.let_go(league, player)
         for team in broke:                                   # these teams have no room under the cap: they make no offer
@@ -37,7 +38,8 @@ def market_league(seed=3, own=OWN, others=OTHERS, wins=8, mutate=None, broke=())
                     player.salary = T.FR_MAX_SALARY
         if mutate is not None:
             mutate(league)
-    return draft_league(seed=seed, team=TEAM, stage_no=D.STAGE_FREE_AGENCY, wins=[wins] * 32, finish=[D.FINISH_MISSED] * 32, mutate=change)
+    return draft_league(seed=seed, team=TEAM, stage_no=D.STAGE_FREE_AGENCY, wins=[wins] * 32, finish=[D.FINISH_MISSED] * 32, mutate=change,
+                        real=True)                           # SR.5: full teams of the real rosters (drrig.full_league)
 
 
 def quiet_league(**kwargs):
@@ -76,6 +78,11 @@ def staff_market(league, skip=()):
     copy_of = start_of(league)
     M.run_market(copy_of, skip)
     return copy_of
+
+
+def own_free(league):
+    """SR.5: the player's own men who were not signed again (free agents whose last team is his)."""
+    return [p.id for p in league.players.values() if p.status == "free" and p.team == TEAM]
 
 
 def same_players(a, b):
@@ -157,7 +164,7 @@ def test_when_the_player_ends_every_round_with_no_offer_nothing_is_signed_for_hi
     rig = run(tmp_path, league, keys=three_rounds(), keep=True)
     final = after_stage(rig)
     same_players(final, staff_market(league, skip=(TEAM,)))
-    assert [final.rosters[TEAM - 1][i] for i in OWN] == [0, 0, 0]
+    assert not any(final.players[pid].status == "active" and final.players[pid].team == TEAM for pid in own_free(league))   # SR.5: none signed for him
     assert final.market is None and final.stage_no == D.STAGE_DRAFT
     text = spoken(rig)
     assert not any(" signs with you, " in t for t in text)
@@ -334,9 +341,9 @@ def test_one_free_agent_on_the_market_is_told_in_the_singular(tmp_path):
 
 def test_an_offer_he_cannot_pay_is_not_in_the_menu(tmp_path):
     def poor(league):
-        for player in league.active_of(TEAM):
-            if player is not None:
-                player.salary = 60                                              # 31 contracts of 6.0 million: hardly any room
+        from nfl4.extras.franchise import real_roster as RR
+        for player in RR.members(league, TEAM):
+            player.salary = 80                                              # SR.5: 50 contracts of 8.0 million: hardly any room
     league = market_league(mutate=poor)
     start = start_of(league)
     space = M.room(start, TEAM)
@@ -387,7 +394,7 @@ def test_the_staff_setting_turned_on_while_the_player_is_placing_an_offer_hands_
 
     def until(rig):
         settings = rig.game.options.settings.game
-        if any(t.endswith(". you can pay up to 50.9 million. ") and not t.startswith(" round") for t in spoken(rig)) and not settings.nx_fr_auto:
+        if any(". you can pay up to " in t and t.endswith(" million. ") and not t.startswith(" round") for t in spoken(rig)) and not settings.nx_fr_auto:
             settings.nx_fr_auto = True
         return at_stage(D.STAGE_DRAFT)(rig)
     rig = run(tmp_path, league, keys=[ENTER], until=until, keep=True)
@@ -457,7 +464,7 @@ def test_a_window_closed_at_the_first_question_leaves_the_market_in_progress_on_
     rig = run(tmp_path, league, until=lambda r: any(t.startswith(" round 1 of 3. your open places") for t in spoken(r)))
     saved = saved_league(rig)
     assert saved.stage_no == D.STAGE_FREE_AGENCY and saved.market == M.begin()
-    assert [saved.rosters[TEAM - 1][i] for i in OWN] == [0, 0, 0]
+    assert all(saved.players[pid].status == "free" for pid in own_free(league))
 
 
 def test_a_window_closed_after_an_offer_resumes_the_same_round_with_the_offer_kept(tmp_path):

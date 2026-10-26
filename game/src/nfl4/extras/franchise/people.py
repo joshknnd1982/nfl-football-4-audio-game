@@ -57,8 +57,13 @@ def personality(pid: int) -> str:
 
 
 def is_starter(league, player) -> bool:
-    """He holds the first place of his group (the cut and a trade put the best first)."""
-    return player.place >= 0 and player.place == D.PLACES_OF[player.pos][0]
+    """SR.5 (design 21.7 (6)): he is a starter of his position's chart (roster_file.STARTERS of them: three receivers, two tackles, two corners, one of
+    every other position)."""
+    from .. import roster_model as RM
+    if player.status != "active" or not 1 <= player.team <= D.TEAMS or not isinstance(league.chart, list) or len(league.chart) != D.TEAMS:
+        return False
+    order = league.chart[player.team - 1].get(player.position, ())
+    return player.id in order[:RM.STARTERS.get(player.position, 1)]
 
 
 def slack_change(league, player, how: str) -> int:

@@ -7,7 +7,7 @@ import random
 
 import pytest
 
-from drrig import SURNAMES
+from drrig import SURNAMES, legacy_data
 from nfl4.extras import depth_chart as DC
 from nfl4.extras import real_names as R
 from nfl4.extras import roster_file as RF
@@ -16,7 +16,6 @@ from nfl4.extras import tuning as T
 from nfl4.extras import usage
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import real_roster as RR
-from nfl4.extras.franchise import reserves
 from nfl4.extras.franchise.files import MemoryFiles
 from nfl4.extras.franchise.league import LeagueRecord, new_league
 from nfl4.extras.franchise.store import FranchiseStore
@@ -136,7 +135,7 @@ def test_every_team_of_a_new_franchise_is_its_real_roster_man_for_man():
             p = mine[name]
             assert (p.position, p.number) == (man.pos, man.number), (t, name)
             if man.status == "":
-                assert p.status in ("active", "reserve") and p.roster_list == "", (t, name)
+                assert p.status == "active" and p.roster_list == "", (t, name)                     # SR.5: no bench status
             elif man.status == RF.SQUAD:
                 assert (p.status, p.roster_list) in (("practice", "PS"), ("active", "")), (t, name)      # ("active": the squad kicker the view needs)
             else:
@@ -147,10 +146,10 @@ def test_every_team_of_a_new_franchise_is_its_real_roster_man_for_man():
             got = [league.players[pid].name for pid in chart[position] if league.players[pid].roster_list == ""]
             assert [n for n in got if n in want] == want, (t, position)              # the file's depth order (an elevated kicker leads his own)
         assert [league.players[pid].name for pid in chart["KR"]] == [real.spoken(n) for n in team.roles["KR"]], t
-        on_53 = [p for p in mine.values() if p.status in ("active", "reserve")]
+        on_53 = [p for p in mine.values() if p.status == "active"]
         assert len(on_53) <= D.ROSTER_MAX + D.GAME_DAY_EXTRA, t
     bears = {p.name: p for p in league.players.values() if p.team == BEARS}
-    assert [n for n in ("Caleb Williams", "Tyson Bagent", "Case Keenum") if bears[n].status in ("active", "reserve")] == [
+    assert [n for n in ("Caleb Williams", "Tyson Bagent", "Case Keenum") if bears[n].status == "active"] == [
         "Caleb Williams", "Tyson Bagent", "Case Keenum"]
     assert league.player_at(BEARS, 33).name == "Caleb Williams" and bears["Miller Moss"].status == "practice"
     assert bears["Colston Loveland"].position == "TE" and bears["Colston Loveland"].pos == "WR"     # the bridge: his group is the receivers'
@@ -168,7 +167,7 @@ def test_a_new_franchise_round_trips_in_format_18_and_its_lineup_plays_the_empty
     league, _ = real_league()
     text = league.to_json()
     data = json.loads(text)
-    assert data["format"] == D.FORMAT == 18 and len(data["players"][0]) == 19 and len(data["chart"]) == 32
+    assert data["format"] == D.FORMAT == 19 and len(data["players"][0]) == 19 and len(data["chart"]) == 32 and "rosters" not in data   # SR.5
     again = LeagueRecord.from_json(text)
     again.reserves_on = True
     assert again.to_json() == text
@@ -178,13 +177,13 @@ def test_a_new_franchise_round_trips_in_format_18_and_its_lineup_plays_the_empty
     roster = league.roster_for_game(BEARS)
     assert roster.empty == [("Running Backs:", 4), ("Running Backs:", 5), ("Running Backs:", 6)]
     assert league.strength_sum(BEARS) == league.sums[BEARS - 1] and 40 * 78 <= league.strength_sum(BEARS) <= 99 * 78
-    assert not league.has_empty_place() and reserves.room(league, BEARS) == 0           # 53 men: no open spot although back places are empty
+    assert not league.has_empty_place() and RR.room(league, BEARS) == 0                 # 53 men: no open spot although back places are empty
 
 
 # ----- an older league is converted once (NX-L7) -----
 
 def downgraded(league, version):
-    data = json.loads(league.to_json())
+    data = legacy_data(league)                                                        # SR.5: an older file stores its places (format 19 does not)
     data["format"] = version
     for key in ("chart", "roster_version", "roster_offer"):
         del data[key]
@@ -203,19 +202,18 @@ def test_a_format_16_league_gets_its_teams_missing_real_men_and_every_real_quart
     assert done["from"] == 16 and done["joined"] > 500 and done["positions"] > 900
     league.check()
     for t, team in shipped_teams().items():
-        names = {p.name for p in league.players.values() if p.team == t and p.status in ("active", "reserve")}
+        names = {p.name for p in league.players.values() if p.team == t and p.status == "active"}
         assert {real.spoken(m.name) for m in team.active() if m.pos == "QB"} <= names, t
     bears = {p.name: p for p in league.players.values() if p.team == BEARS}
-    assert bears["Tyson Bagent"].status == "reserve" and bears["Tyson Bagent"].position == "QB" and bears["Tyson Bagent"].number == "17"
+    assert bears["Tyson Bagent"].status == "active" and bears["Tyson Bagent"].position == "QB" and bears["Tyson Bagent"].number == "17"   # SR.5
     assert all(p.position for p in league.players.values())
     again = LeagueRecord.from_json(league.to_json())
-    assert again.loaded_format == 18 and again.converted is None
+    assert again.loaded_format == 19 and again.converted is None
 
 
 def test_a_format_17_league_keeps_its_bench_and_gets_the_positions_by_name():
     real = R.defaults()
-    old = new_league(GameRandom(random.Random(4)), SURNAMES, "Kim", 9, "20260101-000000", real=older_names(real))
-    reserves.real_reserves(old, older_names(real))
+    old, _ = real_league(seed=4, team=9)                  # SR.5: a league of 53 a team written as format 17 did (the men without a place on the bench)
     league = LeagueRecord.from_json(downgraded(old, 17))
     league.reserves_on = True
     done = RR.convert(league, real)
@@ -236,7 +234,7 @@ def test_the_store_keeps_the_older_file_and_converts_the_league_when_it_opens_it
     store.open(True)
     assert store.league is not None and store.league.converted["from"] == 16
     assert files.data["league.sav.before-format-18"] == downgraded(old, 16).encode("utf-8")
-    assert store.save() and json.loads(files.data["league.sav"])["format"] == 18
+    assert store.save() and json.loads(files.data["league.sav"])["format"] == 19
 
 
 # ----- who starts (NX-L11 data) -----
@@ -251,7 +249,7 @@ def test_in_a_franchise_the_player_chooses_the_starter_at_every_position_and_the
     for position in RM.MADDEN + RM.ROLES:
         men = chart[position] if position in RM.ROLES else [pid for pid in chart[position]]
         if position in RM.ROLES:
-            men = [p.id for p in league.team_men(BEARS) if p.status == "reserve" and p.position in ("WR", "CB", "HB")]
+            men = [p.id for p in league.team_men(BEARS) if p.place < 0 and p.position in ("WR", "CB", "HB")]
         if len(men) < 2:
             continue
         pick = men[1]

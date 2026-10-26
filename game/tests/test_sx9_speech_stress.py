@@ -10,13 +10,13 @@ from nfl4.extras.franchise import data as D
 
 INTO_FRANCHISE = [F9, DOWN, DOWN, DOWN, DOWN, ENTER]
 TWO = [DOWN, DOWN]                                   # past the to do list and the news to the roster
-GROUP_SIZES = (1, 6, 6, 6, 5, 4, 2, 2, 1, 1)          # the roster's ten groups (test_fr_menus)
+GROUP_SIZES = (1, 6, 6, 0, 6, 5, 6, 2, 1, 1, 0)       # SR.5: the roster's 11 families of frrig's drawn team (no lineman, no snapper: said with 0)
 
 
 def every_player_keys():
     keys = []
     for size in GROUP_SIZES:
-        keys += [ENTER] + [DOWN] * (size - 1) + [ESC, DOWN]
+        keys += [ENTER] + ([DOWN] * (size - 1) + [ESC] if size else []) + [DOWN]      # (an empty family is said and closes by itself)
     return keys
 
 
@@ -38,7 +38,10 @@ def test_nvda_closing_in_the_middle_of_the_roster_goes_on_with_sapi_and_every_pl
                         mode="nvda", nvda_running=True, speech_per_char=0.002)
     run_until(rig)
     league = rig.fstore.league
-    names = [player.name for player in league.active_of(league.team)]
+    # SR.5: every man of the roster (the families' lists hold the men of the return places too)
+    from nfl4.extras.franchise import real_roster as RR
+    names = [player.name for player in RR.members(league, league.team)]
+    assert len(names) == sum(GROUP_SIZES)
     heard = " ".join(texts(rig.nvda) + texts(rig.sapi))
     assert all(name in heard for name in names)
     assert texts(rig.nvda) and texts(rig.sapi)                # the first half by NVDA, the rest by the SAPI voice

@@ -235,6 +235,12 @@ def make_view(chart: dict, roles: dict | None = None, fit=None, squad: dict | No
     for man in returners:
         if id_of(man) not in {id_of(s) for s in seen}:
             seen.append(man)
+    if len(seen) < len(RETURNERS):
+        # SR.5: a Franchise team with every back, receiver and corner in a place (a small roster after injuries or a thin offseason) returns kicks
+        # with a spare safety, then a spare backer (a real team's coverage men); never the quarterback, the kickers or the snapper
+        for man in tiers(ready, ("FS", "SS")) + tiers(ready, ("SAM", "MIKE", "WILL")) + tiers(ready, ("LEDG", "REDG", "DT")):
+            if id_of(man) not in {id_of(s) for s in seen}:
+                seen.append(man)
     for index, man in zip(RETURNERS, seen):
         view.places[index] = man
         used.add(id_of(man))

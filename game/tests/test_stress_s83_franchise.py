@@ -13,7 +13,6 @@ from drrig import SURNAMES
 from frrig import COACH_AND_TEAM, WANT_FRANCHISE, enter_until, franchise_rig, run_until
 from test_fr_resume import RecordingFiles
 
-from nfl4.extras import tuning as T
 from nfl4.extras.franchise import contracts as CT
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import signings as S
@@ -54,7 +53,7 @@ def test_hundreds_of_random_signings_and_releases_keep_the_league_whole_and_the_
             continue
         S.sign(league, player, release, week)
         made += 1
-        assert CT.cap_used(league, league.team) <= T.FR_CAP
+        assert CT.cap_used(league, league.team) <= CT.cap_of(league)                 # SR.5: the cap is FR_CAP + FR_CAP_ROSTER for every league
         league.check()
         assert LeagueRecord.from_json(league.to_json()).to_json() == league.to_json()
     assert made >= 20 and refused >= 20
@@ -67,13 +66,13 @@ def test_a_squeezed_cap_refuses_every_signing_that_would_break_it():
     S.ensure_pool(league, SURNAMES)
     for player in league.players.values():
         if player.team == league.team and player.status == "active":
-            player.salary = max(player.salary, T.FR_CAP // 40)                      # the payroll at the cap
+            player.salary = max(player.salary, CT.cap_of(league) // 40)             # the payroll at the cap (SR.5: contracts.cap_of)
     for player in S.pool(league):
         group = S.roster_group(league, league.team, player.pos)
         for release in group + [None]:
             reason = S.problems(league, player, release, 1)
             if reason is None:
-                assert S.cap_after(league, league.team, player, release) <= T.FR_CAP
+                assert S.cap_after(league, league.team, player, release) <= CT.cap_of(league)     # SR.5: contracts.cap_of
 
 
 # ----- the real calendar, closed and started again from every save -----

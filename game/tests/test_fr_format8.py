@@ -7,7 +7,7 @@ import json
 import random
 
 import pytest
-from drrig import SURNAMES, draft_league
+from drrig import SURNAMES, draft_league, legacy_data
 
 from nfl4.extras.franchise import data as D, draft as DR, market as M, undrafted as UD
 from nfl4.extras.franchise.files import MemoryFiles
@@ -32,7 +32,7 @@ def through_store(league):
 
 
 def as_format_7(league, drop=()):
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     for key in ("comp", "future_picks", "tags") + tuple(drop):
         data.pop(key, None)
     data["format"] = 7
@@ -47,7 +47,7 @@ def test_format_8_round_trips_every_new_value_through_the_real_store():
     league.market = M.begin()
     league.market["moves"] = [[1, 2, 3, 50]]
     loaded, files = through_store(league)
-    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 18          # (12 since SZ.8: the values are format 8's)
+    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 19          # (12 since SZ.8: the values are format 8's; SR.5: 19)
     assert (loaded.comp, loaded.future_picks, loaded.tags, loaded.market) == (league.comp, league.future_picks, league.tags, league.market)
     assert loaded.to_json() == league.to_json()
 

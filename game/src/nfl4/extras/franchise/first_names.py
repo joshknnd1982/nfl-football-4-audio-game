@@ -30,10 +30,33 @@ FIRST_NAMES = (
 FIRST_NAMES = tuple(dict.fromkeys(FIRST_NAMES))          # the order kept, each name once
 
 
+_REAL: frozenset | None = None
+
+
+def real_full_names() -> frozenset:
+    """NX-L12 (D-164): the full names of the real men of the shipped rosters and free agents (casefolded), read once: a made-up man never takes one."""
+    global _REAL
+    if _REAL is None:
+        try:
+            from .. import real_names
+            names = real_names.defaults()
+            _REAL = names.real_full_names() if names is not None else frozenset()
+        except Exception:                      # the names never cost a first name
+            _REAL = frozenset()
+    return _REAL
+
+
 def first_name(league_id: str, surname: str) -> str:
-    """The first name of the made-up player `surname` in league `league_id` (the same every time; no draw)."""
+    """The first name of the made-up player `surname` in league `league_id` (the same every time; no draw). NX-L12: never one that makes the full name of
+    a real player of the rosters (the next name of the list then)."""
     key = ("%s|%s" % (league_id, surname)).encode("utf-8", "surrogatepass")
-    return FIRST_NAMES[zlib.crc32(key) % len(FIRST_NAMES)]
+    start = zlib.crc32(key) % len(FIRST_NAMES)
+    real = real_full_names()
+    for step in range(len(FIRST_NAMES)):
+        name = FIRST_NAMES[(start + step) % len(FIRST_NAMES)]
+        if ("%s %s" % (name, surname)).casefold() not in real:
+            return name
+    return FIRST_NAMES[start]
 
 
 def full_name(league_id: str, surname: str) -> str:

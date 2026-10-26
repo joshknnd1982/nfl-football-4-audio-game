@@ -8,7 +8,7 @@ import copy
 import random
 
 import pytest
-from drrig import SURNAMES, at_stage, draft_league, offseason_rig
+from drrig import SURNAMES, at_stage, draft_league, full_league, offseason_rig
 from frrig import (COACH_AND_TEAM, DOWN, ENTER, ESC, F9, WANT_FRANCHISE, enter_until, franchise_rig, quit_policy, run_until, spoken)
 
 from nfl4.extras import nx_texts as X
@@ -17,6 +17,7 @@ from nfl4.extras.franchise import aging
 from nfl4.extras.franchise import contracts as CT
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import market as M
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise import signings as S
 from nfl4.extras.franchise import trades as TR
 from nfl4.extras.franchise.league import OFFSEASON, SEASON, LeagueRecord, new_league
@@ -33,6 +34,13 @@ def fresh(seed=3, team=TEAM):
     return league
 
 
+def full(seed=3, team=TEAM):
+    """SR.5: a league of full teams (53 men, drrig.full_league) in week 1: a signing needs a release, as the season's whole places did."""
+    league = full_league(seed, team)
+    league.stage, league.gtp = SEASON, 1
+    return league
+
+
 def quarterback(league, team=TEAM):
     return league.player_at(team, D.PLACES_OF["QB"][0])
 
@@ -43,8 +51,8 @@ def test_the_pool_is_three_veterans_for_every_group_made_from_the_league_and_not
     league = fresh()
     assert S.pool(league) == []
     made = S.ensure_pool(league, SURNAMES)
-    assert made == 3 * len(D.POSITIONS) == len(S.pool(league))
-    for position in D.POSITIONS:
+    assert made == 3 * len(D.ROSTER_ORDER) == len(S.pool(league))                 # SR.5: the 11 families (the line and the snapper too)
+    for position in D.ROSTER_ORDER:
         assert len(S.pool_of(league, position)) == 3
     for p in S.pool(league):
         assert p.status == "free" and p.team == 0 and p.left == 0 and p.place == -1 and p.salary == p.years == 0
@@ -66,7 +74,7 @@ def test_the_pool_is_the_best_first_and_is_no_part_of_the_offseasons_market_or_o
     league.stage, league.stage_no = OFFSEASON, D.STAGE_FREE_AGENCY
     assert M.pool(league) == []                                                      # the veterans have left = 0: no market sees them
     kept = aging.drop_the_unkept(league)
-    assert kept == 3 * len(D.POSITIONS) and S.pool(league) == []                     # stage 6 drops them like the released
+    assert kept == 3 * len(D.ROSTER_ORDER) and S.pool(league) == []                 # SR.5: the 11 families                     # stage 6 drops them like the released
 
 
 def test_a_player_the_player_released_is_a_free_agent_of_the_season_and_of_the_offseason_market():
@@ -83,7 +91,7 @@ def test_a_player_the_player_released_is_a_free_agent_of_the_season_and_of_the_o
 # ----- a signing -----
 
 def test_a_signing_needs_a_release_when_the_group_is_full_and_makes_dead_money_and_a_whole_record():
-    league = fresh()
+    league = full()                                                                  # SR.5: a team of 53 has no room
     S.ensure_pool(league, SURNAMES)
     old, new = quarterback(league), S.pool_of(league, "QB")[0]
     assert not S.open_place(league, TEAM, "QB") and S.problems(league, new, None, 1) == "no place and no release"
@@ -95,18 +103,20 @@ def test_a_signing_needs_a_release_when_the_group_is_full_and_makes_dead_money_a
     assert dead > 0 and S.cap_after(league, TEAM, new, old) == expected
     paid = S.sign(league, new, old, 1)
     assert paid == (salary, years, dead) and league.dead[TEAM - 1] == dead
-    assert new.status == "active" and new.team == TEAM and quarterback(league) is new and (new.salary, new.years) == (salary, years)
+    assert new.status == "active" and new.team == TEAM and (new.salary, new.years) == (salary, years)
+    assert new.id in league.chart[TEAM - 1][new.position] and RR.roster_count(league, TEAM) == D.ROSTER_MAX      # SR.5: he joins the chart, the 53 stay 53
+    assert quarterback(league) is max((p for p in RR.members(league, TEAM) if p.pos == "QB"), key=lambda p: (p.rating, -p.id))   # the best plays
     assert old.status == "free" and old.place == -1 and old.salary == old.years == 0
     assert CT.cap_used(league, TEAM) == expected
     league.check()
 
 
 def test_a_signing_into_an_open_place_releases_nobody(monkeypatch):
-    league = fresh()
+    league = full()
     S.ensure_pool(league, SURNAMES)
-    runner = league.player_at(TEAM, D.PLACES_OF["RB"][-1])
-    league.rosters[TEAM - 1][runner.place] = 0                                       # an empty place (a test of the rules only: the season's places are full)
-    runner.status, runner.place, runner.left, runner.salary, runner.years = "free", -1, 0, 0, 0
+    runner = [p for p in RR.members(league, TEAM) if p.pos == "RB"][-1]               # (a back place may be empty: the men, not the places)
+    RR.leave(league, runner, "free")                                                 # SR.5: a spot free on the 53 (the chart's next man takes the place)
+    runner.left, runner.salary, runner.years, runner.team = 0, 0, 0, 0
     new = S.pool_of(league, "RB")[0]
     assert S.open_place(league, TEAM, "RB") and S.problems(league, new, None, 1) is None
     assert S.problems(league, new, league.player_at(TEAM, D.PLACES_OF["RB"][0]), 1) == "a release with an open place"
@@ -115,7 +125,7 @@ def test_a_signing_into_an_open_place_releases_nobody(monkeypatch):
 
 
 def test_a_signing_that_breaks_a_rule_is_refused_with_the_reason():
-    league = fresh()
+    league = full()                                                                  # SR.5: a full 53, so a release is asked for
     S.ensure_pool(league, SURNAMES)
     old, new = quarterback(league), S.pool_of(league, "QB")[0]
     assert S.problems(league, new, old, 20) == "outside the regular season"          # the play-offs (week 19 and on)
@@ -131,14 +141,17 @@ def test_a_signing_that_breaks_a_rule_is_refused_with_the_reason():
 
 def test_a_hurt_player_cannot_be_released_and_the_cap_holds(monkeypatch):
     from nfl4.extras.franchise import injuries
-    league = fresh()
+    league = full()                                                                  # SR.5: a full 53, so a release is asked for
     S.ensure_pool(league, SURNAMES)
     old, new = quarterback(league), S.pool_of(league, "QB")[0]
     kind = next(iter(injuries.KIND_IDS))
     injuries.injure(league, old.id, kind, 3, 0, 1)
-    assert S.problems(league, new, old, 1) == "a release who is hurt" and S.releasable(league, TEAM, "QB", 1) == []
+    releasable = S.releasable(league, TEAM, "QB", 1)
+    assert S.problems(league, new, old, 1) == "a release who is hurt" and old not in releasable
+    assert releasable == [p for p in RR.members(league, TEAM) if p.pos == "QB" and p is not old]      # SR.5: the team has two quarterbacks; the fit one may go
     league.injuries["hurt"].clear()
-    monkeypatch.setattr(T, "FR_CAP", CT.cap_used(league, TEAM) + S.price(new)[0] - old.salary + CT.dead_money(old) - 1)       # one tenth over
+    limit = CT.cap_used(league, TEAM) + S.price(new)[0] - old.salary + CT.dead_money(old) - 1                                 # one tenth over
+    monkeypatch.setattr(T, "FR_CAP", limit - T.FR_CAP_ROSTER)                        # SR.5: the cap is FR_CAP + FR_CAP_ROSTER (contracts.cap_of)
     assert S.problems(league, new, old, 1) == "over the cap"
     monkeypatch.setattr(T, "FR_CAP", T.FR_CAP + 1)
     assert S.problems(league, new, old, 1) is None
@@ -159,17 +172,17 @@ def test_releasing_a_man_ends_his_open_trade_demand_and_the_question_about_him()
 # ----- the menu on the program rig -----
 
 def test_f9_free_agents_in_the_season_signs_a_quarterback_and_writes_before_it_tells(tmp_path):
-    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + FREE_AGENTS + [ENTER] * 5, policy=quit_policy)
+    # SR.5: the rig's new franchise is a drawn league of 34 men a team, so the team has room on its 53: no release is asked (sign, the group, the man, Enter)
+    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + FREE_AGENTS + [ENTER] * 4, policy=quit_policy)
     run_until(rig)
     league = rig.fstore.league
     text = spoken(rig)
     assert any(t.startswith(" free agents. you can sign a player any week") for t in text)
-    signed = [t for t in text if t.startswith(" you released ")]
-    assert len(signed) == 1 and " and signed " in signed[0]
-    old = next(p for p in league.players.values() if p.status == "free" and p.team == 0 and p.left == league.season)
-    new = quarterback_of(league)
-    assert old.pos == new.pos == "QB" and new.team == league.team and new.status == "active" and new.salary > 0
-    assert league.dead[league.team - 1] > 0 or old.years == 0
+    signed = [t for t in text if t.startswith(" you signed ")]
+    assert len(signed) == 1 and not [t for t in text if t.startswith(" you released ")]
+    new = next(p for p in RR.members(league, league.team) if p.salary > 0 and " you signed %s, " % p.name in signed[0])
+    assert new.pos == "QB" and new.status == "active" and new.id in league.chart[league.team - 1]["QB"]
+    assert league.dead[league.team - 1] == 0
     assert league.trades["log"] == [] and S.pool_of(league, "QB") and rig.fstore.files.data["league.sav"]                                # written
 
 
@@ -178,7 +191,7 @@ def quarterback_of(league):
 
 
 def test_the_confirmation_says_no_to_a_signing_with_escape_and_changes_nothing(tmp_path):
-    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + FREE_AGENTS + [ENTER] * 4 + [ESC], policy=quit_policy)
+    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + FREE_AGENTS + [ENTER] * 3 + [ESC], policy=quit_policy)    # SR.5: no release asked (room on the 53)
     run_until(rig)
     league = rig.fstore.league
     before = quarterback_of(league)

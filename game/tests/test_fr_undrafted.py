@@ -11,6 +11,7 @@ from frrig import DOWN, ENTER, UP, spoken
 from nfl4.extras import nx_texts as X
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import contracts as CT, data as D, draft as DR, undrafted as UD
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise.league import LeagueError, LeagueRecord
 from nfl4.game.rnd import GameRandom
 
@@ -242,16 +243,27 @@ def test_with_the_staff_setting_on_nothing_is_asked_and_his_team_follows_the_com
 
 
 def test_of_two_teams_that_want_him_the_one_that_values_him_more_signs_him():
-    league, draft = drafted(mutate=wanting)
-    prospect = next(p for p in UD.pool(draft) if UD.wanted(draft, TEAM, p) and p.pos in ("RB", "WR", "DL", "LB", "CB"))
+    # SR.5: a need is by family (fewer than FR_ROSTER_TARGET, or a starter under FR_DRAFT_WEAK), so both teams have the need bonus and the values differ by
+    # the "better" one: the player's team is short of backs but its two starters are better than him, the other team's backs are all weak
+    league, draft = drafted()
+    prospect = next(p for p in UD.pool(draft) if p.pos == "RB")
     other = 20 if TEAM != 20 else 21
-    index = D.PLACES_OF[prospect.pos][0]                                # the other team gets an open place of his group: the need bonus
-    gone = league.players[league.rosters[other - 1][index]]
-    league.rosters[other - 1][index] = 0
-    gone.status, gone.place, gone.left = "released", -1, league.season
+    rookies = sum(1 for r in draft.rookies.get(TEAM, ()) if r.pos == "RB")
+    backs = sorted((p for p in RR.members(league, TEAM) if p.pos == "RB"), key=lambda p: (-p.rating, p.id))
+    keep = T.FR_ROSTER_TARGET["RB"] - 1 - rookies
+    assert keep >= T.FR_GROUP_STARTERS["RB"], "the player's team drafted too many backs for this case"
+    for man in backs[:keep]:
+        man.rating = man.peak = 70
+    for man in backs[keep:]:
+        man.left = league.season
+        RR.leave(league, man, "released")
+    for man in RR.members(league, other):
+        if man.pos == "RB":
+            man.rating = man.peak = 41
+    RR.refresh_view(league, other)
     draft = DR.Draft(league)
     values = {t: draft.value(prospect, draft.needs(t)) for t in (TEAM, other)}
-    assert UD.wanted(draft, other, prospect) and values[other] > values[TEAM]
+    assert UD.wanted(draft, TEAM, prospect) and UD.wanted(draft, other, prospect) and values[other] > values[TEAM]
     result = UD.resolve(draft, [UD.Offer(TEAM, prospect.index), UD.Offer(other, prospect.index)])
     assert any(p.index == prospect.index and t == other for p, t, _pl in result.signed)
 

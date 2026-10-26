@@ -298,7 +298,8 @@ def test_when_nobody_fits_the_stage_says_so_and_offers_only_letting_him_go(tmp_p
     def poor(league):
         for player in league.active_of(TEAM):
             if player is not None and player.years > 0:
-                player.salary = 60                                                           # 31 running contracts of 6.0 million
+                player.salary = 70                                                           # 31 running contracts of 7.0 million
+    # SR.5 (D-164): the cap is CT.cap_of (FR_CAP + FR_CAP_ROSTER) in every league, so the contracts are dearer for the room to stay under the lower offer
     league = contract_league(mutate=poor)
     start = start_of(league)
     first = asked(league)[0]
@@ -313,7 +314,7 @@ def test_when_nobody_fits_the_stage_says_so_and_offers_only_letting_him_go(tmp_p
     assert text[at + 2] == " 1. let him go "                                                 # the only answer there is
     assert rig.fstore.league.players[first.id].status == "free"
     after = LeagueRecord.from_json(rig.kept[D.STAGE_FREE_AGENCY].decode("utf-8"))
-    assert CT.cap_used(after, TEAM) <= T.FR_CAP
+    assert CT.cap_used(after, TEAM) <= CT.cap_of(after)                                     # SR.5: the cap of every league
 
 
 def test_the_room_shrinks_as_the_player_signs_so_the_team_ends_under_the_cap(tmp_path):
@@ -346,16 +347,20 @@ def test_with_the_staff_handling_it_nothing_is_asked_and_one_sentence_counts_wha
 
 
 def test_with_the_setting_off_every_player_is_asked_and_nothing_is_decided_for_him(tmp_path):
+    weak_man = {}
+
     def weak(league):
+        weak_man["id"] = league.player_at(TEAM, 7).id
         league.player_at(TEAM, 7).rating = 41                                                # the staff would let him go
     league = contract_league(mutate=weak)
     start = start_of(league)
-    assert resign.worth_keeping(start.player_at(TEAM, 0)) and not resign.worth_keeping(start.player_at(TEAM, 7))
+    man = start.players[weak_man["id"]]              # SR.5 (D-164): the view is made again by rating, so he is held by his ID, not by place 7
+    assert resign.worth_keeping(start.player_at(TEAM, 0)) and not resign.worth_keeping(man)
     rig = run(tmp_path, league)                                                              # Enter at every question
     text = spoken(rig)
     names = [t for t in text if "he asks" in t]
-    assert len(names) == 3 and any(start.player_at(TEAM, 7).name in t for t in names)        # the weak one is asked about too
-    assert rig.fstore.league.players[start.player_at(TEAM, 7).id].status == "active"         # and Enter signed him: the player's choice
+    assert len(names) == 3 and any(man.name in t for t in names)                             # the weak one is asked about too
+    assert rig.fstore.league.players[man.id].status == "active"                              # and Enter signed him: the player's choice
 
 
 def test_the_staffs_choice_for_the_players_team_equals_what_the_computer_teams_do_for_theirs(tmp_path):

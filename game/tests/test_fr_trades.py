@@ -11,7 +11,7 @@ import json
 import random
 
 import pytest
-from drrig import SURNAMES
+from drrig import SURNAMES, legacy_data
 
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import contracts as CT
@@ -232,7 +232,10 @@ def test_the_reasons_a_trade_cannot_be_made():
     assert TR.problems(league, good, 5) == "outside the trade window"
     league.stage = SEASON
     back = league.player_at(REBUILDER, D.PLACES_OF["RB"][0])
-    assert TR.problems(league, TR.Trade(CONTENDER, REBUILDER, a.id, back.id), 5) == "players of different positions"
+    # SR.5 (design 21.7 (4)): any position for any, unless a team would fall under a family minimum (the contender's only quarterback for a back)
+    assert TR.problems(league, TR.Trade(CONTENDER, REBUILDER, a.id, back.id), 5) == "a team would be short of a position"
+    runner, corner = league.player_at(CONTENDER, D.PLACES_OF["RB"][0]), league.player_at(REBUILDER, D.PLACES_OF["CB"][0])
+    assert TR.problems(league, TR.Trade(CONTENDER, REBUILDER, runner.id, corner.id), 5) is None      # six backs and six corners: both keep their minimums
     assert TR.problems(league, TR.Trade(CONTENDER, CONTENDER, a.id, b.id), 5) == "the teams"
     assert TR.problems(league, TR.Trade(REBUILDER, CONTENDER, a.id, b.id), 5) == "a player who is not on his team"
     assert TR.problems(league, TR.Trade(CONTENDER, REBUILDER, a.id, b.id, ((1, REBUILDER),), ()), 5) == "a pick the team does not own"
@@ -246,11 +249,12 @@ def test_a_trade_that_would_put_a_team_over_the_cap_cannot_be_made_and_one_just_
     league = scenario()
     a, b = quarterback(league, CONTENDER), quarterback(league, REBUILDER)
     trade = TR.Trade(CONTENDER, REBUILDER, a.id, b.id)
+    cap = CT.cap_of(league)                                               # SR.5: the cap of every league is FR_CAP + FR_CAP_ROSTER
     for player in league.active_of(CONTENDER):                            # the contender's other contracts rise until the trade fills its cap exactly
-        need = T.FR_CAP - TR.cap_after(league, trade, CONTENDER)
+        need = cap - TR.cap_after(league, trade, CONTENDER)
         if player is not a and need > 0:
             player.salary += min(need, T.FR_MAX_SALARY - player.salary)
-    assert TR.cap_after(league, trade, CONTENDER) == T.FR_CAP == CT.cap_used(league, CONTENDER) - a.salary + b.salary
+    assert TR.cap_after(league, trade, CONTENDER) == cap == CT.cap_used(league, CONTENDER) - a.salary + b.salary
     assert TR.problems(league, trade, 5) is None
     b.salary += 1                                                         # one tenth of a million more: over the cap
     assert TR.problems(league, trade, 5) == "over the cap"
@@ -293,7 +297,9 @@ def test_a_trade_puts_the_better_player_first_in_his_new_group():
     set_player(giver, 75, 30)
     taker = league.player_at(CONTENDER, D.PLACES_OF["DL"][2])
     TR.execute(league, TR.Trade(CONTENDER, REBUILDER, taker.id, giver.id), 5, TR.KIND_COMPUTER)
-    assert league.player_at(CONTENDER, D.PLACES_OF["DL"][0]) is giver and giver.place == D.PLACES_OF["DL"][0]
+    # SR.5: he joins the contender's chart at his own position, first by the staff's order (the best rating), and takes that position's first place
+    assert league.chart[CONTENDER - 1][giver.position][0] == giver.id and giver.place in D.PLACES_OF["DL"]
+    assert giver.place == min(i for i in D.PLACES_OF["DL"] if league.player_at(CONTENDER, i).position == giver.position)
     league.check()
 
 
@@ -581,11 +587,11 @@ def test_a_damaged_offer_item_is_refused(mutate):
 def test_format_five_round_trips_the_trades_and_a_format_four_file_loads_with_none():
     league = scenario()
     TR.execute(league, TR.search(league, 5, standing())[0], 5, TR.KIND_COMPUTER)
-    data = json.loads(league.to_json())
-    assert data["format"] == D.FORMAT == 18 and data["trades"] == league.trades     # (format 12 since SZ.8: the trades are format 5's)
+    data = legacy_data(league)
+    assert data["format"] == D.FORMAT == 19 and data["trades"] == league.trades     # SR.5: format 19 (no places stored)     # (format 12 since SZ.8: the trades are format 5's)
     again = LeagueRecord.from_json(league.to_json())
     assert again.trades == league.trades and again.to_json() == league.to_json()
-    old = json.loads(fresh().to_json())
+    old = legacy_data(fresh())
     del old["trades"]
     old["format"] = 4
     loaded = LeagueRecord.from_json(json.dumps(old))
@@ -685,7 +691,7 @@ def test_a_draft_saved_by_format_four_gets_the_owners_of_the_draft_order():
     for _ in range(40):
         _round, _pick, team = draft.next_slot()
         draft.make_pick(team, draft.best_for(team))
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     order = data["draft"]["order"]
     del data["draft"]["owners"], data["draft"]["comp"], data["draft"]["undrafted"], data["trades"]     # (what formats 5 to 8 added to a draft)
     del data["comp"], data["future_picks"], data["tags"]
@@ -693,7 +699,12 @@ def test_a_draft_saved_by_format_four_gets_the_owners_of_the_draft_order():
     loaded = LeagueRecord.from_json(json.dumps(data))
     assert loaded.draft["owners"] == [order[i % D.TEAMS] for i in range(D.DRAFT_PICKS)]
     loaded.staff = league.staff                    # SX.8l: a format-4 file gets a new league's staff (the migration of format 7); the rest is the file's
-    assert loaded.to_json() == league.to_json()
+    # SR.5: an older file's 34 places become the chart (real_roster.from_places): its two return places become the KR role and men of equal rating keep the
+    # places' order, so the charts are compared by the men of each position; everything else is the file's
+    mine, theirs = json.loads(loaded.to_json()), json.loads(league.to_json())
+    for record in (mine, theirs):
+        record["chart"] = [{pos: sorted(ids) for pos, ids in chart.items() if pos not in ("KR", "PR")} for chart in record["chart"]]
+    assert mine == theirs
 
 
 def test_traded_picks_while_a_draft_is_in_progress_are_damage():

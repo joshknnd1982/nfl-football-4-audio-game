@@ -160,7 +160,7 @@ def stand_in_rating(position: str) -> int:
 
 
 def used_names(league: LeagueRecord, extra=()) -> set:
-    names = {p.name for p in league.players.values() if p.status in ("active", "reserve")}      # D-149: the bench's names are in use
+    names = {p.name for p in league.players.values() if p.status == "active"}      # the roster's names are in use
     names |= {row[2] for row in list(extra) + league.injuries["stand_ins"]}
     return FN.name_keys(league.league_id, names)            # D-131: a made-up full name keeps its surname in use
 
@@ -325,8 +325,8 @@ def cover_choices(league: LeagueRecord, pid: int, week: int) -> list:
     every other player of his group who plays (for a returner: the backs and receivers who play, but the other returner), the best first. [] when he plays,
     when the group has nobody fit (the staff's stand-in plays) or when there is only one man to choose (nothing to ask)."""
     player = league.players.get(pid)
-    if player is None or player.status != "active" or player.team != league.team:
-        return []
+    if player is None or player.status != "active" or player.team != league.team or player.place < 0:
+        return []                                         # (SR.5: a hurt man the game day does not use leaves no place to fill)
     team = league.team
     if plays(league, player, week, staff=False):
         return []
@@ -337,12 +337,14 @@ def cover_choices(league: LeagueRecord, pid: int, week: int) -> list:
     first = staff_table[player.place][0]
     if not isinstance(first, int):
         return []                                         # a stand-in (or an elevated squad player): nobody of his own team is fit
-    if player.pos == "RET":
+    place_group = D.POSITION_OF_PLACE[player.place]               # SR.5: the place he plays (a 3-4 edge man at linebacker, a receiver who returns)
+    if place_group == "RET":
         returners = {o.id for o in league.group_of(team, "RET") if o is not None}
         group = [q for q in league.group_of(team, "RB") + league.group_of(team, "WR") if q is not None and q.id not in returners]
     else:
-        group = [q for q in league.group_of(team, player.pos) if q is not None]
-    group += league.bench(team, player.pos)                       # D-149: the men of his bench may start in his place too
+        group = [q for q in league.group_of(team, place_group) if q is not None]
+        group += [q for q in league.bench(team, place_group) if q.pos != player.pos]
+    group += league.bench(team, player.pos)                       # D-149: the men of the roster without a place may start in his place too
     others = sorted((q for q in group if q.id not in (pid, first) and plays(league, q, week, staff=False)), key=lambda q: (-q.rating, q.place))
     choices = [league.players[first]] + others
     return choices if len(choices) > 1 else []

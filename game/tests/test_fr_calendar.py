@@ -6,6 +6,7 @@ the engine's bye week and calendar weeks, the schedule the player hears, and who
 The original's 16 weeks are tested where they were (test_season_*.py, the Franchise tests with their 16 random weeks).
 """
 import pytest
+from drrig import legacy_data
 from frrig import COACH_AND_TEAM, ENTER, WANT_FRANCHISE, enter_until, franchise_rig, run_until, spoken
 from seasonrig import Draws, ENTER as KEY_ENTER, season_rig, texts
 
@@ -272,7 +273,7 @@ def test_a_league_file_of_format_11_is_the_originals_16_weeks_and_its_offseason_
     run_until(rig)
     league = rig.fstore.league
     league.news.append({"season": 1, "week": 16, "pool": "NWD", "markup": "The first pick.", "told": 1})        # an offseason line as format 11 kept it
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     data["format"] = 11
     del data["calendar"]
     again = LeagueRecord.from_json(json.dumps(data))
@@ -313,7 +314,7 @@ def test_the_summaries_and_the_standings_know_the_length_of_the_season(shipped):
 
 def test_a_team_on_its_bye_plays_no_game_gets_no_game_injury_and_is_not_asked_about_a_hurt_player(shipped):
     import random
-    from drrig import SURNAMES
+    from drrig import SURNAMES, legacy_data
     from nfl4.extras import tuning as T
     from nfl4.extras.franchise import injuries, workload
     from nfl4.extras.franchise.league import SEASON, new_league

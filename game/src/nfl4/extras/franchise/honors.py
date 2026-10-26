@@ -218,7 +218,7 @@ def check_honors(league, whole) -> None:
                 raise LeagueError("a coach's award is %r" % (row,))
         else:
             whole(row[2], 1, 10 ** 9, "an award's player")
-            if row[4] not in D.POSITIONS or row[2] not in league.players:
+            if row[4] not in D.ALL_POSITIONS or row[2] not in league.players:
                 raise LeagueError("the award of player %r, who is not in the league" % (row[2],))
         if row[0] >= league.season and not (row[0] == league.season and league.stage != "season"):
             raise LeagueError("an award of season %r before it ended" % (row[0],))

@@ -5,6 +5,8 @@ NFL_FRANCHISE_DESIGN 11, SX.8a. The menus are the F9 classes with their keys as 
 whole program on the rig of tests/frrig.py. The names of the players are drawn, so the tests read them from the league record. The
 window closes (`quit_policy`) when the scripted keys are used up.
 """
+import pytest
+
 from frrig import (COACH_AND_TEAM, DOWN, ENTER, ESC, F9, WANT_FRANCHISE, enter_until, franchise_rig, quit_policy, run_until,
                    spoken)
 from nfl4.data import settingsfile
@@ -55,12 +57,20 @@ def test_while_the_franchise_is_in_use_its_menu_has_the_to_do_list_the_news_the_
     assert [labels for title, labels in seen if title == "Added functions"][0][3:] == ["Rules.", "Franchise", "About NFL Football 4."]
 
 
-def test_the_roster_has_the_ten_groups_with_their_counts(tmp_path, monkeypatch):
+def test_the_roster_has_the_families_with_their_counts(tmp_path, monkeypatch):
+    # SR.5 (D-164): the roster lists the FAMILIES of D.ROSTER_ORDER (no "returners": the return places hold men of a family), each with the number
+    # of the team's men of that family in the chart, a family with nobody said with 0 (the drawn league of frrig has no OL and no LS), and they add up
+    # to the title's.
+    from nfl4.extras import roster_model as RM
+    from nfl4.extras.franchise import data as D
     seen = menus_seen(monkeypatch)
-    in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [ENTER])
-    roster = [labels for title, labels in seen if title == "your roster"][0]
-    assert roster == [" quarterback: 1 ", " running backs: 6 ", " receivers: 6 ", " defensive linemen: 6 ", " linebackers: 5 ",
-                      " cornerbacks: 4 ", " safeties: 2 ", " returners: 2 ", " kicker: 1 ", " punter: 1 "]
+    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [ENTER])
+    title, roster = [(title, labels) for title, labels in seen if title.startswith("your roster")][0]
+    chart = league(rig).chart[league(rig).team - 1]
+    counts = {family: sum(len(ids) for pos, ids in chart.items() if RM.GROUP.get(pos) == family) for family in D.ROSTER_ORDER}
+    assert len(roster) == len(D.ROSTER_ORDER) == 11 and [label.split(":")[0] for label in roster][:3] == [" quarterback", " running backs", " receivers"]
+    assert [int(label.split(":")[1]) for label in roster] == [counts[family] for family in D.ROSTER_ORDER]
+    assert title.startswith("your roster, %d of 53 players" % sum(counts.values()))
 
 
 def test_a_group_lists_its_players_by_name_position_rating_age_and_potential(tmp_path):

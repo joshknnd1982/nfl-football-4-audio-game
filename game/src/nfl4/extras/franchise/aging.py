@@ -21,17 +21,18 @@ from dataclasses import dataclass
 from .. import tuning as T
 from . import contracts
 from . import data as D
-from . import first_names as FN
-from .league import LeagueRecord, Player, draw_name
+from .league import LeagueRecord, Player
 
 
 def league_order(league: LeagueRecord):
-    """The active players, team 1 to 32 and each team's places in order, then (D-149) the team's bench by player ID (a league with no bench draws
-    exactly as before)."""
+    """The active players, team 1 to 32 and each team's places in order (the view), then the rest of its roster by player ID (SR.5: the men without a
+    place; the draft's rookies are not yet the league's to age)."""
+    from .real_roster import waiting_ids
     players = league.players
+    waiting = waiting_ids(league)
     bench: dict = {}
     for player in players.values():
-        if player.status == "reserve":
+        if player.status == "active" and player.place < 0 and player.id not in waiting:
             bench.setdefault(player.team, []).append(player)
     for team, roster in enumerate(league.rosters, start=1):
         for pid in roster:
@@ -98,11 +99,15 @@ def apply_aging(league: LeagueRecord, retiring: list) -> None:
     for player in list(league_order(league)):
         player.age = aged(player)
         player.seasons = min(99, player.seasons + 1)
+    from . import real_roster
+    teams = set()
     for player in retiring:
-        if player.place >= 0:                                # (a bench man has no place, D-149)
-            league.rosters[player.team - 1][player.place] = 0
-        player.status, player.left, player.place, player.points = "retired", league.season, -1, 0     # points are of no use now
+        teams.add(player.team)
+        player.left, player.points = league.season, 0         # points are of no use now
+        real_roster.leave(league, player, "retired", refresh=False)
         contracts.leave(player)
+    for team in sorted(t for t in teams if 1 <= t <= D.TEAMS):
+        real_roster.refresh_view(league, team)                # SR.5: the next man of each chart plays the place
     contracts.turn_the_year(league)
 
 
@@ -161,49 +166,17 @@ def summarize(plan: list, team: int) -> DevelopmentSummary:
 # ----- the places -----
 
 def place_by_rating(league: LeagueRecord, team: int | None = None) -> None:
-    """In each group the best player takes the first place (design 7.6: the order does not change play, it makes the roster
-    speech start with the best); equal ratings keep the lower ID first. A group with an empty place keeps it last."""
+    """SR.5 (D-164): each team's chart in the staff's order (the best of each position first, design 7.6; the player's own order kept, NX-D3) and its
+    34 places made again from it (real_roster.refresh_view)."""
+    from . import real_roster
     for t in ([team] if team else range(1, D.TEAMS + 1)):
-        roster = league.rosters[t - 1]
-        for position, places in D.PLACES_OF.items():
-            players = sorted((league.players[roster[i]] for i in places if roster[i]), key=lambda p: (-p.rating, p.id))
-            if t == league.team:
-                from . import depth
-                players = depth.player_order(league, position, players)     # NX-D3: the player's own order for the men he placed
-            for index, player in zip(places, players):
-                roster[index] = player.id
-                player.place = index
-            for index in places[len(players):]:
-                roster[index] = 0
+        real_roster.refresh_view(league, t)
 
 
 def fill_places(league: LeagueRecord, rnd, surnames: list) -> int:
-    """The fill of the roster cut (design 7.6, stage 5): every empty place gets an undrafted rookie, in team order and place order,
-    the name, the rating, the potential as design 12 item 6 draws them for the fill. Returns how many. The places are then put in
-    rating order. (SX.8c used it as a stand-in at the end of stage 3, before the draft existed.)"""
-    used = FN.name_keys(league.league_id, (player.name for player in league.players.values() if player.status in ("active", "reserve")))   # D-131, D-149
-    high, average = T.FR_ROOKIE_POTENTIAL_SHARES
-    count = 0
-    for team in range(1, D.TEAMS + 1):
-        roster = league.rosters[team - 1]
-        for index, pid in enumerate(roster):
-            if pid:
-                continue
-            position = D.POSITION_OF_PLACE[index]
-            name = draw_name(rnd, surnames, used)
-            used.add(name)
-            base, span = T.FR_FILL_RATING if D.GROUP_SIZE[position] >= 3 else T.FR_FILL_RATING_SMALL
-            rating = clamp_rating(base + rnd.below(span))
-            roll = rnd.below(100)
-            potential = "high" if roll < high else "average" if roll < average else "low"
-            player = Player(league.next_id, FN.full_name(league.league_id, name), position, rating, potential, D.AGE_MIN + 1, 0, rating, None, 0, "active", 0,
-                            team, index, T.FR_MIN_SALARY, T.FR_FILL_YEARS)       # SX.8g: an undrafted rookie signs for the minimum
-            league.players[player.id] = player
-            roster[index] = player.id
-            league.next_id += 1
-            count += 1
-    place_by_rating(league)
-    return count
+    """The fill of the roster cut (stage 5): SR.5, the families a team holds fewer of than their minimums (real_roster.fill_needs). Returns how many."""
+    from . import real_roster
+    return len(real_roster.fill_needs(league, rnd, surnames))
 
 
 def drop_the_unkept(league: LeagueRecord) -> int:
@@ -213,7 +186,7 @@ def drop_the_unkept(league: LeagueRecord) -> int:
     from . import honors
     kept = honors.keeps(league)
     gone = [pid for pid, p in league.players.items()
-            if p.status not in ("active", "practice", "reserve", "list") and p.team != league.team and p.peak < D.STAR_PEAK and pid not in kept]   # D-136: the squads stay; SR.4 the reserve lists
+            if p.status not in ("active", "practice", "list") and p.team != league.team and p.peak < D.STAR_PEAK and pid not in kept]   # D-136: the squads stay; SR.4 the reserve lists
     for pid in gone:
         del league.players[pid]
     return len(gone)

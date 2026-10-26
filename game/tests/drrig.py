@@ -20,10 +20,49 @@ from nfl4.game.rnd import GameRandom
 SURNAMES = load_surnames()
 
 
-def draft_league(seed=3, team=5, stage_no=D.STAGE_DRAFT, wins=None, finish=None, mutate=None):
+def full_league(seed=3, team=5):
+    """SR.5 (D-164): a new franchise of the real rosters made exact for the tests that take men from teams: every family of every team at exactly its
+    roster target (FR_ROSTER_TARGET: the weakest men of a family over it released, made-up men of a family under it signed for the minimum), four more
+    linemen to fill the 53, and every team spending 70 percent of its cap (the salaries over the minimum lowered alike, so a team can pay what it needs)."""
+    from nfl4.extras import nfl_surnames, real_names
+    from nfl4.extras import roster_model as RM
+    from nfl4.extras import tuning as T
+    from nfl4.extras.franchise import contracts as CT
+    from nfl4.extras.franchise import real_roster as RR
+    from nfl4.extras.franchise.league import Player
+    league = new_league(GameRandom(random.Random(seed)), nfl_surnames.pool(), "Kim", team, "20260101-000000", real=real_names.defaults())
+    for t in range(1, D.TEAMS + 1):
+        for group, target in T.FR_ROSTER_TARGET.items():
+            while RR.family_count(league, t, group) > target:
+                man = min((p for p in RR.members(league, t) if p.pos == group), key=lambda p: (p.rating, -p.id))
+                RR.leave(league, man, "released", refresh=False)
+                CT.leave(man)
+            for k in range(target - RR.family_count(league, t, group)):
+                man = Player(league.next_id, "Filler %s %d %d" % (group, t, k), group, 60, "average", 26, 4, 60, None, 0, "active", 0, t, -1,
+                             T.FR_MIN_SALARY, 2, position=RM.WORD_POSITIONS[group][0])
+                league.players[man.id] = man
+                league.next_id += 1
+        for k in range(D.ROSTER_MAX - RR.roster_count(league, t)):
+            man = Player(league.next_id, "Filler line %d %d" % (t, k), "OL", 60, "average", 26, 4, 60, None, 0, "active", 0, t, -1,
+                         T.FR_MIN_SALARY, 2, position="C")
+            league.players[man.id] = man
+            league.next_id += 1
+        RR.refresh_view(league, t)
+        men = [p for p in CT.team_players(league, t) if CT.running(p) and p.salary > T.FR_MIN_SALARY]
+        over = CT.cap_used(league, t) - int(0.70 * CT.cap_of(league))
+        extra = sum(p.salary - T.FR_MIN_SALARY for p in men)
+        if over > 0 and extra > over:
+            for p in men:
+                p.salary = T.FR_MIN_SALARY + (p.salary - T.FR_MIN_SALARY) * (extra - over) // extra
+    league.sums = [league.strength_sum(t) for t in range(1, D.TEAMS + 1)]
+    return league
+
+
+def draft_league(seed=3, team=5, stage_no=D.STAGE_DRAFT, wins=None, finish=None, mutate=None, real=False):
     """A league at the start of an offseason stage. `wins` (32 numbers) and `finish` (32 numbers, D.FINISH_*) make the history entry the
-    draft order reads; without them the season's records are 8 and 8 for everybody and nobody was in the play-offs."""
-    league = new_league(GameRandom(random.Random(seed)), SURNAMES, "Kim", team, "20260101-000000")
+    draft order reads; without them the season's records are 8 and 8 for everybody and nobody was in the play-offs. `real` (SR.5): the full league
+    of the real rosters (`full_league`) in place of a drawn league of 34 places."""
+    league = full_league(seed, team) if real else new_league(GameRandom(random.Random(seed)), SURNAMES, "Kim", team, "20260101-000000")
     league.stage, league.stage_no, league.gtp, league.records = OFFSEASON, stage_no, 0, [8, 8] * 32
     if wins is not None:
         league.records = [x for w in wins for x in (w, 16 - w)]
@@ -120,4 +159,24 @@ def at_stage(number, pick=None):
 
 
 __all__ = ["draft_league", "offseason_rig", "saved_league", "at_stage", "default_until", "SURNAMES", "enter_until", "franchise_rig",
-           "run_until", "replay", "picks_of"]
+           "run_until", "replay", "picks_of", "legacy_data", "full_league"]
+
+
+def legacy_data(league):
+    """SR.5 (league.sav format 19 stores no places): the record as a version before 0.16.3 wrote it, for the tests that make an older file by changing the
+    format number: the 34 places stored ("rosters"), each man's place in his row, the men of a roster without a place on the bench (status "reserve").
+    `league` is a LeagueRecord or the text of league.sav. The caller sets the format and takes away what that format did not have."""
+    import json as _json
+    from nfl4.extras.franchise.league import LeagueRecord as _Record
+    from nfl4.extras.franchise.real_roster import waiting_ids
+    if isinstance(league, (str, bytes)):
+        league = _Record.from_json(league.decode("utf-8") if isinstance(league, bytes) else league)
+    data = _json.loads(league.to_json())
+    data["rosters"] = [list(roster) for roster in league.rosters]
+    waiting = waiting_ids(league)
+    for row in data["players"]:
+        player = league.players[row[0]]
+        row[13] = player.place
+        if player.status == "active" and player.place < 0 and player.id not in waiting:
+            row[10] = "reserve"
+    return data

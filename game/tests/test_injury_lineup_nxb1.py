@@ -6,7 +6,7 @@ he is fit again; with the staff setting on nothing is asked. The chosen man play
 import json
 import random
 
-from drrig import SURNAMES
+from drrig import SURNAMES, legacy_data
 from frrig import COACH_AND_TEAM, DOWN, ENTER, ESC, F9, WANT_FRANCHISE, franchise_rig, quit_policy, run_until, spoken
 
 from nfl4.extras import nx_texts as X
@@ -131,7 +131,7 @@ def test_the_file_keeps_the_choice_and_an_older_file_has_none():
     hurt = dl(league)
     I.injure(league, hurt.id, "IJA", 5, 0, 2)
     I.choose(league, hurt.id, dl(league, 4).id)
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     assert data["format"] == D.FORMAT >= 15 and data["injuries"]["chosen"] == [[hurt.id, dl(league, 4).id]]
     data["format"] = 14
     del data["injuries"]["chosen"]
@@ -199,7 +199,7 @@ def test_the_week_asks_who_starts_and_the_second_answer_starts_him_in_the_game(t
     assert seen and seen[-1][0] == chosen.id                           # the week 2 game's lineup has him in the place
     saved = LeagueRecord.from_json(rig.files.data["league.sav"].decode("utf-8"))
     assert saved.injuries["chosen"] == league.injuries["chosen"]
-    data = json.loads(rig.files.data["league.sav"].decode("utf-8"))
+    data = legacy_data(rig.files.data["league.sav"])
     data["format"] = 14                                                # a league saved by 0.13.0: no choice, the staff's rule
     del data["injuries"]["chosen"]
     data["todo"] = [i for i in data["todo"] if i["kind"] != D.TODO_LINEUP]

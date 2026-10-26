@@ -9,7 +9,7 @@ from frrig import DOWN, ENTER, ESC, F1, F9, UP, spoken
 from nfl4.extras import nx_texts as X
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import draft as DR
-from nfl4.extras.franchise.league import LeagueRecord
+from nfl4.extras.franchise.league import LeagueError, LeagueRecord
 
 PAGE_DOWN, PAGE_UP = 34, 33
 TEAM = 5
@@ -69,7 +69,8 @@ def test_after_the_last_pick_the_rookies_are_told_by_their_ranges_and_the_stage_
         low, high = final.rookie_range(player)
         expected.append(X.text("NXK-06", player=player.name, position=position_word(player.pos), lo=low, hi=high, a=player.age,
                                potential=X.text(D.POTENTIAL_TEXT[player.potential])))
-    assert text[end + 1:end + 8] == expected and X.text("NXE-03") in text[end + 8:end + 14]      # (SX.8m: the undrafted market's lines come between)
+    assert text[end + 1:end + 8] == expected and X.text("NXE-03") in text[end + 8:end + 20]      # (SX.8m: the undrafted market's lines come between)
+    # SR.5 (D-164): the undrafted market signs by family needs against FR_ROSTER_TARGET, so more of its lines may come before the wait
 
 
 def test_the_player_with_the_first_pick_and_the_player_with_the_last_pick_hear_the_right_pick_numbers(tmp_path):
@@ -245,14 +246,21 @@ def test_a_draft_is_the_same_whether_the_player_takes_the_staffs_first_lets_the_
 
 
 def test_the_open_places_of_the_players_team_are_told_and_a_drafted_rookie_closes_one(tmp_path):
+    from nfl4.extras.franchise import real_roster as RR
+
     def mutate(league):
-        for index in (33, 0, 31):
-            player = league.player_at(TEAM, index)
-            player.status, player.place, player.left = "retired", -1, league.season
-            league.rosters[TEAM - 1][index] = 0
+        # SR.5 (D-164): a place is a view of the chart, so the men leave the chart (the next man of the chart takes a place); the men are taken
+        # first, since the places shift after each one leaves. The drawn league has one quarterback and one kicker, and an empty back place stays open
+        for player in [league.player_at(TEAM, index) for index in (33, 0, 31)]:
+            player.left = league.season
+            RR.leave(league, player, "retired")
     rig = ran(tmp_path, league=draft_league(mutate=mutate), until=at_stage(4, pick=1))
     text = spoken(rig)
-    assert any(t.endswith(" your open places: quarterback 1, running back 1, kicker 1. ") for t in prompts(text))
+    # SR.5 (D-164): the open places are the family needs against tuning.FR_ROSTER_TARGET (QB 2, WR 9, OL 9, DL 10, S 4, K 1, LS 1, ...): with his only
+    # quarterback and his only kicker gone the team needs 2 and 1; five backs are still over the target of 3, so no back is open; the rest is the
+    # drawn league's own shortage (34 places: no lineman OL, no snapper)
+    assert any(t.endswith(" your open places: quarterback 2, receiver 3, offensive lineman 9, defensive lineman 4, safety 2, kicker 1, long snapper 1. ")
+               for t in prompts(text))
 
 
 # ----- a draft closed in the middle (design 3.3 item 4) -----
@@ -310,7 +318,9 @@ def test_the_short_offseason_still_asks_for_the_picks_but_ends_the_draft_without
     rig = ran(tmp_path, short=True, until=at_stage(5))
     text = spoken(rig)
     end = text.index(X.text("NXK-11"))
-    assert len(prompts(text)) == 7 and " stage 7 of 9. the draft. " in text
+    # SR.5: a drawn team of 34 and its rookies is under 53, so the short cut asks nothing and the rig may run on into the next draft: the first draft's
+    # prompts are counted (those before its end)
+    assert len(prompts(text[:end])) == 7 and " stage 7 of 9. the draft. " in text
     assert X.text("NXE-03") not in text[end:end + 9]
 
 
@@ -333,6 +343,8 @@ def test_the_players_rookies_are_told_by_their_range_in_f9_until_the_cut(tmp_pat
         real_menu(self, speech, keys, title, items, *args, **kwargs)
     monkeypatch.setattr(menus, "_lines_picker", picker)
     monkeypatch.setattr(spoken_menu.SpokenMenu, "__init__", menu)
+    from nfl4.extras import roster_model as RM
+    # SR.5 (D-164): the roster lists every family (a family with nobody said with 0)
     steps = D.ROSTER_ORDER.index(rookie.pos)
     keys = [ENTER, F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER] + [DOWN] * steps + [ENTER, ESC, ESC, ESC, ESC]
     ran(tmp_path / "f9", keys=keys, until=at_stage(4, pick=8))
@@ -340,7 +352,7 @@ def test_the_players_rookies_are_told_by_their_range_in_f9_until_the_cut(tmp_pat
                       potential=X.text(D.POTENTIAL_TEXT[rookie.potential]))
     group = [lines for title, lines in lists if expected in lines]
     assert group and group[0][-1] == expected                                           # last: after the players the team has
-    roster = [labels for title, labels in menus_seen if title == "your roster"][0]
+    roster = [labels for title, labels in menus_seen if title.startswith("your roster")][0]           # SR.5: the title says the 53 too
     count = int(roster[steps].split(":")[1])
     assert count == len(group[0])                                                       # the group line counts the rookie too
 

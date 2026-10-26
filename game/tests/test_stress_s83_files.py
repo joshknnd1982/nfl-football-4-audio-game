@@ -111,8 +111,8 @@ def test_the_template_has_every_file_the_matrix_damages_and_the_matrix_names_eve
 def targets():
     """The files of the template, named here because the parameters are made before any program runs (the names are the program's own:
     data/files/store.py, data/customize.py, data/settingsfile.py, audio/soundsconfig.py). test_the_template_has_the_files lists them."""
-    customize = ["customize/" + name + ".txt" for name in ("banter", "coaches", "divisions", "free_agents", "injuries", "news", "penalties", "remarks",
-                                                           "respellings", "rosters", "surnames", "teams")]      # SX.11: coaches, respellings, rosters; NX-B3: free_agents
+    customize = ["customize/" + name + ".txt" for name in ("banter", "coaches", "divisions", "free_agents", "injuries", "news", "nfl_surnames", "penalties", "remarks",
+                                                           "respellings", "rosters", "surnames", "teams")]      # SX.11: coaches, respellings, rosters; NX-B3: free_agents; NX-L12: nfl_surnames
     playbooks = ["customize/playbooks/" + name + ".txt" for name in ("plays", "styles", "team_styles", "favourites")]   # SX.10c
     return (["settings.txt", "sounds/sounds.txt", "sounds/foot0.wav", "footbal1.dat", "footbal2.dat", "footbal3.dat", "football.gtp",
              "footballlog.txt", "commercials/About commercials.txt", "football.sav"] + customize + playbooks)

@@ -43,6 +43,7 @@ PER_GAME = 2                  # UNVERIFIED (SRC-SECONDARY): two elevations a tea
 PRACTICE_SALARY = 2           # tenths of a million: 13,750 dollars x 18 weeks = 0.25 million (2026, SRC-SECONDARY)
 PRACTICE_SALARY_VETERAN = 4   # 18,350 to 22,850 dollars x 18 weeks = 0.33 to 0.41 million
 RETURN_COVER = ("RB", "WR", "CB")     # a returner's place is stood in for by a squad back, then a receiver, then a cornerback
+PLACE_FAMILIES = {"LB": ("LB", "DL"), "DL": ("DL", "LB"), "CB": ("CB", "S"), "S": ("S", "CB")}   # SR.5: a defense place's squad man may be of the near family
 
 
 def empty() -> dict:
@@ -77,7 +78,9 @@ def can_take(league, team: int, player) -> bool:
 
 
 def _join(league, team: int, player) -> None:
+    from .. import roster_file as RF
     player.status, player.team, player.place, player.left, player.points = STATUS, team, -1, 0, 0
+    player.roster_list = RF.SQUAD
     player.salary, player.years = salary_of(player), 1
     league.practice["elevations"].pop(str(player.id), None)
 
@@ -87,7 +90,7 @@ def candidates(league) -> list:
     over or this one), the best first."""
     season = league.season
     return sorted((p for p in league.players.values() if p.status in ("released", "free") and p.left in (season, season - 1)
-                   and p.age <= T.FR_PRACTICE_MAX_AGE and p.pos in D.POSITIONS),          # (D-149: a lineman or a snapper let go is no squad player)
+                   and p.age <= T.FR_PRACTICE_MAX_AGE and p.pos in D.GROUPS),          # SR.5: any of the 22 positions (the line and the snapper too)
                   key=lambda p: (-p.rating, p.id))
 
 
@@ -123,8 +126,10 @@ def form(league) -> int:
     return joined + top_up(league)                     # the places nobody let go could fill: young made-up players
 
 
-TEMPLATE = (("QB", 1), ("RB", 2), ("WR", 3), ("DL", 3), ("LB", 3), ("CB", 2), ("S", 2))     # 16 places of a squad filled with young players
-REAL_GROUP = {"QB": "QB", "RB": "RB", "FB": "RB", "WR": "WR", "TE": "WR", "DL": "DL", "LB": "LB", "CB": "CB", "S": "S", "K": "K", "P": "P"}   # NX-B2
+# 16 places of a squad filled with young players (SR.5: the real squads' mix, the line too; SRC-OFFICIAL counts of the shipped squads, rounded)
+TEMPLATE = (("QB", 1), ("RB", 1), ("WR", 3), ("OL", 3), ("DL", 3), ("LB", 2), ("CB", 2), ("S", 1))
+REAL_GROUP = {"QB": "QB", "RB": "RB", "FB": "RB", "WR": "WR", "TE": "WR", "DL": "DL", "LB": "LB", "CB": "CB", "S": "S", "K": "K", "P": "P",
+              "OL": "OL", "LS": "LS"}   # NX-B2 (SR.5: the line and the snapper too)
 
 
 def real_squads(league, real) -> int:
@@ -151,7 +156,11 @@ def real_squads(league, real) -> int:
             rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
             if CT.cap_used(league, team) + PRACTICE_SALARY > CT.cap_of(league):
                 break
-            player = Player(league.next_id, name, position, rating, "average", age, seasons, rating, None, 0, STATUS, 0, team, -1, PRACTICE_SALARY, 1)
+            from .. import roster_file as RF
+            from .. import roster_model as RM
+            real_position = getattr(agent, "madden", "") or RM.WORD_POSITIONS.get(agent.pos.upper(), (RM.WORD_POSITIONS[position][0],))[0]
+            player = Player(league.next_id, name, RM.GROUP[real_position], rating, "average", age, seasons, rating, None, 0, STATUS, 0, team, -1,
+                            PRACTICE_SALARY, 1, position=real_position, number=getattr(agent, "number", "-") or "-", roster_list=RF.SQUAD)
             league.players[player.id] = player
             league.next_id += 1
             known.add(name.casefold())
@@ -168,9 +177,11 @@ def top_up(league, surnames: list | None = None) -> int:
     from . import first_names as FN
     from .signings import _mix
     if surnames is None:
-        from ...game.names import load_surnames
-        surnames = load_surnames()
-    used = FN.name_keys(league.league_id, (p.name for p in league.players.values() if p.status in ("active", STATUS, "free", "reserve")))
+        from .. import nfl_surnames
+        surnames = nfl_surnames.pool()                    # NX-L12: real NFL players' last names
+    from .. import roster_file as RF
+    from .. import roster_model as RM
+    used = FN.name_keys(league.league_id, (p.name for p in league.players.values() if p.status in ("active", STATUS, "free")))
     made = 0
     base, span = T.FR_PRACTICE_RATING
     for team in range(1, D.TEAMS + 1):
@@ -186,8 +197,10 @@ def top_up(league, surnames: list | None = None) -> int:
             seasons = (h >> 8) % 2
             age = 22 + seasons + (h >> 12) % 2
             rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
+            choices = RM.WORD_POSITIONS[position]
+            real_position = choices[(h >> 40) % len(choices)]                 # SR.5: a position of the family (no draw)
             player = Player(league.next_id, FN.full_name(league.league_id, surname), position, rating, "average", age, seasons, rating,
-                            None, 0, STATUS, 0, team, -1, PRACTICE_SALARY, 1)
+                            None, 0, STATUS, 0, team, -1, PRACTICE_SALARY, 1, position=real_position, roster_list=RF.SQUAD)
             if CT.cap_used(league, team) + PRACTICE_SALARY > CT.cap_of(league):
                 break
             league.players[player.id] = player
@@ -216,7 +229,7 @@ def playoffs(league, week: int) -> bool:
 
 def eligible(league, team: int, position: str, week: int, exclude=()) -> list:
     """The squad players who may stand in for the group `position` this week, the best first."""
-    wanted = RETURN_COVER if position == "RET" else (position,)
+    wanted = RETURN_COVER if position == "RET" else PLACE_FAMILIES.get(position, (position,))
     out = []
     for pos in wanted:
         for p in squad(league, team):
@@ -304,8 +317,8 @@ def promote_problem(league, player, release, week: int) -> str | None:
     else:
         if release is None:
             return "no place and no release"
-        if (release.status not in ("active", "reserve") or release.team != team or release.pos != player.pos
-                or (release.status == "active" and release.place < 0)):
+        from . import real_roster
+        if release.status != "active" or release.team != team or release.pos != player.pos or release.id in real_roster.waiting_ids(league):
             return "a release who is not a player of the group"
         if not injuries.healthy(league, release.id, week):
             return "a release who is hurt"
@@ -321,35 +334,25 @@ def promote_problem(league, player, release, week: int) -> str | None:
 def promote(league, player, release) -> tuple:
     """The squad player signs to the roster for the minimum (one season); the released player, when there is one, is a free agent of the season.
     Returns (the salary, the dead money)."""
-    from . import aging
+    from . import real_roster
     from . import signings as S
-    from . import reserves
     team = league.team
-    roster = league.rosters[team - 1]
     dead = 0
-    slot = None
     if release is not None:
-        slot = release.place                              # -1: a man of the bench (D-149)
-        if slot >= 0:
-            roster[slot] = 0
         dead = CT.release(league, release)
-        release.status, release.left, release.place, release.points, release.team = "free", league.season, -1, 0, 0
+        release.left, release.points = league.season, 0
+        real_roster.leave(league, release, "free", refresh=False)
+        release.team = 0
         S._forget(league, release.id)
     salary = CT.min_salary(player.seasons)
-    player.team, player.left, player.points = team, 0, 0
-    if slot is not None and slot >= 0:
-        reserves.to_place(league, player, slot)
-    elif slot is not None:
-        player.status, player.place = reserves.STATUS, -1
-    else:
-        reserves.join(league, team, player)               # an empty place of his group, else the bench (D-149)
+    real_roster.join(league, team, player, refresh=False)  # SR.5: onto the chart (the places are made again below)
     CT.sign(player, salary, 1)
     league.practice["elevations"].pop(str(player.id), None)
     for row in league.injuries["stand_ins"]:
         if row[0] == team and row[2] == player.name:
             row[2] = ""                                   # placeholder; the next week's settle makes a new stand-in if one is still needed
     league.injuries["stand_ins"][:] = [row for row in league.injuries["stand_ins"] if row[2]]
-    aging.place_by_rating(league, team)
+    real_roster.refresh_view(league, team)
     if len(league.sums) == D.TEAMS:
         league.sums[team - 1] = league.strength_sum(team)
     return salary, dead
@@ -360,8 +363,8 @@ def sign_problem(league, player) -> str | None:
     from . import signings as S
     if player is None or player not in S.pool(league):
         return "not a free agent"
-    if player.pos not in D.POSITIONS:
-        return "not a position of the squad"                   # D-149: the squads keep no lineman and no snapper
+    if player.pos not in D.GROUPS:
+        return "not a position of the squad"
     if not can_take(league, league.team, player):
         return "the practice squad is full" if len(squad(league, league.team)) >= SIZE else "too many veterans"
     if CT.cap_used(league, league.team) + salary_of(player) > CT.cap_of(league):

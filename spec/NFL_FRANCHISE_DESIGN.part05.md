@@ -318,3 +318,48 @@ THE CONVERSION of a league of format 17 or older, once, when it is opened (NX-L7
 - An empty back place is marked, never guessed from a repeated name (fixesforgames B-P175): `Roster.empty` in a game, the identity `injuries.EMPTY` in a lineup; every share and injury draw skips it.
 - A converted older league keeps its places as they were (no view is made for it until SR.5); its charts, positions, numbers and (format 16 and older) missing real men are the conversion's.
 - 21.13's data is built (`real_roster.choose_starter`, `depth_chart.choose_starter`, `migrate_depth`, nx_depth by position and role); the write-back of an older group entry in the new form is done by SR.6's menus, which write only the new form.
+
+### 21.15 SR.5 as built (2026-10-25, D-164): every Franchise block on the chart
+
+- THE CHART IS THE TEAM (21.3, 21.6). league.sav FORMAT 19: `rosters` (the 34 places) is no longer saved and a player row's place is -1; the places are
+  made in memory from each team's chart by `real_roster.refresh_view` (the chart cleaned: every active man of the team once at his own position, nobody
+  else; each position in the staff's order, the best rating first, the chart's order among equals, the player's own team with the men he put first,
+  `depth["order"]` by POSITION now; the roles kept to men still there; then `roster_model.make_view(distinct=True)`). The status "reserve" (D-149's
+  bench) is gone: a man of the roster without a place is an active man (`LeagueRecord.bench` lists them from the chart). `Player.pos` is his family's word
+  (QB RB WR OL DL LB CB S K P LS), always `roster_model.GROUP[position]`; RET is only the group of the view's two return places. A file of format 18 or older
+  is read through `real_roster.from_places` (its stored places and bench checked as written, `legacy_check`, then the chart; the order by group becomes the
+  order by position); a format-19 file's chart is checked as written (a damaged chart is refused, never cleaned silently) before the places are made.
+- ONE WAY ON AND OFF A TEAM: `real_roster.join(league, team, man)` and `leave(league, man, status)` (then `refresh_view`) are used by signings, the market,
+  the tag's offer sheet, trades (both teams), practice squad promotions, re-signing's let-go, retirements and the cut. The store's save makes every chart
+  and view again first (`_mend_charts`) and logs `chart_mended` with the teams when a chart's men had to change (rule 0.15: a path that forgot to say so).
+- THE CUT TO 53 (21.7 (1)): `draft.keep_plan` keeps the family minimums first (FR_FAMILY_MIN; a one-man family's man under the floor not counted), then
+  every man by keep value while his family is under its most (FR_FAMILY_MAX: QB 3, K 1, P 1, LS 1), at most 53 less the men the fill must make;
+  `apply_cut` ends the draft and makes every chart again (the rookies who stay join them). The fill is `real_roster.fill_needs` (21.3's last resort, after
+  the cut: an undrafted rookie for each man a family is short of its minimum, drawn as the old fill drew; NX-L12 surnames). `return_lists` brings the real
+  reserve lists' men back at the start of the cut (Q-079's default). COVER_FIRST, fill_line, real_reserves and reserves.py are gone.
+- THE DRAFT (21.7 (2)): the class by position (FR_CLASS_POSITIONS, the league's mix; no returner prospect); a class row has 7 values (the position last);
+  needs by family: under FR_ROSTER_TARGET (the league's mean rounded DOWN: QB 2, RB 3, WR 9, OL 9, DL 10, LB 4, CB 5, S 4, K 1, P 1, LS 1) or a starter
+  (FR_GROUP_STARTERS of the family's best) under FR_DRAFT_WEAK, the line and the snapper apart (they play no place); "better" when the prospect beats
+  the weakest starter; K, P and LS are the surplus positions. A rookie gets the lowest free jersey number of his position's NFL range.
+- THE MARKET AND SIGNINGS (21.7 (3)): a man signs while his team has fewer than 53 (`real_roster.room`); a computer team bids for its families under their
+  targets (and a weak starter), at most its room, and an offer of a family whose need an earlier signing of the round met lapses (`resolve`'s spots); the
+  player's own offers are his choice. Signings in the season, practice promotions and the tag's sheet join the chart. The season's veterans of the pool
+  are made for the line and the snapper too.
+- TRADES (21.7 (4)): any man for any man; a trade that leaves a team under a family minimum it holds is refused ("a team would be short of a position").
+  The trade menus still offer one position (SR.6 widens them).
+- INJURIES (21.7 (5)): the lineup is the view with the week's injuries; a hurt man's place goes to the man the staff's rule names (the best fit man of his
+  family without a place first, never above the hurt man's rating, then the next man up, then the stand-in); the player's choice (NX-B1) is any fit man of
+  the place's family or of his own; a hurt man without a place leaves no place to fill.
+- STARTERS (21.7 (6)): `people.is_starter` is the first STARTERS men of his position's chart.
+- MUST-HAVES (21.7 (7)): a team with no active kicker or punter signs its squad's to the 53 at the next refresh (logged `must_have_promoted`); the family
+  minimums are kept by the cut, the fill and the trade rule, so a team starts every season with them (the soaks).
+- THE CAP (21.7 (10)): `contracts.cap_of` = FR_CAP + FR_CAP_ROSTER (510, measured: `work\sr5\measure_cap.py`) for every league; the re-signing room counts
+  the 53 spots (`resign.league_terms`), only the roster's men hold a spot (the squad is paid, holds none) and the minimum's reserve is never negative.
+- THE SQUADS (21.7 (11)): any of the 22 positions; the made-up young men of a top-up take a position of their family and the NX-L12 surnames.
+- NX-L12 (D-163): `assets\data\nfl_surnames.txt` (9,504 last names of real NFL players: nflverse's players table, CC BY 4.0, and the rosters; written by
+  `game\tools\update_surnames.py`, refreshed by `update_rosters.py --write`), a customizable file of the N. F. L. rules (real_names kind
+  `nflsurnames`); every made-up man of the Franchise takes one (weekly.surnames_of); a first name never makes a real player's full name of the files
+  (written or spoken, first_names.first_name steps to the next name); a quick game's last-resort name is a real surname chosen from the drawn one
+  (`RealNames.last_resort`, no draw). Classic keeps the original's 1,708 surnames.
+- NOT YET (SR.6): the roster said by positions (21.8), the lineup item and the choice of every starter by menu (21.13), the conversion's sentence, the
+  in-game update (21.10); the trade menus' other positions; a returner on top of his place in a franchise game (Q-082, decided for SR.6).

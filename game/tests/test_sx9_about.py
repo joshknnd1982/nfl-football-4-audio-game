@@ -46,6 +46,8 @@ def _strings(path: Path):
                 docs.add(id(first.value))
     for node in ast.walk(tree):
         if isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in docs:
+            if node.value.isidentifier() and node.value.islower():
+                continue        # SR.5: an attribute name in the code (practice.py's getattr(agent, "madden", ...)), never a text anyone hears
             yield node.value
 
 

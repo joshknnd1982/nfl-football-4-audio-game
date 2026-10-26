@@ -7,7 +7,7 @@ import random
 import pytest
 from drrig import SURNAMES, offseason_rig
 from frrig import DOWN, ENTER, ESC, F9, spoken
-from test_fr_cut_flow import TEAM, cut_league, run, surplus_groups
+from test_fr_cut_flow import TEAM, at_cut, cut_league, run, staffs_releases
 
 from nfl4.extras import nx_texts as X
 from nfl4.extras import tuning as T
@@ -27,9 +27,15 @@ def overspend(league, team, salary=80):
             player.salary, player.years = salary, 1
 
 
+def released_of(final, start):
+    """SR.5: the men of the player's team the stage let go (full_league released men of its own before the stage, so only men active at the start count)."""
+    return {p.id for p in final.players.values() if p.status in ("released", "practice") and p.team == TEAM and p.id in start.players
+            and start.players[p.id].status == "active" and start.players[p.id].team == TEAM}
+
+
 def start_of(league):
     """The league as the program reads it, and the table of the rookies waiting."""
-    start = LeagueRecord.from_json(league.to_json())
+    start = at_cut(league)                       # SR.5: as the stage sees it, the men of the real reserve lists back (Q-079)
     return start, DR.waiting_by_team(start)
 
 
@@ -74,7 +80,7 @@ def test_every_team_is_under_the_cap_after_the_stage_and_the_dead_money_of_its_r
     assert len(staff[9]) > len(DR.plan_cut(start, 9, waiting))                         # and the staff lets go of more players than the cut
     rig = run(tmp_path, league)
     final = rig.fstore.league
-    assert all(CT.cap_used(final, t) <= T.FR_CAP for t in range(1, D.TEAMS + 1))
+    assert all(CT.cap_used(final, t) <= CT.cap_of(final) for t in range(1, D.TEAMS + 1))
     assert all(p.id not in final.players or final.players[p.id].status in ("released", "practice") for p in staff[9])       # (the dropped ones are gone)
     assert final.dead[8] == sum(CT.dead_money(p) for p in staff[9]) > 0
 
@@ -99,8 +105,8 @@ def test_the_staffs_list_for_a_team_over_the_cap_names_the_cap_and_the_players_l
     assert text[at + 1:at + 1 + len(expected)] == expected
     assert text[at + 1 + len(expected)] == " 1. release them "
     final = rig.fstore.league
-    assert {p.id for p in final.players.values() if p.status in ("released", "practice") and p.left in (0, 1) and p.team == TEAM} == {p.id for p in staff}
-    assert CT.cap_used(final, TEAM) <= T.FR_CAP
+    assert released_of(final, start) == {p.id for p in staff}                          # SR.5: men active at the start only
+    assert CT.cap_used(final, TEAM) <= CT.cap_of(final)
 
 
 def test_a_released_player_of_the_cap_list_is_told_with_what_he_costs():
@@ -119,7 +125,7 @@ def test_choosing_yourself_asks_for_each_release_the_cap_needs_after_the_groups_
     league = cut_league()
     overspend(league, TEAM)
     start, waiting = start_of(league)
-    groups = sum(over for _, over in surplus_groups(start))
+    groups = len(staffs_releases(start))                                              # SR.5: one cut question a release over the 53 (D-149)
     cut = DR.plan_cut(start, TEAM, waiting)
     extras = CT.cap_releases(start, TEAM, waiting, cut)
     assert groups >= 3 and len(extras) >= 2
@@ -134,24 +140,24 @@ def test_choosing_yourself_asks_for_each_release_the_cap_needs_after_the_groups_
     for player in extras:
         assert X.text("NXE-55", player=player.name) in text
     final = rig.fstore.league
-    assert {p.id for p in final.players.values() if p.status in ("released", "practice") and p.left in (0, 1) and p.team == TEAM} == {p.id for p in cut + extras}
-    assert CT.cap_used(final, TEAM) <= T.FR_CAP
+    assert released_of(final, start) == {p.id for p in cut + extras}                   # SR.5: men active at the start only
+    assert CT.cap_used(final, TEAM) <= CT.cap_of(final)
 
 
 def test_choosing_a_player_other_than_the_staffs_first_for_the_cap_releases_him_and_asks_again_until_the_cap_is_met(tmp_path):
     league = cut_league()
     overspend(league, TEAM)
     start, waiting = start_of(league)
-    groups = sum(over for _, over in surplus_groups(start))
+    groups = len(staffs_releases(start))                                              # SR.5: one cut question a release over the 53 (D-149)
     cut = DR.plan_cut(start, TEAM, waiting)
     candidates = CT.cap_candidates(start, TEAM, waiting, cut)
     rig = run(tmp_path, league, keys=[DOWN, ENTER] + [ENTER] * groups + [DOWN, ENTER])        # the second of the staff's list at the first cap question
     final = rig.fstore.league
     assert final.players[candidates[1].id].status in ("released", "practice")
     assert X.text("NXE-55", player=candidates[1].name) in spoken(rig)
-    assert CT.cap_used(final, TEAM) <= T.FR_CAP
+    assert CT.cap_used(final, TEAM) <= CT.cap_of(final)
     asked = [t for t in spoken(rig) if t.endswith(" choose who is released. ") and "salary cap" in t]
-    own = {p.id for p in final.players.values() if p.status in ("released", "practice") and p.left in (0, 1) and p.team == TEAM}
+    own = released_of(final, start)                                                       # SR.5: men active at the start only
     assert len(asked) == len(own) - len(cut) >= 1              # one question for each release the cap needed, then no more
 
 
@@ -164,7 +170,7 @@ def test_with_the_staff_handling_the_cut_nothing_is_asked_and_the_cap_releases_a
     text = spoken(rig)
     assert X.text("NXE-56", n=len(staff)) in text
     assert not [t for t in text if "release them" in t or "choose who is released" in t or "over the salary cap" in t]
-    assert CT.cap_used(rig.fstore.league, TEAM) <= T.FR_CAP
+    assert CT.cap_used(rig.fstore.league, TEAM) <= CT.cap_of(rig.fstore.league)
 
 
 def test_a_window_closed_at_the_question_of_a_team_over_the_cap_leaves_the_file_as_it_was_and_nobody_is_released(tmp_path):
@@ -216,7 +222,7 @@ def test_the_news_line_names_the_team_with_the_most_cap_space_and_equal_space_go
     league.dead = [5] * D.TEAMS
     league.dead[11] = league.dead[12] = 0
     event = news.cap_event(league)
-    assert (event.pool, event.team, event.n) == ("NWK", 12, T.FR_CAP - 34 * T.FR_MIN_SALARY)
+    assert (event.pool, event.team, event.n) == ("NWK", 12, CT.cap_of(league) - 34 * T.FR_MIN_SALARY)     # SR.5: the cap of every league
     league.dead[11] = 3
     assert news.cap_event(league).team == 13
 
@@ -251,7 +257,7 @@ def test_f9_has_the_salary_cap_item_with_the_players_numbers_his_rank_and_the_32
     assert lists and lists[0][0] == X.text("NXF-28")
     lines = lists[0][1]
     assert len(lines) == 2 + D.TEAMS
-    assert lines[0] == history.cap_text(league, words) and lines[0].startswith(" the salary cap is 193.2 million. your payroll is ")
+    assert lines[0] == history.cap_text(league, words) and lines[0].startswith(" the salary cap is 244.2 million. your payroll is ")    # SR.5: FR_CAP + FR_CAP_ROSTER
     ranking = CT.cap_ranking(league)
     assert lines[1] == X.text("NXA-02", k=ranking.index(TEAM) + 1)
     assert lines[2:] == [X.text("NXA-03", k=rank, team=words.team_name(team), space=words.amount(CT.cap_space(league, team)))

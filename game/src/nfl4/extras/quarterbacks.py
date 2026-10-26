@@ -224,7 +224,7 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         return next((team - 1 for team in range(1, TEAMS + 1) if words.team_name(team).casefold().startswith(text)), None)
 
     def own_team() -> str | None:
-        from .franchise import reserves
+        from .franchise import real_roster
         team = league.team
         first = starter(team)
         seconds = bench(team)
@@ -234,7 +234,7 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         labels += [X.text("NXJ-Q17", player=p.name, r=p.rating, a=p.age) for p in behind]
         if not labels:
             return X.text("NXJ-Q04", team=words.team_name(team))
-        header = X.text("NXL-56") if reserves.on(league) else X.text("NXJ-Q15")
+        header = X.text("NXL-56")
         chosen = ListPicker(speech, keys, header, len(labels), lambda i: labels[i]).run()
         if chosen is None:
             return team_line(team)
@@ -247,10 +247,7 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         week = league.gtp
         if chosen - offset < len(seconds):                               # D-149 (Q-069): the backup of the bench starts, the starter goes to the bench
             player = seconds[chosen - offset]
-            if first is None:
-                reserves.to_place(league, player, D.PLACES_OF["QB"][0])
-            else:
-                reserves.swap(league, first, player)
+            real_roster.choose_starter(league, "QB", player.id)        # SR.5: the first of the QB chart (the starter moves down one)
             if len(league.sums) == D.TEAMS:
                 league.sums[team - 1] = league.strength_sum(team)
             debuglog.event("franchise", "quarterback_benched", week=week, season=league.season, starts=player.id,
@@ -259,7 +256,7 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
             return X.text("NXL-58", player=player.name, other=first.name) if first is not None else X.text("NXJ-P08", player=player.name)
         player = behind[chosen - offset - len(seconds)]
         release = None
-        if reserves.room(league, team) > 0 and first is not None:
+        if real_roster.room(league, team) > 0 and first is not None:
             # D-149: a squad quarterback signs to the bench, then starts; the starter goes to the bench (nobody is released)
             problem = P.promote_problem(league, player, None, week)
             if problem == "over the cap":
@@ -272,8 +269,8 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
                 return X.text("NXJ-S17", player=player.name)
             names = (player.name, first.name)
             salary, dead = P.promote(league, player, None)
-            if player.status == "reserve":
-                reserves.swap(league, first, player)
+            if player.place < 0:
+                real_roster.choose_starter(league, "QB", player.id)
             if len(league.sums) == D.TEAMS:
                 league.sums[team - 1] = league.strength_sum(team)
             debuglog.event("franchise", "quarterback_starter", week=week, season=league.season, player=player.id, rating=player.rating, salary=salary,

@@ -9,9 +9,10 @@ calibration's fast run use the very same code (the speech and the questions are 
     keep_order / plan_cut / apply_cut  the roster cut of every team (no draw): the staff's releases, the player's own choice, the places
     check_draft                        the whole-file check of a draft record (league.py calls it)
 
-A drafted rookie is an ACTIVE player with `place` -1 (waiting) until the cut: the roster lists keep their 34 places, and the group's
-count plus the rookies waiting for it is what the need bonus and the cut look at. The draft record (`LeagueRecord.draft`) is a plain dict,
-{"class": [[pos, name, true rating, potential, age, low end of the range] ...], "order": [32 teams], "picks": [[team, prospect index,
+A drafted rookie is an ACTIVE player with `place` -1 who waits OUTSIDE the chart until the cut (real_roster.waiting_ids): the team's family count plus
+the rookies waiting for it is what the need bonus and the cut look at (SR.5, D-164: by family, against FR_ROSTER_TARGET and FR_GROUP_STARTERS, in place
+of the 34 places' groups). The draft record (`LeagueRecord.draft`) is a plain dict,
+{"class": [[group, name, true rating, potential, age, low end of the range, position] ...], "order": [32 teams], "picks": [[team, prospect index,
 player ID] ...], "staff_all": 0 or 1, "owners": [the team that makes each of the 224 picks], "comp": [[round, team] of the compensatory picks]}; it lives from the class (the start of stage 4) to the end of
 stage 5, when the cut applies. SX.8j: a pick may have changed hands in a trade of the season (`trades.py`); the draft makes the owners its own when it is
 created (`owners`, pick by pick) and the trades' table of picks starts empty again. SX.8m: the compensatory picks awarded a year before (`comp.py`) sit at
@@ -28,7 +29,7 @@ from . import data as D
 from . import first_names as FN
 from .league import LeagueError, LeagueRecord, Player, draw_name
 
-SURPLUS_POSITIONS = ("K", "P", "RET")        # design 7.3: a prospect of these needs an open place to be worth a pick
+SURPLUS_POSITIONS = ("K", "P", "LS")         # design 7.3: a prospect of these needs an open spot to be worth a pick (SR.5: the snapper, no returner)
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,7 @@ class Prospect:
     potential: str
     age: int
     low: int
+    position: str = ""                       # SR.5: his position of the 22 (`pos` is its family's word)
 
     @property
     def middle(self) -> int:
@@ -55,7 +57,7 @@ class Prospect:
         return cls(index, *row)
 
     def to_row(self) -> list:
-        return [self.pos, self.name, self.true, self.potential, self.age, self.low]
+        return [self.pos, self.name, self.true, self.potential, self.age, self.low, self.position]
 
 
 # ----- the class (stage 4's draws, design 12 item 6) -----
@@ -67,12 +69,14 @@ def class_size(comp_count: int) -> int:
 
 
 def make_class(league: LeagueRecord, rnd, surnames: list, comp_count: int = 0) -> list:
-    """The class of this draft: for each prospect in order the position `below(sum of the weights)`, the name (`rnd(len(surnames))`
-    again while an active player or a prospect of this class has it: design 7.4), the true rating `below(15)` twice, the potential
-    `below(100)`, the age `below(3)` and the scouting offset `below(7)`. Nothing of the league is changed."""
-    weights = T.FR_CLASS_WEIGHTS
+    """The class of this draft: for each prospect in order the position `below(sum of the weights)` (SR.5: the 22 positions by the league's mix,
+    FR_CLASS_POSITIONS), the name (`rnd(len(surnames))` again while an active player or a prospect of this class has it: design 7.4; NX-L12: the
+    surnames are real NFL players' in the N. F. L. rules), the true rating `below(15)` twice, the potential `below(100)`, the age `below(3)` and the
+    scouting offset `below(7)`. Nothing of the league is changed."""
+    from .. import roster_model as RM
+    weights = T.FR_CLASS_POSITIONS
     total = sum(weight for _, weight in weights)
-    used = FN.name_keys(league.league_id, (player.name for player in league.players.values() if player.status in ("active", "reserve")))   # D-131, D-149
+    used = FN.name_keys(league.league_id, (player.name for player in league.players.values() if player.status == "active"))   # D-131
     base, span = T.FR_ROOKIE_RATING
     high, average = T.FR_ROOKIE_POTENTIAL_SHARES
     age_base, age_span = T.FR_ROOKIE_AGE
@@ -90,8 +94,29 @@ def make_class(league: LeagueRecord, rnd, surnames: list, comp_count: int = 0) -
         potential = "high" if chance < high else "average" if chance < average else "low"
         age = age_base + rnd.below(age_span)
         offset = rnd.below(T.FR_SCOUT_SPAN)
-        prospects.append(Prospect(index, position, FN.full_name(league.league_id, name), true, potential, age, true - offset))
+        prospects.append(Prospect(index, RM.GROUP[position], FN.full_name(league.league_id, name), true, potential, age, true - offset, position))
     return prospects
+
+
+def migrate_class(league: LeagueRecord) -> None:
+    """SR.5 (format 19): a draft in progress of an older file: each prospect gets his position (the conversion table's first of his group word; a returner
+    a receiver), his group word follows it, and a rookie he became takes the same (no draw)."""
+    from .. import roster_model as RM
+    data = league.draft
+    if not isinstance(data, dict) or not isinstance(data.get("class"), list):
+        return
+    for row in data["class"]:
+        if isinstance(row, list) and len(row) == 6 and isinstance(row[0], str):
+            position = RM.WORD_POSITIONS.get(row[0], ("WR",))[0]
+            row[0] = RM.GROUP[position]
+            row.append(position)
+    for key in ("picks", "undrafted"):
+        for pick in data.get(key, ()) if isinstance(data.get(key), list) else ():
+            if isinstance(pick, list) and len(pick) == 3 and isinstance(pick[1], int) and 0 <= pick[1] < len(data["class"]):
+                player = league.players.get(pick[2]) if isinstance(pick[2], int) else None
+                row = data["class"][pick[1]]
+                if player is not None and isinstance(row, list) and len(row) == 7:
+                    player.position, player.pos = row[6], row[0]
 
 
 def draft_order(sums: list, wins: list, finish: list) -> list:
@@ -124,7 +149,7 @@ class Board:
 
     def __init__(self, prospects: list, taken: set):
         self.base = {p.index: p.middle + T.FR_DRAFT_POTENTIAL[p.potential] for p in prospects}
-        self.by_pos = {position: [] for position in D.POSITIONS}
+        self.by_pos = {position: [] for position in D.GROUPS}
         for p in prospects:
             if p.index not in taken:
                 self.by_pos[p.pos].append(p)
@@ -218,23 +243,26 @@ class Draft:
     # ----- what a team needs -----
 
     def needs(self, team: int) -> dict:
-        """For each position group of the team: (open, lowest). A group has an open place when its places outnumber the players it
-        has left plus the rookies drafted into it; a group of one place counts as open also when its best player (a rookie by the
-        middle of his range) is under `FR_DRAFT_WEAK`. `lowest` is the rating of the weakest player who would hold a place: the lowest
-        rating the group knows (the incumbents' true ratings, the rookies' middles) while the group has an open place, and once the
-        rookies make it full the place-count'th best, so that a prospect counts as better only when he would take a place (a team
-        that has drafted its quarterback does not want a fourth one, D-059). None for an empty group."""
+        """For each family of the team (SR.5, D-164): (open, lowest). A family is open when the team holds fewer than its roster target
+        (FR_ROSTER_TARGET: the real league's mean) counting the rookies drafted into it, or when its weakest starter (a rookie by the middle of his
+        range) is under `FR_DRAFT_WEAK`. `lowest` is the rating of the family's weakest starter
+        (FR_GROUP_STARTERS of them: the incumbents' true ratings, the rookies' middles), so a prospect counts as better only when he would start
+        (a team that has drafted its quarterback does not want a fourth one, D-059). None for an empty family."""
+        from . import real_roster
         league = self.league
-        roster = league.rosters[team - 1]
         rookies = self.rookies.get(team, ())
+        mine = {r.id for r in rookies}
+        men = [p for p in real_roster.members(league, team) if p.id not in mine]
         needs = {}
-        for position in D.POSITIONS:
-            places = D.PLACES_OF[position]
-            known = [league.players[roster[i]].rating for i in places if roster[i]]
-            known += [self.middle_of[r.id] for r in rookies if r.pos == position]
-            is_open = len(known) < len(places) or (len(places) == 1 and max(known) < T.FR_DRAFT_WEAK)
-            starters = sorted(known, reverse=True)[:len(places)]
-            needs[position] = (is_open, starters[-1] if starters else None)
+        for group in D.GROUPS:
+            known = [p.rating for p in men if p.pos == group]
+            known += [self.middle_of[r.id] for r in rookies if r.pos == group]
+            starting = T.FR_GROUP_STARTERS[group]
+            starters = sorted(known, reverse=True)[:starting]
+            # under the target, or a starter under FR_DRAFT_WEAK (SR.5: every family, as the one-place groups were: a weak starter is a need)
+            is_open = len(known) < T.FR_ROSTER_TARGET[group] or (group not in D.RESERVE_POSITIONS and len(starters) == starting
+                                                                  and starters[-1] < T.FR_DRAFT_WEAK)    # (the line and the snapper play no place)
+            needs[group] = (is_open, starters[-1] if starters else None)
         return needs
 
     def value(self, prospect: Prospect, needs: dict) -> int:
@@ -294,7 +322,8 @@ class Draft:
             raise LeagueError("%s was taken already" % prospect.name)
         player = Player(league.next_id, prospect.name, prospect.pos, prospect.true, prospect.potential, prospect.age, 0,
                         prospect.true, [league.season, round_no, in_round], 0, "active", 0, team, -1,
-                        contracts.rookie_salary(contracts.pick_number(round_no, in_round)), T.FR_ROOKIE_YEARS)      # SX.8g: the scale of his pick, four years
+                        contracts.rookie_salary(contracts.pick_number(round_no, in_round)), T.FR_ROOKIE_YEARS,      # SX.8g: the scale of his pick, four years
+                        position=prospect.position, number=free_number(league, team, prospect.position))
         league.next_id += 1
         league.players[player.id] = player
         self.picks.append([team, prospect.index, player.id])
@@ -329,17 +358,36 @@ def owners_of(league: LeagueRecord, order: list) -> list:
 
 
 def open_places(draft: Draft, team: int) -> list:
-    """The positions with open places and how many, in the roster menu's order: [(position, count)]."""
+    """The families the team holds fewer of than its roster target (FR_ROSTER_TARGET), counting its rookies, and how many, in the roster menu's
+    order: [(group, count)]."""
+    from . import real_roster
     league = draft.league
-    roster = league.rosters[team - 1]
+    men = real_roster.members(league, team)
     rookies = draft.rookies.get(team, ())
     out = []
-    for position in D.ROSTER_ORDER:
-        places = D.PLACES_OF[position]
-        have = sum(1 for i in places if roster[i]) + sum(1 for r in rookies if r.pos == position)
-        if have < len(places):
-            out.append((position, len(places) - have))
+    for group in D.ROSTER_ORDER:
+        have = sum(1 for p in men if p.pos == group) + sum(1 for r in rookies if r.pos == group)
+        if have < T.FR_ROSTER_TARGET[group]:
+            out.append((group, T.FR_ROSTER_TARGET[group] - have))
     return out
+
+
+# the NFL's jersey numbers by position (SRC-OFFICIAL, the 2021 rule 5-1-4 as amended: the numbers a position may wear); a rookie takes the lowest free one
+NUMBER_RANGES = {"QB": (1, 19), "K": (1, 19), "P": (1, 19), "HB": (1, 49), "FB": (1, 49), "WR": (1, 49), "TE": (1, 49), "CB": (1, 49), "FS": (1, 49),
+                 "SS": (1, 49), "SAM": (1, 59), "MIKE": (1, 59), "WILL": (1, 59), "LEDG": (50, 99), "REDG": (50, 99), "DT": (50, 99),
+                 "LT": (50, 79), "LG": (50, 79), "C": (50, 79), "RG": (50, 79), "RT": (50, 79), "LS": (40, 99)}
+
+
+def free_number(league: LeagueRecord, team: int, position: str) -> str:
+    """Design 21.7 (2): the lowest number of the position's range that no man of the team (its roster and its squad) wears; "-" when none is free."""
+    if position not in NUMBER_RANGES:
+        return "-"
+    taken = {p.number for p in league.players.values() if p.team == team and p.status in ("active", "practice", "list")}
+    low, high = NUMBER_RANGES[position]
+    for number in range(low, high + 1):
+        if str(number) not in taken:
+            return str(number)
+    return "-"
 
 
 # ----- the roster cut (stage 5, design 7.6; no draw) -----
@@ -355,28 +403,41 @@ def keep_order(players: list) -> list:
 
 
 def waiting_by_team(league: LeagueRecord) -> dict:
-    """The rookies waiting for the cut, by team: the active players who have no place."""
+    """The rookies waiting for the cut, by team: the draft's picks and the undrafted in camp (real_roster.waiting_ids), in pick order."""
+    from . import real_roster
     waiting: dict = {}
-    for player in league.players.values():
-        if player.status == "active" and player.place < 0:
+    for pid in sorted(real_roster.waiting_ids(league)):
+        player = league.players.get(pid)
+        if player is not None and player.status == "active":
             waiting.setdefault(player.team, []).append(player)
     return waiting
 
 
 def group_players(league: LeagueRecord, team: int, position: str, waiting: dict) -> list:
-    """The team's players of one group: those in its places, the rookies waiting for it and (D-149) the men of its bench."""
-    roster = league.rosters[team - 1]
-    players = [league.players[roster[i]] for i in D.PLACES_OF[position] if roster[i]]
-    return players + [w for w in waiting.get(team, ()) if w.pos == position] + league.bench(team, position)
+    """The team's players of one family: the men of its chart (the view's first, then the rest in chart order) and the rookies waiting for it."""
+    from . import real_roster
+    rookies = [w for w in waiting.get(team, ()) if w.pos == position]
+    mine = {w.id for w in waiting.get(team, ())}
+    men = [p for p in real_roster.members(league, team) if p.pos == position and p.id not in mine]
+    men.sort(key=lambda p: (p.place < 0, p.place if p.place >= 0 else 0, -p.rating, p.id))
+    return men + rookies
+
+
+def team_candidates(league: LeagueRecord, team: int, waiting: dict) -> list:
+    """Every man the team's cut decides on: its roster and its rookies waiting (each once)."""
+    from . import real_roster
+    rookies = list(waiting.get(team, ()))
+    mine = {p.id for p in rookies}
+    return [p for p in real_roster.members(league, team) if p.id not in mine] + rookies
 
 
 def surplus(league: LeagueRecord, team: int, waiting: dict) -> dict:
-    """position -> how many players the team has over the group's places (only the groups that have any)."""
+    """group -> how many players the team holds over its roster target (only the families that have any)."""
     out = {}
-    for position in D.POSITIONS:
-        over = len(group_players(league, team, position, waiting)) - D.GROUP_SIZE[position]
+    for group in D.GROUPS:
+        over = len(group_players(league, team, group, waiting)) - T.FR_ROSTER_TARGET[group]
         if over > 0:
-            out[position] = over
+            out[group] = over
     return out
 
 
@@ -385,55 +446,51 @@ def release_order(players: list) -> list:
     return list(reversed(keep_order(players)))
 
 
+FLOOR_GROUPS = ("K", "P", "LS")             # SR.5: the families of one man (design 7.6's floor, invariant I5)
+
+
 def floor_releases(kept: list, position: str) -> list:
-    """The players of a group of one or two places who are under the cut's floor (`FR_CUT_FLOOR`): one weak player is the whole group,
-    so he is released although the group is not over its places, and the fill puts an undrafted rookie of 50 or more in his place
+    """The players of a family of one man (the kicker, the punter, the snapper) who are under the cut's floor (`FR_CUT_FLOOR`): one weak player is the
+    whole family, so he is released although the family is not over its limit, and the fill puts an undrafted rookie of 50 or more in his place
     (invariant I5, D-059). `kept` are the players who stay by the count. The worst to keep first."""
-    if D.GROUP_SIZE[position] > D.CUT_FLOOR_GROUP_MAX:
+    if position not in FLOOR_GROUPS:
         return []
     return [player for player in release_order(kept) if player.rating < T.FR_CUT_FLOOR]
 
 
+def keep_plan(players: list, gone=frozenset()) -> list:
+    """SR.5 (D-164, design 21.7 (1)): the men the staff keeps of `players` (a team's roster and its rookies), at most D.ROSTER_MAX: the family minimums
+    first (FR_FAMILY_MIN: two quarterbacks, the kicker, the punter, the snapper, eight linemen and the rest; each family's best by `keep_order`, a one-man
+    family's man under the floor not counted), then every other man by `keep_order` while his family is under its most (FR_FAMILY_MAX). In keep order."""
+    ranked = [p for p in keep_order(players) if p.id not in gone]
+    floor = {p.id for group in FLOOR_GROUPS for p in floor_releases([q for q in ranked if q.pos == group], group)}
+    # room is kept for the men the fill must make (a family with fewer men than its minimum: real_roster.fill_needs), so a team ends the cut at 53
+    missing = sum(max(0, least - sum(1 for q in ranked if q.pos == group and q.id not in floor)) for group, least in T.FR_FAMILY_MIN.items())
+    limit = D.ROSTER_MAX - missing
+    kept: list = []
+    held: dict = {}
+    for group in D.GROUPS:
+        for p in [q for q in ranked if q.pos == group and q.id not in floor][:T.FR_FAMILY_MIN.get(group, 0)]:
+            kept.append(p)
+            held[group] = held.get(group, 0) + 1
+    chosen = {p.id for p in kept}
+    for p in ranked:
+        if len(kept) >= limit:
+            break
+        if p.id in chosen or p.id in floor or held.get(p.pos, 0) >= T.FR_FAMILY_MAX.get(p.pos, D.ROSTER_MAX):
+            continue
+        kept.append(p)
+        chosen.add(p.id)
+        held[p.pos] = held.get(p.pos, 0) + 1
+    return keep_order(kept)
+
+
 def plan_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
-    """The players the staff releases from the team: in each group (in the roster menu's order) the surplus, the worst to keep first,
-    then the players of a small group who are under the floor. A league that carries benches (D-149) keeps the surplus on the bench: see `plan_bench_cut`."""
-    from . import reserves
-    if reserves.on(league):
-        return plan_bench_cut(league, team, waiting)
-    released = []
-    for position in D.ROSTER_ORDER:
-        players = group_players(league, team, position, waiting)
-        over = len(players) - D.GROUP_SIZE[position]
-        cut = release_order(players)[:over] if over > 0 else []
-        gone = {player.id for player in cut}
-        released += cut + floor_releases([player for player in players if player.id not in gone], position)
-    return released
-
-
-def bench_candidates(league: LeagueRecord, team: int, waiting: dict) -> tuple:
-    """D-149: (the men over the places of their groups, who are the bench's candidates; the floor's releases of the small groups). The men a group keeps for
-    its places are its best by `keep_order`; the line and the snapper are all candidates."""
-    surplus, floor = [], []
-    for position in D.ROSTER_ORDER:
-        players = keep_order(group_players(league, team, position, waiting))
-        size = D.GROUP_SIZE[position]
-        kept = players[:size]
-        floor += floor_releases(kept, position)
-        surplus += players[size:]
-    for position in D.RESERVE_POSITIONS:
-        surplus += group_players(league, team, position, waiting)
-    return surplus, floor
-
-
-def plan_bench_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
-    """D-149 (NX-B2b): the cut of a league that carries benches keeps 53: each group's places as before (the floor of the small groups too), then the bench,
-    `reserves.bench_order` of the men over the places (a backup quarterback, the long snapper and five linemen first, then one backup of each group, then by
-    the keep value) up to `reserves.MAX`; the rest are released, the worst to keep first."""
-    from . import reserves
-    surplus, floor = bench_candidates(league, team, waiting)
-    bench = reserves.bench_order(surplus, keep_order)
-    room = reserves.MAX - reserves.line_missing(surplus)          # room is kept for the snapper and the linemen the bench lacks (reserves.fill_line)
-    return release_order(bench[room:]) + floor
+    """The players the staff releases from the team (SR.5, D-164: the cut to 53 of design 21.7 (1)): every man of its roster and its rookies whom
+    `keep_plan` does not keep, the worst to keep first."""
+    players = team_candidates(league, team, waiting)
+    kept = {p.id for p in keep_plan(players)}
+    return release_order([p for p in players if p.id not in kept])
 
 
 def staff_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
@@ -445,42 +502,24 @@ def staff_cut(league: LeagueRecord, team: int, waiting: dict) -> list:
 
 def apply_cut(league: LeagueRecord, releases: dict, waiting: dict) -> int:
     """Every team's cut: `releases` is team -> the players it releases. The released leave (status released, the season they left, the
-    dead money of their contracts charged to the team: SX.8g); the rest of each group take its places best first, the rookies among
-    them (their true rating is known now); a group with fewer players than places keeps its empty places last. Returns the number
-    released."""
-    from . import reserves
-    from .depth import player_order
+    dead money of their contracts charged to the team: SX.8g); the draft is over (its rookies who stay join their positions' charts, their true
+    rating known now) and every team's chart and places are made again (the staff's order: the best first; the player's own order kept, NX-D3).
+    Returns the number released."""
+    from . import real_roster
     count = 0
-    benches = reserves.on(league)
     for team in range(1, D.TEAMS + 1):
-        gone = {player.id for player in releases.get(team, ())}
-        roster = league.rosters[team - 1]
-        for position in (D.ALL_POSITIONS if benches else D.POSITIONS):
-            places = D.PLACES_OF[position]
-            players = group_players(league, team, position, waiting)
-            kept = sorted((p for p in players if p.id not in gone), key=lambda p: (-p.rating, p.id))
-            if team == league.team:
-                kept = player_order(league, position, kept)              # NX-D3: the men the player put first keep their places
-            if len(kept) > len(places) and not benches:
-                raise ValueError("the %s group of team %d keeps %d players for %d places" % (position, team, len(kept), len(places)))
-            for player in kept[len(places):]:
-                player.status, player.place = reserves.STATUS, -1         # D-149: the men over the places are on the bench
-            kept = kept[:len(places)]
-            for player in kept:
-                player.status = "active"
-            for player in players:
-                if player.id in gone:
-                    if contracts.released_free(player):
-                        contracts.leave(player)                     # SX.8m: an undrafted rookie released at his first cut costs nothing
-                    else:
-                        contracts.release(league, player)           # before the status: the dead money is charged to his team
-                    player.status, player.left, player.place, player.points = "released", league.season, -1, 0
-                    count += 1
-            for index, player in zip(places, kept):
-                roster[index] = player.id
-                player.place = index
-            for index in places[len(kept):]:
-                roster[index] = 0
+        for player in releases.get(team, ()):
+            if player.status != "active" or player.team != team:
+                continue
+            if contracts.released_free(player, league):
+                contracts.leave(player)                     # SX.8m: an undrafted rookie released at his first cut costs nothing
+            else:
+                contracts.release(league, player)           # before the status: the dead money is charged to his team
+            player.status, player.left, player.place, player.points = "released", league.season, -1, 0
+            count += 1
+    league.draft = None
+    league.pick_no = 0
+    real_roster.refresh_all(league)
     return count
 
 
@@ -503,11 +542,12 @@ def check_draft(league: LeagueRecord, whole) -> set:
     if not isinstance(rows, list) or len(rows) != size:
         raise LeagueError("the class holds %r prospects, not %d" % (len(rows) if isinstance(rows, list) else rows, size))
     youngest, span = T.FR_ROOKIE_AGE
+    from .. import roster_model as RM
     for row in rows:
-        if not isinstance(row, list) or len(row) != 6:
+        if not isinstance(row, list) or len(row) != 7:
             raise LeagueError("a prospect is %r" % (row,))
-        position, name, true, potential, age, low = row
-        if position not in D.POSITIONS or potential not in D.POTENTIALS:
+        position, name, true, potential, age, low, real_position = row
+        if position not in D.GROUPS or potential not in D.POTENTIALS or real_position not in RM.MADDEN or RM.GROUP[real_position] != position:
             raise LeagueError("a prospect is %r" % (row,))
         if not isinstance(name, str) or not 1 <= len(name) <= 40 or any(ord(c) < 32 for c in name):
             raise LeagueError("a prospect has the name %r" % (name,))

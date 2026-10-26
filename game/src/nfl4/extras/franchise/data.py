@@ -6,7 +6,7 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 18                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 19                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
@@ -40,6 +40,11 @@ FORMAT = 18                                  # league.sav's format; a higher one
 #                                                its `roster_version` (the rosters.txt it was made from) and `roster_offer`. A player row has 19 values (the 16 of
 #                                                format 17, then position, number, list). The 34 places are still stored until SR.5 moves every block onto the chart
 #                                                (the bridge of D-161). A file of format 17 or older is converted once when it is opened (real_roster.convert)
+#                                              19 (2026-10-25, SR.5, D-164, NX-L6) the chart is the team: the 34 places are no longer stored (`rosters` leaves the
+#                                                file; they are made from the chart in memory, real_roster.refresh_view), a player row's place is -1, the status
+#                                                "reserve" (the bench of D-149) is gone (an active man without a place), `pos` is his family's word (never RET), the
+#                                                player's order (`depth["order"]`) is by position, a draft prospect has his position (7 values). A file of format 18
+#                                                or older is read through real_roster.from_places
 COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the end of rounds 3 to 7 (NFL, SRC-OFFICIAL)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
@@ -99,8 +104,12 @@ GAME_DAY_EXTRA = 2
 # corner at safety, a backer on the line; a returner is a man of any group that returns kicks
 PLACE_COVERS = {"LB": ("DL",), "DL": ("LB",), "CB": ("S",), "S": ("CB",), "RET": ("RB", "WR", "CB", "S", "LB", "DL")}
 GROUP_SIZE = {position: len(places) for position, places in PLACES_OF.items()}                                           # OL, LS: 0
-ROSTER_ORDER = ("QB", "RB", "WR", "DL", "LB", "CB", "S", "RET", "K", "P")      # the order the groups are listed and spoken in
-BENCH_ORDER = ROSTER_ORDER + RESERVE_POSITIONS                                  # the bench's groups, in the same order, then the line and the snapper
+# SR.5 (D-164): a player's group is his FAMILY of positions (roster_model.GROUP of his position): RET is only the group of the two return places of the
+# view, never a player's; the offensive line and the snapper are families of the roster like the others (no place of the engine is theirs)
+GROUPS = ("QB", "RB", "WR", "OL", "DL", "LB", "CB", "S", "K", "P", "LS")
+ROSTER_ORDER = GROUPS                                                           # the order the groups are listed and spoken in
+BENCH_ORDER = GROUPS
+PLACE_GROUPS = ("RB", "WR", "DL", "LB", "CB", "S", "RET", "K", "P", "QB")     # the groups of the engine's places (the view)
 
 # the weights of a team's strength (design 4.4): they follow how often the engine reads each place; the sum is 78. OL and LS have no place, so they
 # add nothing to a strength; their weight 1 only gives a bench lineman a value in a trade or a release (trades.worth, contracts.release_value).

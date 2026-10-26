@@ -146,18 +146,18 @@ class FranchiseStore:
             self._notice("NXF-37")
 
     def _benches(self) -> None:
-        """D-149: the league carries the 53-man roster (a league of format 16 or older has nobody on a bench yet; its next cut fills them)."""
-        if self.league is not None and self.reserves:
+        """D-149, SR.5: every league carries the 53-man roster (its chart); logged with the size of the rosters (rule 0.15)."""
+        if self.league is not None:
             self.league.reserves_on = True
-            from . import reserves
-            debuglog.event("franchise", "benches", on=True, players=sum(reserves.count(self.league, t) for t in range(1, D.TEAMS + 1)))   # rule 0.15
+            from . import real_roster
+            debuglog.event("franchise", "rosters", players=sum(real_roster.roster_count(self.league, t) for t in range(1, D.TEAMS + 1)))
 
     def _convert(self, name: str) -> None:
         """SR.4 (NX-L7, design 21.6): a league of format 17 or older, once: the file is kept as league.sav.before-format-18, then every man gets his
         real position and number by his name, a league without benches its teams' missing real men, the depth charts (real_roster.convert). Saved
         at the next save; `league.converted` tells SR.6's sentence what was done. A failure never costs the player his franchise (it is logged)."""
         league = self.league
-        if league is None or not league.loaded_format or league.loaded_format >= D.FORMAT:
+        if league is None or not league.loaded_format or league.loaded_format >= 18:      # SR.5: a league of format 18 has its positions already
             return
         try:
             self.files.copy(name, D.LEAGUE_FILE + BEFORE_FORMAT_18)
@@ -167,15 +167,24 @@ class FranchiseStore:
         except Exception:
             log.exception("the franchise could not be brought to the real rosters' positions")
 
+    @staticmethod
+    def _mend_charts(league) -> None:
+        """SR.5 (D-164): every team's chart and places made again from its roster before a write (real_roster.refresh_all), so a path that changed a
+        man's team or status without real_roster.join or leave can never write a broken file; when a chart's men had to change it is logged (rule 0.15:
+        the log names the path to mend)."""
+        from . import real_roster
+        before = [sorted(pid for key, ids in chart.items() if key not in ("KR", "PR") for pid in ids) if isinstance(chart, dict) else None
+                  for chart in (league.chart if isinstance(league.chart, list) else [])]
+        real_roster.refresh_all(league)
+        after = [sorted(pid for key, ids in chart.items() if key not in ("KR", "PR") for pid in ids) for chart in league.chart]
+        changed = [team for team, (a, b) in enumerate(zip(before, after), start=1) if a != b]
+        if changed:
+            debuglog.event("franchise", "chart_mended", logging.WARNING, teams=changed, stage=league.stage, stage_no=league.stage_no)
+
     def _fix_backs(self) -> None:
-        """A league made before 2026-10-23 may have real tight ends, quarterbacks or defenders in running back places: renamed in memory."""
-        from .league import fix_real_backs, fix_real_positions
-        try:
-            real = self.real_names_of() if self.real_names_of is not None else None
-            fix_real_backs(self.league, real)
-            fix_real_positions(self.league, real)          # NX-D1: no real player of another family of position in a place of another team
-        except Exception:                        # a fix of names must never cost the player his franchise
-            log.exception("the running backs of the franchise could not be checked")
+        """SR.5 (NX-L5, NX-L7): nothing to rename any more. A real man of an older league whom the old fill put at another position gets his real position
+        back by his name (real_roster.convert), never a made-up name; the renames of 2026-10-23 and NX-D1 (fix_real_backs, fix_real_positions) are gone."""
+        return None
 
     @property
     def exists(self) -> bool:
@@ -239,6 +248,7 @@ class FranchiseStore:
         if self.season is not None and league.stage == SEASON and not self.engine_consistent():
             return True                          # the engine is between two of its own writes: the file keeps the last whole state
         try:
+            self._mend_charts(league)
             league.check()
             data = league.to_json().encode("utf-8")
         except Exception:

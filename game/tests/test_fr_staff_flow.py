@@ -12,6 +12,7 @@ from frrig import DOWN, ENTER, ESC, F9, spoken
 from nfl4.extras import nx_texts as X
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
+from nfl4.extras.franchise import real_roster as RR
 from nfl4.extras.franchise import staff as S
 from nfl4.extras.franchise import staff_flow as SF
 from nfl4.extras.franchise.league import LeagueError, LeagueRecord
@@ -345,8 +346,9 @@ def test_a_new_franchise_says_the_owners_goal_of_season_one(tmp_path):
 def test_an_empty_roster_place_at_the_stage_of_the_staff_is_damage():
     league = staff_league()
     gone = league.player_at(4, 6)                                        # a receiver's place (SR.4: an empty back place is allowed)
-    league.rosters[3][6] = 0
-    gone.status, gone.team, gone.place, gone.left, gone.salary, gone.years = "retired", 0, -1, league.season, 0, 0
+    RR.leave(league, gone, "retired")                                    # SR.5: he leaves the chart; a drawn team of six receivers has no seventh
+    gone.left, gone.salary, gone.years = league.season, 0, 0
+    assert league.has_empty_place()
     league.stage_no = D.STAGE_AGING                                      # stage 2 may have empty places: the file loads ...
     LeagueRecord.from_json(league.to_json())
     league.stage_no = D.STAGE_STAFF                                      # ... stage 9 (before the retirements) may not

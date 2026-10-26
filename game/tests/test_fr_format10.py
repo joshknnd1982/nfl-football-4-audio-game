@@ -6,7 +6,7 @@ gets the empty honors and counts, never another league's.
 import json
 
 import pytest
-from drrig import draft_league
+from drrig import draft_league, legacy_data
 from test_fr_format9 import TEAM, through_store
 
 from nfl4.extras.franchise import data as D
@@ -16,7 +16,7 @@ from nfl4.extras.franchise.league import OFFSEASON, SEASON, LeagueError, LeagueR
 
 
 def as_format_9(league):
-    data = json.loads(league.to_json())
+    data = legacy_data(league)
     data.pop("honors")
     data.pop("usage")
     data["format"] = 9
@@ -48,7 +48,7 @@ def test_format_10_round_trips_the_honors_and_the_counts_through_the_real_store(
     league.season = 3
     honored(league)
     loaded, files = through_store(league)
-    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 18
+    assert json.loads(files.data[D.LEAGUE_FILE].decode("utf-8"))["format"] == D.FORMAT == 19     # SR.5: format 19 (no places stored)
     assert loaded.honors == league.honors and loaded.usage == league.usage and loaded.to_json() == league.to_json()
 
 
