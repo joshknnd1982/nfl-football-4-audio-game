@@ -25,7 +25,7 @@ def test_the_readme_exists_with_lf_line_ends_and_the_attribution_and_the_notes()
     assert "\r" not in text and text.endswith("\n") and text.startswith("# NFL Football 4")
     for needed in ("This is inspired by Jim Kitchen", "blind from birth", "died in 2015", "MIT License", "If something goes wrong",
                    "Madden NFL is a trademark of Electronic Arts", "If a rights holder asks for them to be removed, they will be removed",
-                   "https://github.com/joshknnd1982", "no release yet"):
+                   "https://github.com/joshknnd1982", "no full release yet"):      # 2026-10-26: test installers are pre-releases
         assert needed.lower() in text.lower(), needed
 
 
@@ -76,7 +76,7 @@ def test_no_text_a_reader_meets_calls_the_game_a_clone_or_a_new_version_of_jim_k
 def test_the_changelog_names_no_release_and_the_version_of_the_code_is_in_it():
     from nfl4 import VERSION
     text = (GAME / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert "No release has been published yet" in text and "## %s " % VERSION in text
+    assert "published on GitHub as pre-releases" in text and "## %s " % VERSION in text
     assert "1.0.0 (" not in text
 
 

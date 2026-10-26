@@ -2,7 +2,7 @@
 
 An audio-only American football game for blind players, by Josh Kennedy, inspired by Jim Kitchen. It is Josh Kennedy's own game, loosely based on Jim Kitchen's games; it is not a clone or a copy of them. You play with the keyboard. The game tells you everything in speech and sound, through your screen reader or the Windows voices. There are no pictures.
 
-**Status: a work in progress.** There is no release yet and no installer to download. The game can be run and built from the source in this repository. Test builds exist for the maintainer only.
+**Status: a work in progress.** There is no full release yet. A test installer (a pre-release, version 0.16.2) can be downloaded from the Releases page; it is for testers, and CHANGELOG.md says what to try. The game can also be run and built from the source in this repository.
 
 ## Inspired by Jim Kitchen
 
@@ -141,7 +141,7 @@ The report holds the newest logs, a description of your Windows, voices and soun
 ## Tests and building
 
 - The tests are in `game/tests`: more than 6,000, run in both the 64-bit and the 32-bit Python. From the `game` folder: `.venv\Scripts\python -m pytest`.
-- `game/tools/build.ps1` builds the 64-bit and 32-bit programs with PyInstaller. `release/installer.iss` is the Inno Setup script for one installer that holds both. No installer is published yet.
+- `game/tools/build.ps1` builds the 64-bit and 32-bit programs with PyInstaller. `release/installer.iss` is the Inno Setup script for one installer that holds both. Test installers are published on the Releases page as pre-releases.
 - The Classic mode has a recorded transcript of the original's behavior that the tests compare with, so a change cannot alter the original game.
 
 ## License and credits

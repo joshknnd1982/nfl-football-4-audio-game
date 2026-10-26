@@ -1,6 +1,6 @@
 # Changelog: what is new, and how to test it
 
-This file lists everything new in each build of NFL Football 4, newest first, so that players and outside testers know what changed and what to try. No release has been published yet: the versions below are test builds; the first release will be 1.0.0.
+This file lists everything new in each build of NFL Football 4, newest first, so that players and outside testers know what changed and what to try. The versions below are test builds, published on GitHub as pre-releases (the first from 0.16.2); the first full release will be 1.0.0.
 
 ## Before you start
 
