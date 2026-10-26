@@ -10,9 +10,9 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
-## 0.16.2 (2026-10-25, test build)
+## 0.16.2 (2026-10-26, test build)
 
-Not built yet: this test build comes when the real rosters are in the Franchise too (later sessions). Until then the items below are in the source.
+The eleventh test installer. The real rosters are now in the Franchise too: its teams, the roster heard by positions, the starting lineup and the choice of who starts at every position, the returners, and "get the latest rosters" (which says you already have the newest until the maintainer publishes a rosters folder). Nothing here has been heard by the owner yet; please test the items below.
 
 ### The real rosters of 2026-10-25, read from each team's own pages
 The rosters were read again, this time from the raw pages of all 32 teams (their roster and depth chart pages), and compared with two other sources (nflverse and Sleeper); where the sources disagreed, a search of the news settled it. The old file had missed some real players (for example Josh Jacobs, Brian Branch, Christian Kirk and Dre Greenlaw), and every practice squad now has at most 17 men, as the NFL allows. A player called up from the practice squad for one game day stays on the practice squad, as in the real NFL.
