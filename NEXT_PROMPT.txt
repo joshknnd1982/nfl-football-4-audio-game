@@ -1,6 +1,6 @@
 NEXT SESSION BLOCK (rewritten 2026-10-26 at the end of phase PR, session SR.7)
 
-Where we are: phase PR is finished but for the owner's listening round. SR.7 is done (D-167). Version 0.16.3 is BUILT as the twelfth test installer (release\nfl4-setup-0.16.3.exe, 19,093,041 bytes, SHA-256 5B24B9A542D17CB8B05C43A17677957A01D299FDE6764BF9D58CBE35E23EB674; exe_smoke ALL PASS 64 and 32 bit, verify_installer 31 PASS). It is NOT published: GitHub still has the pre-release v0.16.2. Committed locally; nothing pushed.
+Where we are: phase PR is finished but for the owner's listening round. SR.7 is done (D-167). Version 0.16.3 is BUILT as the twelfth test installer (release\nfl4-setup-0.16.3.exe, 19,093,041 bytes, SHA-256 5B24B9A542D17CB8B05C43A17677957A01D299FDE6764BF9D58CBE35E23EB674; exe_smoke ALL PASS 64 and 32 bit, verify_installer 31 PASS). It is PUBLISHED at the owner's word: master pushed to https://github.com/joshknnd1982/nfl-football-4-audio-game and the pre-release v0.16.3 created with the installer and checksums_test_0.16.3.txt (download hash checked equal).
 What SR.7 did:
   Real ages (Q-078 answered): rosters.txt lines now end with "; age 24; seasons 2" (from nflverse's birth dates and rookie years, Sleeper second; all 2,521 men). A new franchise gives every real man his real age (21 to 40 in the game) and his NFL seasons; each practice squad has at most six veterans. Six 20-season soaks (drawn ages, real ages, the game's own code; both calendars): 0 problems, the same bands (places mean 69.4 to 69.7, strength spread 1.1 to 1.3, cap use 0.77).
   Position words: draft prospects, rookies before the cut, undrafted men, free agents and award rows say the man's own position.
@@ -13,7 +13,7 @@ Decisions made automatically (spec\DECISIONS.part12.md): D-167 (real ages and se
 
 Owner-needed:
   1. The listening round on 0.16.3 (PLAYTEST_LIST 80 to 90; the Bears' roster first, then the lineup, the returners, the ages, the draft's positions).
-  2. Whether to publish 0.16.3 as a pre-release on GitHub. The rosters/ folder on GitHub must keep 0.16.2's rosters.txt (no ages) until testers have 0.16.3, because 0.16.2 refuses a rosters file with ages; publish the new rosters.txt together with 0.16.3 or later.
+  2. The rosters/ folder on GitHub keeps 0.16.2's rosters.txt (no ages) on purpose: 0.16.2 refuses a rosters file with ages, and 0.16.3 already has the file with ages built in (the same rosters of 2026-10-25). Publish a rosters.txt with ages only with the next roster refresh, when testers have moved to 0.16.3.
 Open questions: none needs the owner now except Q-034 (are the play descriptions clear), which the listening round answers. Q-037, Q-048, Q-067, Q-070 are decided for sessions after phase PR; Q-038, Q-039 and the rest of Q-068 are accepted defaults with their sessions named.
 
 NEXT SESSION: P8, an S8.2-style session: the owner's playtest of 0.16.3 (PLAYTEST_LIST 80 to 90) and the fixes of what he reports, each with a test; then P10 S10.3 (the JAWS and exotic-voice checks on the build) and the calibration sessions after phase PR (Q-037, Q-048, Q-067, Q-070). If the owner reports nothing, start with S10.3's scripted checks.
