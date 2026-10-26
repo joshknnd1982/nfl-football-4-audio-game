@@ -21,8 +21,8 @@ def award_line(league, words, row: list) -> str:
             return X.text("NXG-B05", award=award_name(award), coach=league.coach)
         return X.text("NXG-B04", award=award_name(award), name=name, team=words.team_name(team))
     if team == league.team:
-        return X.text("NXG-B03", award=award_name(award), player=name, position=words.position(position))
-    return X.text("NXG-B02", award=award_name(award), player=name, position=words.position(position), team=words.team_name(team))
+        return X.text("NXG-B03", award=award_name(award), player=name, position=words.award_position(league, pid, position))
+    return X.text("NXG-B02", award=award_name(award), player=name, position=words.award_position(league, pid, position), team=words.team_name(team))
 
 
 def member_line(words, player) -> str:
@@ -52,11 +52,11 @@ def award_lines(league, words) -> list:
     """NXG-20 and NXG-21: every award, the newest season first, in the order of the awards."""
     rows = sorted(league.honors["awards"], key=lambda row: (-row[0], honors.AWARDS.index(row[1])))
     out = []
-    for season, award, _pid, name, position, team in rows:
+    for season, award, pid, name, position, team in rows:
         if award == "coy":
             out.append(X.text("NXG-21", n=season, award=award_name(award), name=name, team=words.team_name(team)))
         else:
-            out.append(X.text("NXG-20", n=season, award=award_name(award), player=name, position=words.position(position), team=words.team_name(team)))
+            out.append(X.text("NXG-20", n=season, award=award_name(award), player=name, position=words.award_position(league, pid, position), team=words.team_name(team)))
     return out
 
 
@@ -74,8 +74,8 @@ def text_lines(league, words) -> list:
     rows = sorted(league.honors["awards"], key=lambda row: (-row[0], honors.AWARDS.index(row[1])))
     if rows:
         out += ["", "Awards"]
-        for season, award, _pid, name, position, team in rows:
-            who = name if award == "coy" else "%s, %s" % (name, words.position(position).strip())
+        for season, award, pid, name, position, team in rows:
+            who = name if award == "coy" else "%s, %s" % (name, words.award_position(league, pid, position).strip())
             out.append("%s, season %d: %s, the %s." % (_sentence(award_name(award)), season, who, words.team_name(team)))
     members = honors.hall_members(league)
     if members:

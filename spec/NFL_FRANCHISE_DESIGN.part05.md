@@ -363,3 +363,19 @@ THE CONVERSION of a league of format 17 or older, once, when it is opened (NX-L7
   (`RealNames.last_resort`, no draw). Classic keeps the original's 1,708 surnames.
 - NOT YET (SR.6): the roster said by positions (21.8), the lineup item and the choice of every starter by menu (21.13), the conversion's sentence, the
   in-game update (21.10); the trade menus' other positions; a returner on top of his place in a franchise game (Q-082, decided for SR.6).
+
+### 21.16 SR.7 as built (2026-10-26, D-167): real ages, the position words, NX-L10's checks
+
+- REAL AGES (21.5's last item settled, Q-078): rosters.txt's player line may end with `; age N; seasons N` (written by update_rosters.py from nflverse's roster
+  table, Sleeper's feed second); a new franchise gives the real men their real ages (21 to 40) and seasons (at most age less 21), after the view's draws;
+  each practice squad keeps at most six veterans (the six most experienced); a man with no age keeps the drawn or hashed age. Measured: the 20-season
+  bands of SR.5 and SR.6 hold (D-167 (3)).
+- POSITION WORDS: the draft's prospects, the rookies before the cut, the undrafted, the market's free agents and the award rows say the man's own
+  position (an older draft's prospect without one keeps his group's word).
+- NX-L10 (21.11's list) and where each item is tested: all 32 teams of a new franchise equal rosters.txt (test_real_roster_sr4 "every team ... man for
+  man", the Bears' quarterbacks and Miller Moss); the view of every team at full health (sr4 "the view of every team ... the design's counts"); whole
+  games of every team, no empty or doubled name (test_nx_l10_sr7, 16 games; sr4 "a whole quick game ... never gives an empty back place the ball");
+  the draws the same as 0.16.x (sr4 "the same draws with or without the real rosters", test_sx11_names); leagues of format 16 and 17 opened (sr4 the
+  format 16 and 17 tests, "the store keeps the older file and converts"); format 18 and 19 round trips (sr4, sr5); the offer and the update with the
+  player's team untouched and the download with a fake server (test_rosters_update_sr6); the cap measurement (sr5 "the cap is the measured cap");
+  the soaks (work\sr6, work\sr7, 0 problems); Classic's golden transcript (test_pag_golden and the Classic tests in the full suites).

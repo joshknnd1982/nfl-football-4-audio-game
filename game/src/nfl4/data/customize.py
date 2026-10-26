@@ -197,6 +197,7 @@ OLD_SHIPPED_ROSTERS = {
     "962870e5691d6f7fe622d275d037334b59418f260742a27b98006ac50099c17e",     # 0.10.0 to 0.13.0: season 2026, as of 2026-10-22 (SX.11)
     "e77caff85373148b9fe39fc9951b59d5ef6661ef49208d94ac937572fd273960",     # 0.14.0: as of 2026-10-24, format 1 (NX-B2; missed in 0.15.0, added in SR.2)
     "4ea4f247acd43e6698ea3cab300dcca8039d65e912a19b4b009020ab1732edc4",     # 0.15.0 to 0.16.1: as of 2026-10-24, format 1 with NX-D1's positions
+    "10ce66ecfcf0de6766092d88e5bd5b042ab80c355f6cce625ecfc457f44d57a3",     # 0.16.2: as of 2026-10-25, layout 2 without ages (SR.7 adds them, D-167)
 }
 ROSTERS_BEFORE_REFRESH = ".before-layout-2"    # SR.2: the copy of the player's old file when the layout-2 rosters replace it (was .before-2026-10-24)
 

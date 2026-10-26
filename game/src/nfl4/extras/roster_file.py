@@ -46,6 +46,19 @@ _PLAYER_ID = re.compile(r"T(\d{2})P(\d{2,3})")
 _ROLE_ID = re.compile(r"T(\d{2})(KR|PR)(\d)")
 _VALUE = re.compile(r"^(?:(%s)\s+)?(%s)\s+(\d{1,2}|-)\s+(\S.*)$" % ("|".join(sorted(STATUSES, key=len, reverse=True)),
                                                                    "|".join(sorted(MADDEN, key=len, reverse=True))))
+# SR.7 (Q-078, D-167): after the name, optionally "; age N" (his age on the file's date) and "; seasons N" (his NFL seasons before this one). A name has
+# no semicolon, so the first semicolon ends it. Facts from nflverse's roster table (birth date, rookie year).
+_AGE_PART = re.compile(r"^(?P<name>[^;]*?)\s*(?:;\s*age\s+(?P<age>\d{1,2})\s*)?(?:;\s*seasons\s+(?P<seasons>\d{1,2})\s*)?$", re.IGNORECASE)
+AGE_LOW, AGE_HIGH = 18, 50                               # the check's limits of a real player's age (the game then keeps its own 21 to 40)
+
+
+def split_age(text: str):
+    """(name, age or None, seasons or None) of a player's text after the number, or None when a part after a semicolon is not "age N" or "seasons N"."""
+    found = _AGE_PART.match(text.strip())
+    if found is None:
+        return None
+    age, seasons = found.group("age"), found.group("seasons")
+    return found.group("name").strip(), int(age) if age else None, int(seasons) if seasons else None
 
 
 @dataclass
@@ -54,6 +67,8 @@ class Man:
     number: str         # digits or "-"
     name: str
     status: str = ""    # ACTIVE, SQUAD or a RESERVE kind
+    age: int | None = None       # SR.7: his age on the file's date, None when the sources give none
+    seasons: int | None = None   # SR.7: his NFL seasons before this one (0: a rookie), None when unknown
 
 
 @dataclass
@@ -105,12 +120,16 @@ def parse(text: str):
             if not 1 <= team <= TEAMS or parts is None:
                 problems.append("line %d (%s) is not a player of layout 2" % (number, ident))
                 continue
-            name = parts.group(4).strip()
+            split = split_age(parts.group(4))
+            if split is None:
+                problems.append("line %d (%s): after the name only \"; age N\" and \"; seasons N\" may follow" % (number, ident))
+                continue
+            name, age, seasons = split
             reason = name_problem(name)
             if reason:
                 problems.append("line %d (%s): %s" % (number, ident, reason))
                 continue
-            rows.setdefault(team, []).append((int(player.group(2)), Man(parts.group(2), parts.group(3), name, parts.group(1) or ACTIVE)))
+            rows.setdefault(team, []).append((int(player.group(2)), Man(parts.group(2), parts.group(3), name, parts.group(1) or ACTIVE, age, seasons)))
         elif role:
             team = int(role.group(1))
             if not 1 <= team <= TEAMS:
@@ -154,6 +173,10 @@ def check(teams: dict):
             reason = name_problem(m.name)
             if reason:
                 fail.append("%s: %r: %s" % (tag, m.name, reason))
+            if m.age is not None and not AGE_LOW <= m.age <= AGE_HIGH:
+                fail.append("%s: %s has the age %d" % (tag, m.name, m.age))
+            if m.seasons is not None and (m.seasons < 0 or (m.age is not None and m.seasons > m.age - AGE_LOW)):
+                fail.append("%s: %s has %d seasons at the age %s" % (tag, m.name, m.seasons, m.age))
             k = m.name.casefold()
             if k in names:
                 fail.append("%s: %s is on the team twice" % (tag, m.name))
@@ -189,6 +212,8 @@ HEADER = """# NFL Football 4 rosters, format 1, layout 2: the real positions.
 # Each line is an ID, an equals sign, the list (none for the active roster; PS the practice squad; IR injured reserve, IRD injured reserve and
 # designated for return, PUP physically unable to perform, NFI non-football injury, SUS suspended, PSI practice squad injured), the position,
 # the jersey number and the name. The number is a number, or a minus sign when the player has none.
+# After the name, "; age 24" is his age on the date of the VERSION line and "; seasons 2" his NFL seasons before this one (0: a rookie); both may
+# be left out, and a new franchise then gives him an age of its own. A new franchise gives every other man his real age and seasons.
 # The positions are the positions of a real roster: QB quarterback, HB halfback, FB fullback, WR wide receiver, TE tight end, LT left tackle,
 # LG left guard, C center, RG right guard, RT right tackle, LEDG left edge, REDG right edge, DT defensive tackle, SAM strong-side linebacker,
 # MIKE middle linebacker, WILL weak-side linebacker, CB cornerback, FS free safety, SS strong safety, K kicker, P punter, LS long snapper.
@@ -209,7 +234,8 @@ def render(version: str, teams: dict) -> str:
         ordered = team.active() + team.squad() + team.reserves()
         for i, m in enumerate(ordered, start=1):
             mark = (m.status + " ") if m.status else ""
-            out.append("T%02dP%02d = %s%s %s %s" % (t, i, mark, m.pos, m.number, m.name))
+            extra = ("; age %d" % m.age if m.age is not None else "") + ("; seasons %d" % m.seasons if m.seasons is not None else "")
+            out.append("T%02dP%02d = %s%s %s %s%s" % (t, i, mark, m.pos, m.number, m.name, extra))
         for role in ROLES:
             for i, name in enumerate(team.roles.get(role, [])[:9], start=1):
                 out.append("T%02d%s%d = %s" % (t, role, i, name))

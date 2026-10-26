@@ -242,7 +242,7 @@ def test_f9_at_the_cut_question_tells_the_waiting_rookies_by_their_ranges_as_the
 
     def told(rig):
         nonlocal expected
-        expected = rig.fstore.words.prospect_line(rookie.name, rookie.pos, low, high, rookie.age, rookie.potential)
+        expected = rig.fstore.words.prospect_line(rookie.name, rookie.position or rookie.pos, low, high, rookie.age, rookie.potential)
         return any(t.startswith(heading) and t.endswith(expected) for t in spoken(rig))
     rig = run(tmp_path, league, keys=keys, until=told)
     assert told(rig)                                                                       # the cut has not been applied: the range, not the rating

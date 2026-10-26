@@ -30,8 +30,10 @@ def ran(tmp_path, keys=(), picks_told="mine", league=None, until=None, **kwargs)
 
 
 def group_word(player):
-    # SR.6: the scouts' range line (NXK-06, prospect_line) still names a prospect or a rookie before the cut by his group's word
-    return X.text(D.POSITION_TEXT[player.pos])
+    # SR.7: the scouts' range line (NXK-06, prospect_line) names a prospect or a rookie before the cut by his own position (his group's word only
+    # when he has none: an older draft)
+    from nfl4.extras import roster_file as RF
+    return RF.SPOKEN.get(getattr(player, "position", "") or "") or X.text(D.POSITION_TEXT[player.pos])
 
 
 def position_word(player):

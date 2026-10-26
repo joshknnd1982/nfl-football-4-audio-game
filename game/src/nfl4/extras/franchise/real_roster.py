@@ -510,6 +510,26 @@ def bench_age(league, team: int, name: str) -> tuple:
     return age, potential
 
 
+def real_age(man, age: int, seasons: int) -> tuple:
+    """SR.7 (Q-078, D-167): (age, seasons) of a man of rosters.txt: his real age (within the game's AGE_MIN to AGE_MAX) and his real NFL seasons when the
+    file gives them, else the `age` and `seasons` the game made (a draw or the hash). No draw either way."""
+    if getattr(man, "age", None) is None:
+        return age, seasons
+    age = max(D.AGE_MIN, min(D.AGE_MAX, man.age))
+    if getattr(man, "seasons", None) is not None:
+        seasons = man.seasons
+    return age, max(0, min(seasons, age - 21))
+
+
+def cap_squad_veterans(men: list) -> None:
+    """SR.7: a real practice squad has at most six veterans by ACCRUED seasons, which the data does not give (calendar seasons count up to ten a squad):
+    the six most experienced men keep their seasons, the others count as at most two (practice.VETERAN_SEASONS - 1). No draw."""
+    from . import practice
+    ordered = sorted(men, key=lambda p: -p.seasons)
+    for p in ordered[practice.VETERANS:]:
+        p.seasons = min(p.seasons, practice.VETERAN_SEASONS - 1)
+
+
 def file_teams(real) -> dict:
     """{team: roster_file.Team} of a layout-2 RealNames (the spoken names), or {} when the names are not layout 2."""
     if real is None or not hasattr(real, "is_layout2") or not all(real.is_layout2(t) for t in range(1, D.TEAMS + 1)):
@@ -517,9 +537,11 @@ def file_teams(real) -> dict:
     out = {}
     for team in range(1, D.TEAMS + 1):
         lines = real.rosters[team - 1]
-        men = [RF.Man(p.madden or RM.WORD_POSITIONS.get(p.pos, ("WR",))[0], p.number, real.spoken(p.name), p.status if p.squad else "")
+        men = [RF.Man(p.madden or RM.WORD_POSITIONS.get(p.pos, ("WR",))[0], p.number, real.spoken(p.name), p.status if p.squad else "",
+                      getattr(p, "age", None), getattr(p, "seasons", None))
                for p in lines if p.pos != "RET"]
-        men += [RF.Man(p.madden or RM.WORD_POSITIONS.get(p.pos, ("WR",))[0], p.number, real.spoken(p.name), p.status or "IR")
+        men += [RF.Man(p.madden or RM.WORD_POSITIONS.get(p.pos, ("WR",))[0], p.number, real.spoken(p.name), p.status or "IR",
+                       getattr(p, "age", None), getattr(p, "seasons", None))
                 for p in real.reserve(team)]
         given = real.roles[team - 1] if getattr(real, "roles", None) and isinstance(real.roles[team - 1], dict) and real.roles[team - 1] else None
         if given:
@@ -563,6 +585,7 @@ def make_real(league, real, drawn_team_order: list) -> int:
             man = active[key] if not isinstance(key, tuple) else squad_men[key[1]]
             player.name, player.position, player.number, player.roster_list = man.name, man.pos, man.number, ""
             player.pos = group_of(man.pos)
+            player.age, player.seasons = real_age(man, player.age, player.seasons)       # SR.7: the place's drawn rating and potential, his real age
             ids_of[key] = player.id
         weakest: dict = {}
         for pid in roster:
@@ -582,6 +605,7 @@ def make_real(league, real, drawn_team_order: list) -> int:
                 rating = bench_rating(league, team, group, man.name, weakest, previous)
                 age, potential = bench_age(league, team, man.name)
                 seasons = max(0, age - 22)
+            age, seasons = real_age(man, age, seasons)                                    # SR.7 (D-167)
             player = Player(league.next_id, man.name, group, rating, potential, age, seasons, rating, None, 0, status, 0, team, -1,
                             position=man.pos, number=man.number, roster_list=roster_list)
             if status == "active":
@@ -595,9 +619,11 @@ def make_real(league, real, drawn_team_order: list) -> int:
         for key, man in enumerate(active):
             if key not in ids_of:
                 ids_of[key] = join_file(man, "active", "").id
+        squad_players = []
         for i, man in enumerate(squad_men):
             if ("PS", i) not in ids_of:
-                join_file(man, "practice", RF.SQUAD)
+                squad_players.append(join_file(man, "practice", RF.SQUAD))
+        cap_squad_veterans(squad_players)
         for man in file_team.reserves():
             join_file(man, "list", man.status)
         chart_ids = {position: [ids_of[k] for k in chart[position]] for position in RM.MADDEN}
@@ -770,7 +796,8 @@ def convert(league, real) -> dict:
                 group = group_of(man.pos)
                 rating = bench_rating(league, team, group, man.name, weakest, previous)
                 age, potential = bench_age(league, team, man.name)
-                player = Player(league.next_id, man.name, group, rating, potential, age, max(0, age - 22), rating, None, 0, "active", 0, team, -1,
+                age, seasons = real_age(man, age, max(0, age - 22))                       # SR.7 (D-167): a joining real man's real age
+                player = Player(league.next_id, man.name, group, rating, potential, age, seasons, rating, None, 0, "active", 0, team, -1,
                                 position=man.pos, number=man.number)
                 CT.sign(player, *CT.initial_contract(player))
                 league.players[player.id] = player

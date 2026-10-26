@@ -240,6 +240,18 @@ class Words:
         spoken = RF.SPOKEN.get(getattr(player, "position", "") or "")
         return spoken if spoken else self.position(player.pos)
 
+    def position_word(self, code: str) -> str:
+        """SR.7: the word of a position code: one of the 22 real positions (RF.SPOKEN), else the group's word (an older draft's prospect)."""
+        return RF.SPOKEN.get(code or "") or self.position(code)
+
+    def award_position(self, league, pid: int, group: str) -> str:
+        """SR.7: an award row keeps the group word of its season; the winner (always in the league, honors.check_honors) is said at his own position
+        when it is of that group."""
+        player = league.players.get(pid) if league is not None else None
+        if player is not None and getattr(player, "position", "") and player.pos == group:
+            return self.position_for(player)
+        return self.position(group)
+
     def position_of(self, player) -> str:
         """His position word (SR.6: "on the bench" of D-149 is gone, a man without a place is an active man)."""
         return self.position_for(player)
@@ -279,7 +291,7 @@ class Words:
         """NXJ-04: a free agent in the market with what he asks and how many other teams are interested (NXJ-A01 to NXJ-A03); NXJ-A04 adds the player's
         own offer when there is one (SX.8i)."""
         interest = X.text("NXJ-A01") if others == 0 else X.text("NXJ-A02") if others == 1 else X.text("NXJ-A03", k=others)
-        line = X.text("NXJ-04", player=self.named(player), position=self.position(player.pos), a=player.age, r=player.rating,
+        line = X.text("NXJ-04", player=self.named(player), position=self.position_for(player), a=player.age, r=player.rating,
                       potential=self.potential(player.potential), contract=self.contract_of(salary, years), interest=interest)
         if offer is not None:
             line += X.text("NXJ-A04", contract=self.contract_of(offer, years))
@@ -300,8 +312,9 @@ class Words:
                       contract=self.contract(player))
 
     def prospect_line(self, name: str, position: str, low: int, high: int, age: int, potential: str) -> str:
-        """NXK-06: a prospect, or a rookie before the cut, by the range the scouts give (SX.8d)."""
-        return X.text("NXK-06", player=name, position=self.position(position), lo=max(D.RATING_MIN, low), hi=high, a=age,     # (never under the scale, SX.8m)
+        """NXK-06: a prospect, or a rookie before the cut, by the range the scouts give (SX.8d). SR.7: `position` is his real position's code (the
+        prospect's or the rookie's `position`), or a group word for an older draft."""
+        return X.text("NXK-06", player=name, position=self.position_word(position), lo=max(D.RATING_MIN, low), hi=high, a=age,     # (never under the scale, SX.8m)
                       potential=self.potential(potential))
 
     def open_places(self, places: list) -> str:

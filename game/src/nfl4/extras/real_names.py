@@ -94,6 +94,8 @@ class RealPlayer:
     squad: bool = False  # the 53-man file: a player of the practice squad (no place in a game; the Franchise's squad)
     madden: str = ""     # layout 2: the real position (roster_file.MADDEN); "" for a format-1 line of a group word
     status: str = ""     # layout 2: "" active, "PS" the practice squad, or a reserve list (IR, PUP, ...): then the man is in RealNames.reserves
+    age: int | None = None       # SR.7 (D-167): his real age on the file's date, None when the line gives none
+    seasons: int | None = None   # SR.7: his NFL seasons before this one, None when the line gives none
 
 
 @dataclass(frozen=True)
@@ -406,13 +408,18 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
         if status and code == "RET":
             bad.add(entry.id, "a practice squad player is not a returner, the line is ignored")
             continue
-        reason = name_problem(parts.group(4).strip())
+        split = RF.split_age(parts.group(4))                 # SR.7 (D-167): "; age N; seasons N" after the name
+        if split is None:
+            bad.add(entry.id, "after the name only \"; age 24\" and \"; seasons 2\" may follow, the line is ignored")
+            continue
+        name, age, seasons = split
+        reason = name_problem(name)
         if reason:
             bad.add(entry.id, "%s, the line is ignored" % reason)
             continue
         madden = code if code in RF.MADDEN else ""
         lines.setdefault(team, []).append((int(match.group(2)), entry.line, RealPlayer(RF.GROUP_OF.get(code, code), parts.group(3),
-                                                                                       parts.group(4).strip(), squad, madden, status)))
+                                                                                       name, squad, madden, status, age, seasons)))
     for team, rows in lines.items():
         rows.sort(key=lambda row: (row[0], row[1]))          # by the number of the ID, then by the line: the file's own order is the depth order
         players = [player for _, _, player in rows]

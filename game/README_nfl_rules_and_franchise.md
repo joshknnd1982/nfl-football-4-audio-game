@@ -74,7 +74,7 @@ weak-side linebacker, cornerback, free and strong safety, kicker, punter and lon
 backs, six receivers, seventeen defenders, two returners, two kickers and the quarterback) are only the view of that chart that the game plays:
 a team with three running backs runs with three, a 3-4 team's edge players fill its linebacker places, and the offensive line and the long
 snapper, who have no place in the original, are on the roster, paid and in every list. A new franchise is exactly the rosters of rosters.txt
-(the game gives the ratings and ages). When a player is hurt, the staff's first choice for his place is the best healthy man of his position
+(the game gives the ratings; since 0.16.3 every real player has his real age and seasons from rosters.txt, kept within the game's 21 to 40). When a player is hurt, the staff's first choice for his place is the best healthy man of his position
 (never rated above the hurt man), so a hurt quarterback's place goes to the backup quarterback; "who starts for" in the to-do list and the
 injury report lists those men too. At the roster cut every team keeps 53: two or three quarterbacks, a kicker, a punter, a long snapper, at
 least eight linemen and enough of every other position first, then the most valuable players; the draft has prospects of every position, and

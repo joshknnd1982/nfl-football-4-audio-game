@@ -124,5 +124,6 @@ def test_a_new_franchise_has_the_real_practice_squads_and_made_up_players_only_f
     assert "Sean Clifford" in {p.name for p in P.squad(league, 1)}               # the Bengals' squad quarterback
     assert P.real_squads(league, real) == 0                                         # once
     # SR.4: a new franchise of the real rosters runs no top_up (mode.start_new): its squads are the real ones, 15 to 17 men
-    veterans = [p for team in range(1, 33) for p in P.squad(league, team) if p.seasons >= P.VETERAN_SEASONS]
-    assert veterans == []
+    # SR.7 (D-167): the real squads' real seasons, at most six veterans a squad (real_roster.cap_squad_veterans)
+    for team in range(1, 33):
+        assert sum(1 for p in P.squad(league, team) if p.seasons >= P.VETERAN_SEASONS) <= P.VETERANS, team

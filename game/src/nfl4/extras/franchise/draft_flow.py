@@ -102,7 +102,7 @@ def stage_draft(p, n: int, m: int, short: bool) -> None:
     first = league.players[draft.picks[0][2]]                               # the first pick of the draft: the NWD line (design 8.3)
     told, recent = news.render(league, [news.first_pick_event(draft.picks[0][0], first)], g.news_pools or DEFAULT_POOLS, words, g.rnd)
     lines = [X.text("NXK-11")] + [
-        words.prospect_line(player.name, player.pos, *draft.range_of(player), player.age, player.potential) for player in own if player.drafted is not None]
+        words.prospect_line(player.name, player.position or player.pos, *draft.range_of(player), player.age, player.potential) for player in own if player.drafted is not None]
     lines += _undrafted_lines(words, league, draft, udfa, offers, short)
     news.keep(league, told, recent, D.NEWS_OFFSEASON)
     league.stage_no = off._next_stage(D.STAGE_DRAFT)
@@ -128,7 +128,7 @@ def _players_pick(g, draft: DR.Draft, words, league, round_no: int, in_round: in
     places = DR.open_places(draft, team)
     situation = [X.text("NXK-04", coach=league.coach, round=round_no, pick=in_round, list=words.open_places(places)),
                  X.text("NXK-05")]
-    items = [words.prospect_line(pr.name, pr.pos, pr.low, pr.high, pr.age, pr.potential) for pr in staff]
+    items = [words.prospect_line(pr.name, pr.position or pr.pos, pr.low, pr.high, pr.age, pr.potential) for pr in staff]
     items += [X.text("NXK-07"), X.text("NXK-08"), X.text("NXK-09")]
     start = 0
     while True:
@@ -137,7 +137,7 @@ def _players_pick(g, draft: DR.Draft, words, league, round_no: int, in_round: in
             return staff[answer], True
         which = answer - len(staff)
         if which == 0:                           # hear more prospects: everybody available, the most valuable to the team first
-            lines = [words.prospect_line(pr.name, pr.pos, pr.low, pr.high, pr.age, pr.potential) for pr in ranked]
+            lines = [words.prospect_line(pr.name, pr.position or pr.pos, pr.low, pr.high, pr.age, pr.potential) for pr in ranked]
             taken = FranchiseQuestion(g, [X.text("NXK-07")], lines, escape_value=-1).ask()
             if taken >= 0:
                 return ranked[taken], True
@@ -294,7 +294,7 @@ def _undrafted_choice(g, words, draft, league) -> list:
     start = 0
     notice: list = []
     while True:
-        lines = [words.prospect_line(p.name, p.pos, p.low, p.high, p.age, p.potential) + ("," + X.text("NXU-C01") if p.index in chosen else "")
+        lines = [words.prospect_line(p.name, p.position or p.pos, p.low, p.high, p.age, p.potential) + ("," + X.text("NXU-C01") if p.index in chosen else "")
                  for p in ranked]
         start = FranchiseQuestion(g, notice + [X.text("NXU-27")], [X.text("NXU-A07")] + lines, start=start).ask()
         if start == 0:                                  # "done" is the first item: the list is long and paged, and Enter alone ends it
@@ -318,7 +318,7 @@ def _undrafted_lines(words, league, draft, udfa, offers: list, short: bool) -> l
     own = [(prospect, player) for prospect, t, player in udfa.signed if t == team]
     if own:
         lines.append(X.text("NXU-20"))
-        lines += [words.prospect_line(player.name, player.pos, prospect.low, prospect.high, player.age, player.potential) for prospect, player in own]
+        lines += [words.prospect_line(player.name, player.position or player.pos, prospect.low, prospect.high, player.age, player.potential) for prospect, player in own]
     won = {prospect.index: (t, prospect) for prospect, t, _ in udfa.signed}
     for offer in offers:
         other, prospect = won.get(offer.prospect, (None, None))

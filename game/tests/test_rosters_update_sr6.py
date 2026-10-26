@@ -279,15 +279,15 @@ def newer_rosters(league):
     text = with_version(shipped(), NEW)
     lines = lines_of(text)
     qb = next(i for i, line in enumerate(lines) if line.startswith("T01P") and "= QB " in line)
-    mover = lines[qb].split(" ", 4)[-1]                                       # "Joe Burrow"
+    mover = lines[qb].split(";")[0].split(" ", 4)[-1]                                       # "Joe Burrow"
     lines[qb] = lines[qb].split("=")[0] + "= QB 2 Test Quarterback"
     lines.append("T02P198 = QB 9 %s" % mover)
     gone_at = next(i for i, line in enumerate(lines) if line.startswith("T03P") and "= WR " in line
-                   and league_name(league, C, line.split(" ", 4)[-1]) is not None)
-    gone = lines[gone_at].split(" ", 4)[-1]
+                   and league_name(league, C, line.split(";")[0].split(" ", 4)[-1]) is not None)
+    gone = lines[gone_at].split(";")[0].split(" ", 4)[-1]
     del lines[gone_at]
     lines += ["T04P197 = LT 60 New Tackle One", "T04P198 = LT 61 New Tackle Two", "T04P199 = LT 62 New Tackle Three"]
-    own = next(p for p in RR.members(league, OWN) if p.position == "WR" and any(p.name == line.split(" ", 4)[-1] for line in lines if line.startswith("T%02dP" % OWN)))
+    own = next(p for p in RR.members(league, OWN) if p.position == "WR" and any(p.name == line.split(";")[0].split(" ", 4)[-1] for line in lines if line.startswith("T%02dP" % OWN)))
     lines.append("T06P197 = WR 81 %s" % own.name)
     problems = {kind: cl.Problems(R.FILE_NAMES[kind]) for kind in R.FILE_NAMES}
     entries = R.parse_entries("\n".join(lines) + "\n", R.ROSTERS).entries

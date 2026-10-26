@@ -400,8 +400,11 @@ def test_a_new_leagues_players_and_coaches_are_the_real_ones_with_the_same_ratin
         drawn = [p for p in old.players.values() if p.team == team and p.status == "active"]
         kept = [p for p in drawn if p.id in real.players]
         assert len(kept) >= len(drawn) - 6, team
+        ages = {names.spoken(m.name): m.age for m in names.rosters[team - 1] if m.age is not None}   # SR.7 (D-167): the real ages
         for p in kept:
-            assert real.players[p.id].team == team and real.players[p.id].age == p.age, (team, p.id)
+            man = real.players[p.id]
+            assert man.team == team, (team, p.id)
+            assert man.age == (max(21, min(40, ages[man.name])) if man.name in ages else p.age), (team, p.id)
         chart = real.chart[team - 1]                                             # SR.5: the best rating of each position to its real starter
         for position in RM.MADDEN:
             ratings = [real.players[pid].rating for pid in chart.get(position, ())]

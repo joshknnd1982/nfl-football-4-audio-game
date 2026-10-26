@@ -555,7 +555,7 @@ def read_previous(text: str):
         m = re.match(r"\s*T(\d{2})P\d{2,3}\s*=\s*(.*)$", line)
         if not m:
             continue
-        words = m.group(2).split()
+        words = m.group(2).split(";")[0].split()                        # SR.7: "; age N; seasons N" is not part of the name
         status = words[0] if words and words[0] in RF.STATUSES else ""
         if status:
             words = words[1:]
@@ -599,6 +599,56 @@ def age_on(player: dict, today: str) -> str:
     except ValueError:
         return "-"
     return str(day.year - born.year - ((day.month, day.day) < (born.month, born.day)))
+
+
+def add_ages(teams, nv_rows, sl_teams, today: str) -> int:
+    """SR.7 (Q-078, D-167): every man's age on the file's date and his NFL seasons before this one, from nflverse's roster table (birth_date,
+    rookie_year or years_exp), else Sleeper's feed (birth_date, years_exp): his own team's row by name, then by the loose name when it names one man,
+    then the league's when only one man has the name. A man no source dates keeps no age (the game then makes one). Returns how many got an age."""
+    def entries(rows, name_field, rookie):
+        for r in rows:
+            name = r.get(name_field) or ""
+            born = r.get("birth_date") or ""
+            if not name or not born:
+                continue
+            age = age_on({"birth_date": born}, today)
+            if age == "-":
+                continue
+            seasons = rookie(r)
+            yield name, int(age), seasons
+
+    def nv_rookie(r):
+        year = r.get("rookie_year") or r.get("entry_year") or ""
+        return SEASON - int(year) if str(year).isdigit() else None
+
+    def sl_rookie(r):
+        exp = r.get("years_exp")
+        return int(exp) if isinstance(exp, int) or str(exp or "").isdigit() else None
+
+    exact, loose, league = {}, {}, {}
+    for source, rows_of, field, rookie in (("nv", nv_rows, "full_name", nv_rookie), ("sl", sl_teams, "full_name", sl_rookie)):
+        for t, rows in rows_of.items():
+            for name, age, seasons in entries(rows, field, rookie):
+                for table, key in ((exact, (source, t, name_key(name))), (loose, (source, t, loose_key(name))), (league, (source, name_key(name)))):
+                    table.setdefault(key, set()).add((age, seasons))
+    given = 0
+    for t, team in teams.items():
+        for m in team.men:
+            found = None
+            for source in ("nv", "sl"):
+                for table, key in ((exact, (source, t, name_key(m.name))), (loose, (source, t, loose_key(m.name))), (league, (source, name_key(m.name)))):
+                    hits = table.get(key, set())
+                    if len(hits) == 1:
+                        found = next(iter(hits))
+                        break
+                if found:
+                    break
+            if found and RF.AGE_LOW <= found[0] <= RF.AGE_HIGH:
+                m.age = found[0]
+                seasons = found[1]
+                m.seasons = seasons if seasons is not None and 0 <= seasons <= m.age - RF.AGE_LOW else None
+                given += 1
+    return given
 
 
 FA_LINE = re.compile(r"^\s*F(\d{1,4})\s*=\s*(\S+)\s+(\d{1,2}|-)\s+(.+?)\s*$")
@@ -736,7 +786,11 @@ def run(out: Path, offline: bool, official: bool, pause: float, today: str, prev
     settle_notes = []
     apply_settlements(teams, read_settlements(SETTLEMENTS.read_bytes().decode("utf-8")) if SETTLEMENTS.exists() else [], settle_notes)
     return_elevations(teams, previous, settle_notes)
+    aged = add_ages(teams, nv_rows, sl_teams, today)                    # SR.7 (D-167): the real ages and seasons
     failures, warnings = RF.check(teams)
+    men = sum(len(team.men) for team in teams.values())
+    if men and aged < 0.95 * men:
+        warnings.append("only %d of %d men have an age (the sources' birth dates are missing)" % (aged, men))
     warnings.extend(n for n in settle_notes if "no longer applies" in n or "unknown list" in n)
     for t in sorted(built):
         for note in built[t].notes:

@@ -99,7 +99,7 @@ def man_line(g, store, section: Section, index: int) -> str:
     p = section.men[index]
     if section.key == "rookies":
         low, high = league.rookie_range(p)
-        return words.prospect_line(p.name, p.pos, low, high, p.age, p.potential)
+        return words.prospect_line(p.name, p.position or p.pos, low, high, p.age, p.potential)
     name = name_in_team(league, p)
     word = words.position_for(p)
     if section.key == "squad":

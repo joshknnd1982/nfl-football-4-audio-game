@@ -62,3 +62,14 @@ The owner, answering Q-016: "claude must research the last names of real nfl pla
 
 Status 2026-10-25: NX-L1 to NX-L8, NX-L10's tests of the model, NX-L12 BUILT; NX-L11 DATA BUILT (menus SR.6); NX-L9 DESIGNED, NOT BUILT; nothing heard
 (SR.7). Next: SR.6.
+
+### 21.11 SR.6 and SR.7 done (2026-10-26; D-165, D-166, D-167; design 21.16)
+
+- SR.6: the roster by positions, the starting lineup and the choice of starters at all 22 positions and both return roles, the namesakes, "get the
+  latest rosters" with the offer to a franchise in progress (NX-L9, NX-L11); built as test installer 0.16.2 and published as a pre-release.
+- SR.7: NX-L10's checks (design 21.16 maps every item to its test; the new whole games of all 32 teams), the real ages and seasons (Q-078 answered:
+  the bands hold), the position words of the draft, the rookies, the free agents and the awards; the full suites in 64-bit and 32-bit, the soaks of
+  20 seasons on both calendars; version 0.16.3.
+
+Status 2026-10-26: NX-L1 to NX-L12 BUILT and checked by tests and soaks; nothing heard by the owner yet (PLAYTEST_LIST 80 to 90; the Bears' roster
+first). Phase PR is finished but for the owner's listening round; P9 and P10 go on where 0.16.1 left them.

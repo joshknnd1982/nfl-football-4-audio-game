@@ -10,6 +10,28 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.3 (2026-10-26, test build)
+
+The twelfth test installer. The real players now have their real ages in a new franchise, and the draft, the rookies before the cut, the free agents and the awards say each player's own position. Everything of 0.16.2 below is still to be tested; nothing here has been heard by the owner yet.
+
+### Every real player has his real age in a new franchise
+rosters.txt now gives each player's age on 2026-10-25 and how many NFL seasons he played before this one, worked out from the birth dates and first seasons in nflverse's public roster table (and Sleeper's player feed where nflverse has none); every one of the 2,521 players has them. A new franchise gives every real player his real age and seasons, so the veterans are old and the rookies young, as in the real league; the game keeps its ages from 21 to 40, so the few players over 40 are 40 in the game and retire after the first season. The ratings are still the game's own. On each practice squad the six most experienced players count as veterans, as the league's rule allows. In 20-season tests the league stayed as balanced as before.
+- How to test: start a new franchise as the Bears with the N. F. L. rules, then F9, Franchise, your roster: Caleb Williams is 24, Tyson Bagent 26, Colston Loveland 22, and on the practice squad Miller Moss 24. Try a team with an old star you know (the Steelers' Aaron Rodgers is 40 in the game).
+- Tell us: a player whose age is clearly wrong (say which team and player).
+
+### Your copy of rosters.txt from 0.16.2 gets the ages once
+If the rosters.txt in your customize folder is exactly the copy 0.16.2 made and you never changed it, the game replaces it once with the new one with ages and keeps yours beside it as `rosters.txt.before-layout-2`. A file you changed is yours and stays; a line without an age still works (a new franchise then gives that player an age of its own).
+- How to test: install over 0.16.2, start the game with the N. F. L. rules, open the customize folder (F9, Customize, "Open the folder with the names and banter files"): rosters.txt has lines like `T17P01 = QB 18 Caleb Williams; age 24; seasons 2`, and your old copy is beside it.
+
+### The draft, the rookies, the free agents and the awards say each player's position
+The draft's prospects, your rookies before the roster cut, the undrafted players you sign, the free agents of the market and the awards of each season now name the player's own position ("strong safety", "your halfback") instead of the group word ("safety", "running back").
+- How to test: in a franchise, at the draft listen to the prospects; after the draft, F9, Franchise, your roster, End, then Up: your rookies are said with their positions. After a season, the awards and F9, Franchise, history, awards.
+- Tell us: any player still said as "defensive lineman", "running back" or "safety" in a franchise list where you expected his own position.
+
+### A note on "get the latest rosters"
+The rosters published on GitHub for "get the latest rosters" are still the ones of 0.16.2 (without ages), so this item says you already have the newest. Version 0.16.2 cannot read a rosters file with ages; the rosters with ages will be published once testers use 0.16.3.
+- How to test: F9, Customize, "get the latest rosters": with internet it says you already have the newest.
+
 ## 0.16.2 (2026-10-26, test build)
 
 The eleventh test installer. The real rosters are now in the Franchise too: its teams, the roster heard by positions, the starting lineup and the choice of who starts at every position, the returners, and "get the latest rosters" (which says you already have the newest until the maintainer publishes a rosters folder). Nothing here has been heard by the owner yet; please test the items below.

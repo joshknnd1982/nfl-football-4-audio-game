@@ -200,10 +200,12 @@ def _new_man(league, team: int, man, target: str, weakest: dict, previous: dict)
         base, span = T.FR_PRACTICE_RATING
         seasons = (h >> 8) % 2
         age, rating, potential = 22 + seasons + (h >> 12) % 3, max(D.RATING_MIN, min(D.RATING_MAX, base + h % span)), "average"
+        age, real_seasons = RR.real_age(man, age, seasons)          # SR.7 (D-167): his real age; a squad man joins as a non-veteran (the limits hold)
+        seasons = min(real_seasons, practice.VETERAN_SEASONS - 1)
     else:
         rating = RR.bench_rating(league, team, group, man.name, weakest, previous)
         age, potential = RR.bench_age(league, team, man.name)
-        seasons = max(0, age - 22)
+        age, seasons = RR.real_age(man, age, max(0, age - 22))      # SR.7 (D-167)
     status, roster_list = {"active": ("active", ""), "practice": ("practice", RF.SQUAD), "list": ("list", man.status)}[target]
     player = Player(league.next_id, man.name, group, rating, potential, age, seasons, rating, None, 0, status, 0, team, -1,
                     position=man.pos, number=man.number, roster_list=roster_list)
