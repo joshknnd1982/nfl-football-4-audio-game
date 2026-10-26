@@ -1,4 +1,3 @@
-- NXB-E17 (help, say5): " Goes back to the list of play groups. ". description of an item or menu word (NX-P8)
 - NXB-E18 (help, say5): " Opens the other lists of plays that are not in the first menu, such as play action and trick plays. ". description of an item or menu word (NX-P8)
 - NXB-E19 (help, say5): " Opens the plays you have chosen as favourites, so you can call them quickly. ". description of an item or menu word (NX-P8)
 - NXB-E20 (help, say5): " Calls the same play you called last time. ". description of an item or menu word (NX-P8)
@@ -322,6 +321,12 @@
 - NXM-L61 (sentence, say5): " The long snapper snaps the ball a long way back to the punter or the holder on kicks. Nobody notices him unless he makes a mistake. ". the plain description of a position or a role, heard with D in the lineup (SR.6, rule 0.25)
 - NXM-L62 (sentence, say5): " The kick returner catches kickoffs and runs them back toward the other end of the field. ". the plain description of a position or a role, heard with D in the lineup (SR.6, rule 0.25)
 - NXM-L63 (sentence, say5): " The punt returner catches punts and runs them back, or signals a fair catch to stay safe. ". the plain description of a position or a role, heard with D in the lineup (SR.6, rule 0.25)
+- NXM-L86 (sentence, say5): " <position>, <player>, number <number>, filling in from <old> ". the lineup (F9, Rules, Depth charts) when no man of the position is left: the man who plays there (S8.2, B-P189)
+- NXM-L87 (sentence, say5): " <position>, <player>, filling in from <old> ". the lineup (F9, Rules, Depth charts) when no man of the position is left: the man who plays there (S8.2, B-P189)
+- NXM-L88 (sentence, say5): " <position>, <player>, number <number>, from the practice squad for game day ". the lineup: a kicker or punter only on the practice squad, brought up for game day as the game does (S8.2, B-P189)
+- NXM-L89 (sentence, say5): " <position>, <player>, from the practice squad for game day ". the lineup: as NXM-L88 without a number (S8.2, B-P189)
+- NXM-L90 (menu, say5): "<group>, <player> filling in from <old>". the depth chart menu's item of a position with no man of its own: who plays there (S8.2, B-P189)
+- NXM-L91 (menu, say5): "<group>, <player> from the practice squad". the depth chart menu's item: a kicker or punter only on the practice squad (S8.2, B-P189)
 
 ## Statistics lines (C7, H11)
 

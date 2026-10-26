@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2336.
+- Texts: 2342.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -14,7 +14,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 89.
 - Playbooks (design section 10): 828.
-- Menus and settings (design 10.4, 12): 189.
+- Menus and settings (design 10.4, 12): 195.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 727.
 - The real coaches and players (NX-N, SX.11): 7.

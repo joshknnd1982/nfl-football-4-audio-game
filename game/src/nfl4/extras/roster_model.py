@@ -248,6 +248,59 @@ def make_view(chart: dict, roles: dict | None = None, fit=None, squad: dict | No
     return view
 
 
+def fill_ins(chart: dict, squad: dict | None, places) -> dict:
+    """S8.2 (an e-mail report, 2026-10-26: "at some positions it has no one starting"): the man who plays a place of the lineup that no man of its
+    own position is left for (a 3-4 team has no strong-side linebacker, many teams no fullback, a team's only kicker is on the practice squad).
+    `places` are (position, slot) in the lineup's order; returns {(position, slot): (man, his own position, how)} for those places only, where how is
+    "family" (a spare man of the other side or role, then of the rest of the family), "squad" (the practice squad's kicker or punter, brought up for
+    game day as make_view does), "kicker" (the punter kicks or the kicker punts, as make_view does) or "cover" (a spare man of the nearest defense
+    family, COVER_FROM, as make_view does). A spare man is one behind his own position's starters; each fills one place at most. Never a man of
+    another family on offense; nobody when nobody fits. No draw; the chart is not changed (the man keeps his own position)."""
+    spare = {p: list(chart.get(p, ()))[STARTERS.get(p, 1):] for p in MADDEN}
+    squad = squad or {}
+    used: set = set()
+    out = {}
+
+    def take(positions):
+        for p in positions:
+            while spare[p]:
+                man = spare[p].pop(0)
+                if id_of(man) not in used:
+                    return man, p
+        return None
+
+    for position, slot in places:
+        if position not in FAMILY or slot < len(chart.get(position, ())):
+            continue
+        found = None
+        moves = SAME_FAMILY_MOVES.get(position, ())
+        rest = tuple(p for p in FAMILY_POSITIONS[FAMILY[position]] if p != position and p not in moves)
+        if position in ("K", "P"):
+            men = [m for m in squad.get(position, ()) if id_of(m) not in used]
+            if men:
+                found = (men[0], position, "squad")
+            else:
+                other = "P" if position == "K" else "K"
+                if chart.get(other):
+                    found = (chart[other][0], other, "kicker")
+        for positions in (moves, rest):
+            if found is None and positions:
+                got = take(positions)
+                if got:
+                    found = (got[0], got[1], "family")
+        if found is None:
+            for borrow in COVER_FROM.get(FAMILY[position], ()):
+                got = take(borrow)
+                if got:
+                    found = (got[0], got[1], "cover")
+                    break
+        if found is not None:
+            if found[2] != "kicker":
+                used.add(id_of(found[0]))
+            out[(position, slot)] = found
+    return out
+
+
 def tiers(ready, positions) -> list:
     """The ready men of the positions by tiers: the starters of each position (STARTERS of them), then the second tier, and so on, in the order of the
     positions within a tier."""

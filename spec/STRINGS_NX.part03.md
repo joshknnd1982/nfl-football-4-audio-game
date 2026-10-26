@@ -242,3 +242,4 @@
 - NXB-E14 (help, say5): " Extra players rush the quarterback. If it works, the offense loses yards; if not, the pass can go a long way. ". description of an item or menu word (NX-P8)
 - NXB-E15 (help, say5): " Defenders are set to stop short passes. Weak against long passes and runs. ". description of an item or menu word (NX-P8)
 - NXB-E16 (help, say5): " Defenders drop back to stop long passes. Weak against runs and short passes. ". description of an item or menu word (NX-P8)
+- NXB-E17 (help, say5): " Goes back to the list of play groups. ". description of an item or menu word (NX-P8)

@@ -96,6 +96,13 @@ def lineup_line(backend, key: str, slot: int) -> str:
     found = backend.starters(key)
     man = found[slot] if slot < len(found) else None
     if man is None:
+        fill = backend.fill(key, slot)                 # S8.2: a man of another position plays there (B-P189)
+        if fill is not None:
+            man, own, how = fill
+            if how == "squad":
+                return X.text("NXM-L88" if man.number != "-" else "NXM-L89", position=place, player=man.name, number=man.number)
+            return X.text("NXM-L86" if man.number != "-" else "NXM-L87", position=place, player=man.name, number=man.number,
+                          old=RF.SPOKEN[own])
         squad = backend.squad_men(key)
         if squad:
             return X.text("NXM-L35", position=place, player=squad[0].name)
@@ -133,6 +140,9 @@ def choose_flow(speech, keys, backend, key: str, slot: int = 0) -> str | None:
         return X.text("NXM-L77", position=word(key))
     current = backend.starters(key)
     now = current[slot].key if slot < len(current) else None
+    if now is None:
+        fill = backend.fill(key, slot)                 # the man who fills in is where the list starts, said as starting now
+        now = fill[0].key if fill is not None else None
     start = next((i for i, man in enumerate(candidates) if man.key == now), 0)
     lines = [man_line(man, man.key == now) for man in candidates]
     if key in RM.ROLES:
@@ -204,6 +214,14 @@ class Backend:
 
     def busy(self) -> str | None:
         return None
+
+    def fill(self, key: str, slot: int = 0):
+        """S8.2 (B-P189): (man, his own position, how) of a lineup place with no man of its own position, or None (roster_model.fill_ins)."""
+        if key in RM.ROLES:
+            return None
+        chart = {position: self.men_at(position) for position in RM.MADDEN}
+        squad = {position: self.squad_men(position) for position in ("K", "P")}
+        return RM.fill_ins(chart, squad, LINEUP).get((key, slot))
 
     def squad_text(self, man: Man, key: str) -> str:
         return X.text("NXM-L68", player=man.name, position=label(key))

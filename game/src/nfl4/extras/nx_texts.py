@@ -2344,6 +2344,12 @@ TEXTS: dict[str, str] = {
     'NXM-L61': ' The long snapper snaps the ball a long way back to the punter or the holder on kicks. Nobody notices him unless he makes a mistake. ',
     'NXM-L62': ' The kick returner catches kickoffs and runs them back toward the other end of the field. ',
     'NXM-L63': ' The punt returner catches punts and runs them back, or signals a fair catch to stay safe. ',
+    'NXM-L86': ' <position>, <player>, number <number>, filling in from <old> ',
+    'NXM-L87': ' <position>, <player>, filling in from <old> ',
+    'NXM-L88': ' <position>, <player>, number <number>, from the practice squad for game day ',
+    'NXM-L89': ' <position>, <player>, from the practice squad for game day ',
+    'NXM-L90': '<group>, <player> filling in from <old>',
+    'NXM-L91': '<group>, <player> from the practice squad',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -4683,6 +4689,12 @@ SPEAKERS: dict[str, str] = {
     'NXM-L61': 'say5',
     'NXM-L62': 'say5',
     'NXM-L63': 'say5',
+    'NXM-L86': 'say5',
+    'NXM-L87': 'say5',
+    'NXM-L88': 'say5',
+    'NXM-L89': 'say5',
+    'NXM-L90': 'say5',
+    'NXM-L91': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -7022,6 +7034,12 @@ KINDS: dict[str, str] = {
     'NXM-L61': 'sentence',
     'NXM-L62': 'sentence',
     'NXM-L63': 'sentence',
+    'NXM-L86': 'sentence',
+    'NXM-L87': 'sentence',
+    'NXM-L88': 'sentence',
+    'NXM-L89': 'sentence',
+    'NXM-L90': 'menu',
+    'NXM-L91': 'menu',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

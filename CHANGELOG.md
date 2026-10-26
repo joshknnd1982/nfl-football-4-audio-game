@@ -10,6 +10,15 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.4 (2026-10-26, test build)
+
+Not built yet: the next test installer will carry it. A fix from a player's e-mail.
+
+### Every position of a depth chart names the man who plays there
+A player wrote that at some positions nobody was starting. Many real teams have no strong-side linebacker on their depth chart (they play a 3-4 defense with two inside linebackers), most have no fullback, and one team's only kicker is on the practice squad, so the starting lineup and the depth chart menu said "nobody" there, although the game always put a man on the field. Now each such place names the man who plays it and where he comes from: "strong-side linebacker, Jay Higgins the fourth, number 49, filling in from middle linebacker", "fullback, Justice Hill filling in from halfback", "kicker, Zane Gonzalez, from the practice squad for game day". The man keeps his own position on the roster, and nobody plays two places. Enter on the place still lists everyone who may start there; the man you choose then starts there.
+- How to test: with the N. F. L. rules, F9, Rules, Depth charts, the Ravens: "strong-side linebacker" names a linebacker filling in, and "fullback" a halfback filling in; the starting lineup says the same. Go through every position of a few teams, in a quick game and in a franchise (F9, Rules, Depth charts while a franchise is open): no position says "nobody".
+- Tell us: any position that still says nobody, and whether "filling in from" is clear.
+
 ## 0.16.3 (2026-10-26, test build)
 
 The twelfth test installer. The real players now have their real ages in a new franchise, and the draft, the rookies before the cut, the free agents and the awards say each player's own position. Everything of 0.16.2 below is still to be tested; nothing here has been heard by the owner yet.

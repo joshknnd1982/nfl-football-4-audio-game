@@ -216,7 +216,15 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
 def _first_label(backend, key: str) -> str:
     """A position in the depth chart menu: its name and its first man ("left tackle, Theo Benedet first"), or nobody."""
     found = backend.starters(key)
-    return X.text("NXM-D04", group=L.word(key), player=found[0].name) if found else X.text("NXM-D43", group=L.word(key))
+    if found:
+        return X.text("NXM-D04", group=L.word(key), player=found[0].name)
+    fill = backend.fill(key, 0)                        # S8.2: who plays there when nobody of the position is left (B-P189)
+    if fill is not None:
+        man, own, how = fill
+        if how == "squad":
+            return X.text("NXM-L91", group=L.word(key), player=man.name)
+        return X.text("NXM-L90", group=L.word(key), player=man.name, old=L.RF.SPOKEN[own])
+    return X.text("NXM-D43", group=L.word(key))
 
 
 def _describe(char: str, key) -> str | None:
