@@ -66,8 +66,13 @@ def put_first(league, position: str, pid: int) -> list:
 
 
 def reset(league) -> None:
-    """The staff's order again for every position (the best first) and no key players."""
+    """The staff's order again for every position (the best first: the player asked for it, so no starter is kept by D-170's margin) and no key
+    players."""
     league.depth = empty()
+    from . import real_roster
+    chart = league.chart[league.team - 1]
+    for position in real_roster.RM.MADDEN:
+        chart[position] = real_roster.order_position(league, league.team, position, list(chart.get(position, ())), strict=True)
     from .aging import place_by_rating
     place_by_rating(league, league.team)
 

@@ -1045,3 +1045,14 @@ COMPUTER_FAKE_FIELD_GOAL = 150         # per 10,000 such field goals (no publish
 PENALTY_RATE_SCALE_CATALOG = 1.07      # the foul scale of a game that plays the catalog (SX.3's 1.2 for the original's plays)
 RULING_RATES_CATALOG = {"goal": (28, 62), "catch": (4, 15), "line": (20, 86)}    # (wrong, close) per 1000 in such a game (SX.6's:
 #                                        goal (60, 135), catch (6, 17), line (30, 100); the others as SX.6)
+
+# ----- the staff's depth order keeps its starters (D-170, the owner 2026-10-26: "it doesn't have the depth charts right") -----
+# A Franchise team's chart starts in the real order of rosters.txt. The staff re-orders a position whenever its roster changes (a signing, a trade, an
+# injury list, a new season), and the ratings are the game's own, not real ones; sorted by rating alone, a backup one point better took the job (in a
+# 2-season soak 14 real starting quarterbacks lost their place, Josh Allen went to the practice squad). Now a man passes the man ahead of him only when
+# his rating is at least this many points higher; the order among closer men is the chart's (the real order, then the staff's earlier choices).
+# Start values (UNVERIFIED, set by work/s82_1026c/watch_qb_seasons.py): a quarterback's job is the hardest to lose.
+FR_DEPTH_HOLD = {"QB": 8, "*": 5}
+# A man who joins the chart now (signed, traded, back from a list, his own team's man re-signed after he left) passes a man by this many points:
+# a staff starts the man it brought in when he is clearly better, but a point of the game's own ratings is noise.
+FR_DEPTH_HOLD_NEW = 3

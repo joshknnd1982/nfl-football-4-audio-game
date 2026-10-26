@@ -109,11 +109,20 @@ def form(league) -> int:
     while True:
         moved = False
         for team in order:
-            if len(squad(league, team)) >= SIZE:
+            members = squad(league, team)
+            if len(members) >= SIZE:
                 continue
-            choice = next((p for p in own.get(team, []) if p.id not in taken and can_take(league, team, p)), None)
+            # can_take's rule with the team's squad and payroll worked out once for its turn (they do not change while it looks; D-169: with the
+            # whole free-agent pool, asking can_take for every candidate walked every player of the league thousands of times)
+            used, cap = CT.cap_used(league, team), CT.cap_of(league)
+            veterans = sum(1 for p in members if veteran(p))
+
+            def fits(p):
+                return used + salary_of(p) <= cap and (not veteran(p) or veterans < VETERANS)
+
+            choice = next((p for p in own.get(team, []) if p.id not in taken and fits(p)), None)
             if choice is None:
-                choice = next((p for p in pool if p.id not in taken and can_take(league, team, p)), None)
+                choice = next((p for p in pool if p.id not in taken and fits(p)), None)
             if choice is None:
                 continue
             taken.add(choice.id)

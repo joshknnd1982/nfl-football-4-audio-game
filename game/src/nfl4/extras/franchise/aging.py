@@ -166,7 +166,8 @@ def summarize(plan: list, team: int) -> DevelopmentSummary:
 # ----- the places -----
 
 def place_by_rating(league: LeagueRecord, team: int | None = None) -> None:
-    """SR.5 (D-164): each team's chart in the staff's order (the best of each position first, design 7.6; the player's own order kept, NX-D3) and its
+    """SR.5 (D-164): each team's chart in the staff's order (the best of each position first, design 7.6, a starter kept until a man is clearly better,
+    D-170; the player's own order kept, NX-D3) and its
     34 places made again from it (real_roster.refresh_view)."""
     from . import real_roster
     for t in ([team] if team else range(1, D.TEAMS + 1)):

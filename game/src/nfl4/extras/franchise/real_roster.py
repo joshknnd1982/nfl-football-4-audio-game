@@ -160,8 +160,12 @@ def _blank_chart() -> dict:
     return chart
 
 
-def order_position(league, team: int, position: str, ids: list) -> list:
-    """The staff's order of a position: the best rating first, the chart's order among equals; on the player's own team the men he put first (his order of
+def order_position(league, team: int, position: str, ids: list, new=frozenset(), strict: bool = False) -> list:
+    """The staff's order of a position, slot by slot from the top (D-170): the man the chart's order puts in a slot (the real order of rosters.txt, then
+    the staff's earlier choices) keeps it unless a man below him is at least FR_DEPTH_HOLD rating points better, and then the best such man takes it
+    (the ratings are the game's own, so a point or two never takes a real starter's job); a man in `new` (he joined the chart now: signed, traded,
+    back from a list) needs FR_DEPTH_HOLD_NEW points, as a staff starts the clearly better man it brought in; `strict` (the staff's full order, F9's
+    reset) puts the best rating first, the chart's order among equals; on the player's own team the men he put first (his order of
     the position, NX-D3, NX-L11) keep their places at the top."""
     players = league.players
     index = {pid: n for n, pid in enumerate(ids)}
@@ -171,7 +175,20 @@ def order_position(league, team: int, position: str, ids: list) -> list:
             if pid in index and pid not in first:
                 first.append(pid)
     chosen = set(first)
-    rest = sorted((pid for pid in ids if pid not in chosen), key=lambda pid: (-players[pid].rating, index[pid]))
+    hold = T.FR_DEPTH_HOLD.get(position, T.FR_DEPTH_HOLD["*"])
+    if strict:
+        return first + sorted((pid for pid in ids if pid not in chosen), key=lambda pid: (-players[pid].rating, index[pid]))
+    left = [pid for pid in ids if pid not in chosen]          # the chart's order
+    rest: list = []
+    while left:                                               # slot by slot from the top: the man there keeps it unless a man below is clearly better
+        keeper = left[0]
+        floor = players[keeper].rating
+        better = [pid for pid in left[1:] if players[pid].rating >= floor + (T.FR_DEPTH_HOLD_NEW if pid in new else hold)]
+        if keeper in new:                                     # a newcomer at the top of the order holds nothing yet: the best man of the rest takes it
+            better = [pid for pid in left[1:] if players[pid].rating > floor]
+        take = max(better, key=lambda pid: (players[pid].rating, -left.index(pid))) if better else keeper
+        rest.append(take)
+        left.remove(take)
     return first + rest
 
 
@@ -187,13 +204,15 @@ def clean_chart(league, team: int, waiting=None) -> dict:
             if position_of.get(pid) == position and pid not in chart[position]:
                 chart[position].append(pid)
     present = {pid for position in RM.MADDEN for pid in chart[position]}
+    new = set()
     for p in men:
         if p.id not in present:
             if p.position not in RM.MADDEN:
                 give_positions(league)
             chart[p.position].append(p.id)
+            new.add(p.id)
     for position in RM.MADDEN:
-        chart[position] = order_position(league, team, position, chart[position])
+        chart[position] = order_position(league, team, position, chart[position], new)
     for role in RM.ROLES:
         seen: list = []
         for pid in old.get(role, ()):

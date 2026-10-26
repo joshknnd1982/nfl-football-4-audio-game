@@ -654,23 +654,103 @@ def add_ages(teams, nv_rows, sl_teams, today: str) -> int:
 FA_LINE = re.compile(r"^\s*F(\d{1,4})\s*=\s*(\S+)\s+(\d{1,2}|-)\s+(.+?)\s*$")
 
 
-def refresh_free_agents(old_text, previous, teams, sl_free, sl_teams, today):
+# D-169 (the owner 2026-10-26: "it doesn't have all free agents example is kicker"): the whole pool of real free agents. A man is a free agent when
+# nflverse's players table says he was on an NFL roster in this season or the one before (last_season), has not retired (RET, RSR), is on no team of
+# the new rosters.txt nor of Sleeper, and Sleeper has him active without a team (the second source). nflverse's positions become the file's words.
+FA_POSITION = {"QB": "QB", "RB": "RB", "HB": "RB", "FB": "FB", "WR": "WR", "TE": "TE",
+               "OT": "OL", "T": "OL", "G": "OL", "OG": "OL", "C": "OL", "OL": "OL",
+               "DE": "DL", "DT": "DL", "NT": "DL", "DL": "DL", "EDGE": "DL",
+               "LB": "LB", "ILB": "LB", "MLB": "LB", "OLB": "LB",
+               "CB": "CB", "S": "S", "SAF": "S", "FS": "S", "SS": "S", "K": "K", "P": "P", "LS": "LS"}
+FA_GONE = ("RET", "RSR")                        # nflverse: retired, reserve/retired
+FA_SEASONS = 2                                  # this season and the one before
+FA_HEADER = """# NFL Football 4 freeagents, format 1.
+# These are the real NFL free agents a new franchise starts with: every player who was on an NFL roster this season or last season, has not retired,
+# and is on no team when the list was made.
+# Each line is an ID, an equals sign, the position, the age and the name. The age is a number, or a minus sign when it is not known.
+# The positions are QB, RB, FB, WR, TE, OL, DL, LB, CB, S, K, P and LS. In the first season of a new franchise these players are
+# the free agents of F9, Franchise, free agents; the game makes up players only for a position this list has too few of.
+# The game gives them no real ratings: a free agent's rating is made by the game.
+# A new season: replace the lines, change the VERSION line, save the file, then choose Reload in the Customize item of the F9 menu.
+# Write an ID = off to leave a player out. A name has 1 to 30 characters, with no comma and no semicolon.
+# Delete the whole file to get the original list back. The names are facts, used descriptively.
+# They are not endorsed by the teams or the league.
+# Sources: nflverse's players table (CC BY 4.0, github.com/nflverse), compared with Sleeper's player feed.""".split("\n")
+
+
+def players_table(out: Path, offline: bool):
+    """nflverse's players table (players.csv) of this run: the saved copy in <out>/raw, else one request (none when offline); None when it is missing."""
+    if str(Path(__file__).resolve().parent) not in sys.path:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))      # (-I leaves the script's folder out of the path)
+    import update_surnames as US
+    saved = out / "raw" / "nflverse_players.csv"
+    if saved.exists():
+        return saved.read_bytes()
+    if offline:
+        return None
+    req = urllib.request.Request(US.URL, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        data = r.read()
+    saved.parent.mkdir(parents=True, exist_ok=True)
+    saved.write_bytes(data)
+    return data
+
+
+def free_agent_pool(nv_players: bytes | None, on_team, sl_free, today: str) -> list:
+    """[(position word, age, name)] of D-169's rule, sorted by position then name; [] without the players table."""
+    if not nv_players:
+        return []
+    from nfl4.extras.real_names import name_problem
+    free_match = Matcher([p["full_name"] for p in sl_free])
+    free_by = {p["full_name"]: p for p in sl_free}
+    out, seen = [], set()
+    for r in csv.DictReader(io.StringIO(nv_players.decode("utf-8-sig"))):
+        try:
+            last = int(r.get("last_season") or 0)
+        except ValueError:
+            continue
+        name = (r.get("display_name") or "").strip()
+        if last < SEASON - FA_SEASONS + 1 or (r.get("status") or "") in FA_GONE or not name or name_problem(name):
+            continue
+        if on_team.find(name) or name_key(name) in seen:
+            continue
+        hit = free_match.find(name)
+        if not hit:
+            continue                                  # Sleeper has him on a team, or not as an active man
+        sl = free_by[hit]
+        word = FA_POSITION.get((r.get("position") or "").upper())
+        if (r.get("position") or "").upper() == "DB":
+            word = FA_POSITION.get((sl.get("position") or "").upper(), "CB")
+        if word is None:
+            continue
+        age = age_on(sl, today)
+        if age == "-":
+            age = age_on({"birth_date": r.get("birth_date")}, today)
+        seen.add(name_key(name))
+        out.append((word, age, name))
+    out.sort(key=lambda row: (list(FA_POSITION.values()).index(row[0]), name_key(row[2])))
+    return out
+
+
+def refresh_free_agents(old_text, previous, teams, sl_free, sl_teams, today, nv_players=None):
     """free_agents.txt again: the old list without the men now on a team, plus the men of the previous rosters who are on no team now and
-    whom Sleeper has without a team; ages from Sleeper. The IDs stay (a player's "off" lines name them); new men get new IDs."""
+    whom Sleeper has without a team, plus (D-169) every man of the real free-agent pool (`free_agent_pool`); ages from Sleeper. The IDs stay (a
+    player's "off" lines name them); new men get new IDs."""
     on_team = set()
+    on_names = []
     for team in teams.values():
         for m in team.men:
             on_team.add(name_key(m.name))
+            on_names.append(m.name)
     for rows in sl_teams.values():
         for p in rows:
             on_team.add(name_key(p["full_name"]))
+            on_names.append(p["full_name"])
     free_match = Matcher([p["full_name"] for p in sl_free])
     free_by = {p["full_name"]: p for p in sl_free}
-    header, kept, removed, top = [], [], [], 0
+    header, kept, removed, top = list(FA_HEADER), [], [], 0
     for line in old_text.replace("\r\n", "\n").split("\n"):
         m = FA_LINE.match(line)
-        if line.startswith("#"):
-            header.append(line)
         if not m:
             continue
         top = max(top, int(m.group(1)))
@@ -694,6 +774,14 @@ def refresh_free_agents(old_text, previous, teams, sl_free, sl_teams, today):
         age = age_on(free_by[hit], today)
         kept.append((top, pg, age, name))
         added.append(name)
+        known.add(k)
+    for pos, age, name in free_agent_pool(nv_players, Matcher(on_names), sl_free, today):      # D-169
+        if name_key(name) in known:
+            continue
+        top += 1
+        kept.append((top, pos, age, name))
+        added.append(name)
+        known.add(name_key(name))
     body = [l for l in header] + ["", "VERSION = season %d, as of %s" % (SEASON, today)]
     body += ["F%03d = %s %s %s" % (i, pos, age, name) for i, pos, age, name in kept]
     return "\n".join(body) + "\n", removed, added
@@ -814,7 +902,23 @@ def run(out: Path, offline: bool, official: bool, pause: float, today: str, prev
     v2, parsed, problems = RF.parse(text)
     if problems or RF.render(v2, parsed) != text:
         failures.append("the written file does not read back the same (%s)" % problems[:3])
-    fa_text, fa_removed, fa_added = refresh_free_agents((previous_dir / "free_agents.txt").read_bytes().decode("utf-8"), previous, teams, sl_free, sl_teams, today)
+    try:
+        nv_players = players_table(out, offline)
+    except (OSError, urllib.error.URLError) as exc:
+        nv_players = None
+        warnings.append("nflverse's players table could not be read (%s): the free agents are the previous list's" % exc)
+    if nv_players is None:
+        warnings.append("no nflverse players table: the free agents are the previous list's (D-169)")
+    fa_text, fa_removed, fa_added = refresh_free_agents((previous_dir / "free_agents.txt").read_bytes().decode("utf-8"), previous, teams, sl_free, sl_teams,
+                                                        today, nv_players)
+    fa_counts = {}
+    for line in fa_text.split("\n"):
+        m = FA_LINE.match(line)
+        if m:
+            fa_counts[m.group(2)] = fa_counts.get(m.group(2), 0) + 1
+    for word, least in (("K", 3), ("P", 3), ("LS", 2), ("QB", 5)):
+        if nv_players is not None and fa_counts.get(word, 0) < least:
+            failures.append("free agents: only %d %s (a broken read of the players table?)" % (fa_counts.get(word, 0), word))
     (out / "rosters.txt").write_bytes(text.encode("utf-8"))
     (out / "free_agents.txt").write_bytes(fa_text.encode("utf-8"))
     counts = ["T%02d %-10s active %2d squad %2d reserve %2d  KR %s  PR %s" % (
@@ -826,7 +930,9 @@ def run(out: Path, offline: bool, official: bool, pause: float, today: str, prev
     rep += ["", "THE SOURCES COMPARED"] + report
     rep += ["", "CHANGES SINCE THE PREVIOUS FILE (%d)" % len(change_lines)] + change_lines
     rep += ["", "FREE AGENTS: %d left out (now on a team): %s" % (len(fa_removed), ", ".join(fa_removed)),
-            "FREE AGENTS: %d added (on the previous rosters, on no team now, without a team in Sleeper): %s" % (len(fa_added), ", ".join(fa_added)),
+            "FREE AGENTS: %d added (on the previous rosters or in the real pool of D-169, on no team now, without a team in Sleeper): %s" % (
+                len(fa_added), ", ".join(fa_added)),
+            "FREE AGENTS BY POSITION: %s" % ", ".join("%s %d" % kv for kv in sorted(fa_counts.items())),
             "", "FETCH LOG"] + fetch.log
     (out / "report.txt").write_bytes(("\n".join(rep) + "\n").encode("utf-8"))
     return failures, warnings, text, fa_text

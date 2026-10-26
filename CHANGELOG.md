@@ -10,6 +10,20 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.5 (2026-10-26, test build)
+
+The fourteenth test installer. Two fixes from the owner's report. Everything of 0.16.4, 0.16.3 and 0.16.2 below is still to be tested.
+
+### Every real free agent, kickers, punters and long snappers too
+The list of real free agents a new franchise starts with had only 170 players: 3 kickers, 2 punters and no long snapper. It now has all 771 players who were on an NFL roster this season or last season, have not retired and are on no team (as of 2026-10-25), at every position: 14 kickers (Younghoe Koo, Cade York, Greg Joseph, Matt Prater, Graham Gano and more), 7 punters (Johnny Hekker, Thomas Morstead and more), 7 long snappers, 140 offensive linemen, 25 quarterbacks. Two public sources must agree that a player is unsigned (nflverse's players table and Sleeper's player feed). The game still makes up a free agent only for a position that has too few real ones. If the free_agents.txt in your customize folder is exactly the copy 0.16.2 to 0.16.4 made, the game replaces it once and keeps yours beside it as `free_agents.txt.before-layout-2`; a file you changed stays yours.
+- How to test: start a new franchise with the N. F. L. rules, then F9, Franchise, free agents, and go to the kickers: real kickers, no made-up names. Try the punters, the long snappers and the offensive line too.
+- Tell us: a free agent who has in fact signed with a team, or a known unsigned player who is missing.
+
+### A team keeps its real starter until a backup is clearly better
+J.J. McCarthy really is a Giant now: the Vikings traded him to the Giants on 2026-09-28, and he is Jameis Winston's backup while Jaxson Dart is on injured reserve. A new franchise starts Winston, as the Giants do. But during a franchise, every time a team's roster changed (a signing, a trade, an injury, a new season) the staff put each position in order of the game's own ratings, and those ratings are made up, not real ones. So a backup rated one point higher took the job: in two-season tests 5 to 8 real starting quarterbacks a season lost their place on their own team (Josh Allen went to the Bills' practice squad, Caleb Williams sat behind Haynes King). Now a man passes the man ahead of him only when he is clearly better: 8 rating points at quarterback, 5 at every other position, and 3 for a man the team just brought in. In the same tests 2 or 3 starting quarterbacks a season lose their place, each to a clearly better man. Your own choice of starters is kept as before. The ratings are still the game's own, so after a few seasons a team's order can still differ from the real one; and an injured starter's place still goes to his backup for the games he misses.
+- How to test: start a new franchise as the Giants with the N. F. L. rules: Jameis Winston starts at quarterback (F9, Rules, Depth charts, or the starting lineup), McCarthy is second. Play into the second season and listen to a few teams' quarterbacks: the real starters should mostly still start.
+- Tell us: where you heard J.J. McCarthy start for the Giants (a quick game, or which week of a franchise, and whether Winston was hurt), and any real starter who loses his job to a man who is not clearly better.
+
 ## 0.16.4 (2026-10-26, test build)
 
 The thirteenth test installer. A fix from a player's e-mail. Everything of 0.16.3 and 0.16.2 below is still to be tested; nothing here has been heard by the owner yet.

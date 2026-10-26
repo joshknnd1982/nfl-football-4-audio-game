@@ -205,6 +205,7 @@ ROSTERS_BEFORE_REFRESH = ".before-layout-2"    # SR.2: the copy of the player's 
 # SR.2: free_agents.txt in the same way (a player's copy lays every one of its IDs over the built-in list, so a man who has signed since would stay free)
 OLD_SHIPPED_FREE_AGENTS = {
     "016328cf7ab998d2fe3f8763756871b03e02fcd196942d6e758c0da741ba892d",     # 0.14.0 to 0.16.1: as of 2026-10-24 (NX-B3)
+    "48b1300b1a6c8b3b08134af599c73e3adc53d2a9025d9aa4b272d86225ca9304",     # 0.16.2 to 0.16.4: as of 2026-10-25, 170 men (D-169 adds the whole pool)
 }
 
 

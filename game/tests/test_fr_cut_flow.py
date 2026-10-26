@@ -88,10 +88,11 @@ def test_release_them_releases_exactly_those_players_and_the_rookies_who_stay_jo
     assert all(pid for i, pid in enumerate(after_cut.rosters[TEAM - 1]) if i not in D.BACK_PLACES)
     mine = RR.members(after_cut, TEAM)
     assert len(mine) == 53 and any(p.drafted is not None for p in mine)
-    for position, ids in after_cut.chart[TEAM - 1].items():                             # the staff's order: the best of a position first
-        if position not in ("KR", "PR"):
+    for position, ids in after_cut.chart[TEAM - 1].items():                             # the staff's order (D-170: nobody clearly better sits behind)
+        if position not in ("KR", "PR") and ids:
             ratings = [after_cut.players[pid].rating for pid in ids]
-            assert ratings == sorted(ratings, reverse=True), position
+            assert max(ratings) < ratings[0] + T.FR_DEPTH_HOLD.get(position, T.FR_DEPTH_HOLD["*"]), position
+            assert RR.order_position(after_cut, TEAM, position, list(ids)) == list(ids), position         # the order is the staff's own
 
 
 def test_the_rookies_true_ratings_are_known_from_the_cut_on(tmp_path):
