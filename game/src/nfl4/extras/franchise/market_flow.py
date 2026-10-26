@@ -159,7 +159,7 @@ def _result_lines(words, league, result, signed_mine: list, offers: dict, staff:
         return lines
     others = [(player, bid) for player, bid in result.signed if bid.team != team]
     for player, bid in others[:D.STARS_NAMED]:
-        lines.append(X.text("NXJ-E04", player=player.name, team=words.team_name(bid.team), position=words.position(player.pos), r=player.rating))
+        lines.append(X.text("NXJ-E04", player=player.name, team=words.team_name(bid.team), position=words.position_for(player), r=player.rating))
     if len(others) > D.STARS_NAMED:
         rest = len(others) - D.STARS_NAMED
         lines.append(X.text("NXJ-I02") if rest == 1 else X.text("NXJ-E05", n=rest))
@@ -278,7 +278,7 @@ def _offer_sheet(g, words, store, league, staff: bool, header: str) -> list:
         keep = tags.should_match(league, player, salary, years)
         lead.append(X.text("NXU-56", player=player.name))
     else:
-        situation = [header, X.text("NXU-50", team=words.team_name(team), player=player.name, position=words.position(player.pos), contract=contract),
+        situation = [header, X.text("NXU-50", team=words.team_name(team), player=player.name, position=words.position_for(player), contract=contract),
                      X.text("NXU-51") if can else X.text("NXU-52")]
         recommended = tags.should_match(league, player, salary, years)
         kinds = ([True, False] if recommended else [False, True]) if can else [False]

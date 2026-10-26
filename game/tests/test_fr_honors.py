@@ -306,8 +306,8 @@ def test_stage_ones_lines_name_the_players_own_and_the_others():
     assert lines[4] == X.text("NXG-B04", award=X.text("NXG-A05"), name="Smith", team="Team3")
     member = at(league, 4, "LB")
     lines = HF.stage_lines(league, WORDS, [], [member])
-    assert lines == [X.text("NXG-B06"), X.text("NXG-B07", player=member.name, position=WORDS.position("LB"), team="Team4", n=member.seasons,
-                                                   r=member.peak)]
+    assert lines == [X.text("NXG-B06"), X.text("NXG-B07", player=member.name, position=WORDS.position_for(member), team="Team4", n=member.seasons,
+                                                   r=member.peak)]  # SR.6: a man is said by his own position (the hall of fame; the awards keep the stored group)
     assert HF.short_lines(league, WORDS, rows, [member]) == [X.text("NXG-B02", award=X.text("NXG-A01"), player=other.name,
                                                                      position=WORDS.position("QB"), team="Team9"), X.text("NXG-B09")]
     assert HF.short_lines(league, WORDS, [], [member, other]) == [X.text("NXG-B08", n=2)] and "members" in X.text("NXG-B08", n=2)

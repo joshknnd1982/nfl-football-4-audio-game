@@ -63,13 +63,15 @@ class SpokenMenu(_Speaker):
     are off unless a menu asks (nfl4's F9 Rules menu, NFL_EXTRAS_DESIGN 12.2)."""
 
     def __init__(self, speech, keys: KeyInput, title: str, items: list[Item], help_text: str = words.MENU_HELP,
-                 space_enters: bool = False, digits_jump: bool = False):
+                 space_enters: bool = False, digits_jump: bool = False,
+                 on_key: Callable[[str, int], str | None] | None = None):
         super().__init__(speech, keys)
         self.title = title
         self.items = items
         self.help_text = help_text
         self.space_enters = space_enters
         self.digits_jump = digits_jump
+        self.on_key = on_key              # a typed letter and the current item: the text to say, or None (SR.6: D describes the position)
         self.index = 0
 
     def _digit_item(self, code) -> int | None:
@@ -112,7 +114,9 @@ class SpokenMenu(_Speaker):
             elif code == KEY_F1:
                 self.say(self.help_text)
             else:
-                self.say(item.label())
+                char = typed_character(code) if self.on_key is not None and isinstance(code, int) else ""
+                said = self.on_key(char.lower(), self.index) if char else None
+                self.say(said if said else item.label())
 
 
 class ListPicker(_Speaker):
@@ -128,8 +132,10 @@ class ListPicker(_Speaker):
                  search: Callable[[str], int | None] | None = None, help_text: str = words.LIST_HELP,
                  clock: Callable[[], float] = time.monotonic,
                  first_letter: Callable[[str, int], int | None] | None = None,
-                 letter_mode: Callable[[], str] = lambda: "type"):
+                 letter_mode: Callable[[], str] = lambda: "type",
+                 on_key: Callable[[str, int], str | None] | None = None):
         super().__init__(speech, keys)
+        self.on_key = on_key              # a typed letter and the current item: the text to say, or None (SR.6: D describes the position)
         self.title = title
         self.count = count
         self.name = name
@@ -172,6 +178,9 @@ class ListPicker(_Speaker):
                 continue
             elif code == KEY_F1:
                 self.say(self.help_text)
+                continue
+            elif self.on_key is not None and isinstance(code, int) and (char := typed_character(code)) and (said := self.on_key(char.lower(), self.index)):
+                self.say(said)
                 continue
             elif (self.search is not None or self.first_letter is not None) and (char := typed_character(code)):
                 if self.letter_mode() == "first" and self.first_letter is not None and char != " ":

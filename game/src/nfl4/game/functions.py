@@ -433,6 +433,15 @@ class Functions:
             Item(lambda: words.CUSTOMIZE_RESET_ONE_ITEM, enter=self._enter(reset_one_menu)),
             Item(lambda: words.CUSTOMIZE_RESET_ALL_ITEM, enter=guarded(reset_all)),
         ]
+        if custom.extras:                              # nfl4 only (rule 0.13, SR.6, NX-L9): rosters.txt is read only with the N. F. L. rules
+            from ..extras import nx_texts
+
+            def latest_rosters() -> str:
+                from ..extras.franchise import rosters_flow
+                store = self.g.franchise() if getattr(self.g, "franchise_in_use", False) else None
+                return rosters_flow.run(self.g, self.speech, self.keys, store)
+
+            items.append(Item(lambda: nx_texts.text("NXZ-U01") + ".", enter=guarded(latest_rosters)))
         SpokenMenu(self.speech, self.keys, words.CUSTOMIZE_TITLE, items, help_text=words.CUSTOMIZE_HELP).run()
 
     def sample(self) -> None:

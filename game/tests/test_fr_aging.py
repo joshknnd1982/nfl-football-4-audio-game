@@ -412,16 +412,17 @@ class Veterans:
         for player in league.players.values():
             if player.team == league.team:
                 player.age = 22
-        words = {0: "running back", 7: "receiver", 33: "quarterback"}
+        from nfl4.extras import roster_file as RF
         for place in (0, 7, 33):
             player = league.player_at(league.team, place)
             player.age, player.seasons = 39, 16 + place
-            self.own.append((player.name, words[place], player.rating, player.seasons + 1))
+            self.own.append((player.name, RF.SPOKEN[player.position], player.rating, player.seasons + 1))      # SR.6: his own position word (halfback, wide receiver...)
         self.star = league.player_at(2, 12)
         self.star.age, self.star.peak, self.star.rating, self.star.seasons = 39, 93, 88, 17
 
 
 def test_stage_two_names_the_players_of_your_team_who_retire_and_the_league_count_and_the_stars(tmp_path):
+    from nfl4.extras import roster_file as RF
     veterans = Veterans()
     rig = stage_rig(tmp_path, veterans)
     text = spoken(rig)
@@ -434,7 +435,7 @@ def test_stage_two_names_the_players_of_your_team_who_retire_and_the_league_coun
     own = [p for p in retired if p.team == 5]
     assert len(own) == 3 and len([t for t in after if ", retires. seasons played: " in t and " of the " not in t]) == 3
     count = X.text("NXE-33", n=len(retired))
-    star = X.text("NXE-35", player=veterans.star.name, team=rig.game.league.team(*team_ref(2)), position="defensive lineman", n=18)
+    star = X.text("NXE-35", player=veterans.star.name, team=rig.game.league.team(*team_ref(2)), position=RF.SPOKEN[veterans.star.position], n=18)       # SR.6: his own position word
     assert star in after and after.index(count) < after.index(star) < after.index(X.text("NXE-03"))
     assert all(p.left == 1 and p.status == "retired" and p.age >= 30 for p in retired)
 
@@ -553,22 +554,14 @@ def test_the_roster_and_the_ratings_at_a_stages_wait_are_what_the_stage_just_sai
     assert not any("retires. seasons" in line for line in stage_three[0])
 
 
-def test_the_roster_of_f9_counts_the_players_it_has_while_places_are_empty(tmp_path, monkeypatch):
-    from nfl4.game import spoken_menu
-    seen = []
-    real = spoken_menu.SpokenMenu.__init__
-
-    def spy(self, speech, keys, title, items, *args, **kwargs):
-        seen.append((title, [item.label() for item in items]))
-        real(self, speech, keys, title, items, *args, **kwargs)
-    monkeypatch.setattr(spoken_menu.SpokenMenu, "__init__", spy)
+def test_the_roster_of_f9_counts_the_players_it_has_while_places_are_empty(tmp_path):
     from frrig import DOWN, ENTER, ESC, F9
-    stage_rig(tmp_path, Veterans(), keys=[F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, ESC, ESC, ESC])
-    # SR.5: the title counts the roster (NXL-54: the men, those in the game's places, those on the bench) and every family is an item, so the retired
-    # quarterback's family (none left until the cut's fill) is said with 0
-    [(title, roster)] = [(title, labels) for title, labels in seen if title.startswith("your roster")]
-    assert title.startswith("your roster, 31 of 53 players: 31 in the game's places and 0 on the bench")
-    assert roster[:3] == [" quarterback: 0 ", " running backs: 5 ", " receivers: 5 "] and roster[4] == " defensive linemen: 6 "
+    rig = stage_rig(tmp_path, Veterans(), keys=[F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, ESC, ESC, ESC])
+    # SR.6: the roster is one list by positions (roster_flow.PositionList): its first speech counts the men ("your roster. 31 players of 53.") and
+    # the first heading says its count, so the retired quarterback's heading (none left until the cut's fill) is said with 0
+    first = next(t for t in spoken(rig) if t.startswith("your roster."))
+    assert first.startswith("your roster. 31 players of 53.")
+    assert X.text("NXM-L01", heading=X.text("NXL-60"), n=0).strip() in first
 
 
 def test_the_development_points_are_not_counted_in_a_retired_players_file(tmp_path):

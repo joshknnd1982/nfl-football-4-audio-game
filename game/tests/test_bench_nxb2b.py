@@ -114,14 +114,15 @@ def test_a_name_pool_all_in_use_costs_one_draw_not_ten_thousand():
     assert draw_name(rnd, ["Able", "Baker"], {"Able"}) == "Baker"                       # a free surname is still drawn by the old rule
 
 
-def test_a_man_without_a_place_is_said_with_his_position_on_the_bench():
-    """The words of D-149 stay until SR.6 says the roster by positions (design 21.8)."""
+def test_a_man_without_a_place_is_said_with_his_own_position_and_no_bench_words():
+    """SR.6 (design 21.8): "on the bench" is gone; every man is said by his own position word (Words.position_for)."""
     from nfl4.extras import nx_texts as X
+    from nfl4.extras import roster_file as RF
     from nfl4.extras.franchise.history import Words
     league, _ = real_league()
     words = Words(lambda team: "Team %d" % team)
     man = league.bench(1, "QB")[0] if league.bench(1, "QB") else league.bench(1)[0]
-    assert X.text("NXL-52", position=words.position(man.pos)) in words.player(man)
+    assert RF.SPOKEN[man.position] in words.player(man) and "on the bench" not in words.player(man)       # SR.6
     placed = league.group_of(1, "QB")[0]
     assert "on the bench" not in words.player(placed)
     assert words.group("OL") == X.text("NXL-50") and words.position("LS") == X.text("NXM-D42")

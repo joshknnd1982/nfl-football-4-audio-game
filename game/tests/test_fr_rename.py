@@ -9,6 +9,7 @@ from frrig import COACH_AND_TEAM, DOWN, ENTER, ESC, F1, F9, WANT_FRANCHISE, fran
 
 from nfl4.extras import nx_texts as X
 from nfl4.extras.franchise import rename
+from nfl4.game.keys import KEY_RIGHT as RIGHT
 from nfl4.extras.franchise.league import LeagueRecord, new_league
 from nfl4.game.rnd import GameRandom
 
@@ -37,7 +38,7 @@ def test_a_name_in_use_his_own_name_no_name_and_a_rookie_before_the_cut_are_refu
     assert rename.check_name(league, qb, "Brandnew") is None
     assert rename.check_name(league, qb, other.name.upper()) == "NXU-44" and rename.check_name(league, qb, other.name + " ") == "NXU-44"
     assert rename.check_name(league, qb, qb.name.lower()) == "NXU-43"
-    qb.place = -1
+    league.draft = {"picks": [[1, 1, qb.id]], "undrafted": []}      # SR.6: only a rookie of the running draft waits for the cut (a man without a place is an ordinary man)
     assert rename.check_name(league, qb, "Brandnew") == "NXU-45"
 
 
@@ -86,7 +87,7 @@ def test_escape_or_a_name_too_short_changes_nothing(tmp_path):
 
 def test_the_name_of_another_active_player_is_refused(tmp_path):
     karst = ["k", "a", "r", "s", "t", ENTER]
-    rig, league = renamed(tmp_path, karst, [ENTER, ESC, DOWN, ENTER, ENTER] + karst)        # the quarterback is karst; then the first running back
+    rig, league = renamed(tmp_path, karst, [ENTER, RIGHT, ENTER, DOWN, DOWN, DOWN, ENTER] + karst)        # the quarterback is karst; then SR.6: the next position (halfbacks), the first man, "change his name" (after the fullback and the two returner items)
     back = league.player_at(league.team, 0)
     assert back.name != "karst" and league.player_at(league.team, 33).name == "karst"
     assert X.text("NXU-44", player=back.name) in spoken(rig)

@@ -296,7 +296,7 @@ def test_placeholders_give_the_team_names_the_score_as_said_the_player_and_the_c
     values = news.placeholders(news.Event("NWB", team=1, other=2, n=7, score=(27, 20)), league, WORDS)
     assert values == {"<coach>": "Kim", "<n>": "7", "<team>": "Team1", "<other>": "Team2", "<score>": "27 to 20"}
     values = news.placeholders(news.Event("NWP", team=TEAM, player=player, rating=80), league, WORDS)
-    assert values["<player>"] == player.name and values["<position>"] == WORDS.position(player.pos) and values["<r>"] == "80"
+    assert values["<player>"] == player.name and values["<position>"] == WORDS.position_for(player) and values["<r>"] == "80"  # SR.6: a man is said by his own position
     assert values["<team>"] == "Team%d" % TEAM
 
 

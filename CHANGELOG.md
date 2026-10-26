@@ -66,6 +66,60 @@ With the N. F. L. rules, every player the game makes up (the draft classes after
 - How to test: in a franchise, reach the draft of the first offseason and listen to the prospects' names; or F9, Customize, open the folder, and open nfl_surnames.txt.
 - Tell us: a made-up player whose full name is a real player's name.
 
+### Your roster is heard position by position
+F9, Franchise, your roster is now one list in the order of a real team's positions: quarterbacks, halfbacks, fullbacks, wide receivers, tight ends, left tackles, left guards, centers, right guards, right tackles, left edge, right edge, defensive tackles, the three kinds of linebacker, cornerbacks, free and strong safeties, kickers, punters and long snappers. Each heading is said with its count ("quarterbacks, 3"), and each player with his own position, whether he starts or is the second or third man, his number, rating, age, potential and contract, and "kick returner" or "punt returner" when he returns kicks. After the positions come the practice squad, the reserve lists (injured reserve and the like) and, in the draft, the rookies who wait for the cut. "On the bench" is gone: a player without a place in the game's 34 places is simply on the roster.
+- How to test: start a franchise (or open one), F9, Franchise, your roster. Down goes player by player and says a heading when a new position starts. Left and Right (or Page Up and Page Down) go from position to position; Home and End go to the ends; a letter goes to the next position that starts with it (L: left tackles, then left guards, then left edge; E: the tight ends). T does nothing, because T calls a time out in a game. F1 says the keys.
+- Tell us: a player said at a wrong position, a position that is missing, a letter that goes somewhere you did not expect.
+
+### The starting lineup: choose who starts at every position
+F9, Rules, Depth charts, your team (any of the 32 teams in a quick game or a season; your own team in a franchise): the first item is now "starting lineup", one list with every starter: quarterback, halfback, fullback, three wide receivers, tight end, the five linemen, left edge, two defensive tackles, right edge, the three linebackers, two cornerbacks, free safety, strong safety, kicker, punter, long snapper, kick returner and punt returner. Each line says the position, the starter and his number. Enter on a line lists the men who may start there: the men of that position first (the one who starts now is marked), then the men who can move there from the other side or the other role (a right tackle at left tackle, a free safety at strong safety, a halfback at fullback, one linebacker position for another), then the practice squad's men of the position. Enter on a man makes him the starter; the man who was there takes his old place. The positions follow in the same menu (the old groups are gone), each with its first man, and so do the key downs and moments.
+- How to test: F9, Rules, Depth charts, choose the Bears, "starting lineup": Down through the lines; Enter on "left tackle", Down to the right tackle in the list, Enter: you hear that he moves from right tackle to left tackle and starts there. Play a quick game: he is the left tackle in the set-up. In a franchise do the same: the choice is kept in the franchise and is still there after a trade, an injury or the roster cut.
+- Tell us: a player you cannot choose who you expected, or a choice that is not in your game.
+
+### A practice squad player can start
+In the lineup list a practice squad player is marked, and choosing him as a starter brings him up. In a quick game or a season the game brings up at most two men from the practice squad for one game (the real rule), and the third is refused with a sentence. In a franchise the game asks the practice squad's own questions first (the contract, and whom to release when your 53 are full) and then makes him the starter.
+- How to test: lineup list, a position, Down to the end of the list: the squad's man ("practice squad"); Enter. In a franchise, in the regular season, you are asked to sign him.
+
+### When a starter you chose leaves the team
+If a player you chose to start is traded, released, retires or is no longer on the team's roster file, the next man starts, and the next time you open the roster or the depth charts you hear one sentence ("Darnell Wright is no longer on the team; Braxton Jones starts at right tackle").
+- How to test: choose a starter in a franchise, trade him away (F9, Franchise, trades), then open the lineup: you hear the sentence once.
+
+### Kick and punt returners start elsewhere too (franchise games)
+In a franchise game the kick returner and the punt returner you chose (and the team's real ones) now return on top of their own place, as in a quick game: a starting receiver can return punts. Before, a franchise game used only men who started nowhere else. A returner who is hurt is replaced by the next man of the list.
+- How to test: franchise, F9, Rules, Depth charts, "punt returner": choose your best receiver. Play the game: he returns punts.
+
+### A man is said at his own position everywhere
+In the franchise a player is named with his real position in every list and sentence: "T.J. Watt, left edge", "halfback", "free safety", not "running back", "defensive lineman" or "safety".
+- How to test: free agents, trades, the injury report and the news: positions are the real ones.
+
+### Players with the same name
+Six names belong to two real players. In a list of players from more than one team (trades, free agents) such a name is said with the position and the team ("Justin Jefferson, strong-side linebacker, Browns"), and two of one name on your own team by their numbers ("DeVonta Smith, number 6"). The play-by-play says the name only.
+- How to test: trades, "ask a team for a player", Browns or Vikings: Justin Jefferson is said with his position and team.
+
+### A trade can give a player of another position
+When you ask for a player, the list of players you give ends with "a player of another position", which asks for the position and lists your players of it. Before, you could only give a player of the position you asked for.
+- How to test: F9, Franchise, trades, ask a team for a player, choose a position and a player; at the list of your players go to the last line.
+
+### What a position does (D)
+In the lineup and in the positions' items of the depth charts, D says a plain description of the position, for a person who knows nothing of football ("The center is the middle lineman. He snaps the ball to the quarterback at the start of the play, then blocks."). The descriptions are in PLAYS_GUIDE.md too.
+- How to test: lineup list, press D on a line, then Down and D again. The menu stays where it is.
+
+### The keys are documented
+F5, F6 and the Keys section of the README name the roster's keys, Enter on a position of the depth charts and D there.
+- How to test: F5 and F6, and `README_keys.md`.
+
+### Get the latest rosters
+F9, Customize, "get the latest rosters" (N. F. L. rules), and F9, Franchise, "get the latest rosters" ask the game's page on GitHub for the newest rosters.txt and free_agents.txt, only when you choose it, never by themselves. A newer file is checked (every team, every position, the practice squads) and written to your customize folder; your earlier files are kept beside it as `rosters.txt.before-<date>` and `free_agents.txt.before-<date>`. A rosters.txt you wrote yourself asks one yes or no question first ("no" first), because your lines would be replaced. The game says "You now have the rosters of <date>", "You already have the newest rosters, from <date>" or why it could not (no connection, a file that failed its checks). The page has no rosters folder yet, so until the maintainer publishes one the game says you already have the newest.
+- How to test: F9, Customize, "get the latest rosters" (the last item): with no internet you hear that the rosters could not be downloaded; with internet, that you already have the newest. Escape stops the wait.
+
+### A franchise in progress can be brought up to a newer roster file
+When a franchise was made from older rosters than the file you have, the game offers it once when you open the franchise: "There are newer real rosters, from <date>. Bring the other 31 teams up to them? Your own team is not changed." The first answer is "No, keep my league as it is", so Enter changes nothing. With "yes" the 31 computer teams get the file's players at their positions, numbers and lists (a player moves with his contract; a real player the file has nowhere becomes a free agent; a team over 53 is cut to 53), your team and your players are never touched, and the old file is kept as `league.sav.before-rosters-<date>`. It is never offered during a game, the draft or the roster cut.
+- How to test: only possible once a newer rosters.txt exists (the maintainer's step); then open an old franchise.
+
+### Your old franchise says what was done to it
+When a franchise saved by an older version is converted as it opens, the game says so once: "Your franchise now has the real rosters' positions: every player has his real position, and <n> real players joined their teams."
+- How to test: open a franchise saved by 0.15.0 or older; you hear the sentence once.
+
 ## 0.16.1 (2026-10-25, test build)
 
 Nothing new to play in this build: it is the same game as 0.16.0 after a tidy-up of the project. The source folder of the project, which had an older name, is now called `game`, and the old word is gone from the texts of the program and from its log.

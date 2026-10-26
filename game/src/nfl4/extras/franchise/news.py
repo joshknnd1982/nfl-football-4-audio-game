@@ -187,7 +187,7 @@ def placeholders(event: Event, league: LeagueRecord, words) -> dict:
         values["<score>"] = words.score(*event.score).strip()
     if event.player is not None:
         values["<player>"] = _plain(event.player.name)
-        values["<position>"] = words.position(event.player.pos)
+        values["<position>"] = words.position_for(event.player)
         values["<r>"] = str(event.rating or event.player.rating)
     if event.pool == "NWK":
         values["<cap>"] = words.amount(event.n)

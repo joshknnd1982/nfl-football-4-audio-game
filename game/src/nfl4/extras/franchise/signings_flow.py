@@ -27,7 +27,7 @@ from .league import SEASON
 def free_agent_line(words, player) -> str:
     """NXJ-S04: a free agent with what he asks."""
     salary, years = S.price(player)
-    return X.text("NXJ-S04", player=player.name, position=words.position(player.pos), a=player.age, r=player.rating, contract=words.contract_of(salary, years))
+    return X.text("NXJ-S04", player=words.named(player), position=words.position_for(player), a=player.age, r=player.rating, contract=words.contract_of(salary, years))
 
 
 def release_line(words, player) -> str:

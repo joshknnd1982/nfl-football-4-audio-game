@@ -9,6 +9,7 @@ from frrig import DOWN, ENTER, ESC, F1, F9, UP, spoken
 from nfl4.extras import nx_texts as X
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import draft as DR
+from nfl4.extras.franchise.history import Words
 from nfl4.extras.franchise.league import LeagueError, LeagueRecord
 
 PAGE_DOWN, PAGE_UP = 34, 33
@@ -28,8 +29,14 @@ def ran(tmp_path, keys=(), picks_told="mine", league=None, until=None, **kwargs)
                          until=until or at_stage(5), **kwargs)
 
 
-def position_word(position):
-    return X.text(D.POSITION_TEXT[position])
+def group_word(player):
+    # SR.6: the scouts' range line (NXK-06, prospect_line) still names a prospect or a rookie before the cut by his group's word
+    return X.text(D.POSITION_TEXT[player.pos])
+
+
+def position_word(player):
+    # SR.6: a man is said by his own position (Words.position_for), a prospect without one by his group's word
+    return Words(lambda team: "").position_for(player)
 
 
 # ----- the stage -----
@@ -54,7 +61,7 @@ def test_the_player_takes_the_staffs_first_prospect_with_enter_and_it_is_told_as
     mine = [final.players[pid] for team, _, pid in final.draft["picks"] if team == TEAM]
     assert len(mine) == 7
     for player in mine:
-        assert X.text("NXK-10", player=player.name, position=position_word(player.pos)) in text
+        assert X.text("NXK-10", player=player.name, position=position_word(player)) in text
     assert not [t for t in text if t.startswith(" the staff took ")]
 
 
@@ -67,7 +74,7 @@ def test_after_the_last_pick_the_rookies_are_told_by_their_ranges_and_the_stage_
     expected = []
     for player in rookies:
         low, high = final.rookie_range(player)
-        expected.append(X.text("NXK-06", player=player.name, position=position_word(player.pos), lo=low, hi=high, a=player.age,
+        expected.append(X.text("NXK-06", player=player.name, position=group_word(player), lo=low, hi=high, a=player.age,
                                potential=X.text(D.POTENTIAL_TEXT[player.potential])))
     assert text[end + 1:end + 8] == expected and X.text("NXE-03") in text[end + 8:end + 20]      # (SX.8m: the undrafted market's lines come between)
     # SR.5 (D-164): the undrafted market signs by family needs against FR_ROSTER_TARGET, so more of its lines may come before the wait
@@ -99,7 +106,7 @@ def expected_told(rig, setting, mine=TEAM):
         if setting == "all" or (setting == "first" and (overall <= 3 or next_team == mine)):
             player = final.players[pid]
             lines.append(X.text("NXK-03", n=(overall - 1) % 32 + 1, team=words.team_name(team), player=player.name,
-                                position=position_word(player.pos)))
+                                position=position_word(player)))
     return lines
 
 
@@ -168,9 +175,9 @@ def test_the_staffs_list_the_long_list_the_staffs_pick_and_every_key_choose_the_
     text = spoken(rig)
     final = saved_league(rig)
     assert picks_of(final) == replay(rig, lambda k: [0, 1, 2, 2, 0, 0, 0][k])
-    chosen = [X.text("NXK-10", player=final.players[pid].name, position=position_word(final.players[pid].pos))
+    chosen = [X.text("NXK-10", player=final.players[pid].name, position=position_word(final.players[pid]))
               for team, _, pid in final.draft["picks"] if team == TEAM]
-    staff = [X.text("NXK-12", player=final.players[pid].name, position=position_word(final.players[pid].pos))
+    staff = [X.text("NXK-12", player=final.players[pid].name, position=position_word(final.players[pid]))
              for team, _, pid in final.draft["picks"] if team == TEAM]
     assert [t for t in text if t in chosen] == chosen[:5]                              # the first five were the player's own choice
     assert [t for t in text if t in staff[5:]] == staff[5:]                            # and the last two the staff's
@@ -324,37 +331,21 @@ def test_the_short_offseason_still_asks_for_the_picks_but_ends_the_draft_without
     assert X.text("NXE-03") not in text[end:end + 9]
 
 
-def test_the_players_rookies_are_told_by_their_range_in_f9_until_the_cut(tmp_path, monkeypatch):
-    from nfl4.extras.franchise import menus
-    from nfl4.game import spoken_menu
+def test_the_players_rookies_are_told_by_their_range_in_f9_until_the_cut(tmp_path):
+    # SR.6: F9, your roster is one list by positions (roster_flow.PositionList); the rookies who wait for the cut are its last section, told by their ranges
+    # (End goes to the last man, Up to the first rookie, whose heading is said with him)
+    from nfl4.game.keys import KEY_END
     probe = ran(tmp_path / "probe", until=at_stage(4, pick=7))
     cut = saved_league(probe)
-    rookie = cut.waiting_rookies(TEAM)[0]                                              # the player's first pick, the same in every run
+    waiting = cut.waiting_rookies(TEAM)
+    rookie = waiting[0]                                                                # the player's first pick, the same in every run
     low, high = cut.rookie_range(rookie)
-    lists, menus_seen = [], []
-    real_picker, real_menu = menus._lines_picker, spoken_menu.SpokenMenu.__init__
-
-    def picker(speech, keys, title, lines, **kwargs):
-        lists.append((title, list(lines)))
-        real_picker(speech, keys, title, lines)
-
-    def menu(self, speech, keys, title, items, *args, **kwargs):
-        menus_seen.append((title, [item.label() for item in items]))
-        real_menu(self, speech, keys, title, items, *args, **kwargs)
-    monkeypatch.setattr(menus, "_lines_picker", picker)
-    monkeypatch.setattr(spoken_menu.SpokenMenu, "__init__", menu)
-    from nfl4.extras import roster_model as RM
-    # SR.5 (D-164): the roster lists every family (a family with nobody said with 0)
-    steps = D.ROSTER_ORDER.index(rookie.pos)
-    keys = [ENTER, F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER] + [DOWN] * steps + [ENTER, ESC, ESC, ESC, ESC]
-    ran(tmp_path / "f9", keys=keys, until=at_stage(4, pick=8))
-    expected = X.text("NXK-06", player=rookie.name, position=position_word(rookie.pos), lo=low, hi=high, a=rookie.age,
+    keys = [ENTER, F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, KEY_END] + [UP] * (len(waiting) - 1) + [ESC, ESC, ESC]
+    rig = ran(tmp_path / "f9", keys=keys, until=at_stage(4, pick=8))
+    expected = X.text("NXK-06", player=rookie.name, position=group_word(rookie), lo=low, hi=high, a=rookie.age,
                       potential=X.text(D.POTENTIAL_TEXT[rookie.potential]))
-    group = [lines for title, lines in lists if expected in lines]
-    assert group and group[0][-1] == expected                                           # last: after the players the team has
-    roster = [labels for title, labels in menus_seen if title.startswith("your roster")][0]           # SR.5: the title says the 53 too
-    count = int(roster[steps].split(":")[1])
-    assert count == len(group[0])                                                       # the group line counts the rookie too
+    heading = X.text("NXM-L01", heading=X.text("NXL-85"), n=len(waiting))
+    assert any(t.startswith(heading) and t.endswith(expected) for t in spoken(rig)), "the rookies' heading, then the first rookie's range"
 
 
 def test_the_franchise_settings_menu_cycles_the_picks_told_with_left_right_and_enter_and_keeps_it(tmp_path):

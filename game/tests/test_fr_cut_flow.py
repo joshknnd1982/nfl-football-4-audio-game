@@ -69,7 +69,7 @@ def test_the_stage_names_itself_lists_what_the_staff_would_release_and_asks_rele
     assert len(expected) >= 7                                                          # 53 men and seven rookies or more: seven go
     at = text.index(" stage 8 of 9. the roster cut. ")
     assert text[at + 1] == X.text("NXE-50")
-    lines = [X.text("NXE-51", player=p.name, position=rig.fstore.words.position(p.pos), a=p.age, r=p.rating) for p in expected]
+    lines = [X.text("NXE-51", player=p.name, position=rig.fstore.words.position_for(p), a=p.age, r=p.rating) for p in expected]  # SR.6: a man is said by his own position
     assert text[at + 2:at + 2 + len(lines)] == lines
     assert text[at + 2 + len(lines)] == " 1. release them "
 
@@ -101,7 +101,7 @@ def test_the_rookies_true_ratings_are_known_from_the_cut_on(tmp_path):
     start = LeagueRecord.from_json(league.to_json())
     for rookie in DR.waiting_by_team(start).get(TEAM, []):
         if rookie in staffs_releases(start):
-            assert X.text("NXE-51", player=rookie.name, position=rig.fstore.words.position(rookie.pos), a=rookie.age,
+            assert X.text("NXE-51", player=rookie.name, position=rig.fstore.words.position_for(rookie), a=rookie.age,  # SR.6: a man is said by his own position
                           r=rookie.rating) in text
 
 
@@ -226,24 +226,24 @@ def test_the_stage_writes_the_cut_the_fill_and_the_end_of_the_draft_in_one_save(
     assert all(RR.roster_count(after, team) <= D.ROSTER_MAX and not RR.short_groups(after, team) for team in range(1, D.TEAMS + 1))
 
 
-def test_f9_at_the_cut_question_tells_the_waiting_rookies_by_their_ranges_as_the_draft_did(tmp_path, monkeypatch):
-    from nfl4.extras.franchise import menus
-    lists = []
-    real = menus._lines_picker
-
-    def picker(speech, keys, title, lines, **kwargs):
-        lists.append((title, list(lines)))
-        real(speech, keys, title, lines, **kwargs)
-    monkeypatch.setattr(menus, "_lines_picker", picker)
+def test_f9_at_the_cut_question_tells_the_waiting_rookies_by_their_ranges_as_the_draft_did(tmp_path):
+    # SR.6: F9, your roster is one list by positions (roster_flow.PositionList): the rookies who wait for the cut are its last section (End, then Up to the
+    # first), told by their ranges (the group word, as the draft told them), not by their ratings
+    from frrig import UP
+    from nfl4.game.keys import KEY_END
     league = cut_league()
     start = LeagueRecord.from_json(league.to_json())
-    rookie = DR.waiting_by_team(start)[TEAM][0]
+    waiting = DR.waiting_by_team(start)[TEAM]
+    rookie = waiting[0]
     low, high = start.rookie_range(rookie)
-    steps = D.ROSTER_ORDER.index(rookie.pos)                                               # (every family of a full team has men: no item is left out)
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER] + [DOWN] * steps + [ENTER, ESC, ESC, ESC, ESC]
-    rig = run(tmp_path, league, keys=keys, until=lambda r: bool(lists))
-    words = rig.fstore.words
-    expected = words.prospect_line(rookie.name, rookie.pos, low, high, rookie.age, rookie.potential)
-    group = [lines for title, lines in lists if expected in lines]
-    assert group, lists                                                                    # the cut has not been applied: the range, not the rating
-    assert words.player(rookie) not in group[0]
+    heading = X.text("NXM-L01", heading=X.text("NXL-85"), n=len(waiting))
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, KEY_END] + [UP] * (len(waiting) - 1) + [ESC, ESC, ESC]
+    expected = None
+
+    def told(rig):
+        nonlocal expected
+        expected = rig.fstore.words.prospect_line(rookie.name, rookie.pos, low, high, rookie.age, rookie.potential)
+        return any(t.startswith(heading) and t.endswith(expected) for t in spoken(rig))
+    rig = run(tmp_path, league, keys=keys, until=told)
+    assert told(rig)                                                                       # the cut has not been applied: the range, not the rating
+    assert "rating" not in expected

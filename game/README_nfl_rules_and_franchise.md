@@ -68,19 +68,22 @@ championship. At the end of the regular season the game names the division winne
 the teams follows the game's own rule (the most wins, a tie counting half a win), not the NFL's long list of tie-breakers. Classic and a
 franchise on the original's 16 weeks keep the original's 12 teams.
 
-**The 53-man roster.** Every franchise team carries its real 53-man roster: the 34 players the game plays in its places and up to 19 more on
-the bench (the backup quarterbacks, the extra receivers and defenders, the offensive line and the long snapper). A new franchise puts the rest
-of each team's real 53 of 2026-10-24 on its bench, each a little below the team's players of his position (the game gives the ratings and ages;
-the files hold names and positions only). The bench plays no snap and adds nothing to a team's strength; it is paid (the salary cap is 247.2
-million: 193.2 for the places and 54 for the bench), grows older, improves, retires and is signed again or let go like everyone else. When a
-player is hurt, the staff's first choice for his place is the best healthy man of the bench at his position (never rated above the hurt man),
-so a hurt quarterback's place goes to the backup quarterback; "who starts for" in the to-do list and the injury report lists the bench too. At
-the roster cut the best of each position take the places, then up to 19 stay on the bench (a backup quarterback, the long snapper and five
-linemen first, then a backup at each position, then the best of the rest), and only the players over 53 are released; a bench short of a long
-snapper or five linemen gets young made-up ones, since the draft makes none. In every list a bench player is said with "on the bench" after his
-position. F9, Franchise, your roster says how many play in the places and how many are on the bench; Depth charts and Quarterbacks (F9, Rules)
-let you put a bench player in a place, and the last man of the places goes to the bench. A franchise saved by an older version has nobody on a
-bench until its next roster cut.
+**The real roster.** Every franchise team is its real roster of up to 53 players, each at his real position (quarterback, halfback, fullback,
+wide receiver, tight end, left and right tackle, left and right guard, center, left and right edge, defensive tackle, strong-side, middle and
+weak-side linebacker, cornerback, free and strong safety, kicker, punter and long snapper), with a depth chart. The original's 34 places (six
+backs, six receivers, seventeen defenders, two returners, two kickers and the quarterback) are only the view of that chart that the game plays:
+a team with three running backs runs with three, a 3-4 team's edge players fill its linebacker places, and the offensive line and the long
+snapper, who have no place in the original, are on the roster, paid and in every list. A new franchise is exactly the rosters of rosters.txt
+(the game gives the ratings and ages). When a player is hurt, the staff's first choice for his place is the best healthy man of his position
+(never rated above the hurt man), so a hurt quarterback's place goes to the backup quarterback; "who starts for" in the to-do list and the
+injury report lists those men too. At the roster cut every team keeps 53: two or three quarterbacks, a kicker, a punter, a long snapper, at
+least eight linemen and enough of every other position first, then the most valuable players; the draft has prospects of every position, and
+the made-up players of later classes take the last names of real NFL players. The salary cap is 244.2 million. F9, Franchise, your roster is
+heard position by position (headings with their counts, each player with his own position, his depth, his number, his rating and age, his
+contract and whether he returns kicks), then the practice squad, the reserve lists and the draft's rookies; Enter on a player makes him a
+starter, a returner, or changes his name. F9, Rules, Depth charts has the starting lineup and chooses who starts at every position, from the
+players on the team and, with a practice squad player, by bringing him up. A franchise saved by an older version is brought to this model when
+it is opened.
 
 **Practice squads.** Every team keeps a practice squad of up to 16 players (at most 6 of them veterans), the players who practice with the team but do not play unless they are elevated or signed. The squads are formed at the start of each season from the players cut and let go in the offseason, each team taking its own first; places nobody filled get young made-up players, so a new franchise has full squads from week 1. When an injury leaves a position with nobody fit to play, a squad player of that position is elevated to play (up to 3 times in a regular season, any number of times in the play-offs) before a made-up stand-in is used, and the week's injury report says so. F9, Franchise, practice squad (the tenth item) lets you hear your squad, sign a squad player to your roster for the minimum salary, add a free agent of the season to the squad, or release a squad player. Squad salaries count against the salary cap. The squads end with the season. Other teams do not sign players from your squad in this version.
 
@@ -147,8 +150,8 @@ surnames and the typed coach.
 Every player plays only his own position, as the teams' depth charts of 2026-10-24 list it: a quarterback is never a receiver, a safety
 never a cornerback; a place a team has too few real players for gets a made-up player of that position. The starters play the most, as in
 Madden: the first running back carries about 60 runs in 100, the first receivers are thrown to most, the starting defenders make most of the
-tackles (in a franchise a better rating adds a little). F9, Rules, Depth charts sets any team's order position by position (in a franchise,
-your own team's) and, under "key downs and moments", the back and the receiver who get the ball on third and fourth down, in the red zone
+tackles (in a franchise a better rating adds a little). F9, Rules, Depth charts has the starting lineup of any team (in a franchise, your own) and sets who starts at each of the 22 positions and who
+returns kicks and punts and, under "key downs and moments", the back and the receiver who get the ball on third and fourth down, in the red zone
 and in the last two minutes of a half (about 60 plays in 100 there). The Classic rules keep the original's draws.
 
 The names are facts (names, positions, numbers), used descriptively; this project is not made, endorsed or supported by any team or by the

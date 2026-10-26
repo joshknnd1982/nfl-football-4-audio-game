@@ -131,6 +131,19 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("describe", "D", "In a play menu and the kick off menu", "says a plain description of the current item for a person who "
            "knows nothing of football; the menu stays on the item", "nfl", False, "",
            " D. in a play menu and the kick off menu, describes the current item in plain words. ", letters="d"),
+    KeyRow("roster", "Up and Down, Left and Right, Page Up and Page Down, Home, End, letters, Enter", "In F9, Franchise, your roster",
+           "Up and Down go player by player, Left and Right and Page Up and Page Down go position by position, Home and End go to the first "
+           "and the last, a letter goes to the next position that starts with it (E goes to the tight ends and T is never used), and Enter "
+           "opens the player's items: make him a starter, the kick returner or the punt returner, or change his name", "nfl", False, "",
+           " In your roster. Up and Down go player by player, Left and Right position by position, a letter jumps to a position, and Enter "
+           "opens the player's items. "),
+    KeyRow("lineup", "Enter on a position", "In F9, Rules, Depth charts, in the starting lineup and in the positions' items",
+           "opens the list of the players who may start there, the starter first, then the players of his family who can move there and "
+           "the practice squad's players; Enter on a player makes him the starter, and a practice squad player is brought up for the game",
+           "nfl", False, "", " In the depth charts. Enter on a position lists the players who may start there; Enter on one makes him the starter. "),
+    KeyRow("describe_position", "D in a depth chart", "In F9, Rules, Depth charts, in the starting lineup and in the positions' items",
+           "says a plain description of the position the list is on, for a person who knows nothing of football", "nfl", False, "",
+           " D in a depth chart. says what the position does. "),
     KeyRow("penalty", "A and D", "At a penalty question", "A accepts the penalty and D declines it; Up and Down change the answer and "
            "Enter takes it", "nfl", False, "A. accepts it and D. declines it", letters="ad", feature="penalties"),
     KeyRow("qb_items", "8, 9 and 0", "In the offense menu with quarterback runs", "8 is the quarterback sneak, 9 the keeper and 0 the "

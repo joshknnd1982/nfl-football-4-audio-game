@@ -83,16 +83,16 @@ def stage_draft(p, n: int, m: int, short: bool) -> None:
         store.save()
         if mine:
             if chosen:
-                g.say2(X.text("NXK-10", player=player.name, position=words.position(player.pos)))
+                g.say2(X.text("NXK-10", player=player.name, position=words.position_for(player)))
             else:
                 announced = _announce(g, round_no, announced)
-                g.say2(X.text("NXK-12", player=player.name, position=words.position(player.pos)))
+                g.say2(X.text("NXK-12", player=player.name, position=words.position_for(player)))
         else:
             next_team = draft.slot(overall + 1)[2] if overall < draft.total else None
             if _told(g.options.settings.game.nx_fr_picks_told, overall, next_team, league.team):      # read at each pick: F9 may change it
                 announced = _announce(g, round_no, announced)
                 g.say2(X.text("NXK-03", n=in_round, team=words.team_name(team), player=player.name,
-                              position=words.position(player.pos)))
+                              position=words.position_for(player)))
     # the draft is over: the undrafted free agents (SX.8m), asked before anything changes, then the stage is written (the draft record stays until the cut:
     # F9 tells the rookies by their ranges)
     staff_udfa = bool(g.options.settings.game.nx_fr_auto)
@@ -177,7 +177,7 @@ def stage_cut(p, n: int, m: int, short: bool) -> None:
             situation = [header]
             if cut:
                 situation += [X.text("NXE-50")] + [
-                    X.text("NXE-51", player=pl.name, position=words.position(pl.pos), a=pl.age, r=pl.rating) for pl in cut]
+                    X.text("NXE-51", player=pl.name, position=words.position_for(pl), a=pl.age, r=pl.rating) for pl in cut]
             if len(mine) > len(cut):
                 situation += [X.text("NXE-59" if cut else "NXA-15", over=words.amount(CT.cap_over(league, team, waiting, cut)))] + [
                     words.released_for_the_cap(pl) for pl in mine[len(cut):]]

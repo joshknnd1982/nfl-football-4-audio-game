@@ -53,32 +53,34 @@ def test_while_the_franchise_is_in_use_its_menu_has_the_to_do_list_the_news_the_
     in_a_franchise(tmp_path, INTO_FRANCHISE)
     assert ("Franchise", ["to do list", "news", "your roster", "league history", "team ratings", "salary cap",
                           "free agents", "trades", "injury report", "practice squad", "your job and staff", "franchise settings", "play classic seasons",
-                          "get the latest calendar"]) in seen      # D-128: the latest calendar, the last item       # injury report since SX.8k, your job and staff since SX.8l
+                          "get the latest calendar", "get the latest rosters"]) in seen      # SR.6: the latest rosters, after the calendar. D-128: the latest calendar, the last item       # injury report since SX.8k, your job and staff since SX.8l
     assert [labels for title, labels in seen if title == "Added functions"][0][3:] == ["Rules.", "Franchise", "About NFL Football 4."]
 
 
-def test_the_roster_has_the_families_with_their_counts(tmp_path, monkeypatch):
-    # SR.5 (D-164): the roster lists the FAMILIES of D.ROSTER_ORDER (no "returners": the return places hold men of a family), each with the number
-    # of the team's men of that family in the chart, a family with nobody said with 0 (the drawn league of frrig has no OL and no LS), and they add up
-    # to the title's.
+def test_the_roster_has_the_positions_with_their_counts(tmp_path):
+    # SR.6 (design 21.8): the roster is one list by the 22 positions (roster_flow.PositionList): its first speech counts the men and names the first
+    # heading with its count; the headings' counts add up to the title's (the drawn league of frrig has no OL and no LS).
     from nfl4.extras import roster_model as RM
-    from nfl4.extras.franchise import data as D
-    seen = menus_seen(monkeypatch)
+    from nfl4.extras.franchise import roster_flow
     rig = in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [ENTER])
-    title, roster = [(title, labels) for title, labels in seen if title.startswith("your roster")][0]
+    sections = roster_flow.sections_of(rig.game, rig.fstore)
     chart = league(rig).chart[league(rig).team - 1]
-    counts = {family: sum(len(ids) for pos, ids in chart.items() if RM.GROUP.get(pos) == family) for family in D.ROSTER_ORDER}
-    assert len(roster) == len(D.ROSTER_ORDER) == 11 and [label.split(":")[0] for label in roster][:3] == [" quarterback", " running backs", " receivers"]
-    assert [int(label.split(":")[1]) for label in roster] == [counts[family] for family in D.ROSTER_ORDER]
-    assert title.startswith("your roster, %d of 53 players" % sum(counts.values()))
+    assert [s.key for s in sections][:len(RM.MADDEN)] == list(RM.MADDEN)
+    counts = [len(s.men) for s in sections if s.key in RM.MADDEN]
+    assert counts == [len(chart.get(position, ())) for position in RM.MADDEN]
+    first = next(t for t in spoken(rig) if t.startswith("your roster."))
+    assert first.startswith("your roster. %d players of 53." % sum(counts))
+    assert X.text("NXM-L01", heading=sections[0].heading, n=counts[0]).strip() in first
 
 
-def test_a_group_lists_its_players_by_name_position_rating_age_and_potential(tmp_path):
-    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [ENTER, DOWN, DOWN, ENTER, DOWN])      # roster, receivers, the second player
+def test_a_position_lists_its_players_by_name_position_rating_age_and_potential(tmp_path):
+    # SR.6: the roster is one list; the letter W goes to the wide receivers, Down to the second man
+    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [ENTER, "w", DOWN])
     text = spoken(rig)
-    receivers = league(rig).group_of(1, "WR")
-    for player in receivers[:2]:
-        assert any(" %s, receiver, rating %d, age %d, %s potential, " % (player.name, player.rating, player.age, player.potential) in t
+    league_ = league(rig)
+    for pid in league_.chart[league_.team - 1]["WR"][:2]:
+        player = league_.players[pid]
+        assert any(" %s, wide receiver, " % player.name in t and ", rating %d, age %d, %s potential, " % (player.rating, player.age, player.potential) in t
                    and " million for " in t for t in text)               # SX.8b: the ratings are spoken (NXL-31); SX.8g: and the contract (NXL-33)
 
 
@@ -116,7 +118,7 @@ def test_a_waiting_franchise_has_back_to_your_franchise_and_its_history_in_the_m
     seen = menus_seen(monkeypatch)
     script = [ENTER] + COACH_AND_TEAM + GAME + INTO_FRANCHISE                  # the classic answer, a classic game, F9, Franchise
     run_until(franchise_rig(tmp_path / "two", script, files=first.files, kind="classic", policy=quit_policy))
-    assert ("Franchise", ["back to your franchise", "league history", "get the latest calendar"]) in seen      # D-128
+    assert ("Franchise", ["back to your franchise", "league history", "get the latest calendar", "get the latest rosters"]) in seen      # SR.6. D-128
 
 
 def test_the_history_of_a_waiting_franchise_can_be_heard_from_the_classic_season(tmp_path):

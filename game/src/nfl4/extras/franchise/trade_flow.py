@@ -52,8 +52,8 @@ def offer_lines(words, league, trade: TR.Trade) -> list:
     own = league.team
     gives, gets, _, _ = trade.side(own)
     give, get = league.players[gives], league.players[gets]
-    return [X.text("NXX-01", team=words.team_name(trade.other(own)), get=get.name, position=words.position(get.pos), r=get.rating, a=get.age,
-                   contract=words.contract(get), give=give.name, give_r=give.rating, give_a=give.age, picks=picks_line(words, trade, own))]
+    return [X.text("NXX-01", team=words.team_name(trade.other(own)), get=words.named(get), position=words.position_for(get), r=get.rating, a=get.age,
+                   contract=words.contract(get), give=words.named(give), give_r=give.rating, give_a=give.age, picks=picks_line(words, trade, own))]
 
 
 def made_line(words, league, trade: TR.Trade, staff: bool = False) -> str:
@@ -61,9 +61,9 @@ def made_line(words, league, trade: TR.Trade, staff: bool = False) -> str:
     own = league.team
     gives, gets, _, _ = trade.side(own)
     if staff:
-        return X.text("NXX-05", team=words.team_name(trade.other(own)), get=league.players[gets].name, give=league.players[gives].name,
+        return X.text("NXX-05", team=words.team_name(trade.other(own)), get=words.named(league.players[gets]), give=words.named(league.players[gives]),
                       picks=picks_line(words, trade, own))
-    return X.text("NXX-02", team=words.team_name(trade.other(own)), get=league.players[gets].name, give=league.players[gives].name)
+    return X.text("NXX-02", team=words.team_name(trade.other(own)), get=words.named(league.players[gets]), give=words.named(league.players[gives]))
 
 
 def log_line(words, league, row: list) -> str:
@@ -71,8 +71,8 @@ def log_line(words, league, row: list) -> str:
     week, a, b, pa, pb, picks_a, picks_b, _kind = row
     trade = TR.Trade(a, b, pa, pb, tuple(tuple(p) for p in picks_a), tuple(tuple(p) for p in picks_b))
     text_id = "NXX-25" if week >= 1 else "NXX-35"                    # SZ.8: a trade of the offseason (week 0) says so
-    return X.text(text_id, n=week, team=words.team_name(a), other=words.team_name(b), give=league.players[pa].name,
-                  get=league.players[pb].name, picks=picks_line(words, trade, league.team))
+    return X.text(text_id, n=week, team=words.team_name(a), other=words.team_name(b), give=words.named(league.players[pa]),
+                  get=words.named(league.players[pb]), picks=picks_line(words, trade, league.team))
 
 
 def closed_reason(g, league) -> str | None:
@@ -162,18 +162,18 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
             return X.text("NXX-27")
         offers = TR.block_offers(league, league.team, player, league.records, league.gtp)
         if not offers:
-            return X.text("NXX-17", give=player.name)
+            return X.text("NXX-17", give=words.named(player))
         lines = []
         for trade, _gain in offers:
             get = league.players[trade.give_b]
-            lines.append(X.text("NXX-18", team=words.team_name(trade.b), get=get.name, r=get.rating, a=get.age, picks=picks_line(words, trade, league.team)))
+            lines.append(X.text("NXX-18", team=words.team_name(trade.b), get=words.named(get), r=get.rating, a=get.age, picks=picks_line(words, trade, league.team)))
         chosen = pick_from(X.text("NXX-11"), lines)
         if chosen is None:
             return None
         trade = offers[chosen][0]
         if TR.problems(league, trade, league.gtp) is not None:
             return X.text("NXX-03")
-        if confirmed(X.text("NXX-22", team=words.team_name(trade.b), get=league.players[trade.give_b].name, give=player.name,
+        if confirmed(X.text("NXX-22", team=words.team_name(trade.b), get=words.named(league.players[trade.give_b]), give=words.named(player),
                             picks=picks_line(words, trade, league.team))):
             make(trade)
             return None
@@ -232,7 +232,7 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
                  Item(lambda: X.text("NXX-49"), enter=lambda: add_from(False)),
                  Item(lambda: X.text("NXX-50"), enter=take_out)]
         try:
-            SpokenMenu(speech, keys, X.text("NXX-45", give=give.name, get=get.name), items, space_enters=True, digits_jump=True).run()
+            SpokenMenu(speech, keys, X.text("NXX-45", give=words.named(give), get=words.named(get)), items, space_enters=True, digits_jump=True).run()
         except _Send:
             return tuple(offered), tuple(asked)
         return None
@@ -243,11 +243,20 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         league = store.league
         traded = TR.traded_this_season(league)
         own = [pl for pl in TR.group(league, league.team, position, bench=True) if pl.id not in traded]
-        if not own:
-            return X.text("NXX-27")
-        index = pick_from(X.text("NXX-19", group=words.group(position), get=get.name), [words.player(pl) for pl in own])
+        lines = [words.player(pl) for pl in own] + [X.text("NXM-L84")]          # SR.6: any man for any man (D-164 (5)), so the last line goes to another position
+        index = pick_from(X.text("NXX-19", group=words.group(position), get=words.named(get)), lines)
         if index is None:
             return None
+        if index == len(own):
+            other = choose_group(X.text("NXM-L85"))
+            if other is None:
+                return None
+            own = [pl for pl in TR.group(league, league.team, other, bench=True) if pl.id not in traded]
+            if not own:
+                return X.text("NXX-27")
+            index = pick_from(X.text("NXX-19", group=words.group(other), get=words.named(get)), [words.player(pl) for pl in own])
+            if index is None:
+                return None
         give = own[index]
         before = ""
         if not TR.picks_open(league):
@@ -267,7 +276,7 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         if trade is None:
             return before + X.text("NXX-23", team=team)
         more = X.text("NXX-44", team=team) if added else ""
-        if confirmed(before + more + X.text("NXX-22", team=team, get=get.name, give=give.name, picks=picks_line(words, trade, league.team))):
+        if confirmed(before + more + X.text("NXX-22", team=team, get=words.named(get), give=words.named(give), picks=picks_line(words, trade, league.team))):
             make(trade)
             return None
         return X.text("NXX-04", team=team)
@@ -295,7 +304,7 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         if not theirs:
             return X.text("NXX-43", team=words.team_name(other), group=words.group(position))
         target = pick_from(X.text("NXX-41", group=words.group(position), team=words.team_name(other)),
-                           [X.text("NXX-42", player=pl.name, r=pl.rating, a=pl.age, contract=words.contract(pl)) for pl in theirs])
+                           [X.text("NXX-42", player=words.named(pl), r=pl.rating, a=pl.age, contract=words.contract(pl)) for pl in theirs])
         if target is None:
             return None
         debuglog.event("franchise", "trade_target", other=other, position=position, get=theirs[target].id)       # rule 0.15
@@ -314,7 +323,7 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         others = sorted((pl for team in range(1, D.TEAMS + 1) if team != league.team for pl in TR.group(league, team, position, bench=True)
                          if pl.id not in traded), key=lambda pl: (-pl.rating, pl.id))
         target = pick_from(X.text("NXX-20", group=words.group(position)),
-                           [X.text("NXX-21", player=pl.name, team=words.team_name(pl.team), r=pl.rating, a=pl.age, contract=words.contract(pl))
+                           [X.text("NXX-21", player=words.named(pl), team=words.team_name(pl.team), r=pl.rating, a=pl.age, contract=words.contract(pl))
                             for pl in others])
         if target is None:
             return None

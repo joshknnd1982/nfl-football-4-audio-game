@@ -20,6 +20,7 @@ from ...game import prompt_texts as PT
 from ...game import prompts as P
 from ...game.keys import KEY_ENTER
 from .. import nx_texts as X
+from . import real_roster
 
 KEY_F1, KEY_BACKSPACE, KEY_UP, KEY_DOWN, KEY_ESCAPE = 112, 8, 38, 40, 27
 
@@ -28,7 +29,7 @@ def check_name(league, player, name: str):
     """None when `name` may be the player's new name; else the ID of the sentence that says why not: no name typed (NXU-42), his own name (NXU-43), another
     active player's name (NXU-44: names stay unique among the league's active players, design 7.4), a player waiting for the cut (NXU-45: the draft knows him
     by the name of his prospect until the cut is applied)."""
-    if player.place < 0:
+    if player.id in real_roster.waiting_ids(league):       # SR.6: a man without a place is an active man now; only the draft's rookies wait
         return "NXU-45"
     if not name:
         return "NXU-42"
@@ -116,7 +117,7 @@ def confirmed(speech, keys, question: str) -> bool:
 def ask(g, speech, keys, store, player) -> str:
     """F9's renaming of one of the player's own players: returns the sentence to say after it (the new name, or why nothing changed)."""
     league = store.league
-    if player.place < 0:
+    if player.id in real_roster.waiting_ids(league):
         return X.text("NXU-45", player=player.name)
     name = P.cqn(typed(g, speech, keys, X.text("NXU-40", player=player.name)))
     why = check_name(league, player, name)
@@ -126,5 +127,7 @@ def ask(g, speech, keys, store, player) -> str:
         return X.text("NXU-42", player=player.name)
     old = player.name
     rename(league, player, name.strip())
+    if getattr(store, "words", None) is not None:
+        store.words.forget_names()                        # SR.6: the table of names two men share
     store.save()
     return X.text("NXU-46", player=old, name=name)

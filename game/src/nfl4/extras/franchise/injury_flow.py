@@ -20,6 +20,7 @@ from ...game import outcome as O
 from ...game.gamestate import other
 from ...game.setup import Roster
 from .. import nx_texts as X
+from ..roster_model import RETURN_NEVER as RETURN_NEVER_POSITIONS
 from .. import tuning as T
 from . import data as D
 from . import injuries as I
@@ -30,6 +31,8 @@ from .league import LeagueRecord
 SECTIONS = {"Running Backs:": "running_backs", "Receivers:": "receivers", "Defensive Players:": "defense",
             "Special Teams Players:": "special_teams", "Kickers:": "kickers"}
 QB_PLACE = D.PLACES_OF["QB"][0]
+RET_PLACES = D.PLACES_OF["RET"]
+RETURN_NEVER = RETURN_NEVER_POSITIONS
 DEFENSE_FIRST = D.PLACES_OF["DL"][0]
 RB_FIRST, WR_FIRST, RET_FIRST = D.PLACES_OF["RB"][0], D.PLACES_OF["WR"][0], D.PLACES_OF["RET"][0]
 
@@ -53,14 +56,56 @@ def write_roster(roster: Roster, table: list) -> None:
     roster.empty = [(heading, number) for index, (heading, number, _position) in enumerate(D.PLACES) if table[index][0] == I.EMPTY]   # SR.4
 
 
+def game_returners(league: LeagueRecord, team: int, week: int, staff: bool, out=frozenset()) -> list:
+    """Q-082 (D-164 (8), SR.6): the two men who return kicks and punts in a game, from the team's roles KR1, PR1, KR2, PR2 ...: the first two different men
+    who are fit (not hurt for the week, not hurt in the game in progress), of any position but the quarterback, the kickers and the snapper. A returner is
+    a role on top of his own place, as in a quick game: the Franchise's stored view gives one man one place, so the game day lays the roles over its two
+    return places. Returns [(player id, name, rating)], at most two (the roles' men first, then the stored view's return places')."""
+    chart = league.chart[team - 1]
+    turns = []
+    for i in range(max((len(chart.get(role, ())) for role in ("KR", "PR")), default=0)):
+        for role in ("KR", "PR"):
+            if i < len(chart.get(role, ())):
+                turns.append(chart[role][i])
+    turns += [league.rosters[team - 1][place] for place in RET_PLACES]       # then the men of the stored view's return places (a team whose roles name one man)
+    found, seen = [], set()
+    for pid in turns:
+        p = league.players.get(pid) if pid else None
+        if p is None or pid in seen or p.status != "active" or p.team != team or p.position in RETURN_NEVER:
+            continue
+        seen.add(pid)
+        if not I.plays(league, p, week, staff, out):
+            continue
+        rating = max(D.RATING_MIN, p.rating - (0 if pid in out else I.penalty(league, pid, week)))
+        found.append((pid, p.name, rating))
+        if len(found) == len(RET_PLACES):
+            break
+    return found
+
+
+def with_returners(table: list, returners: list) -> list:
+    """A lineup (identity, name, rating) with the game day's returners in its two return places."""
+    out = list(table)
+    for place, row in zip(RET_PLACES, returners):
+        out[place] = row
+    return out
+
+
 def lineup_roster(league: LeagueRecord, team: int, week: int, staff: bool) -> Roster:
-    """The team's Roster for the game of `week`: league.roster_for_game with the week's lineup (equal to it when nobody is hurt)."""
+    """The team's Roster for the game of `week`: league.roster_for_game with the week's lineup (equal to it when nobody is hurt), and the return roles
+    laid over the two return places (`game_returners`)."""
     roster = league.roster_for_game(team)
     hurt = not I.nobody_hurt(league) or league.injuries["stand_ins"]
     from . import people
+    returners = game_returners(league, team, week, staff)
     if hurt or people.has_morale(league):                     # SX.8n: the morale moves the ratings the H8 door reads (the ratings' cap stays the ratings')
         table = I.lineup(league, team, week, staff) if hurt else people.plain_table(league, team)
-        write_roster(roster, people.with_morale(league, team, table))
+        write_roster(roster, with_returners(people.with_morale(league, team, table), returners))
+    else:
+        for place, (_pid, name, rating) in zip(RET_PLACES, returners):
+            heading, number, _position = D.PLACES[place]
+            roster.special_teams[number - 1] = name
+            roster.ratings[(heading, number)] = rating
     return roster
 
 
@@ -108,6 +153,7 @@ class GameInjuries:
         from . import people
         if people.has_morale(self.league):                # the morale moves the ratings the H8 door and the carrier's weights read (SX.8n; the
             table = people.with_morale(self.league, team, table)     # review of SX.8o: the refresh at the kick-off and after an injury had dropped it)
+        table = with_returners(table, game_returners(self.league, team, self.week, self.staff_of(side), self.out(side)))      # SR.6: Q-082
         write_roster(self.state.rosters[side], table)
         self.state.quarterbacks[side] = table[QB_PLACE][1]
         self.identity[side] = [entry[0] for entry in table]
@@ -237,7 +283,7 @@ class GameInjuries:
             self.say_text(X.text("NXI-30", player=self.state.quarterbacks[side], position=self.words.position("QB")))
 
     def announce(self, player, team: int) -> None:
-        values = {"<player>": _plain(player.name), "<position>": self.words.position(player.pos), "<team>": _plain(self.words.team_name(team))}
+        values = {"<player>": _plain(player.name), "<position>": self.words.position_for(player), "<team>": _plain(self.words.team_name(team))}
         markup = make_line(self.pools, "IJX", values, self.rnd)
         if markup is not None:
             self.say_markup(markup)
@@ -274,7 +320,7 @@ def _status_line(words, player, row, week: int, injury: str | None, league: Leag
     `league`: the season's length (16 weeks, or the calendar's 18) says when the play-offs are and when the Super Bowl is."""
     regular = league.regular_weeks if league is not None else D.REGULAR_WEEKS
     state = I.status_of_row(row, week, regular)
-    values = dict(player=_plain(player.name), position=words.position(player.pos))
+    values = dict(player=_plain(player.name), position=words.position_for(player))
     if injury is not None:
         values["injury"] = injury
     if state == D.STATUS_DOUBTFUL:
@@ -364,7 +410,7 @@ def answers_order(league: LeagueRecord, item_: dict) -> tuple:
 def item_view(words, league: LeagueRecord, item_: dict) -> tuple:
     player = league.players[item_["player"]]
     state = I.status(league, player.id, item_["week"])
-    situation = [X.text("NXI-40" if state == D.STATUS_DOUBTFUL else "NXI-41", player=_plain(player.name), position=words.position(player.pos))]
+    situation = [X.text("NXI-40" if state == D.STATUS_DOUBTFUL else "NXI-41", player=_plain(player.name), position=words.position_for(player))]
     answers = [X.text("NXI-A01" if play else "NXI-A02") for play in answers_order(league, item_)]
     return situation, answers
 
@@ -381,12 +427,12 @@ def lineup_choices(league: LeagueRecord, item_: dict) -> list:
 
 
 def choice_text(words, player, staff: bool) -> str:
-    return X.text("NXI-A03" if staff else "NXI-A04", player=_plain(player.name), position=words.position(player.pos), r=player.rating, a=player.age)
+    return X.text("NXI-A03" if staff else "NXI-A04", player=_plain(player.name), position=words.position_for(player), r=player.rating, a=player.age)
 
 
 def lineup_view(words, league: LeagueRecord, item_: dict) -> tuple:
     player = league.players[item_["player"]]
-    situation = [X.text("NXI-60", player=_plain(player.name), position=words.position(player.pos))]
+    situation = [X.text("NXI-60", player=_plain(player.name), position=words.position_for(player))]
     answers = [choice_text(words, choice, index == 0) for index, choice in enumerate(lineup_choices(league, item_))]
     return situation, answers
 

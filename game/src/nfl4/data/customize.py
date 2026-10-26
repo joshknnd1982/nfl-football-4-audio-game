@@ -563,7 +563,7 @@ class Customization:
             if previous.real_names is None or snapshot.real_names is None:
                 return
             # the three files make one set of names: the part the held file makes is the earlier one's, the others stay as read
-            part = {COACHES: ("version", "coaches"), ROSTERS: ("rosters", "reserves", "roles"), RESPELLINGS: ("respellings",),
+            part = {COACHES: ("version", "coaches"), ROSTERS: ("rosters", "reserves", "roles", "roster_version"), RESPELLINGS: ("respellings",),
                     FREE_AGENTS: ("free_agents",), NFL_SURNAMES: ("surnames",)}[key]     # SR.4: a roster's reserve lists and return roles go with it
             snapshot.real_names = dataclasses.replace(snapshot.real_names, **{name: getattr(previous.real_names, name) for name in part})
         elif key in (PLAYS, STYLES, TEAMSTYLES):

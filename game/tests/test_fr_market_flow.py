@@ -179,10 +179,10 @@ def test_the_headlines_name_the_most_valuable_signings_of_the_other_teams_then_c
     first = M.run_round(start_of(league), 1, (), skip=(TEAM,))
     assert len(first.signed) > D.STARS_NAMED
     for player, bid in first.signed[:D.STARS_NAMED]:
-        assert X.text("NXJ-E04", player=player.name, team=words.team_name(bid.team), position=words.position(player.pos), r=player.rating) in text
+        assert X.text("NXJ-E04", player=player.name, team=words.team_name(bid.team), position=words.position_for(player), r=player.rating) in text  # SR.6: a man is said by his own position
     assert X.text("NXJ-E05", n=len(first.signed) - D.STARS_NAMED) in text
     fourth, bid = first.signed[D.STARS_NAMED]                          # the fourth signing is counted, not named
-    assert X.text("NXJ-E04", player=fourth.name, team=words.team_name(bid.team), position=words.position(fourth.pos), r=fourth.rating) not in text
+    assert X.text("NXJ-E04", player=fourth.name, team=words.team_name(bid.team), position=words.position_for(fourth), r=fourth.rating) not in text  # SR.6: a man is said by his own position
 
 
 # ----- offers -----
@@ -594,4 +594,4 @@ def test_the_franchise_menu_lists_the_free_agents_after_the_salary_cap(tmp_path,
     monkeypatch.setattr(spoken_menu.SpokenMenu, "__init__", spy)
     run(tmp_path, market_league(), keys=[F9, DOWN, DOWN, DOWN, DOWN, ENTER, ESC, ESC, ESC], until=lambda r: any(t == "Franchise" for t, _ in seen))
     franchise = [labels for title, labels in seen if title == "Franchise"][0]
-    assert franchise.index("free agents") == franchise.index("salary cap") + 1 and franchise[-2:] == ["play classic seasons", "get the latest calendar"]      # D-141
+    assert franchise.index("free agents") == franchise.index("salary cap") + 1 and franchise[-3:] == ["play classic seasons", "get the latest calendar", "get the latest rosters"]      # D-141

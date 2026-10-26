@@ -90,7 +90,10 @@ class FranchiseSeason(SeasonMode):
 
     def before_menu(self) -> None:
         """Design 3.4: week 1 NXF-08, the news of the week that was played, the to-do list, once a week (the told mark of the
-        record, so a restart or F1 does not say them again)."""
+        record, so a restart or F1 does not say them again). SR.6: first the conversion's sentence and the offer of newer rosters, once each
+        (rosters_flow.at_opening; the week's menu is outside every game)."""
+        from . import rosters_flow
+        rosters_flow.at_opening(self.p)
         weekly.before_menu(self.p)
 
     def before_game(self) -> None:
@@ -167,7 +170,7 @@ def activate(p, store) -> None:
     g = p.g
     p.classic_stores = (p.store, g.season_store, g.setup_store)
     store.bind(g.season)
-    store.words = history.Words(lambda team: g.league.team(*team_ref(team)))
+    store.words = history.Words(lambda team: g.league.team(*team_ref(team)), lambda: store.league)
     store.staff_setting = lambda: bool(g.options.settings.game.nx_fr_auto)    # SX.8k: the player's lineup follows the staff's rule when it is on
     # SX.8l: the coordinators choose the playbooks; SX.8o: a computer team's follow its best players (staff.fitted_styles, the week's lineups)
     g.franchise_styles = lambda: staff.fitted_styles(store.league, store.league.gtp) if store.league is not None else None
@@ -309,6 +312,9 @@ def resume(p) -> None:
     """The franchise is in use: continue its offseason where the file says, then load its season."""
     from . import offseason
     store = p.store
+    if store.league.stage != SEASON or store.league.gtp == 0:
+        from . import rosters_flow
+        rosters_flow.at_opening(p)                       # SR.6: a league opened outside its weeks (the week's menu does it in the season)
     if store.league.stage == SEASON:                     # the season first: the offseason of a season that ended reads its values
         store.load_season(p.season)
         if not p.season.schedule:                        # a window closed between the league and its first schedule
@@ -377,6 +383,9 @@ def start_new(p) -> None:
     league = new_league(g.rnd, weekly_rules.surnames_of(g), season.coach, team, new_league_id(g), own_names(g),
                         team_styles=table.teams if table is not None else None,      # SX.8l: the coordinators start with the teams' styles
                         real=getattr(g, "real_names", None))                         # SX.11: the real coaches and players (None: drawn surnames)
+    if league.roster_version:                            # SR.6: the league is labelled with rosters.txt's own VERSION (make_real wrote coaches.txt's)
+        from . import roster_update
+        league.roster_version = roster_update.version_of(getattr(g, "real_names", None)) or league.roster_version
     if getattr(store, "practice_squads", True):
         from . import practice
         joined = practice.real_squads(league, getattr(g, "real_names", None))     # NX-B2: the real practice squads first (no draw)

@@ -30,6 +30,7 @@ GROUP_POSITIONS = dict(GROUPS)
 from .roster_file import MADDEN as POSITIONS_22, ROLES as RETURN_ROLES
 ENTRY_KEYS = tuple(GROUP_POSITIONS) + tuple(p for p in POSITIONS_22 if p not in GROUP_POSITIONS) + RETURN_ROLES
 RETURN_FROM = ("RB", "FB", "WR", "CB")           # a returner is a role of a back, a receiver or a cornerback
+ELEVATIONS_MAX = 2                               # SR.6: practice squad men a team brings up for one game (the NFL's two; practice.PER_GAME)
 SITUATIONS = ("down", "redzone", "twominute")
 ROLES = ("back", "receiver")
 RED_ZONE = 20
@@ -122,6 +123,7 @@ def with_depth(real, depth: dict):
     if real is None or not depth:
         return real
     from .real_names import RealPlayer
+    real = _with_elevated(real, depth)
     rosters = list(real.rosters)
     for team, groups in depth.items():
         if not 1 <= team <= TEAMS:
@@ -147,6 +149,41 @@ def with_depth(real, depth: dict):
         rosters[team - 1] = tuple(roster)
     out = dataclasses.replace(real, rosters=tuple(rosters))
     return _with_positions(out, depth)
+
+
+def elevated_names(depth: dict, real, team: int) -> list:
+    """SR.6 (NX-L11): the practice squad men the team's entries name at their positions (or as returners), in the entries' order, at most ELEVATIONS_MAX
+    (the real game-day elevations: two a game); a man's own position or the other side or role of his family counts, another family never."""
+    from . import roster_model as RM
+    if real is None or not real.is_layout2(team):
+        return []
+    squad = {p.name.casefold(): p for p in real.rosters[team - 1] if p.squad and p.madden}
+    found: list = []
+    for key in ENTRY_KEYS:
+        for name in (depth.get(team, {}).get(key) or ()):
+            man = squad.get(name.casefold())
+            if man is None or name in found:
+                continue
+            if key in RM.ROLES or (key in RM.MADDEN and RM.may_start_at(key, man.madden)):
+                found.append(name)
+    return found[:ELEVATIONS_MAX]
+
+
+def _with_elevated(real, depth: dict):
+    """The real names with the elevated practice squad men of every team's entries made active men (a game-day elevation, SR.6), so the entries below
+    lay them over the lines like any active man."""
+    out = real
+    for team in depth:
+        if not 1 <= team <= TEAMS:
+            continue
+        names = {n.casefold() for n in elevated_names(depth, out, team)}
+        if not names:
+            continue
+        rosters = list(out.rosters)
+        rosters[team - 1] = tuple(dataclasses.replace(p, squad=False, status="") if p.squad and p.name.casefold() in names else p
+                                  for p in rosters[team - 1])
+        out = dataclasses.replace(out, rosters=tuple(rosters))
+    return out
 
 
 def _with_positions(real, depth: dict):
@@ -210,25 +247,39 @@ def migrate_depth(depth: dict, real) -> dict:
     return {team: groups for team, groups in out.items() if groups}
 
 
-def choose_starter(depth: dict, real, team: int, position: str, name: str, slot: int = 0) -> dict:
+def choose_starter(depth: dict, real, team: int, position: str, name: str, slot: int = 0, base=None) -> dict:
     """NX-L11 (design 21.13) in a quick game or a season: the setting after the player made `name` the starter at `position` (or a return role) of
     `team` (slot 1 for the second of three receivers, two tackles or two corners): the position's order of the rosters with him in the slot, the man
     who was there in his old place (roster_model.put_first). ValueError when he may not start there (another family, not on the active roster)."""
     from . import roster_model as RM
-    current = with_depth(real, migrate_depth(depth, real))
-    chart, roles, _squad = current.chart(team)
+    moved = migrate_depth(depth, real)
+    current = with_depth(real, moved)
+    chart, roles, squad = current.chart(team)
+    named = {n for p in RM.MADDEN for n in chart.get(p, ())}
+    on_squad = next((p for p in RM.MADDEN if name in squad.get(p, ())), None) if name not in named else None
+    if on_squad is not None:                                   # SR.6: a practice squad man is an elevation, two a game
+        brought = elevated_names(moved, base if base is not None else real, team)     # `base`: the rosters before the depth is laid over
+        if name not in brought and len(brought) >= ELEVATIONS_MAX:
+            raise ElevationLimit("%s would be a third man brought up from the practice squad" % name)
     if position in RM.ROLES:
         order = roles.get(position) or []
-        if name not in {n for p in RM.MADDEN for n in chart.get(p, ())}:
+        if name not in named and on_squad is None:
             raise ValueError("%s is not on the active roster" % name)
+        own = next((p for p in RM.MADDEN if name in chart.get(p, ())), None) or on_squad
+        if own in RM.RETURN_NEVER:
+            raise ValueError("%s cannot return kicks" % name)
     else:
-        own = next((p for p in RM.MADDEN if name in chart.get(p, ())), None)
+        own = next((p for p in RM.MADDEN if name in chart.get(p, ())), None) or on_squad
         if own is None or not RM.may_start_at(position, own):
             raise ValueError("%s cannot start at %s" % (name, position))
         order = chart.get(position, [])
-    out = {t: dict(g) for t, g in migrate_depth(depth, real).items()}
+    out = {t: dict(g) for t, g in moved.items()}
     out.setdefault(team, {})[position] = RM.put_first(order, name, slot)
     return out
+
+
+class ElevationLimit(ValueError):
+    """SR.6: the team already brings up ELEVATIONS_MAX practice squad men for the game."""
 
 
 def put_first(depth: dict, team: int, group: str, name: str, current: list) -> dict:

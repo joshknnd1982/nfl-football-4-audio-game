@@ -46,7 +46,7 @@ def camp_league(age=24, computer=True):
 
 def prompt_of(league, player, words):
     salary, years = P.new_contract(player)
-    return X.text("NXU-H01", player=player.name, position=words.position(player.pos), r=player.rating, contract=words.contract(player),
+    return X.text("NXU-H01", player=player.name, position=words.position_for(player), r=player.rating, contract=words.contract(player),  # SR.6: a man is said by his own position
                   ask=words.contract_of(salary, years))
 
 
@@ -137,7 +137,7 @@ def at_week(number):
 
 
 def demand_text(league, player, words):
-    return X.text("NXU-D01", player=player.name, position=words.position(player.pos), n="@").split("@")[0]
+    return X.text("NXU-D01", player=player.name, position=words.position_for(player), n="@").split("@")[0]  # SR.6: a man is said by his own position
 
 
 def test_a_demand_of_the_players_team_is_an_item_with_the_offers_and_enter_takes_the_staffs_recommendation(tmp_path):

@@ -200,10 +200,52 @@ def clean_chart(league, team: int, waiting=None) -> dict:
             if pid in position_of and pid not in seen:
                 seen.append(pid)
         chart[role] = seen
+    if team == league.team:
+        _drop_left(league, position_of, chart, old)
     if not isinstance(league.chart, list) or len(league.chart) != D.TEAMS:
         league.chart = [{} for _ in range(D.TEAMS)]
     league.chart[team - 1] = chart
     return chart
+
+
+def _drop_left(league, position_of: dict, chart: dict, old: dict) -> None:
+    """SR.6 (design 21.13): a man the player chose who is no longer on the team (traded, released, retired, a new roster) leaves his order; when he was a
+    starter (one of the first STARTERS of the position, or the first returner) the loss is kept in `depth["dropped"]` as [id, position, slot] and told
+    once by the lineup and the roster (`told_dropped`)."""
+    depth = league.depth if isinstance(league.depth, dict) else None
+    if depth is None:
+        return
+    order = depth.get("order")
+    if not isinstance(order, dict):
+        return
+    for key in list(order):
+        ids = order[key]
+        if not isinstance(ids, list):
+            continue
+        starters = RM.STARTERS.get(key, 1) if key in RM.MADDEN else 1
+        for slot, pid in enumerate(ids):
+            if pid in position_of or slot >= starters:
+                continue
+            row = [pid, key, slot]
+            kept = depth.setdefault("dropped", [])
+            if row not in kept and len(kept) < 200:
+                kept.append(row)
+        order[key] = [pid for pid in ids if pid in position_of]
+        if not order[key]:
+            del order[key]
+
+
+def told_dropped(league) -> list:
+    """SR.6: [(player id, key, slot, the man who starts there now or None)] of the starters the player chose who left, each once; the record is cleared.
+    The man is the one on the chart at that slot now (a position) or the first of the role."""
+    depth = league.depth if isinstance(league.depth, dict) else {}
+    rows = depth.pop("dropped", []) if isinstance(depth, dict) else []
+    chart = league.chart[league.team - 1] if isinstance(league.chart, list) and len(league.chart) == D.TEAMS else {}
+    out = []
+    for pid, key, slot in rows:
+        ids = chart.get(key, []) if isinstance(chart, dict) else []
+        out.append((pid, key, slot, ids[slot] if slot < len(ids) else None))
+    return out
 
 
 def squad_chart(league, team: int) -> dict:
@@ -415,7 +457,10 @@ def choose_starter(league, position: str, pid: int, slot: int = 0) -> list:
     chart = clean_chart(league, team)
     orders = league.depth.setdefault("order", {})
     if position in RM.ROLES:
+        if man.position in RM.RETURN_NEVER:
+            raise LeagueError("a %s cannot return kicks" % man.position)
         chart[position] = RM.put_first(chart[position], pid, slot)
+        orders[position] = list(chart[position][:slot + 1])         # SR.6: his choice is kept, so a loss is told (_drop_left)
     else:
         if position not in RM.MADDEN or not RM.may_start_at(position, man.position):
             raise LeagueError("a %s cannot start at %s" % (man.position, position))
@@ -566,7 +611,7 @@ def make_real(league, real, drawn_team_order: list) -> int:
         if view.empty or view.covered or view.elevated:
             debuglog.event("franchise", "roster_view", logging.DEBUG, team=team, empty=view.empty, covered=sorted(view.covered.items()),
                            elevated=len(view.elevated))      # design 21.11 (rule 0.15)
-    league.roster_version = getattr(real, "version", "") or ""
+    league.roster_version = getattr(real, "roster_version", "") or getattr(real, "version", "") or ""
     league.practice["season"] = league.season
     league.reserves_on = True
     starters_first(league)                                   # each position's best drawn rating to its real starter (no draw)
@@ -734,7 +779,7 @@ def convert(league, real) -> dict:
                 joined += 1
     refresh_all(league)
     if teams and not league.roster_version:
-        league.roster_version = getattr(real, "version", "") or ""
+        league.roster_version = getattr(real, "roster_version", "") or getattr(real, "version", "") or ""
     done = {"from": league.loaded_format, "positions": named, "joined": joined}
     league.converted = done
     debuglog.event("franchise", "league_converted", **done)                                          # rule 0.15

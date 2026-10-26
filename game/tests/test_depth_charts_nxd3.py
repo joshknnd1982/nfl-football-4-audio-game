@@ -122,16 +122,18 @@ def nfl_rig(tmp_path, keys):
 
 
 def test_enter_on_a_player_makes_him_the_starter_and_the_next_game_uses_him(tmp_path):
-    rig = nfl_rig(tmp_path, [ENTER, ENTER, DOWN, ENTER])                     # the Bengals, running backs, the second back
+    # SR.6: the menu is the starting lineup, then the 22 positions (QB first, HB second): the Bengals, the halfbacks, the second halfback
+    rig = nfl_rig(tmp_path, [ENTER, DOWN, DOWN, ENTER, DOWN, ENTER])
     settings = rig.game.options.settings.game
-    group = DC.parse_depth(settings.nx_depth)[BENGALS]["RB"]
+    group = DC.parse_depth(settings.nx_depth)[BENGALS]["HB"]
     assert group[0] == "Samaje Perine" and rig.saves.count == 1
     assert rig.game.real_names.roster(BENGALS, None).running_backs[0] == "Samaje Perine"
-    assert X.text("NXM-D08", player="Samaje Perine", group=X.text("NXM-D20")) in said(rig)
+    assert X.text("NXM-L68", player="Samaje Perine", position="halfback") in said(rig)       # SR.6: the choice is said with the position (NXM-L68)
 
 
 def test_key_downs_and_moments_set_and_clear(tmp_path):
-    rig = nfl_rig(tmp_path, [ENTER] + [DOWN] * 10 + [ENTER, DOWN, ENTER, DOWN, ENTER])   # the Bengals, key downs, third down the receiver, the first receiver
+    # SR.6: key downs and moments follow the lineup and the 24 positions and roles (item 25)
+    rig = nfl_rig(tmp_path, [ENTER] + [DOWN] * 25 + [ENTER, DOWN, ENTER, DOWN, ENTER])   # the Bengals, key downs, third down the receiver, the first receiver
     settings = rig.game.options.settings.game
     chosen = DC.parse_keys(settings.nx_key_players)[BENGALS]
     assert list(chosen) == [("down", "receiver")]
@@ -141,11 +143,11 @@ def test_key_downs_and_moments_set_and_clear(tmp_path):
 def test_the_real_order_again(tmp_path):
     rig = rig_for(tmp_path, [])
     rig.game.options.settings.game.rules = "nfl"
-    rig.game.options.settings.game.nx_depth = "T01 RB=Samaje Perine"
+    rig.game.options.settings.game.nx_depth = "T01 HB=Samaje Perine"                    # SR.6: keyed by position
     rig.game.options.settings.game.nx_key_players = "T01 down back=Samaje Perine"
     Q.apply(rig.game) if rig.game.real_names is not None else None
-    rig.game.real_names = DC.with_depth(real(), DC.parse_depth("T01 RB=Samaje Perine"))
-    rig.keys.answers = RULES + DEPTH + [ENTER] + [DOWN] * 11 + [ENTER, ESC, ESC, ESC, ESC]
+    rig.game.real_names = DC.with_depth(real(), DC.parse_depth("T01 HB=Samaje Perine"))
+    rig.keys.answers = RULES + DEPTH + [ENTER] + [DOWN] * 26 + [ENTER, ESC, ESC, ESC, ESC]
     rig.game.functions.run()
     assert rig.game.options.settings.game.nx_depth == "" and rig.game.options.settings.game.nx_key_players == ""
     assert X.text("NXM-D11", team=rig.game.league.team(1, 1)) in said(rig)
@@ -203,13 +205,13 @@ def test_the_league_file_keeps_the_depth_chart_and_checks_it():
 
 def test_in_a_franchise_the_menu_orders_the_players_own_team_and_saves_it(tmp_path):
     from frrig import COACH_AND_TEAM, F9, WANT_FRANCHISE, franchise_rig, quit_policy, run_until, spoken
-    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + [F9] + RULES + DEPTH + [ENTER, DOWN, ENTER, ESC, ESC, ESC, ESC],
+    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + [F9] + RULES + DEPTH + [DOWN, DOWN, ENTER, DOWN, ENTER, ESC, ESC, ESC, ESC],
                         policy=quit_policy)
     run_until(rig)
     record = rig.fstore.league
     first = FD.group_of(record, "RB")[0]
     assert record.depth["order"][first.position][0] == first.id              # SR.5 (D-164): the order is kept by position (HB)
-    assert X.text("NXM-D08", player=first.name, group=X.text("NXM-D20")) in spoken(rig)
+    assert X.text("NXM-L68", player=first.name, position="halfback") in spoken(rig)         # SR.6: NXM-L68 names the position
     from nfl4.extras.franchise.league import LeagueRecord
     saved = LeagueRecord.from_json(rig.files.data["league.sav"].decode("utf-8"))
     assert saved.depth == record.depth

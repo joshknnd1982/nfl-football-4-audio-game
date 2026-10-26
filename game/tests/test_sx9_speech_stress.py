@@ -14,10 +14,8 @@ GROUP_SIZES = (1, 6, 6, 0, 6, 5, 6, 2, 1, 1, 0)       # SR.5: the roster's 11 fa
 
 
 def every_player_keys():
-    keys = []
-    for size in GROUP_SIZES:
-        keys += [ENTER] + ([DOWN] * (size - 1) + [ESC] if size else []) + [DOWN]      # (an empty family is said and closes by itself)
-    return keys
+    # SR.6: the roster is one list of men by position (F9 roster_flow.PositionList): Down steps man by man across the headings, then Escape
+    return [DOWN] * (sum(GROUP_SIZES) + 10) + [ESC]
 
 
 def texts(backend):

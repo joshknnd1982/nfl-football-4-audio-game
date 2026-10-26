@@ -139,12 +139,12 @@ def stage_retirements(p, n: int, m: int, short: bool) -> None:
     lines = [_stage_line(n, m, "NXE-12")]
     if own:
         lines.append(X.text("NXE-30"))
-        lines += [X.text("NXE-31", player=player.name, position=words.position(player.pos), a=aging.aged(player),
+        lines += [X.text("NXE-31", player=player.name, position=words.position_for(player), a=aging.aged(player),
                          r=player.rating, n=player.seasons + 1) for player in own]
     else:
         lines.append(X.text("NXE-32"))
     lines.append(X.text("NXE-33", n=len(retiring)))
-    lines += [X.text("NXE-35", player=player.name, team=words.team_name(player.team), position=words.position(player.pos),
+    lines += [X.text("NXE-35", player=player.name, team=words.team_name(player.team), position=words.position_for(player),
                       n=player.seasons + 1) for player in stars]
     told, recent = news.render(league, news.star_events(stars), g.news_pools or DEFAULT_POOLS, words, g.rnd)    # NWR, after the draws
     lines += _news_texts(told)
@@ -184,7 +184,7 @@ def stage_development(p, n: int, m: int, short: bool) -> None:
     lines = ([] if asked or held else [header]) + rest + camp_lines + [X.text("NXE-40", n=summary.improved, m=summary.declined, k=summary.same)]
     for text_id, change in (("NXE-41", summary.best), ("NXE-42", summary.worst)):
         if change is not None:
-            lines.append(X.text(text_id, player=change.player.name, position=words.position(change.player.pos),
+            lines.append(X.text(text_id, player=change.player.name, position=words.position_for(change.player),
                                 d=abs(change.delta), r=change.new))
     told, recent = news.render(league, news.improver_events(plan, league.team), g.news_pools or DEFAULT_POOLS, words, g.rnd)   # NWP
     lines += _news_texts(told)

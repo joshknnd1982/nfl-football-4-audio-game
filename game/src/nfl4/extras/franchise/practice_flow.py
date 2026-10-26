@@ -27,9 +27,9 @@ from .signings_flow import _surnames, free_agent_line, release_line
 
 def squad_line(words, league, player) -> str:
     if P.playoffs(league, league.gtp):                           # the play-offs: no limit of elevations
-        return X.text("NXJ-P01", player=player.name, position=words.position(player.pos), a=player.age, r=player.rating)
+        return X.text("NXJ-P01", player=words.named(player), position=words.position_for(player), a=player.age, r=player.rating)
     left = max(0, P.ELEVATIONS - P.elevations(league, player))
-    return X.text("NXJ-P04", player=player.name, position=words.position(player.pos), a=player.age, r=player.rating, n=left)
+    return X.text("NXJ-P04", player=words.named(player), position=words.position_for(player), a=player.age, r=player.rating, n=left)
 
 
 def closed_reason(g, league) -> str | None:
@@ -40,6 +40,53 @@ def closed_reason(g, league) -> str | None:
     if league.prepared != [league.season, league.gtp]:
         return X.text("NXJ-S19")
     return None
+
+
+def promote_player(g, speech, keys, store, words, player) -> tuple:
+    """The squad player signs to the roster with the practice squad menu's own questions (the place of the group, the man to release, the contract, one
+    confirmation). Returns (the sentence to say, True when he was signed). SR.6: the starting lineup uses it for a squad man the player chose as a starter."""
+    league = store.league
+
+    def say(text: str) -> None:
+        speech.stop()
+        speech.say_async(text)
+
+    def confirmed(text: str) -> bool:
+        say(text)
+        return keys.read_key() == KEY_ENTER
+
+    def pick_from(title: str, lines: list):
+        return ListPicker(speech, keys, title, len(lines), lambda i: lines[i]).run()
+
+    reason = closed_reason(g, league)
+    if reason is not None:
+        return reason, False
+    week = league.gtp
+    release = None
+    if not S.open_place(league, league.team, player.pos):
+        candidates = S.releasable(league, league.team, player.pos, week)
+        if not candidates:
+            return X.text("NXJ-S15"), False
+        chosen = pick_from(X.text("NXJ-S06", player=player.name), [release_line(words, p) for p in candidates])
+        if chosen is None:
+            return None, False
+        release = candidates[chosen]
+    problem = P.promote_problem(league, player, release, week)
+    if problem == "over the cap":
+        return X.text("NXJ-S16", room=words.amount(max(0, CT.cap_space(league, league.team)))), False
+    if problem is not None:
+        return X.text("NXJ-S18"), False
+    contract = words.contract_of(CT.min_salary(player.seasons), 1)
+    asked = (X.text("NXJ-P06", player=player.name, contract=contract) if release is None else
+             X.text("NXJ-P07", give=release.name, get=player.name, contract=contract, dead=words.amount(CT.dead_money(release))))
+    if not confirmed(asked):
+        return X.text("NXJ-S17", player=player.name), False
+    names = (player.name, release.name if release is not None else "")
+    salary, dead = P.promote(league, player, release)
+    debuglog.event("franchise", "practice_promoted", week=week, season=league.season, player=player.id, position=player.pos,
+                   rating=player.rating, salary=salary, released=release.id if release is not None else None, dead_money=dead)
+    store.save()
+    return X.text("NXJ-P08", player=names[0]) if release is None else X.text("NXJ-P09", give=names[1], get=names[0]), True
 
 
 def practice_menu(g, speech, keys, store, words) -> None:
@@ -79,33 +126,7 @@ def practice_menu(g, speech, keys, store, words) -> None:
         index = pick_from(X.text("NXJ-P03", n=len(members)), [squad_line(words, league, p) for p in members])
         if index is None:
             return None
-        player = members[index]
-        week = league.gtp
-        release = None
-        if not S.open_place(league, league.team, player.pos):
-            candidates = S.releasable(league, league.team, player.pos, week)
-            if not candidates:
-                return X.text("NXJ-S15")
-            chosen = pick_from(X.text("NXJ-S06", player=player.name), [release_line(words, p) for p in candidates])
-            if chosen is None:
-                return None
-            release = candidates[chosen]
-        problem = P.promote_problem(league, player, release, week)
-        if problem == "over the cap":
-            return X.text("NXJ-S16", room=words.amount(max(0, CT.cap_space(league, league.team))))
-        if problem is not None:
-            return X.text("NXJ-S18")
-        contract = words.contract_of(CT.min_salary(player.seasons), 1)
-        asked = (X.text("NXJ-P06", player=player.name, contract=contract) if release is None else
-                 X.text("NXJ-P07", give=release.name, get=player.name, contract=contract, dead=words.amount(CT.dead_money(release))))
-        if not confirmed(asked):
-            return X.text("NXJ-S17", player=player.name)
-        names = (player.name, release.name if release is not None else "")
-        salary, dead = P.promote(league, player, release)
-        debuglog.event("franchise", "practice_promoted", week=week, season=league.season, player=player.id, position=player.pos,
-                       rating=player.rating, salary=salary, released=release.id if release is not None else None, dead_money=dead)
-        store.save()
-        return X.text("NXJ-P08", player=names[0]) if release is None else X.text("NXJ-P09", give=names[1], get=names[0])
+        return promote_player(g, speech, keys, store, words, members[index])[0]
 
     def add():
         reason = closed_reason(g, league)

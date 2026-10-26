@@ -245,7 +245,7 @@ def test_out_for_the_season_only_when_he_misses_the_play_offs_too():
     row = hurt(league, p, 4, week=13)                          # back in week 18: he plays in the play-offs
     assert I.status_of_row(row, 14) == "out" and "for the season" not in F._status_line(F_WORDS, p, row, 14, None)
     row[3] = 21                                                # back after the Super Bowl
-    assert F._status_line(F_WORDS, p, row, 14, None) == X.text("NXI-17", player=p.name, position=F_WORDS.position("RB"))
+    assert F._status_line(F_WORDS, p, row, 14, None) == X.text("NXI-17", player=p.name, position=F_WORDS.position_for(p))  # SR.6: a man is said by his own position
 
 
 def test_the_report_tells_the_new_injuries_by_name_then_the_older_ones_then_who_is_back():
@@ -256,7 +256,7 @@ def test_the_report_tells_the_new_injuries_by_name_then_the_older_ones_then_who_
     lines = F.report_lines(league, 3, [back.id], F_WORDS, None, FakeRnd([0]))
     low, high = I.spoken_range(row_old, 3)
     assert lines[0].strip().startswith(new.name) and "sprained ankle" in lines[0]
-    assert X.text("NXI-15", player=old.name, position=F_WORDS.position("RB"), lo=low, hi=high) in lines
+    assert X.text("NXI-15", player=old.name, position=F_WORDS.position_for(old), lo=low, hi=high) in lines  # SR.6: a man is said by his own position
     assert lines[-1] == X.text("NXI-20", list=back.name)
     assert F.report_lines(fresh(), 3, [], F_WORDS, None, FakeRnd()) == []          # nothing to tell: no report
 

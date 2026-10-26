@@ -11,6 +11,7 @@ from __future__ import annotations
 from ..data import debuglog
 from ..game.spoken_menu import Item, ListPicker, SpokenMenu
 from . import depth_chart as DC
+from . import lineup as L
 from . import nx_texts as X
 
 GROUP_TEXT = {"RB": "NXM-D20", "WR": "NXM-D21", "TE": "NXM-D22", "DL": "NXM-D23", "LB": "NXM-D24", "CB": "NXM-D25", "S": "NXM-D26", "K": "NXM-D27",
@@ -139,7 +140,17 @@ def _quick_menu(game, speech, keys, say) -> None:
             SpokenMenu(speech, keys, X.text("NXM-K02"), items, space_enters=True, digits_jump=True).run()
             return None
 
-        items = [Item(lambda g=g: first_label(g), enter=lambda g=g: open_group(g)) for g, _p in DC.GROUPS]
+        if real().is_layout2(team):                                   # SR.6 (NX-L11): the lineup and every real position
+            backend = L.QuickBackend(game, team, team_name(team))
+            told = " ".join(t.strip() for t in backend.notices())
+            title = X.text("NXM-D03", team=team_name(team)) + (" " + told + " " if told else "")
+            items, order = L.position_items(speech, keys, backend, lambda key: _first_label(backend, key))
+            items = [Item(lambda: X.text("NXM-L30"), enter=lambda: L.lineup_picker(speech, keys, backend, team_name(team)))] + items
+            items += [Item(lambda: X.text("NXM-K01"), enter=keys_menu), Item(lambda: X.text("NXM-D09"), enter=reset)]
+            order = [None] + order + [None, None]
+            SpokenMenu(speech, keys, title, items, space_enters=True, digits_jump=True, on_key=lambda c, i: _describe(c, order[i])).run()
+            return None
+        items = [Item(lambda g=g: first_label(g), enter=lambda g=g: open_group(g)) for g, _p in DC.GROUPS]     # older rosters with the original's groups
         items += [Item(lambda: X.text("NXM-K01"), enter=keys_menu), Item(lambda: X.text("NXM-D09"), enter=reset)]
         SpokenMenu(speech, keys, X.text("NXM-D03", team=team_name(team)), items, space_enters=True, digits_jump=True).run()
         return None
@@ -160,33 +171,6 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
     league = store.league
     words = store.words
 
-    def members(group: str) -> list:
-        return FD.chart_of(league, FRANCHISE_GROUP[group])                             # D-149: the places, then the bench
-
-    def first_label(group: str) -> str:
-        found = members(group)
-        return X.text("NXM-D04", group=group_word(group), player=found[0].name) if found else X.text("NXM-D43", group=group_word(group))
-
-    def open_group(group: str):
-        if game.play_engine is not None:
-            return X.text("NXI-54")                                # the game has begun: the lineup is the game's
-        found = members(group)
-        if not found:
-            return X.text("NXM-D14")
-        lines = [X.text("NXM-D07", player=p.name, position=words.position_of(p), r=p.rating, a=p.age) for p in found]
-        chosen = ListPicker(speech, keys, X.text("NXM-D05", group=group_word(group), team=words.team_name(league.team)), len(lines),
-                            lambda i: lines[i]).run()
-        if chosen is None:
-            return None
-        pick = found[chosen]
-        placed = [p for p in found if p.place >= 0]
-        FD.put_first(league, FRANCHISE_GROUP[group], pick.id)
-        benched = [p for p in placed if p.place < 0]                                    # D-149, SR.5: the man pushed out of the places
-        debuglog.event("franchise", "depth_set", group=group, first=pick.id, benched=[p.id for p in benched])            # rule 0.15
-        store.save()                                                                    # written, then told (B-X53)
-        told = X.text("NXM-D08", player=pick.name, group=group_word(group))
-        return told + "".join(X.text("NXL-55", player=p.name) for p in benched)
-
     def keys_menu():
         def label(situation: str, role: str) -> str:
             pid = (league.depth or {}).get("key", {}).get(situation, {}).get(role)
@@ -197,7 +181,7 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         def choose(situation: str, role: str):
             group = "RB" if role == "back" else "WR"
             found = FD.group_of(league, group)
-            lines = [X.text("NXM-K04")] + [X.text("NXM-D07", player=p.name, position=words.position(p.pos), r=p.rating, a=p.age) for p in found]
+            lines = [X.text("NXM-K04")] + [X.text("NXM-D07", player=p.name, position=words.position_for(p), r=p.rating, a=p.age) for p in found]
             chosen = ListPicker(speech, keys, label(situation, role), len(lines), lambda i: lines[i]).run()
             if chosen is None:
                 return None
@@ -218,7 +202,23 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         store.save()
         return X.text("NXM-D12")
 
-    groups = [g for g, _p in DC.GROUPS if g in FRANCHISE_GROUP]
-    items = [Item(lambda g=g: first_label(g), enter=lambda g=g: open_group(g)) for g in groups]
+    from .franchise.practice_flow import promote_player
+    backend = L.FranchiseBackend(game, store, promote=lambda man: promote_player(game, speech, keys, store, words, league.players[man.key]))
+    told = " ".join(t.strip() for t in backend.notices())                 # SR.6: a starter he chose who left the team
+    title = X.text("NXM-D03", team=words.team_name(league.team)) + (" " + told + " " if told else "")
+    items, order = L.position_items(speech, keys, backend, lambda key: _first_label(backend, key))
+    items = [Item(lambda: X.text("NXM-L30"), enter=lambda: L.lineup_picker(speech, keys, backend, words.team_name(league.team)))] + items
     items += [Item(lambda: X.text("NXM-K01"), enter=keys_menu), Item(lambda: X.text("NXM-D10"), enter=reset)]
-    SpokenMenu(speech, keys, X.text("NXM-D03", team=words.team_name(league.team)), items, space_enters=True, digits_jump=True).run()
+    order = [None] + order + [None, None]
+    SpokenMenu(speech, keys, title, items, space_enters=True, digits_jump=True, on_key=lambda c, i: _describe(c, order[i])).run()
+
+
+def _first_label(backend, key: str) -> str:
+    """A position in the depth chart menu: its name and its first man ("left tackle, Theo Benedet first"), or nobody."""
+    found = backend.starters(key)
+    return X.text("NXM-D04", group=L.word(key), player=found[0].name) if found else X.text("NXM-D43", group=L.word(key))
+
+
+def _describe(char: str, key) -> str | None:
+    """Rule 0.25: D says the plain description of the position the menu is on."""
+    return L.describe(key) if char == "d" and key else None

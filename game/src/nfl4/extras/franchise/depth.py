@@ -84,8 +84,14 @@ def set_key(league, situation: str, role: str, pid: int | None) -> None:
 
 def check(league, whole) -> None:
     depth = league.depth
-    if not isinstance(depth, dict) or set(depth) != {"order", "key"} or not isinstance(depth["order"], dict) or not isinstance(depth["key"], dict):
+    if not isinstance(depth, dict) or set(depth) not in ({"order", "key"}, {"order", "key", "dropped"}) or not isinstance(depth["order"], dict)             or not isinstance(depth["key"], dict):
         raise LeagueError("the depth chart is %r" % (type(depth).__name__,))
+    dropped = depth.get("dropped", [])                       # SR.6: the starters the player chose who left the team, told once ([id, position, slot])
+    if not isinstance(dropped, list) or len(dropped) > 200:
+        raise LeagueError("the dropped starters are %r" % (type(dropped).__name__,))
+    for row in dropped:
+        if not isinstance(row, list) or len(row) != 3 or row[1] not in KEYS or not isinstance(row[0], int) or isinstance(row[0], bool)                 or not isinstance(row[2], int) or isinstance(row[2], bool) or not 0 <= row[2] <= 5:
+            raise LeagueError("a dropped starter is %r" % (row,))
     for position, order in depth["order"].items():
         if position not in KEYS or not isinstance(order, list) or len(order) > 120:
             raise LeagueError("a depth chart position is %r" % (position,))

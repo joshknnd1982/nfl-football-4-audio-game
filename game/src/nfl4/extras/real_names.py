@@ -114,6 +114,9 @@ class RealNames:
     reserves: tuple = ()                # layout 2: 32 tuples of RealPlayer on a reserve list (injured reserve and the like), never in a game
     roles: tuple = ()                   # layout 2 (SR.4): 32 dicts {"KR": [names], "PR": [names]}, the return roles in order (the player's choice laid over)
     surnames: tuple = ()                # NX-L12: ((ID, last name), ...) of nfl_surnames.txt in the order of the IDs
+    # SR.6 (NX-L9, design 21.10): the VERSION line of rosters.txt ("season 2026, as of 2026-10-25"). `version` above is coaches.txt's line, which the
+    # leagues of SR.4 and SR.5 took as their roster_version; the offer of newer rosters compares leagues with this one (franchise/roster_update.py)
+    roster_version: str = ""
 
     def surname_pool(self) -> list:
         """NX-L12: the last names of real NFL players the made-up players take ([] when the file gives none)."""
@@ -370,6 +373,7 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
                 coaches[number - 1] = entry.value
 
     rosters = list(base_rosters)
+    roster_version = defaults.roster_version if defaults else ""
     reserves = list(defaults.reserves) if defaults and defaults.reserves else [()] * TEAMS
     team_roles = list(defaults.roles) if defaults and defaults.roles else [{} for _ in range(TEAMS)]
     lines: dict[int, list] = {}
@@ -377,6 +381,7 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
     bad = problems[ROSTERS]
     for entry in roster_entries:
         if entry.id == "VERSION":
+            roster_version = entry.value or roster_version          # SR.6: the rosters' own date (NX-L9)
             continue
         role = _ROLE_ID.fullmatch(entry.id)
         if role is not None and 1 <= int(role.group(1)) <= TEAMS:
@@ -481,7 +486,7 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
         surnames[ident] = (ident, name)
     return RealNames(version, tuple(coaches), tuple(rosters), tuple(sorted(respell.values())),
                      tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))), tuple(reserves), tuple(team_roles),
-                     tuple(sorted(surnames.values(), key=lambda row: int(row[0][1:]))))
+                     tuple(sorted(surnames.values(), key=lambda row: int(row[0][1:]))), roster_version)
 
 
 def _team_lines(players: list, roles: "dict | None"):

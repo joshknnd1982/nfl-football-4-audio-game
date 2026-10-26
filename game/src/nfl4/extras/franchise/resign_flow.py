@@ -45,7 +45,7 @@ def stage_contracts(p, n: int, m: int, short: bool) -> None:
     if not short:
         for pid in state["stars"]:
             star = league.players[pid]
-            intro.append(X.text("NXW-40", player=star.name, team=words.team_name(star.team), position=words.position(star.pos), r=star.rating))
+            intro.append(X.text("NXW-40", player=star.name, team=words.team_name(star.team), position=words.position_for(star), r=star.rating))
     if staff:
         own = X.text("NXW-30", n=state["signed"], m=state["let_go"]) if state["signed"] or state["let_go"] else X.text("NXW-02")
     elif state["pending"]:
@@ -94,7 +94,7 @@ def _talk(g, words, store, league, state: dict, player, preface: list) -> None:
     from . import tags
     open_price = tags.nonexclusive_salary(league, player)
     lines = list(preface)
-    lines.append(X.text("NXW-03", player=player.name, position=words.position(player.pos), a=player.age, r=player.rating,
+    lines.append(X.text("NXW-03", player=player.name, position=words.position_for(player), a=player.age, r=player.rating,
                         potential=words.potential(player.potential), mood=words.mood(how), contract=words.contract_of(talk.ask, talk.years)))
     trait = X.text("NXU-P01", trait=X.text(people.TRAIT_TEXT[people.personality(player.id)]))     # SX.8n: what he cares about most (after the room)
     while True:

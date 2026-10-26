@@ -100,7 +100,7 @@ def test_the_staffs_list_for_a_team_over_the_cap_names_the_cap_and_the_players_l
     at = text.index(" stage 8 of 9. the roster cut. ")
     over = CT.cap_over(start, TEAM, waiting, cut)
     assert over > 0
-    expected = [X.text("NXE-50")] + [X.text("NXE-51", player=p.name, position=words.position(p.pos), a=p.age, r=p.rating) for p in cut]
+    expected = [X.text("NXE-50")] + [X.text("NXE-51", player=p.name, position=words.position_for(p), a=p.age, r=p.rating) for p in cut]  # SR.6: a man is said by his own position
     expected += [X.text("NXE-59", over=words.amount(over))] + [words.released_for_the_cap(p) for p in staff[len(cut):]]
     assert text[at + 1:at + 1 + len(expected)] == expected
     assert text[at + 1 + len(expected)] == " 1. release them "
@@ -115,7 +115,7 @@ def test_a_released_player_of_the_cap_list_is_told_with_what_he_costs():
     player.salary, player.years = 124, 3
     words = history.Words(lambda t: "")
     line = words.released_for_the_cap(player)
-    assert line == " %s, %s, age %d, rating %d, 12.4 million for 3 years. " % (player.name, words.position(player.pos), player.age, player.rating)
+    assert line == " %s, %s, age %d, rating %d, 12.4 million for 3 years. " % (player.name, words.position_for(player), player.age, player.rating)  # SR.6: a man is said by his own position
     player.salary, player.years = 9, 1
     assert words.contract(player) == "0.9 million for one year" and words.amount(1932) == "193.2 million"
     assert words.amount(120) == "12 million"
@@ -275,4 +275,4 @@ def test_the_menu_of_the_franchise_lists_the_salary_cap_after_the_team_ratings(t
     monkeypatch.setattr(spoken_menu.SpokenMenu, "__init__", spy)
     offseason_rig(tmp_path, cut_league(), keys=[F9, DOWN, DOWN, DOWN, DOWN, ENTER, ESC, ESC, ESC], until=lambda r: any(t == "Franchise" for t, _ in seen))
     franchise = [labels for title, labels in seen if title == "Franchise"][0]
-    assert franchise.index("salary cap") == franchise.index("team ratings") + 1 and franchise[-2:] == ["play classic seasons", "get the latest calendar"]      # D-141
+    assert franchise.index("salary cap") == franchise.index("team ratings") + 1 and franchise[-3:] == ["play classic seasons", "get the latest calendar", "get the latest rosters"]      # D-141

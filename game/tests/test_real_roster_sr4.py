@@ -153,7 +153,7 @@ def test_every_team_of_a_new_franchise_is_its_real_roster_man_for_man():
         "Caleb Williams", "Tyson Bagent", "Case Keenum"]
     assert league.player_at(BEARS, 33).name == "Caleb Williams" and bears["Miller Moss"].status == "practice"
     assert bears["Colston Loveland"].position == "TE" and bears["Colston Loveland"].pos == "WR"     # the bridge: his group is the receivers'
-    assert league.roster_version == real.version
+    assert league.roster_version == real.roster_version      # SR.6: the rosters.txt VERSION (it was coaches.txt's until SR.5)
 
 
 def test_a_new_franchise_makes_the_same_draws_with_or_without_the_real_rosters():

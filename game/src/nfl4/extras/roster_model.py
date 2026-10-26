@@ -55,7 +55,7 @@ PLACE_COUNT = 34
 SECTIONS = (BACKS, RECEIVERS, range(12, 29), RETURNERS)
 # the nearest families a short defense section borrows from, in order (design 21.4 (4))
 COVER_FROM = {"backers": (("LEDG", "REDG"), ("DT",)), "corners": (("FS", "SS"),), "safeties": (("CB",),), "defensive line": (("SAM", "MIKE", "WILL"),)}
-RETURN_NEVER = frozenset(("QB", "K", "P", "LS"))                # never a returner, whatever the roles say
+RETURN_NEVER = frozenset(("QB", "K", "P", "LS", "LT", "LG", "C", "RG", "RT"))     # never a returner, whatever the roles say (SR.6: nor a lineman)
 RETURN_FALLBACK =(("HB", "FB"), ("WR", "TE"), ("CB",))           # who returns when the roles name fewer than two fit men (today's rule)
 
 

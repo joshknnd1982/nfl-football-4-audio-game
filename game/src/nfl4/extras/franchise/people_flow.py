@@ -49,7 +49,7 @@ def holdouts(p, header: str) -> tuple:
             continue
         salary, years = P.new_contract(player)
         fits = P.can_pay(league, league.team, player, salary)
-        situation = ([] if asked else [header]) + lines + [X.text("NXU-H01", player=player.name, position=words.position(player.pos), r=player.rating,
+        situation = ([] if asked else [header]) + lines + [X.text("NXU-H01", player=player.name, position=words.position_for(player), r=player.rating,
                                                                    contract=words.contract(player), ask=words.contract_of(salary, years))]
         if not fits:
             situation.append(X.text("NXU-H02"))
@@ -90,7 +90,7 @@ def demand_choices(league, item: dict) -> list:
 def demand_view(words, league, item: dict) -> tuple:
     pid = item["demand"][0]
     player = league.players[pid]
-    situation = [X.text("NXU-D01", player=player.name, position=words.position(player.pos), n=len(item["demand"][1]))]
+    situation = [X.text("NXU-D01", player=player.name, position=words.position_for(player), n=len(item["demand"][1]))]
     answers = []
     from . import trade_flow
     for choice in demand_choices(league, item):

@@ -188,7 +188,7 @@ def item_view(g, league, item: dict, later: bool = True) -> tuple:
     words = g.franchise().words
     if item["kind"] == D.TODO_EXTRA_WORK:
         situation = [X.text("NXD-10")]
-        answers = [X.text("NXD-A02", player=pl.name, position=words.position(pl.pos), r=pl.rating, potential=words.potential(pl.potential))
+        answers = [X.text("NXD-A02", player=pl.name, position=words.position_for(pl), r=pl.rating, potential=words.potential(pl.potential))
                    for pl in todo.valid_players(league, item)]
         answers.append(X.text("NXD-A03"))
     elif item["kind"] == D.TODO_TRADE:                       # SX.8j: an offer of a computer team, accept (the staff's recommendation) or decline

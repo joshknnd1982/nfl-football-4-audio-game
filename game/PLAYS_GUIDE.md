@@ -511,6 +511,35 @@ How your defense plays against a punt or a field goal.
 - **Field Goal Block**: The defense tries to block the field goal. A block saves points; a penalty for hitting the kicker is the risk.
 - **Field Goal Safe**: The defense stays back so there is no risk of a penalty, but lets the kick go. Safe against a fake.
 
+## The positions
+
+In F9, Rules, Depth charts (and in the starting lineup), press D on a position to hear what it does. These are the 22 positions of a real team and the two returners.
+
+- **Quarterback**: The quarterback takes the snap, then hands the ball off, throws it or runs with it. He runs the whole offense.
+- **Halfback**: The halfback lines up behind the quarterback, takes handoffs and runs with the ball, and also catches short passes.
+- **Fullback**: The fullback is a big back who mostly blocks for the player carrying the ball, and sometimes carries it a short way himself.
+- **Wide receiver**: A wide receiver lines up near the sideline, runs a planned path down the field and catches passes from the quarterback.
+- **Tight end**: The tight end lines up beside the offensive line. He blocks like a lineman on some plays and catches passes on others.
+- **Left tackle**: The left tackle is the lineman at the left end of the offensive line. He protects the quarterback from rushers on that side.
+- **Left guard**: The left guard blocks left of the center. He opens running lanes and stops rushers coming up the middle.
+- **Center**: The center is the middle lineman. He snaps the ball to the quarterback at the start of the play, then blocks.
+- **Right guard**: The right guard blocks right of the center. He opens running lanes and stops rushers coming up the middle.
+- **Right tackle**: The right tackle is the lineman at the right end of the offensive line. He protects the quarterback from rushers on that side.
+- **Left edge**: The left edge is a defensive end or an outside linebacker on the left side of the defense. He rushes the passer and stops runs to that side.
+- **Right edge**: The right edge is a defensive end or an outside linebacker on the right side of the defense. He rushes the passer and stops runs to that side.
+- **Defensive tackle**: A defensive tackle lines up in the middle of the defensive line. He stops runs up the middle and pushes in on the quarterback.
+- **Strong-side linebacker**: The strong-side linebacker lines up behind the line, on the side of the tight end. He stops runs and covers receivers.
+- **Middle linebacker**: The middle linebacker is the leader of the defense. He stops runs up the middle, covers short passes and helps call the defense.
+- **Weak-side linebacker**: The weak-side linebacker lines up on the side away from the tight end. He is quick, chases runners and covers backs.
+- **Cornerback**: A cornerback covers a wide receiver man to man. He tries to knock down or catch the pass and tackles after short catches.
+- **Free safety**: The free safety plays deep behind the defense and watches the quarterback. He is the last defender who can stop a long pass.
+- **Strong safety**: The strong safety plays closer to the line. He helps stop runs, covers tight ends and backs, and sometimes rushes the quarterback.
+- **Kicker**: The kicker kicks off to start each half and after scores, and kicks the field goals and the extra points.
+- **Punter**: The punter kicks the ball away, usually on fourth down, so the other team has to start far from your goal.
+- **Long snapper**: The long snapper snaps the ball a long way back to the punter or the holder on kicks. Nobody notices him unless he makes a mistake.
+- **Kick returner**: The kick returner catches kickoffs and runs them back toward the other end of the field.
+- **Punt returner**: The punt returner catches punts and runs them back, or signals a fair catch to stay safe.
+
 ## Settings
 
 - **Formation**: Chooses how the quarterback and running backs line up before the snap.

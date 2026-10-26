@@ -10,6 +10,7 @@ from drrig import SURNAMES, legacy_data
 from frrig import COACH_AND_TEAM, DOWN, ENTER, ESC, F9, WANT_FRANCHISE, franchise_rig, quit_policy, run_until, spoken
 
 from nfl4.extras import nx_texts as X
+from nfl4.extras import roster_file as RF
 from nfl4.extras import tuning as T
 from nfl4.extras.franchise import data as D
 from nfl4.extras.franchise import history
@@ -115,7 +116,7 @@ def test_the_item_answers_the_staffs_choice_keeps_none_another_keeps_him():
     item = F.lineup_item(league, 3, hurt.id)
     league.todo.append(item)
     situation, answers = F.lineup_view(WORDS, league, item)
-    assert situation == [X.text("NXI-60", player=hurt.name, position=WORDS.position("DL"))]
+    assert situation == [X.text("NXI-60", player=hurt.name, position=RF.SPOKEN[hurt.position])]  # SR.6: own position word
     assert answers[0].endswith("the staff's choice") and len(answers) == todo.answer_count(league, item) == 5
     assert todo.is_do_nothing(league, item, 0) and not todo.is_do_nothing(league, item, 2)
     chosen = todo.apply_answer(league, item, 2)
@@ -191,7 +192,7 @@ def test_the_week_asks_who_starts_and_the_second_answer_starts_him_in_the_game(t
     league = rig.fstore.league
     hurt = own_dl(rig)
     text = spoken(rig)
-    asked = [t for t in text if X.text("NXI-60", player=hurt.name, position=WORDS.position("DL")).strip() in t]
+    asked = [t for t in text if X.text("NXI-60", player=hurt.name, position=RF.SPOKEN[hurt.position]).strip() in t]  # SR.6: own position word
     assert asked, "the to-do list asks who starts"
     (row,) = league.injuries["chosen"] or [[None, None]]
     chosen = league.players[row[1]]
@@ -224,7 +225,7 @@ def test_with_the_staff_setting_on_nothing_is_asked(tmp_path, monkeypatch):
         rig.game.options.settings.game.nx_fr_auto = True
     rig = run(tmp_path, GAME, setup=staff_on)
     hurt = own_dl(rig)
-    assert not any(X.text("NXI-60", player=hurt.name, position=WORDS.position("DL")).strip() in t for t in spoken(rig))
+    assert not any(X.text("NXI-60", player=hurt.name, position=RF.SPOKEN[hurt.position]).strip() in t for t in spoken(rig))  # SR.6: own position word
     assert rig.fstore.league.injuries["chosen"] == []
 
 

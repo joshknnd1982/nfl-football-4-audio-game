@@ -13,6 +13,7 @@ from typing import Callable
 
 from ...game.standings import half_wins, ties_words
 from .. import nx_texts as X
+from .. import roster_file as RF
 from .. import tuning as T
 from . import contracts
 from . import data as D
@@ -185,8 +186,47 @@ def retired_stars(league: LeagueRecord) -> list:
 class Words:
     """Names and texts for the speech and history.txt: `team_name(t)` the nickname of team 1 to 32 (the player's teams.txt)."""
 
-    def __init__(self, team_name: Callable[[int], str]):
+    def __init__(self, team_name: Callable[[int], str], league_of: Callable[[], object] | None = None):
         self.team_name = team_name
+        self.league_of = league_of              # SR.6: the league, to tell two men of one name apart (`named`)
+
+    def forget_names(self) -> None:
+        """A player was renamed (SX.8m): the table of shared names is made again at the next call."""
+        self._twin_table = None
+
+    def _twins(self, league) -> dict:
+        """{casefolded name: [the men who have it]} for the names more than one man of the league has (made once; again when a man joins the league)."""
+        stamp = (id(league), len(league.players), league.next_id)
+        table = getattr(self, "_twin_table", None)
+        if table is None or table[0] != stamp:
+            found: dict = {}
+            for p in league.players.values():
+                found.setdefault(p.name.casefold(), []).append(p)
+            table = (stamp, {key: men for key, men in found.items() if len(men) > 1})
+            self._twin_table = table
+        return table[1]
+
+    def named(self, player) -> str:
+        """Design 21.8: a man's name in a list that can hold men of more than one team. A name that another man of the league also has is said with his
+        position and team ("Justin Jefferson, strong-side linebacker, Browns"); two of one name on one team by their numbers ("DeVonta Smith, number 6").
+        The play-by-play says the name only; the league never renames a real man."""
+        league = self.league_of() if self.league_of is not None else None
+        name = player.name
+        if league is None:
+            return name
+        key = name.casefold()
+        twins = self._twins(league).get(key)
+        if not twins:
+            return name
+        same = [p for p in twins if p.id != player.id and p.status in ("active", "practice", "list", "free")]
+        if not same:
+            return name
+        on_team = player.status in ("active", "practice", "list") and 1 <= player.team <= D.TEAMS
+        if on_team and any(p.team == player.team and p.status in ("active", "practice", "list") for p in same):
+            return X.text("NXM-L82", player=name, number=player.number).strip()
+        if on_team:
+            return X.text("NXM-L81", player=name, position=self.position_for(player), team=self.team_name(player.team)).strip()
+        return X.text("NXM-L83", player=name, position=self.position_for(player)).strip()
 
     def finish(self, code: int) -> str:
         return X.text(D.FINISH_TEXT[code])
@@ -194,10 +234,15 @@ class Words:
     def position(self, position: str) -> str:
         return X.text(D.POSITION_TEXT[position])
 
+    def position_for(self, player) -> str:
+        """SR.6 (design 21.8): the man's own position in words (a left edge, a strong safety, a halfback), everywhere a man is named; a man without a real
+        position (a prospect of the draft's class) is said by his group's word."""
+        spoken = RF.SPOKEN.get(getattr(player, "position", "") or "")
+        return spoken if spoken else self.position(player.pos)
+
     def position_of(self, player) -> str:
-        """His position word; D-149: "<position> on the bench" (NXL-52) for a man of a team's bench."""
-        word = self.position(player.pos)
-        return X.text("NXL-52", position=word) if getattr(player, "status", "") == "active" and getattr(player, "place", 0) < 0 else word
+        """His position word (SR.6: "on the bench" of D-149 is gone, a man without a place is an active man)."""
+        return self.position_for(player)
 
     def group(self, position: str) -> str:
         return X.text(D.GROUP_TEXT[position])
@@ -210,7 +255,7 @@ class Words:
 
     def player(self, player) -> str:
         """NXL-31: a player in a list (SX.8b: the rating and the potential are spoken)."""
-        return X.text("NXL-31", player=player.name, position=self.position_of(player), r=player.rating, a=player.age,
+        return X.text("NXL-31", player=self.named(player), position=self.position_of(player), r=player.rating, a=player.age,
                       potential=self.potential(player.potential))
 
     def amount(self, units: int) -> str:
@@ -234,7 +279,7 @@ class Words:
         """NXJ-04: a free agent in the market with what he asks and how many other teams are interested (NXJ-A01 to NXJ-A03); NXJ-A04 adds the player's
         own offer when there is one (SX.8i)."""
         interest = X.text("NXJ-A01") if others == 0 else X.text("NXJ-A02") if others == 1 else X.text("NXJ-A03", k=others)
-        line = X.text("NXJ-04", player=player.name, position=self.position(player.pos), a=player.age, r=player.rating,
+        line = X.text("NXJ-04", player=self.named(player), position=self.position(player.pos), a=player.age, r=player.rating,
                       potential=self.potential(player.potential), contract=self.contract_of(salary, years), interest=interest)
         if offer is not None:
             line += X.text("NXJ-A04", contract=self.contract_of(offer, years))
@@ -344,7 +389,7 @@ def record_lines(league: LeagueRecord, words: Words) -> list:
 
 
 def retired_lines(league: LeagueRecord, words: Words) -> list:
-    return [X.text("NXG-17", player=p.name, position=words.position(p.pos), team=words.team_name(p.team), n=p.seasons,
+    return [X.text("NXG-17", player=p.name, position=words.position_for(p), team=words.team_name(p.team), n=p.seasons,
                    r=p.peak, s=p.left) for p in retired_stars(league)]
 
 
@@ -389,7 +434,7 @@ def history_text(league: LeagueRecord, words: Words) -> str:
         out += ["", "Retired stars"]
         for p in stars:
             out.append("%s, %s, %s, %d seasons, best rating %d, retired after season %d." %
-                       (p.name, words.position(p.pos), words.team_name(p.team), p.seasons, p.peak, p.left))
+                       (p.name, words.position_for(p), words.team_name(p.team), p.seasons, p.peak, p.left))
     from . import honors_flow
     out += honors_flow.text_lines(league, words)          # SX.8o: the awards and the hall of fame
     return "\n".join(out) + "\n"

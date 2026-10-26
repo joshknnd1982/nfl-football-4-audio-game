@@ -1,281 +1,327 @@
-- BN84 (remark, say): " The tricky thing about radio is that I paint the whole picture with words, and my paint box is mostly adjectives and enthusiasm. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN85 (remark, say): " Describing a football game on the radio is like telling a joke through a keyhole. You do your best and hope the punchline gets through. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN86 (remark, say): " If I ever go quiet for a second, it is not because I ran out of words. It is because I am hunting for a better one. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN87 (remark, say): " Up here in the booth my headset is a little tight and my coffee is a little cold, and I would not trade it for any seat in the house. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN88 (remark, say): " A broadcaster's best friends are a sharp pencil, a steady voice and a stat sheet that somebody remembered to print. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN89 (remark, say): " What is in a broadcast booth? Mostly headsets, wires, snacks and one enormous pile of paper that nobody can ever find anything in. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN90 (remark, say): " Coffee is the quiet hero of every broadcast crew. It never complains, never talks back and never asks for a raise. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN91 (remark, say): " A big thank you to our engineers, who keep every sound sharp and every cable out of <commentator>'s reach. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN92 (remark, say): " To every listener tuned in, whether you are in a kitchen, a car or a garden chair: thank you for letting us keep you company. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN93 (remark, say): " Somewhere behind a wall of switches sits an engineer who makes us sound good. We say thank you far too rarely, so, thank you. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN94 (remark, say): " Whether you listen by choice or because your cousin insisted, we are glad to have you along. We do all of this for you. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN95 (remark, say): " If it is a cold one out there, spare a thought for the folks in the upper rows, who have mostly turned into scarves with eyes. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN96 (remark, say): " Ball security is the quiet hero of every game. Hang on to the ball and the rest of the game tends to take care of itself. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN97 (remark, say): " Two hands on the ball, folks. That is the oldest advice in football, and it never gets old. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN98 (remark, say): " A good tackler wraps up and drives through. Arm tackles are just wishful thinking with a helmet on. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN99 (remark, say): " The battle in the trenches never makes the highlight reel, but it decides more games than almost anything else. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN100 (remark, say): " Great blocking looks like nothing at all. When the runner has room to move, somebody up front did the hard work. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN101 (remark, say): " Special teams are the third phase of the game, and a well placed punt can be worth as much as a long pass. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN102 (remark, say): " The kicking game is all nerve and routine. Snap, hold, kick, and let the rest of the world fade away. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN103 (remark, say): " Field position is a quiet kind of scoreboard, and every single yard of it is worth something to somebody. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN104 (remark, say): " The clock is the one player on the field that never gets tired and never takes a side. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN105 (remark, say): " Patience wins more football games than panic ever has. Take what the defense gives you. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN106 (remark, say): " Discipline is not glamorous, but staying in your lane and doing your job keeps a whole team standing. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN107 (remark, say): " Hustle is free, folks! You do not need a big contract or a fast time to chase a play down the field. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN108 (remark, say): " Football is the ultimate team game. Eleven players, one job, and nobody scores alone. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN109 (remark, say): " Preparation happens in the week, so that the surprises on game day turn out to be small ones. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN110 (remark, say): " A good quarterback keeps a cool head when the pocket gets warm, and the cool head matters more than the arm. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN111 (remark, say): " A good receiver catches the ball in traffic and only then thinks about running. Hands first, feet second. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN112 (remark, say): " A good runner needs vision, patience, and a little nerve. Find the hole, then hit it hard. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN113 (remark, say): " An offensive lineman does a lot of work for very little applause. Hats off to every one of them. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN114 (remark, say): " A defender has to forget the last play right away. Short memory, long reach, that is the recipe. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN115 (remark, say): " Football teaches you to get back up. Every player in a uniform has been knocked down and stood up again. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN116 (remark, say): " Good sportsmanship is simple: play hard, shake hands, and respect the people who just tried to knock you down. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN117 (remark, say): " A good rival makes you better, and the best ones know it. Respect the other side and the game improves for everybody. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN118 (remark, say): " There is nothing like a close game, where every snap matters and nobody in the building dares to sit back! ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN119 (remark, say): " A long, patient drive is a thing of beauty: ten or twelve plays, each one a small decision made well. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN120 (remark, say): " The twelfth man is the crowd, and a loud one can make a visiting quarterback wish for earplugs. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN121 (remark, say): " To everyone in the stands, thank you for the noise. The players can hear you, even if they pretend they cannot. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN122 (remark, say): " Some fans have seen it all, and they will still jump out of their seats on the very next snap. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN123 (remark, say): " <commentator>, tell me honestly, is film study really as much fun as people say? ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN124 (remark, say): " <commentator> is sitting very quietly over there. Either thinking deeply, or hoping nobody asks a question. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN125 (remark, say): " Football teaches you that the work nobody sees is usually the work that matters most. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN126 (remark, say): " To everyone listening at home or out on the road, thanks for keeping us company on this broadcast. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN127 (remark, say): " If you are driving along right now, keep your eyes on the road and your ears right here with us. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN128 (remark, say): " Wherever you are listening from, pull up a chair. Is there a better seat in the house than the one next to your radio? ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN129 (remark, say): " Everybody is a head coach on fourth down when they are sitting in the comfort of their own living room. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN130 (remark, say): " Field position is the quiet partner of every good defense. Make them start long, and the rest gets easier. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN131 (remark, say): " Winning the clock is its own kind of winning. Keep the ball, keep the legs fresh, and keep the other side waiting. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN132 (remark, say): " A kicker lives a lonely life, and when the kick is true, he or she is the most popular player in town. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN133 (remark, say): " Tackling is a lost art only until the next good tackle, and then everyone remembers how beautiful it is! ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN134 (remark, say): " Is there a better sound in sports than a whole stadium holding its breath before the snap? ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN135 (remark, say): " They say football is a game of inches, but it is really a game of effort, repeated play after play. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN136 (remark, say): " Preparation, hustle, and a little luck. That is the formula, and two of those three are up to the players. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN137 (remark, say): " <commentator>, I will let you have the next word if you promise to keep the jokes about my voice to a minimum. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN138 (remark, say): " Teamwork shows up in small ways: a block here, a call there, a pat on the back after a tough series. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN139 (remark, say): " Every young quarterback learns that the best throw is sometimes the one you do not make. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN140 (remark, say): " A good coach teaches the game, and a great one teaches the people playing it. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN141 (remark, say): " Sometimes the most exciting moment in football is the quiet before the snap, when everything is still possible. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN142 (remark, say): " Whatever happens next, football has already done its job. It has got us all sitting up and listening! ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- ASK01 (remark, say): " <commentator>, what did you make of that one? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK02 (remark, say): " Over to you, <commentator>. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK03 (remark, say): " <commentator>, your thoughts on that play? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK04 (remark, say): " What stood out to you there, <commentator>? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK05 (remark, say): " <commentator>, break that one down for us. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK06 (remark, say): " <commentator>, may I have your analysis of that? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK07 (remark, say): " <commentator>, what was going on there? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK08 (remark, say): " Let us bring in <commentator> for a quick word. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK09 (remark, say): " Your take on that, <commentator>? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK10 (remark, say): " <commentator>, give us the color on that one. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK11 (remark, say): " Anything you would add to that, <commentator>? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK12 (remark, say): " <commentator>, tell the folks at home what you saw. ". pool ASK default: the announcer turns to Ghip before his line
-- CTC01 (remark, color): " Third down, and the <team> pick it up. Staying on the field is half the battle in this game. ". pool CTC default: Ghip, after a third down conversion
-- CTC02 (remark, color): " That is a big-time conversion. Every third down made leaves the <opponent> defense a little more tired. ". pool CTC default: Ghip, after a third down conversion
-- CTC03 (remark, color): " First down! A drive that was wobbling a second ago is standing tall again, and the <team> breathe easy. ". pool CTC default: Ghip, after a third down conversion
-- CTC04 (remark, color): " The <opponent> had them right where they wanted them, and the <team> found a way out anyway. ". pool CTC default: Ghip, after a third down conversion
-- CTC05 (remark, color): " Third down is where drives live or die. That one lives. ". pool CTC default: Ghip, after a third down conversion
-- CTC06 (remark, color): " Whatever the play was, it worked. The <team> get a fresh set of downs and a little more confidence. ". pool CTC default: Ghip, after a third down conversion
-- CTC07 (remark, color): " Nice patience there. You do not need a miracle on third down, just a smart play and a bit of nerve. ". pool CTC default: Ghip, after a third down conversion
-- CTC08 (remark, color): " Defenses hate this. They had it covered, and the <team> got the first down anyway. ". pool CTC default: Ghip, after a third down conversion
-- CTS01 (remark, color): " Stopped short on third down. The <opponent> defense earned that one, and the <team> have some thinking to do. ". pool CTS default: Ghip, after a third down stop
-- CTS02 (remark, color): " That is the drive-killer. Third down is where defenses make their money, and the <opponent> just got paid. ". pool CTS default: Ghip, after a third down stop
-- CTS03 (remark, color): " Nothing doing there. The <team> needed a little more and could not find it. ". pool CTS default: Ghip, after a third down stop
-- CTS04 (remark, color): " The <opponent> were ready for that one, and the drive stalls. Credit to the guys on defense. ". pool CTS default: Ghip, after a third down stop
-- CTS05 (remark, color): " Credit the <opponent> defense. They read it, they closed it down, and the <team> come up short. ". pool CTS default: Ghip, after a third down stop
-- CTS06 (remark, color): " Third and not enough. Sometimes the best play in the world still runs into a good defender. ". pool CTS default: Ghip, after a third down stop
-- CTS07 (remark, color): " A drive that looked healthy has run out of gas. The <team> will want a cleaner answer next time. ". pool CTS default: Ghip, after a third down stop
-- CTS08 (remark, color): " Heavy sigh from the <team> bench. All that effort, and the <opponent> shut the door on the last play. ". pool CTS default: Ghip, after a third down stop
-- CFD01 (remark, color): " Going for it! The <team> are putting the whole drive on one play. Gutsy, and you can feel it from here. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD02 (remark, color): " No kick. The <team> want it badly enough to bet on themselves, and the <opponent> had better be ready. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD03 (remark, color): " Bold call. Fourth down is the point of no return, and the <team> have decided to roll the dice. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD04 (remark, color): " Some coaches wait for a miracle, others go find one. Here come the <team>, heading out to find it. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD05 (remark, color): " A stop here hands the <opponent> the ball and the momentum. A conversion, though, and the <team> look like geniuses. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD06 (remark, color): " Number crunchers love this call and old-school types hate it. We are about to see who is right. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD07 (remark, color): " Quiet in the stadium now. Fourth down, no kick, and the <team> are all in. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD08 (remark, color): " Heart rates just went up. Mine included, and I am only sitting up here with a headset on. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CBG01 (remark, color): " <yards> yards in one go. The <opponent> defense just got a free lesson in what happens when you blink. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG02 (remark, color): " That is a chunk. <yards> yards will make any coach grin and any defensive coordinator reach for the antacids. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG03 (remark, color): " Lots of daylight there, and the <opponent> will be rewatching that one with a very long face. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG04 (remark, color): " <quarterback> and the <team> offense will happily take <yards> yards, thank you very much. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG05 (remark, color): " That is how you flip the field. <yards> yards, and suddenly the <team> are a lot more comfortable. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG06 (remark, color): " Most times a play like that starts with one missed tackle. Tackling is the whole job, folks. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG07 (remark, color): " That was <yards> yards of pure confidence. The <team> believed it would work, and it did. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG08 (remark, color): " My knees hurt just watching that sprint. <yards> yards of open field is a long way when somebody is chasing you. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG09 (remark, color): " The <opponent> will want that one back. <yards> yards is a lot to give away before anyone has finished their popcorn. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG10 (remark, color): " Big play, and big plays are the great equalizer. One of those can undo a whole game of grinding. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBO01 (remark, color): " The suspense has left the building and taken the popcorn with it, because <situation>. ". pool CBO default: Ghip, in a game that is decided
-- CBO02 (remark, color): " At this stage the game is about pride and getting everybody home healthy. The <team> and the <opponent> both know it. ". pool CBO default: Ghip, in a game that is decided
-- CBO03 (remark, color): " Well, <situation>, so the scoreboard is doing the talking now, and we are just filling the gaps. ". pool CBO default: Ghip, in a game that is decided
-- CBO04 (remark, color): " Bright side: some young players are about to get snaps they would never get in a close game. ". pool CBO default: Ghip, in a game that is decided
-- CBO05 (remark, color): " A comeback from here would need a miracle and a very generous clock. ". pool CBO default: Ghip, in a game that is decided
-- CBO06 (remark, color): " Whether you are the <team> or the <opponent>, today is either a party or a lesson. You already know which. ". pool CBO default: Ghip, in a game that is decided
-- CBO07 (remark, color): " Advice for the side that is behind: keep your head up, learn something, and hide the film from your friends. ". pool CBO default: Ghip, in a game that is decided
-- CBO08 (remark, color): " Let me be honest, I am hoping for a trick play now, anything to keep the fans in their seats. ". pool CBO default: Ghip, in a game that is decided
-- CFG01 (remark, color): " Three points, and they count just as much as the other kind. The <team> take them gladly. ". pool CFG default: Ghip, after a field goal
-- CFG02 (remark, color): " Good kick. A field goal is not a touchdown, but the scoreboard does not ask how you got there. ". pool CFG default: Ghip, after a field goal
-- CFG03 (remark, color): " Right down the middle. Kickers get little love until the ball is in the air, and then everyone knows their name. ". pool CFG default: Ghip, after a field goal
-- CFG04 (remark, color): " Points are points. The <team> cash in, and now <situation>. ". pool CFG default: Ghip, after a field goal
-- CFG05 (remark, color): " Sometimes the drive stalls and the kicker bails you out. The <team> will take that trade all day long. ". pool CFG default: Ghip, after a field goal
-- CFG06 (remark, color): " Not a touchdown, but the <opponent> still have to answer, and <situation>. Every little bit adds up. ". pool CFG default: Ghip, after a field goal
-- CFG07 (remark, color): " Clean kick, and credit to the two guys who snap and hold the ball. Nobody ever thanks those two. ". pool CFG default: Ghip, after a field goal
-- CFG08 (remark, color): " I would have liked a touchdown, but the <team> will not complain about three. Well, <situation>, so that works. ". pool CFG default: Ghip, after a field goal
-- CFM01 (remark, color): " Ouch. Kickers get all the credit when it works and all the blame when it does not, and the <team> just felt the blame side. ". pool CFM default: Ghip, after a missed kick
-- CFM02 (remark, color): " Points left on the board. Games like this have a way of coming back to remind you about those. ". pool CFM default: Ghip, after a missed kick
-- CFM03 (remark, color): " The <opponent> will happily take that gift. Every miss is a little life for the other sideline. ". pool CFM default: Ghip, after a missed kick
-- CFM04 (remark, color): " A kick is snap, hold and swing, and all three have to be perfect. Something slipped there, and the <team> pay for it. ". pool CFM default: Ghip, after a missed kick
-- CFM05 (remark, color): " No miss feels good. The <team> kicking unit will want to forget that one, and fast. ". pool CFM default: Ghip, after a missed kick
-- CFM06 (remark, color): " You hate to see it. The <team> did the hard work to get there, and then the foot let them down. ". pool CFM default: Ghip, after a missed kick
-- CFM07 (remark, color): " Sometimes the ball just does not cooperate. Bad bounce, bad day at the office. Shake it off and move on. ". pool CFM default: Ghip, after a missed kick
-- CFM08 (remark, color): " That is a kicker wishing for a do-over. The <opponent> sideline is breathing a little easier now. ". pool CFM default: Ghip, after a missed kick
-- CFN01 (remark, color): " And that is the game: <situation>, and nobody can say the <team> did not earn it. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN02 (remark, color): " Credit to the <team> for finishing the job. The <opponent> fought, but the better team on the day gets the win. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN03 (remark, color): " Well, <situation>, and that tells you plenty about who wanted it more today. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN04 (remark, color): " Final whistle, and the <team> can sleep well tonight. The <opponent> will be up late watching the replays, I bet. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN05 (remark, color): " Winning cures a lot of aches. The <team> will enjoy the ride home, and the <opponent> will have plenty to study. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN06 (remark, color): " A win is a win, and <situation>. Nobody asks how pretty it was when the scoreboard reads like that. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN07 (remark, color): " Tip of the headset to the <team> for a job well done. The <opponent> will be back, and they will remember. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN08 (remark, color): " That is how you finish a game. The <team> found a way, and the <opponent> must now forget it quickly. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFT01 (remark, color): " A tie, and <situation>. Nobody celebrates, nobody mourns, and my coffee went cold waiting for a winner. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT02 (remark, color): " Neither the <team> nor the <opponent> could find that last bit of magic. Both sides will wonder what might have been. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT03 (remark, color): " Like splitting the last pizza slice when you both wanted the pie. Honors even for the <team> and the <opponent>. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT04 (remark, color): " Well, <situation>. Nobody lost, nobody won, and somebody in the stands is explaining that to a friend. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT05 (remark, color): " Both the <team> and the <opponent> will say they did their best, and honestly, they will be right. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT06 (remark, color): " A tie is football's way of saying you both tried, now go home. Fair enough for the <team> and the <opponent>. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CHT01 (remark, color): " That is the half, and <situation>. The locker rooms are about to hear some very honest speeches. ". pool CHT default: Ghip, at half time
-- CHT02 (remark, color): " Halftime already. Both the <team> and the <opponent> have things to fix, and both have things worth keeping. ". pool CHT default: Ghip, at half time
-- CHT03 (remark, color): " Well, <situation>, and the second half is a whole new ball game, as they say. ". pool CHT default: Ghip, at half time
-- CHT04 (remark, color): " Halftime is where coaches turn mistakes into adjustments. The <opponent> will be rewriting a plan, and so will the <team>. ". pool CHT default: Ghip, at half time
-- CHT05 (remark, color): " Time for a snack, folks. The players get a rest, a drink and a very thorough talking-to from their coaches. ". pool CHT default: Ghip, at half time
-- CHT06 (remark, color): " Half the game is done, and <situation>. The other half is where reputations get made. ". pool CHT default: Ghip, at half time
-- CHT07 (remark, color): " I would love to be a fly in either locker room right now. The <team> and the <opponent> both have homework. ". pool CHT default: Ghip, at half time
-- CHT08 (remark, color): " The <team> and the <opponent> have both shown us something. Now we see who adjusts better when the second half begins. ". pool CHT default: Ghip, at half time
-- CKO01 (remark, color): " Here we go. The <team> have a plan, the <opponent> have a plan, and by halftime one of them will need revising. ". pool CKO default: Ghip, before the opening kick-off
-- CKO02 (remark, color): " Coach <coach>, the clipboard is yours now. Deep breath, trust the call sheet, and try to remember which way you are kicking. ". pool CKO default: Ghip, before the opening kick-off
-- CKO03 (remark, color): " <quarterback> has waited all week for this, and the nerves usually disappear right around the first snap. ". pool CKO default: Ghip, before the opening kick-off
-- CKO04 (remark, color): " Opening kick-off time. Nobody has fumbled, nobody has thrown an interception, and everybody still thinks they are winning. ". pool CKO default: Ghip, before the opening kick-off
-- CKO05 (remark, color): " Expect the <opponent> to hit early and hard. Best reply from the <team> is to hit back and smile about it. ". pool CKO default: Ghip, before the opening kick-off
-- CKO06 (remark, color): " Settle in, everybody. Good football is about to start, and the bad kind is never far behind. That is just the deal. ". pool CKO default: Ghip, before the opening kick-off
-- CKO07 (remark, color): " First thing to watch, Coach <coach>: who wins the battle for field position. Boring, yes, but it wins more games than fancy plays. ". pool CKO default: Ghip, before the opening kick-off
-- CKO08 (remark, color): " I like the <team> chances today, I like the <opponent> chances today, and I like hot coffee. Let us play. ". pool CKO default: Ghip, before the opening kick-off
-- CPN01 (remark, color): " Flag stays. The <team> just gave away ground without the other side doing a thing, and that is the cheapest way to lose it. ". pool CPN default: Ghip, after an accepted penalty
-- CPN02 (remark, color): " Nobody likes to see the flag fly. The <team> now have to climb out of that one. ". pool CPN default: Ghip, after an accepted penalty
-- CPN03 (remark, color): " Discipline, discipline, discipline. Penalties are the one thing a team can fully control, and that one was on the <team>. ". pool CPN default: Ghip, after an accepted penalty
-- CPN04 (remark, color): " The referee has spoken, and the <opponent> are not complaining. A flag like that can swing a whole drive. ". pool CPN default: Ghip, after an accepted penalty
-- CPN05 (remark, color): " Flags change drives. Depending on which side you are on, that one helps or hurts, and it hurts the <team>. ". pool CPN default: Ghip, after an accepted penalty
-- CPN06 (remark, color): " Self-inflicted. The <opponent> did not have to do a thing there, and the <team> are left shaking their heads. ". pool CPN default: Ghip, after an accepted penalty
-- CPN07 (remark, color): " Sloppy. A moment of overeagerness, and the <team> pay for it in yards. ". pool CPN default: Ghip, after an accepted penalty
-- CPN08 (remark, color): " Tough break, but every team gets flagged. The <team> need a short memory and a clean next play. ". pool CPN default: Ghip, after an accepted penalty
-- CQE01 (remark, color): " That wraps up the <quarter>, and <situation>. Plenty of football left, and both benches know it. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE02 (remark, color): " Ends switch now. The <quarter> is in the books, and honestly, anything can still happen in the next one. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE03 (remark, color): " Well, <situation>, but nobody hands out trophies after the <quarter>. Coaches will be busy now. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE04 (remark, color): " Quick breather for everybody. The <team> and the <opponent> both have notes to read and plans to tweak. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE05 (remark, color): " The <quarter> is done. Think of a road trip: now is the time to check the map and the fuel gauge. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE06 (remark, color): " Fresh legs, fresh ideas. Whoever uses this break to fix their mistakes, the <team> or the <opponent>, gets the edge. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE07 (remark, color): " Players grab water, coaches grab notes, and <situation> as we turn the page on the <quarter>. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE08 (remark, color): " Whatever you thought after the <quarter>, throw it away. The <opponent> and the <team> are both capable of changing the story. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CRZ01 (remark, color): " Red zone, the last twenty yards before the end zone. The <team> are close, and the <opponent> defense is getting crowded. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ02 (remark, color): " The <team> are close now. Space is tight down here, so every little detail matters, and the <opponent> know it. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ03 (remark, color): " Inside the twenty. Less room to run, less room to throw, and no room at all for mistakes. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ04 (remark, color): " Now it is a different game. The field is short, every yard is a fight, and the <opponent> defense knows it. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ05 (remark, color): " Time to turn position into points. This is where the <team> earn their paycheck, or settle for a field goal. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ06 (remark, color): " Close enough to taste it. Points are not guaranteed, but the <team> are knocking on the door. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ07 (remark, color): " The <opponent> have to tighten up now. Down here, one slip and it is a score. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ08 (remark, color): " Red zone trip for the <team>. Touchdowns win games, while field goals only keep you polite. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CSK01 (remark, color): " Ouch. <quarterback> had nowhere to go, and the <opponent> rush made sure of it. ". pool CSK default: Ghip, after a sack
-- CSK02 (remark, color): " Nobody enjoys that. A sack is the quarterback's version of a surprise bill in the mail. ". pool CSK default: Ghip, after a sack
-- CSK03 (remark, color): " The blockers lost that battle fast. When protection breaks, even a great quarterback is just a person in a hurry. ". pool CSK default: Ghip, after a sack
-- CSK04 (remark, color): " Credit the <opponent> for that one. They got there before <quarterback> could get rid of it. ". pool CSK default: Ghip, after a sack
-- CSK05 (remark, color): " That is a rough moment for the <team> blockers. Somebody has to hold on a half second longer. ". pool CSK default: Ghip, after a sack
-- CSK06 (remark, color): " <quarterback> will dust off, shake it off, and live to throw another day. That is the job description. ". pool CSK default: Ghip, after a sack
-- CSK07 (remark, color): " A sack is a quiet drive killer: no drama, just lost yards and a much harder next play. ". pool CSK default: Ghip, after a sack
-- CSK08 (remark, color): " Sometimes the best thing a quarterback can do is throw it away. Sometimes there is no time to do even that. ". pool CSK default: Ghip, after a sack
-- CSK09 (remark, color): " The <opponent> brought the pressure and it paid off. The <team> will want a quicker pass next time, I would bet. ". pool CSK default: Ghip, after a sack
-- CSK10 (remark, color): " Poor <quarterback> just got a close-up look at the grass. At least it is well kept. ". pool CSK default: Ghip, after a sack
-- CTD01 (remark, color): " Touchdown, <team>! So now <situation>, and the <opponent> sideline has gone awfully quiet. ". pool CTD default: Ghip, after a touchdown
-- CTD02 (remark, color): " Well, <situation>, and that tells you plenty about how this game is going. ". pool CTD default: Ghip, after a touchdown
-- CTD03 (remark, color): " That drive had patience, a little luck, and some tired legs on the other side. Nicely done by the <team>. ". pool CTD default: Ghip, after a touchdown
-- CTD04 (remark, color): " Six points, and <situation>. Now the <opponent> get to see whether they can hit back. ". pool CTD default: Ghip, after a touchdown
-- CTD05 (remark, color): " Beautiful. You could hear the whole stadium exhale. The <team> earned that one the hard way. ". pool CTD default: Ghip, after a touchdown
-- CTD06 (remark, color): " Remember, <situation>, but this game is not over until the clock says so. Nobody is safe, and nobody is done. ". pool CTD default: Ghip, after a touchdown
-- CTD07 (remark, color): " That is finishing a drive. Plenty of teams move the ball, but the <team> actually got it across the line. ". pool CTD default: Ghip, after a touchdown
-- CTD08 (remark, color): " I would celebrate, but my back retired from celebrating years ago. Great touchdown for the <team>, and <situation>. ". pool CTD default: Ghip, after a touchdown
-- CTD09 (remark, color): " The <opponent> will take a moment on the sideline, regroup, and start planning their answer. That is football, folks. ". pool CTD default: Ghip, after a touchdown
-- CTD10 (remark, color): " Six more on the board, and <situation>. Every possession matters a little more from here. ". pool CTD default: Ghip, after a touchdown
-- CTM01 (remark, color): " Two minutes left in the <quarter>, and the <team> have the ball. This is where clock management earns its paycheck. ". pool CTM default: Ghip, at the two-minute warning
-- CTM02 (remark, color): " Well, <situation>, and the two-minute warning means every second now counts double. ". pool CTM default: Ghip, at the two-minute warning
-- CTM03 (remark, color): " Funny thing, two minutes feels like ten when you are the <opponent> and just waiting to get the ball back. ". pool CTM default: Ghip, at the two-minute warning
-- CTM04 (remark, color): " Smart teams plan for this stretch all week, and now we find out if the <team> did their homework. ". pool CTM default: Ghip, at the two-minute warning
-- CTM05 (remark, color): " A timeout here, a first down there, and suddenly the <quarter> is over. Two minutes is no time at all. ". pool CTM default: Ghip, at the two-minute warning
-- CTM06 (remark, color): " This is the stretch where coaches earn their money, and I never miss a chance to enjoy it from up here. ". pool CTM default: Ghip, at the two-minute warning
-- CTM07 (remark, color): " With the clock this short, the <team> must be sharp, and the <opponent> only need to be stubborn. ". pool CTM default: Ghip, at the two-minute warning
-- CTM08 (remark, color): " Take a breath now, folks, because after this warning nobody on either bench gets to breathe again until the whistle. ". pool CTM default: Ghip, at the two-minute warning
-- CTT01 (remark, color): " Fourth quarter, and <situation>. Every snap now feels like it weighs a ton. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT02 (remark, color): " Nobody can relax when it is this close. The <team> and the <opponent> are one mistake from a very long night. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT03 (remark, color): " Well, <situation>, and my blood pressure is not what it used to be. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT04 (remark, color): " Tight game, tight nerves. This is when one bad bounce, one dropped pass or one penalty flag decides who celebrates. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT05 (remark, color): " The <team> and the <opponent> have been trading blows all day, and neither wants to blink first. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT06 (remark, color): " A game this close turns on small things, a yard here, a flag there. The <team> and the <opponent> know it. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT07 (remark, color): " I love a game like this one. My nerves, however, filed a complaint about twenty minutes ago. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT08 (remark, color): " One field goal swings this either way. Coaches love that in theory, and then they do not sleep for a week. ". pool CTT default: Ghip, in a close fourth quarter
-- CTV01 (remark, color): " That is a gift to the <opponent>. You cannot hand over the ball and expect a thank-you card. ". pool CTV default: Ghip, after a turnover
-- CTV02 (remark, color): " Turnovers swing games faster than anything else. The <team> will want a long talk with whoever coughed that up. ". pool CTV default: Ghip, after a turnover
-- CTV03 (remark, color): " Ball security, ball security, ball security. Every coach says it every day, and now and then the ball just does not listen. ". pool CTV default: Ghip, after a turnover
-- CTV04 (remark, color): " Credit to the <opponent> defense there. Somebody was ready, and somebody on the <team> was a half step slow. ". pool CTV default: Ghip, after a turnover
-- CTV05 (remark, color): " That one will sting for the <team>. Short memory is every player's best friend, but this one may hang around for a while. ". pool CTV default: Ghip, after a turnover
-- CTV06 (remark, color): " Momentum is a funny thing. A moment ago it lived on one sideline, and now the <opponent> are holding the keys. ". pool CTV default: Ghip, after a turnover
-- CTV07 (remark, color): " Short and ugly. The <team> had the ball, and then they did not. Football really does not get simpler than that. ". pool CTV default: Ghip, after a turnover
-- CTV08 (remark, color): " A turnover changes the whole mood of a game. The <team> need to take a breath and answer it quickly. ". pool CTV default: Ghip, after a turnover
-- CTV09 (remark, color): " Bad throw, bad bounce, or slippery hands, who knows. Either way, the <opponent> get a very welcome surprise. ". pool CTV default: Ghip, after a turnover
-- CTV10 (remark, color): " My old coach used to say the ball is the whole game. He would be saying it very loudly right about now. ". pool CTV default: Ghip, after a turnover
-- NXM-37 (menu, say5): "Broadcast". F9 Rules item 10: the radio broadcast (the announcer's banter and Ghip), followed by on or off (SY.1)
-- NXH-65 (help, say5): " The broadcast: with the N. F. L. rules and the comments on, the announcer chats like a radio broadcast, and a color commentator adds thoughts in a separate voice. ". F6 addition (SY.1, rule 0.27)
-- NXH-66 (help, say5): " F8 switches all the comments off. F9, Rules, Broadcast switches the commentator off. ". F6 addition (SY.1, rule 0.27)
-- NXB-B01 (sentence, say5): " <commentator>, the color commentator, is in the booth with me. F12 chooses the voice, and F9, Rules, Broadcast sends the commentator home. ". said once per program run before the opening kick-off, in the N. F. L. rules with the broadcast on (SY.1)
-- NXM-38 (menu, say5): "Stadium sounds". F9 Rules item 11: the crowd, the hits and the chain, followed by on or off (SY.2)
-- NXH-67 (help, say5): " The stadium sounds: the crowd cheers, groans and boos, hits sound, and the chain clanks at a first down. F9, Rules, Stadium sounds switches them off. ". F6 addition (SY.2)
-- NXH-68 (help, say5): " The referee announces the flags and the reviews over a microphone, in a separate voice. F12 and F11 ask for that voice and its volume, and F9, Rules, Broadcast switches the referee off. ". F6 addition (SY.3)
-- NXH-70 (help, say5): " The commentator is called Ghip until you choose another name in F9, Rules, Commentator. The list has well known sports podcasters, and you can type a name of your own. ". F6 addition (SZ.1)
-- NXH-71 (help, say5): " The stadium and referee sounds can be replaced with your own sound files: F9, Sounds, Stadium and referee sounds lists them with the file name each one takes. ". F6 addition (SZ.2)
-- NXH-81 (help, say5): " Your own music and celebrations: put music.wav, or celebration1.wav and up, in the sounds folder. The game plays no music or celebrations of its own. ". F6 addition (NX-M1, NX-M2)
-- NXM-39 (menu, say5): "Commentator". F9 Rules item 12: the color commentator's name, followed by the name (SZ.1, D-106)
-- NXM-40 (menu, say5): "Choose the commentator". the title of the list of names (SZ.1)
-- NXM-41 (help, say5): " Up and Down move through the names. Typing letters jumps to a name. Enter chooses it, and Escape goes back without a change. The last item lets you type a name of your own. ". F1 in the list of names (SZ.1)
-- NXM-42 (menu, say5): "Type a name of your own". the last item of the list of names (SZ.1)
-- NXM-43 (prompt, say5): " Type the commentator's name, then press Enter. ". the typed prompt of the commentator's own name (SZ.1)
-- NXM-44 (sentence, say5): " no name was typed. ". said after an empty typed name (SZ.1)
-- NXM-45 (menu, say5): "<name>, the default". an item of the list of names: the default (SZ.1)
-- NXM-46 (menu, say5): "<name>, the name you typed". an item of the list of names: the player's own name (SZ.1)
-- NXM-47 (menu, say5): "Stadium and referee sounds". F9 Sounds item: the list of the N. F. L. rules' own sounds that the player can replace (SZ.2)
-- NXM-48 (menu, say5): "<label>. File name <file>. <count>". an item of that list (SZ.2)
-- NXM-49 (piece, piece): "the original sound". the count of a family with one shipped sound (SZ.2)
-- NXM-50 (piece, piece): "your sound". the count of a family whose one sound is the player's file (SZ.2)
-- NXM-51 (piece, piece): "<n> sounds, <m> of them yours". the count of a family with several sounds (SZ.2)
-- NXM-52 (help, say5): " Enter plays the sound, and again plays the next one of its family. To use your own sound, put a file with the same name in your sounds folder, and it replaces this one. ". F1 in that list (SZ.2)
-- NXM-53 (help, say5): " To add one more, give it a number, like crowd_cheer2. Delete your file to get the original back. The sounds folder is in the Sounds menu. These sounds play only with the N. F. L. rules. ". F1 in that list, second part (SZ.2)
-- NXM-54 (menu, say5): "Put the stadium sounds back". F9 Sounds item: the player's stadium and referee files are moved aside (SZ.2)
-- NXM-55 (prompt, say5): " this moves your own stadium and referee sound files to the removed sounds folder. Press Enter to do it, or any other key to cancel. ". the confirmation of that item (SZ.2)
-- NXM-56 (sentence, say5): " <n> of your files were moved. The original sounds are back. ". after that item (SZ.2)
-- NXM-57 (sentence, say5): " you have no stadium or referee sound files of your own. ". after that item when there is nothing to move (SZ.2)
-- NXB-S01 (menu, say5): "The crowd cheers". crowd_cheer (SZ.2)
-- NXB-S02 (menu, say5): "The crowd roars". crowd_roar (SZ.2)
-- NXB-S03 (menu, say5): "The crowd groans". crowd_groan (SZ.2)
-- NXB-S04 (menu, say5): "The crowd boos". crowd_boo (SZ.2)
-- NXB-S05 (menu, say5): "The crowd gasps". crowd_gasp (SZ.2)
-- NXB-S06 (menu, say5): "The crowd applauds". crowd_applause (SZ.2)
-- NXB-S07 (menu, say5): "The crowd sighs". crowd_oh (SZ.2)
-- NXB-S08 (menu, say5): "A helmet hit". hit_helmet (SZ.2)
-- NXB-S09 (menu, say5): "A hit in the pads". hit_pads (SZ.2)
-- NXB-S10 (menu, say5): "The pop of a catch". ball_catch (SZ.2)
-- NXB-S11 (menu, say5): "A flag is thrown". flag_throw (SZ.2)
-- NXB-S12 (menu, say5): "The first down chain". first_down_chain (SZ.2)
-- NXB-S13 (menu, say5): "The goal post is hit". goal_post_hit (SZ.2)
-- NXB-S14 (menu, say5): "The referee's microphone clicks on". mic_on (SZ.2)
-- NXB-S15 (menu, say5): "The referee's microphone clicks off". mic_off (SZ.2)
-- NXB-S16 (menu, say5): "A short whistle". whistle_short (SZ.2)
-- NXB-S17 (menu, say5): "A long whistle". whistle_long (SZ.2)
-- NXB-S18 (menu, say5): "A double whistle". whistle_double (SZ.2)
-- NXB-S19 (menu, say5): "A triple whistle". whistle_triple (SZ.2)
-- NXB-S20 (menu, say5): "Crowd roars for your big play". F9 Sounds, stadium sounds list: crowd_big_play (tester 2026-10-23)
-- NXB-S21 (menu, say5): "Crowd cheers a flag on them". F9 Sounds, stadium sounds list: crowd_flag_cheer (tester 2026-10-23)
-- NXB-S22 (menu, say5): "One file for every whistle". F9 Sounds, stadium sounds list: whistle (tester 2026-10-23)
+- NXV-11 (prompt, say2): " <coach> these teams want you as their head coach. choose your new team. ". stage 9: the offers (never the team that fired him)
+- NXV-A01 (answer, say2): "the <team>, rating <r>, number <k> of 32". stage 9: an offer, the best ranked first (the staff's recommendation)
+- NXV-12 (sentence, say2): " you are the new head coach of the <team>. ". stage 9: the job the player took
+- NXV-13 (sentence, say2): " head coaches fired in the league: <n>. ". stage 9: the league's firings
+- NXV-14 (sentence, say2): " no head coach was fired in the league. ". stage 9: no firing
+- NXV-15 (sentence, say2): " the <team> hired <name>, the offensive coordinator of the <other>, as head coach. ". stage 9: a head coach hired (at most three told)
+- NXV-16 (sentence, say2): " the <team> hired <name>, the defensive coordinator of the <other>, as head coach. ". stage 9: a head coach hired
+- NXV-17 (sentence, say2): " your offensive coordinator <name> left to be head coach of the <team>. ". stage 9: the player's coordinator was hired away
+- NXV-18 (sentence, say2): " your defensive coordinator <name> left to be head coach of the <team>. ". stage 9: the player's coordinator was hired away
+- NXV-20 (sentence, say2): " your offensive coordinator: <name>, <style>, rating <r>. ". stage 9's question and end, F9's job and staff
+- NXV-21 (sentence, say2): " your defensive coordinator: <name>, <style>, rating <r>. ". stage 9's question and end, F9's job and staff
+- NXV-22 (prompt, say2): " <coach> do you keep your coordinators? ". stage 9: the player's question (staff setting off)
+- NXV-A02 (answer, say2): "keep them". stage 9: keep both coordinators (the do-nothing answer)
+- NXV-A03 (answer, say2): "replace the offensive coordinator". stage 9
+- NXV-A04 (answer, say2): "replace the defensive coordinator". stage 9
+- NXV-A05 (answer, say2): "replace both". stage 9
+- NXV-A06 (answer, say2): "keep him". stage 9: one coordinator in place (the do-nothing answer)
+- NXV-A07 (answer, say2): "replace him". stage 9: one coordinator in place
+- NXV-23 (prompt, say2): " choose your new offensive coordinator. ". stage 9: the candidates follow, the best rated first
+- NXV-24 (prompt, say2): " choose your new defensive coordinator. ". stage 9: the candidates follow, the best rated first
+- NXV-A08 (answer, say2): "<name>, <style>, rating <r>". stage 9: a coordinator candidate
+- NXV-25 (sentence, say2): " <name> is your new offensive coordinator. ". stage 9: the coordinator hired
+- NXV-26 (sentence, say2): " <name> is your new defensive coordinator. ". stage 9: the coordinator hired
+- NXV-28 (sentence, say2): " the <team> let their head coach go to make room for you. ". stage 9: the team the player joined had a coach still in place
+- NXV-30 (sentence, say5): " the owner's goal this season: <goal>. ". F9, franchise, your job and staff
+- NXV-31 (sentence, say5): " your job rating: <a> of 100. ". F9, franchise, your job and staff
+- NXF-45 (menu, say5): "your job and staff". F9 Franchise item (SX.8l)
+- NXF-48 (menu, say5): "get the latest calendar". F9, Franchise, the last item (D-128): download the newest N. F. L. schedule_<year>.txt from the game's GitHub repository, only when chosen
+- NXF-49 (sentence, say5): " asking the game's page on GitHub for the newest N. F. L. calendar. this takes a few seconds. Escape stops it. ". F9, Franchise, get the latest N. F. L. calendar, while the request runs (D-128)
+- NXF-50 (sentence, say5): " the <year> calendar is saved in your customize folder. your franchise plays it in its <year> season. ". the download's result (D-128): a newer calendar, for a season the franchise has not begun
+- NXF-51 (sentence, say5): " you have the newest calendar already, the one of <year>. the N. F. L. releases each season's schedule in the spring. ". the download's result (D-128): nothing newer is published
+- NXF-52 (sentence, say5): " the game could not reach GitHub. check the internet connection and try again later. nothing was changed. ". the download's result (D-128): no connection, no answer in time
+- NXF-53 (sentence, say5): " the calendar on GitHub is not a whole N. F. L. calendar, so it was not saved. ". the download's result (D-128): the parser refused the file (the log has the reason)
+- NXF-54 (sentence, say5): " you stopped the download. ". the download's result (D-128): Escape during the request
+- NXF-55 (sentence, say5): " the calendar could not be saved in your customize folder. nothing was changed. ". the download's result (D-128): the folder cannot be written
+- NXF-56 (sentence, say5): " the <year> calendar is saved in your customize folder. a franchise plays it in its <year> season. ". the download's result (D-128): saved, and no franchise, or a franchise past that season
+- NXH-43 (help, say5): " Your job: the owner sets a goal each season and rates you from 0 to 100; a low rating costs your job unless you won more than you lost. Your coordinators' styles are your team playbook. ". F6, after NXH-42 (SX.8l)
+- NXV-09 (sentence, say2): " the owner has fired you. your job rating was <a>, after 1 win and <l> losses. ". stage 9: NXV-10 for a season of one win
+- NXV-32 (sentence, say5): " the owner has fired you. choose your new team at the question. ". F9, franchise, your job and staff, while the job question waits
+- NXU-01 (prompt, say2): " the camp. choose its focus. the staff recommends <focus>. ". stage 3, before the progression: the camp's focus (SX.8m)
+- NXU-02 (sentence, say2): " camp focus: <focus>. extra work for: <list>. ". stage 3: the focus and the players who got a point (SX.8m)
+- NXU-03 (sentence, say2): " camp focus: <focus>. no player could take the extra work. ". stage 3: the focus found nobody (SX.8m)
+- NXU-A01 (answer, say2): "offense". a camp focus: the quarterback, the running backs and the receivers (SX.8m)
+- NXU-A02 (answer, say2): "defense". a camp focus: the defensive players (SX.8m)
+- NXU-A03 (answer, say2): "young players". a camp focus: the players aged 24 or less (SX.8m)
+- NXU-10 (sentence, say2): " this draft has <n> compensatory picks, at the end of rounds 3 to 7. ". stage 4: the draft's compensatory picks (SX.8m)
+- NXU-11 (sentence, say2): " this draft has 1 compensatory pick. ". stage 4: one compensatory pick (SX.8m)
+- NXU-12 (sentence, say2): " your compensatory picks: <list>. ". stage 4: the player's compensatory picks, NXK-15 each (SX.8m)
+- NXU-60 (sentence, say2): " compensatory picks for next year's draft: <n> in the league. ". the end of free agency (SX.8m)
+- NXU-64 (sentence, say2): " compensatory picks for next year's draft: 1 in the league. ". the end of free agency, one pick (SX.8m)
+- NXU-61 (sentence, say2): " your team gets <n> of them: <list>. ". the end of free agency: the player's, NXU-62 each (SX.8m)
+- NXU-63 (sentence, say2): " your team gets one: <list>. ". the end of free agency: the player's one pick (SX.8m)
+- NXU-62 (piece, piece): "round <round>". a compensatory pick in NXU-61 and NXU-63 (SX.8m)
+- NXU-20 (sentence, say2): " undrafted free agents who signed with you for camp: ". stage 4, then NXK-06 for each (SX.8m)
+- NXU-22 (sentence, say2): " <player> signed with the <team>. ". stage 5: an undrafted free agent the player offered went elsewhere (SX.8m)
+- NXU-23 (sentence, say2): " undrafted free agents signed for camp in the league: <n>. ". stage 4, a full offseason (SX.8m)
+- NXU-24 (prompt, say2): " undrafted free agents. <n> prospects were not drafted; you may sign up to <m> for camp. ". stage 4, after the last pick: the undrafted market's question (SX.8m)
+- NXU-25 (sentence, say2): " the staff would offer: <list>. ". stage 5: the staff's offers by name (SX.8m)
+- NXU-26 (sentence, say2): " the staff would offer nobody. ". stage 5: no prospect is worth more than the fill (SX.8m)
+- NXU-27 (prompt, say2): " choose the undrafted free agents you offer a place in camp. ". stage 4, choose yourself: Enter offers or withdraws (SX.8m)
+- NXU-28 (sentence, say2): " you offer <player> a place. ". stage 5, choose yourself (SX.8m)
+- NXU-29 (sentence, say2): " your offer to <player> is withdrawn. ". stage 5, choose yourself (SX.8m)
+- NXU-30 (sentence, say2): " you have offered as many players as you may. ". stage 4, choose yourself: FR_UDFA_CHASE offers (SX.8m)
+- NXU-A04 (answer, say2): "make the staff's offers". stage 5, undrafted free agents (SX.8m)
+- NXU-A05 (answer, say2): "choose yourself". stage 5, undrafted free agents (SX.8m)
+- NXU-A06 (answer, say2): "offer nobody". stage 5, undrafted free agents (SX.8m)
+- NXU-A07 (answer, say2): "done". stage 5, choose yourself: the offers are made (SX.8m)
+- NXU-C01 (piece, piece): "offered". after a prospect the player offers a place (SX.8m)
+- NXU-40 (prompt, say5): " type the new name of <player>, then press enter. ". F9 roster, Enter on a player: the original's typed prompt (SX.8m)
+- NXU-41 (prompt, say5): " is <name> correct? ". F9 roster: the original's yes or no question (SX.8m)
+- NXU-42 (sentence, say5): " <player> keeps his name. ". F9 roster: no name typed, or the answer no (SX.8m)
+- NXU-43 (sentence, say5): " that is his name already. <player> keeps it. ". F9 roster: the same name (SX.8m)
+- NXU-44 (sentence, say5): " another player has that name. <player> keeps his name. ". F9 roster: names stay unique among the active (SX.8m)
+- NXU-45 (sentence, say5): " <player> waits for the roster cut and can be renamed after it. ". F9 roster: a drafted rookie before the cut (SX.8m)
+- NXU-46 (sentence, say5): " <player> is now <name>. ". F9 roster: renamed (SX.8m)
+- NXU-A10 (answer, say2): "use the non-exclusive tag, <contract>". stage 7, a talk: other teams may make him an offer (SX.8m)
+- NXU-57 (sentence, say2): " <player> gets the non-exclusive franchise tag, <contract>. other teams may make him an offer in free agency. ". stage 7: the non-exclusive tag (SX.8m)
+- NXU-50 (prompt, say2): " the <team> make an offer for <player>, your <position> under the non-exclusive tag: <contract>. ". stage 8: the offer sheet (SX.8m)
+- NXU-51 (sentence, say2): " you may keep him at that contract, or let him go for their first round picks of this draft and the next. ". stage 8: the offer sheet (SX.8m)
+- NXU-52 (sentence, say2): " your cap has no room to match it, so he goes for their first round picks of this draft and the next. ". stage 8: the offer sheet, no room (SX.8m)
+- NXU-A08 (answer, say2): "keep him at their offer". stage 8: match the offer sheet (SX.8m)
+- NXU-A09 (answer, say2): "let him go for the picks". stage 8: take the two first-round picks (SX.8m)
+- NXU-53 (sentence, say2): " <player> stays, <contract>. ". stage 8: the offer is matched (SX.8m)
+- NXU-54 (sentence, say2): " <player> joins the <team>. you get their first round picks of this draft and the next. ". stage 8: the picks are taken (SX.8m)
+- NXU-55 (sentence, say2): " no team made an offer for <player>. he stays on the tag. ". stage 8: no offer sheet (SX.8m)
+- NXU-56 (sentence, say2): " the staff answered the offer for <player>. ". stage 8: the staff handles the to-do list (SX.8m)
+- NXH-44 (help, say5): " Camp focus before the progression, undrafted free agents at the cut, compensatory picks for free agents lost, the non-exclusive tag. F9 roster: Enter renames your player. ". F6, after NXH-43 (SX.8m)
+- NXU-31 (sentence, say2): " <player> did not sign with you. ". stage 4: an offer of the player that signed nobody (the review of SX.8m)
+- NXU-P01 (sentence, say2): " he cares most about <trait>. ". stage 7, a talk: his personality, after NXW-03 (SX.8n)
+- NXU-P10 (piece, piece): "money". a personality (SX.8n)
+- NXU-P11 (piece, piece): "winning". a personality (SX.8n)
+- NXU-P12 (piece, piece): "loyalty". a personality (SX.8n)
+- NXU-P13 (piece, piece): "playing time". a personality (SX.8n)
+- NXU-P14 (piece, piece): "the game". a personality (SX.8n)
+- NXU-M01 (piece, piece): "high". a morale of 3 or more (SX.8n)
+- NXU-M02 (piece, piece): "good". a morale of -2 to 2 (SX.8n)
+- NXU-M03 (piece, piece): "low". a morale of -3 or less (SX.8n)
+- NXU-T01 (piece, piece): "a top player". a player tag: rated 85 or more (SX.8n; not "a star", the name of an EA development trait, the review)
+- NXU-T02 (piece, piece): "a rising player". a player tag: 24 or younger with high potential (SX.8n)
+- NXU-T03 (piece, piece): "a veteran". a player tag: 31 or older (SX.8n)
+- NXU-T05 (sentence, say5): " <tag>. morale <morale>. he cares most about <trait>. ". F9's roster, after NXL-33: the tag, the morale, the personality (SX.8n)
+- NXU-T06 (sentence, say5): " morale <morale>. he cares most about <trait>. ". F9's roster, after NXL-33, a player without a tag (SX.8n)
+- NXU-H01 (prompt, say2): " <player>, <position>, rating <r>, holds out at camp. he is paid <contract> and asks <ask>. ". stage 3: the player's holdout (SX.8n)
+- NXU-H02 (sentence, say2): " there is no room under the cap to pay him. ". stage 3: the raise does not fit (SX.8n)
+- NXU-H06 (sentence, say2): " players holding out in the league: <n>. ". stage 3: the other teams' holdouts (SX.8n)
+- NXU-H10 (answer, say2): "pay him". stage 3, a holdout (SX.8n)
+- NXU-H11 (answer, say2): "let him wait". stage 3, a holdout (SX.8n)
+- NXU-H12 (answer, say2): "trade him". stage 3, a holdout: he asks to be traded at once (SX.8n)
+- NXU-H20 (sentence, say2): " <player> signs a new contract, <contract>. ". stage 3: paid (SX.8n)
+- NXU-H21 (sentence, say2): " <player> stays away from camp. he is unhappy and may ask to be traded. ". stage 3: let him wait (SX.8n)
+- NXU-H22 (sentence, say2): " <player> goes on the trade block. the other teams make their offers when the season begins. ". stage 3: trade him (SX.8n)
+- NXU-H23 (sentence, say2): " the staff paid <player>, who held out: <contract>. ". stage 3, the staff setting on (SX.8n)
+- NXU-H24 (sentence, say2): " <player> held out, and the staff let him wait. ". stage 3, the staff setting on (SX.8n)
+- NXU-D01 (prompt, say2): " <player>, <position>, asks to be traded. offers from <n> teams. ". the to-do item of a trade demand (SX.8n)
+- NXU-D10 (answer, say2): "keep him". a trade demand: no trade this week (SX.8n)
+- NXU-D11 (answer, say2): "the <team>: <get>, rating <r>. <picks>". a trade demand: an offer (SX.8n)
+- NXU-D12 (sentence, say2): " <player> stays with your team for now. ". a trade demand: kept (SX.8n)
+- NXU-G01 (sentence, say2): " the goal of this game: win by <n> points or more. ". before the kick-off, the stronger team (SX.8n)
+- NXU-G02 (sentence, say2): " the goal of this game: win it. ". before the kick-off, two teams of about one strength (SX.8n)
+- NXU-G03 (sentence, say2): " the goal of this game: lose by no more than <n> points, or win. ". before the kick-off, the weaker team (SX.8n)
+- NXU-G04 (sentence, say2): " last week's goal was met. ". before the menu, after the news (SX.8n)
+- NXU-G05 (sentence, say2): " last week's goal was missed. ". before the menu, after the news (SX.8n)
+- NXH-45 (help, say5): " Players have a personality and a morale, which moves a rating by up to 2 points in a game. An underpaid player may hold out at camp and ask to be traded. Every game has a goal. ". F6, after NXH-44 (SX.8n)
+- NWH01 (remark, say2): " <player> of the <team> wants to be traded. ". a player asks to be traded (news, SX.8n)
+- NWH02 (remark, say2): " unhappy with the <team>, <player> asks for a trade. ". a player asks to be traded (news, SX.8n)
+- NWH03 (remark, say2): " the <team> hear a trade request from their <position>, <player>. ". a player asks to be traded (news, SX.8n)
+- NWH04 (remark, say2): " <player> tells the <team> he wants out. ". a player asks to be traded (news, SX.8n)
+- NXU-D13 (sentence, say2): " that trade can no longer be made. <player> stays with your team for now. ". a trade demand: the chosen offer can no longer be made (the review of SX.8n)
+- NXG-06 (menu, say5): "awards by season". history menu (SX.8o)
+- NXG-07 (menu, say5): "hall of fame". history menu (SX.8o)
+- NXG-A01 (piece, piece): "most valuable player". an award (SX.8o; the NFL's AP award, a plain sports word)
+- NXG-A02 (piece, piece): "offensive player of the year". an award (SX.8o)
+- NXG-A03 (piece, piece): "defensive player of the year". an award (SX.8o)
+- NXG-A04 (piece, piece): "rookie of the year". an award (SX.8o)
+- NXG-A05 (piece, piece): "coach of the year". an award (SX.8o)
+- NXG-B01 (sentence, say2): " the awards of the season. ". stage 1, before the awards (SX.8o)
+- NXG-B02 (sentence, say2): " <award>: <player>, <position> of the <team>. ". stage 1, an award of another team's player (SX.8o)
+- NXG-B03 (sentence, say2): " <award>: <player>, your <position>. ". stage 1, an award of the player's own player (SX.8o)
+- NXG-B04 (sentence, say2): " <award>: <name> of the <team>. ". stage 1, the coach of the year of another team (SX.8o)
+- NXG-B05 (sentence, say2): " <award>: you, coach <coach>. ". stage 1, the player is the coach of the year (SX.8o)
+- NXG-B06 (sentence, say2): " the hall of fame's new class: ". stage 1, before the players who enter the hall (SX.8o)
+- NXG-B07 (sentence, say2): " <player>, <position>, the <team>, <n> seasons, best rating <r>. ". stage 1, a player who enters the hall (SX.8o)
+- NXG-B08 (sentence, say2): " the hall of fame takes <n> new members. ". stage 1 with the offseason short: the class's size (SX.8o)
+- NXG-20 (sentence, say5): " season <n>, <award>: <player>, <position>, the <team>. ". history line: an award (SX.8o)
+- NXG-21 (sentence, say5): " season <n>, <award>: <name>, the <team>. ". history line: the coach of the year (SX.8o)
+- NXG-22 (sentence, say5): " <player>, <position>, the <team>, <n> seasons, best rating <r>, entered in season <s>. ". history line: a member of the hall (SX.8o)
+- NXH-46 (help, say5): " Season awards, and the best players enter the hall of fame five seasons after they leave. Ratings decide who carries the ball; a back who carries a lot is hurt more often. ". F6, after NXH-45 (SX.8o)
+- NXG-B09 (sentence, say2): " the hall of fame takes one new member. ". stage 1 with the offseason short: a class of one (the review of SX.8o)
+- NXC-20 (sentence, say2): " week <n> ". the real calendar's schedule (SZ.8), before each week's game in the place of the original's 'game number <n>': the weeks run 1 to 18 and a bye is a week too
+- NXC-21 (sentence, say2): " bye week. ". the real calendar's schedule (SZ.8): the week in which the player's team does not play
+- NXC-22 (menu, say5): " 1. see this week's games ". the main menu's first choice in the bye week (SZ.8), in the place of ' 1. play game '
+- NXC-23 (sentence, say2): " Your team has a bye this week. There is no game today. ". 'Today's game is ...' in the bye week (SZ.8)
+- NXC-24 (sentence, say2): " your team has a bye this week. ". the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
+- NXC-25 (sentence, say4): " the top seeds, the <team> and the <other>, have the only byes of the wild card round. ". the end of a regular season on the real calendar (D-129, the N. F. L.'s 14-team play-offs), after the N. F. C. wild card teams: the A. F. C.'s seed 1, then the N. F. C.'s
+- NXH-72 (help, say5): " Practice squad: up to 16 players, at most 6 veterans, formed at the roster cut. A squad player is elevated when an injury leaves his position with nobody, up to 3 times a season. ". F6 while the franchise is in use (D-136)
+- NXH-73 (help, say5): " Practice squad: the players a team keeps to practice with it but who do not play unless they are elevated for a game or signed. Elevated: moved up from the practice squad for one game. ". F7 glossary while the franchise is in use (D-136)
+- NXH-74 (help, say5): " F9, Franchise, practice squad: sign a squad player to your roster, add a free agent to the squad, or release a squad player. ". F6 while the franchise is in use (D-136)
+- NXH-76 (help, say5): " The play-offs of a franchise on the real calendar are the N. F. L.'s: 7 teams in each conference, and only the top seed rests in the wild card round. The division round is reseeded. ". F6 while the franchise is in use (D-129)
+- NXH-77 (help, say5): " F9, Franchise, get the latest N. F. L. calendar asks the game's page on GitHub for the newest schedule, only when you choose it. ". F6 while the franchise is in use (D-128)
+- NXH-78 (help, say5): " In a franchise, F9, Rules, Quarterbacks lists every team's starter and its practice squad quarterbacks; on your team a practice squad quarterback can become the starter. ". F6 while the franchise is in use (D-132)
+- NXJ-Q01 (sentence, say5): " the quarterbacks of every team. Up and Down move through the teams, letters find one, and Enter lists a team's quarterbacks so you can choose who starts. ". F9, Rules, Quarterbacks: the title of the teams' list outside a franchise (D-132)
+- NXJ-Q02 (sentence, say5): " the <team>: <player> starts. ". a team's line in the quarterbacks' list (D-132)
+- NXJ-Q03 (sentence, say5): " behind him: <list>. ". a team's line in the quarterbacks' list: the other quarterbacks in depth order (D-132)
+- NXJ-Q04 (sentence, say5): " the <team> have no quarterback in the list. ". a team without a quarterback in rosters.txt or in the franchise (D-132)
+- NXJ-Q05 (sentence, say5): " the quarterbacks of the <team>, the starter first. Enter makes the one you hear the starter, from the next game. Escape goes back. ". the title of one team's quarterbacks outside a franchise (D-132)
+- NXJ-Q06 (menu, say5): "<player>, starts". the starter in one team's list (D-132)
+- NXJ-Q07 (sentence, say5): " <player> is your starter. Enter on a practice squad quarterback makes him the starter instead. ". Enter on your own starter in a franchise (D-132)
+- NXJ-Q08 (sentence, say5): " <player> starts for the <team> from the next game. ". a starter chosen outside a franchise (D-132): saved in settings.txt
+- NXJ-Q09 (sentence, say5): " <player> already starts for the <team>. ". Enter on the starter outside a franchise (D-132)
+- NXJ-Q10 (sentence, say5): " the real players could not be read, so there is no list of quarterbacks. ". F9, Rules, Quarterbacks when the rosters cannot be read (D-132)
+- NXJ-Q11 (sentence, say5): " the quarterbacks of your franchise's teams. Up and Down move through the teams, letters find one. Enter on your own team lets you choose who starts. ". F9, Rules, Quarterbacks while a franchise is in use (D-132)
+- NXJ-Q12 (sentence, say5): " the <team>: <player>, rating <r>, age <a>, starts. ". a team's line in a franchise (D-132)
+- NXJ-Q13 (sentence, say5): " on the practice squad: <list>. ". a team's line in a franchise: its practice squad quarterbacks (D-132)
+- NXJ-Q14 (sentence, say5): "<player>, rating <r>". a practice squad quarterback in a team's line (D-132)
+- NXJ-Q15 (sentence, say5): " your quarterbacks, the starter first. you have one quarterback place: a squad quarterback you make the starter signs to the roster, and the starter is released. Enter asks first. ". the title of your own quarterbacks in a franchise (D-132)
+- NXJ-Q16 (sentence, say5): "<player>, rating <r>, age <a>, starts". your starter in a franchise (D-132)
+- NXJ-Q17 (sentence, say5): "<player>, rating <r>, age <a>, practice squad". a practice squad quarterback of yours in a franchise (D-132)
+- NXJ-Q18 (sentence, say5): " the staff of the <team> chooses its own starter. ". Enter on another team in a franchise (D-132)
+- NXJ-Q19 (sentence, say5): " your practice squad has no quarterback. F9, Franchise, practice squad, add a free agent, can sign one. ". Enter on your own starter in a franchise with no squad quarterback (D-132)
+- NXJ-Q20 (sentence, say5): " the real players are used with the N. F. L. rules. choose the N. F. L. rules in this menu to hear and choose the quarterbacks. ". F9, Rules, Quarterbacks while the Rules are Classic (D-132)
+- NXL-50 (piece, piece): "offensive linemen". group of the bench only (D-149, NX-B2b)
+- NXL-51 (piece, piece): "long snappers". group of the bench only (D-149, NX-B2b)
+- NXL-52 (piece, piece): "<position> on the bench". the position word of a man of a team's bench in every player line (D-149)
+- NXL-53 (sentence, say5): " your roster has <n> players and room for <m>. choose who is released. ". the roster cut, the player's own choice when his team has a bench (D-149)
+- NXL-54 (piece, piece): ", <n> of <m> players: <p> in the game's places and <k> on the bench". after NXF-13, the title of F9's roster when the team has a bench (D-149)
+- NXL-55 (sentence, say5): " <player> goes to the bench. ". the depth chart: a man of the bench put first pushes the last man of the places to the bench (D-149)
+- NXZ-U01 (menu, say5): "get the latest rosters". F9, Customize (with the N. F. L. rules) and F9, Franchise after get the latest calendar (SR.6, NX-L9, design 21.10): download the maintainer's checked rosters.txt and free_agents.txt, only when chosen
+- NXZ-U02 (sentence, say5): " asking the game's page on GitHub for the newest real rosters. this takes a few seconds. Escape stops it. ". get the latest rosters, while the request runs (SR.6, design 21.10); Escape says NXF-54
+- NXZ-U03 (sentence, say5): " You now have the rosters of <label>. ". the download's result (design 21.10): newer rosters checked, saved in the customize folder and read at once; <label> is the file's date (October 25, 2026)
+- NXZ-U04 (sentence, say5): " You already have the newest rosters, from <label>. ". the download's result (design 21.10): nothing newer, or no rosters folder in the repository yet (404, D-141); <label> the date of the player's rosters
+- NXZ-U05 (sentence, say5): " The rosters could not be downloaded: <label>. Your rosters stay as they were. ". the download's result (design 21.10): <label> is one of NXZ-U06 to NXZ-U09
+- NXZ-U06 (piece, piece): "the game could not reach GitHub". NXZ-U05's reason: no connection, no answer in time
+- NXZ-U07 (piece, piece): "GitHub did not send the file". NXZ-U05's reason: a server error, another HTTP answer than the file or 404
+- NXZ-U08 (piece, piece): "a check of the file failed, <label>". NXZ-U05's reason: roster_file.parse or check (D-155) or the free agents loader refused the file; <label> is the first failure, as the log has it
+- NXZ-U09 (piece, piece): "they could not be saved in your customize folder". NXZ-U05's reason: the copy of the player's file or the new file could not be written
+- NXZ-U10 (prompt, say5): " Your rosters.txt has your own changes. The new rosters replace it, and your file is kept as a copy. Replace it? ". get the latest rosters: the player's own edited rosters.txt (not the shipped text, not a downloaded one), asked once, No first (design 21.10)
+- NXZ-U11 (answer, say5): "No, keep my own rosters". NXZ-U10's first answer (Enter and Escape take it)
+- NXZ-U12 (answer, say5): "Yes, use the new rosters". NXZ-U10's second answer
+- NXZ-U13 (sentence, say5): " You kept your own rosters. Nothing was changed. ". the download's result after NXZ-U11
+- NXZ-U14 (prompt, say2): " There are newer real rosters, from <label>. Bring the other 31 teams up to them? Your own team is not changed. ". the offer of design 21.10, once for each newer rosters.txt, when a franchise made from older rosters is opened or after a download; never in a game, the draft or the cut
+- NXZ-U15 (answer, say2): "No, keep my league as it is". NXZ-U14's first answer: Enter changes nothing (rule 0.23's spirit, Q-080)
+- NXZ-U16 (answer, say2): "Yes, bring the other teams up". NXZ-U14's second answer
+- NXZ-U17 (sentence, say2): " The other 31 teams now have the rosters of <label>: <n> players moved or joined. ". after NXZ-U16 (design 21.10 (4)): <n> the men who moved between computer teams, signed from the free agents or joined the league
+- NXZ-U18 (sentence, say2): " Your league stays as it is. ". after NXZ-U15: nothing changed, the offer is not made again for these rosters
+- NXZ-U19 (sentence, say2): " Your franchise now has the real rosters' positions: every player has his real position, and <n> real players joined their teams. ". the conversion of a league of format 17 or older (design 21.6 (6), rule 0.28 (4)), once, where the player opens the franchise
+- NXZ-U20 (sentence, say2): " Your franchise now has the real rosters' positions: every player has his real position. ". NXZ-U19 when no real player joined (a league of format 17 had its benches)
+- NXZ-U21 (sentence, say2): " The other teams could not be brought up to the new rosters, so your league stays as it is. ". after NXZ-U16 when the update failed its checks (the log has the cause); the league is put back as it was
+- NXL-60 (piece, piece): "quarterbacks". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-61 (piece, piece): "halfbacks". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-62 (piece, piece): "fullbacks". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-63 (piece, piece): "wide receivers". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-64 (piece, piece): "tight ends". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-65 (piece, piece): "left tackles". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-66 (piece, piece): "left guards". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-67 (piece, piece): "centers". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-68 (piece, piece): "right guards". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-69 (piece, piece): "right tackles". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-70 (piece, piece): "left edge". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-71 (piece, piece): "right edge". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-72 (piece, piece): "defensive tackles". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-73 (piece, piece): "strong-side linebackers". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-74 (piece, piece): "middle linebackers". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-75 (piece, piece): "weak-side linebackers". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-76 (piece, piece): "cornerbacks". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-77 (piece, piece): "free safeties". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-78 (piece, piece): "strong safeties". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-79 (piece, piece): "kickers". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-80 (piece, piece): "punters". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-81 (piece, piece): "long snappers". the heading of a position in F9's roster (SR.6, design 21.8)
+- NXL-82 (piece, piece): "kick returner". the return role (SR.6, NX-L11)
+- NXL-83 (piece, piece): "punt returner". the return role (SR.6, NX-L11)
+- NXL-84 (piece, piece): "practice squad". the heading of the practice squad in F9's roster (SR.6)
+- NXL-85 (piece, piece): "rookies waiting for the cut". the heading of the draft's rookies in F9's roster (SR.6)
+- NXL-56 (sentence, say5): " your quarterbacks, the starter first, then the others, then the practice squad. Enter on a backup makes him the starter. ". F9, Rules, Quarterbacks, the player's own team in a franchise (D-149, Q-069; SR.6: no bench)
+- NXL-57 (piece, piece): "<player>, rating <r>, age <a>, backup". a backup quarterback in the Quarterbacks list (D-149; SR.6: no bench)
+- NXL-58 (sentence, say5): " <player> starts now, and <other> moves down one place. ". the Quarterbacks list: a backup made the starter (D-149, Q-069; SR.6)
+- NXL-59 (sentence, say5): " the other quarterbacks: <list>. ". the Quarterbacks list: another team's other quarterbacks (D-149; SR.6)
+- NXH-82 (help, say5): " Every team keeps its real 53 players at their real positions. Your roster lists them by position, and Depth charts chooses who starts. ". F6, after NXH-78, while the franchise is in use (D-149, NX-B2b; SR.6: by positions)
 
+## The real coaches and players (NX-N, SX.11)
+
+- NXB-N01 (sentence, say2): " The head coach of the <team> is <coach>. ". the coach question after the team is chosen (NX-N1, the N. F. L. rules); the first line, said again by F1
+- NXB-N02 (menu, say2): " Keep <coach> as your coach ". the question's first item: the real head coach of the chosen team; Enter takes it
+- NXB-N03 (menu, say2): " Choose another real coach ". the question's second item: the list of the 32 real head coaches (NX-N1)
+- NXB-N04 (menu, say2): " Type a name for your coach ". the question's third item: the original's typed prompt (NX-N1)
+- NXB-N05 (sentence, say2): " Choose your coach. ". the list of the 32 real head coaches: its first line
+- NXB-N06 (menu, say2): " <coach> of the <team> ". an item of the list of real coaches
+- NXB-N07 (sentence, say2): " <coach> is your coach. ". said after the coach is chosen from the list
+
+## The radio broadcast: banter and Ghip (SY.1, rule 0.27)
+
+- BN01 (remark, say): " The crowd is in fine voice today, and you can feel it right through the soles of your shoes. That hum never gets old. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN02 (remark, say): " Listen to that wall of sound rolling down from the upper deck. Nothing quite like a stadium full of people who care. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN03 (remark, say): " The folks in the cheap seats are making the most noise, as usual, and bless every one of them. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN04 (remark, say): " A little breeze is swirling around the stadium, the kind that makes every cup of something hot taste even better. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN05 (remark, say): " If you could bottle this kind of football weather, you would never need another season. Crisp air, bright lights, perfect. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN06 (remark, say): " The wind has a mind of its own up here today, and every flag around the stadium is telling on it. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN07 (remark, say): " The band is warming up the brass again, and there is no finer background music than a tuba that means business. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN08 (remark, say): " Hats off to the band, who have been marching and playing since long before most of us found our seats. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN09 (remark, say): " I can see a sign in the stands with glitter on it. Somebody has been busy at the craft table this week, and we salute them. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN10 (remark, say): " Fans in the front rows are dressed in their colors from head to toe. That is what I call commitment to the cause. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN11 (remark, say): " Every fan has a tradition, a chant or a lucky sock, and I would never be the one to tell them to give it up. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN12 (remark, say): " To everyone listening in the car, keep both hands on the wheel and let the football ride along in the back seat. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN13 (remark, say): " Somewhere a family has the radio on the porch with the grill going, and that is exactly how a game ought to be enjoyed. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN14 (remark, say): " A wave to everybody in the kitchen with the radio turned up over the dishes. Keep scrubbing, friends, we are with you. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN15 (remark, say): " Hello again to all our friends tuning in, near and far. Pull up a chair and stay awhile. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN16 (remark, say): " A big warm welcome to anyone joining us on the broadcast for the first time. Make yourselves at home. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN17 (remark, say): " Good to have you all along for the ride. It would be awfully lonely in this booth without you. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN18 (remark, say): " The smell of popcorn is drifting up to the press box, and I am doing my very best to stay professional about it. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN19 (remark, say): " Somewhere below us a vendor is calling out about hot pretzels, and that voice could sell snow to a snowman. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN20 (remark, say): " Nothing beats a stadium snack in a paper tray with just a little too much mustard on it. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN21 (remark, say): " They say football is a game of inches, but I say it is a game of patience, hot cocoa, and a good set of lungs. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN22 (remark, say): " Old football wisdom says the ball takes funny bounces, and I have never seen it take a straight one when it mattered. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN23 (remark, say): " Football wisdom, folks: keep your eye on the ball, and keep your hot cocoa well away from the microphone. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN24 (remark, say): " Sights, sounds, and smells of game day, folks. Cut grass, drumbeats, and thousands of people saying the same thing at once. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN25 (remark, say): " I love the way the lights make the grass glow. Whoever tends that field deserves a standing ovation every day. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN26 (remark, say): " Listen closely and you can hear a drum, a whistle, and somebody's very optimistic cowbell. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN27 (remark, say): " A quiet word of respect for the officials in the striped shirts, who run more miles than most of us do in a month. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN28 (remark, say): " Tough job, wearing a whistle and a thousand opinions on your shoulders. Respect to the officials, every one of them. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN29 (remark, say): " Helmets, shoulder pads, mouth guards, and a whole lot of tape. Football is the only sport that dresses for a castle siege. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN30 (remark, say): " Ever tried lacing up a pair of cleats with cold fingers? Respect to anyone who does it with a smile. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN31 (remark, say): " That ball is a funny shape, pointed at both ends, and somehow it still causes all this excitement. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN32 (remark, say): " Somebody keeps a stack of fresh footballs ready at all times, and I always say a dry ball is a happy ball. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN33 (remark, say): " Coaches and their clipboards, an inseparable pair. I suspect that clipboard knows more secrets than this whole broadcast booth. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN34 (remark, say): " There is always a coach in a headset chewing on something very intently. I believe it is written in the rulebook somewhere. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN35 (remark, say): " Rookies bring the fresh legs and the wide eyes, and veterans bring the wisdom and the sore knees. It takes both. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN36 (remark, say): " Every veteran was a nervous rookie once, carrying somebody's helmet bag and learning where the good snacks are kept. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN37 (remark, say): " The sideline is a busy place, full of towels and water bottles and plenty of people pretending not to be nervous. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN38 (remark, say): " A tip of the cap to everyone along the sideline carrying water, towels, and spare patience. Football runs on them. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN39 (remark, say): " Football has a lovely rhythm, a burst of action and then a breath. It gives all of us time for a sip of something. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN40 (remark, say): " Take your time and enjoy it, folks. This is a game that rewards patience and a snack within arm's reach. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN41 (remark, say): " <commentator>, I notice your headphones are on crooked again. Please tell me it is a lucky charm and not a wardrobe choice. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN42 (remark, say): " <commentator> is looking very thoughtful over there. Either the game has all the attention or the lunch bag does. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN43 (remark, say): " <commentator> perks up every time the crowd gets loud. Some of us just cannot hide how much we love this game. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN44 (remark, say): " A friendly reminder to the folks at home: stay for the whole game, because the best part always arrives the minute you leave the room. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN45 (remark, say): " Give your neighbors a wave today. Football is better when it is shared, even across a fence. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN46 (remark, say): " Every stadium has its own personality, and this one has a loud, cheerful, slightly creaky one that I would not trade. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN47 (remark, say): " The lights up on the stadium roof are glowing like a row of friendly lighthouses, guiding everyone safely to their seats. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN48 (remark, say): " Concrete steps, wooden benches, and happy people squeezed in tight. That is what a football stadium is made of. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN49 (remark, say): " Rain, wind, sunshine or snow, football fans show up anyway. That is either dedication or a very stubborn streak, and I love both. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN50 (remark, say): " Somewhere out there one fan is bundled in every coat they own, and the fan next to them is in short sleeves. Same game, different weather. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN51 (remark, say): " There is a smell in the air when football season comes around, and I am told it is mostly woodsmoke and popcorn. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN52 (remark, say): " Leaves turn, evenings cool off, and suddenly everyone has strong opinions about football again. Ah, the season of strong opinions. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN53 (remark, say): " Every team bus carries a lot of equipment and a lot more nervous energy, and the poor driver hears all of it. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN54 (remark, say): " Every player who ever ran out through a tunnel did it with a thumping heart. Radio cannot carry that sound, but trust me, it is loud. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN55 (remark, say): " I would love to hear what gets said in the tunnel. Mostly deep breaths, I imagine, and one very brave joke. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN56 (remark, say): " The locker room is full of stories, songs and one mystery smell that nobody will ever explain on the air. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN57 (remark, say): " Somewhere on the sideline a mascot in a very warm costume is working harder than anybody, and nobody ever thanks the costume. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN58 (remark, say): " The cheerleaders never stop smiling or leaping, and I get tired just thinking about it from up here in the booth. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN59 (remark, say): " I would love to know how a mascot sees anything through that giant head. I suspect the answer is carefully, and with a friend. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN60 (remark, say): " Long before the first whistle, the parking lots were full of grills, folding chairs and people with very firm views on sausages. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN61 (remark, say): " Some of the best seats in football are in a parking lot, with a camp chair, a cooler and a radio just like yours. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN62 (remark, say): " Finding a parking space is the first real contest of game day, and some fans train for it harder than the players do. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN63 (remark, say): " If you have ever lost your car in a giant lot after a game, welcome to the oldest football tradition there is. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN64 (remark, say): " Somewhere in the stands there is a youngster seeing a live game for the very first time, eyes wide as dinner plates. I love that. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN65 (remark, say): " Kids at the game are mostly there for the snacks, and honestly, the snacks are a perfectly good reason. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN66 (remark, say): " A grandparent in the stands is explaining the whole game to a grandchild right now, and I bet they are getting nearly every rule right. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN67 (remark, say): " Some grandparents have held the same seat for decades, and heaven help anyone who tries to sit in it. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN68 (remark, say): " Football has been played in some form for a very long time, and people are still arguing about the same things. That is called tradition. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN69 (remark, say): " Generations of players have lined up on a field just like this one, and every one of them thought theirs was the toughest era. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN70 (remark, say): " The old timers always say football was tougher in their day, and they say it with great confidence and no paperwork. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN71 (remark, say): " Huddle is such a friendly word for eleven people deciding how to confuse the other eleven. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN72 (remark, say): " Funny word, snap. It sounds like a twig breaking, yet it starts everything in this game. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN73 (remark, say): " Gridiron is the best name any playing field ever got. Say it out loud. Gridiron. It just sounds like a game. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN74 (remark, say): " Pigskin is what we call the ball up here in the booth, because plain old ball was apparently too ordinary for us. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN75 (remark, say): " I know a fan who wears the same lucky socks every game and refuses to wash them. We love them dearly, but from a distance. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
+- BN76 (remark, say): " Lucky hats, lucky chairs, lucky snacks. Every fan has a ritual, and every fan swears it is the only reason anything good happens. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)

@@ -26,7 +26,7 @@ def award_line(league, words, row: list) -> str:
 
 
 def member_line(words, player) -> str:
-    return X.text("NXG-B07", player=player.name, position=words.position(player.pos), team=words.team_name(player.team), n=player.seasons, r=player.peak)
+    return X.text("NXG-B07", player=player.name, position=words.position_for(player), team=words.team_name(player.team), n=player.seasons, r=player.peak)
 
 
 def stage_lines(league, words, awards: list, inducted: list) -> list:
@@ -62,7 +62,7 @@ def award_lines(league, words) -> list:
 
 def hall_lines(league, words) -> list:
     """NXG-22: the hall's members, the newest class first."""
-    return [X.text("NXG-22", player=p.name, position=words.position(p.pos), team=words.team_name(p.team), n=p.seasons, r=p.peak, s=season)
+    return [X.text("NXG-22", player=p.name, position=words.position_for(p), team=words.team_name(p.team), n=p.seasons, r=p.peak, s=season)
             for p, season in honors.hall_members(league)]
 
 
@@ -82,7 +82,7 @@ def text_lines(league, words) -> list:
         out += ["", "Hall of fame"]
         for p, season in members:
             out.append("%s, %s, %s, %d seasons, best rating %d, entered in season %d." %
-                       (p.name, words.position(p.pos).strip(), words.team_name(p.team), p.seasons, p.peak, season))
+                       (p.name, words.position_for(p).strip(), words.team_name(p.team), p.seasons, p.peak, season))
     return out
 
 

@@ -168,14 +168,15 @@ def test_the_new_seasons_sums_and_rating_follow_the_ratings_at_the_end_of_the_of
 # ----- the roster and the team ratings in F9 -----
 
 def test_a_group_of_the_roster_speaks_the_rating_the_age_and_the_potential_of_each_player(tmp_path):
-    rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + [DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, DOWN],
+    # SR.6: the roster is one list by positions; the letter W goes to the wide receivers, Down to the second man
+    rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + [DOWN, DOWN, ENTER, "w", DOWN],
                                   policy=quit_policy))
     text, record = spoken(rig), league(rig)
     words = history.Words(lambda t: "")
-    for player in record.group_of(1, "WR")[:2]:                                                  # the second group of the menu
-        line = X.text("NXL-33", player=player.name, position="receiver", r=player.rating, a=player.age,
-                      potential=words.potential(player.potential), contract=words.contract(player))     # SX.8g: and the contract
-        assert any(line in t for t in text), line
+    for pid in record.chart[record.team - 1]["WR"][:2]:                                          # the first two wide receivers
+        player = record.players[pid]
+        tail = ", rating %d, age %d, %s potential, %s" % (player.rating, player.age, words.potential(player.potential), words.contract(player))   # SX.8g: and the contract
+        assert any(" %s, wide receiver, " % player.name in t and tail in t for t in text), tail
 
 
 def test_the_potential_words_are_high_average_and_low():
