@@ -1,0 +1,6 @@
+# free_agent_settlements.txt: men update_rosters.py must never list as free agents (nfl4, D-172). This is inspired by Jim Kitchen.
+# nflverse and Sleeper do not mark every retirement, and a retired man can stay in the news. Each line: an ID, an equals sign, the name as nflverse
+# writes it, then " | " and why, then " | " and the source with its date. Remove a line when the man comes back (signs with a team or a report says so).
+
+X001 = Derek Carr | retired; the Saints hold his rights (reserve/retired) | Fox News and NBC Sports, 2026-07-10: still retired, open to a comeback only for a contender
+X002 = Tom Brady | retired (2023), a broadcaster | widely reported; Sleeper still lists him active

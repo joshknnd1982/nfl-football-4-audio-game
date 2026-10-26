@@ -60,7 +60,8 @@ def test_the_shipped_free_agents_are_the_whole_pool_with_kickers_punters_and_sna
         by.setdefault(a.pos, []).append(a.name)
     assert len(agents) >= 700
     assert len(by["K"]) >= 10 and len(by["P"]) >= 5 and len(by["LS"]) >= 5 and len(by["OL"]) >= 100 and len(by["QB"]) >= 20
-    assert {"Younghoe Koo", "Cade York", "Greg Joseph", "Matt Prater", "Graham Gano"} <= set(by["K"])
+    assert {"Younghoe Koo", "Cade York", "Greg Joseph", "Matt Prater", "Graham Gano", "Justin Tucker"} <= set(by["K"])    # D-172: Tucker, out in 2025
+    assert "Taylor Heinicke" in by["QB"] and "Derek Carr" not in by["QB"] and "Tom Brady" not in by["QB"]               # retired men are not free
     assert {"Johnny Hekker", "Thomas Morstead"} <= set(by["P"])
     on_teams = {p.name.casefold() for team in range(1, 33) for p in real.rosters[team - 1]}
     assert not [a.name for a in agents if a.name.casefold() in on_teams]
@@ -103,6 +104,21 @@ def test_the_script_takes_the_real_pool_and_leaves_out_the_retired_the_signed_an
     assert U.free_agent_pool(None, on_team, sl_free, "2026-10-25") == []
 
 
+def test_a_man_out_a_whole_season_is_free_only_while_he_is_in_the_news_and_a_settled_retiree_never():
+    U = _tool()
+    csv_text = ("gsis_id,display_name,position,status,last_season,latest_team,birth_date\n"
+                "1,Quiet Kicker,K,ACT,2024,BAL,1989-11-21\n"
+                "2,News Kicker,K,ACT,2024,BAL,1989-11-21\n"
+                "3,Derek Carr,QB,ACT,2024,NO,1991-03-28\n"
+                "4,Gone Long,K,ACT,2023,BAL,1989-11-21\n")
+    recent, old = 1792519541008, 1701970258455                        # 2026-10 and 2023-12, in Sleeper's milliseconds
+    sl_free = [{"full_name": "Quiet Kicker", "news_updated": old}, {"full_name": "News Kicker", "news_updated": recent},
+               {"full_name": "Derek Carr", "news_updated": recent}, {"full_name": "Gone Long", "news_updated": recent}]
+    pool = U.free_agent_pool(csv_text.encode("utf-8"), U.Matcher([]), sl_free, "2026-10-25")
+    assert [n for _p, _a, n in pool] == ["News Kicker"]
+    assert U.name_key("Derek Carr") in U.read_fa_settlements(U.FA_SETTLEMENTS.read_bytes().decode("utf-8"))
+
+
 def test_the_refresh_adds_the_pool_after_the_old_ids_and_writes_the_new_header():
     U = _tool()
     import nfl4.extras.roster_file as RF
@@ -117,6 +133,7 @@ def test_the_refresh_adds_the_pool_after_the_old_ids_and_writes_the_new_header()
 
 def test_a_players_copy_of_the_older_shipped_list_is_refreshed():
     assert "48b1300b1a6c8b3b08134af599c73e3adc53d2a9025d9aa4b272d86225ca9304" in customize.OLD_SHIPPED_FREE_AGENTS     # 0.16.2 to 0.16.4
+    assert "d44f6dd5f1c63fa74819cd551ceb5a1f8f68574dbbbb970b13875f75567f68fa" in customize.OLD_SHIPPED_FREE_AGENTS     # 0.16.5
 
 
 # ----- D-170: the staff keeps a real starter until a man is clearly better -----

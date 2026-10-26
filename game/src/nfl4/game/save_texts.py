@@ -74,6 +74,22 @@ EVERY_SLOT_FULL = " Every slot holds a saved game, so nothing was restored. Dele
 SEASON_EXISTS = " There is a season in progress, so the deleted one was not restored. Delete this one first. "
 FRANCHISE_EXISTS = " There is a franchise in progress, so the deleted one was not restored. Delete this one first. "
 
+# ----- D-173 (the owner 2026-10-26): three franchises, each restorable from its kept copies -----
+CONTINUE_FRANCHISE_N = "continue franchise %d, the %s"
+DELETE_A_FRANCHISE = "delete a franchise"
+RESTORE_FRANCHISE_COPY = "restore the deleted franchise of the %s, season %d"
+RESTORE_FRANCHISE_UNREADABLE = "restore a deleted franchise that could not be read"
+OF_FRANCHISE_N = " of franchise %d"
+FRANCHISE_N = " Franchise %d: "
+WHICH_FRANCHISE_CONTINUE = " Which franchise do you want to continue? "
+WHICH_FRANCHISE_DELETE = " Which franchise do you want to delete? "
+WHICH_FRANCHISE_SLOT = " Where do you want the new franchise? You can keep three. "
+FRANCHISE_SLOT_EMPTY = "franchise %d, empty"
+FRANCHISE_SLOT_FULL = "franchise %d, the %s, season %d, replace it"
+DELETE_QUESTION_FRANCHISE_N = " Delete franchise %d, the %s? It is kept in the backup, and you can restore it. "
+FRANCHISE_RESTORED_TO = " The franchise was restored as franchise %d. You can continue it now. "
+EVERY_FRANCHISE_FULL = " You have three franchises, so the deleted one was not restored. Delete one first; the deleted one stays in the backup. "
+
 # ----- a new game (NX-S7) -----
 NEW_KIND_QUESTION = " What kind of game do you want to start? "
 NEW_SEASON = "a new season"

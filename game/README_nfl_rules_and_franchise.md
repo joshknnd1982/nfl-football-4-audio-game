@@ -135,6 +135,13 @@ continue the franchise, start a new game, delete the saved game, the season or t
 - The files are in your data folder (see README_if_something_goes_wrong.md): football.sav, football2.sav and football3.sav are the three
   places, autosave.sav is the automatic save, the folder backup holds what was deleted or finished, and a franchise keeps its own set in its
   folder. Older saved games of the original game are place 1.
+- You can keep three franchises (since 0.16.6). Each has its own folder: franchise (the one you had before), franchise2 and franchise3. With
+  more than one, the start-up menu says each one and has "continue franchise 1, the Giants", "continue franchise 2, ..." and "delete a franchise".
+  A new franchise asks where it goes: the list starts on the first empty franchise, and a full one says its team and season and is replaced
+  only after one more question (the old one goes to the backup).
+- Every franchise keeps its three last deleted or replaced copies in its folder old. "Restore the deleted franchise of the Giants, season 2"
+  brings one back: into its own franchise when that is empty, else into the first empty one. With three franchises it tells you to delete one
+  first, and the copy stays in the backup.
 
 ### The real coaches and players
 

@@ -127,14 +127,14 @@ def test_deleting_the_franchise_asks_again_moves_it_to_the_backup_and_restoring_
     rig.game.startup_menu = True
     run_until(rig)
     spoken = said(rig)
-    assert spoken.count(S.DELETE_QUESTION_FRANCHISE) == 2 and S.WAS_DELETED in spoken and S.FRANCHISE_RESTORED in spoken
+    assert spoken.count(S.DELETE_QUESTION_FRANCHISE) == 2 and S.WAS_DELETED in spoken and S.FRANCHISE_RESTORED_TO % 1 in spoken   # D-173: its slot
     assert files.data["league.sav"] == before and not files.exists("old/league-1.sav")
-    assert " 2. %s " % S.RESTORE_FRANCHISE in spoken
+    assert any(line.startswith(" 2. restore the deleted franchise of the ") for line in spoken)          # D-173: the copy is named
 
 
 def test_a_new_franchise_is_started_from_the_menu_with_the_last_kind_first_and_the_classic_season_is_kept(tmp_path):
     files = MemoryFiles()
-    rig = franchise_rig(tmp_path, [DOWN, ENTER, DOWN, ENTER] + COACH_AND_TEAM, files=files, kind="classic", policy=quit_policy,
+    rig = franchise_rig(tmp_path, [DOWN, ENTER, DOWN, ENTER, ENTER] + COACH_AND_TEAM, files=files, kind="classic", policy=quit_policy,   # D-173: slot 1
                         preset=preset_season())
     rig.game.startup_menu = True
     run_until(rig)

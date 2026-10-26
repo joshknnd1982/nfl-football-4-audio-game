@@ -140,11 +140,11 @@ def main(argv=None) -> int:
                                   last_errors=last_errors, speech=speech, speech_settings=settings.speech, started=started,
                                   audio=audio, store=store, custom=custom, settings=settings)
 
-    def franchise_factory(classic_store):
+    def franchise_factory(classic_store, slot=1):
         from .extras.franchise import data as franchise_data
         from .extras.franchise.files import DiskFiles
         from .extras.franchise.store import FranchiseStore
-        return FranchiseStore(DiskFiles(os.path.join(paths.user_data_dir(), franchise_data.FOLDER)), classic_store)
+        return FranchiseStore(DiskFiles(os.path.join(paths.user_data_dir(), franchise_data.folder_of(slot))), classic_store)   # D-173
 
     def game_thread():
         try:

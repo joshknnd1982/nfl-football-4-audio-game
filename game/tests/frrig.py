@@ -78,13 +78,17 @@ def franchise_rig(tmp_path, answers=(), policy=enter_policy, files=None, kind=No
     if classic_names is not None:
         rig.store.names = classic_names
 
-    def factory(classic):
-        store = FranchiseStore(rig.files, classic)
+    rig.slot_files = {1: rig.files}               # D-173: each franchise slot has a folder of its own (slots 2 and 3 in memory too)
+
+    def factory(classic, slot=1):
+        files_of = rig.slot_files.setdefault(slot, MemoryFiles())
+        store = FranchiseStore(files_of, classic)
         store.strict = True
         store.practice_squads = practice          # D-136: the older tests keep the league they were written for; the squads' tests ask for them
         store.reserves = reserves                 # D-149: the same for the 53-man roster's benches; the benches' tests ask for them
         store.real_calendar = real_calendar       # SZ.8: the tests of the original's 16 random weeks stay as they were; the tests of the calendar ask for it
-        rig.fstore = store
+        if slot == 1:
+            rig.fstore = store
         return store
 
     rig.fstore = None

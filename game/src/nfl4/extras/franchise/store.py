@@ -65,6 +65,7 @@ class FranchiseStore:
         self._notices: list = []
         self.shelf = SaveShelf(files)           # SX.14: the franchise's saved games (three slots, the automatic save, the backup)
         self._write_notice_given = False
+        self.slot = 1                           # D-173: which of the three franchise slots this store's folder is (flow.franchise_peek sets it)
 
     # ----- notices -----
 
@@ -413,21 +414,55 @@ class FranchiseStore:
         franchise is there now, none was deleted, or it could not be moved."""
         if not self.deleted_exists():
             return False
+        return self.restore_backup(1)
+
+    # ----- D-173 (the owner 2026-10-26: "the backups fail to restore"): every kept copy, into any empty slot -----
+
+    def backup_numbers(self) -> list:
+        """The numbers of the kept copies in old\\ (1 the newest), whether or not a franchise is in this slot now."""
+        return [n for n in range(1, D.OLD_COPIES + 1) if self.files.exists(D.OLD_FOLDER + "/" + "league-%d.sav" % n)]
+
+    def peek_backup(self, number: int):
+        """The kept copy's league (a LeagueRecord) for its summary, or None when it cannot be read."""
+        state, record = self._read(D.OLD_FOLDER + "/" + "league-%d.sav" % number)
+        return record if state == "ok" else None
+
+    def restore_backup(self, number: int, target: "FranchiseStore | None" = None) -> bool:
+        """Kept copy `number` of this slot becomes the franchise of `target` (this store, or another slot's), which must be empty; the
+        copies after it move up one. Every file of the copy moves (league.sav, history.txt, its saved games). False when the target holds a
+        franchise, the copy is not there, or a file could not be moved (what moved stays where it went, and the log says which)."""
+        target = target if target is not None else self
         old = D.OLD_FOLDER + "/"
-        for target, pattern in self._companions():
-            source = old + pattern % 1
-            if self.files.exists(source) and not self.files.move(source, target):
-                debuglog.event("save", "franchise_restore_failed", file=target)
+        if not target.opened:
+            target.open(False)
+        if target.league is not None or not self.files.exists(old + "league-%d.sav" % number):
+            debuglog.event("save", "franchise_restore_refused", slot=getattr(self, "slot", 1), copy=number,
+                           target=getattr(target, "slot", 1), target_full=target.league is not None)
+            return False
+        for name, pattern in self._companions():
+            source = old + pattern % number
+            if not self.files.exists(source):
+                continue
+            if target is self:
+                moved = self.files.move(source, name)
+            else:
+                data = self.files.read(source)
+                moved = data is not None and target.files.write(name, data)
+                if moved:
+                    self.files.remove(source)
+            if not moved:
+                debuglog.event("save", "franchise_restore_failed", file=name, copy=number)
                 return False
-        for _target, pattern in self._companions():
-            for number in range(2, D.OLD_COPIES + 1):
-                if self.files.exists(old + pattern % number):
-                    self.files.move(old + pattern % number, old + pattern % (number - 1))
-        self.opened = False
-        self.problem = ""
-        self.open(True)
-        debuglog.event("save", "franchise_restore", ok=self.league is not None)
-        return self.league is not None
+        for _name, pattern in self._companions():
+            for later in range(number + 1, D.OLD_COPIES + 1):
+                if self.files.exists(old + pattern % later):
+                    self.files.move(old + pattern % later, old + pattern % (later - 1))
+        target.files.remove(D.PREVIOUS_FILE)            # the copy is whole; an older slot's previous file must never heal over it
+        target.opened, target.problem, target.league = False, "", None
+        target.open(True)
+        debuglog.event("save", "franchise_restore", slot=getattr(self, "slot", 1), copy=number, target=getattr(target, "slot", 1),
+                       ok=target.league is not None)
+        return target.league is not None
 
     @staticmethod
     def _companions() -> tuple:

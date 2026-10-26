@@ -664,6 +664,24 @@ FA_POSITION = {"QB": "QB", "RB": "RB", "HB": "RB", "FB": "FB", "WR": "WR", "TE":
                "CB": "CB", "S": "S", "SAF": "S", "FS": "S", "SS": "S", "K": "K", "P": "P", "LS": "LS"}
 FA_GONE = ("RET", "RSR")                        # nflverse: retired, reserve/retired
 FA_SEASONS = 2                                  # this season and the one before
+# D-172 (the owner 2026-10-26: "Justin Tucker is still a free agent and not listed"): a man whose last season was the one before last (Tucker: released in
+# May 2025, unsigned all of 2025) is a free agent too when Sleeper has news of him within FA_NEWS_DAYS of the file's date; one gone quiet that long is
+# out of the league (2026-10-25: 64 such men kept, 449 left out). Neither source marks every retirement, so known retirees are settled by hand.
+FA_OLDER_SEASONS = 3
+FA_NEWS_DAYS = 365
+FA_SETTLEMENTS = Path(__file__).resolve().parent / "free_agent_settlements.txt"
+
+
+def read_fa_settlements(text: str) -> set:
+    """name keys of free_agent_settlements.txt: "X001 = name | why | source"; a man there is never a free agent."""
+    out = set()
+    for line in text.replace("\r\n", "\n").split("\n"):
+        if line.strip().startswith("#") or "=" not in line:
+            continue
+        name = line.split("=", 1)[1].split("|")[0].strip()
+        if name:
+            out.add(name_key(name))
+    return out
 FA_HEADER = """# NFL Football 4 freeagents, format 1.
 # These are the real NFL free agents a new franchise starts with: every player who was on an NFL roster this season or last season, has not retired,
 # and is on no team when the list was made.
@@ -703,6 +721,8 @@ def free_agent_pool(nv_players: bytes | None, on_team, sl_free, today: str) -> l
     from nfl4.extras.real_names import name_problem
     free_match = Matcher([p["full_name"] for p in sl_free])
     free_by = {p["full_name"]: p for p in sl_free}
+    settled = read_fa_settlements(FA_SETTLEMENTS.read_bytes().decode("utf-8")) if FA_SETTLEMENTS.exists() else set()
+    news_since = (_dt.datetime.fromisoformat(today) - _dt.timedelta(days=FA_NEWS_DAYS)).timestamp() * 1000
     out, seen = [], set()
     for r in csv.DictReader(io.StringIO(nv_players.decode("utf-8-sig"))):
         try:
@@ -710,14 +730,16 @@ def free_agent_pool(nv_players: bytes | None, on_team, sl_free, today: str) -> l
         except ValueError:
             continue
         name = (r.get("display_name") or "").strip()
-        if last < SEASON - FA_SEASONS + 1 or (r.get("status") or "") in FA_GONE or not name or name_problem(name):
+        if last < SEASON - FA_OLDER_SEASONS + 1 or (r.get("status") or "") in FA_GONE or not name or name_problem(name):
             continue
-        if on_team.find(name) or name_key(name) in seen:
+        if on_team.find(name) or name_key(name) in seen or name_key(name) in settled:
             continue
         hit = free_match.find(name)
         if not hit:
             continue                                  # Sleeper has him on a team, or not as an active man
         sl = free_by[hit]
+        if last < SEASON - FA_SEASONS + 1 and float(sl.get("news_updated") or 0) < news_since:
+            continue                                  # out a whole season and no news for a year (D-172)
         word = FA_POSITION.get((r.get("position") or "").upper())
         if (r.get("position") or "").upper() == "DB":
             word = FA_POSITION.get((sl.get("position") or "").upper(), "CB")

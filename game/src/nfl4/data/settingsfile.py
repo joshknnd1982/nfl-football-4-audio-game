@@ -95,6 +95,7 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # nx_onside_question_chosen  yes when you chose the line above yourself; a file without it is read as always, once
 # nx_season_kind      classic = a classic season (default), franchise = your franchise, a league that lasts from season to
 #                     season (F9, Franchise; used only with the N. F. L. rules)
+# nx_franchise_slot   1, 2 or 3: which of your three franchises is in use (default 1); the start-up menu chooses it
 # nx_fr_auto          on or off: the staff handles your to do list and the roster cut of the franchise (default off)
 # nx_fr_offseason     full = every stage of the offseason is told (default), short = a sentence for each stage
 # nx_fr_picks_told    first = the first picks and yours (default), mine = only yours, all = every pick of the draft
@@ -153,6 +154,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_key_players = {game.nx_key_players}",
         f"nx_menu_hints = {game.nx_menu_hints}",
         f"nx_season_kind = {game.nx_season_kind}",
+        f"nx_franchise_slot = {game.nx_franchise_slot}",
         f"nx_fr_auto = {'on' if game.nx_fr_auto else 'off'}",
         f"nx_fr_offseason = {game.nx_fr_offseason}",
         f"nx_fr_picks_told = {game.nx_fr_picks_told}",
@@ -349,6 +351,10 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if value.lower() not in ("classic", "franchise"):
             raise ValueError(f"'{value[:20]}' is not classic or franchise")
         game.nx_season_kind = value.lower()
+    elif name == "nx_franchise_slot":
+        if value.strip() not in ("1", "2", "3"):
+            raise ValueError(f"'{value[:20]}' is not 1, 2 or 3")
+        game.nx_franchise_slot = int(value.strip())
     elif name == "nx_fr_auto":
         word = _ON_WORDS.get(value.lower())
         if word is None:

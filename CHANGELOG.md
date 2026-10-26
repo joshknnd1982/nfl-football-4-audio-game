@@ -12,10 +12,21 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 
 ## 0.16.6 (2026-10-26, test build)
 
-The fifteenth test installer. A change for bug reports only; nothing you hear in the game is different. Everything of 0.16.5 and before below is still to be tested.
+The fifteenth test installer. Three fixes from the owner's report: the free agents who sat out last season, three franchises with backups that restore, and problem reports that name the players. Everything of 0.16.5 and before below is still to be tested.
+
+### Free agents who sat out last season, like Justin Tucker
+0.16.5 listed only players who were on an NFL roster this season or last season, so Justin Tucker (released in May 2025, unsigned all of 2025) was missing. The list now also has the players whose last season was 2024 and who are still in the news this past year: 836 free agents in all (17 kickers, 9 punters, 8 long snappers, 30 quarterbacks), with Justin Tucker, Taylor Heinicke and Dorian Thompson-Robinson among them. Players who have gone quiet for a year are left out, and so are known retirees the sources do not mark (Derek Carr, Tom Brady). If your free_agents.txt is exactly 0.16.5's, it is replaced once and yours is kept beside it.
+- How to test: a new franchise, F9, Franchise, free agents, the kickers: Justin Tucker is there. Look for other unsigned players you know.
+- Tell us: anyone still missing, or anyone listed who has signed or retired.
+
+### Three franchises, and backups that restore
+You can now keep three franchises. The franchise you have stays franchise 1. "Start a new game", then "a new franchise", asks where it goes: the list starts on the first empty franchise; a full one says its team and season and is replaced only after one more question (it goes to the backup). With more than one franchise, the start-up menu says each one and has "continue franchise 1, the Giants" and so on, and "delete a franchise". Before, a deleted or replaced franchise could be restored only while no other franchise existed, so starting a new franchise locked the older one away, and after you closed the game the start-up menu did not come back for a deleted franchise at all; now it does. Now every kept copy (the three last deleted or replaced of each franchise) can be restored: "restore the deleted franchise of the Giants, season 1" brings it back into its own franchise when that is empty, else into the first empty one; with three franchises the game says to delete one first and keeps the copy.
+- How to test: with the N. F. L. rules start a franchise as one team, then "start a new game", "a new franchise", franchise 2, another team. Quit and start again: both franchises are said, and each can be continued. Delete franchise 1 and restore it. Start a new franchise in a full slot, then restore the replaced one: it comes back into the empty slot.
+- Tell us: any restore that says it could not be restored (and save a problem report right then).
+
 
 ### A problem report names the real players
-The debug log hides every name you type, so that a report never holds a private name. It also hid the real players and coaches the game offers you (you only press Enter), so a report about who started at quarterback said only "typed". Now the real players and head coaches of the rosters, the free agents and the coaches file are named in the log; a name you type that is no real player's is still hidden. The log also writes one line at the start of each game with the two quarterbacks the game offered and the two who play, and whether yours came from the season's first game.
+This one changes nothing you hear. The debug log hides every name you type, so that a report never holds a private name. It also hid the real players and coaches the game offers you (you only press Enter), so a report about who started at quarterback said only "typed". Now the real players and head coaches of the rosters, the free agents and the coaches file are named in the log; a name you type that is no real player's is still hidden. The log also writes one line at the start of each game with the two quarterbacks the game offered and the two who play, and whether yours came from the season's first game.
 - How to test: play the first game of a franchise or a season, then F9, Speech settings, "Save a problem report", and send the file: it lets the maintainer see the quarterbacks by name.
 
 ## 0.16.5 (2026-10-26, test build)

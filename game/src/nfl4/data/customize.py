@@ -206,6 +206,7 @@ ROSTERS_BEFORE_REFRESH = ".before-layout-2"    # SR.2: the copy of the player's 
 OLD_SHIPPED_FREE_AGENTS = {
     "016328cf7ab998d2fe3f8763756871b03e02fcd196942d6e758c0da741ba892d",     # 0.14.0 to 0.16.1: as of 2026-10-24 (NX-B3)
     "48b1300b1a6c8b3b08134af599c73e3adc53d2a9025d9aa4b272d86225ca9304",     # 0.16.2 to 0.16.4: as of 2026-10-25, 170 men (D-169 adds the whole pool)
+    "d44f6dd5f1c63fa74819cd551ceb5a1f8f68574dbbbb970b13875f75567f68fa",     # 0.16.5: 771 men (D-172 adds the men out a season who are still in the news)
 }
 
 

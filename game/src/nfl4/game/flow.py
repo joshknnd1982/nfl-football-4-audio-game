@@ -98,6 +98,7 @@ class Game(Speakers):
         self.season_hooks = CLASSIC_SEASON_HOOKS
         self.franchise_factory: Callable | None = None
         self._franchise_store = None
+        self._franchise_stores: dict = {}            # D-173: the store of each franchise slot, made when first needed
         self.parked_classic: SeasonState | None = None
         self._season_engine = None
         self.play_engine = None                       # the running pag, so F12's GetSexOf reaches its He and She words
@@ -183,16 +184,44 @@ class Game(Speakers):
         """The franchise's store (nfl4 only, SX.8a): made when first needed, never with Rules = Classic. It opens the folder
         itself (`open`), so asking for it touches no file."""
         if self._franchise_store is None:
+            self._franchise_store = self.franchise_peek(self.franchise_slot)
+            if self._franchise_store not in self.notice_sources:
+                self.notice_sources = self.notice_sources + (self._franchise_store,)
+        return self._franchise_store
+
+    # ----- D-173 (the owner 2026-10-26): three franchises, each in a slot (a folder) of its own -----
+
+    @property
+    def franchise_slot(self) -> int:
+        slot = getattr(self.options.settings.game, "nx_franchise_slot", 1) if self.options is not None else 1
+        return slot if isinstance(slot, int) and 1 <= slot <= 3 else 1
+
+    def franchise_peek(self, slot: int):
+        """The store of franchise slot 1 to 3, made once (not opened: `open` reads the folder). The store in use is `franchise()`'s."""
+        stores = self._franchise_stores
+        if slot not in stores:
             from ..extras.franchise.files import MemoryFiles
             from ..extras.franchise.store import FranchiseStore
             if self.franchise_factory is not None:
-                store = self.franchise_factory(self.program_store)
+                store = self.franchise_factory(self.program_store) if slot == 1 else self.franchise_factory(self.program_store, slot)
             else:
                 store = FranchiseStore(MemoryFiles(), self.program_store)
             store.real_names_of = lambda: self.real_names      # 2026-10-23: the real names, to fix a league's wrong-position backs
-            self._franchise_store = store
+            store.slot = slot
+            stores[slot] = store
+        return stores[slot]
+
+    def select_franchise_slot(self, slot: int) -> None:
+        """Slot `slot` becomes the franchise in use (the setting is saved); the caller puts no franchise in use while it changes."""
+        settings = self.options.settings.game
+        if settings.nx_franchise_slot != slot:
+            settings.nx_franchise_slot = slot
+            self.options.save()
+        store = self.franchise_peek(slot)
+        self._franchise_store = store
+        if store not in self.notice_sources:
             self.notice_sources = self.notice_sources + (store,)
-        return self._franchise_store
+        debuglog.event("save", "franchise_slot", slot=slot)
 
     def franchise_help(self, key: str) -> list:
         """The added help lines of F5, F6 and F7 while the franchise is in use (nfl4 only, SX.8e, H12); none in a classic season."""

@@ -49,6 +49,12 @@ COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"
 FOLDER = "franchise"                         # the folder of the data folder that holds every franchise file
+SLOTS = 3                                    # D-173 (the owner 2026-10-26): three franchises, each in a folder of its own
+
+
+def folder_of(slot: int) -> str:
+    """The folder of franchise slot 1 to SLOTS: slot 1 is the folder every earlier version used (its franchise stays), 2 and 3 beside it."""
+    return FOLDER if slot == 1 else "%s%d" % (FOLDER, slot)
 LEAGUE_FILE, PREVIOUS_FILE, HISTORY_FILE, SAVED_FILE = "league.sav", "league.previous.sav", "history.txt", "football.sav"
 OLD_FOLDER = "old"                           # archived franchises: old\league-1.sav and old\history-1.txt (the three newest)
 OLD_COPIES = 3

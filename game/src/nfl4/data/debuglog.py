@@ -77,6 +77,7 @@ _typed: list[str] = []               # strings the player typed, replaced by <ty
 # Names that are public facts (the real rosters, free agents and head coaches the game ships or the player loads): never hidden, so a log shows
 # which real man the game offered and played (2026-10-26: a problem report about the Giants' starting quarterback said only "<typed>").
 _public: set[str] = set()
+_NOT_NAMES = frozenset({"coach"})       # the default coach "name": hiding it hid the word coach in every sentence (2026-10-26 report)
 _private_names: list[str] = []       # extra account names (tests), besides the ones found in the environment
 RUN_ID = secrets.token_hex(3)
 STARTED = time.monotonic()
@@ -188,7 +189,7 @@ def add_typed(*texts: str) -> None:
     _resolve_public()
     for text in texts:
         text = unicodedata.normalize("NFC", (text or "").strip())
-        if len(text) >= 2 and text not in _typed and text.casefold() not in _public:
+        if len(text) >= 2 and text not in _typed and text.casefold() not in _public and text.casefold() not in _NOT_NAMES:
             _typed.append(text)
             del _typed[:-60]
 
