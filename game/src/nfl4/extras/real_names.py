@@ -153,6 +153,11 @@ class RealNames:
         """The spoken name of team 1 to 32's head coach ("" when there is none)."""
         return self.spoken(self.coaches[team - 1]) if 1 <= team <= TEAMS and self.coaches[team - 1] else ""
 
+    def public_names(self) -> frozenset:
+        """Every real man's and head coach's name, as written and as spoken (casefolded): public facts the debug log never hides."""
+        coaches = [c for c in self.coaches if c]
+        return self.real_full_names() | frozenset(n.casefold() for c in coaches for n in (c, self.spoken(c)))
+
     def coach_choices(self) -> list:
         """(team, spoken name) of every team that has a coach, in the teams' order."""
         return [(team, self.coach(team)) for team in range(1, TEAMS + 1) if self.coaches[team - 1]]
@@ -491,9 +496,12 @@ def build(coach_entries, roster_entries, respell_entries, defaults: "RealNames |
                 bad.add(entry.id, "%s, the line is ignored" % reason)
             continue
         surnames[ident] = (ident, name)
-    return RealNames(version, tuple(coaches), tuple(rosters), tuple(sorted(respell.values())),
-                     tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))), tuple(reserves), tuple(team_roles),
-                     tuple(sorted(surnames.values(), key=lambda row: int(row[0][1:]))), roster_version)
+    built = RealNames(version, tuple(coaches), tuple(rosters), tuple(sorted(respell.values())),
+                      tuple(sorted(free.values(), key=lambda row: int(row[0][1:]))), tuple(reserves), tuple(team_roles),
+                      tuple(sorted(surnames.values(), key=lambda row: int(row[0][1:]))), roster_version)
+    from ..data import debuglog
+    debuglog.add_public_source(built.public_names)  # rule 0.15: the real men the game offers are named in the log, never <typed> (read lazily)
+    return built
 
 
 def _team_lines(players: list, roles: "dict | None"):

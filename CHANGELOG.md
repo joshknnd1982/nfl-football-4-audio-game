@@ -10,6 +10,14 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.6 (2026-10-26, test build)
+
+The fifteenth test installer. A change for bug reports only; nothing you hear in the game is different. Everything of 0.16.5 and before below is still to be tested.
+
+### A problem report names the real players
+The debug log hides every name you type, so that a report never holds a private name. It also hid the real players and coaches the game offers you (you only press Enter), so a report about who started at quarterback said only "typed". Now the real players and head coaches of the rosters, the free agents and the coaches file are named in the log; a name you type that is no real player's is still hidden. The log also writes one line at the start of each game with the two quarterbacks the game offered and the two who play, and whether yours came from the season's first game.
+- How to test: play the first game of a franchise or a season, then F9, Speech settings, "Save a problem report", and send the file: it lets the maintainer see the quarterbacks by name.
+
 ## 0.16.5 (2026-10-26, test build)
 
 The fourteenth test installer. Two fixes from the owner's report. Everything of 0.16.4, 0.16.3 and 0.16.2 below is still to be tested.

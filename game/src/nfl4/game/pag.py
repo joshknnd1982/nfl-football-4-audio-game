@@ -444,6 +444,9 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
                 own, opponent = self.g.getqbs(self.s, saved=self.saved is not None, own_from_file=own_from_file)
             else:
                 own, opponent = self.g.getqbs(self.s, saved=self.saved is not None, own_from_file=own_from_file, defaults=defaults)
+            from ..data import debuglog          # rule 0.15 (2026-10-26, "the Giants started J.J. McCarthy"): who was offered and who plays
+            debuglog.event("game", "quarterbacks", own=own, opponent=opponent, own_offered=defaults[0], opponent_offered=defaults[1],
+                           own_from_season_file=bool(own_from_file and self.s.gpn != 0))
         self.s.quarterbacks = {1: own, 2: opponent}
 
     # ----- the coin toss and the opening choice (4.14; 0x43bb4c to 0x43cc63) -----

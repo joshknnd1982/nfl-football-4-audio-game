@@ -74,6 +74,9 @@ _state = "starting"                  # what the game thread is doing now, for th
 _context = "start"                   # the screen or menu a key reaches
 _exit_reason = ""
 _typed: list[str] = []               # strings the player typed, replaced by <typed> in every line
+# Names that are public facts (the real rosters, free agents and head coaches the game ships or the player loads): never hidden, so a log shows
+# which real man the game offered and played (2026-10-26: a problem report about the Giants' starting quarterback said only "<typed>").
+_public: set[str] = set()
 _private_names: list[str] = []       # extra account names (tests), besides the ones found in the environment
 RUN_ID = secrets.token_hex(3)
 STARTED = time.monotonic()
@@ -182,11 +185,38 @@ def add_typed(*texts: str) -> None:
     """Strings the player typed or that the game loaded from the player's files (a coach's name, the quarterbacks, a renamed
     player): the log writes the length of typed text, and any line that holds one of these (the game says them aloud) shows
     <typed> instead, as a whole word in any case. Give the cleaned form as well as the raw one."""
+    _resolve_public()
     for text in texts:
         text = unicodedata.normalize("NFC", (text or "").strip())
-        if len(text) >= 2 and text not in _typed:
+        if len(text) >= 2 and text not in _typed and text.casefold() not in _public:
             _typed.append(text)
             del _typed[:-60]
+
+
+def add_public(names) -> None:
+    """Names that are public facts (a real player's or coach's name, as written and as spoken): add_typed never hides them, and one
+    already hidden is shown again. A name the player types that is no real man's stays hidden."""
+    _public.update(unicodedata.normalize("NFC", n).strip().casefold() for n in names if n and n.strip())
+    _typed[:] = [t for t in _typed if t.casefold() not in _public]
+
+
+_public_sources: list = []              # callables that give public names, read only when a typed name must be checked (a list costs 50 ms)
+
+
+def add_public_source(source) -> None:
+    """`source()` gives public names (real_names.build registers each set of names it makes); it is called the first time a typed name
+    must be checked, so the many rebuilds of the names cost nothing here."""
+    _public_sources.append(source)
+    del _public_sources[:-4]
+
+
+def _resolve_public() -> None:
+    while _public_sources:
+        source = _public_sources.pop(0)
+        try:
+            add_public(source())
+        except Exception:                   # the log never stops the game
+            pass
 
 
 def redact(text: str) -> str:
@@ -203,6 +233,8 @@ def redact(text: str) -> str:
         text = _EMAIL.sub("<email>", text)
     if any(word in lowered for word in _SECRET_WORDS):
         text = _PRIVATE_KEY.sub(lambda m: m.group(1) + m.group(2) + "<hidden>", text)
+    if _typed and _public_sources:
+        _resolve_public()                   # names registered before the rosters were read are shown once they are
     if _typed:
         folded = text.casefold()
         for typed in tuple(_typed):
