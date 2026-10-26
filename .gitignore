@@ -3,19 +3,10 @@
 /football.exe
 /football.txt
 /foot*.wav
-# Original-derived working material, working notes and the maintainer's private playbook copies
+# Original-derived working material (string dumps, raw pages, scratch scripts): never published. The working notes, playbooks and fixesforgames are published since 2026-10-26 (the owner's word)
 /extracted/
 /observations/
 /work/
-/CLAUDE.md
-/CLAUDE.part*.md
-/playbook-*.md
-/NEXT_PROMPT.txt
-/PROJECT_STATE.md
-/PROJECT_STATE.part*.md
-/SESSION_LOG.md
-/SESSION_LOG.part*.md
-/PLAYTEST_LIST.md
 # Build output and release files (attached to the GitHub release, not committed)
 /release/*.exe
 /release/*.zip
@@ -28,8 +19,6 @@ venv/
 .pytest_cache/
 /release/checksums.txt
 /release/nfl4-portable-*/
-/fixesforgames.md
-/fixesforgames.part*.md
 /release/checksums_test_*.txt
 # Excerpts of the teams' pages and of Sleeper's feed, the fixtures of the roster script's tests: kept local, never published (D-156, D-157)
 /game/tests/data/rosters_sr2/
