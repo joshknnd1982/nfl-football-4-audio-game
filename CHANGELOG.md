@@ -12,7 +12,7 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 
 ## 0.16.4 (2026-10-26, test build)
 
-Not built yet: the next test installer will carry it. A fix from a player's e-mail.
+The thirteenth test installer. A fix from a player's e-mail. Everything of 0.16.3 and 0.16.2 below is still to be tested; nothing here has been heard by the owner yet.
 
 ### Every position of a depth chart names the man who plays there
 A player wrote that at some positions nobody was starting. Many real teams have no strong-side linebacker on their depth chart (they play a 3-4 defense with two inside linebackers), most have no fullback, and one team's only kicker is on the practice squad, so the starting lineup and the depth chart menu said "nobody" there, although the game always put a man on the field. Now each such place names the man who plays it and where he comes from: "strong-side linebacker, Jay Higgins the fourth, number 49, filling in from middle linebacker", "fullback, Justice Hill filling in from halfback", "kicker, Zane Gonzalez, from the practice squad for game day". The man keeps his own position on the roster, and nobody plays two places. Enter on the place still lists everyone who may start there; the man you choose then starts there.

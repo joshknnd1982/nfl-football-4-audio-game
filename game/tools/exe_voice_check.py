@@ -9,10 +9,15 @@ import time
 
 exe = sys.argv[1]
 seconds = float(sys.argv[2]) if len(sys.argv) > 2 else 15
-data = tempfile.mkdtemp(prefix="brain_st_")
+data = tempfile.mkdtemp(prefix="nfl4_voice_")
 voice = sys.argv[3] if len(sys.argv) > 3 else r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\TokenEnums\SmoothTalker\SmoothTalker"
-open(os.path.join(data, "settings.txt"), "w").write(
-    f"# Brain settings, format 1\nspeech_voice = {voice}\nspeech_volume = 0\nsound_volume = 0\n")
+# nfl4's own settings (the Brain lines this tool first wrote were healed away, and with NVDA running the game spoke
+# through NVDA, so no voice was ever loaded): the Windows voices forced, the screen reader question answered, every
+# role on the voice under test at volume 0, sounds almost silent (B-X155).
+ROLES = ("announcer", "own_quarterback", "own_punter", "opponent_quarterback", "opponent_punter")
+open(os.path.join(data, "settings.txt"), "w", encoding="utf-8").write(
+    "# NFL Football 4 settings, format 1\n" + "".join(f"voice_{role} = {voice}\nvolume_{role} = 0\n" for role in ROLES)
+    + "sound_volume = -50\nspeech_output = sapi\nspeech_output_chosen = yes\n")
 env = dict(os.environ, NFL4_DATA_DIR=data, NFL4_DEBUG="1")
 t0 = time.perf_counter()
 proc = subprocess.Popen([exe], env=env, cwd=data)
@@ -24,6 +29,10 @@ if alive:
     subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import logfiles  # noqa: E402  (one log file per launch since rule 0.15)
-print(logfiles.launch_text(data)[-2500:] or "no log")
+log = logfiles.launch_text(data)
+print(log[-2500:] or "no log")
 settings = open(os.path.join(data, "settings.txt"), encoding="utf-8").read()
-print("settings voice line:", [l for l in settings.splitlines() if l.startswith("speech_voice")])
+print("settings voice line:", [l for l in settings.splitlines() if l.startswith("voice_announcer")])
+name = voice.rsplit("\\", 1)[-1]
+spoken = [l for l in log.splitlines() if 'backend="SAPI 5"' in l]
+print("spoke through SAPI:", len(spoken), "| voice named in the log:", name in log, "| NVDA used:", "backend=NVDA" in log)
