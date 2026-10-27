@@ -19,7 +19,7 @@ from ..game.rules import ClassicRules
 from .broadcast import DEFAULT_TALK, Broadcast
 
 KEY_F6 = "117"
-HELP_F6 = ("NXH-65", "NXH-66", "NXH-83", "NXH-70")          # the broadcast's lines of F6 (the N. F. L. rules say them too)
+HELP_F6 = ("NXH-65", "NXH-66", "NXH-83", "NXH-84", "NXH-70")          # the broadcast's lines of F6 (the N. F. L. rules say them too)
 
 
 class ClassicRadioRules(ClassicRules):
@@ -33,7 +33,9 @@ class ClassicRadioRules(ClassicRules):
 
     def for_game(self) -> "ClassicRadioRules":
         """A fresh object for one game, with the same switches and names (Game.play_game)."""
-        return type(self)(self.broadcast.analyst, dict(self.broadcast.names), self.broadcast.talk_level)
+        fresh = type(self)(self.broadcast.analyst, dict(self.broadcast.names), self.broadcast.talk_level)
+        fresh.broadcast.play_calls = self.broadcast.play_calls      # RC (D-195)
+        return fresh
 
     def period_clock(self, game, state):
         self.game, self.state = game, state

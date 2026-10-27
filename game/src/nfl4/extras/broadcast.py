@@ -50,6 +50,7 @@ from . import commentators
 from . import crew
 from . import nx_texts as X
 from . import remarks
+from .radio_calls import DEFAULT_CALLS, RadioCalls
 
 log = logging.getLogger("nfl4.extras")
 
@@ -59,7 +60,8 @@ log = logging.getLogger("nfl4.extras")
 # the gap and the announcer's turn to him were lowered to about half that (the kick-off, half time and the final whistle stay). Was: CTD 85, CFG 55,
 # CFM 70, CTV 80, CBG 60, CSK 40, CTC 15, CTS 15, CFD 70, CRZ 35, CPN 30, CTM 75, CQE 60, CTT 60, CBO 50; ASK_CHANCE 40; MIN_GAP 2.
 CHANCE = {"CKO": 100, "CTD": 60, "CFG": 30, "CFM": 40, "CTV": 45, "CBG": 30, "CSK": 20, "CTC": 8, "CTS": 8, "CFD": 40, "CRZ": 15, "CPN": 15,
-          "CTM": 45, "CQE": 35, "CHT": 100, "CFN": 100, "CFT": 100, "CTT": 35, "CBO": 25}
+          "CTM": 45, "CQE": 35, "CHT": 100, "CFN": 100, "CFT": 100, "CTT": 35, "CBO": 25,
+          "CXR": 0}            # RC (D-195): the analyst's exclamation before a line of REACT_POOLS (none at "a little")
 ASK_CHANCE = 25
 # BC.4 (D-191, the listening test): Walt's hand-off (ASK: "walk us through that play", "what changed on that snap") only before a line about a
 # play, never before the analyst's line at the kick-off, the two-minute warning, the end of a quarter, half time or the end of the game.
@@ -108,6 +110,14 @@ class Talk:
     network_every: int
     score_after: int
     score_one_in: int
+    # RC (D-195; the owner on 0.16.9: "Not once did the game have the sideline reporter speak at all. I want an exciting commentary"):
+    # the reporter's own moments (a touchdown, a takeaway, a big play, a fourth-down gamble, the two-minute warning, a quarter's end, the
+    # final whistle), her chance in percent there and the plays between two of her play moments; Walt hands off to her by name before her
+    # note at the sign-on (the analyst's exclamation before a big moment's line is the chance of CXR). "A little" has none
+    # of it, so it stays the 0.16.8 broadcast word for word (D-193).
+    nora: int = 0
+    nora_gap: int = FAR_GAP
+    nora_intro: bool = False
 
 
 def _chances(plain: int, **special) -> dict:
@@ -121,15 +131,15 @@ def _chances(plain: int, **special) -> dict:
 TALK_LEVELS = {
     "little": Talk("little", "NXM-65", _chances(0), MIN_GAP, ASK_CHANCE, ASIDE_ONE_IN, ASIDE_GAP, NETWORK_EVERY, SCORE_RESET_AFTER,
                    SCORE_RESET_ONE_IN),
-    "some": Talk("some", "NXM-66", _chances(25, CTD=75, CFG=45, CFM=55, CTV=65, CBG=50, CSK=35, CTC=25, CTS=25, CFD=55, CRZ=30, CPN=30,
+    "some": Talk("some", "NXM-66", _chances(25, CTD=75, CFG=45, CFM=55, CTV=65, CBG=50, CSK=35, CTC=25, CTS=25, CFD=55, CRZ=30, CPN=30, CXR=35,
                                             CTM=60, CQE=50, CTT=50, CBO=40),
-                 2, 20, 4, 2, 420, 300, 2),
-    "lots": Talk("lots", "NXM-67", _chances(50, CTD=90, CFG=65, CFM=75, CTV=85, CBG=75, CSK=60, CTC=50, CTS=50, CFD=75, CRZ=55, CPN=50,
+                 2, 20, 4, 2, 420, 300, 2, nora=35, nora_gap=6, nora_intro=True),
+    "lots": Talk("lots", "NXM-67", _chances(50, CTD=90, CFG=65, CFM=75, CTV=85, CBG=75, CSK=60, CTC=50, CTS=50, CFD=75, CRZ=55, CPN=50, CXR=60,
                                             CTM=85, CQE=75, CTT=75, CBO=60),
-                 1, 15, 3, 2, 360, 240, 2),
-    "most": Talk("most", "NXM-68", _chances(85, CTD=100, CFG=90, CFM=95, CTV=100, CBG=100, CSK=90, CTC=80, CTS=80, CFD=95, CRZ=90, CPN=80,
+                 1, 15, 3, 2, 360, 240, 2, nora=60, nora_gap=4, nora_intro=True),
+    "most": Talk("most", "NXM-68", _chances(85, CTD=100, CFG=90, CFM=95, CTV=100, CBG=100, CSK=90, CTC=80, CTS=80, CFD=95, CRZ=90, CPN=80, CXR=85,
                                             CTM=100, CQE=100, CTT=100, CBO=90),
-                 1, 10, 1, 1, 300, 180, 1),
+                 1, 10, 1, 1, 300, 180, 1, nora=85, nora_gap=3, nora_intro=True),
 }
 TALK_ORDER = ("little", "some", "lots", "most")
 DEFAULT_TALK = "lots"
@@ -156,7 +166,12 @@ def talk_words(key: str) -> str:
     return X.text(TALK_LEVELS.get(key, TALK_LEVELS[DEFAULT_TALK]).text_id)
 
 WALT_POOLS = ("SGN", "CRW", "BN", "ASK", "ASN", "UPD", "QUP", "STA", "NID", "LID", "DRV", "CLK", "SGO")
-NORA_POOLS = ("SON", "SIN", "SHT")
+# RC (D-195): the reporter's own moments, each line of them names her (a screen reader speaks the whole crew in one voice): STD a touchdown,
+# STV a takeaway, SBG a big play, SFD a fourth-down gamble, SMW the two-minute warning, SQE the end of the first or third quarter, SFN the
+# final whistle with a winner, SFT a tie
+NORA_MOMENTS = ("STD", "STV", "SBG", "SFD", "SMW", "SQE", "SFN", "SFT")
+NORA_POOLS = ("SON", "SIN", "SHT") + NORA_MOMENTS
+REACT_POOLS = frozenset(("CTD", "CTV", "CBG", "CSK", "CFM"))   # RC: the analyst's lines that may open with an exclamation (CXR)
 CREW_WORDS = ("<analyst>", "<commentator>", "<sideline>")      # a line that names Gus or Nora: left out while the Broadcast item is off
 
 
@@ -186,6 +201,7 @@ class Facts:
         self.taken_over = getattr(outcome, "then", None) is not None   # a penalty or a review took the play over: no line for it
         self.down, self.to_go = state.down, state.to_go      # at the snap (the narration end point is before the downs)
         self.consumed = False
+        self.nora_done = False                               # RC (D-195): the reporter's moment of this play was looked at
 
 
 class Drive:
@@ -228,6 +244,8 @@ class Broadcast:
         self.state = None
         self.clock = None
         self.rnd: GameRandom | None = None
+        self.play_calls = DEFAULT_CALLS             # RC (D-195): used when the game has no settings of the player (a test's game)
+        self.calls = RadioCalls(self)               # the radio play-by-play (extras/radio_calls.py), attached with every game
         self._reset()
 
     def _reset(self) -> None:
@@ -247,6 +265,7 @@ class Broadcast:
         self.hurt: tuple[str, int] | None = None     # a Franchise game's man who was hurt: (name, side), Nora reports at the dead ball
         self.used: dict[str, set[str]] = {}
         self.signed_off = False
+        self.nora_since = FAR_GAP                    # RC (D-195): plays since the reporter's last play moment
         self.own_record = SimpleNamespace(recent={})  # Classic has no extras record: the last lines of each pool are kept here
 
     # ----- the names (extras/crew.py) -----
@@ -287,6 +306,8 @@ class Broadcast:
         self._reset()
         self._talk_told = None
         self.talk()                                   # the log names the level of this game
+        self.calls.attach(game)                       # RC (D-195): the radio play-by-play of this game, with its own generator
+        game.radio_calls = self.calls
         if self.analyst:
             self._own_voice()                         # starts the reading of the voice list when it is needed; the opening takes the voice
 
@@ -303,6 +324,7 @@ class Broadcast:
     def note_outcome(self, state, outcome) -> None:
         self.facts = Facts(state, outcome)
         self.since += 1
+        self.nora_since += 1
         self.plays += 1
         self.aside_since += 1
         self.clock_since += 1
@@ -323,6 +345,7 @@ class Broadcast:
         if not self.active() or state.down != 4 or state.two_point or offense_play in KICK_PLAYS or offense_play == 0:
             return
         self._try(state, "CFD", self._values(state, state.wisoff))
+        self._nora_try(state, "SFD", self._values(state, state.wisoff))     # RC: the sideline sees the offense stay on the field
 
     def penalty(self, state, side: int) -> None:
         if self.active():
@@ -352,6 +375,8 @@ class Broadcast:
             if not getattr(g, "crew_introduced", False):          # once per program run: where the crew's voices and names are set
                 g.crew_introduced = True
                 g.say5(X.text("NXB-B01"))
+            if self.talk().nora_intro:                             # RC (D-195): Walt names her before her first words
+                self._line(state, "ASN", values, g.say5)
             self._line(state, "SON", values, self._nora)
             self._say(state, "CKO", values, ask=False)
         self.last_id = self.score_said = self.game_seconds(state)
@@ -408,9 +433,35 @@ class Broadcast:
         reported = self._injury_report(state)
         timed = self.on_air() and self._clock_line(state)    # late in a half the time comes first, then the analyst
         analyst = self._play_line(state)
-        if not self.on_air() or reported or timed or analyst:
+        nora = self._nora_play(state)                        # RC (D-195): the reporter after a takeaway or a big play
+        if not self.on_air() or reported or timed or analyst or nora:
             return
         self._walt_filler(state)
+
+    def _nora_play(self, state) -> bool:
+        """RC (D-195): the reporter's line about the last play, a takeaway (STV) or a big gain (SBG), at her own rate."""
+        f = self.facts
+        if f is None or f.nora_done or f.two_point or f.taken_over or f.score:
+            return False
+        f.nora_done = True
+        if f.turnover and f.kind in (O.INTERCEPTION, O.FUMBLE):
+            return self._nora_try(state, "STV", self._values(state, other(f.offense)))
+        if f.kind in (O.RUN, O.PASS_COMPLETE) and f.yards >= BIG_GAIN:
+            return self._nora_try(state, "SBG", self._values(state, f.offense, yards=f.yards))
+        return False
+
+    def _nora_try(self, state, pool: str, values: dict[str, str], gap: bool = True, always: bool = False) -> bool:
+        """RC (D-195): one of the reporter's moments: her chance of the level (always: at the final whistle), not twice within the
+        level's plays for a play moment (gap). No draw at all at the level "a little" (it has no such moments)."""
+        t = self.talk()
+        if not self.active() or not t.nora or (gap and self.nora_since < t.nora_gap):
+            return False
+        if not always and self.rnd(100) > t.nora:
+            return False
+        if self._line(state, pool, values, self._nora) is None:
+            return False
+        self.nora_since = 0
+        return True
 
     def _play_line(self, state) -> bool:
         """The last play's line of the analyst, in the order of what matters most."""
@@ -517,6 +568,7 @@ class Broadcast:
         if what == "touchdown":                           # right after the six points: the scorer has the ball (state.wisoff)
             self._drive_summary(state, touchdown=True)
             self._try(state, "CTD", self._values(state, state.wisoff))
+            self._nora_try(state, "STD", self._values(state, state.wisoff), gap=False)   # RC: the scene on the field
         elif what == "score":                             # after_score: the game has just said the score (a field goal, a safety, a try)
             if f is not None:
                 f.consumed = True
@@ -526,6 +578,7 @@ class Broadcast:
                 self._try(state, "CFG", self._values(state, state.wisoff))
         elif what == "two_minute":
             self._try(state, "CTM", self._values(state, state.wisoff))
+            self._nora_try(state, "SMW", self._values(state, state.wisoff), gap=False)   # RC: the sidelines at the warning
         elif what == "two_minute_break":                  # before the commercial slot of rule 0.14 at the two-minute warning
             self._station_break(state)
         elif what == "quarter_end":
@@ -544,6 +597,7 @@ class Broadcast:
                 self.signed_off = True
                 self._line(state, "SGO", self._values(state, 1), self.game.say5)
                 log.info("broadcast: signed off after %d lines of the crew and %d plays", self.spoken, self.plays)
+                self.calls.game_over()
 
     def _station_break(self, state) -> None:
         self._line(state, "STA", self._values(state, state.wisoff), self.game.say5)
@@ -566,13 +620,16 @@ class Broadcast:
         elif quarter == 3 and margin >= DECIDED_MARGIN:
             pool = "CBO"
         self._try(state, pool, self._values(state, 1, quarter=quarter))
+        self._nora_try(state, "SQE", self._half_values(state) | {"<quarter>": QUARTER_WORDS[quarter]}, gap=False)   # RC
 
     def _game_end(self, state) -> None:
         a, b = state.score(1), state.score(2)
         if a == b:
             self._try(state, "CFT", self._values(state, 1))
+            self._nora_try(state, "SFT", self._half_values(state), gap=False, always=True)       # RC: the final word from the field
         else:
             self._try(state, "CFN", self._values(state, 1 if a > b else 2))
+            self._nora_try(state, "SFN", self._values(state, 1 if a > b else 2), gap=False, always=True)
 
     def _drive_summary(self, state, touchdown: bool) -> None:
         """DRV (the N. F. L. rules only): the plays, yards and minutes of the drive that scored, about once in three scores."""
@@ -732,6 +789,9 @@ class Broadcast:
             values = dict(values, **{"<situation>": self._final_clause(state)})
         if ask and self.rnd(100) <= self.talk().ask:
             self._line(state, "ASK", {}, self.game.say5)
+        react = self.talk().chance.get("CXR", 0)          # RC (D-195): "Wow!" before his reason on a big moment (no draw at "a little")
+        if pool in REACT_POOLS and react and self.rnd(100) <= react:
+            self._line(state, "CXR", values, self._gus)
         if self._line(state, pool, values, self._gus) is not None:
             self.since = 0
 

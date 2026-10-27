@@ -259,7 +259,7 @@ def test_the_default_file_lists_the_pool_in_its_place_between_on_and_pn():
     # the design's order (CUSTOMIZABLE_CONTENT 13): TO, the replay pools (SX.6: CH, CH, RV, RV), ON, QB, PN
     base = ["TO"] * 5 + ["CH"] * 7 + ["RV"] * 6 + ["ON"] * 3 + ["QB"] * 5 + ["PN"] * 4
     # SY.1: then BN, ASK and the analyst's pools; BC.3: then the radio format's 73 lines (SGN to CLK); S-D: the analyst after ordinary plays (104)
-    assert pools[:len(base)] == base and len(pools) == len(base) + 142 + 12 + 158 + 73 + 104
+    assert pools[:len(base)] == base and len(pools) == len(base) + 142 + 12 + 158 + 73 + 104 + 68     # RC: CXR and the reporter's moments (68)
 
 
 # ----- the statistics and the help -----

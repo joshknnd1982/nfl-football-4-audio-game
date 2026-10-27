@@ -310,7 +310,7 @@ def _check_trade_item(league: LeagueRecord, item: dict, whole) -> None:
         if not isinstance(picks, list) or len(picks) > T.FR_TRADE_PICKS_MAX:
             raise LeagueError("the picks of a trade offer are %r" % (picks,))
         for pick in picks:
-            if not isinstance(pick, list) or len(pick) != 2:
+            if not isinstance(pick, list) or len(pick) not in (2, 3) or (len(pick) == 3 and pick[2] != 1):   # RC (D-197): (round, team, 1)
                 raise LeagueError("a pick of a trade offer is %r" % (pick,))
             whole(pick[0], 1, D.DRAFT_ROUNDS, "a pick's round")
             whole(pick[1], 1, D.TEAMS, "a pick's team")

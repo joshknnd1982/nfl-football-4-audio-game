@@ -7,6 +7,11 @@ A trade swaps ONE player of each team, both of the SAME position, so every place
 (no dead money); the side that must give more adds up to `FR_TRADE_PICKS_MAX` picks of the coming draft. A pick is (round, the team whose pick it was by the
 draft order); its owner is that team unless a trade moved it (`LeagueRecord.trades["picks"]`, the exceptions only). The draft makes the owners its own when it
 begins (`draft.Draft.create`) and the table starts empty again.
+RC (D-197, the owner on 0.16.9: "Add the following year 2028 nfl draft picks and make them tradeable as well"): a pick of the draft AFTER the coming one is
+(round, the team whose pick it is, NEXT) (in a franchise's first season, the 2026 season, the coming draft is the 2027 NFL draft and this one the 2028
+draft). Its owner is that team unless `LeagueRecord.future_picks` (the table of SX.8m's first-round picks owed, now every round) has a row
+[season + 1, round, team, owner]; at the new season those rows join the coming draft's table (`tags.move_future`), so a pick traded a year ahead is
+made by its owner. Such a pick is worth FR_TRADE_NEXT_SHARE percent of the same round's pick of the coming draft and is offered after them.
 
     situation                        contending, middle or rebuilding, from the team's record (research F1)
     player_value / pick_value        what a player or a pick is worth to a team in its situation (research B5: rating, age, potential, contract; picks by round)
@@ -39,6 +44,21 @@ def empty() -> dict:
 
 # ----- the picks of the coming draft -----
 
+NEXT = 1                                              # RC (D-197): the third part of a pick of the draft after the coming one
+
+
+def is_next(pick) -> bool:
+    return len(pick) == 3 and pick[2] == NEXT
+
+
+def owner_next(league, round_no: int, original: int) -> int:
+    """The owner of the team's pick of the draft after the coming one (`future_picks`, the exceptions only)."""
+    for season, r, o, own in league.future_picks:
+        if season == league.season + 1 and r == round_no and o == original:
+            return own
+    return original
+
+
 def owner(league, round_no: int, original: int) -> int:
     for r, o, own in league.trades["picks"]:
         if r == round_no and o == original:
@@ -63,10 +83,22 @@ def picks_of(league, team: int) -> list:
         return []
     out = [(r, team) for r in range(1, D.DRAFT_ROUNDS + 1) if owner(league, r, team) == team]
     out += [(r, o) for r, o, own in league.trades["picks"] if own == team and o != team]
-    return sorted(out, key=lambda pick: (pick[0], pick[1] != team, pick[1]))
+    later = [(r, team, NEXT) for r in range(1, D.DRAFT_ROUNDS + 1) if owner_next(league, r, team) == team]     # RC (D-197): the draft after it,
+    later += [(r, o, NEXT) for season, r, o, own in league.future_picks if season == league.season + 1 and own == team and o != team]   # offered after
+    order = lambda pick: (pick[0], pick[1] != team, pick[1])                                              # noqa: E731
+    return sorted(out, key=order) + sorted(later, key=order)
 
 
 def move_pick(league, pick: tuple, to_team: int) -> None:
+    if is_next(pick):                                                  # RC (D-197): a pick of the draft after the coming one
+        round_no, original, _next = pick
+        season = league.season + 1
+        rows = [row for row in league.future_picks if not (row[0] == season and row[1] == round_no and row[2] == original)]
+        if to_team != original:
+            rows.append([season, round_no, original, to_team])
+        rows.sort()
+        league.future_picks = rows
+        return
     round_no, original = pick
     table = [row for row in league.trades["picks"] if not (row[0] == round_no and row[1] == original)]
     if to_team != original:
@@ -139,6 +171,12 @@ def pick_value(round_no: int, how: str) -> int:
     return T.FR_TRADE_PICK_VALUE[round_no - 1] * T.FR_TRADE_PICK_SHARE[how] // 100
 
 
+def value_of(pick, how: str) -> int:
+    """A pick's worth: its round's (pick_value), FR_TRADE_NEXT_SHARE percent of it for a pick of the draft after the coming one (RC, D-197)."""
+    value = pick_value(pick[0], how)
+    return value * T.FR_TRADE_NEXT_SHARE // 100 if is_next(pick) else value
+
+
 # ----- a trade -----
 
 @dataclass(frozen=True)
@@ -173,7 +211,7 @@ def gain(league, trade: Trade, team: int, how: str) -> int:
     """What the trade is worth to `team` in the situation `how`: the player and the picks it gets less the player and the picks it gives."""
     gives, gets, picks_out, picks_in = trade.side(team)
     return (player_value(league.players[gets], how) - player_value(league.players[gives], how)
-            + sum(pick_value(r, how) for r, _ in picks_in) - sum(pick_value(r, how) for r, _ in picks_out))
+            + sum(value_of(p, how) for p in picks_in) - sum(value_of(p, how) for p in picks_out))
 
 
 def traded_this_season(league) -> set:
@@ -298,6 +336,16 @@ def execute(league, trade: Trade, week: int, kind: int) -> None:
 # ----- the picks that even a trade -----
 
 def cover(gap: int, picks: list, how: str, limit: int = T.FR_TRADE_PICKS_MAX) -> tuple | None:
+    """`_cover` with the coming draft's picks first; the picks of the draft after it only when those cannot make it up (RC, D-197: the computer teams'
+    calibrated trades of SX.8j keep their picks, and a pick a year ahead is the last thing a team gives)."""
+    coming = [p for p in picks if not is_next(p)]
+    chosen = _cover(gap, coming, how, limit)
+    if chosen is not None or len(coming) == len(picks):
+        return chosen
+    return _cover(gap, picks, how, limit)
+
+
+def _cover(gap: int, picks: list, how: str, limit: int = T.FR_TRADE_PICKS_MAX) -> tuple | None:
     """The picks (of `picks`, the giver's) that give the receiver, valued in the receiver's situation `how`, at least `gap` more: the cheapest single pick that is
     enough; else the most valuable pick and again for what is left, at most `limit` picks (FR_TRADE_PICKS_MAX, less the picks the giver has already put in a
     proposal, NX-B4). None when they cannot. () when nothing is needed."""
@@ -306,12 +354,12 @@ def cover(gap: int, picks: list, how: str, limit: int = T.FR_TRADE_PICKS_MAX) ->
     while gap > 0:
         if len(chosen) >= limit or not left:
             return None
-        cheapest_first = sorted(left, key=lambda p: (pick_value(p[0], how), -p[0], p[1]))
-        enough = [p for p in cheapest_first if pick_value(p[0], how) >= gap]
+        cheapest_first = sorted(left, key=lambda p: (value_of(p, how), -p[0], p[1], len(p)))
+        enough = [p for p in cheapest_first if value_of(p, how) >= gap]
         pick = enough[0] if enough else cheapest_first[-1]
         chosen.append(pick)
         left.remove(pick)
-        gap -= pick_value(pick[0], how)
+        gap -= value_of(pick, how)
     return tuple(sorted(chosen))
 
 
@@ -541,7 +589,7 @@ def check_trades(league, whole) -> None:
             if not isinstance(picks, list) or len(picks) > T.FR_TRADE_PICKS_MAX:
                 raise LeagueError("the picks of a trade are %r" % (picks,))
             for pick in picks:
-                if not isinstance(pick, list) or len(pick) != 2:
+                if not isinstance(pick, list) or len(pick) not in (2, 3) or (len(pick) == 3 and pick[2] != NEXT):
                     raise LeagueError("a pick of a trade is %r" % (pick,))
                 whole(pick[0], 1, D.DRAFT_ROUNDS, "a pick's round")
                 whole(pick[1], 1, D.TEAMS, "a pick's team")

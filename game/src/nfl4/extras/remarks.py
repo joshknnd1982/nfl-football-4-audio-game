@@ -49,11 +49,14 @@ from .state import RECENT_REMARKS
 log = logging.getLogger("nfl4.extras")
 
 ANALYST_POOLS = ("CKO", "CBG", "CSK", "CTV", "CTD", "CFG", "CFM", "CTC", "CTS", "CFD", "CRZ", "CPN", "CTM", "CQE", "CHT", "CFN", "CFT", "CTT",
-                 "CBO") + ("CRG", "CRS", "CPC", "CPI", "CPT", "CKR")      # SY.1: the analyst's pools (rule 0.27); S-D: after ordinary plays
+                 "CBO") + ("CRG", "CRS", "CPC", "CPI", "CPT", "CKR") + ("CXR",)   # SY.1: the analyst's pools (rule 0.27); S-D: after ordinary
+#                                                                       plays; RC (D-195): CXR, his exclamation before a big moment's line
 ANNOUNCER_POOLS = ("BN", "ASK", "SGN", "CRW", "UPD", "QUP", "STA", "ASN", "SGO", "NID", "LID", "DRV", "CLK")   # SY.1, BC.3: the announcer's
-SIDELINE_POOLS = ("SON", "SIN", "SHT")                                     # BC.3: the sideline reporter's
+RC_SIDELINE_POOLS = ("STD", "STV", "SBG", "SFD", "SMW", "SQE", "SFN", "SFT")   # RC (D-195): the reporter's own moments (extras/broadcast.py)
+SIDELINE_POOLS = ("SON", "SIN", "SHT") + RC_SIDELINE_POOLS                # BC.3: the sideline reporter's
 BROADCAST_POOLS = ("BN", "ASK") + ANALYST_POOLS[:19] + ("SGN", "CRW", "SON", "UPD", "QUP", "STA", "ASN", "SIN", "SHT", "SGO", "NID", "LID",
-                                                        "DRV", "CLK") + ANALYST_POOLS[19:]   # the order of remarks.txt (S-D's pools last)
+                                                        "DRV", "CLK") + ANALYST_POOLS[19:] + RC_SIDELINE_POOLS   # the order of remarks.txt
+#                                                       (S-D's pools, then RC's: the analyst's exclamations and the reporter's moments last)
 COLOR_POOLS = ANALYST_POOLS                                                # said by the analyst's voice
 POOLS_BUILT = ("TO", "CHS", "CHC", "RVR", "RVC", "ON", "QB", "PN") + BROADCAST_POOLS     # the pools whose feature exists (SX.2 timeouts, SX.6 replay
 #                                                         challenges, SX.4 onside kicks, SX.5 quarterback runs, SX.3 penalties),
@@ -83,7 +86,9 @@ for _pool, _names in (("CKO", ("<team>", "<opponent>", "<coach>", "<quarterback>
                       # S-D (D-193): after an ordinary play, <team> the side that had the ball at the snap (the punting team for CPT)
                       ("CRG", ("<team>", "<opponent>", "<quarterback>")), ("CRS", ("<team>", "<opponent>", "<quarterback>")),
                       ("CPC", ("<team>", "<opponent>", "<quarterback>")), ("CPI", ("<team>", "<opponent>", "<quarterback>")),
-                      ("CPT", ("<team>", "<opponent>")), ("CKR", ())):
+                      ("CPT", ("<team>", "<opponent>")), ("CKR", ()),
+                      # RC (D-195): the analyst's exclamation; <team> and <opponent> as in the line it opens
+                      ("CXR", ("<team>", "<opponent>"))):
     PLACEHOLDERS[_pool] = _names
 # BC.3: the radio format's pools. <visitors> and <home> the two teams, <situation> the score clause, <quarter> the quarter (or "first half"),
 # <player> the man who was hurt, <team> and <opponent> as in the analyst's pools, <plays> <yards> <minutes> a drive, <time> the time left
@@ -91,7 +96,15 @@ for _pool, _names in (("SGN", ("<visitors>", "<home>")), ("CRW", ()), ("SON", ("
                       ("UPD", ("<situation>", "<quarter>", "<visitors>", "<home>")), ("QUP", ("<situation>", "<quarter>")), ("STA", ()),
                       ("ASN", ()), ("SIN", ("<player>", "<team>")), ("SHT", ("<team>", "<opponent>", "<visitors>", "<home>")), ("SGO", ()),
                       ("NID", ()), ("LID", ()), ("DRV", ("<plays>", "<yards>", "<minutes>", "<team>")),
-                      ("CLK", ("<time>", "<quarter>", "<situation>"))):
+                      ("CLK", ("<time>", "<quarter>", "<situation>")),
+                      # RC (D-195): the reporter's moments. <team> the team the moment is about (the scorers, the team that took the
+                      # ball, the team that made the big play or goes for it, the team with the ball at the warning, the winner; at a
+                      # quarter's end and a tie the team ahead or the home team), <opponent> the other
+                      ("STD", ("<team>", "<opponent>", "<visitors>", "<home>")), ("STV", ("<team>", "<opponent>")),
+                      ("SBG", ("<team>", "<opponent>", "<yards>")), ("SFD", ("<team>", "<opponent>")),
+                      ("SMW", ("<team>", "<opponent>", "<visitors>", "<home>")),
+                      ("SQE", ("<quarter>", "<team>", "<opponent>", "<visitors>", "<home>")),
+                      ("SFN", ("<team>", "<opponent>", "<visitors>", "<home>")), ("SFT", ("<team>", "<opponent>", "<visitors>", "<home>"))):
     PLACEHOLDERS[_pool] = _names
 # SZ.1 (D-106): <commentator> is the color commentator's name and fits every pool; BC.3: so do the crew's other names (F9, Rules, Broadcast crew)
 CREW_PLACEHOLDERS = ("<commentator>", "<announcer>", "<analyst>", "<sideline>", "<network>")

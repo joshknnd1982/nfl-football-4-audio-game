@@ -626,6 +626,9 @@ FR_TRADE_POTENTIAL = {"high": 115, "average": 100, "low": 85}     # ... in perce
 FR_TRADE_MONEY_DIVISOR = 20       # tenths of a million saved against his market price (for every year left) per point of value
 FR_TRADE_PICK_SHARE = {"contend": 70, "middle": 100, "rebuild": 130}   # a pick's value in percent, by the team's situation
 FR_TRADE_PICK_VALUE = (48, 38, 29, 19, 10, 3, 1)       # round 1 to 7, measured in SX.8j (see below)
+FR_TRADE_NEXT_SHARE = 75          # RC (D-197): a pick of the draft after the coming one is worth this percent of the same round's pick of the coming
+#                                   draft (the trade charts' rule of thumb, a future pick about one round later: 38/48, 29/38, 19/29; UNVERIFIED as a
+#                                   number, a convention of the trade value charts, SRC-SECONDARY)
 # SX.8j calibration (D-070; the reports are work/simulate_franchise_sx8f_fast_500x20_sx8j.txt, _fast_2000x20_sx8j_2000.txt, _fast_500x20_sx8j_off.txt (trades off) and
 # _full_5x20_sx8j.txt, the sweeps work/sweep_trades_sx8j.py, the measurement work/measure_pick_value_sx8j.txt). THE PICKS: a pick is worth what the player it becomes is
 # worth to a team in the situation "middle" (trades.player_value) at the start of his first and second season, 0 when the cut released him, the mean of the two, over 200

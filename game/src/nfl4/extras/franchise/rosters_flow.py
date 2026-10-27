@@ -51,7 +51,9 @@ REPOSITORY_RAW = calendar_flow.REPOSITORY_RAW.rsplit("calendars/", 1)[0] + "rost
 ROSTERS_FILE, FREE_AGENTS_FILE = "rosters.txt", "free_agents.txt"
 DOWNLOADED_MARK = "rosters.txt.downloaded"      # the SHA-256 of each rosters.txt this item wrote: such a file is the game's, not the player's own
 TIMEOUT = 15.0                                  # seconds for each request
-MAX_BYTES = 2_000_000                           # rosters.txt is about 80 kB
+MAX_BYTES = 4_000_000                           # rosters.txt is about 130 kB, a team's roster page about 420 kB (D-196)
+GITHUB_GRACE = 3.0                              # D-196: seconds the update waits for GitHub's checked file once the NFL's pages are in
+NFL, GITHUB = "nfl", "github"                    # where the rosters came from
 LEAGUE_BACKUP = ".before-rosters-"              # league.sav.before-rosters-<date> (the store's backup pattern, design 21.10 (4))
 
 OK, NOTHING_NEWER, OFFLINE, SERVER, BAD_FILE, NOT_SAVED, STOPPED, KEPT_OWN = (
@@ -65,6 +67,9 @@ class Download:
     detail: str = ""            # the reason of a failure, for the sentence and the log
     rosters: str = ""           # the checked text of rosters.txt (LF line ends)
     free: str = ""              # the checked text of free_agents.txt, "" when it is not newer or not there
+    source: str = ""            # D-196: NFL (the teams' own pages) or GITHUB (the maintainer's checked file)
+    read: int = 0               # D-196: the teams read from their own pages
+    kept: list = None           # D-196: [(team, reason)] of the teams kept as they were
 
 
 def url_of(name: str) -> str:
@@ -191,20 +196,20 @@ def _get(fetch, name: str):
         return 200, None, Download(BAD_FILE, detail="%s is not a text file" % name)
 
 
-def download(fetch, folder: str) -> Download:
-    """The newest checked rosters (and free agents) newer than the player's, or why not. Writes nothing."""
+def _github(fetch, folder: str) -> Download:
+    """The maintainer's checked rosters (and free agents) on the game's GitHub page, newer than the player's, or why not. Writes nothing."""
     local = local_version(folder, ROSTERS_FILE)
     status, text, failed = _get(fetch, ROSTERS_FILE)
     if failed is not None:
         return failed
     if status == 404:                                        # D-141's behaviour until the owner publishes the folder
-        return Download(NOTHING_NEWER, local)
+        return Download(NOTHING_NEWER, local, source=GITHUB)
     reason = rosters_problem(text)
     if reason:
         return Download(BAD_FILE, detail=reason)
     version = text_version(text)
     if not RU.newer(version, local):
-        return Download(NOTHING_NEWER, local)
+        return Download(NOTHING_NEWER, local, source=GITHUB)
     status, free, failed = _get(fetch, FREE_AGENTS_FILE)
     if failed is not None:
         return failed
@@ -214,7 +219,73 @@ def download(fetch, folder: str) -> Download:
             return Download(BAD_FILE, detail="free_agents.txt: " + reason)
         if not RU.newer(text_version(free), local_version(folder, FREE_AGENTS_FILE)):
             free = None                                      # the player's free agents are as new: they stay
-    return Download(OK, version, rosters=text, free=free or "")
+    return Download(OK, version, rosters=text, free=free or "", source=GITHUB)
+
+
+def _local_text(folder: str, name: str) -> str:
+    text = _player_text(folder, name)
+    return text if text is not None else _shipped(name)
+
+
+def download(fetch, folder: str, stop: threading.Event | None = None, today: str | None = None) -> Download:
+    """D-196: the newest rosters from the NFL's own pages (extras/roster_live.py), converted on the newest checked file the game has (the player's,
+    or the maintainer's on the game's GitHub page when that one answers within GITHUB_GRACE seconds of the pages and is newer), or why not.
+    When the NFL's pages cannot be read, a newer checked file of GitHub's is the answer. Writes nothing."""
+    from .. import roster_live as L
+    today = today or time.strftime("%Y-%m-%d")
+    local_text = _local_text(folder, ROSTERS_FILE)
+    local = text_version(local_text)
+    box: dict = {}
+
+    def ask_github():
+        try:
+            box["github"] = _github(fetch, folder)
+        except Exception as exc:                                 # the NFL's pages decide then
+            log.warning("the game's GitHub page could not be asked: %s", exc)
+
+    asked = threading.Thread(target=ask_github, name="nfl4-rosters-github", daemon=True)
+    asked.start()
+    pages = L.fetch_pages(fetch, stop)
+    if stop is not None and stop.is_set():
+        return Download(STOPPED)
+    asked.join(GITHUB_GRACE)
+    github = box.get("github")                                   # None: GitHub did not answer in time (the tester's network, D-196)
+    checked = github is not None and github.result == OK
+    base_text = github.rosters if checked else local_text
+    free_base = github.free if checked and github.free else _local_text(folder, FREE_AGENTS_FILE)
+    read = [t for t, (got, _reason) in pages.items() if got is not None]
+    debuglog.event("rosters", "nfl_read", logging.INFO, teams_read=len(read), github=github.result if github is not None else "no answer",
+                   base=text_version(base_text))
+    if len(read) < L.MIN_TEAMS:
+        if github is not None and github.result != NOTHING_NEWER:
+            return github                 # a newer checked file, or GitHub's own failure (it names the reason; the sentence names both places)
+        reasons = [reason for got, reason in pages.values() if got is None]
+        offline = bool(reasons) and all(r.startswith(("offline", "timeout", "the site could not")) for r in reasons)
+        detail = "the N. F. L. teams' pages could be read for %d teams of 32" % len(read)
+        if github is not None and github.result not in (OK, NOTHING_NEWER):
+            detail += "; GitHub: " + (github.detail or github.result)
+        return Download(OFFLINE if offline else SERVER, detail=detail, source=NFL)
+    live = L.convert(pages, base_text)
+    version = L.version_of(today)
+    text = RF.render(version, live.teams)
+    reason = rosters_problem(text)
+    if reason:
+        log.warning("the rosters of the NFL's pages failed a check: %s", reason)
+        if checked:
+            return github
+        return Download(BAD_FILE, detail=reason, source=NFL)
+    if L.same_men(text, local_text):
+        return Download(NOTHING_NEWER, local, source=NFL, read=len(live.read), kept=live.kept)
+    free, left, joined = L.free_agents(free_base, base_text, live.teams, version)
+    problem = free_agents_problem(free)
+    if problem:
+        log.warning("the free agents of the NFL's pages failed a check: %s", problem)
+        free = github.free if checked else ""
+    debuglog.event("rosters", "nfl_converted", logging.INFO, teams_read=len(live.read), kept=[t for t, _r in live.kept],
+                   notes=len(live.notes), free_agents_left=left, free_agents_joined=joined)
+    for note in live.notes[:200]:
+        log.info("rosters (the NFL's pages): %s", note)
+    return Download(OK, version, rosters=text, free=free, source=NFL, read=len(live.read), kept=live.kept)
 
 
 def _backup_suffix(path: str, suffix: str) -> str:
@@ -288,6 +359,17 @@ def sentence(result: str, version: str = "", detail: str = "") -> str:
     return X.text("NXZ-U05", label=reason_of(result, detail))
 
 
+def source_sentence(got: Download) -> str:
+    """D-196: where saved rosters came from, and the teams whose pages could not be read."""
+    if got.source == NFL:
+        kept = len(got.kept or [])
+        more = X.text("NXZ-U25") if kept == 1 else X.text("NXZ-U23", n=kept) if kept else ""
+        return " " + " ".join(t.strip() for t in (X.text("NXZ-U22"), more) if t.strip()) + " "
+    if got.source == GITHUB:
+        return X.text("NXZ-U24")
+    return ""
+
+
 def conversion_sentence(converted: dict) -> str:
     """Design 21.6 (6): what the conversion did (rule 0.28 (4)); the second part only when real men joined."""
     joined = converted.get("joined", 0) if isinstance(converted, dict) else 0
@@ -324,7 +406,7 @@ def run(g, speech, keys, store, fetch=None) -> str:
 
     def work():
         try:
-            box["got"] = download(fetch, folder)
+            box["got"] = download(fetch, folder, stop)
         except Exception as exc:                                 # never a reason to stop the game
             log.exception("getting the latest rosters failed")
             box["got"] = Download(SERVER, detail=str(exc)[:200])
@@ -349,8 +431,11 @@ def run(g, speech, keys, store, fetch=None) -> str:
         if result == OK:
             reload(g)
     debuglog.event("rosters", "rosters_download", logging.INFO, result=result, version=got.version, size=len(got.rosters),
-                   free_agents=len(got.free), detail=str(detail)[:200])
+                   free_agents=len(got.free), detail=str(detail)[:200], source=got.source or None, teams_read=got.read or None,
+                   kept=[t for t, _r in got.kept] if got.kept else None)
     text = sentence(result, got.version, detail)
+    if result == OK:
+        text = text.rstrip() + " " + source_sentence(got).strip() + " "
     if result in (OK, NOTHING_NEWER, KEPT_OWN) and store is not None:
         more = offer(g, speech, keys, store)
         if more:

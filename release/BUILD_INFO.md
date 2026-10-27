@@ -5,11 +5,11 @@ Made by game/tools/build.ps1 (PyInstaller, onedir, windowed); recorded by game/t
 ## 64-bit
 
 - Tools: python 3.14.8, bits 64, pyinstaller 6.22.3, pygame-ce 2.5.8, audioop-lts 0.2.2
-- nfl4.exe: 4880451 bytes, SHA-256 133175e863ccc4eefe8f3033891dd77bf46967bf7c2a135a4360e7b2f25af019
-- Files: 176, 32.5 MB; full list with hashes in build_manifest_64.txt
+- nfl4.exe: 5302836 bytes, SHA-256 dd4da3e9218d405317e2e4cc1b8ecd8194ba35979dc80c9db753147e08019ebb
+- Files: 177, 32.9 MB; full list with hashes in build_manifest_64.txt
 
 ## 32-bit
 
 - Tools: python 3.14.8, bits 32, pyinstaller 6.22.3, pygame-ce 2.5.8, audioop-lts 0.2.2
-- nfl4.exe: 4837443 bytes, SHA-256 9642c957b6a6c4318fcd921c6c2ca1ca6c73c160e78bf3b3294fcc9efb52ec69
-- Files: 132, 27.7 MB; full list with hashes in build_manifest_32.txt
+- nfl4.exe: 5259828 bytes, SHA-256 afa1e611bac1dff299456478c4309c4d53634a26fb4b7d878973cfd53bcec4f1
+- Files: 133, 28.2 MB; full list with hashes in build_manifest_32.txt

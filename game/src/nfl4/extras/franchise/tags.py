@@ -197,14 +197,14 @@ def check_tags(league, whole) -> None:
 def check_future(league, whole) -> None:
     from .league import LeagueError
     rows = league.future_picks
-    if not isinstance(rows, list) or len(rows) > D.TEAMS:
+    if not isinstance(rows, list) or len(rows) > D.TEAMS * D.DRAFT_ROUNDS:       # RC (D-197): every round of the draft after the coming one
         raise LeagueError("the picks owed are %r" % (type(rows).__name__ if not isinstance(rows, list) else len(rows),))
     seen: set = set()
     for row in rows:
         if not isinstance(row, list) or len(row) != 4:
             raise LeagueError("a pick owed is %r" % (row,))
         whole(row[0], league.season + 1, league.season + 1, "the draft of a pick owed")
-        whole(row[1], 1, 1, "the round of a pick owed")
+        whole(row[1], 1, D.DRAFT_ROUNDS, "the round of a pick owed")
         whole(row[2], 1, D.TEAMS, "the team of a pick owed")
         whole(row[3], 1, D.TEAMS, "the owner of a pick owed")
         if row[2] == row[3] or (row[0], row[1], row[2]) in seen:

@@ -27,6 +27,13 @@ from nfl4.extras.franchise.store import FranchiseStore
 
 NEW = "season 2026, as of 2026-11-02"
 NEW_SPOKEN = "November 2, 2026"
+NOT_SENT = X.text("NXZ-U05", label=X.text("NXZ-U07"))       # RC (D-196): neither the NFL's pages (the fake has none) nor GitHub had newer rosters
+NFL_PAGE = "https://www.bengals.com/team/players-roster/"     # RC (D-196): the first team's roster page, asked before GitHub's file is used
+
+
+def from_github(spoken_date: str) -> str:
+    """RC (D-196): the sentence of rosters saved from GitHub's checked file (the NFL's pages could not be read: the fake network has none)."""
+    return X.text("NXZ-U03", label=spoken_date).rstrip() + " " + X.text("NXZ-U24").strip() + " "
 
 
 def shipped(kind=R.ROSTERS) -> str:
@@ -138,7 +145,7 @@ def test_newer_rosters_are_checked_saved_with_a_copy_of_the_old_and_read_at_once
     net = Net({"rosters.txt": body(with_version(shipped(), NEW)), "free_agents.txt": body(with_version(shipped(R.FREE_AGENTS), NEW))})
     speech = Speech()
     text = RF.run(game, speech, Keys(), None, fetch=net)
-    assert speech.said == [X.text("NXZ-U02")] and text == X.text("NXZ-U03", label=NEW_SPOKEN)
+    assert speech.said == [X.text("NXZ-U02")] and text == from_github(NEW_SPOKEN)
     assert RF.text_version(read(folder / "rosters.txt").decode("utf-8")) == NEW
     assert read(folder / "rosters.txt.before-2026-11-02") == old_rosters and read(folder / "free_agents.txt.before-2026-11-02") == old_free
     assert game.applied == 1 and game.real_names.roster_version == NEW                  # read at once: the next game, season or franchise uses it
@@ -149,7 +156,7 @@ def test_the_same_or_an_older_version_changes_nothing(game, folder):
     before = read(folder / "rosters.txt")
     for version in ("season 2026, as of 2026-10-26", "season 2026, as of 2026-09-01"):
         text = RF.run(game, Speech(), Keys(), None, fetch=Net({"rosters.txt": body(with_version(shipped(), version))}))
-        assert text == X.text("NXZ-U04", label="October 26, 2026")
+        assert text == NOT_SENT                         # RC (D-196): GitHub's file is not newer and the NFL's pages were not read
     assert read(folder / "rosters.txt") == before and game.applied == 0
     assert not [n for n in os.listdir(folder) if ".before-" in n and "layout" not in n]
 
@@ -157,7 +164,7 @@ def test_the_same_or_an_older_version_changes_nothing(game, folder):
 def test_the_repository_without_a_rosters_folder_says_you_have_the_newest(game, folder):
     net = Net()
     text = RF.run(game, Speech(), Keys(), None, fetch=net)
-    assert text == X.text("NXZ-U04", label="October 26, 2026") and net.asked == [RF.url_of("rosters.txt")]
+    assert text == NOT_SENT and RF.url_of("rosters.txt") in net.asked and NFL_PAGE in net.asked     # RC (D-196): the NFL's pages, and GitHub
 
 
 @pytest.mark.parametrize("damage", ["parse", "check", "team", "header", "free"])
@@ -211,7 +218,7 @@ def test_the_players_own_rosters_ask_first_and_no_keeps_them(game, folder):
     assert any(X.text("NXZ-U11") in s for s in speech.said)
     assert RF.run(game, Speech(), Keys([27]), None, fetch=newer) == X.text("NXZ-U13")   # Escape is no too
     text = RF.run(game, Speech(), Keys([40, 13]), None, fetch=newer)                   # Down, Enter: yes
-    assert text == X.text("NXZ-U03", label=NEW_SPOKEN) and read(folder / "rosters.txt.before-2026-11-02") == own
+    assert text == from_github(NEW_SPOKEN) and read(folder / "rosters.txt.before-2026-11-02") == own
 
 
 def test_a_copy_is_never_written_over(game, folder):
@@ -223,11 +230,11 @@ def test_a_copy_is_never_written_over(game, folder):
 def test_free_agents_that_are_not_newer_stay_and_a_missing_file_is_no_failure(game, folder):
     before = read(folder / "free_agents.txt")
     net = Net({"rosters.txt": body(with_version(shipped(), NEW)), "free_agents.txt": body(shipped(R.FREE_AGENTS))})
-    assert RF.run(game, Speech(), Keys(), None, fetch=net) == X.text("NXZ-U03", label=NEW_SPOKEN)
+    assert RF.run(game, Speech(), Keys(), None, fetch=net) == from_github(NEW_SPOKEN)
     assert read(folder / "free_agents.txt") == before
     later = "season 2026, as of 2026-12-01"
-    assert RF.run(game, Speech(), Keys(), None, fetch=Net({"rosters.txt": body(with_version(shipped(), later))})) == X.text(
-        "NXZ-U03", label="December 1, 2026")
+    assert RF.run(game, Speech(), Keys(), None, fetch=Net({"rosters.txt": body(with_version(shipped(), later))})) == from_github(
+        "December 1, 2026")
 
 
 def test_escape_stops_the_wait_and_nothing_is_saved(game, folder):
@@ -255,7 +262,7 @@ def test_f9_customize_has_the_item_with_the_nfl_rules_and_it_asks_github(tmp_pat
     rig.game.functions.run()
     spoken = said(rig)
     assert "Customize. 6 items. Press F1 for help. " in spoken[3] and X.text("NXZ-U01") + "." in spoken
-    assert asked == [RF.url_of("rosters.txt")] and X.text("NXZ-U04", label="October 26, 2026") in spoken
+    assert RF.url_of("rosters.txt") in asked and NFL_PAGE in asked and NOT_SENT in spoken      # RC (D-196): the NFL's pages, and GitHub
     rig = program_rig(tmp_path / "classic", [], preset=preset_season())
     rig.game.customization = Customization(str(tmp_path / "classic" / "customize"))       # Classic: the five items of the original's files
     rig.keys.answers = [DOWN, DOWN, ENTER, ESC, ESC]
@@ -460,7 +467,7 @@ def test_the_item_with_a_franchise_in_use_offers_after_the_download(game, folder
     store = store_of(league)
     net = Net({"rosters.txt": body(with_version(shipped(), NEW))})
     text = RF.run(game, Speech(), Keys([13]), store, fetch=net)                          # the offer's Enter: no
-    assert text == X.text("NXZ-U03", label=NEW_SPOKEN).rstrip() + " " + X.text("NXZ-U18").lstrip()
+    assert text == from_github(NEW_SPOKEN).rstrip() + " " + X.text("NXZ-U18").lstrip()
     assert league.roster_offer == NEW
 
 

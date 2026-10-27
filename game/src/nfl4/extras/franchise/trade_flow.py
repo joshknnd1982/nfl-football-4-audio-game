@@ -25,9 +25,24 @@ from . import trades as TR
 
 # ----- the words -----
 
+def next_year(words) -> int:
+    """RC (D-197): the year of the draft after the coming one (a franchise's first season, 2026: its coming draft is the 2027 draft, this one 2028)."""
+    from . import fixtures
+    league = words.league_of() if getattr(words, "league_of", None) else None
+    return fixtures.year_of(getattr(league, "season", 1)) + 2
+
+
 def pick_text(words, pick: tuple, holder: int, own: int) -> str:
     """A pick named for the player: "your round 2 pick" (his team's own), "their round 3 pick" (the giving team's own), else "the round 2 pick of the
-    Bears"."""
+    Bears"; a pick of the draft after the coming one says its year: "your 2028 round 2 pick" (RC, D-197)."""
+    if TR.is_next(pick):
+        round_no, original, _next = pick
+        year = next_year(words)
+        if original == own:
+            return X.text("NXX-P08", round=round_no, year=year)
+        if original == holder:
+            return X.text("NXX-P09", round=round_no, year=year)
+        return X.text("NXX-P07", round=round_no, year=year, team=words.team_name(original))
     round_no, original = pick
     if original == own:
         return X.text("NXX-P04", round=round_no)
@@ -210,7 +225,7 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
                 return None
             pick = left[index]
             chosen_list.append(pick)
-            debuglog.event("franchise", "trade_pick_added", side="offered" if mine else "asked", round=pick[0], original=pick[1],
+            debuglog.event("franchise", "trade_pick_added", side="offered" if mine else "asked", round=pick[0], original=pick[1], next_draft=TR.is_next(pick),
                            other=other)                                                                     # rule 0.15
             named = pick_text(words, pick, holder, own)
             return X.text("NXX-P02", list=named) if mine else X.text("NXX-51", list=named)

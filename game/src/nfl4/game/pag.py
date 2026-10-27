@@ -96,6 +96,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         self.save_ui = save_ui                        # SX.14 (NX-S5, NX-S6): the slot and the quit-or-keep-playing questions of Save Game; None: the original's
         self.roster_sink = roster_sink                # S7.5: writes footplay.txt when the player's names were drawn
         self.s = GameState()
+        game.radio_calls = None                        # D-195: only a broadcast attaches the radio calls (in H1); the bare Classic has none
         self.clock = rules.period_clock(game, self.s)
         self.result = GameResult(None)
         self.outcomes: list[PlayOutcome] = []        # every H2 record of this game, in order (the tests read them)

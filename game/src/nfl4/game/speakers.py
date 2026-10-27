@@ -35,11 +35,14 @@ Int(Rnd * 30) / (max(vr, 1) * 25) seconds: 0 to 1.16 s at rate 1 or below, short
 """
 from __future__ import annotations
 
+import logging
 from typing import Callable
 
 from ..speech.roles import ANNOUNCER, REFEREE, player_role
 from .keys import KeyInput
 from .rnd import GameRandom
+
+log = logging.getLogger("nfl4.game")
 
 REPLAY_INTRO = " here's the instant rea play "      # string 2550
 REPLAY_PAUSE = 0.2                                   # inrep's dy(0.2)
@@ -64,6 +67,9 @@ class Speakers:
         # S7.3b: every pause with the address of its call in the lifted code (None = not recorded). The tests compare
         # the sites of a game with work/pause_table_s43.txt (GAME_SPEC 7 item 3).
         self.pause_log: list[tuple[int | None, float]] | None = None
+        # D-195 (nfl4's radio play-by-play, extras/radio_calls.py): while a game with the radio broadcast is played, the play-by-play of
+        # say2 and say4 passes through it (call(text) -> (text, rate_step)); None (the engine's bare Classic, every menu): the words as they are
+        self.radio_calls = None
 
     # ----- the log -----
 
@@ -124,26 +130,47 @@ class Speakers:
         if char and ord(char[0]) >= 32:
             self._speak(char, self.speech.last_role or ANNOUNCER, False)
 
+    def _called(self, text: str) -> tuple[str, int]:
+        """D-195: the play-by-play sentence as the radio call (and its rate step) when a radio caller is attached, else as it is. A caller
+        that fails leaves the original's words: the play is told either way."""
+        calls = self.radio_calls
+        if calls is None or not text.strip():
+            return text, 0
+        try:
+            return calls.call(text)
+        except Exception as exc:
+            log.warning("radio calls: %r said in the original's words (%s)", text, exc)
+            return text, 0
+
     def say2(self, text: str) -> None:
-        """Announcer, asynchronous; logged, kept for the replay."""
+        """Announcer, asynchronous; logged, kept for the replay (the radio call when there is one, D-195)."""
+        text, step = self._called(text)
         self._remember(text)
         self._logged(text)
-        self._speak(text, ANNOUNCER, False)
+        self._speak(text, ANNOUNCER, False, step)
 
     def say3(self, text: str) -> None:
         """The quarterback (qorp = 1) or the punter of the side on offense, waits; neither logged nor replayed."""
         self._speak(text, player_role(self.wisoff, punter=(self.qorp != 1)), True)
 
     def say4(self, text: str) -> None:
-        """Announcer, waits; logged, kept for the replay."""
+        """Announcer, waits; logged, kept for the replay (the radio call when there is one, D-195)."""
+        text, step = self._called(text)
         self._remember(text)
         self._logged(text)
-        self._speak(text, ANNOUNCER, True)
+        self._speak(text, ANNOUNCER, True, step)
 
     def say5(self, text: str) -> None:
         """Announcer, asynchronous; logged, not kept for the replay (the menus and prompts)."""
         self._logged(text)
         self._speak(text, ANNOUNCER, False)
+
+    def say5_call(self, text: str) -> None:
+        """say5 for a sentence of the play-by-play that the original says asynchronously without keeping it for the replay (the huddle
+        and the quarterback at the line, pag_scrimmage.snap_count): the radio call when there is one (D-195). The menus keep say5."""
+        text, step = self._called(text)
+        self._logged(text)
+        self._speak(text, ANNOUNCER, False, step)
 
     def say_role(self, text: str, role: str) -> None:
         """A speaker of the extras (the analyst, SY.1), asynchronous; logged, not kept for the replay (the pools of the broadcast)."""

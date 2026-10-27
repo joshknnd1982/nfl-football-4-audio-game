@@ -98,6 +98,11 @@ of the real calendar (the NFL's deadline of 2026 is the day after week 9) and of
 draft, after it, after the roster cut and before week 1 too, as in the NFL. They are closed while the draft is under way and while the roster
 cut is being decided, and from the draft to week 1 a trade is player for player (draft picks can be traded again when the season begins). The
 news at the start of the season says where they are, and the week before the deadline, its last week and the week after it are told too.
+The picks you can trade are those of the coming draft and, since 0.16.10, those of the draft after it, as NFL teams trade them a year ahead: in
+your first season (2026) the coming draft is the 2027 draft and the one after it the 2028 draft. A pick of the later draft is said with its year
+("your 2028 round 2 pick") and comes after the coming draft's picks in the lists; it is worth a little less than the same round's pick of the
+coming draft (about three quarters), and when its season begins it simply becomes a pick of the coming draft, owned by whoever got it. The computer
+teams trade them too.
 
 **Quarterbacks.** F9, Rules, Quarterbacks (the item before Reset) lists every team's quarterbacks. Outside a franchise they are the real
 players of the rosters, the starter first; Enter on a team lists its quarterbacks, and Enter on one makes him that team's starter from the next
@@ -154,6 +159,13 @@ rosters.txt, respellings.txt, free_agents.txt; CUSTOMIZE.md says how, and how a 
 squads are the real ones and its first season's free agents are the real ones. The Classic rules keep the original's random
 surnames and the typed coach.
 
+To bring the rosters up to today, choose **F9, Customize (or F9, Franchise), get the latest rosters**. Since 0.16.10 the game reads them
+straight from the NFL: every team's own roster page and depth chart page, converted into the game's rosters in a few seconds (the lists, the
+numbers, the positions, the return men, each player's age and seasons; a player the game knows keeps his checked position and depth place, new
+players come in behind). Your rosters.txt and free_agents.txt are kept as copies first, a team whose pages cannot be read right then stays as it
+was, and a franchise in use is asked whether its other 31 teams come up to the new rosters. The game's page on GitHub, with the maintainer's
+checked file, is asked at the same time and used when the NFL's pages cannot be read.
+
 Every player plays only his own position, as the teams' depth charts of 2026-10-24 list it: a quarterback is never a receiver, a safety
 never a cornerback; a place a team has too few real players for gets a made-up player of that position. The starters play the most, as in
 Madden: the first running back carries about 60 runs in 100, the first receivers are thrown to most, the starting defenders make most of the
@@ -174,20 +186,27 @@ NFL is copied.
 
 ## The radio broadcast
 
-With the comments on, every game is called like a radio broadcast of the Gridiron Radio Network, a made-up network. It works in both rule sets, Classic and the N. F. L. rules. The game's own play-by-play (the snap, the run, the tackle, the yards) stays as it always was; the broadcast crew talks around it, between the plays and at the big moments, the way a real radio crew does. The style is modelled on real NFL radio broadcasts. The original game's jokes and its commentator are gone.
+With the comments on, every game is called like a radio broadcast of the Gridiron Radio Network, a made-up network. It works in both rule sets, Classic and the N. F. L. rules. Walt calls every play the way a radio announcer does, with exclamations at the big moments (see "The play calls" below), and the broadcast crew talks around the plays, between them and at the big moments, the way a real radio crew does. The style is modelled on real NFL radio broadcasts. The original game's jokes and its commentator are gone.
+
+### The play calls
+
+Every play is called like a live radio call, in short lively words: the snap, the throw, "Caught by Seals!", "Intercepted!", "Sacked!", "Fumble! The ball is loose!". The teams are named, never "my ball" or "your ball": "The Jets take over at their own 23.", "The Bengals are at the Jets 47.". The down is said as a radio call says it: "Third and 4! A big down here!", "First down, Bengals!", "Fourth and goal!". The gain grows with its size, from "A gain of 3." to "What a play! 34 yards!". A long touchdown run counts down, "He's at the 40! the 30! the 20! the 10! 5! 4! 3! 2! 1! Touchdown Bengals!", and a long kick return builds up the same way. Every moment has several wordings. With the game's own Windows voices the biggest calls are said a little faster; a screen reader speaks them at its own speed, with the exclamation marks.
+
+You can go back to the original game's plain sentences: **F9, Rules, Play calls** (the twelfth item, right after How much the crew talks). Enter, Left and Right switch between "radio style, exciting" (the default) and "plain, the original's words". The change is saved and used at once, also in the game you are playing. F8 does not change the play calls: with the comments off you hear the radio calls without the crew. The setting is `nx_play_calls` in settings.txt (radio or plain). Only the words change: the plays, their results, the score and the clock are the same either way.
 
 ### The crew
 
 - **Walt Kessler**, play-by-play, in the announcer's voice. He opens and closes the broadcast and fills the breaks.
 - **Gus Delgado**, the color analyst, in a voice of his own. He explains what just happened and what to watch next.
-- **Nora Banks**, the sideline reporter, in a voice of her own. She reports from the field.
+- **Nora Banks**, the sideline reporter, in a voice of her own. She reports from the field. Her lines start with her name, or Walt names her first ("Let's go down to Nora Banks on the sideline."), so you know it is her even when a screen reader speaks the whole crew in one voice.
 
 They are made-up people. You can give them, and the network, other names (see "Names, voices and volumes" below).
 
 ### What you hear during a game
 
-- **Before the coin toss:** Walt signs on and names the two teams, introduces Gus and Nora, Nora has a note from the field, and Gus gives his first thought. The first game after you start the program also has one sentence about the keys for the crew's voices and names.
-- **After a play:** Gus explains it: why a run worked or was stopped, a catch or an incompletion, a sack, a turnover, a big gain, a third down made or stopped, a team going for it on fourth down, a trip inside the 20, a penalty, a punt, a kick off. Now and then Walt turns to him first ("walk us through that play").
+- **Before the coin toss:** Walt signs on and names the two teams, introduces Gus and Nora, sends it down to Nora for a note from the field, and Gus gives his first thought. The first game after you start the program also has one sentence about the keys for the crew's voices and names.
+- **After a play:** Gus explains it: why a run worked or was stopped, a catch or an incompletion, a sack, a turnover, a big gain, a third down made or stopped, a team going for it on fourth down, a trip inside the 20, a penalty, a punt, a kick off. Now and then Walt turns to him first ("walk us through that play"). After a touchdown, a takeaway, a big play, a sack or a missed field goal Gus often starts with an exclamation: "Wow!", "Unbelievable!".
+- **Nora at the big moments:** after a touchdown, an interception or a lost fumble, or a big play of 20 yards or more; when a team goes for it on fourth down; at the two-minute warning; at the end of the first and third quarter; and always at the final whistle. She tells you what is happening on the field: the bench, the crowd, the players.
 - **At the other breaks between plays:** Walt has an aside about the game, the crowd or football in general, says the network's name now and then, and says the score again when nobody has said it for a while.
 - **After a score:** Gus on the touchdown or the field goal. With the N. F. L. rules Walt sometimes sums up the drive that scored (the plays, the yards and the minutes).
 - **The end of the first and third quarter:** Walt's update with the score, then Gus.
@@ -216,16 +235,16 @@ You choose how often the crew speaks: **F9, Rules, How much the crew talks**.
 
 The levels:
 
-- **a little:** the crew speaks only at the special plays and moments. This is how version 0.16.8 sounded: about 64 lines of the crew in a game, Gus after about one play in eight.
-- **some:** Gus after about one play in three or four, about as often as on a real radio broadcast. About 98 lines in a game.
-- **a lot** (the default): Gus after about one play in two, and Walt fills more of the breaks Gus leaves. About 140 lines in a game.
-- **the most:** someone of the crew after nearly every play. About 190 lines in a game.
+- **a little:** the crew speaks only at the special plays and moments. This is how version 0.16.8 sounded: about 64 lines of the crew in a game, Gus after about one play in eight, Nora only before the kick-off, at half time and at a franchise injury, and no exclamations from Gus.
+- **some:** Gus after about one play in three or four, about as often as on a real radio broadcast; Nora at about one big moment in three.
+- **a lot** (the default): Gus after about one play in two, and Walt fills more of the breaks Gus leaves; Nora at more than half of the big moments, about ten to fifteen times a game.
+- **the most:** someone of the crew after nearly every play, and Nora at nearly every big moment.
 
 The change is saved at once and used at once, also in the game you are playing: you do not wait for the next game. F9, Rules, Reset brings back "a lot". The setting is `nx_crew_talk` in settings.txt (little, some, lots or most).
 
 ### Names, voices and volumes
 
-- **Names:** F9, Rules, Broadcast crew (the thirteenth item) says the three names. Press Enter to open the crew: Play by play announcer, Color analyst, Sideline reporter and Network. On one of them, Enter opens a short list: the original name, the name you typed last time, and "Type a name of your own". Left and Right switch between the original name and yours without the list. You never have to type anything. New names are used from the next game.
+- **Names:** F9, Rules, Broadcast crew (the fourteenth item) says the three names. Press Enter to open the crew: Play by play announcer, Color analyst, Sideline reporter and Network. On one of them, Enter opens a short list: the original name, the name you typed last time, and "Type a name of your own". Left and Right switch between the original name and yours without the list. You never have to type anything. New names are used from the next game.
 - **Voices:** with the game's own Windows voices, F12 asks for Gus's and Nora's voices after the other speakers (while the comments and the broadcast are on). The first time, the game picks voices for them that differ from the announcer's. With NVDA or JAWS speaking for the game, the screen reader reads every line in its own one voice, so the crew all sound alike; to hear three voices, choose the game's own voices in F9, Speech settings, Speech output.
 - **Volumes:** F11 sets each speaker's volume, Gus's and Nora's too while the comments and the broadcast are on.
 
@@ -236,7 +255,7 @@ Every line of the crew is in remarks.txt in your customize folder (F9, Customize
 ### Good to know
 
 - The first key you press cuts off the line being spoken, as with every other sentence of the game. If you choose your plays quickly you hear only the start of the crew's lines; wait a moment before the next key to hear them all.
-- F2, the instant replay, repeats the play-by-play only, not the crew.
+- F2, the instant replay, repeats the play-by-play only (the radio calls as they were said), not the crew.
 - F6 explains the broadcast and names these menu items.
 - The broadcast never changes how a game goes. It uses its own random numbers, so the plays, the scores and the clock are the same with the crew on or off, and a Classic game is the original's game with or without it.
 - Tell us what you think: is "a lot" the right amount, does a line not fit the play it follows, does one come too often? To report a problem, press F9, choose Speech settings, "Save a problem report", and send the file it saves.

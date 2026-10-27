@@ -83,6 +83,8 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     questions to him (default on; F8 switches all comments off, this switches only the analyst)
 # nx_crew_talk        how much the radio crew talks: little (the rates of 0.16.8), some, lots (default) or most (a line after nearly
 #                     every play); F9, Rules, How much the crew talks changes it, at once, also in the game you are playing
+# nx_play_calls       radio or plain: every play called like an exciting radio broadcast (radio, default) or told in the original's
+#                     plain words; F9, Rules, Play calls changes it, at once, also in the game you are playing
 # nx_menu_hints       0 to 99: in how many program runs the play menus said where Right and M are; at 3 the hints stop (set it to 3 to
 #                     stop them, to 0 to hear them again)
 # nx_announcer, nx_analyst, nx_sideline, nx_network   the names of the radio crew and the network (default Walt Kessler, Gus
@@ -155,6 +157,7 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_stadium = {'on' if game.nx_stadium else 'off'}",
         f"nx_broadcast = {'on' if game.nx_broadcast else 'off'}",
         f"nx_crew_talk = {game.nx_crew_talk}",
+        f"nx_play_calls = {game.nx_play_calls}",
         f"nx_announcer = {game.nx_announcer}",
         f"nx_announcer_own = {game.nx_announcer_own}",
         f"nx_analyst = {game.nx_analyst}",
@@ -320,6 +323,12 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         if key is None:
             raise ValueError(f"'{value[:20]}' is not little, some, lots or most")
         game.nx_crew_talk = key
+    elif name == "nx_play_calls":                        # RC (D-195)
+        from ..extras.radio_calls import calls_key
+        key = calls_key(value)
+        if key is None:
+            raise ValueError(f"'{value[:20]}' is not radio or plain")
+        game.nx_play_calls = key
     elif name == "nx_menu_hints":
         game.nx_menu_hints = _number(value, 0, 99)
     elif name == "nx_commentator":                       # BC.3: a file of 0.16.7 or older: the analyst's name and, when typed, his own

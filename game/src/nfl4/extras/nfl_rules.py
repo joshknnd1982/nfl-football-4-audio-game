@@ -204,6 +204,7 @@ class NflRules(ClassicRules):
                            self.broadcast.analyst, self.stadium.on)
         fresh.broadcast.names = dict(self.broadcast.names)          # SZ.1, BC.3: the crew's names (set on the object, so a subclass's constructor stays as it is)
         fresh.broadcast.talk_level = self.broadcast.talk_level      # S-D (D-193): how much the crew talks
+        fresh.broadcast.play_calls = self.broadcast.play_calls      # RC (D-195): radio or plain play calls (a game reads the setting live)
         return fresh
 
     # ----- H1 -----
@@ -1035,7 +1036,7 @@ class NflRules(ClassicRules):
 
     def extra_help(self, key: str) -> list[str]:
         ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-47", "NXH-14", "NXH-18", "NXH-27"),
-               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-83", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-79", "NXH-80", "NXH-81", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-83", "NXH-84", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-79", "NXH-80", "NXH-81", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
                         "NXH-16", "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30") + MENU_HELP_F6,     # SX.12: overtime after the clock
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
                         "NXH-33") + descriptions.F7_WORD_ROWS}.get(key, ())

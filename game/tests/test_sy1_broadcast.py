@@ -31,7 +31,9 @@ SIZES = {"BN": 142, "ASK": 12, "CKO": 8, "CBG": 10, "CSK": 10, "CTV": 10, "CTD":
          "SGN": 4, "CRW": 3, "SON": 8, "UPD": 4, "QUP": 4, "STA": 6, "ASN": 4, "SIN": 6, "SHT": 8, "SGO": 4, "NID": 6, "LID": 6, "DRV": 6,
          "CLK": 4,
          # S-D (D-193): the analyst after ordinary plays
-         "CRG": 20, "CRS": 20, "CPC": 24, "CPI": 18, "CPT": 12, "CKR": 10}
+         "CRG": 20, "CRS": 20, "CPC": 24, "CPI": 18, "CPT": 12, "CKR": 10,
+         # RC (D-195): the analyst's exclamation and the sideline reporter's own moments
+         "CXR": 12, "STD": 10, "STV": 8, "SBG": 8, "SFD": 6, "SMW": 6, "SQE": 6, "SFN": 8, "SFT": 4}
 
 
 # ----- the texts -----

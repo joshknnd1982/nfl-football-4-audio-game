@@ -54,7 +54,7 @@ Reading of the numbers:
 
 ## 5. Recurring moves, with the game's new lines
 
-The game keeps its own play-by-play (the original author's sentences are the narration of every play and stay). The new lines are the voices around it. Each move below names the pool that carries it (pool names are those of `spec\strings_nx.tsv` and of `NFL_BROADCAST_DESIGN.md`).
+The game keeps its own play-by-play (the original author's sentences are the narration of every play and stay). The new lines are the voices around it. AMENDED 2026-10-27 (D-195, the owner on 0.16.9: "It still says 3rd and ten at the 26 yard line ... Make it an exciting radio broadcast. Radio broadcasters use a lot of exclamations"): the engine still makes the original's sentences, and each is now said as a radio call of section 4's voice (extras/radio_calls.py: present tense, short fragments, the teams by name, the down as a call says it, the key word repeated and an exclamation at a big play, a countdown on a long run); F9, Rules, Play calls brings back the original's words. NFL_BROADCAST_DESIGN.md section 13. Each move below names the pool that carries it (pool names are those of `spec\strings_nx.tsv` and of `NFL_BROADCAST_DESIGN.md`).
 
 | Move | When | Pattern | Pool | Example (new) |
 |---|---|---|---|---|

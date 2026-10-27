@@ -102,7 +102,7 @@ def test_the_classic_broadcast_follows_the_radio_format(classic_pair):
     lines = crew_lines(radio)
     pools = [pool for pool, _role, _text in lines]
     count = Counter(pools)
-    assert pools[:5] == ["SGN", "CRW", "HINT", "SON", "CKO"]                    # the sign-on, the crew, where to set them, Nora, Gus
+    assert pools[:6] == ["SGN", "CRW", "HINT", "ASN", "SON", "CKO"]             # the sign-on, the crew, where to set them, Walt names Nora (RC), Nora, Gus
     assert count["SGN"] == count["CRW"] == count["SON"] == count["CKO"] == count["SGO"] == 1 and pools[-1] == "SGO"
     assert count["QUP"] == 3 and count["SHT"] == 1 and count["CHT"] == 1         # quarters one and three and the half; Nora and Gus at the half
     assert count["STA"] == 3                                                     # the two two-minute warnings and half time
@@ -327,5 +327,5 @@ def test_the_keys_and_the_help_name_the_crew_in_both_modes():
     readme = (Path(__file__).resolve().parents[1] / "README_keys.md").read_text(encoding="utf-8")
     assert "sideline reporter" in readme
     help6 = ClassicRadioRules().extra_help("117")
-    assert help6[-4:] == [X.text("NXH-65"), X.text("NXH-66"), X.text("NXH-83"), X.text("NXH-70")]     # S-D: NXH-83, how much the crew talks
+    assert help6[-5:] == [X.text("NXH-65"), X.text("NXH-66"), X.text("NXH-83"), X.text("NXH-84"), X.text("NXH-70")]     # S-D: NXH-83, how much the crew talks; RC: NXH-84, the play calls
     assert "Broadcast crew" in X.text("NXH-70") and "Walt Kessler" in X.text("NXH-70")

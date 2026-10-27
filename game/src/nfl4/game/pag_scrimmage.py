@@ -52,9 +52,9 @@ class ScrimmageSteps:
         line = self.qb(s.wisoff) + P.QB_LINE[rnd(4) - 1]                      # drawn first (0x43fe61)
         huddle = P.THE_TEAM + s.teams[s.wisoff]
         huddle += P.NO_HUDDLE if rnd(10) == 7 else P.HUDDLE_BROKEN              # drawn second (0x440093)
-        g.say5(huddle)
+        g.say5_call(huddle)                                                     # say5, or its radio call (D-195)
         snd.c2uh()
-        g.say5(line)
+        g.say5_call(line)
         snd.c2uf()
         self.dy(0.2, 0x44027e)
         self.say3(P.HUT_1)

@@ -227,6 +227,10 @@ class Rig:
         self.game.options.settings.speech.mode_chosen = True
         # SZ.5 (D-110): the play menus say where Right and M are in the first three program runs; the rig's player has heard it
         self.game.options.settings.game.nx_menu_hints = 3
+        # RC (D-195): a new player's settings say radio play calls; the rig's player has the original's words (Play calls: plain), the
+        # sentences the engine makes and the many narration tests pin. The radio calls are tested with "radio" set by the test
+        # (tests/test_rc_radio_calls.py, work\bc4_1027\listen_broadcast.py); tests/test_rc_radio_calls.py checks the program's own default
+        self.game.options.settings.game.nx_play_calls = "plain"
 
     def run(self):
         self.game.run()
