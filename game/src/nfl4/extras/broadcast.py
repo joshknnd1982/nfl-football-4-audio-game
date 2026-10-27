@@ -17,7 +17,8 @@ The switches: F8 (the comments) silences all of it; F9, Rules, Broadcast switche
 Walt's sign-on, identifications, updates, breaks and sign-off stay with the comments on (the lines of those pools that name the analyst or the
 reporter are then left out of the draw).
 
-The broadcast never changes the game: it draws only from its OWN random generator (seeded from the game's seed, so a session can be replayed),
+The broadcast never changes the game: it draws only from its OWN random generator (seeded from the program's seed and the game's draws so
+far, so every game of a run has its own lines and a session can be replayed: game/rnd.side_seed, BC.4),
 never from the game's, it changes no state, no score, no clock and no sound, and every line is asynchronous so the first key (or T) cuts it.
 A pool never gives the same line twice in a game while it has others (rule 0.28 (3)). The game's own score sentence after a score is the
 score update there (rule 0.28 (3): Walt does not say it again right after); Walt resets the score at a dead ball when it has not been said
@@ -36,7 +37,7 @@ from types import SimpleNamespace
 
 from ..game import outcome as O
 from ..game.gamestate import other, own_half
-from ..game.rnd import GameRandom
+from ..game.rnd import GameRandom, side_seed
 from ..speech.roles import ANNOUNCER, COLOR, CREW_ROLES, EXTRA_ROLES, SIDELINE
 from . import commentators
 from . import crew
@@ -52,6 +53,9 @@ log = logging.getLogger("nfl4.extras")
 CHANCE = {"CKO": 100, "CTD": 60, "CFG": 30, "CFM": 40, "CTV": 45, "CBG": 30, "CSK": 20, "CTC": 8, "CTS": 8, "CFD": 40, "CRZ": 15, "CPN": 15,
           "CTM": 45, "CQE": 35, "CHT": 100, "CFN": 100, "CFT": 100, "CTT": 35, "CBO": 25}
 ASK_CHANCE = 25
+# BC.4 (D-191, the listening test): Walt's hand-off (ASK: "walk us through that play", "what changed on that snap") only before a line about a
+# play, never before the analyst's line at the kick-off, the two-minute warning, the end of a quarter, half time or the end of the game.
+NO_ASK = frozenset(("CKO", "CTM", "CQE", "CTT", "CBO", "CHT", "CFN", "CFT"))
 MAJOR = frozenset(("CKO", "CTD", "CHT", "CFN", "CFT"))        # these never wait for the gap below
 MIN_GAP = 4                                                    # plays between two ordinary lines of the analyst
 BIG_GAIN = 20                                                  # yards: CBG
@@ -78,6 +82,19 @@ QUARTER_SECONDS = 900
 WALT_POOLS = ("SGN", "CRW", "BN", "ASK", "ASN", "UPD", "QUP", "STA", "NID", "LID", "DRV", "CLK", "SGO")
 NORA_POOLS = ("SON", "SIN", "SHT")
 CREW_WORDS = ("<analyst>", "<commentator>", "<sideline>")      # a line that names Gus or Nora: left out while the Broadcast item is off
+
+
+def _capital_first(say):
+    """BC.4 (D-191): a line begins with a capital letter also when it begins with a name ("the Gridiron Radio Network coverage continues")."""
+    first = [True]
+
+    def speak(text):
+        if first[0] and text.strip():
+            first[0] = False
+            i = len(text) - len(text.lstrip())
+            text = text[:i] + text[i].upper() + text[i + 1:]
+        return say(text)
+    return speak
 
 
 class Facts:
@@ -171,10 +188,13 @@ class Broadcast:
     # ----- the game -----
 
     def attach(self, game, state, clock=None) -> None:
-        """A new game: its own generator, seeded from the game's seed (or a fixed one when the game's source was given, as in tests)."""
+        """A new game: its own generator, seeded from the program's seed and the game's draws so far (game/rnd.side_seed, BC.4: every game of
+        a run has its own lines; a fixed seed when the game's source was given, as in tests)."""
         self.game, self.state, self.clock = game, state, clock
-        seed = getattr(getattr(game, "rnd", None), "seed", None)
-        self.rnd = GameRandom(random.Random((seed if seed is not None else 0x5EED) ^ SEED_MIX))
+        game_rnd = getattr(game, "rnd", None)
+        self.rnd = GameRandom(random.Random(side_seed(game_rnd, SEED_MIX)))
+        log.info("broadcast: a new game; its generator from the program's seed and %s draws of the game's",
+                 getattr(game_rnd, "draws", "no") if getattr(game_rnd, "seed", None) is not None else "a test's source, no")
         self._reset()
         if self.analyst:
             self._own_voice()                         # starts the reading of the voice list when it is needed; the opening takes the voice
@@ -376,6 +396,9 @@ class Broadcast:
     def moment(self, state, what: str, quarter: int = 0) -> None:
         if not self.on_air():
             return
+        if what == "sign_on":                             # BC.4 (D-191): before the opening coin toss, as the real calls do (RADIO_NFL_STYLE 3)
+            self.opening(state)
+            return
         f = self.facts
         if what == "touchdown":                           # right after the six points: the scorer has the ball (state.wisoff)
             self._drive_summary(state, touchdown=True)
@@ -400,8 +423,9 @@ class Broadcast:
                 self._line(state, "SHT", values, self._nora)
                 self._try(state, "CHT", self._values(state, 1))
             self._station_break(state)
-        elif what == "final_score":                       # after the game's final score sentence: Gus, then Walt signs off
+        elif what == "final_score":                       # after the game's final score sentence: Gus
             self._game_end(state)
+        elif what == "sign_off":                          # BC.4 (D-191): after the final statistics, the broadcast's last words
             if not self.signed_off:
                 self.signed_off = True
                 self._line(state, "SGO", self._values(state, 1), self.game.say5)
@@ -565,7 +589,8 @@ class Broadcast:
             return None
         if pool not in WALT_POOLS and not self.active():
             return None
-        said = remarks.say_remark(self.game, state, self._record(state), pool, values, say=say, exclude=self._exclude(pool), rnd=self.rnd)
+        said = remarks.say_remark(self.game, state, self._record(state), pool, values, say=_capital_first(say), exclude=self._exclude(pool),
+                                  rnd=self.rnd)
         if said is not None:
             self.used.setdefault(pool, set()).add(said.id)
             self.spoken += 1
@@ -584,7 +609,7 @@ class Broadcast:
             return False
         if self.rnd(100) > CHANCE[pool]:
             return False
-        self._say(state, pool, values)
+        self._say(state, pool, values, ask=pool not in NO_ASK)
         return True
 
     def _say(self, state, pool: str, values: dict[str, str], ask: bool = True) -> None:

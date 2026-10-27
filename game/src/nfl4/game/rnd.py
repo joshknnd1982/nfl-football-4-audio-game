@@ -103,3 +103,14 @@ class GameRandom:
     def mark(self, what: str, **fields) -> None:
         """The debug log's line for the start of a game, season or league: which generator and how many draws so far."""
         debuglog.event("rnd", what, seed=self.seed if self.seed is not None else "given", draws=self.draws, **fields)
+
+
+def side_seed(rnd, mix: int) -> int:
+    """The seed of a side generator for one game (nfl4's radio broadcast and stadium sounds, which never draw from the game's own, G-D2).
+    BC.4 (D-191): the program's seed AND the draws the game's generator has made so far, so every game of one program run gets lines of
+    its own (with the seed alone every game of a season opened with the same sign-on, crew, reporter's note and analyst's line), while the
+    same seed and keys still give the same lines (the log has both). A source a test gave has no seed: the fixed seed of before."""
+    seed = getattr(rnd, "seed", None)
+    if seed is None:
+        return 0x5EED ^ mix
+    return ((seed ^ mix) << 32) ^ int(getattr(rnd, "draws", 0))

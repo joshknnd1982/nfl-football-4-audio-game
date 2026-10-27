@@ -255,11 +255,12 @@ class BreakSteps:
             g.superbowl(s.final_scores)                             # Q27: once, in place of the final score (S7.3c)
         else:
             self.final_score()
-        self.rules.broadcast_moment(s, "final_score")               # H23 (BC.3): the analyst and the sign-off after the final score
+        self.rules.broadcast_moment(s, "final_score")               # H23 (BC.3): the analyst after the final score
         self.snd.commercial("final")                                # owner rule 0.14: after the final score, before the statistics
         s.quarter += 1
         s.finished = True                                           # L194 = 1
         self.quarter_stats()
+        self.rules.broadcast_moment(s, "sign_off")                  # H23 (BC.4, D-191): the crew's last words, after the final statistics
         if g.season.gtp == 42:
             g.season.gtp = 0
         return self.finish

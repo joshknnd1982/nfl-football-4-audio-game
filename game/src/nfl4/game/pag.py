@@ -461,6 +461,8 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
 
     def coin_toss(self, overtime: bool = False):
         g, s = self.g, self.s
+        if not overtime:                                   # H23 (BC.4, D-191): the radio crew signs on before the toss (the engine's Classic:
+            self.rules.broadcast_moment(s, "sign_on")      # nothing, no draw)
         own_call = 0                                       # Ldc = 0 (0x43aea1)
         computer_call = 0                                  # L428 = 0
         if g.season.vtrnt != 1:

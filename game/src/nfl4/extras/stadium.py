@@ -34,7 +34,7 @@ from ..audio.output import CROWD_SLOT
 from ..data import debuglog, paths
 from ..game import outcome as O
 from ..game.gamestate import other
-from ..game.rnd import GameRandom
+from ..game.rnd import GameRandom, side_seed
 from ..speech.roles import REFEREE
 
 log = logging.getLogger("nfl4.extras")
@@ -150,8 +150,7 @@ class Stadium:
 
     def attach(self, game, state) -> None:
         self.game = game
-        seed = getattr(getattr(game, "rnd", None), "seed", None)
-        self.rnd = GameRandom(random.Random((seed if seed is not None else 0x5EED) ^ SEED_MIX))
+        self.rnd = GameRandom(random.Random(side_seed(getattr(game, "rnd", None), SEED_MIX)))   # BC.4 (D-191): new draws every game of a run
         self.played = 0
         self.last_mic = -99.0
         sounds = getattr(game, "sounds", None)

@@ -291,3 +291,6 @@ If you want to hear a league that is already many seasons old without playing th
 133. Added 2026-10-27 (D-189): F9, Rules, Broadcast crew: rename the reporter, start a game, and hear the new name; go back to Nora Banks with Left or Right, and then to your name again: is your typed name still there?
 134. Added 2026-10-27 (D-189): F9, Rules, Broadcast off: only Walt's sign-on, updates, breaks and sign-off are left, and no line names Gus or Nora? F8 off: no crew at all?
 135. Added 2026-10-27 (D-189): in a franchise game with the N. F. L. rules, when a player is hurt, does Nora report it at the next dead ball, after the announcer's own sentence?
+136. Added 2026-10-27 (D-191, BC.4's listening test): with comments on, do Walt's sign-on, the crew, Nora and Gus come before the coin toss? Is Walt's sign-off the last thing you hear, after the final statistics?
+137. Added 2026-10-27 (D-191): play two games in one session (the first two weeks of a season): does the crew open the second game with other words than the first?
+138. Added 2026-10-27 (D-191): at the two-minute warning with no commercials of your own, Walt says a station break ("back in a moment", "we'll be right back") and the game goes straight on: does that sound right, or should he say only the network's name then?

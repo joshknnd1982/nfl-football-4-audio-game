@@ -141,7 +141,8 @@ Added in PX SX.12 (the 2026 overtime, Rule 16, D-096), each the original's answe
                                            score's pause), the end of a quarter, the two-minute warning, half time, the end of the game
                                            (the crowd and the analyst, extras/stadium.py and broadcast.py); BC.3 (D-189) added the
                                            station breaks before the commercial slots ("two_minute_break", "half_time_break") and the
-                                           moment after the final score ("final_score": the analyst and the sign-off). The program's
+                                           moment after the final score ("final_score": the analyst); BC.4 (D-191) the sign-on before
+                                           the opening coin toss ("sign_on") and the sign-off after the final statistics ("sign_off"). The program's
                                            Classic answers them with the radio broadcast only (extras/classic_radio.py); this object,
                                            the engine's exact Classic, with nothing
     H22 overtime_lines(state)              said after " We are going into over time number "  no lines

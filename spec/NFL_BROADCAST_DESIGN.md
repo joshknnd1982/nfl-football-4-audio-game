@@ -119,6 +119,7 @@ podcasters' names become Gus Delgado.
   last typed name kept, the reporter's voice the next free one (no gender in the voice list).
 - BC.4 Verification: full suites 64 and 32, a listening test of a whole game's broadcast transcript (work script: every line in order, no doubled
   sentence), the playtest list, a test build at the owner's word.
+  DONE 2026-10-27 (D-191, Opus 5.5): the suites, the soaks and the listening test (work\bc4_1027\listen_broadcast.py: whole games in both modes, every line in order); fixed before the release: each game's own broadcast seed (game/rnd.side_seed), the sign-on before the opening coin toss (H23 "sign_on"), the sign-off after the final statistics (H23 "sign_off"), no hand-off before a line that is not about a play (NO_ASK), a capital first letter; the test build 0.16.8.
 
 ## 9. Tests (BC.2 and BC.3)
 
