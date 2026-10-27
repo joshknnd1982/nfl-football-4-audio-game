@@ -31,7 +31,7 @@ def menu_opening(title: str, count: int) -> str:
 # SX.14 (rule 0.23): the saved-game questions use the original's menu keys, and Save Game now asks for a place; the same line says so
 KEYS_ADDED_SAVES = (" Saved games. When something is saved, the game asks first what to do: Up and Down and the digits choose, Enter takes "
                     "the choice, and F1 says it again. Save Game asks for one of three places, then whether to quit or keep playing. ")
-KEYS_ADDED_F9 = (" F9. added functions: the speech settings, the sounds, the names and the banter, the rules, "
+KEYS_ADDED_F9 = (" F9. added functions: the speech settings, the sounds, the names and the commentary, the rules, "
                  "and the about text. " + KEYS_ADDED_SAVES.lstrip())
 # F1 repeats the prompt as the original does; right after it one short sentence says where the help is.
 F1_HELP_HINT = (" For help, F5 lists the special keys, F6 explains the game, F7 gives the football words, "
@@ -39,11 +39,11 @@ F1_HELP_HINT = (" For help, F5 lists the special keys, F6 explains the game, F7 
 
 # ----- the added functions (F9): help and about -----
 F9_TITLE = "Added functions"
-F9_HELP = (MENU_HELP + " The five items are the speech settings, the sounds, the names and the banter, the rules, and the "
+F9_HELP = (MENU_HELP + " The five items are the speech settings, the sounds, the names and the commentary, the rules, and the "
            "about text. "
            "The original's own keys work as always: Control sets the speech rate, F11 the volumes, F12 the voices.")
 # nfl4 only (SX.9): with the N. F. L. rules the Franchise item is a sixth item, before About
-F9_HELP_FRANCHISE = (MENU_HELP + " The six items are the speech settings, the sounds, the names and the banter, the rules, the "
+F9_HELP_FRANCHISE = (MENU_HELP + " The six items are the speech settings, the sounds, the names and the commentary, the rules, the "
                      "franchise, and the about text. "
                      "The original's own keys work as always: Control sets the speech rate, F11 the volumes, F12 the voices.")
 SPEECH_ITEM = "Speech settings."
@@ -313,29 +313,29 @@ def restored_all(result) -> str:
 
 
 # ----- customize menu (S7.7, G-K2, D-048) -----
-CUSTOMIZE_ITEM = "Customize the names and the banter."
+CUSTOMIZE_ITEM = "Customize the names and the commentary."
 CUSTOMIZE_TITLE = "Customize"
 CUSTOMIZE_HELP = (MENU_HELP + " The files are plain text. Open the folder, change a file in any text editor, save it, "
                   "then choose Reload. A game in progress keeps the players it already has.")
 CUSTOMIZE_NOT_AVAILABLE = "The customization files are not available."
-CUSTOMIZE_FOLDER_ITEM = "Open the folder with the names and banter files."
-CUSTOMIZE_FOLDER_OPENING = ("Opening the folder. The files are teams.txt, divisions.txt, surnames.txt and banter.txt. "
-                            "Your own sound files for the banter go in the sounds folder inside it.")
+CUSTOMIZE_FOLDER_ITEM = "Open the folder with the customization files."
+CUSTOMIZE_FOLDER_OPENING = ("Opening the folder. The files are teams.txt, divisions.txt and surnames.txt, and with the N. F. L. rules "
+                            "remarks.txt and the files of the added features. Your own sound files go in the sounds folder inside it.")
 CUSTOMIZE_FOLDER_FAILED = "The customization folder could not be opened. Its place is in the readme."
-CUSTOMIZE_RELOAD_ITEM = "Reload the names and the banter from the files."
+CUSTOMIZE_RELOAD_ITEM = "Reload the names and the commentary from the files."
 CUSTOMIZE_CHECK_ITEM = "Check the customization files."
 CUSTOMIZE_RESET_ONE_ITEM = "Reset one list to the original."
 CUSTOMIZE_RESET_ALL_ITEM = "Reset all lists to the original."
 CUSTOMIZE_RESET_ONE_TITLE = "Reset one list"
 CUSTOMIZE_RESET_ONE_HELP = ("Up and Down move through the lists. Enter puts the original back. Your file is kept with the "
                             "ending before-reset. Escape goes back.")
-CUSTOMIZE_CONFIRM_RESET_ALL = ("This puts the original team names, division names, surnames and banter lines back. Your files "
+CUSTOMIZE_CONFIRM_RESET_ALL = ("This puts the original team names, division names, surnames and the other lists back. Your files "
                                "are kept with the ending before-reset. Your sound files and footplay.txt are not touched. "
                                "Press Enter to do it, or any other key to cancel.")
 
 
-def customize_reloaded(banter_lines: int, notices: list[str]) -> str:
-    text = f"The files were read again. {banter_lines} banter line{'s are' if banter_lines != 1 else ' is'} on."
+def customize_reloaded(notices: list[str]) -> str:
+    text = "The files were read again."
     return " ".join([text] + [notice.strip() for notice in notices])
 
 

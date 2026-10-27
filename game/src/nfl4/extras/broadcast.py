@@ -1,20 +1,18 @@
-"""The radio-style broadcast of the N. F. L. rules mode: the announcer's radio banter and Ghip, the color commentator (nfl4 only, rule 0.13).
-This is inspired by Jim Kitchen.
+"""The radio-style broadcast of the N. F. L. rules mode: the color analyst (nfl4 only, rule 0.13). This is inspired by Jim Kitchen.
 
-CLAUDE.md 0.27 (the owner, 2026-10-22: when comments are on, the original's comments are replaced by standard sports banter as from a radio
-broadcast), playbook 7.19, D-101. Two parts:
+CLAUDE.md 0.27 as amended on 2026-10-26 (the owner: the original's commentary goes from every mode; a made-up radio crew is the only
+commentary), playbook 7.19, D-101, D-178. BC.2 (D-180) removed the original's banter step and with it the pool BN drawn by the
+original's rule on the game's generator (the Rules hook H23 banter_lines is gone); BC.3 brings the play-by-play announcer's asides
+(pool BN), the sideline reporter and the radio format back on the broadcast's own generator (spec/NFL_BROADCAST_DESIGN.md).
 
-* The banter. In the N. F. L. rules the announcer's banter (game/banter.py: after a score, after a change of possession, one play in four)
-  draws its lines from the pool BN of remarks.txt instead of the 142 jokes of the original. The pool has the original's size and is drawn by the
-  original's rule (the same draws), so nothing in the game's random sequence moves; the player's banter.txt belongs to the Classic rules.
-* Ghip. After some plays and at some moments (the opening kick-off, a touchdown, a turnover, a big gain, a sack, a missed kick, a third down, a
-  fourth-down gamble, the red zone, a penalty, the two-minute warning, the end of the first and third quarters, half time, a close or a decided
-  game, the final whistle) the color commentator adds one line from his pool in a voice of his own (speech/roles.COLOR), and the announcer
-  sometimes turns to him first (pool ASK). A line is said asynchronously, never replayed by F2, and the first key (or T) cuts it.
+The analyst: after some plays and at some moments (the opening kick-off, a touchdown, a turnover, a big gain, a sack, a missed kick, a
+third down, a fourth-down gamble, the red zone, a penalty, the two-minute warning, the end of the first and third quarters, half time, a
+close or a decided game, the final whistle) the color analyst adds one line from his pool in a voice of his own (speech/roles.COLOR), and
+the announcer sometimes turns to him first (pool ASK). A line is said asynchronously, never replayed by F2, and the first key (or T) cuts it.
 
 The broadcast never changes the game: it draws only from its OWN random generator (seeded from the game's seed, so a session can be replayed),
 never from the game's, it changes no state and no sound, and the Classic rules never call it (the hooks H23 answer nothing there). F8 (comments
-off) silences it; F9, Rules, Broadcast switches Ghip and the ASK lines off (the radio banter stays: it is the N. F. L. rules' banter).
+off) silences it; F9, Rules, Broadcast switches the analyst and the ASK lines off.
 """
 from __future__ import annotations
 
@@ -22,7 +20,6 @@ import logging
 import random
 
 from ..game import outcome as O
-from ..game.banter_pool import Line
 from ..game.gamestate import other
 from ..game.rnd import GameRandom
 from ..speech.roles import ANNOUNCER, COLOR, EXTRA_ROLES
@@ -32,7 +29,7 @@ from . import remarks
 
 log = logging.getLogger("nfl4.extras")
 
-# The chance in percent of Ghip at each kind of moment (his pool), and how often the announcer turns to him first.
+# The chance in percent of the analyst at each kind of moment (his pool), and how often the announcer turns to him first.
 # The owner, 2026-10-25 (Q-043): "Talks too much". Measured 26.5 lines a game (work\sr4\ghip_rate.py, 12 games); the ordinary moments' chances,
 # the gap and the announcer's turn to him were lowered to about half that (the kick-off, half time and the final whistle stay). Was: CTD 85, CFG 55,
 # CFM 70, CTV 80, CBG 60, CSK 40, CTC 15, CTS 15, CFD 70, CRZ 35, CPN 30, CTM 75, CQE 60, CTT 60, CBO 50; ASK_CHANCE 40; MIN_GAP 2.
@@ -40,7 +37,7 @@ CHANCE = {"CKO": 100, "CTD": 60, "CFG": 30, "CFM": 40, "CTV": 45, "CBG": 30, "CS
           "CTM": 45, "CQE": 35, "CHT": 100, "CFN": 100, "CFT": 100, "CTT": 35, "CBO": 25}
 ASK_CHANCE = 25
 MAJOR = frozenset(("CKO", "CTD", "CHT", "CFN", "CFT"))        # these never wait for the gap below
-MIN_GAP = 4                                                    # plays between two ordinary lines of Ghip
+MIN_GAP = 4                                                    # plays between two ordinary lines of the analyst
 BIG_GAIN = 20                                                  # yards: CBG
 CLOSE_MARGIN, DECIDED_MARGIN = 3, 21                           # CTT in the fourth quarter, CBO in the second half
 SEED_MIX = 0x6B1B_0C0F                                         # the broadcast's seed is the game's seed mixed with this
@@ -65,20 +62,17 @@ class Facts:
 
 
 class Broadcast:
-    def __init__(self, rules, radio_banter: bool = False, ghip: bool = False, commentator: str = commentators.DEFAULT):
+    def __init__(self, rules, analyst: bool = False, commentator: str = commentators.DEFAULT):
         self.rules = rules
-        self.radio_banter = bool(radio_banter)      # the pool BN replaces the original's banter (the N. F. L. rules from the settings)
-        self.ghip = bool(ghip)                      # Ghip and the announcer's questions (F9, Rules, Broadcast)
-        self.commentator = commentators.clean(commentator) or commentators.DEFAULT     # SZ.1: his name (F9, Rules, Commentator); Ghip by default
+        self.analyst = bool(analyst)                # the analyst and the announcer's questions (F9, Rules, Broadcast)
+        self.commentator = commentators.name_of_text(commentator)      # SZ.1, BC.2: his name (F9, Rules, Commentator); Gus Delgado by default
         self.game = None
         self.rnd: GameRandom | None = None
         self.facts: Facts | None = None
         self.since = MIN_GAP
         self.opened = False
         self.red_zone_side = 0
-        self.spoken = 0                              # how many lines of Ghip this game (the log says it at the end)
-        self._banter_source = None
-        self._banter_cache: tuple = ()
+        self.spoken = 0                              # how many lines of the analyst this game (the log says it at the end)
 
     # ----- the game -----
 
@@ -88,27 +82,12 @@ class Broadcast:
         seed = getattr(getattr(game, "rnd", None), "seed", None)
         self.rnd = GameRandom(random.Random((seed if seed is not None else 0x5EED) ^ SEED_MIX))
         self.facts, self.since, self.opened, self.red_zone_side, self.spoken = None, MIN_GAP, False, 0, 0
-        self._banter_source = None
-        if self.ghip:
+        if self.analyst:
             self._own_voice()                         # starts the reading of the voice list when it is needed; the opening takes the voice
 
     def active(self) -> bool:
-        """Ghip may speak: the broadcast is on, the game has begun and the comments are on (F8)."""
-        return bool(self.ghip and self.game is not None and self.rnd is not None and self.game.comtog == 0)
-
-    # ----- the banter (the announcer's, H23 banter_lines) -----
-
-    def banter_lines(self, game):
-        """The pool BN as the engine's lines, or None when this game keeps the original's banter (a hand-made rules object)."""
-        if not self.radio_banter:
-            return None
-        pools = getattr(game, "remark_pools", None) or remarks.DEFAULT_POOLS
-        lines = pools.lines("BN")
-        if lines is not self._banter_source:
-            self._banter_source = lines
-            values = {"<commentator>": self.commentator}           # SZ.1: the banter that turns to the commentator says his name
-            self._banter_cache = tuple(Line(r.number, remarks.filled(r.pieces, values), r.markup, r.builtin) for r in lines)
-        return self._banter_cache
+        """The analyst may speak: the broadcast is on, the game has begun and the comments are on (F8)."""
+        return bool(self.analyst and self.game is not None and self.rnd is not None and self.game.comtog == 0)
 
     # ----- what the engine tells -----
 
@@ -117,20 +96,20 @@ class Broadcast:
         self.since += 1
 
     def opening(self, state) -> None:
-        """Before the opening kick-off of the game: the announcer says once per program run who is in the booth, then Ghip's opening line."""
+        """Before the opening kick-off of the game: the announcer says once per program run who is in the booth, then the analyst's opening line."""
         x = state.extras
         if self.opened or not self.active() or state.quarter != 1 or x is None or x.plays != 0:
             return
         self.opened = True
         g = self.game
         self._own_voice()
-        if not getattr(g, "ghip_introduced", False):
-            g.ghip_introduced = True
+        if not getattr(g, "analyst_introduced", False):
+            g.analyst_introduced = True
             g.say5(X.text("NXB-B01", commentator=self.commentator))
         self._say(state, "CKO", self._values(state, 1), ask=False)
 
     def _own_voice(self) -> None:
-        """Ghip and the referee get a voice of their own the first time a game opens, when the player has not chosen one (F12): the next
+        """The analyst and the referee get a voice of their own the first time a game opens, when the player has not chosen one (F12): the next
         voice of the announcer's engine that nobody uses, else the next voice of the list. Done once the voice list is read (the game
         starts the reading in the background); until then they share the announcer's voice. The choice is saved like the player's own,
         so F12 shows it."""
@@ -166,7 +145,7 @@ class Broadcast:
             if changed:
                 options.save()
         except Exception as exc:
-            log.warning("broadcast: the voices of Ghip and the referee could not be chosen: %s", exc)
+            log.warning("broadcast: the voices of the analyst and the referee could not be chosen: %s", exc)
 
     def before_snap(self, state, offense_play: int) -> None:
         if not self.active() or state.down != 4 or state.two_point or offense_play in KICK_PLAYS or offense_play == 0:
@@ -294,7 +273,7 @@ class Broadcast:
         if said is not None:
             self.since = 0
             self.spoken += 1
-            log.info("broadcast: the commentator (%s) says %s (%s) after %d plays", self.commentator, said.id, pool, getattr(x, "plays", 0))
+            log.info("broadcast: the analyst (%s) says %s (%s) after %d plays", self.commentator, said.id, pool, getattr(x, "plays", 0))
 
     @staticmethod
     def _final_clause(state) -> str:

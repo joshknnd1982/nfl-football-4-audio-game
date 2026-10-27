@@ -146,7 +146,7 @@ class Speakers:
         self._speak(text, ANNOUNCER, False)
 
     def say_role(self, text: str, role: str) -> None:
-        """A speaker of the extras (Ghip, SY.1), asynchronous; logged, not kept for the replay (the pools of the broadcast)."""
+        """A speaker of the extras (the analyst, SY.1), asynchronous; logged, not kept for the replay (the pools of the broadcast)."""
         self._logged(text)
         self._speak(text, role, False)
 

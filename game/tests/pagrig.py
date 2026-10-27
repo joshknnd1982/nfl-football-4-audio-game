@@ -161,7 +161,7 @@ def engine_rig(tmp_path, answers=(), comments=False, **state):
     s.rosters = {1: named_roster(""), 2: named_roster("O")}
     s.quarterbacks = {1: "Starr", 2: "Unitas"}
     own, opp = s.rosters[1], s.rosters[2]
-    s.banter_names = (own.running_backs + own.receivers + own.defense + opp.running_backs + opp.receivers
+    s.player_names = (own.running_backs + own.receivers + own.defense + opp.running_backs + opp.receivers
                       + opp.defense)
     s.plays = [33, 33, 33, 33, 33]
     for name, value in state.items():

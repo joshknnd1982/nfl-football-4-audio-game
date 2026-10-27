@@ -106,7 +106,9 @@ podcasters' names become Gus Delgado.
 - BC.2 Remove the original's commentary: banter_lines.py, banter.py's speak_banter (play_line and the sound player move to banter_markup or a
   module of their own, the Franchise's weekly and news pools use them), banter_pool.py and the BANTER customization, Ghip and the 28 names,
   hook H23 banter_lines; keep the per-play draw and the 58 players' names (renamed player_names); the golden transcript recorded again; every test that pinned the jokes. Sonnet 5.5,
-  high (Opus 5.5 if the draws move).
+  high (Opus 5.5 if the draws move). DONE 2026-10-27 (D-180, Opus 5.5): as planned; the analyst's default name is already Gus Delgado; the
+  draws of seeded comments-off games are proved unchanged (tests/test_bc2_no_original_commentary.py); the new line player is
+  game/line_player.py. For BC.3: BN is not drawn at all now; the menu loses a typed name once the player steps to the default.
 - BC.3 The crew and the format: the broadcast in both modes (the moments of section 4 from both rules' hooks), the new pools and texts
   (strings_nx.tsv), the names and their menu, SIDELINE in roles, F11, F12, the help, the keys (0.24), CHANGELOG 0.16.8, CUSTOMIZE.md, README.
   Opus 5.5, high.

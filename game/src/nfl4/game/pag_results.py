@@ -3,12 +3,15 @@
 CODE (lifted) pag: 0x44e537 (the ball moves), 0x443ef5 (safety), 0x44ea5c to 0x44f6ae (touchdown), 0x4506ef (a play
 that ends in the field of play), 0x44df65 and 0x44dfda (turnover spot and possession), 0x4510b6 to 0x451a30 (the banter
 draw, the position and down sentences, the log), 0x444146 and 0x444233 (the score and what follows it).
+
+BC.2 (D-178, D-180, rule 0.27 as amended): the original's banter (GoSub 0x45915e: its 142 lines, the line, name and choice draws) is gone
+from every mode. Its one draw that comes with comments off too, Int(Rnd * 4) + 1 after a play that ends in the field of play, is kept
+with nothing said on it, so a seeded game with comments off makes exactly the draws it made before (tests/test_bc2_no_original_commentary.py).
 """
 from __future__ import annotations
 
 from . import outcome as O
 from . import phrases as P
-from .banter import speak_banter
 from .gamestate import other, own_half
 from .playtables import TURNOVER_SPOT_ODDS, TURNOVER_SPOT_SHORTEST
 from .vbnum import trim
@@ -104,7 +107,7 @@ class ResultSteps:
         snd.play_tackle(8)
         snd.playcel()
         s.stats[s.wisoff].score += 6
-        self.rules.broadcast_moment(s, "touchdown")       # H23: the crowd and Ghip (the N. F. L. rules; Classic: nothing)
+        self.rules.broadcast_moment(s, "touchdown")       # H23: the crowd and the analyst (the N. F. L. rules; Classic: nothing)
         if self.rules.points_end_game(s, s.wisoff):       # H22 (SX.12): a touchdown that decides the overtime has no try (4-8-2 (c));
             return self.game_end                          # Classic: never (its overtime ends after the try)
         if s.wisoff == 2:                                 # the computer always kicks
@@ -266,7 +269,6 @@ class ResultSteps:
             s.punt_flag = 0
         else:                                             # a missed field goal (and " is way to short")
             self.log_replay_list()
-        self.banter()
         s.down = 1
         s.to_go = 10
         return self.down_sentence
@@ -274,9 +276,8 @@ class ResultSteps:
     # ----- the position and the down (L_4510b6, L_451181, L_4513f2) -----
 
     def banter_position(self):
-        """L_4510b6: a banter line 1 time in 4, then " it's" and the position."""
-        if self.rnd(4) == 2:
-            self.banter()
+        """L_4510b6: the original's draw of a banter line 1 time in 4 (kept with nothing said on it, BC.2), then " it's" and the position."""
+        self.rnd(4)
         self.s.text = P.ITS
         return self.position
 
@@ -322,9 +323,6 @@ class ResultSteps:
         for line in list(g.replay):
             g.log_print(line)
 
-    def banter(self) -> None:
-        speak_banter(self.g, self.s)
-
     # ----- the scores (5.12) -----
 
     def score(self):
@@ -336,14 +334,13 @@ class ResultSteps:
         return self.after_score
 
     def after_score(self):
-        """L_444233: the score, a synchronous " " on the voice that spoke last, rady, banter, the key wait, then the
+        """L_444233: the score, a synchronous " " on the voice that spoke last, rady, (the original's banter, gone: BC.2), the key wait, then the
         kick-off received by the side that did not score (after a safety the side that scored)."""
         g, s = self.g, self.s
         g.say_score(s.score(1), s.score(2))
         g.voice_speak(" ", wait=True)
         self.rady(0x4443cb)
-        self.banter()
-        self.rules.broadcast_moment(s, "score")                     # H23: Ghip after a field goal (the N. F. L. rules)
+        self.rules.broadcast_moment(s, "score")                     # H23: the analyst after a field goal (the N. F. L. rules)
         self.key_wait()
         s.wisoff = other(s.wisoff)
         s.defense = other(s.wisoff)

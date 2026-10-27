@@ -1,13 +1,16 @@
-"""The player's customization: teams.txt, divisions.txt, surnames.txt, banter.txt and the sounds folder. This is inspired by Jim Kitchen.
+"""The player's customization: teams.txt, divisions.txt, surnames.txt and the sounds folder. This is inspired by Jim Kitchen.
 
 D-032 items 7 to 11, D-035, D-048, CUSTOMIZABLE_CONTENT 3 to 6, 10 and 12, playbook 7.9 and 7.10. One folder, `customize`
 (`paths.customize_dir()`), holds the files the player edits; footplay.txt and footplay.previous.txt live in it too but belong
 to the store of S7.5 (data/files/store.py), which reads, repairs and writes them: this module only CHECKS footplay.txt for the
-Customize menu and never changes it. `sounds` below it holds the player's own sound files for the banter.
+Customize menu and never changes it. `sounds` below it holds the player's own sound files for the customizable lines.
+
+BC.2 (D-178, D-180): the original's banter and its file banter.txt are gone from every mode. A banter.txt a player already has stays
+on disk untouched; it is not read, made, checked or reset (the CHANGELOG says how to move a line of one's own into remarks.txt).
 
 `Customization` loads every list once when it is made (and again on reload), always ending with usable values:
 
-* the built-in originals are the defaults and are never edited (game/league.py, assets/data/surnames.txt, game/banter_lines.py);
+* the built-in originals are the defaults and are never edited (game/league.py, assets/data/surnames.txt);
 * a player's entry with the same ID replaces the default, a missing ID keeps it, an unknown ID is a problem and ignored;
 * a bad entry (a name the rules refuse, a line the markup refuses) keeps the default and is a problem; every file with
   problems gives ONE spoken summary and its lines in the log;
@@ -38,7 +41,6 @@ from typing import Callable
 from ..audio.wavdata import SoundLoadError, load_sound_file
 from ..game import league as league_module
 from ..game.banter_markup import Sound
-from ..game.banter_pool import DEFAULT_LINES, BanterPool, banter_id, banter_number, build_pool
 from ..game.names import POOL_SIZE, load_surnames
 from . import customlists as cl
 from . import debuglog
@@ -51,7 +53,7 @@ GAME = "NFL Football 4"
 SOUNDS_FOLDER = "sounds"
 NAME_MIN, NAME_MAX = 1, 30
 
-TEAMS, DIVISIONS, SURNAMES, BANTER = "teams", "divisions", "surnames", "banter"
+TEAMS, DIVISIONS, SURNAMES = "teams", "divisions", "surnames"
 REMARKS = "remarks"         # nfl4 only (rule 0.13): the extras' remark pools, read only with the N. F. L. rules (SX.2)
 PENALTIES = "penalties"     # nfl4 only (rule 0.13): the fouls' names, switches and weights (SX.3)
 PLAYS, STYLES, TEAMSTYLES = "plays", "styles", "teamstyles"     # nfl4 only: the playbooks' files in `playbooks` (SX.7)
@@ -77,7 +79,6 @@ SPECS: tuple[ListSpec, ...] = (
     ListSpec(TEAMS, "teams.txt", "team names", "the original team names"),
     ListSpec(DIVISIONS, "divisions.txt", "division names", "the original division names"),
     ListSpec(SURNAMES, "surnames.txt", "surnames", "the original surnames"),
-    ListSpec(BANTER, "banter.txt", "banter lines", "the original banter lines"),
 )
 # CUSTOMIZABLE_CONTENT 13: the files of the extra features are read, made, checked and reset only while the Rules setting is
 # the N. F. L. rules (`Customization.use_extras`); with Classic none of them is ever opened
@@ -130,24 +131,6 @@ SURNAME_NOTES = (
     "Only the names change: there are always 1,708. Spell a name the way the voice should say it.",
     "A name has 1 to 30 characters, with no comma and no semicolon. Delete a line to get the original name back.",
     "Your own team's players are in the file footplay.txt, which is next to this one.",
-)
-BANTER_NOTES = (
-    "These are the announcer's remarks. B001 to B142 are the original lines. Each line is an ID, an equals sign and the line.",
-    "Change a line to say something else. Write B045 = off to switch a line off. Delete a line to get the original back.",
-    "Add your own lines with a new ID, B143 and up. Each line is chosen by chance, and none twice in a game.",
-    "In a line these words in square brackets do something:",
-    "  [name] is a player's name drawn by the game, the same name everywhere in the line.",
-    "  [opponent quarterback] is the name of the other team's quarterback.",
-    "  [bleep] plays the original's bleep sound.",
-    "  [sound my laugh.wav] plays your own sound file from the sounds folder, which is next to this file.",
-    "  [pause] is a short pause of random length, and [pause 2] a pause of 2 seconds.",
-    "  [then] ends a spoken part: the words after it are said as a new part.",
-    "  [faster] ends a spoken part and says the next part one step faster.",
-    "  [one of: some words | other words | more words] says one of them, chosen by chance.",
-    "A line can be words only, a sound only, or both. Examples:",
-    "  B143 = What a hit! [sound crunch.wav] Ghip, did you see that?",
-    "  B144 = [sound crowd boo.wav]",
-    "A line has at most 500 characters and 20 parts. The F8 key switches all comments off, yours too.",
 )
 
 
@@ -328,11 +311,9 @@ class Snapshot:
     team_names: tuple[str, ...]
     division_names: tuple[str, ...]
     surnames: list[str] | None            # None: the original surname asset could not be read (the game reads it itself)
-    banter: BanterPool
     statuses: dict[str, str] = field(default_factory=dict)          # list key -> load status (data.customlists)
     problems: dict[str, cl.Problems] = field(default_factory=dict)  # list key -> what was wrong inside the file
     notices: list[str] = field(default_factory=list)                # the spoken sentences of this load
-    sound_files: list[str] = field(default_factory=list)            # the sound files the player's banter lines name
     kept: set[str] = field(default_factory=set)                     # lists whose file could not be read: the earlier values stay
     remarks: object = None              # extras.remarks.RemarkPools with the N. F. L. rules; None while they are not used
     fouls: object = None                # extras.penalty_list.FoulTable with the N. F. L. rules; None while not used (SX.3)
@@ -460,8 +441,6 @@ class Customization:
             if names is None:
                 raise RuntimeError("the original surnames are not available")
             return cl.render_list(GAME, SURNAMES, SURNAME_NOTES, [("S%04d" % n, name) for n, name in enumerate(names, start=1)])
-        if key == BANTER:
-            return cl.render_list(GAME, BANTER, BANTER_NOTES, [(banter_id(line.number), line.markup) for line in DEFAULT_LINES])
         if key == REMARKS:
             from ..extras import remarks
             return cl.render_list(GAME, REMARKS, remarks.NOTES, remarks.default_entries())
@@ -493,8 +472,7 @@ class Customization:
         """Read every list in use; never raises. `previous` is the snapshot in use: a list whose file cannot be read now (held
         by another program, damaged and not replaceable, unreadable) keeps the values it had (playbook 7.10: keep the loaded
         copy), and only the very first load falls back to the originals."""
-        snapshot = Snapshot(league_module.DEFAULT_TEAM_NAMES, league_module.DEFAULT_DIVISION_NAMES,
-                            None, BanterPool(DEFAULT_LINES))
+        snapshot = Snapshot(league_module.DEFAULT_TEAM_NAMES, league_module.DEFAULT_DIVISION_NAMES, None)
         if self.extras:
             from ..extras.penalty_list import DEFAULT_TABLE
             from ..extras.playbooks import DEFAULT_TABLE as DEFAULT_PLAYBOOKS
@@ -543,8 +521,6 @@ class Customization:
             snapshot.division_names = previous.division_names
         elif key == SURNAMES:
             snapshot.surnames = previous.surnames
-        elif key == BANTER:
-            snapshot.banter, snapshot.sound_files = previous.banter, previous.sound_files
         elif key == REMARKS:
             if previous.remarks is None:            # the extras were just switched on: nothing loaded before, originals
                 return
@@ -596,27 +572,6 @@ class Customization:
             explicit = explicit_names(entries, re.compile(r"S(\d{1,4})", re.IGNORECASE), POOL_SIZE, problems)
             if defaults is not None:
                 snapshot.surnames = [explicit.get(n, defaults[n - 1]) for n in range(1, POOL_SIZE + 1)]
-        elif key == BANTER:
-            overrides: dict[int, str | None] = {}
-            seen: set[int] = set()
-            for entry in entries:
-                number = banter_number(entry.id)
-                if number is None:
-                    problems.add("line %d" % entry.line, "the ID %s is not a banter ID (B001 to B9999), the line is ignored"
-                                 % entry.id)
-                elif number in seen:
-                    problems.add(entry.id, "this ID is there twice, the first line is used")
-                else:
-                    seen.add(number)
-                    if entry.value.casefold() == "off":
-                        overrides[number] = None
-                    elif entry.value == "":
-                        problems.add(entry.id, "the line has no text (write off to switch a line off), the original is used")
-                    else:
-                        overrides[number] = entry.value
-            snapshot.banter = build_pool(overrides, problems)
-            snapshot.sound_files = sorted({piece.file for line in snapshot.banter.lines if not line.builtin
-                                           for piece in line.pieces if isinstance(piece, Sound)})
         elif key == REMARKS:
             from ..extras import remarks
             snapshot.remarks = remarks.build_pools(remarks.overrides_of(entries, problems), problems)
@@ -708,11 +663,6 @@ class Customization:
                 parts.append("%s: it could not be read or made, so it was not checked." % spec.file_name)
             else:
                 parts.append("%s: %s." % (spec.file_name, "no problems" if not count else cl.plural(count, "problem")))
-        names = snapshot.sound_files
-        if names:
-            bad = [name for name in names if self.sound_probe(os.path.join(self.sounds_dir, name))]
-            parts.append("The banter names %s, %s." % (cl.plural(len(names), "sound file"),
-                                                       "all can be used" if not bad else "%d cannot be used" % len(bad)))
         for what, found in (("remarks", remark_sound_files(snapshot.remarks)), ("news lines", remark_sound_files(snapshot.news)),
                              ("injury words", remark_sound_files(snapshot.injuries))):
             if found:

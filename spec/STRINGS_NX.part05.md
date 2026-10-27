@@ -483,3 +483,11 @@
 - NXV-03 (sentence, say2): " your job rating is <a> of 100, up <d>. ". stage 1, the verdict: the job rating rose
 - NXV-04 (sentence, say2): " your job rating is <a> of 100, down <d>. ". stage 1, the verdict: the job rating fell
 - NXV-05 (sentence, say2): " your job rating stays at <a> of 100. ". stage 1, the verdict: the job rating did not move
+- NXV-06 (sentence, say2): " the owner is not happy. your job is in danger. ". stage 1, after the job rating when it is under FR_FIRE_BELOW + FR_DANGER
+- NXV-07 (sentence, say2): " the owner's goal for season <n>: <goal>. ". stage 6 and a new franchise, after the team's rating
+- NXV-G01 (piece, piece): "win at least <n> games". a goal of the owner (FR_GOALS: wins)
+- NXV-G02 (piece, piece): "reach the play offs". a goal of the owner (FR_GOALS: playoffs)
+- NXV-G03 (piece, piece): "reach the conference championship game". a goal of the owner (FR_GOALS: title_game)
+- NXV-10 (sentence, say2): " the owner has fired you. your job rating was <a>, after <w> wins and <l> losses. ". stage 9: the player is fired (never after a winning season)
+- NXV-11 (prompt, say2): " <coach> these teams want you as their head coach. choose your new team. ". stage 9: the offers (never the team that fired him)
+- NXV-A01 (answer, say2): "the <team>, rating <r>, number <k> of 32". stage 9: an offer, the best ranked first (the staff's recommendation)

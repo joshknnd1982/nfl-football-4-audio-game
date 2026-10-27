@@ -1,11 +1,12 @@
-"""F9, Rules, Commentator: choose the color commentator's name (nfl4 only, rule 0.13; SZ.1, D-106). This is inspired by Jim Kitchen.
+"""F9, Rules, Commentator: choose the color analyst's name (nfl4 only, rule 0.13; SZ.1, D-106; BC.2, D-180). This is inspired by Jim Kitchen.
 
-A list of the default (Ghip), well-known sports podcasters (extras/commentators.py) and the last item, which lets the player type a name
-of their own with the original's typed prompt (F1 says the prompt again, Backspace removes the last character, Enter ends). Up and Down
-move, typing letters jumps to a name, Enter chooses, Escape goes back with no change. The name is the setting `nx_commentator`; it is
-used from the next game, like every other rule (a game in progress keeps what it began with).
+A list of the default (Gus Delgado, a made-up name; BC.2 removed the original's Ghip and the list of real podcasters), the player's own
+name when there is one, and the last item, which lets the player type a name of their own with the original's typed prompt (F1 says the
+prompt again, Backspace removes the last character, Enter ends). Up and Down move, Enter chooses, Escape goes back with no change. The
+name is the setting `nx_commentator`; it is used from the next game, like every other rule (a game in progress keeps what it began with).
+BC.3 turns this item into the broadcast crew's four names.
 
-    label(settings)        "Commentator: Ghip" (+ " used with the N. F. L. rules" while Rules is Classic): the Rules menu's item
+    label(settings)        "Commentator: Gus Delgado" (+ " used with the N. F. L. rules" while Rules is Classic): the Rules menu's item
     pick(game, speech, keys, settings)   True when the name changed (the caller saves and applies it)
     step(settings, direction)            Left and Right on the item: the next or the previous name of the list, True when it changed
 """

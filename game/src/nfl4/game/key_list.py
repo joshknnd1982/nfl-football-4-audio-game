@@ -48,7 +48,7 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("f7", "F7", "Anywhere", "reads the football words and hints; in Classic it also describes the original's plays", "all", True,
            "f7. football terminology And hints.", consts=("KEY_F7",)),
     KeyRow("f8", "F8", "Anywhere", "switches the comments off and on", "all", True, "f8. comments toggle.", consts=("KEY_F8",)),
-    KeyRow("f9", "F9", "Anywhere", "opens the added functions: the speech settings, the sounds, the names and the banter, the rules, "
+    KeyRow("f9", "F9", "Anywhere", "opens the added functions: the speech settings, the sounds, the names and the commentary, the rules, "
            "the franchise and the about text", "all", False, "F9. added functions", consts=("KEY_F9",)),
     KeyRow("f11", "F11", "Anywhere", "adjusts the volume of the voices and the sounds: Up and Down, Enter for the next (with the N. F. L. rules and the broadcast on, the volumes of the color commentator and the referee too)", "all", True,
            "F11. adjust volume of voices and sounds.", consts=("KEY_F11",)),

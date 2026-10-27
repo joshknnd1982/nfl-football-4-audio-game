@@ -152,7 +152,7 @@ def test_a_not_applicable_row_has_one_entry_with_a_reason():
         if any(e.startswith("NA:") for e in entries):
             assert len(entries) == 1 and len(entries[0]) > 40, id_
     na = [i for i, e in load_map().items() if e[0].startswith("NA:")]
-    assert sorted(na) == ["Q16", "Q30", "Q40", "S1", "S14", "S2"]
+    assert sorted(na) == ["Q16", "Q30", "Q38", "Q40", "S1", "S14", "S2"]      # Q38: retired by BC.2 (D-180) with the original's banter
 
 
 def test_the_quirk_classes_of_17_5_and_the_quirk_rows_are_the_same_set():

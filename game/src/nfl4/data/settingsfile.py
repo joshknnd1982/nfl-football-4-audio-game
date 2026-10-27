@@ -54,7 +54,7 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     list (original). Choose the voices with F12 rather than typing them here.
 # volume_announcer, volume_own_quarterback, volume_own_punter, volume_opponent_quarterback, volume_opponent_punter
 #                     0 to 100 for each speaker (original 95); F11 changes them
-# voice_color, volume_color   Ghip, the color commentator of the radio broadcast (the N. F. L. rules): his voice and volume, F12 and F11
+# voice_color, volume_color   the color analyst of the radio broadcast (the N. F. L. rules): his voice and volume, F12 and F11
 #                     ask for him when the Broadcast item of F9, Rules is on
 # speech_rate         -10 to 10, or original for the voice's own rate (original); the Ctrl key changes it
 # speech_pitch        -10 to 10 (original 0). Not every voice supports it.
@@ -77,12 +77,12 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # nx_defense_playbook the same for your defense
 # nx_playbook_chosen  yes when you chose a playbook yourself; a file without it that says classic is read as team, once
 # nx_stadium          on or off: the stadium sounds of the N. F. L. rules, the crowd, the hits, the first down chain (default on)
-# nx_broadcast        on or off: Ghip, the color commentator of the radio broadcast of the N. F. L. rules, and the announcer's
-#                     questions to him (default on; F8 switches all comments off, this switches only Ghip)
+# nx_broadcast        on or off: the color analyst of the radio broadcast of the N. F. L. rules, and the announcer's
+#                     questions to him (default on; F8 switches all comments off, this switches only the analyst)
 # nx_menu_hints       0 to 99: in how many program runs the play menus said where Right and M are; at 3 the hints stop (set it to 3 to
 #                     stop them, to 0 to hear them again)
-# nx_commentator      the name of the color commentator of the radio broadcast (default Ghip): the Rules item of the F9 menu lists
-#                     well known sports podcasters and lets you type a name of your own; it is used from the next game
+# nx_commentator      the name of the color analyst of the radio broadcast (default Gus Delgado, a made-up name): the Rules item of
+#                     the F9 menu lets you type a name of your own; it is used from the next game
 # nx_qb_starters      the quarterbacks you chose to start for a team (F9, Rules, Quarterbacks), like T05=Tyler Huntley; T12=Kenny Pickett.
 #                     Empty (default): every team's first quarterback of rosters.txt starts. Used with the N. F. L. rules' real names
 # nx_depth            the depth charts you set for a team (F9, Rules, Depth charts), like T05 RB=Ray Davis; T05 WR=Khalil Shakir,DJ Moore:
@@ -303,10 +303,10 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
     elif name == "nx_menu_hints":
         game.nx_menu_hints = _number(value, 0, 99)
     elif name == "nx_commentator":
-        from ..extras.commentators import clean
+        from ..extras.commentators import clean, name_of_text
         if not clean(value):
             raise ValueError("not a name (at least two letters or digits)")
-        game.nx_commentator = clean(value)
+        game.nx_commentator = name_of_text(value)       # BC.2: Ghip and the retired podcasters' names read as the default
     elif name == "nx_qb_starters":
         from ..extras.quarterbacks import clean as clean_starters
         if value.strip() and not clean_starters(value):

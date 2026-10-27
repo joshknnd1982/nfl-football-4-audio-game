@@ -148,7 +148,7 @@ def test_the_color_commentator_gets_no_saved_voice_while_a_screen_reader_speaks(
     options = types.SimpleNamespace(voice=lambda role: None, voice_catalog=catalog)
     for speaks, expected in ((True, 0), (False, 1)):
         game = types.SimpleNamespace(options=options, speech=types.SimpleNamespace(screen_reader_speaks=lambda s=speaks: s))
-        broadcast = Broadcast(None, ghip=True)
+        broadcast = Broadcast(None, analyst=True)
         broadcast.game = game
         broadcast._own_voice()
         assert catalog.started == expected

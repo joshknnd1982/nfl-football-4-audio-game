@@ -169,7 +169,7 @@ def test_the_hint_is_a_remark_of_pool_chs_or_chc_when_the_comments_are_on_and_si
     assert rig.engine.s.extras.recent == {"CHS": ["CHS03"]}
     rig, record = scene(tmp_path / "close", RUN, yards=4, down=3, to_go=5, comments=True)
     rule(rig, record, Draws().below(1000, 50).below(100, 0).rnd(3, 2))                     # CHC02, no booth for a coach's play
-    assert texts(rig) == [" Ghip, that could have gone either way. "]
+    assert texts(rig) == [" Gus Delgado, that could have gone either way. "]
     rig, record = scene(tmp_path / "off", RUN, yards=4, down=3, to_go=5, comments=False)  # F8: nothing said, the hint still exists
     rule(rig, record, Draws().below(1000, 5).below(100, 0).below(100, 0))
     assert texts(rig) == [] and pending(rig).hint == "strong"

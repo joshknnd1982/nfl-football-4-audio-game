@@ -5,7 +5,7 @@ built (SX.2: 1 Rules, 2 Time outs, then Reset the rules to the defaults last; SX
 design's order), so the player never meets a switch that does nothing; SX.3 added Penalties, SX.4 added Onside kicks and
 Onside question before it, SX.5 added Quarterback runs after Time outs, SX.6 added Replay challenges after Time outs, SX.7
 added Offense playbook and Defense playbook before Reset (1 Rules, 2 Time outs, 3 Replay challenges, 4 Quarterback runs, 5 Onside
-kicks, 6 Onside question, 7 Penalties, 8 Offense playbook, 9 Defense playbook, 10 Reset: the design's ten items; SY.1 added Broadcast, Ghip
+kicks, 6 Onside question, 7 Penalties, 8 Offense playbook, 9 Defense playbook, 10 Reset: the design's ten items; SY.1 added Broadcast, the
 the color commentator, before Reset: 10 Broadcast; SY.2 added Stadium sounds: 11 Stadium sounds; SZ.1 added Commentator, the name of the color
 commentator: 12 Commentator, 13 Reset). Up and Down move, Enter or Space changes the current item and speaks its
 new value, Left and Right change it too, the digits go to an item, Escape leaves (game/spoken_menu.py). A switch says

@@ -386,7 +386,7 @@ def test_a_new_player_starts_with_the_nfl_rules_and_is_asked_the_kind_of_season_
     assert not (tmp_path / "franchise").exists()
 
 
-# ----- the player's names and banter (S7.7, data/customize.py) -----
+# ----- the player's names (S7.7, data/customize.py; BC.2: banter.txt is gone) -----
 
 @pytest.mark.window
 def test_a_start_makes_the_customization_files_and_says_nothing_about_them(tmp_path, monkeypatch):
@@ -397,10 +397,9 @@ def test_a_start_makes_the_customization_files_and_says_nothing_about_them(tmp_p
     monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
     assert app.main() == 0
     # Classic: no file of the extras (remarks.txt) is made (nfl4 only, CUSTOMIZABLE_CONTENT 13, SX.2; the default since SX.9 is the N. F. L. rules)
-    assert sorted(p.name for p in (tmp_path / "customize").iterdir()) == ["banter.txt", "divisions.txt", "sounds",
-                                                                         "surnames.txt", "teams.txt"]
+    assert sorted(p.name for p in (tmp_path / "customize").iterdir()) == ["divisions.txt", "sounds", "surnames.txt", "teams.txt"]
     spoken = " ".join(made.sapi.spoken())
-    assert "teams.txt" not in spoken and "banter.txt" not in spoken and "customiz" not in spoken
+    assert "teams.txt" not in spoken and "banter" not in spoken and "customiz" not in spoken
 
 
 @pytest.mark.window
@@ -419,20 +418,20 @@ def test_a_start_with_the_nfl_rules_also_makes_remarks_txt_and_says_nothing_abou
 
 
 @pytest.mark.window
-def test_a_damaged_banter_file_is_said_after_the_title_and_a_copy_is_kept(tmp_path, monkeypatch):
+def test_a_damaged_customization_file_is_said_after_the_title_and_a_copy_is_kept(tmp_path, monkeypatch):
     monkeypatch.setenv("NFL4_DATA_DIR", str(tmp_path))
     (tmp_path / "customize").mkdir()
     junk = b"\x00\x01 not a list"
-    (tmp_path / "customize" / "banter.txt").write_bytes(junk)
+    (tmp_path / "customize" / "divisions.txt").write_bytes(junk)
     made = Made()
     monkeypatch.setattr(app, "create_speech", made)
     monkeypatch.setattr(window_module, "GameWindow", closing_after(1.2))
     assert app.main() == 0
     spoken = made.sapi.spoken()
-    notice = " The file banter.txt was damaged and has been reset to the original banter lines. A copy was saved. "
+    notice = " The file divisions.txt was damaged and has been reset to the original division names. A copy was saved. "
     assert spoken[0] == texts.TITLE_SPOKEN and spoken[1] == notice and spoken.count(notice) == 1
-    assert (tmp_path / "customize" / "banter.txt.damaged1").read_bytes() == junk
-    assert b"B001 = " in (tmp_path / "customize" / "banter.txt").read_bytes()
+    assert (tmp_path / "customize" / "divisions.txt.damaged1").read_bytes() == junk
+    assert b"D1 = " in (tmp_path / "customize" / "divisions.txt").read_bytes()
 
 
 @pytest.mark.window

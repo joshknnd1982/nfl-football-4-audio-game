@@ -11,6 +11,11 @@ that changes anything the classic game does fails here.
 Re-record only when a classic session (S7.3c, S7.4, S7.5, S7.7, S8.x) changes what the classic game does ON PURPOSE,
 never in PX, and write the reason in DECISIONS.md:  set NFL4_RECORD_GOLDEN=1 and run this file, then diff the old and
 new file. A failure prints the first line that differs.
+
+Re-recorded on purpose in BC.2 (2026-10-27, D-180, the owner's rule 0.27 as amended: the original's commentary leaves every mode, Classic
+too). The game is the same seed; its first old banter moment no longer draws a line, a name and a pause, so the game takes another course
+from there (14,409 lines became 14,188, the score 17 to 43 became 28 to 39). Its draws are now exactly those of the same game with comments
+off (tests/test_bc2_no_original_commentary.py), and no line of the original's jokes is in it.
 """
 import os
 import random

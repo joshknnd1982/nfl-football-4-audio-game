@@ -123,7 +123,7 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert spoken[19] == "Broadcast off " + NEXT_GAME
     assert spoken[20] == "Stadium sounds on "                             # SY.2: the eleventh item
     assert spoken[21] == "Stadium sounds off " + NEXT_GAME
-    assert spoken[22] == "Commentator: Ghip"                              # SZ.1: the twelfth item, only passed
+    assert spoken[22] == "Commentator: Gus Delgado"                              # SZ.1: the twelfth item, only passed
     assert spoken[23] == X.text("NXM-58")                                # D-132: the thirteenth item, only passed
     assert spoken[24] == X.text("NXM-D01")                               # NX-D3: the fourteenth item, only passed
     assert spoken[25] == X.text("NXM-19")

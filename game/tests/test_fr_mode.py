@@ -72,7 +72,7 @@ def test_with_rules_classic_f9s_list_is_exactly_the_five_items_of_the_original(t
     rig = franchise_rig(tmp_path, [F9, ESC], nfl=False, preset=preset_season(),
                         policy=enter_until(lambda: len(rig.keys.read) >= 1))
     seen = f9_labels(monkeypatch, rig)
-    assert seen[0][1] == ["Speech settings.", "Sounds.", "Customize the names and the banter.", "Rules.", "About NFL Football 4."]
+    assert seen[0][1] == ["Speech settings.", "Sounds.", "Customize the names and the commentary.", "Rules.", "About NFL Football 4."]
 
 
 def test_with_the_nfl_rules_f9_gets_the_franchise_item_after_rules_and_before_about(tmp_path, monkeypatch):

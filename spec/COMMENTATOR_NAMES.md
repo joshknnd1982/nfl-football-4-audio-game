@@ -1,5 +1,7 @@
 # The color commentator's names (nfl4 only, rule 0.13; SZ.1, D-106)
 
+RETIRED 2026-10-27 (BC.2, D-178, D-180): the owner had the original's commentary and its commenters removed ("get rid of all of Jim Kitchen's commentary and commenting code for Gip and other commenters"). Neither Ghip nor any name below is offered or said any more; the analyst is the made-up Gus Delgado, and an older settings.txt that holds one of these names reads as him (the program keeps only SHA-256 digests of the names to recognize them). This file stays as the record of D-106.
+
 The owner asked on 2026-10-22: "The user should be able to change Ghip's name or pick from among popular sports podcaster names that Claude
 researches and puts into the game." The game offers the default (Ghip), the names below and the player's own typed name (F9, Rules, Commentator).
 The list is in `game/src/nfl4/extras/commentators.py` (`NAMES`, alphabetical, 28 names). Facts only: a name is the host of a sports podcast or

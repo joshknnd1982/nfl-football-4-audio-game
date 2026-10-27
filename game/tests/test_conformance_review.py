@@ -1,7 +1,7 @@
 """S8.1, second round: the gaps that the independent review of the conformance map found. This is inspired by Jim Kitchen.
 
 Each test names the requirement of GAME_SPEC it closes (Q9, Q15, Q18, Q22, Q25, Q28, Q37, Q38, Q39, Q60, Q61, the length of the
-phrase histories in 17.2 and 5.8/5.9, GetSexOf in 9.2). The review (an Opus 5.5 subagent that had not seen the work) read the
+phrase histories in 17.2 and 5.8/5.9, GetSexOf in 9.2). BC.2 (D-180): Q38's test went with the original's banter. The review (an Opus 5.5 subagent that had not seen the work) read the
 cited tests of every row and listed the rows whose tests named the requirement but did not pin it; Q5 and Q6, where the game
 did not follow D-025 (a) and (b), are fixed in game/program.py and game/gameclock.py with their tests in test_program_menu.py
 and test_gameclock.py.
@@ -17,7 +17,6 @@ from nfl4.game.gamestate import GameState, SavedGame, SideStats, own_half
 from nfl4.game.pag import PlayEngine
 from nfl4.speech.roles import ANNOUNCER, OPPONENT_PUNTER, OPPONENT_QUARTERBACK, OWN_PUNTER, OWN_QUARTERBACK
 from pagrig import Draws, QUARTERBACKS, engine_rig, make_rig, run_steps, texts
-from test_banter import banter_rig
 from test_files_playernames import a_roster
 from test_pag_breaks import break_rig
 from test_pag_flow import chosen, menu_rig
@@ -87,19 +86,6 @@ def test_a_typed_quarterback_name_loses_its_leading_spaces_when_the_file_is_read
     text = pn.with_quarterback(pn.format_roster(a_roster(quarterback="")), "   Starr")
     parsed = pn.parse(text)
     assert parsed.sound and parsed.roster.quarterback == "Starr"
-
-
-# ----- Q38: banter line 113 is one rate step faster, also after another voice spoke -----
-
-def test_line_113_is_one_rate_step_faster_even_when_the_quarterback_spoke_last_q38(tmp_path):
-    from nfl4.game.banter import speak_banter
-    rig, state = banter_rig(tmp_path, [value_for(142, 113), value_for(58, 1), below_value(30, 0)])
-    rig.game.wisoff, rig.game.qorp = 1, 1
-    rig.game.say3(" Hut ")
-    assert rig.said[-1][1] == OWN_QUARTERBACK
-    speak_banter(rig.game, state)
-    text, role, step = rig.said[-1]
-    assert role == ANNOUNCER and step == 1                          # the original loses the +1 when the voice has to be loaded again
 
 
 # ----- Q60: a fumbled pass keeps its attempt and its completion or sack -----
@@ -178,7 +164,7 @@ def test_a_loaded_game_restarts_the_interception_counts_the_histories_and_the_op
     assert step.__name__ == "play_menu" and (s.quarter, s.counter, s.yard_line, s.down) == (3, 12, 40, 2)
     assert s.stats[1].interception_count == s.stats[2].interception_count == 0           # Q28: they restart
     assert s.overtime == 0                                                               # Q28: the overtime count restarts
-    assert s.banter_used == [] and all(set(getattr(s, f).values) == {0} for f in
+    assert all(set(getattr(s, f).values) == {0} for f in
                                        ("snap_history", "sack_history", "throw_history", "incomplete_history", "catch_history"))
     assert set(s.handoff.history.values) == {0} and s.handoff.memory is None            # Q37: no history comes from the file
     assert len(s.rosters[2].names()) == 33 and not hasattr(saved, "rosters")            # Q39: the opponent's names are new

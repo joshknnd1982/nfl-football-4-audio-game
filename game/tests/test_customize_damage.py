@@ -5,8 +5,8 @@ save it in another encoding, make it huge, make it read-only, hold it open in an
 put a bad line in the middle. After each the game starts, speaks, and plays with the original values (or the player's good
 entries), the file is made again or a copy of the damaged one is saved, nothing raises. What was written down before the code:
 the player's footplay.txt and the player's sound files are never touched by any of it; the loaded values are always valid
-(32 different team names, 8 different division names, 1,708 surnames that pass the limits, a banter pool whose lines all have
-pieces); a file that is unusable gives ONE sentence naming it, a bad line gives the count of problems.
+(32 different team names, 8 different division names, 1,708 surnames that pass the limits); a file that is unusable gives ONE
+sentence naming it, a bad line gives the count of problems. BC.2 (D-180): banter.txt is gone, so the matrix covers the three lists.
 """
 import os
 import random
@@ -41,9 +41,6 @@ def assert_valid(snapshot):
     assert all(name_problem(n) is None for n in snapshot.team_names + snapshot.division_names)
     if snapshot.surnames is not None:
         assert len(snapshot.surnames) == POOL_SIZE and all(name_problem(n) is None for n in snapshot.surnames)
-    numbers = [line.number for line in snapshot.banter.lines]
-    assert numbers == sorted(set(numbers))
-    assert all(line.pieces for line in snapshot.banter.lines)
 
 
 def assert_player_files_kept(folder):
@@ -58,7 +55,7 @@ def default_snapshot_values(snapshot, key):
         return snapshot.division_names == league_module.DEFAULT_DIVISION_NAMES
     if key == "surnames":
         return snapshot.surnames == load_surnames()
-    return snapshot.banter.size == 142 and all(line.builtin for line in snapshot.banter.lines)
+    raise KeyError(key)
 
 
 KEYS = [spec.key for spec in SPECS]
@@ -103,11 +100,10 @@ def test_a_bad_line_in_the_middle_is_counted_the_good_entries_stay_and_the_file_
     custom, folder = start(tmp_path)
     spec = next(s for s in SPECS if s.key == key)
     path = folder / spec.file_name
-    first_id = {"teams": "T09 = Broncos", "divisions": "D3 = A. F. C. West.", "surnames": "S0001 = ",
-                "banter": "B002 = "}[key]
+    first_id = {"teams": "T09 = Broncos", "divisions": "D3 = A. F. C. West.", "surnames": "S0001 = "}[key]
     text = path.read_bytes().decode("utf-8")
     text = text.replace(first_id, first_id.replace("Broncos", "Mustangs").replace("West.", "West Side.")
-                        .replace("S0001 = ", "S0001 = Zed ").replace("B002 = ", "B002 = Mine "), 1)
+                        .replace("S0001 = ", "S0001 = Zed "), 1)
     path.write_bytes(text.encode("utf-8"))
     apply("bad_line_in_the_middle", path)
     changed = path.read_bytes()
@@ -120,10 +116,8 @@ def test_a_bad_line_in_the_middle_is_counted_the_good_entries_stay_and_the_file_
         assert snap.team_names[8] == "Mustangs"
     elif key == "divisions":
         assert snap.division_names[2] == "A. F. C. West Side."
-    elif key == "surnames":
-        assert snap.surnames[0].startswith("Zed ")
     else:
-        assert {l.number: l for l in snap.banter.lines}[2].markup.startswith("Mine ")
+        assert snap.surnames[0].startswith("Zed ")
     assert_player_files_kept(folder)
 
 
@@ -192,10 +186,10 @@ def test_a_file_over_eight_megabytes_is_moved_aside_not_copied_and_made_again(tm
 def test_three_damaged_copies_are_kept_per_file_and_the_oldest_goes(tmp_path):
     custom, folder = start(tmp_path)
     for number in range(5):
-        (folder / "banter.txt").write_bytes(b"junk %d" % number)
+        (folder / "divisions.txt").write_bytes(b"junk %d" % number)
         Customization(str(folder))
-    names = sorted(n for n in os.listdir(folder) if n.startswith("banter.txt.damaged"))
-    assert names == ["banter.txt.damaged3", "banter.txt.damaged4", "banter.txt.damaged5"]
+    names = sorted(n for n in os.listdir(folder) if n.startswith("divisions.txt.damaged"))
+    assert names == ["divisions.txt.damaged3", "divisions.txt.damaged4", "divisions.txt.damaged5"]
 
 
 def test_a_reload_after_the_file_was_damaged_in_play_heals_it_and_says_so_while_the_loaded_values_stay_until_then(tmp_path):

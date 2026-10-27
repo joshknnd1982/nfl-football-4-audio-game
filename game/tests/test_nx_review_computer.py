@@ -130,7 +130,7 @@ def test_a_computer_with_one_time_out_and_a_challenge_left_keeps_it_before_the_w
 def test_a_remark_of_pool_rvr_follows_a_reversal_with_chance_one_in_two_when_the_comments_are_on(tmp_path):
     rig, record = scene(tmp_path, TD, yards=5, spot=(1, 5), down=1, to_go=5, comments=True)
     rule(rig, record, Draws().below(1000, 10).below(100, 0).below(100, 99).rady().rady().rnd(2, 1).rnd(3, 2))
-    assert texts(rig)[-2:] == [" the runner was short of the goal line. ", " the replay showed it clearly, Ghip. "]
+    assert texts(rig)[-2:] == [" the runner was short of the goal line. ", " the replay showed it clearly, Gus Delgado. "]
     rig, record = scene(tmp_path / "no", TD, yards=5, spot=(1, 5), down=1, to_go=5, comments=True)
     rule(rig, record, Draws().below(1000, 10).below(100, 0).below(100, 99).rady().rady().rnd(2, 2))    # 2 is not 1: none
     assert texts(rig)[-1] == " the runner was short of the goal line. "
@@ -146,7 +146,7 @@ def test_the_booth_never_says_rvc03_that_a_time_out_was_wasted_and_a_lost_challe
     rig, record = scene(tmp_path / "lost", RUN, yards=4, down=3, to_go=5, comments=True)
     rule(rig, record, Draws().below(1000, 40).below(100, 99))
     assert throw(rig, Draws().rady().rady().rnd(2, 1).rnd(3, 3)) is None
-    assert texts(rig)[-3:] == [X.text("NXR-07"), " the Bengals lose a time out. ", " that is a time out wasted, Ghip. "]
+    assert texts(rig)[-3:] == [X.text("NXR-07"), " the Bengals lose a time out. ", " that is a time out wasted, Gus Delgado. "]
 
 
 @pytest.mark.parametrize("value, what", [(0, "wrong"), (119, "wrong"), (120, "close"), (254, "close"), (255, "plain")])

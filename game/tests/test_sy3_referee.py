@@ -197,7 +197,7 @@ def test_every_shipped_stadium_file_is_a_known_sound():
 
 def whole_game(tmp_path, seed, on):
     said = []
-    rules = RecordingRules(penalties_on=True, onside_on=True, qb_on=True, challenges_on=True, playbooks_on=True, broadcast_on=on, radio_banter=on,
+    rules = RecordingRules(penalties_on=True, onside_on=True, qb_on=True, challenges_on=True, playbooks_on=True, broadcast_on=on,
                            stadium_on=on)
     from nfl4.game import flow
     real = flow.Game.say_referee

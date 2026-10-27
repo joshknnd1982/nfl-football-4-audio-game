@@ -272,8 +272,8 @@ def test_the_player_and_the_opponent_are_the_real_teams_and_the_draws_are_the_sa
     assert real.rosters[2].kickers[0] == names.roster(team_index(2, 4), None).kickers[0]        # the Patriots' kicker: the opponent's real roster
     assert real.rosters[1].names() != old.rosters[1].names()
     assert real.own_names_drawn                                                  # footplay.txt is written with the real players
-    assert real.banter_names == [n for side in (1, 2) for n in (real.rosters[side].running_backs + real.rosters[side].receivers + real.rosters[side].defense)]
-    assert len(real.banter_names) == 58
+    assert real.player_names == [n for side in (1, 2) for n in (real.rosters[side].running_backs + real.rosters[side].receivers + real.rosters[side].defense)]
+    assert len(real.player_names) == 58
 
 
 def test_a_footplay_file_the_player_has_is_the_players():

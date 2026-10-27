@@ -55,10 +55,10 @@ def test_the_draws_go_in_the_originals_order_own_team_then_the_opponent_then_per
 def test_the_banter_name_list_is_58_names_runningbacks_receivers_defense_of_each_side_in_order():
     source = ScriptedRandom(full_script(list(range(1, 34)), list(range(101, 134))), strict=True)
     setup = new_game_setup(GameRandom(source), NamePool(GameRandom(source)))
-    assert len(setup.banter_names) == 58
-    assert setup.banter_names[:29] == NAMES[0:29]                       # the player's 6 + 6 + 17
-    assert setup.banter_names[29:] == NAMES[100:129]                    # the opponent's 6 + 6 + 17
-    assert not set(NAMES[29:33]) & set(setup.banter_names)              # special teams players and kickers are not in it
+    assert len(setup.player_names) == 58
+    assert setup.player_names[:29] == NAMES[0:29]                       # the player's 6 + 6 + 17
+    assert setup.player_names[29:] == NAMES[100:129]                    # the opponent's 6 + 6 + 17
+    assert not set(NAMES[29:33]) & set(setup.player_names)              # special teams players and kickers are not in it
 
 
 def test_a_slot_that_was_used_is_drawn_again_so_no_name_is_on_both_teams():
@@ -83,10 +83,10 @@ def test_names_from_footplay_txt_replace_the_draws_blank_the_pool_and_need_no_ne
     setup = new_game_setup(GameRandom(source), pool, own)
     assert setup.own_names_drawn is False
     assert setup.rosters[1].names() == own.names() and setup.rosters[1] is not own
-    assert setup.banter_names[:29] == own.running_backs + own.receivers + own.defense     # the typed ones too
+    assert setup.player_names[:29] == own.running_backs + own.receivers + own.defense     # the typed ones too
     assert setup.rosters[2].running_backs == NAMES[100:106]                             # slot 41 was blank: drawn again
     assert pool.name(41) == ""
-    assert len(setup.banter_names) == 58
+    assert len(setup.player_names) == 58
 
 
 def test_an_incomplete_names_object_is_refused():
@@ -110,7 +110,7 @@ def test_seeded_games_never_repeat_a_name_inside_a_game_and_keep_the_ranges():
         assert len(names) == 66 and len(set(names)) == 66
         assert all(30 <= n <= 37 for n in setup.plays_per_period) and len(setup.plays_per_period) == 5
         assert all(5 <= w <= 7 for w in setup.warnings)
-        assert len(setup.banter_names) == 58 and rnd.fallbacks == 0
+        assert len(setup.player_names) == 58 and rnd.fallbacks == 0
 
 
 def test_the_game_hands_the_warning_lengths_to_the_clock_and_resets_the_countdown():

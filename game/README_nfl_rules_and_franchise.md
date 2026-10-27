@@ -110,8 +110,8 @@ asks first). The other teams' staffs choose their own starters.
 ### Your own words
 
 The announcer's remarks of the added features (remarks.txt), the names of the fouls (penalties.txt), the playbooks (the folder
-playbooks), the franchise's news (news.txt) and the injuries' words (injuries.txt) are in the customize folder and can be changed like
-banter.txt. CUSTOMIZE.md explains every file. With the Rules setting Classic the game never makes or reads them.
+playbooks), the franchise's news (news.txt) and the injuries' words (injuries.txt) are in the customize folder and can be changed in any text
+editor. CUSTOMIZE.md explains every file. With the Rules setting Classic the game never makes or reads them.
 
 ### Saved games, seasons and the start of the game
 
@@ -174,7 +174,7 @@ NFL is copied.
 
 ## The radio broadcast
 
-With the N. F. L. rules the game sounds like a radio broadcast. The announcer's banter is standard sports banter (the crowd, the weather, the band, the people listening in their cars, a little teasing of the color commentator) instead of the jokes of the original game, and the color commentator (Ghip until you choose another name in F9, Rules, Commentator: a list of well-known sports podcasters and broadcasters, or a name you type; the names are used descriptively and nobody named has anything to do with this game) adds a line in a voice of their own after some plays: a touchdown, a turnover, a big gain, a sack, a missed kick, a third down, a fourth-down gamble, the red zone, a penalty, the two-minute warning, the end of a quarter, half time, a close or a decided game and the final whistle. Every line is customizable (CUSTOMIZE.md), F8 switches all comments off, and F9, Rules, Broadcast switches the commentator off. The broadcast never changes how a game goes: it draws only its own random numbers. The Classic rules keep the original's banter exactly.
+With the N. F. L. rules the game sounds like a radio broadcast. The original game's jokes are gone from every mode (version 0.16.8), and the color analyst (Gus Delgado, a made-up name, until you type another in F9, Rules, Commentator) adds a line in a voice of their own after some plays: a touchdown, a turnover, a big gain, a sack, a missed kick, a third down, a fourth-down gamble, the red zone, a penalty, the two-minute warning, the end of a quarter, half time, a close or a decided game and the final whistle. Every line is customizable (CUSTOMIZE.md), F8 switches all comments off, and F9, Rules, Broadcast switches the commentator off. The broadcast never changes how a game goes: it draws only its own random numbers. The Classic rules keep the original's plays and rules; the original's commentary is not said there either.
 
 ## The stadium sounds and the referee
 

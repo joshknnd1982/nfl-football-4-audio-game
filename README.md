@@ -17,7 +17,7 @@ This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many 
   - every real NFL play, grouped into lists you reach with Right and M, each with a plain description (D) for people who do not know football, and a W key that says which play the playbook would most likely pick;
   - playbooks in seven styles, for your team and for the computer's;
   - the real head coaches and players of the 32 teams, so you type no names, and a list of every team's quarterbacks where you choose who starts (F9, Rules, Quarterbacks);
-  - a radio-style broadcast: the announcer's banter and a color commentator in a voice of their own, stadium sounds, and a referee who announces over a microphone;
+  - a radio-style broadcast: a color analyst in a voice of his own, stadium sounds, and a referee who announces over a microphone;
   - a Franchise: a league of 32 teams that lasts from season to season, with the real 2026 schedule and bye weeks, the NFL's 14-team play-offs, ratings, aging, the draft, contracts and the salary cap, free agency, trades from free agency to the deadline, practice squads, injuries, coaches and history.
 
 Choose the rules in the game: press F9, then Rules. The full description is in [game/README_nfl_rules_and_franchise.md](game/README_nfl_rules_and_franchise.md).
@@ -53,17 +53,17 @@ The game opens a small window that receives the keys, and speaks its welcome.
 
 ## Changing the speech, the volume and the sounds
 
-- F9 opens the added functions: the speech settings (engine, voice, rate, pitch, volume), the sounds, the names and the banter, the rules, the Franchise and the about text.
+- F9 opens the added functions: the speech settings (engine, voice, rate, pitch, volume), the sounds, the names and the commentary, the rules, the Franchise and the about text.
 - F11 adjusts the volumes of the voices and the sounds. F12 changes the voices. The Control key adjusts the rate of speech.
 - Your settings, saved games, own sounds, customization files and logs are in `%APPDATA%\Kitchensinc Revival\NFL Football 4`. The program folder holds only program files.
-- You can change team names, division names, surnames and the announcer's banter, add banter lines of your own, add sounds to the numbered families of sounds the game draws among, and replace the stadium, referee and whistle sounds with your own files. [game/CUSTOMIZE.md](game/CUSTOMIZE.md) says how.
+- You can change team names, division names, surnames and the lines of the radio broadcast, add lines of your own, add sounds to the numbered families of sounds the game draws among, and replace the stadium, referee and whistle sounds with your own files. [game/CUSTOMIZE.md](game/CUSTOMIZE.md) says how.
 
 ## Documents
 
 - [game/README_keys.md](game/README_keys.md): every key, as below.
 - [game/README_nfl_rules_and_franchise.md](game/README_nfl_rules_and_franchise.md): the N. F. L. rules, the Franchise, saved games, the real names, the broadcast.
 - [game/PLAYS_GUIDE.md](game/PLAYS_GUIDE.md): every play with a short plain description.
-- [game/CUSTOMIZE.md](game/CUSTOMIZE.md): names, banter and sounds.
+- [game/CUSTOMIZE.md](game/CUSTOMIZE.md): names, commentary and sounds.
 - [game/README_if_something_goes_wrong.md](game/README_if_something_goes_wrong.md): problem reports.
 - [spec/](spec/): the specification, the decisions and the research the game is built from.
 
@@ -80,7 +80,7 @@ Every key the game handles, where it works and what it does. This list is made f
 - **F6**: Anywhere. Reads the game instructions. (original game)
 - **F7**: Anywhere. Reads the football words and hints; in Classic it also describes the original's plays. (original game)
 - **F8**: Anywhere. Switches the comments off and on. (original game)
-- **F9**: Anywhere. Opens the added functions: the speech settings, the sounds, the names and the banter, the rules, the franchise and the about text. (added)
+- **F9**: Anywhere. Opens the added functions: the speech settings, the sounds, the names and the commentary, the rules, the franchise and the about text. (added)
 - **F11**: Anywhere. Adjusts the volume of the voices and the sounds: Up and Down, Enter for the next (with the N. F. L. rules and the broadcast on, the volumes of the color commentator and the referee too). (original game)
 - **F12**: Anywhere. Changes the voices (with the N. F. L. rules and the broadcast on, the voices of the color commentator and the referee too). (original game)
 - **Control**: Anywhere. Adjusts the rate of speech: Up and Down, Enter to keep it. (original game)

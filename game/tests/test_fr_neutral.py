@@ -100,7 +100,7 @@ def test_n2_the_franchise_game_has_the_leagues_players_and_no_drawn_name(tmp_pat
     assert s.quarterbacks == {1: "Ace", 2: "Bob"}
     assert s.rosters[1].ratings == own.ratings and s.rosters[2].ratings == opponent.ratings        # H7: the ratings come along
     assert s.rosters[1].quarterback == "AQB" and s.rosters[2].quarterback == "BQB"
-    assert s.banter_names == own.running_backs + own.receivers + own.defense + opponent.running_backs + opponent.receivers + opponent.defense
+    assert s.player_names == own.running_backs + own.receivers + own.defense + opponent.running_backs + opponent.receivers + opponent.defense
     said = " ".join(texts(rig))
     assert "Ace" in said and "Bob" in said                                   # the quarterbacks of the league, never asked for
 

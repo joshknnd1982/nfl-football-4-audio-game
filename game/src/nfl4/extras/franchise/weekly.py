@@ -25,7 +25,7 @@ wait) and writes league.sav, as `offseason.py` does for the stages:
 from __future__ import annotations
 
 from ...data import debuglog
-from ...game.banter import play_line
+from ...game.line_player import play_line
 from ...game.banter_markup import Speak, parse_markup, speak_text
 from .. import nx_texts as X
 from .. import playbook_data as PD

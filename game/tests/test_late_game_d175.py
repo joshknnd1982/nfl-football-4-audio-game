@@ -121,7 +121,7 @@ def test_whole_games_never_punt_behind_in_the_last_three_minutes(tmp_path):
     real = nflrig.SimEngine
     nflrig.SimEngine = Watched
     try:
-        for seed in range(1, 13):
+        for seed in range(1, 21):          # BC.2 (D-180): 12 seeds gave only 2 late fourth downs behind on the new draws; 20 give 5
             rules = nflrig.RecordingRules(penalties_on=True, onside_on=True, qb_on=True, challenges_on=True, playbooks_on=True)
             rules.forced = (TEAM_STYLES[(seed + 5) % 32], TEAM_STYLES[seed % 32])
             nflrig.sim_game(tmp_path / ("g%d" % seed), seed, rules=rules)

@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def speaker_voices(settings, skip: frozenset[str] = frozenset()) -> dict[str, RoleVoice]:
-    """The speakers from the speech settings (the five of the original and Ghip). A voice in `skip` (one that crashed the program, data/voiceguard.py)
+    """The speakers from the speech settings (the five of the original and the extras' analyst and referee). A voice in `skip` (one that crashed the program, data/voiceguard.py)
     is not opened: that speaker uses the first voice until the player chooses it again."""
     voices = {}
     for role in ALL_ROLES:

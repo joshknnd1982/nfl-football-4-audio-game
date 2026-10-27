@@ -44,7 +44,7 @@ def test_the_start_draws_the_set_up_then_the_player_calls_the_toss_wins_and_rece
     crowd = [e for e in rig.slot_log if e.slot == SLOT_CROWD1 and e.action == "volume"]
     assert crowd[-1].volume == -100
     assert sounds_played(rig) == ["foot0"]
-    assert len(s.banter_names) == 58 and s.quarterbacks == {1: "Starr", 2: "Unitas"}
+    assert len(s.player_names) == 58 and s.quarterbacks == {1: "Starr", 2: "Unitas"}
 
 
 @pytest.mark.parametrize("call, coin, player_wins", [(1, 1, False), (1, 2, True), (2, 2, False), (2, 1, True)])

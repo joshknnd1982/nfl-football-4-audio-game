@@ -380,7 +380,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         s.rosters = setup.rosters
         if setup.own_names_drawn and self.roster_sink is not None:
             self.roster_sink(setup.rosters[1])               # the original's write of footplay.txt (0x455908 to 0x456f0b)
-        s.banter_names = list(setup.banter_names)
+        s.player_names = list(setup.player_names)
         s.plays = list(setup.plays_per_period)
         s.quarter, s.counter = setup.quarter, setup.play_counter
         if self.saved is not None:                           # SavedGame = 1

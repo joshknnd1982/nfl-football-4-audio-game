@@ -162,6 +162,8 @@ nfl4 is the first game with customization lists, so this is the format "chosen o
 
 ## 12. L12 The announcer's banter, `banter.txt`: own text and own sounds (OWNER DECISION 2026-10-14, D-035; built in S7.7)
 
+RETIRED 2026-10-27 (BC.2, D-180): banter.txt is no longer read, made, checked or reset; a player's file stays on disk untouched. The markup of this section lives on in remarks.txt, news.txt and injuries.txt (game/banter_markup.py, game/line_player.py).
+
 The owner, during P5 S5.2: "in the cloned game, I want to be able to customise the banter, either by adding new sounds, or by adding my own text", and the same for such features in later games (playbook 7.9, CLAUDE.md 0.12). The original's banter is GAME_SPEC 5.13 (142 lines in a table generated from the code); what follows is the game's file, a DRAFT that S7.7 builds and fixes in its tests.
 
 - File: `banter.txt` in the `customize` folder, the format of section 10 (`# NFL Football 4 banter, format 1.` first, `#` notes, one entry per line, `ID = line`), plus the subfolder `customize\sounds\` for the player's sound files.

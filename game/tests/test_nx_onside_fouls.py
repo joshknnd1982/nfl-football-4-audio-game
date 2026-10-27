@@ -293,7 +293,9 @@ def test_whole_simulated_games_keep_every_onside_property(tmp_path):
         rig, engine, rules, result = sim_game(tmp_path / ("g%d" % seed), seed, rules=rules)
         x = engine.s.extras
         x.check()
-        assert rig.rnd.fallbacks == 0 and result.scores is not None and result.scores[0] != result.scores[1]
+        # a level score only as the regular season's tie after its overtime period (16-1-3 (d)); BC.2's draws (D-180) gave one such game
+        assert rig.rnd.fallbacks == 0 and result.scores is not None
+        assert result.scores[0] != result.scores[1] or (engine.s.overtime >= 1 and not engine.s.extras.postseason)
         for quarter, kicking, left, lead, answer in rules.onsides:
             assert quarter == 4 and lead < 0 and left <= 600                       # design 8.4: only the team behind, late
             assert answer in ("kept", "lost", "run")

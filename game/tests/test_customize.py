@@ -1,11 +1,12 @@
-"""The player's customization files: teams, divisions, surnames, banter (data/customize.py). This is inspired by Jim Kitchen.
+"""The player's customization files: teams, divisions, surnames (data/customize.py). This is inspired by Jim Kitchen.
 
 D-032 items 7 to 11, D-035, D-048, CUSTOMIZABLE_CONTENT 3 to 6 and 10 to 12. What was written down before the code: with the
 files absent or unchanged the originals are used; a player's entry with the same ID replaces the original; a bad entry keeps the
 original and is counted once; one spoken summary per file; team names (and division names) always all differ ignoring case: a
 later collision goes back to its original name, an original name taken by a player's name becomes "<name> 2"; a missing file or
 folder is made again silently; reset keeps the player's file as <name>.before-reset and never touches footplay.txt or the
-player's sound files.
+player's sound files. BC.2 (D-180): banter.txt is gone with the original's banter; a player's old file stays on disk untouched and
+is never read, made, checked or reset.
 """
 import os
 import random
@@ -13,10 +14,8 @@ import random
 import pytest
 
 from nfl4.data import customlists as cl
-from nfl4.data.customize import (BANTER, DIVISIONS, SPECS, SURNAMES, TEAMS, Customization, name_problem, unique_variant)
+from nfl4.data.customize import (DIVISIONS, SPECS, SURNAMES, TEAMS, Customization, name_problem, unique_variant)
 from nfl4.game import league as league_module
-from nfl4.game.banter_markup import Sound
-from nfl4.game.banter_pool import DEFAULT_LINES, DEFAULT_MARKUP
 from nfl4.game.names import POOL_SIZE, load_surnames
 from wavmaker import sine, write
 
@@ -50,14 +49,12 @@ def append(tmp_path, name, *lines):
 
 # ----- the first start -----
 
-def test_a_first_start_makes_the_four_files_and_the_sounds_folder_and_says_nothing(tmp_path):
+def test_a_first_start_makes_the_three_files_and_the_sounds_folder_and_says_nothing(tmp_path):
     custom = make(tmp_path)
-    assert sorted(n for n in os.listdir(folder_of(tmp_path))) == ["banter.txt", "divisions.txt", "sounds", "surnames.txt",
-                                                                  "teams.txt"]
+    assert sorted(n for n in os.listdir(folder_of(tmp_path))) == ["divisions.txt", "sounds", "surnames.txt", "teams.txt"]
     assert custom.take_notices() == [] and custom.snapshot.notices == []
     assert [text_of(tmp_path, spec.file_name).splitlines()[0] for spec in SPECS] == [
-        "# NFL Football 4 teams, format 1.", "# NFL Football 4 divisions, format 1.", "# NFL Football 4 surnames, format 1.",
-        "# NFL Football 4 banter, format 1."]
+        "# NFL Football 4 teams, format 1.", "# NFL Football 4 divisions, format 1.", "# NFL Football 4 surnames, format 1."]
     assert custom.snapshot.statuses == {spec.key: cl.CREATED for spec in SPECS}
 
 
@@ -68,8 +65,7 @@ def test_with_the_files_unchanged_the_values_are_the_originals(tmp_path):
     assert snap.statuses == {spec.key: cl.OK for spec in SPECS} and snap.notices == []
     assert snap.team_names == DEFAULT_TEAMS and snap.division_names == DEFAULT_DIVISIONS
     assert snap.surnames == load_surnames() and len(snap.surnames) == POOL_SIZE
-    assert all(a is b for a, b in zip(snap.banter.lines, DEFAULT_LINES)) and snap.banter.size == 142
-    assert all(snap.problem_count(spec.key) == 0 for spec in SPECS) and snap.sound_files == []
+    assert all(snap.problem_count(spec.key) == 0 for spec in SPECS)
 
 
 def test_the_file_texts_hold_every_original_value_by_its_id(tmp_path):
@@ -80,9 +76,6 @@ def test_the_file_texts_hold_every_original_value_by_its_id(tmp_path):
     assert divisions[0] == "D1 = A. F. C. North." and divisions[7] == "D8 = N. F. C. South." and len(divisions) == 8
     surnames = [l for l in text_of(tmp_path, "surnames.txt").splitlines() if l and not l.startswith("#")]
     assert len(surnames) == 1708 and surnames[0].startswith("S0001 = ") and surnames[-1].startswith("S1708 = ")
-    banter = [l for l in text_of(tmp_path, "banter.txt").splitlines() if l and not l.startswith("#")]
-    assert len(banter) == 142 and banter[44] == "B045 = " + DEFAULT_MARKUP[45]
-    assert banter[68] == "B069 = Holy [bleep] Ghip!"
     assert custom.default_text(TEAMS).replace("\n", "\r\n") == text_of(tmp_path, "teams.txt")
 
 
@@ -232,50 +225,20 @@ def test_the_surname_pool_takes_the_renamed_names_and_keeps_used_slots_used(tmp_
         pool.replace_names(new[:100])
 
 
-# ----- banter -----
+# ----- banter.txt (retired, BC.2) -----
 
-def test_the_banter_file_replaces_switches_off_and_adds_lines(tmp_path):
-    make(tmp_path)
-    edit(tmp_path, "banter.txt", "B002 = " + DEFAULT_MARKUP[2], "B002 = Well, [name], that was something")
-    edit(tmp_path, "banter.txt", "B003 = " + DEFAULT_MARKUP[3], "B003 = OFF")
-    append(tmp_path, "banter.txt", "B143 = What a hit! [sound crunch.wav] Ghip, did you see that?", "b150 = [sound a.wav]",
-           "B151 = off")
+def test_an_old_banter_txt_is_left_untouched_and_never_read_checked_or_reset(tmp_path):
+    folder = folder_of(tmp_path)
+    folder.mkdir()
+    old = b"# NFL Football 4 banter, format 1.\r\nB002 = my own line\r\nB143 = [sound crunch.wav]\r\n"
+    (folder / "banter.txt").write_bytes(old)
     custom = make(tmp_path)
-    snap = custom.snapshot
-    by_number = {line.number: line for line in snap.banter.lines}
-    assert snap.problem_count(BANTER) == 0 and snap.banter.off == (3,)             # a new ID that is off is just not there
-    assert by_number[2].builtin is False and 3 not in by_number and 143 in by_number and 150 in by_number
-    assert snap.banter.size == 142 - 1 + 2 and snap.sound_files == ["a.wav", "crunch.wav"]
-    assert by_number[1] is DEFAULT_LINES[0]                                       # untouched lines stay the originals
-
-
-def test_a_banter_line_that_is_exactly_the_original_markup_is_the_original(tmp_path):
-    make(tmp_path)
-    snap = make(tmp_path).snapshot
-    assert all(a is b for a, b in zip(snap.banter.lines, DEFAULT_LINES))
-    edit(tmp_path, "banter.txt", "B069 = Holy [bleep] Ghip!", "B069 = Holy [BLEEP] Ghip!")       # same meaning, other spelling
-    snap = make(tmp_path).snapshot
-    line = {l.number: l for l in snap.banter.lines}[69]
-    assert line.builtin is False and line.markup == "Holy [bleep] Ghip!"
-
-
-def test_banter_problems_are_counted_once_per_line_with_the_original_kept(tmp_path):
-    make(tmp_path)
-    edit(tmp_path, "banter.txt", "B010 = " + DEFAULT_MARKUP[10], "B010 = an [unclosed")
-    append(tmp_path, "banter.txt", "B160 = a [laugh] b", "B161 = [sound a/b.wav]", "B162 =", "XX = nope", "B143 = ok", "B143 = dup")
-    custom = make(tmp_path)
-    snap = custom.snapshot
-    numbers = [l.number for l in snap.banter.lines]
-    assert 10 in numbers and 160 in numbers and 161 not in numbers and 143 in numbers
-    assert snap.problem_count(BANTER) == 6                       # B010, B160, B161, B162, line XX, B143 twice
-    assert snap.notices == [" 6 problems found in banter.txt, details are in the log. "]
-
-
-def test_a_new_banter_id_may_be_any_number_up_to_9999(tmp_path):
-    make(tmp_path)
-    append(tmp_path, "banter.txt", "B9999 = last", "B10000 = too big", "B0 = zero")
-    snap = make(tmp_path).snapshot
-    assert 9999 in [l.number for l in snap.banter.lines] and snap.problem_count(BANTER) == 2
+    assert custom.take_notices() == [] and all(spec.file_name != "banter.txt" for spec in custom.specs)
+    assert "banter" not in custom.check()
+    custom.reset(None)
+    custom.reload()
+    assert (folder / "banter.txt").read_bytes() == old and not (folder / "banter.txt.before-reset").exists()
+    assert sorted(os.listdir(folder)) == ["banter.txt", "divisions.txt", "sounds", "surnames.txt", "teams.txt"]
 
 
 # ----- the notices of damage -----
@@ -293,13 +256,13 @@ def test_a_damaged_file_is_reset_with_one_sentence_and_the_others_are_not_touche
 def test_a_locked_file_uses_the_originals_this_time_and_says_so(tmp_path):
     from filedamage import holding
     make(tmp_path)
-    edit(tmp_path, "banter.txt", "B002 = " + DEFAULT_MARKUP[2], "B002 = mine")
-    with holding(folder_of(tmp_path) / "banter.txt"):
+    edit(tmp_path, "teams.txt", "T09 = Broncos", "T09 = Mustangs")
+    with holding(folder_of(tmp_path) / "teams.txt"):
         snap = make(tmp_path).snapshot
-    assert snap.statuses[BANTER] == cl.LOCKED and snap.banter.size == 142 and snap.banter.lines[1] is DEFAULT_LINES[1]
-    assert snap.notices == [" The file banter.txt is in use by another program. The original banter lines are used this time. "]
-    assert "mine" in text_of(tmp_path, "banter.txt")                                       # nothing was overwritten
-    assert {l.number: l for l in make(tmp_path).snapshot.banter.lines}[2].builtin is False
+    assert snap.statuses[TEAMS] == cl.LOCKED and snap.team_names == DEFAULT_TEAMS
+    assert snap.notices == [" The file teams.txt is in use by another program. The original team names are used this time. "]
+    assert "Mustangs" in text_of(tmp_path, "teams.txt")                                    # nothing was overwritten
+    assert make(tmp_path).snapshot.team_names[8] == "Mustangs"
 
 
 def test_an_unwritable_folder_says_one_sentence_for_all_the_files(tmp_path):
@@ -307,7 +270,7 @@ def test_an_unwritable_folder_says_one_sentence_for_all_the_files(tmp_path):
     custom = make(tmp_path)
     assert custom.snapshot.notices == [" The game could not write its customization files, so the original names and lines "
                                        "are used. "]
-    assert custom.snapshot.team_names == DEFAULT_TEAMS and custom.snapshot.banter.size == 142
+    assert custom.snapshot.team_names == DEFAULT_TEAMS and custom.snapshot.division_names == DEFAULT_DIVISIONS
 
 
 # ----- reload, tend -----
@@ -338,7 +301,7 @@ def test_a_missing_folder_and_a_missing_sounds_folder_are_made_again(tmp_path):
     custom = make(tmp_path)
     shutil.rmtree(folder_of(tmp_path))
     assert custom.take_notices() == []
-    assert sorted(os.listdir(folder_of(tmp_path))) == ["banter.txt", "divisions.txt", "sounds", "surnames.txt", "teams.txt"]
+    assert sorted(os.listdir(folder_of(tmp_path))) == ["divisions.txt", "sounds", "surnames.txt", "teams.txt"]
     shutil.rmtree(folder_of(tmp_path) / "sounds")
     custom.reload()
     assert (folder_of(tmp_path) / "sounds").is_dir()
@@ -358,20 +321,19 @@ def test_reset_one_list_keeps_the_players_file_and_the_other_lists_alone(tmp_pat
     assert custom.snapshot.team_names == DEFAULT_TEAMS and custom.snapshot.division_names[0] == "The North."
 
 
-def test_reset_all_writes_the_four_lists_and_never_touches_footplay_or_the_sound_files(tmp_path):
+def test_reset_all_writes_the_three_lists_and_never_touches_footplay_or_the_sound_files(tmp_path):
     custom = make(tmp_path)
-    for name, old, new in (("teams.txt", "T09 = Broncos", "T09 = Mustangs"), ("divisions.txt", "D1 = A. F. C. North.", "D1 = N."),
-                           ("banter.txt", "B002 = " + DEFAULT_MARKUP[2], "B002 = off")):
+    for name, old, new in (("teams.txt", "T09 = Broncos", "T09 = Mustangs"), ("divisions.txt", "D1 = A. F. C. North.", "D1 = N.")):
         edit(tmp_path, name, old, new)
     (folder_of(tmp_path) / "footplay.txt").write_bytes(b"Running Backs:\r\nA\r\n")
     write(folder_of(tmp_path) / "sounds" / "mine.wav", sine(440, 0.1, 11025), rate=11025)
     footplay = (folder_of(tmp_path) / "footplay.txt").read_bytes()
     sound = (folder_of(tmp_path) / "sounds" / "mine.wav").read_bytes()
     result = custom.reset(None)
-    assert result.done == ["teams.txt", "divisions.txt", "surnames.txt", "banter.txt"] and result.failed == []
-    assert result.kept == ["teams.txt", "divisions.txt", "banter.txt"]    # surnames.txt was the built-in text: no copy needed
+    assert result.done == ["teams.txt", "divisions.txt", "surnames.txt"] and result.failed == []
+    assert result.kept == ["teams.txt", "divisions.txt"]    # surnames.txt was the built-in text: no copy needed
     custom.reload()
-    assert custom.snapshot.team_names == DEFAULT_TEAMS and custom.snapshot.banter.size == 142
+    assert custom.snapshot.team_names == DEFAULT_TEAMS and custom.snapshot.division_names == DEFAULT_DIVISIONS
     assert (folder_of(tmp_path) / "footplay.txt").read_bytes() == footplay
     assert (folder_of(tmp_path) / "sounds" / "mine.wav").read_bytes() == sound
 
@@ -391,22 +353,20 @@ def test_a_reset_that_cannot_write_says_which_list_failed_and_changes_nothing(tm
 def test_check_reads_every_file_and_says_what_it_found_without_applying_anything(tmp_path):
     custom = make(tmp_path)
     assert custom.check() == ("teams.txt: no problems. divisions.txt: no problems. surnames.txt: no problems. "
-                              "banter.txt: no problems. Details of every problem are in the log.")
+                              "Details of every problem are in the log.")
     edit(tmp_path, "teams.txt", "T09 = Broncos", "T09 = a,b")
     edit(tmp_path, "teams.txt", "T10 = Chargers", "T10 = ")
     text = custom.check()
-    assert "teams.txt: 2 problems." in text and "banter.txt: no problems." in text
+    assert "teams.txt: 2 problems." in text and "surnames.txt: no problems." in text
     assert custom.snapshot.team_names == DEFAULT_TEAMS                        # nothing applied
 
 
 def test_check_names_the_sound_files_and_says_how_many_cannot_be_used(tmp_path):
-    custom = make(tmp_path)
-    append(tmp_path, "banter.txt", "B143 = a [sound good.wav] b", "B144 = [sound missing.wav]", "B145 = [sound bad.wav]")
+    custom = Customization(str(folder_of(tmp_path)), extras=True)          # BC.2: the remarks' sounds (banter.txt is gone)
+    append(tmp_path, "remarks.txt", "TO06 = a [sound good.wav] b", "TO07 = [sound missing.wav]", "TO08 = [sound bad.wav]")
     write(folder_of(tmp_path) / "sounds" / "good.wav", sine(440, 0.1, 11025), rate=11025)
     (folder_of(tmp_path) / "sounds" / "bad.wav").write_bytes(b"not a wav file at all")
-    assert "The banter names 3 sound files, 2 cannot be used." in custom.check()
-    custom.reload()
-    assert custom.snapshot.sound_files == ["bad.wav", "good.wav", "missing.wav"]
+    assert "The remarks name 3 sound files, 2 cannot be used." in custom.check()
 
 
 def test_check_looks_at_footplay_without_changing_it(tmp_path):
@@ -433,14 +393,6 @@ def test_check_reports_a_damaged_file_it_healed(tmp_path):
     text = custom.check()
     assert text.startswith("The file divisions.txt was damaged and has been reset to the original division names.")
     assert (folder_of(tmp_path) / "divisions.txt.damaged1").exists()
-
-
-def test_a_sound_name_in_a_line_is_found_in_the_pieces(tmp_path):
-    custom = make(tmp_path)
-    append(tmp_path, "banter.txt", "B143 = [sound a.wav] [sound b.wav] x")
-    custom.reload()
-    line = {l.number: l for l in custom.snapshot.banter.lines}[143]
-    assert [p.file for p in line.pieces if isinstance(p, Sound)] == ["a.wav", "b.wav"]
 
 
 def test_every_problem_is_written_to_the_log_with_the_file_the_entry_and_the_reason(tmp_path, caplog):

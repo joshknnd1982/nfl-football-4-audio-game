@@ -245,7 +245,7 @@ class HotKeys:
                 g.voice_speak(str(options.vr), wait=False)   # 0x42387b
 
     def _extra_roles(self) -> tuple:
-        """Ghip, the color commentator, and the referee are asked for by F11 and F12 only while the N. F. L. rules and the broadcast are on
+        """The color analyst and the referee are asked for by F11 and F12 only while the N. F. L. rules and the broadcast are on
         (SY.1 and SY.3, rule 0.27);
         the original's loops, and Classic, ask for the five speakers only."""
         try:
@@ -261,7 +261,7 @@ class HotKeys:
     def adjvol(self) -> None:
         g, keys, options = self.g, self.keys, self.options
         g.stopspeech()                                   # 0x421a26
-        for role in VOLUME_ORDER + self._extra_roles():  # For L88 = 1 To 5 (0x421aef); the N. F. L. rules' broadcast adds Ghip (SY.1)
+        for role in VOLUME_ORDER + self._extra_roles():  # For L88 = 1 To 5 (0x421aef); the N. F. L. rules' broadcast adds the analyst (SY.1)
             # 0x421b00 clk; the voice load 0x421b7a, Rate 0x422298 and Volume 0x422330 are the speaker's own voice,
             # rate and volume, which the game applies at every text of that speaker (D-022 item 5)
             keys.clk()

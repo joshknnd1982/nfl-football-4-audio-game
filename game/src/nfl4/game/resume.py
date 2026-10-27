@@ -26,6 +26,11 @@ FORMAT = 1
 LIMIT_BYTES = 60_000                    # the file holds a section as one String Variant of at most 65,535 bytes
 CLASSES = {cls.__name__: cls for cls in (SideStats, Roster, PhraseHistory, GroupedPhrases)}
 SKIPPED = {"extras"}                    # the extras record has its own section in the file
+# BC.2 (D-180): fields an older automatic save may have. The original's banter step is gone: its list of the 58 players' names is now
+# player_names (the remark lines that name a player draw from it), and its history of used lines is dropped. Without this map a resume
+# written by 0.16.7 or older would be refused ("a field this version does not have") and the game would go on from the board alone.
+RENAMED_FIELDS = {"banter_names": "player_names"}
+DROPPED_FIELDS = frozenset(("banter_used",))
 
 
 class ResumeError(ValueError):
@@ -96,7 +101,7 @@ def restore(engine, text: str) -> bool:
         data = json.loads(text)
         if not isinstance(data, dict) or data.get("v") != FORMAT:
             raise ResumeError("another format")
-        state = {name: from_plain(value) for name, value in data["state"].items()}
+        state = {RENAMED_FIELDS.get(name, name): from_plain(value) for name, value in data["state"].items() if name not in DROPPED_FIELDS}
         names = {f.name for f in dataclasses.fields(GameState)}
         if not set(state) <= names:
             raise ResumeError("a field this version does not have")

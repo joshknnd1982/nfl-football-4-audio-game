@@ -53,7 +53,7 @@ def nfl_engine_rig(tmp_path, answers=(), comments=False, rules=None, extras=None
     s.rosters = {1: named_roster(""), 2: named_roster("O")}
     s.quarterbacks = {1: "Starr", 2: "Unitas"}
     own, opp = s.rosters[1], s.rosters[2]
-    s.banter_names = (own.running_backs + own.receivers + own.defense + opp.running_backs + opp.receivers
+    s.player_names = (own.running_backs + own.receivers + own.defense + opp.running_backs + opp.receivers
                       + opp.defense)
     s.plays = [33, 33, 33, 33, 33]
     for name, value in state.items():
@@ -68,9 +68,9 @@ def nfl_engine_rig(tmp_path, answers=(), comments=False, rules=None, extras=None
 class RecordingRules(NflRules):
     def __init__(self, timeouts_on=True, auto_sides=(1, 2), penalties_on=False, onside_on=False, onside_always=False,
                  qb_on=False, challenges_on=False, offense_book="classic", defense_book="classic", playbooks_on=False,
-                 broadcast_on=False, radio_banter=False, stadium_on=False):
+                 broadcast_on=False, stadium_on=False):
         super().__init__(timeouts_on, auto_sides, penalties_on, onside_on, onside_always, qb_on, challenges_on,
-                         offense_book, defense_book, playbooks_on, broadcast_on, radio_banter, stadium_on)
+                         offense_book, defense_book, playbooks_on, broadcast_on, stadium_on)
         self.onsides = []           # (quarter, kicking side, seconds left, kicking team's lead, result) of every onside kick
         self.timeouts = []          # (quarter, side, seconds left after it, timeouts left of that side)
         self.periods = []           # (quarter, counted plays, seconds left) at each period end

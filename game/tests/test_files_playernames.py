@@ -136,7 +136,7 @@ def test_the_good_sections_are_kept_the_broken_ones_are_drawn_and_the_quarterbac
     assert setup.own_names_drawn is True and own.is_complete() and own.quarterback == "Unitas"
     assert own.receivers == a_roster().receivers and own.defense == a_roster().defense      # the good ones are the player's
     assert own.running_backs != a_roster().running_backs and len(own.running_backs) == 6   # the broken one is new
-    assert setup.banter_names[:29] == own.running_backs + own.receivers + own.defense
+    assert setup.player_names[:29] == own.running_backs + own.receivers + own.defense
 
 
 def test_a_complete_file_draws_nothing_and_needs_no_new_file():

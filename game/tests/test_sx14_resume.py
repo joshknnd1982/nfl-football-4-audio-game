@@ -135,5 +135,5 @@ def test_a_franchise_rosters_ratings_fit_in_the_resume_part_and_a_too_large_one_
                         2: Roster(["a"] * 6, ["b"] * 6, ["c"] * 17, ["d"] * 2, ["e"] * 2, quarterback="Q", ratings=dict(ratings))}
     assert len(resume.capture(engine).encode()) < resume.LIMIT_BYTES
     assert engine.save_record(auto=True).resume is not None
-    engine.s.banter_names = ["x" * 100] * 700                                    # far more than the file can hold
+    engine.s.player_names = ["x" * 100] * 700                                    # far more than the file can hold
     assert engine.save_record(auto=True).resume is None

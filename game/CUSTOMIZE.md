@@ -1,10 +1,10 @@
-# Changing the names and the banter in NFL Football 4
+# Changing the names and the commentary in NFL Football 4
 
-This is inspired by Jim Kitchen. The game is loosely inspired by his N. F. L. football version 4. You can change the team names, the division names, the players' surnames and the announcer's banter, and you can add your own banter lines and your own sounds. With the files left alone, Classic says and plays what the original does, and the N. F. L. rules use the game's own radio banter.
+This is inspired by Jim Kitchen. The game is loosely inspired by his N. F. L. football version 4. You can change the team names, the division names, the players' surnames and, with the N. F. L. rules, the lines of the radio broadcast, and you can add lines and sounds of your own. With the files left alone, Classic plays as the original does, without the original's jokes (version 0.16.8 took them out of every mode), and the N. F. L. rules use the game's own radio broadcast.
 
 ## Where the files are
 
-Press F9, choose Customize, then "Open the folder with the names and banter files". The folder is also here:
+Press F9, choose Customize, then "Open the folder with the customization files". The folder is also here:
 
     %APPDATA%\Kitchensinc Revival\NFL Football 4\customize
 
@@ -13,9 +13,8 @@ It holds these plain text files. Any text editor will do, and a screen reader re
 - teams.txt, the 32 team names.
 - divisions.txt, the 8 division names.
 - surnames.txt, the 1,708 surnames the players' names are drawn from.
-- banter.txt, the announcer's remarks.
 - footplay.txt, the names of your own team's players. The game writes it at the first game of a season (see below).
-- the folder sounds, for your own sound files used in the banter.
+- the folder sounds, for your own sound files used in your lines.
 - remarks.txt, the remarks of the N. F. L. rules, only when that rule set is chosen in F9 (see below).
 - penalties.txt, the fouls of the N. F. L. rules: their names, and which are called and how often (see below).
 - the folder playbooks, with plays.txt, styles.txt, team_styles.txt and favourites.txt: the plays of the N. F. L. rules' playbooks and your favourite plays (see below).
@@ -75,19 +74,13 @@ A franchise plays the real NFL schedule from a file `schedule_<year>.txt`. The g
 
 Each line is an ID, an equals sign, the visiting team, the home team and the date: `W01G01 = T08 T28 2026-09-09` is the first game of week 1. The teams are the IDs of teams.txt, T01 to T32; a team with no line in a week has its bye. A `VERSION` line says which season it is. The game uses a file only when it is whole: 18 weeks, 17 games and one bye for every team, every division rival twice (once at home); a file that is not whole is not used, and the game says so.
 
-## The banter
+## The old banter.txt
 
-banter.txt has the 142 original lines, B001 to B142. Each time the announcer speaks, the game chooses one line that is on, by chance, and no line comes twice in a game. The F8 key switches all banter off, your lines too. banter.txt is the banter of the Classic rules: with the N. F. L. rules the announcer says radio banter instead (see "The radio broadcast" below), and the 142 jokes of the original are not said.
+Versions before 0.16.8 had banter.txt with the original game's 142 jokes. The owner had the original's commentary taken out of every mode, so the game no longer reads banter.txt. If you have one, it stays in the folder untouched. To keep a line of your own from it, copy it into remarks.txt as a new BN line (BN143 and higher), for example `BN143 = What a hit!`: with the N. F. L. rules the announcer says the BN lines (from version 0.16.8 on, in the new radio broadcast).
 
-Change a line by changing the text after its ID. Switch a line off like this:
+## Words in square brackets
 
-    B045 = off
-
-Delete a line from the file to get the original back. Add a line of your own with a new ID, B143 or higher:
-
-    B143 = What a hit, Ghip!
-
-Inside a line, these words in square brackets do something:
+Inside a line of remarks.txt, news.txt or injuries.txt, these words in square brackets do something:
 
 - `[name]` is a player's name drawn by the game, the same name everywhere in the line.
 - `[opponent quarterback]` is the name of the other team's quarterback.
@@ -98,15 +91,7 @@ Inside a line, these words in square brackets do something:
 - `[faster]` ends a spoken part and says the next part one step faster.
 - `[one of: some words | other words | more words]` says one of them, chosen by chance.
 
-A line can be words only, a sound only, or both. For example, a line with text and a sound:
-
-    B144 = What a hit! [sound crunch.wav] Ghip, did you see that?
-
-A line that is only a sound:
-
-    B145 = [sound crowd boo.wav]
-
-A line has at most 500 characters and 20 parts. A sound file goes in the sounds folder inside the customize folder, and the line names it without a folder. Wav files work; if your files are ogg, flac or mp3, they work too when this game's sound layer can read them. A sound file that cannot be used is skipped, the rest of the line is said, and the game tells you once.
+A line can be words only, a sound only, or both. A line has at most 500 characters and 20 parts. A sound file goes in the sounds folder inside the customize folder, and the line names it without a folder. Wav files work; if your files are ogg, flac or mp3, they work too when this game's sound layer can read them. A sound file that cannot be used is skipped, the rest of the line is said, and the game tells you once.
 
 ## The remarks of the N. F. L. rules
 
@@ -123,21 +108,21 @@ For example:
     ON04 = here comes the surprise that nobody is surprised by.
     PN05 = <surname> will hear about that one from the coach.
 
-A remark is never one of the last three said. F8 switches the remarks off with the banter, except the QB lines: they are the play by play of a run, so they stay on, and if you switch every QB line off the original five are used.
+A remark is never one of the last three said. F8 switches the remarks off with the rest of the commentary, except the QB lines: they are the play by play of a run, so they stay on, and if you switch every QB line off the original five are used.
 
 ## The radio broadcast of the N. F. L. rules
 
-With the N. F. L. rules the game is a radio broadcast, and its lines are in remarks.txt too. When the comments are on (F8), the announcer says a line of radio banter now and then, after a score, after a change of possession and after one play in four, exactly where the original said its jokes; the lines are BN01 to BN142 (generic remarks about the crowd, the weather, the band, the people listening at home, football sayings and a little teasing of the color commentator). The color commentator is called Ghip until you choose another name (see "The commentator's name" below): after some plays and at some moments the commentator adds one line in a voice of their own, and the announcer sometimes turns to the commentator first with a line of ASK01 to ASK12. The commentator's pools are:
+With the N. F. L. rules the game is a radio broadcast, and its lines are in remarks.txt too. The lines BN01 to BN142 are the announcer's radio banter (generic remarks about the crowd, the weather, the people listening at home and football sayings); this test version does not say them, the next one brings them back in the new radio broadcast. The color analyst is called Gus Delgado until you type another name (see "The commentator's name" below): when the comments are on (F8), after some plays and at some moments the commentator adds one line in a voice of their own, and the announcer sometimes turns to the commentator first with a line of ASK01 to ASK12. The commentator's pools are:
 
 - CKO before the opening kick off, CBG after a gain of 20 yards or more, CSK after a sack, CTV after a turn over, CTD after a touch down, CFG after a field goal, CFM after a missed kick, CTC after a third down made, CTS after a third down stopped, CFD when a team goes for it on fourth down, CRZ when a team gets inside the twenty, CPN after a penalty, CTM at the two minute warning, CQE at the end of the first and third quarter, CHT at half time, CFN at the end of a game that one team won, CFT at the end of a tie, CTT in a close fourth quarter and CBO in a game that is decided.
 
-In every pool of remarks.txt `<commentator>` is the commentator's name (Ghip, or the name chosen in F9, Rules, Commentator): the default lines that turn to the commentator use it, and you may use it in your own. In the commentator's lines `<team>` is the team the line is about, `<opponent>` the other team, `<quarterback>` that team's quarterback, `<yards>` the gain, `<situation>` a whole clause with the score (the Bengals lead the Jets 17 to 10) and `<quarter>` the quarter; `<coach>` is your name. Each pool takes only some of them: CKO `<team>`, `<opponent>`, `<coach>`, `<quarterback>`; CBG `<team>`, `<opponent>`, `<yards>`, `<quarterback>`; CSK `<team>`, `<opponent>`, `<quarterback>`; CTD, CFG, CHT, CFN, CFT, CTT and CBO `<situation>`, `<team>` and `<opponent>`; CTM and CQE also `<quarter>`; the others `<team>` and `<opponent>`. The BN lines and the ASK lines have only `<commentator>`. The lines are changed, switched off and added like every other remark (BN143 and up, CTD11 and up), and may name your own sound files. The broadcast's own random numbers are not the game's, so the broadcast never changes how a game goes. A remarks.txt of version 0.10.0 keeps working: a default line that it still holds unchanged follows the commentator's name, a line you changed stays as you wrote it.
+In every pool of remarks.txt `<commentator>` is the analyst's name (Gus Delgado, or the name you typed in F9, Rules, Commentator): the default lines that turn to the commentator use it, and you may use it in your own. In the commentator's lines `<team>` is the team the line is about, `<opponent>` the other team, `<quarterback>` that team's quarterback, `<yards>` the gain, `<situation>` a whole clause with the score (the Bengals lead the Jets 17 to 10) and `<quarter>` the quarter; `<coach>` is your name. Each pool takes only some of them: CKO `<team>`, `<opponent>`, `<coach>`, `<quarterback>`; CBG `<team>`, `<opponent>`, `<yards>`, `<quarterback>`; CSK `<team>`, `<opponent>`, `<quarterback>`; CTD, CFG, CHT, CFN, CFT, CTT and CBO `<situation>`, `<team>` and `<opponent>`; CTM and CQE also `<quarter>`; the others `<team>` and `<opponent>`. The BN lines and the ASK lines have only `<commentator>`. The lines are changed, switched off and added like every other remark (BN143 and up, CTD11 and up), and may name your own sound files. The broadcast's own random numbers are not the game's, so the broadcast never changes how a game goes. A remarks.txt of version 0.10.0 keeps working: a default line that it still holds unchanged follows the commentator's name, a line you changed stays as you wrote it.
 
-The commentator speaks with a voice of their own: F12 asks for it after the five speakers and F11 for its volume (only with the N. F. L. rules and the broadcast on). The first time, the game gives the commentator the next voice of the announcer's engine. F9, Rules, Broadcast switches the commentator and the questions to them off; the radio banter stays, it is the banter of the N. F. L. rules. With NVDA or JAWS the screen reader speaks the commentator too, in its one voice. The first key you press cuts the line that is being said.
+The commentator speaks with a voice of their own: F12 asks for it after the five speakers and F11 for its volume (only with the N. F. L. rules and the broadcast on). The first time, the game gives the commentator the next voice of the announcer's engine. F9, Rules, Broadcast switches the commentator and the questions to them off. With NVDA or JAWS the screen reader speaks the commentator too, in its one voice. The first key you press cuts the line that is being said.
 
 ## The commentator's name
 
-F9, Rules, Commentator (the twelfth item, before Reset) is the name of the color commentator: Ghip is the default. Enter opens a list: Ghip, 28 well-known sports podcasters and broadcasters in alphabetical order, the name you typed last time, and, last, "Type a name of your own". Up and Down move, typing letters jumps to a name (type "pat" for Pat McAfee), Enter chooses, Escape goes back with no change. Left and Right on the item step through the names without opening the list. The new name is used from the next game, like every rule, in the announcer's questions and banter, in the intro and in the remarks of the features, and it is saved in settings.txt (nx_commentator). The names come from the podcast rankings of 2025 and 2026 (spec\COMMENTATOR_NAMES.md lists them with their sources); they are used descriptively, the game's voice and lines are not theirs, and nobody named has anything to do with this game.
+F9, Rules, Commentator (the twelfth item, before Reset) is the name of the color analyst: Gus Delgado, a made-up name, is the default. Enter opens a short list: Gus Delgado, the name you typed last time, and, last, "Type a name of your own". Up and Down move, Enter chooses, Escape goes back with no change. Left and Right on the item step between the names without opening the list. The new name is used from the next game, like every rule, in the announcer's questions, in the intro and in the remarks of the features, and it is saved in settings.txt (nx_commentator). Versions before 0.16.8 called him Ghip, the original's character, and offered a list of real sports podcasters; both are gone, and a settings.txt that still holds one of those names now means Gus Delgado.
 
 ## The stadium sounds of the N. F. L. rules
 
@@ -217,7 +202,7 @@ Injuries happen only in a franchise, never in a quick game or a classic season. 
 - IJA to IJM are the names of the kinds of injury, said in the injury report after the word "with" ("out with a sprained ankle"): IJA an ankle sprain, IJB a hamstring, IJC a knee sprain, IJD a shoulder, IJE a concussion, IJF the ribs, IJG a groin, IJH a broken hand, IJK a high ankle sprain, IJL a torn knee ligament, IJM the back. Each kind has three lines; one of the lines that are on is chosen by chance. If every line of a kind is off, the report says the player is out without naming the injury.
 - IJX is what the announcer says when a player is hurt in a game you play. There `<player>` is the player, `<position>` his position and `<team>` his team.
 
-Change a line, switch it off with `IJA01 = off`, delete it to get the original back, or add your own with a new number, IJA04 and higher. The words in square brackets of the banter work here too, except [name] and [opponent quarterback]. How often an injury happens and how long it lasts never depend on this file. For example:
+Change a line, switch it off with `IJA01 = off`, delete it to get the original back, or add your own with a new number, IJA04 and higher. The words in square brackets (see "Words in square brackets" above) work here too, except [name] and [opponent quarterback]. How often an injury happens and how long it lasts never depend on this file. For example:
 
     IJX05 = [sound my groan.wav] oh no, <player> is down and he is not getting up.
     IJE04 = a bad blow to the head
@@ -232,7 +217,7 @@ Before each game of the regular season you hear the injury report after the news
 - A file that another program holds open, or that cannot be written, is not changed. The original names are used that time.
 - "Reset one list to the original" and "Reset all lists to the original" write the original files again. Your own file is kept with the ending before-reset, and the two copies before it with the endings before-reset2 and before-reset3. If the copy cannot be made, nothing is written. Your sound files and footplay.txt are never touched.
 - If the game cannot read a file while it is running (another program has it open, for example), the names and lines it already loaded stay in use and it tells you once.
-- A file may be up to one megabyte. A banter line's own sounds together are cut at 30 seconds, and its pauses together may be at most 30 seconds.
+- A file may be up to one megabyte. A line's own sounds together are cut at 30 seconds, and its pauses together may be at most 30 seconds.
 
 
 ## Add more sounds to the game
@@ -252,7 +237,7 @@ Wav, ogg, flac and mp3 files work. Capital letters do not matter, and the number
 
 To take one of the original sounds out of the draw, put a line such as `foot15 = off` in sounds.txt in the same folder. A file that cannot be read is skipped, and the game tells you once. Your added sounds are drawn with the same chances as the original ones, so if you add ten files the original ten are heard half as often.
 
-Your announcer's comments are text, not numbered sound files: for your own comments and your own sounds in them, see banter.txt above.
+The commentary is text, not numbered sound files: for your own lines and your own sounds in them, see remarks.txt above.
 
 With the N. F. L. rules the original's ten celebration sounds are not played (next section): only your added celebration files are drawn.
 

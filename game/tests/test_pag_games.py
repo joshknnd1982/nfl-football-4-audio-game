@@ -179,8 +179,11 @@ def test_every_pause_of_a_game_is_a_site_of_the_pause_table_and_every_site_is_re
         sites = {site for site, _ in rig.game.pause_log}
         assert None not in sites and sites <= table, sites - table
         used |= sites
-    # the 30 games reach all 51 (the concede bleeps' pause through the policy's Escape; 0x43b9d9 is every start's dy)
-    assert used == table, sorted(hex(s) for s in table - used)
+    # the 30 games reach all 51 (the concede bleeps' pause through the policy's Escape; 0x43b9d9 is every start's dy) but the banter's
+    # own pause 0x459497: BC.2 (D-180) removed the original's banter from every mode, so the game never pauses there (the table is the
+    # record of the original and keeps it)
+    retired = {0x459497}
+    assert not (used & retired) and used == table - retired, sorted(hex(s) for s in table - retired - used)
 
 
 def test_the_hooks_are_called_in_classic_and_change_nothing(tmp_path):

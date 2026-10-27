@@ -66,7 +66,7 @@ def test_the_opponent_of_a_franchise_game_is_a_roster_and_nothing_is_drawn_for_i
     assert setup.rosters[2].names() == opponent.names() and setup.rosters[2].ratings == opponent.ratings
     assert setup.rosters[2].ratings is not opponent.ratings and setup.rosters[2].quarterback == "BQB"
     assert setup.rosters[1].names() == own.names() and setup.own_names_drawn is False
-    assert setup.banter_names == own.running_backs + own.receivers + own.defense + opponent.running_backs + opponent.receivers + opponent.defense
+    assert setup.player_names == own.running_backs + own.receivers + own.defense + opponent.running_backs + opponent.receivers + opponent.defense
 
 
 def test_without_an_opponent_roster_the_set_up_draws_33_names_as_the_original():

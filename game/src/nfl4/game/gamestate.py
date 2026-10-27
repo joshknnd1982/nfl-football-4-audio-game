@@ -126,7 +126,7 @@ class GameState:
     quarterbacks: dict[int, str] = field(default_factory=dict)
     he_she: dict[int, str] = field(default_factory=lambda: {1: " He ", 2: " He ", 3: " He ", 4: " He "})
     rosters: dict[int, Roster] = field(default_factory=dict)
-    banter_names: list[str] = field(default_factory=list)
+    player_names: list[str] = field(default_factory=list)     # L480, the 58 names (BC.2: was banter_names; the remark lines draw from it)
     # statistics and score
     stats: dict[int, SideStats] = field(default_factory=lambda: {1: SideStats(), 2: SideStats()})
     # the phrase histories (one game, not saved, Q37)
@@ -138,7 +138,6 @@ class GameState:
     handoff: GroupedPhrases = field(default_factory=lambda: GroupedPhrases(4, 9, "hand-off"))     # L70, L4a0
     dropback: GroupedPhrases = field(default_factory=lambda: GroupedPhrases(3, 11, "drop-back"))  # L164, L438
     last_return_run: int = 0           # L558
-    banter_used: list[int] = field(default_factory=list)   # L8b4(1 to L7dc)
     # the end
     final_scores: tuple[int, int] | None = None   # Me.m414(1), (2)
     finished: bool = False             # pag passed the period-end flow (L194 = 1)

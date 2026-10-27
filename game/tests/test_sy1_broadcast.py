@@ -1,10 +1,11 @@
 """The radio-style broadcast of the N. F. L. rules (nfl4 only, rule 0.13; CLAUDE.md 0.27; playbook 7.19; SY.1, D-101).
 This is inspired by Jim Kitchen.
 
-Two parts: the announcer's radio banter (pool BN, 142 lines instead of the original's jokes, drawn by the original's rule) and Ghip, the color
-commentator (his own voice, his own random generator, fifty lines of pools by moment). The properties that matter: the original's banter
-and its draws are untouched in Classic; in the N. F. L. rules the draws of the game are the same with the broadcast on and off (Ghip draws
-only from his own generator); F8 silences him; the pools follow the text rules of the playbook; a player can change, switch off or add a line.
+The color analyst (his own voice, his own random generator, fifty lines of pools by moment) and the pools of remarks.txt the broadcast uses
+(BN, ASK and the analyst's). BC.2 (D-180): the original's banter step is gone from every mode, and with it the pool BN drawn by the original's
+rule on the game's generator (the Rules hook H23 banter_lines); BC.3 draws BN on the broadcast's own generator. The properties that matter:
+the draws of the game are the same with the broadcast on and off (the analyst draws only from his own generator); F8 silences him; the pools
+follow the text rules of the playbook; a player can change, switch off or add a line.
 """
 import re
 
@@ -18,13 +19,9 @@ from nfl4.extras import broadcast as BC
 from nfl4.extras import nx_texts as X
 from nfl4.extras import remarks as RM
 from nfl4.extras.nfl_rules import NflRules, rules_from_settings
-from nfl4.game.banter import speak_banter
-from nfl4.game.banter_lines import LINES
-from nfl4.game.gamestate import GameState
 from nfl4.game.rules import CLASSIC, ClassicRules
 from nfl4.speech.roles import ALL_ROLES, ANNOUNCER, COLOR, ROLES
 from nflrig import RecordingRules, sim_game
-from randsources import ScriptedRandom, below_value, value_for
 
 COLOR_POOLS = RM.COLOR_POOLS
 SIZES = {"BN": 142, "ASK": 12, "CKO": 8, "CBG": 10, "CSK": 10, "CTV": 10, "CTD": 10, "CFG": 8, "CFM": 8, "CTC": 8, "CTS": 8, "CFD": 8, "CRZ": 8,
@@ -57,76 +54,29 @@ def test_every_line_of_the_broadcast_follows_the_text_rules_of_the_playbook():
             assert X.SPEAKERS[remark.id] == ("color" if pool in COLOR_POOLS else "say")
 
 
-def test_no_radio_banter_line_is_one_of_the_originals():
-    original = {text.strip().lower() for line in LINES for text in (line.first, line.second) + tuple(line.alternatives) if text.strip()}
-    banter = {X.TEXTS[r.id].strip().lower() for r in RM.DEFAULT_POOLS.lines("BN")}
-    assert not (original & banter)
+def test_the_radio_banter_lines_are_generic():
     # the radio lines are generic: no placeholder, no sound, no name of a team or a person of the game
     assert all(X.TEXTS[r.id].replace("<commentator>", "") .count("<") == 0 and "[" not in X.TEXTS[r.id] for r in RM.DEFAULT_POOLS.lines("BN"))     # SZ.1: only the commentator's name
     assert not any("Kitchen" in X.TEXTS[r.id] or "Jim" in X.TEXTS[r.id] for r in RM.DEFAULT_POOLS.lines("BN"))
 
 
-def test_the_classic_banter_file_and_the_remarks_file_are_separate():
+def test_the_remark_ids_are_not_the_old_banter_ids():
     assert RM.parse_id("BN142") == ("BN", 142) and RM.parse_id("bn7") == ("BN", 7) and RM.parse_id("B007") is None
     assert RM.remark_id("BN", 7) == "BN07" and RM.remark_id("CTD", 3) == "CTD03"
 
 
-# ----- the banter -----
+# ----- the original's banter step is gone (BC.2) -----
 
-def banter_rig(tmp_path, values, rules):
-    rig = Rig(sounds_dir=tmp_path / "sounds", rng=ScriptedRandom(values, strict=True))
-    rig.rnd.trace = []
-    rig.game.rules = rules
-    state = GameState()
-    state.banter_names = ["N%d" % i for i in range(1, 59)]
-    state.quarterbacks = {1: "Starr", 2: "Unitas"}
-    return rig, state
+def test_neither_rules_has_the_hook_of_the_originals_banter_lines():
+    assert not hasattr(CLASSIC, "banter_lines") and not hasattr(NflRules(), "banter_lines")
+    assert not hasattr(BC.Broadcast(NflRules()), "banter_lines") and not hasattr(BC.Broadcast(NflRules()), "radio_banter")
 
 
-def test_classic_keeps_the_originals_banter_and_a_hand_made_nfl_object_does_too(tmp_path):
-    for rules in (CLASSIC, NflRules()):
-        rig, state = banter_rig(tmp_path, [value_for(142, 1), value_for(58, 7), below_value(30, 0)], rules)
-        speak_banter(rig.game, state)
-        assert rig.said == [(" It looks like N7 is shaken up on the play ", ANNOUNCER, 0)]
+# ----- the analyst in whole games -----
 
-
-def test_the_n_f_l_rules_say_the_radio_banter_with_the_same_draws(tmp_path):
-    rig, state = banter_rig(tmp_path, [value_for(142, 1), value_for(58, 7), below_value(30, 0)], NflRules(radio_banter=True))
-    speak_banter(rig.game, state)
-    assert rig.rnd.trace == [142, 58, 30]                       # the same sizes, in the same order, as the original's
-    assert rig.said == [(X.TEXTS["BN01"], ANNOUNCER, 0)]
-    assert state.banter_used == [1]
-
-
-def test_f8_silences_the_radio_banter_and_the_players_own_lines_work(tmp_path):
-    rules = NflRules(radio_banter=True)
-    rig, state = banter_rig(tmp_path, [], rules)
-    rig.game.comtog_source = lambda: 1
-    speak_banter(rig.game, state)
-    assert rig.said == [] and rig.rnd.trace == []
-    # the player switches BN01 off and adds BN143: the pool is the lines that are on, in the order of their numbers
-    problems = cl.Problems("remarks.txt")
-    pools = RM.build_pools({"BN01": None, "BN143": "my own radio line"}, problems)
-    assert problems.items == [] and len(pools.lines("BN")) == 142 and pools.lines("BN")[-1].id == "BN143"
-    rig2, state2 = banter_rig(tmp_path, [value_for(142, 142), value_for(58, 1), below_value(30, 0)], rules)
-    rig2.game.remark_pools = pools
-    speak_banter(rig2.game, state2)
-    assert rig2.said[0][0] == "my own radio line"
-
-
-def test_every_banter_line_off_leaves_the_game_silent_not_with_the_jokes(tmp_path):
-    rules = NflRules(radio_banter=True)
-    rig, state = banter_rig(tmp_path, [], rules)
-    rig.game.remark_pools = RM.build_pools({r.id: None for r in RM.DEFAULT_POOLS.lines("BN")}, cl.Problems("remarks.txt"))
-    speak_banter(rig.game, state)
-    assert rig.said == [] and rig.rnd.trace == []
-
-
-# ----- Ghip in whole games -----
-
-def whole_game(tmp_path, seed, on, ghip_comments=True):
+def whole_game(tmp_path, seed, on):
     said = []
-    rules = RecordingRules(penalties_on=True, onside_on=True, qb_on=True, challenges_on=True, playbooks_on=True, broadcast_on=on, radio_banter=on)
+    rules = RecordingRules(penalties_on=True, onside_on=True, qb_on=True, challenges_on=True, playbooks_on=True, broadcast_on=on)
     from nfl4.game import flow
     real = flow.Game.say_role
     flow.Game.say_role = lambda self, text, role: said.append((role, text)) or real(self, text, role)
@@ -137,7 +87,7 @@ def whole_game(tmp_path, seed, on, ghip_comments=True):
     return rig, engine, said, result
 
 
-def test_ghip_does_not_move_a_single_draw_or_the_result_of_a_game(tmp_path):
+def test_the_analyst_does_not_move_a_single_draw_or_the_result_of_a_game(tmp_path):
     rig_on, _e, said_on, result_on = whole_game(tmp_path / "on", 21, True)
     rig_off, _e2, said_off, result_off = whole_game(tmp_path / "off", 21, False)
     assert said_off == [] and len(said_on) > 5
@@ -145,7 +95,7 @@ def test_ghip_does_not_move_a_single_draw_or_the_result_of_a_game(tmp_path):
     assert result_on.scores == result_off.scores
 
 
-def test_ghip_speaks_in_his_own_voice_after_the_opening_and_the_lines_are_those_of_his_pools(tmp_path):
+def test_the_analyst_speaks_in_his_own_voice_after_the_opening_and_the_lines_are_those_of_his_pools(tmp_path):
     rig, engine, said, result = whole_game(tmp_path, 22, True)
     assert all(role == COLOR for role, _ in said)
     patterns = [re.sub(r"<[a-z ]+>", ".+", re.escape(X.TEXTS[r.id].strip())) for pool in COLOR_POOLS for r in RM.DEFAULT_POOLS.lines(pool)]
@@ -154,7 +104,7 @@ def test_ghip_speaks_in_his_own_voice_after_the_opening_and_the_lines_are_those_
         assert not re.search(r"<[^<>]+>", body), body                       # every placeholder is filled
         assert any(re.fullmatch(pattern, body) for pattern in patterns), body
     touchdown = [re.sub(r"<[a-z ]+>", ".+", re.escape(X.TEXTS[r.id].strip())) for r in RM.DEFAULT_POOLS.lines("CTD")]
-    assert any(re.fullmatch(pattern, text.strip()) for _role, text in said for pattern in touchdown)        # a game has touchdowns: Ghip is there
+    assert any(re.fullmatch(pattern, text.strip()) for _role, text in said for pattern in touchdown)        # a game has touchdowns: the analyst is there
 
 
 def test_the_same_seed_gives_the_same_commentary_and_another_seed_another(tmp_path):
@@ -164,7 +114,7 @@ def test_the_same_seed_gives_the_same_commentary_and_another_seed_another(tmp_pa
     assert a == b and a != c
 
 
-def test_ghip_leaves_two_plays_between_his_ordinary_lines_and_is_in_every_game_at_the_big_moments(tmp_path):
+def test_the_analyst_leaves_two_plays_between_his_ordinary_lines_and_is_in_every_game_at_the_big_moments(tmp_path):
     rig, engine, said, result = whole_game(tmp_path, 23, True)
     texts = [t for _r, t in said]
     assert 8 <= len(texts) <= 60, len(texts)                                  # a radio crew fills the gaps, it does not talk over the game
@@ -172,9 +122,9 @@ def test_ghip_leaves_two_plays_between_his_ordinary_lines_and_is_in_every_game_a
     assert any("half" in t.lower() for t in [t for _r, t in said2] + texts)   # the halftime line is certain (CHT 100 percent)
 
 
-def test_f8_switches_ghip_off(tmp_path):
+def test_f8_switches_the_analyst_off(tmp_path):
     said = []
-    rules = RecordingRules(penalties_on=True, qb_on=True, playbooks_on=True, broadcast_on=True, radio_banter=True)
+    rules = RecordingRules(penalties_on=True, qb_on=True, playbooks_on=True, broadcast_on=True)
     from nfl4.game import flow
     real = flow.Game.say_role
     flow.Game.say_role = lambda self, text, role: said.append(text)
@@ -195,14 +145,15 @@ def test_f8_switches_ghip_off(tmp_path):
     assert said == []
 
 
-def test_the_intro_of_ghip_is_said_once_per_program_run_by_the_announcer(tmp_path):
+def test_the_intro_of_the_analyst_is_said_once_per_program_run_by_the_announcer(tmp_path):
     rig, engine, said, result = whole_game(tmp_path, 25, True)
-    assert rig.game.ghip_introduced is True
+    assert rig.game.analyst_introduced is True
     spoken = [t for t, role, step in rig.said]
-    assert spoken.count(X.text("NXB-B01", commentator="Ghip")) == 1                 # SZ.1: the name is filled in
+    assert spoken.count(X.text("NXB-B01", commentator="Gus Delgado")) == 1          # SZ.1: the name is filled in (BC.2: the made-up default)
+    assert not any("Ghip" in t for t in spoken)
 
 
-def test_a_players_own_line_and_off_for_ghips_pools(tmp_path):
+def test_a_players_own_line_and_off_for_the_analysts_pools(tmp_path):
     problems = cl.Problems("remarks.txt")
     pools = RM.build_pools({"CTD01": None, "CTD11": "<team> score, says <coach>", "CTD12": "oops <nothing>"}, problems)
     assert [r.id for r in pools.lines("CTD")][0] == "CTD02" and pools.lines("CTD")[-1].id == "CTD12"
@@ -212,14 +163,14 @@ def test_a_players_own_line_and_off_for_ghips_pools(tmp_path):
 
 # ----- the voice and the settings -----
 
-def test_ghip_is_a_sixth_speaker_outside_the_five_of_the_original():
+def test_the_analyst_is_a_sixth_speaker_outside_the_five_of_the_original():
     assert COLOR == "color" and COLOR not in ROLES and ALL_ROLES == ROLES + (COLOR, "referee")           # SY.3 added the referee
     settings = Settings.defaults()
     assert set(settings.speech.voices) == set(ALL_ROLES) and settings.speech.volumes[COLOR] == 95
     assert settings.game.nx_broadcast is True
 
 
-def test_the_settings_file_keeps_ghips_voice_volume_and_the_broadcast_switch():
+def test_the_settings_file_keeps_the_analysts_voice_volume_and_the_broadcast_switch():
     settings = Settings.defaults()
     settings.speech.voices[COLOR] = "voice-id-7"
     settings.speech.volumes[COLOR] = 60
@@ -236,18 +187,17 @@ def test_the_settings_file_keeps_ghips_voice_volume_and_the_broadcast_switch():
 def test_the_programs_rules_follow_the_setting():
     settings = Settings.defaults()
     rules = rules_from_settings(settings.game)
-    assert rules.broadcast.ghip is True and rules.broadcast.radio_banter is True
+    assert rules.broadcast.analyst is True and rules.broadcast.commentator == "Gus Delgado"
     settings.game.nx_broadcast = False
     rules = rules_from_settings(settings.game)
-    assert rules.broadcast.ghip is False and rules.broadcast.radio_banter is True     # the radio banter is the N. F. L. rules' banter
-    assert rules.for_game().broadcast.radio_banter is True and rules.for_game().broadcast.ghip is False
+    assert rules.broadcast.analyst is False and rules.for_game().broadcast.analyst is False
     settings.game.rules = "classic"
     assert rules_from_settings(settings.game) is CLASSIC
 
 
 def test_classic_answers_the_broadcast_hooks_with_nothing():
     rules = ClassicRules()
-    assert rules.banter_lines(object()) is None and rules.broadcast_moment(object(), "score") is None
+    assert rules.broadcast_moment(object(), "score") is None
 
 
 class Catalog:
@@ -263,7 +213,7 @@ class Catalog:
         pass
 
 
-def test_ghip_gets_a_voice_of_his_own_when_the_player_has_not_chosen_one(tmp_path):
+def test_the_analyst_gets_a_voice_of_his_own_when_the_player_has_not_chosen_one(tmp_path):
     from nfl4.game.options import Options
     from nfl4.speech.voices import VoiceInfo
     rig = Rig([], sounds_dir=tmp_path)
@@ -272,7 +222,7 @@ def test_ghip_gets_a_voice_of_his_own_when_the_player_has_not_chosen_one(tmp_pat
     saves = []
     options = Options(Settings.defaults(), rig.speech, save=lambda: saves.append(1), base_rate=lambda: 0, voice_catalog=Catalog(voices))
     rig.game.options = options
-    b = BC.Broadcast(NflRules(), ghip=True)
+    b = BC.Broadcast(NflRules(), analyst=True)
     b.game = rig.game
     b._own_voice()
     assert options.voice(COLOR) == "id2" and options.voice("referee") == "id3" and saves == [1]     # the announcer's engine, the next voices
@@ -284,10 +234,10 @@ def test_ghip_gets_a_voice_of_his_own_when_the_player_has_not_chosen_one(tmp_pat
     options.set_voice("referee", "id3")
     options.voice_catalog = Catalog(voices[:1])
     b._own_voice()
-    assert options.voice(COLOR) is None                                # one voice only: Ghip shares it
+    assert options.voice(COLOR) is None                                # one voice only: the analyst shares it
 
 
-def test_a_voice_list_that_is_not_read_yet_leaves_ghip_with_the_announcers_voice_for_now(tmp_path):
+def test_a_voice_list_that_is_not_read_yet_leaves_the_analyst_with_the_announcers_voice_for_now(tmp_path):
     from nfl4.game.options import Options
     rig = Rig([], sounds_dir=tmp_path)
     started = []
@@ -299,13 +249,13 @@ def test_a_voice_list_that_is_not_read_yet_leaves_ghip_with_the_announcers_voice
             started.append(1)
     options = Options(Settings.defaults(), rig.speech, save=lambda: True, base_rate=lambda: 0, voice_catalog=Slow([]))
     rig.game.options = options
-    b = BC.Broadcast(NflRules(), ghip=True)
+    b = BC.Broadcast(NflRules(), analyst=True)
     b.game = rig.game
     b._own_voice()
     assert options.voice(COLOR) is None and started == [1]
 
 
-# ----- F11 and F12 ask for Ghip only in the N. F. L. rules with the broadcast on -----
+# ----- F11 and F12 ask for the analyst only in the N. F. L. rules with the broadcast on -----
 
 F11, F12, ENTER = 122, 123, 13
 
@@ -322,7 +272,7 @@ def f11_roles(tmp_path, rules, broadcast_on):
     return [role for text, role, step in rig.said if "volume" in text.lower() and role in ALL_ROLES][:]
 
 
-def test_f11_asks_for_ghip_after_the_five_speakers_only_with_the_nfl_rules_and_the_broadcast_on(tmp_path):
+def test_f11_asks_for_the_analyst_after_the_five_speakers_only_with_the_nfl_rules_and_the_broadcast_on(tmp_path):
     five = f11_roles(tmp_path / "a", CLASSIC, True)
     assert COLOR not in five and ANNOUNCER in five
     six = f11_roles(tmp_path / "b", NflRules(), True)
@@ -331,7 +281,7 @@ def test_f11_asks_for_ghip_after_the_five_speakers_only_with_the_nfl_rules_and_t
     assert COLOR not in off
 
 
-def test_ghips_name_and_the_originals_names_stay_apart():
+def test_the_analysts_role_name_and_the_originals_names_stay_apart():
     from nfl4.speech.roles import EXTRA_NAMES, F11_NAMES, F12_NAMES, spoken_name
     assert set(F11_NAMES) == set(F12_NAMES) == set(ROLES) and EXTRA_NAMES == {COLOR: "the color commentator", "referee": "the referee"}
     assert spoken_name(COLOR) == "the color commentator" and spoken_name(ANNOUNCER) == F11_NAMES[ANNOUNCER]       # SZ.1: the name is a setting

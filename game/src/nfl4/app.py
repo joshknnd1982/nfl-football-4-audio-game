@@ -123,7 +123,7 @@ def main(argv=None) -> int:
     # start-up notices (S7.5, D-024 item 5, G-F5, playbook 7.10)
     with debuglog.phase("program files"):
         files = FileProgramStore(paths.user_data_dir(), paths.customize_dir(), first=first_start)
-    # the player's names and banter (teams.txt, divisions.txt, surnames.txt, banter.txt in the same folder, S7.7): read and
+    # the player's names (teams.txt, divisions.txt, surnames.txt in the same folder, S7.7; BC.2: banter.txt is no longer read): read and
     # healed once now, so their notices come with the start-up notices too
     # nfl4 only (rule 0.13, SX.2): the Rules setting chooses Classic or the N. F. L. rules; their files (remarks.txt) are read
     # only with the N. F. L. rules

@@ -1,9 +1,10 @@
-"""The player's names and banter in the game, and the F9 Customize menu on the virtual-clock rig (S7.7). This is inspired by Jim Kitchen.
+"""The player's names in the game, and the F9 Customize menu on the virtual-clock rig (S7.7). This is inspired by Jim Kitchen.
 
 D-032 item 11, D-048, G-K2. What was written down before the code: a changed name is what every later sentence speaks (the
 schedule, the standings, the score, the choice of the team, the roster draws); a season and a saved game hold numbers, so a
 rename never breaks them; Reload applies the files at once (a game in progress keeps the roster it drew); the Customize menu has
-five items in this order: open the folder, reload, check, reset one list, reset all; reset all asks for one Enter.
+five items in this order: open the folder, reload, check, reset one list, reset all; reset all asks for one Enter. BC.2 (D-180):
+banter.txt and its pool are gone, so the Classic lists are three and Reload says no count of banter lines.
 """
 import os
 import random
@@ -11,8 +12,6 @@ import random
 from nfl4.data import customlists as cl
 from nfl4.data.customize import Customization
 from nfl4.game import extra_texts as words
-from nfl4.game.banter_markup import Speak
-from nfl4.game.banter_pool import DEFAULT_MARKUP
 from nfl4.game.names import load_surnames
 from programrig import DOWN, ENTER, ESC, F1, UP, preset_season, program_rig, said
 
@@ -82,7 +81,7 @@ def test_the_surnames_the_next_game_draws_come_from_the_players_file(tmp_path):
     rig.custom.reload()
     rig.game.apply_customization()
     setup = rig.game.new_game_setup()
-    names = setup.rosters[2].running_backs + setup.rosters[2].defense + setup.banter_names
+    names = setup.rosters[2].running_backs + setup.rosters[2].defense + setup.player_names
     assert names and all(name.startswith("Zed") for name in names)
 
 
@@ -163,15 +162,9 @@ def test_reload_applies_the_files_at_once_and_says_what_was_wrong(tmp_path):
     rig = rig_for(tmp_path, [])
     edit(rig, "teams.txt", "T09 = Broncos", "T09 = Mustangs")
     edit(rig, "teams.txt", "T10 = Chargers", "T10 = no,way")
-    for number in range(2, 143):
-        edit(rig, "banter.txt", "B%03d = " % number + DEFAULT_MARKUP[number], "B%03d = off" % number)
-    with open(rig.folder / "banter.txt", "ab") as handle:
-        handle.write(b"B143 = Hello [name]\r\n")
     spoken = customize(rig, [DOWN, ENTER])
-    assert spoken[2] == ("The files were read again. 2 banter lines are on. "
-                         "1 problem found in teams.txt, details are in the log.")
+    assert spoken[2] == "The files were read again. 1 problem found in teams.txt, details are in the log."
     assert rig.game.league.team(3, 1) == "Mustangs" and rig.game.league.team(3, 2) == "Chargers"
-    assert rig.game.banter_pool.numbers() == [1, 143]
 
 
 def test_check_reads_the_results_aloud_and_applies_nothing(tmp_path):
@@ -189,7 +182,7 @@ def test_reset_one_list_asks_which_and_puts_the_original_back_keeping_the_player
     rig.game.apply_customization()
     assert rig.game.league.division_names[0] == "The North."
     spoken = customize(rig, [DOWN, DOWN, DOWN, ENTER, DOWN, ENTER, F1])
-    assert spoken[4] == "Reset one list. 4 items. Press F1 for help. Team names"
+    assert spoken[4] == "Reset one list. 3 items. Press F1 for help. Team names"
     assert spoken[5:7] == ["Division names", "divisions.txt is back to the original. Your file was kept as "
                                              "divisions.txt.before-reset."]
     assert spoken[7] == words.CUSTOMIZE_RESET_ONE_HELP
@@ -227,9 +220,3 @@ def test_a_menu_that_cannot_work_never_ends_the_game(tmp_path):
     spoken = customize(rig, [DOWN, ENTER, DOWN])
     assert spoken[2] == words.FAILED and spoken[3] == words.CUSTOMIZE_CHECK_ITEM      # said, and the menu is still open
 
-
-def test_the_original_142_lines_are_the_pool_after_a_reload_of_untouched_files(tmp_path):
-    rig = rig_for(tmp_path, [])
-    customize(rig, [DOWN, ENTER])
-    assert rig.game.banter_pool.size == 142 and all(line.builtin for line in rig.game.banter_pool.lines)
-    assert all(isinstance(line.pieces[0], Speak) for line in rig.game.banter_pool.lines)

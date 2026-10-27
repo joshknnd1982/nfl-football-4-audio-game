@@ -361,7 +361,7 @@ class Functions:
     # ----- customize (S7.7, G-K2, D-048) -----
 
     def customize_menu(self) -> None:
-        """The names and the banter: open the folder, reload, check, reset one list, reset all (playbook 7.9, 7.10). Every
+        """The names and the commentary: open the folder, reload, check, reset one list, reset all (playbook 7.9, 7.10). Every
         action ends by applying the files' values to the game, so what is spoken next uses them."""
         custom = self.g.customization
         if custom is None:                             # a rig or a program without the player's files
@@ -379,7 +379,7 @@ class Functions:
         def reload() -> str:
             notices = custom.reload()
             self.g.apply_customization()
-            return words.customize_reloaded(custom.snapshot.banter.size, notices)
+            return words.customize_reloaded(notices)
 
         def check() -> str:
             return custom.check()

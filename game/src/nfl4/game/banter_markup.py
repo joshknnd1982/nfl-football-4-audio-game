@@ -1,7 +1,8 @@
-"""The banter line markup: what a line of banter.txt says, as pieces. This is inspired by Jim Kitchen.
+"""The markup of a customizable line (remarks.txt, news.txt, injuries.txt): what a line says, as pieces. This is inspired by Jim Kitchen.
 
-D-035 (the owner's rule that the banter is customizable with own text and own sounds), D-048, CUSTOMIZABLE_CONTENT 12,
-playbook 7.9. A line is a sequence of PIECES:
+D-035 (the owner's rule that the commentary is customizable with own text and own sounds), D-048, CUSTOMIZABLE_CONTENT 12,
+playbook 7.9. It was made for the original's banter.txt; BC.2 (D-178, D-180) removed the original's banter from every mode, and the
+markup stays for the pools that use it. A line is a sequence of PIECES:
 
 * Speak: one spoken part, said with `say` (the announcer, waited). Its items are plain text, `[name]` (the name drawn from
   the 58-name list, the same in the whole line), `[opponent quarterback]` and `[one of: a | b | c]` (one choice drawn with
@@ -14,18 +15,12 @@ Two more words shape the parts: `[then]` ends the spoken part (the next text is 
 text is) and `[faster]` ends it too and speaks the next part one rate step faster (the original's line 113). The words are not
 case sensitive. An unknown word in brackets is spoken as text and reported; an opening bracket with no closing one, a sound
 name with a folder in it, a line of more than 500 characters or 20 pieces, a control character, or a line that says nothing
-make the line bad (the original line with that ID is used, a new ID is left out).
-
-The 142 original lines are written in this markup by `default_pieces` and `to_markup` (the file the game writes on its first
-start), and a player's line that is exactly the markup of the original is the original (built in, with its exact spaces), so
-an unchanged file plays exactly the original's lines.
+make the line bad (the default line with that ID is used, a new ID is left out).
 """
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-
-from .banter_lines import NAME, OPPONENT_QB, BanterLine
 
 MAX_LINE_CHARS = 500
 MAX_PIECES = 20
@@ -88,34 +83,6 @@ class MarkupError(ValueError):
 class ParsedMarkup:
     pieces: tuple | None                # None: the line is bad
     problems: list[str]
-
-
-# ----- the original's lines as pieces -----
-
-def _items_of(text: str) -> tuple:
-    items: list = []
-    for part in re.split("(%s|%s)" % (re.escape(NAME), re.escape(OPPONENT_QB)), text):
-        if part == NAME:
-            items.append(NameRef())
-        elif part == OPPONENT_QB:
-            items.append(OppQbRef())
-        elif part:
-            items.append(Text(part))
-    return tuple(items)
-
-
-def default_pieces(line: BanterLine) -> tuple:
-    """GoSub 0x45915e step 5 and 6: the first text (one rate step faster for line 113), foot13 after it `bleeps` times, then
-    the second text (lines 101 and 110: one of the alternatives, drawn). Every text keeps its exact spaces."""
-    if line.rate_step not in (0, 1):
-        raise ValueError("banter line %d has the rate step %r" % (line.number, line.rate_step))
-    pieces: list = [Speak(_items_of(line.first), faster=line.rate_step == 1)]
-    pieces.extend(Bleep() for _ in range(line.bleeps))
-    if line.alternatives:
-        pieces.append(Speak((OneOf(tuple(_items_of(alt) for alt in line.alternatives)),)))
-    elif line.second != "":
-        pieces.append(Speak(_items_of(line.second)))
-    return tuple(pieces)
 
 
 # ----- pieces to markup -----

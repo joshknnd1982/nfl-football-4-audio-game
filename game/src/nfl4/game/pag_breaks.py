@@ -120,7 +120,7 @@ class BreakSteps:
         self.snd.play_tackle(8)
         g.say4(P.END_OF_QUARTER[quarter])
         g.ptf = 0
-        self.rules.broadcast_moment(self.s, "quarter_end", quarter)      # H23: Ghip (the N. F. L. rules' broadcast)
+        self.rules.broadcast_moment(self.s, "quarter_end", quarter)      # H23: the analyst (the N. F. L. rules' broadcast)
         if quarter != 2:                                             # the end of quarter 2 is the half time break below
             self.snd.commercial("quarter")                           # owner rule 0.14: the player's own commercials, off by default
 
@@ -244,7 +244,7 @@ class BreakSteps:
         g.say4(P.GAME_IS_OVER)
         for line in self.rules.game_over_lines(s):                  # H22 (SX.12): " The game ends in a tie. " (Classic: none)
             g.say4(line)
-        self.rules.broadcast_moment(s, "game_end")                  # H23: Ghip at the final whistle
+        self.rules.broadcast_moment(s, "game_end")                  # H23: the analyst at the final whistle
         g.log_print("")
         g.ptf = 0
         s.final_scores = (s.score(1), s.score(2))

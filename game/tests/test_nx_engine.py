@@ -110,7 +110,7 @@ def test_the_last_timeout_says_none_are_left_and_a_remark_may_follow(tmp_path):
     assert step == rig.engine.save_game
     said = texts(rig)
     i = said.index(" time out called by the Bengals. ")
-    assert said[i + 1:i + 3] == [" you have no time outs left. ", X.text("TO02", commentator="Ghip")]    # its exact spaces (a default); SZ.1: the name is filled in
+    assert said[i + 1:i + 3] == [" you have no time outs left. ", X.text("TO02", commentator="Gus Delgado")]    # its exact spaces (a default); SZ.1: the name is filled in
 
 
 def test_the_s_key_goes_to_save_game(tmp_path):

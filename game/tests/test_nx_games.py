@@ -36,7 +36,10 @@ def test_every_game_ends_with_a_winner_and_no_safety_net_was_needed(games):
 def test_every_period_ends_when_the_clock_reaches_zero_and_the_clock_is_never_negative(games):
     for _, engine, rules, _ in games:
         regulation = [p for p in rules.periods if p[0] <= 4]
-        assert len(regulation) == 4
+        # the rig records a period end at period_checks; a touchdown on the last play of the fourth quarter whose try cannot change the
+        # result has no try and goes straight to the end of the game (SX.13), past that hook (seeds 105 and 156 since BC.2's draws, D-180)
+        walk_off = engine.outcomes[-1].score == "touchdown" and engine.s.extras.left == 0 and len(regulation) == 3
+        assert len(regulation) == 4 or walk_off
         assert all(left == 0 for _, _, left in rules.periods)
         assert all(left >= 0 and pending >= 0 for _, left, pending in rules.lefts)
 

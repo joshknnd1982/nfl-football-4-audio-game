@@ -22,7 +22,6 @@ from typing import Callable
 from ..data import debuglog, paths
 from ..data.settings import Settings
 from . import scorespeech
-from .banter_pool import DEFAULT_POOL, BanterPool
 from .functions import Functions
 from .gameclock import QuarterClock
 from .hotkeys import HotKeys
@@ -62,8 +61,7 @@ class Game(Speakers):
             sounds.announce = lambda text: self._speak(text, ANNOUNCER, True)
         self.league = league if league is not None else League()      # GetTeams (S7.7 fills it from teams.txt)
         self._pool = pool                             # SetPlayerNames: the 1,708 surnames, loaded when first needed
-        self.banter_pool: BanterPool = DEFAULT_POOL   # the 142 lines plus the player's (S7.7, banter.txt)
-        self.banter_sounds_dir: str | None = None     # customize\sounds: the player's files for [sound file] in a line
+        self.custom_sounds_dir: str | None = None     # customize\sounds: the player's files for [sound file] in a line
         self.remark_pools = None                      # the extras' remarks.txt (nfl4 only, SX.2); None = the defaults
         self.foul_table = None                        # the extras' penalties.txt (nfl4 only, SX.3); None = the defaults
         self.playbook_table = None                    # the extras' playbooks files (nfl4 only, SX.7); None = the defaults
@@ -87,7 +85,7 @@ class Game(Speakers):
             # NX-M1, NX-M2 (D-148): the owner's own mode is the N. F. L. rules: no original music, no celebration sounds unless a slot's file is there
             sounds.own_mode = lambda: getattr(self.options.settings.game, "rules", "classic") == "nfl"
         self.vr_source = lambda: self.options.vr       # rady's rate counter (Ctrl changes it)
-        self.comtog_source: Callable[[], int] = lambda: self.options.comtog   # F8: 1 = the comments (banter) are off
+        self.comtog_source: Callable[[], int] = lambda: self.options.comtog   # F8: 1 = the comments are off
         self.rules = rules if rules is not None else CLASSIC   # the program's rules (H12 reads them; pag gets them)
         self.m414: tuple[int, int] | None = None      # the last game's result for the season engine (S7.3c)
         self.season_store = None                      # S7.5: writes football.gtp, footbal3.dat, footbal4.dat, footbal5.dat
@@ -136,7 +134,7 @@ class Game(Speakers):
 
     def apply_customization(self) -> None:
         """Take the values of the player's loaded files (S7.7): the team and division names, the surnames the next draws use
-        (a game in progress keeps the roster it drew), the banter pool and the folder of the banter's own sounds. Never
+        (a game in progress keeps the roster it drew) and the folder of the player's own sounds. Never
         raises: what cannot be applied stays as it was."""
         custom = self.customization
         if custom is None:
@@ -149,8 +147,7 @@ class Game(Speakers):
                     self._pool = NamePool(self.rnd, snapshot.surnames)
                 else:
                     self._pool.replace_names(snapshot.surnames)
-            self.banter_pool = snapshot.banter
-            self.banter_sounds_dir = custom.sounds_dir
+            self.custom_sounds_dir = custom.sounds_dir
             self.remark_pools = snapshot.remarks              # None while the Rules are Classic (the file is not read)
             self.foul_table = snapshot.fouls                  # the same for penalties.txt (SX.3)
             self.playbook_table = snapshot.playbooks          # and the playbooks' three files (SX.7)
@@ -291,7 +288,7 @@ class Game(Speakers):
 
     def new_game_setup(self, own_names: Roster | None = None, opponent_names: Roster | None = None,
                        real_names: bool = False) -> GameSetup:
-        """pag's set-up GoSub (GAME_SPEC 5.5): the rosters, the banter names, the periods' lengths and the warnings; the
+        """pag's set-up GoSub (GAME_SPEC 5.5): the rosters, the players' names, the periods' lengths and the warnings; the
         three warning lengths also go to the clock. `opponent_names` is the Franchise's opponent (nfl4 only, SX.8b). `real_names`
         (nfl4 only, SX.11, the N. F. L. rules): the sides whose names the original draws take the real players of their teams."""
         setup = new_game_setup(self.rnd, self.pool, own_names, opponent_names)
@@ -316,7 +313,7 @@ class Game(Speakers):
                 setup.rosters[side] = roster
                 changed.append(side)
         if changed:
-            setup.banter_names = [name for side in (1, 2) for name in (setup.rosters[side].running_backs + setup.rosters[side].receivers
+            setup.player_names = [name for side in (1, 2) for name in (setup.rosters[side].running_backs + setup.rosters[side].receivers
                                                                        + setup.rosters[side].defense)]
             debuglog.event("names", "real_rosters", sides=changed, version=real.version)
 

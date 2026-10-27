@@ -87,7 +87,7 @@ def test_the_originals_field_goal_is_unchanged_without_a_time_out(tmp_path):
 
 @pytest.mark.parametrize("seed", [3, 7, 12, 19, 25, 31])
 def test_no_sentence_is_said_twice_in_a_row_in_whole_games(tmp_path, seed):
-    rules = RecordingRules(penalties_on=True, onside_on=True, qb_on=True, challenges_on=True, broadcast_on=True, radio_banter=True)
+    rules = RecordingRules(penalties_on=True, onside_on=True, qb_on=True, challenges_on=True, broadcast_on=True)
     rig, engine, rules, result = sim_game(tmp_path, seed, rules=rules)
     said = [t for t, _, _ in rig.said]
     assert len(said) > 200

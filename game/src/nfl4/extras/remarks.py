@@ -20,10 +20,10 @@ replays it, and never silenced by F8), CHS and CHC (SX.6, the hints after a wron
 Each later session adds its pool to POOLS_BUILT
 and its placeholders to PLACEHOLDERS.
 
-SY.1 (the radio-style broadcast, CLAUDE.md 0.27, playbook 7.19, D-101): BN is the announcer's radio banter, 142 lines that replace Jim Kitchen's
-jokes in the N. F. L. rules mode (game/banter.py draws them by the original's rule through the Rules hook `banter_lines`); ASK is the announcer
-turning to Ghip; CKO CBG CSK CTV CTD CFG CFM CTC CTS CFD CRZ CPN CTM CQE CHT CFN CFT CTT CBO are Ghip's lines, the color commentator, spoken
-in his own voice (extras/broadcast.py). They are drawn with the broadcast's OWN random generator, so the game's draws do not move.
+SY.1 (the radio-style broadcast, CLAUDE.md 0.27, playbook 7.19, D-101): BN is the announcer's radio banter, 142 lines (BC.2, D-180: no
+longer drawn by the original's rule on the game's generator; BC.3 draws them on the broadcast's own); ASK is the announcer turning to the
+analyst; CKO CBG CSK CTV CTD CFG CFM CTC CTS CFD CRZ CPN CTM CQE CHT CFN CFT CTT CBO are the color analyst's lines, spoken in his own voice
+(extras/broadcast.py). They are drawn with the broadcast's OWN random generator, so the game's draws do not move.
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ import re
 from dataclasses import dataclass
 from typing import Mapping
 
-from ..game.banter import NAME_LIST_SIZE, play_line
+from ..game.line_player import PLAYER_NAMES, play_line
 from ..game.banter_markup import NameRef, OneOf, Speak, Text, choice_sizes, parse_markup, to_markup
 from . import commentators, nx_texts
 from .remarks_retired import RETIRED
@@ -41,8 +41,8 @@ from .state import RECENT_REMARKS
 log = logging.getLogger("nfl4.extras")
 
 BROADCAST_POOLS = ("BN", "ASK", "CKO", "CBG", "CSK", "CTV", "CTD", "CFG", "CFM", "CTC", "CTS", "CFD", "CRZ", "CPN", "CTM", "CQE", "CHT",
-                   "CFN", "CFT", "CTT", "CBO")      # SY.1: the radio banter, the announcer's question and Ghip's pools (rule 0.27)
-COLOR_POOLS = tuple(pool for pool in BROADCAST_POOLS if pool not in ("BN", "ASK"))      # said by Ghip's voice
+                   "CFN", "CFT", "CTT", "CBO")      # SY.1: the radio banter, the announcer's question and the analyst's pools (rule 0.27)
+COLOR_POOLS = tuple(pool for pool in BROADCAST_POOLS if pool not in ("BN", "ASK"))      # said by the analyst's voice
 POOLS_BUILT = ("TO", "CHS", "CHC", "RVR", "RVC", "ON", "QB", "PN") + BROADCAST_POOLS     # the pools whose feature exists (SX.2 timeouts, SX.6 replay
 #                                                         challenges, SX.4 onside kicks, SX.5 quarterback runs, SX.3 penalties),
 #                                                         in the order of remarks.txt (design 13)
@@ -57,7 +57,7 @@ PLACEHOLDERS = {"TO": ("<team>", "<coach>", "<quarterback>"),
                 "QB": ("<team>", "<coach>", "<quarterback>"),
                 "PN": ("<team>", "<coach>", "<quarterback>", "<surname>"),
                 "BN": (), "ASK": ()}
-# SY.1: Ghip's pools. <team> the team the line is about, <opponent> the other one, <quarterback> that team's quarterback, <coach> the
+# SY.1: the analyst's pools. <team> the team the line is about, <opponent> the other one, <quarterback> that team's quarterback, <coach> the
 # player's name, <yards> a gain, <situation> a clause with the score, <quarter> "second quarter" and so on
 for _pool, _names in (("CKO", ("<team>", "<opponent>", "<coach>", "<quarterback>")), ("CBG", ("<team>", "<opponent>", "<yards>", "<quarterback>")),
                       ("CSK", ("<team>", "<opponent>", "<quarterback>")), ("CTV", ("<team>", "<opponent>")),
@@ -169,7 +169,7 @@ def legacy_markup(key: str) -> str | None:
 
 
 def commentator_of(game) -> str:
-    """The color commentator's name for this game: the broadcast of the game's rules knows it (extras/broadcast.py); Ghip in a rig without."""
+    """The color analyst's name for this game: the broadcast of the game's rules knows it (extras/broadcast.py); the default in a rig without."""
     for rules in (getattr(getattr(game, "play_engine", None), "rules", None), getattr(game, "rules", None)):    # the game being played first
         name = getattr(getattr(rules, "broadcast", None), "commentator", None)
         if name:
@@ -284,8 +284,8 @@ def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=No
     record.recent[pool] = (recent + [remark.id])[-RECENT_REMARKS:]
     name = ""
     if _has_name(remark.pieces):
-        names = state.banter_names
-        index = rnd(NAME_LIST_SIZE)
+        names = state.player_names
+        index = rnd(PLAYER_NAMES)
         name = names[index - 1] if index <= len(names) else ""
     pieces = _filled(remark.pieces, {"<commentator>": commentator_of(game), **values})
     choices = [rnd(size) for size in choice_sizes(pieces)]
@@ -310,12 +310,11 @@ NOTES = (
     "<coach> is your name and",
     "<quarterback> that team's quarterback (in a QB line the quarterback who runs); in a PN line <surname> is the player the",
     "flag was on.",
-    "The words in square brackets of banter.txt work here too: [sound my laugh.wav], [pause], [bleep], [one of: a | b].",
+    "These words in square brackets work in every line: [sound my laugh.wav], [pause], [bleep], [one of: a | b].",
     "A line has at most 500 characters and 20 parts. The F8 key switches all comments off, these too, except the QB lines:",
     "they are the play by play of a run and stay on; if you switch every QB line off, the original five are used.",
-    "BN are the announcer's radio banter, 142 lines that the N. F. L. rules use instead of the jokes of the original (banter.txt keeps the",
-    "original's lines for the Classic rules). They fit any moment, so they have few <...> words. ASK are the announcer's questions to the color",
-    "commentator, who is called Ghip until you choose another name in F9, Rules, Commentator. <commentator> is that name, in every pool.",
+    "BN are the announcer's radio banter, 142 lines. They fit any moment, so they have few <...> words. ASK are the announcer's questions to",
+    "the color analyst, who is called Gus Delgado until you type another name in F9, Rules, Commentator. <commentator> is that name, in every pool.",
     "The other new pools are the color commentator's, said in a voice of their own: CKO before the opening kick off, CBG after a gain of 20",
     "yards or more, CSK after a sack, CTV after a turn over, CTD after a touch down, CFG after a field goal, CFM after a missed kick, CTC and",
     "CTS after a third down made or stopped, CFD when a team goes for it on fourth down, CRZ inside the twenty, CPN after a penalty, CTM at the",

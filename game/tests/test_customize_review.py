@@ -5,6 +5,8 @@ that replaced a file whose copy could not be made, and a second reset that repla
 smaller faults. Written down before the fixes: a reset never writes unless the copy was made; the copies are three deep; a list
 whose file cannot be read now keeps the values it had; a notice is said once and is true; "no problems" is never said of a file
 that was not read; a sound named in a line cannot hold the game for more than 30 seconds; a name with nothing visible is refused.
+BC.2 (D-180): banter.txt is gone; the findings are tested on the lists in use and the sounds on game/line_player.py, which every
+customizable line with a sound uses.
 """
 import os
 
@@ -14,16 +16,30 @@ from filedamage import holding
 from nfl4.audio.library import SOUND_FILE_NOTICE
 from nfl4.data import customlists as cl
 from nfl4.data.customize import Customization, name_problem
-from nfl4.game.banter import MAX_LINE_SOUND_SECONDS, speak_banter
+from gamerig import Rig
 from nfl4.game.banter_markup import parse_markup
-from nfl4.game.banter_pool import build_pool
-from nfl4.data.customlists import Problems
-from test_banter_custom import make_rig, one_line, pool_of
+from nfl4.game.line_player import MAX_LINE_SOUND_SECONDS, play_line
+from randsources import ScriptedRandom
 from wavmaker import sine, write
 
 
 def make(tmp_path):
     return Customization(str(tmp_path / "customize"))
+
+
+def line_rig(tmp_path):
+    """A rig whose game plays the player's sounds from customize\\sounds (no draws: the lines below have no [name] or [one of:])."""
+    rig = Rig(sounds_dir=tmp_path / "sounds", rng=ScriptedRandom([], strict=True))
+    folder = tmp_path / "customize" / "sounds"
+    os.makedirs(folder, exist_ok=True)
+    rig.game.custom_sounds_dir = str(folder)
+    return rig
+
+
+def play(rig, markup):
+    parsed = parse_markup(markup)
+    assert parsed.pieces is not None, parsed.problems
+    play_line(rig.game, parsed.pieces, "", "", [])
 
 
 def edit(tmp_path, name, old, new):
@@ -74,17 +90,16 @@ def test_the_first_load_with_a_held_file_uses_the_originals_and_says_so(tmp_path
     assert custom.snapshot.notices[0].endswith("The original team names are used this time. ")
 
 
-def test_a_banter_pool_is_kept_too_when_its_file_is_damaged_and_cannot_be_replaced(tmp_path):
+def test_a_list_is_kept_too_when_its_file_is_damaged_and_cannot_be_replaced(tmp_path):
     from filedamage import read_only
     custom = make(tmp_path)
-    with open(tmp_path / "customize" / "banter.txt", "ab") as handle:
-        handle.write(b"B143 = my own line\r\n")
+    edit(tmp_path, "divisions.txt", "D1 = A. F. C. North.", "D1 = The North.")
     custom.reload()
-    assert custom.snapshot.banter.size == 143
-    (tmp_path / "customize" / "banter.txt").write_bytes(b"junk")
-    with read_only(tmp_path / "customize" / "banter.txt"):
+    assert custom.snapshot.division_names[0] == "The North."
+    (tmp_path / "customize" / "divisions.txt").write_bytes(b"junk")
+    with read_only(tmp_path / "customize" / "divisions.txt"):
         custom.reload()
-    assert custom.snapshot.banter.size == 143 and custom.snapshot.kept == {"banter"}
+    assert custom.snapshot.division_names[0] == "The North." and custom.snapshot.kept == {"divisions"}
 
 
 # ----- finding 5: notices said once and true -----
@@ -103,17 +118,17 @@ def test_one_unwritable_file_is_said_once_and_the_others_are_not_blamed(tmp_path
     expected = " The file teams.txt could not be made, so the original team names are used. "
     assert custom.take_notices() == [expected]
     assert custom.take_notices() == []
-    assert sorted(os.listdir(folder)) == sorted(["banter.txt", "divisions.txt", "sounds", "surnames.txt", "teams.txt.tmp"])
+    assert sorted(os.listdir(folder)) == sorted(["divisions.txt", "sounds", "surnames.txt", "teams.txt.tmp"])
 
 
 # ----- finding 6: check never says "no problems" of a file it did not read -----
 
 def test_check_does_not_say_no_problems_of_a_file_it_could_not_read(tmp_path):
     custom = make(tmp_path)
-    with holding(tmp_path / "customize" / "banter.txt"):
+    with holding(tmp_path / "customize" / "divisions.txt"):
         text = custom.check()
-    assert "banter.txt: it could not be read or made, so it was not checked." in text
-    assert "banter.txt: no problems" not in text and "teams.txt: no problems." in text
+    assert "divisions.txt: it could not be read or made, so it was not checked." in text
+    assert "divisions.txt: no problems" not in text and "teams.txt: no problems." in text
 
 
 # ----- finding 10: nothing visible -----
@@ -145,35 +160,29 @@ def test_the_superscript_device_names_are_refused_too(name):
 
 
 def test_a_sound_that_is_a_folder_plays_nothing_and_gives_the_notice(tmp_path):
-    pool = pool_of({n: None for n in range(1, 143)} | {143: "a [sound dir.wav] b"})
-    rig, state = make_rig(tmp_path, [], pool=pool)
+    rig = line_rig(tmp_path)
     os.makedirs(tmp_path / "customize" / "sounds" / "dir.wav")
-    one_line(rig, state, 143)
-    speak_banter(rig.game, state)
+    play(rig, "a [sound dir.wav] b")
     assert [t for t, _, _ in rig.said] == ["a", "b"] and rig.audio.library.take_notices() == [SOUND_FILE_NOTICE]
 
 
 # ----- finding 9: the sounds of one line stop at 30 seconds -----
 
 def test_the_sounds_of_one_line_together_are_cut_at_thirty_seconds(tmp_path):
-    pool = pool_of({n: None for n in range(1, 143)} | {143: "[sound long.wav] [sound long.wav] [sound long.wav] end"})
-    rig, state = make_rig(tmp_path, [], pool=pool)
+    rig = line_rig(tmp_path)
     write(tmp_path / "customize" / "sounds" / "long.wav", sine(220, 20.0, 8000), rate=8000)
-    one_line(rig, state, 143)
     before = rig.clock()
-    speak_banter(rig.game, state)
+    play(rig, "[sound long.wav] [sound long.wav] [sound long.wav] end")
     waited = rig.clock() - before
     assert MAX_LINE_SOUND_SECONDS <= waited < MAX_LINE_SOUND_SECONDS + 1.0       # 20 s + the 10 s that are left, then the text
     assert [t for t, _, _ in rig.said] == ["end"]
 
 
 def test_a_second_sound_after_the_limit_is_skipped(tmp_path):
-    pool = pool_of({n: None for n in range(1, 143)} | {143: "[sound long.wav] [sound long.wav] [sound short.wav] [sound short.wav] end"})
-    rig, state = make_rig(tmp_path, [], pool=pool)
+    rig = line_rig(tmp_path)
     write(tmp_path / "customize" / "sounds" / "long.wav", sine(220, 20.0, 8000), rate=8000)
     write(tmp_path / "customize" / "sounds" / "short.wav", sine(220, 1.0, 8000), rate=8000)
-    one_line(rig, state, 143)
-    speak_banter(rig.game, state)
+    play(rig, "[sound long.wav] [sound long.wav] [sound short.wav] [sound short.wav] end")
     played = [e for e in rig.slot_log if e.action == "play" and e.source == "player"]
     assert [e.sound_id for e in played] == ["file long.wav", "file long.wav"]           # the short ones came after the 30 seconds
 
@@ -186,10 +195,10 @@ def test_reset_one_also_says_what_the_reload_healed(tmp_path):
     rig.custom = Customization(str(tmp_path / "customize"))
     rig.game.customization = rig.custom
     rig.game.apply_customization()
-    (tmp_path / "customize" / "banter.txt").write_bytes(b"junk")
+    (tmp_path / "customize" / "divisions.txt").write_bytes(b"junk")
     rig.keys.answers = [DOWN, DOWN, ENTER, DOWN, DOWN, DOWN, ENTER, ENTER, ESC, ESC, ESC]
     rig.game.functions.run()
     spoken = said(rig)
     assert any("Team names" in s for s in spoken)
     healed = [s for s in spoken if s.startswith("teams.txt is back to the original")]
-    assert healed and "The file banter.txt was damaged and has been reset" in healed[0]
+    assert healed and "The file divisions.txt was damaged and has been reset" in healed[0]

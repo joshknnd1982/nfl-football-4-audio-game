@@ -143,7 +143,7 @@ def test_placeholders_a_name_and_choices_are_filled_with_their_draws_in_line_ord
     RM.say_remark(rig.game, rig.engine.s, rig.engine.s.extras, "TO", {"<team>": "Jets", "<coach>": "Kim",
                                                                         "<quarterback>": "Unitas"})
     assert rig.rnd.trace == [1, 58, 2]
-    name = rig.engine.s.banter_names[2]
+    name = rig.engine.s.player_names[2]
     assert [t for t, _, _ in rig.said] == ["Jets called it, %s frowns, says Kim" % name]
 
 
@@ -204,7 +204,7 @@ def test_reset_of_one_list_offers_remarks_only_with_the_nfl_rules_and_keeps_the_
     write(folder, "TO01 = mine\n")
     classic = Customization(folder)
     assert "remarks" not in [spec.key for spec in classic.specs]
-    assert classic.reset(None).done == ["teams.txt", "divisions.txt", "surnames.txt", "banter.txt"]
+    assert classic.reset(None).done == ["teams.txt", "divisions.txt", "surnames.txt"]      # BC.2: no banter.txt
     assert "mine" in open(os.path.join(folder, "remarks.txt"), encoding="utf-8").read()
     custom = Customization(folder, extras=True)
     result = custom.reset("remarks")
