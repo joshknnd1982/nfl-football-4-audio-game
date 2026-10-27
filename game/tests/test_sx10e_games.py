@@ -149,7 +149,8 @@ def test_the_nfl_rules_ask_the_chart_only_in_a_game_that_plays_the_catalog(tmp_p
     rig = nflrig.nfl_engine_rig(tmp_path / "team", rules=NflRules(offense_book="team", defense_book="team", playbooks_on=True))
     s = rig.engine.s
     s.wisoff, s.defense, s.quarter = 2, 1, 5
-    s.stats[2].score, s.stats[1].score = 13, 21                 # behind by 8 after the touchdown: the chart says two, no draw
+    s.stats[2].score, s.stats[1].score = 11, 21                 # behind by 10 after the touchdown: the chart says two, no draw (D-175:
+    #                                                             behind by 8 the league's coaches kick)
     rig.rules.books.resolve(rig.game, s)
     assert rig.rules.computer_goes_for_two(s) is True
 

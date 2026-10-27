@@ -2,7 +2,8 @@
 
 * `SimEngine`: the play engine with BOTH sides played by the computer (the calibration of NFL_EXTRAS_DESIGN 5.7): the
   player's side calls the toss, receives, returns kick-offs 1 time in 2, kicks the extra point, chooses its offense with the
-  computer's draw of 5.7 and a mirrored fourth-down and last-play rule, and its defense with Int(Rnd * 6) + 1; its timeouts
+  computer's draw of 5.7 and a mirrored fourth-down and last-play rule (the fourth quarter's fourth down: the computer's chart, hook H25,
+  D-175), and its defense with Int(Rnd * 6) + 1; its timeouts
   are the computer's rules (NflRules with auto_sides (1, 2)).
 * `RecordingRules`: NflRules that records every timeout, warning and period end with the clock, for the property tests;
   penalties off unless asked (SX.3: `penalties_on=True`; the flow's `events` list every flag).
@@ -172,10 +173,14 @@ class SimEngine(PlayEngine):
         elif s.down >= 4:
             s.offense_play = 6 if s.half == 1 and s.yard_line < 41 else 7
             choice = self.rules.overtime_fourth_down(s) if s.quarter >= 5 else None     # SX.12: as the computer's rule (pag.py)
+            if s.quarter == 4:
+                choice = self.rules.late_fourth_down(s)        # D-175: the fourth quarter's coaches' chart, as the computer's (pag.py)
             if choice == "go":
                 s.offense_play = self.rnd(4)
             elif choice == "kick":
                 s.offense_play = 6
+            elif choice == "punt":
+                s.offense_play = 7
             elif self.rnd(9) == 7:
                 s.offense_play = self.rnd(4)
         self.rules.computer_offense(s)             # SX.5: the computer's sneaks, keepers and draws (no draw in Classic)

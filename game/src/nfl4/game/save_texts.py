@@ -90,6 +90,17 @@ DELETE_QUESTION_FRANCHISE_N = " Delete franchise %d, the %s? It is kept in the b
 FRANCHISE_RESTORED_TO = " The franchise was restored as franchise %d. You can continue it now. "
 EVERY_FRANCHISE_FULL = " You have three franchises, so the deleted one was not restored. Delete one first; the deleted one stays in the backup. "
 
+# ----- D-176 (a tester of 0.16.6: the backup could be reached only at the start, with a franchise going): a deleted franchise can be restored
+# from the new-game question at the start and from F9, Franchise, while playing -----
+RESTORE_A_FRANCHISE = "restore a deleted franchise"
+WHICH_FRANCHISE_RESTORE = " Which deleted franchise do you want to restore? "
+FRANCHISE_RESTORED_PLAY_NOW = " The franchise was restored as franchise %d. Press Enter to play it now, or Escape to stay. "
+FRANCHISE_RESTORED_NEXT_START = (" The franchise was restored as franchise %d. To play it, choose it in the start-up menu the next time you start "
+                                 "the game. ")
+# said before the start-up menu's question when nothing is saved and the menu is there only for the backup (the tester heard only "start a new
+# game" and found no restore: rule 0.28 (2), a menu that holds more than it speaks says which key opens the rest)
+BACKUP_ONLY = " Nothing is saved now, but the backup keeps what you deleted. Press Down for the restore item. "
+
 # ----- a new game (NX-S7) -----
 NEW_KIND_QUESTION = " What kind of game do you want to start? "
 NEW_SEASON = "a new season"

@@ -157,6 +157,11 @@ Added in PX SX.12 (the 2026 overtime, Rule 16, D-096), each the original's answe
     H22 game_over_lines(state)             said after " THE GAME IS OVER" (the tie)            no lines
     H10 between_plays -> OVERTIME_OVER     the game was decided between two plays (the kickers  never returned
                                            kept their kick after their score, 16-1-5 (c))
+
+Added in P8 (the late-game calibration, D-175, Q-037), the original's answer in Classic:
+    H25 late_fourth_down(state)            the computer's fourth down in the fourth quarter:   None (the original's rule,
+                                           "go", "kick" (a field goal) or "punt" (a game that  its draws unchanged)
+                                           plays the catalog: calling.fourth_down_call)
 """
 from __future__ import annotations
 
@@ -403,6 +408,9 @@ class ClassicRules:
         return None
 
     def overtime_fourth_down(self, state) -> str | None:
+        return None
+
+    def late_fourth_down(self, state) -> str | None:
         return None
 
     def game_over_lines(self, state) -> list[str]:

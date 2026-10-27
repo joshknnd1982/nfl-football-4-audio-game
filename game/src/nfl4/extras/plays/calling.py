@@ -102,11 +102,29 @@ HAIL_MARY_REACH = 62                # a field goal longer than this on the last 
 LATERALS_FROM = 75                  # the last play of the game, behind by 8 or less, this far from the goal: the laterals
 # the two-point chart: fourth quarter, the margin after the touchdown's six points, before the try (positive: ahead). Laura Albert,
 # Punk Rock Operations Research, 6 February 2024, tables 1 and 2 (SRC-SECONDARY): go for two behind by 10, 8, 5, 2 or 1 and ahead by
-# 1, 2, 4, 5 or 7; kick tied, behind by 3, 4 or 6, ahead by 3 or 6 (a margin it does not name: the kick)
-TWO_POINT_CHART = frozenset((-10, -8, -5, -2, -1, 1, 2, 4, 5, 7))
+# 1, 2, 4, 5 or 7; kick tied, behind by 3, 4 or 6, ahead by 3 or 6 (a margin it does not name: the kick). D-175 (Q-037): where the
+# league's coaches are measured, the chart is what they do: behind by 1 they kick to tie (13.8 percent went for two in the fourth quarters
+# of 2021 to 2025, nflverse via vertizesports.com; 34 percent in the last two minutes, CBS 2025) and behind by 8 they kick (37.3 percent
+# went for two, 28 of 75); behind by 2 they all go (49 of 49). SRC-SECONDARY; work/late_1026/nfl_late_game_research.md
+TWO_POINT_CHART = frozenset((-10, -5, -2, 1, 2, 4, 5, 7))
+# in overtime the paper's chart as SX.12 measured it: the coaches' figures above are the fourth quarter's, and with the kick that ties the
+# 10-minute period often ran out tied (10,000 games: 14.0 percent of overtime games ended tied, the league 5.9 in 2017 to 2024; D-175)
+TWO_POINT_CHART_OVERTIME = frozenset((-10, -8, -5, -2, -1, 1, 2, 4, 5, 7))
 TWO_POINT_EARLY = 300              # per 10,000 touchdowns before the chart's time (UNVERIFIED; calibrated so all touchdowns give about
 #                                     the league's 9.8 percent, model_data.TWO_POINT_TRY_SHARE)
 CHART_SECONDS = 600                 # the chart rules the last ten minutes (the paper's last six possessions or so; UNVERIFIED reading)
+# the fourth quarter's fourth down (D-175, Q-037; `fourth_down_call`). The yards are to the goal line (a kick of to_goal + 17 yards);
+# the seconds are the fourth quarter's. Values: see D-175 and work/late_1026/nfl_late_game_research.md
+KICK_REACH = 37                     # the field goal in the ordinary choice: at most a 54-yard kick (model_data.FIELD_GOAL 50-54: 73.3)
+LAST_KICK_REACH = 40                # the late kick that ties or wins: at most a 57-yard kick (55-59: 67.9)
+LATE_BEHIND_SECONDS = 300           # behind in the last five minutes: the late rules
+ALL_IN_SECONDS = 180                # behind in the last three minutes: never the punt
+TWO_SCORES_SECONDS = 480            # two scores behind in the last eight minutes: no punt in the other half
+TWO_SCORE_KICK_SECONDS = 60         # two scores behind late: the field goal that makes it one score while a minute is left
+GO_ZONE = 50                        # behind late: from the other half the offense goes for it
+SHORT_GO = 1                        # fourth and this many or fewer: short
+GOAL_TO_GO_GO = 3                   # fourth and short this close to the goal, tied or behind: go for the touchdown
+HALF_FIELD = 50                     # fourth and short in the other half: go for it (the ordinary choice)
 
 
 class Situation(NamedTuple):
@@ -316,9 +334,48 @@ def last_play_call(quarter: int, lead: int, to_goal: int, kick_chosen: bool) -> 
     return ""
 
 
+def fourth_down_call(left: int, lead: int, to_goal: int, to_go: int) -> str:
+    """D-175 (Q-037): the computer's fourth down in the fourth quarter, as the league's coaches decide it (a rule, no draw): "go", "kick"
+    (a field goal) or "punt". `left` is the seconds left, `lead` the offense's own lead, `to_goal` the yards to the goal line, `to_go`
+    the yards to gain. Behind late it never gives the ball away while a score can still help: a field goal that ties or wins is kicked
+    within LAST_KICK_REACH, a team that needs a touchdown goes for it, a team two scores behind kicks the field goal that makes it one
+    score. Otherwise the ordinary choice: the kick within KICK_REACH, fourth and short in the other half goes for it, else the punt."""
+    if lead < 0 and left <= LATE_BEHIND_SECONDS:
+        if lead >= -3:                                          # a field goal ties or wins
+            if to_goal <= LAST_KICK_REACH:
+                return "kick"
+            if left <= ALL_IN_SECONDS or to_goal <= GO_ZONE or to_go <= SHORT_GO:
+                return "go"
+            return "punt"
+        if lead >= -8:                                          # a touchdown is needed
+            if left > ALL_IN_SECONDS and lead >= -6 and to_go > SHORT_GO and to_goal <= KICK_REACH:
+                return "kick"                                   # the field goal makes it a one-point to three-point game
+            if left <= ALL_IN_SECONDS or to_goal <= GO_ZONE or to_go <= SHORT_GO:
+                return "go"
+            return "punt"
+        if lead >= -11 and to_goal <= KICK_REACH and left >= TWO_SCORE_KICK_SECONDS:
+            return "kick"                                       # two scores behind: the kick makes it one score
+        if left <= ALL_IN_SECONDS or to_goal <= GO_ZONE:
+            return "go"
+        return "punt"
+    if lead < -8 and left <= TWO_SCORES_SECONDS:
+        if to_goal <= KICK_REACH and lead >= -11:
+            return "kick"
+        if to_goal <= GO_ZONE or to_go <= SHORT_GO:
+            return "go"
+        return "punt"
+    if to_goal <= KICK_REACH:
+        return "go" if to_go <= SHORT_GO and to_goal <= GOAL_TO_GO_GO and lead <= 0 else "kick"
+    if to_go <= SHORT_GO and to_goal <= HALF_FIELD:
+        return "go"
+    return "punt"
+
+
 def goes_for_two(quarter: int, margin: int, rnd, left: int = 0) -> bool:
     """G26-10: after a touchdown (the margin counts its six points), the chart in the last CHART_SECONDS of the fourth quarter and in
     overtime (no draw); earlier one draw against TWO_POINT_EARLY."""
-    if quarter >= 5 or (quarter == 4 and left <= CHART_SECONDS):
+    if quarter >= 5:
+        return margin in TWO_POINT_CHART_OVERTIME
+    if quarter == 4 and left <= CHART_SECONDS:
         return margin in TWO_POINT_CHART
     return rnd.below(10000) < TWO_POINT_EARLY

@@ -92,6 +92,10 @@ game that plays the catalog (the player uses a playbook; the team's playbook is 
     H21 computer_goes_for_two   after the computer's touchdown its two-point chart (G26-10); the engine's `computer_try_choice`
     H3  menu_action       Enter on a family of the player's menus is the playbook's pick with the same weights (`PlaybookFlow.pick`)
 
+P8, the late-game calibration (D-175, Q-037), in a game that plays the catalog:
+    H25 late_fourth_down  the computer's fourth down in the fourth quarter by the coaches' chart (calling.fourth_down_call: the side's own lead,
+                          the time and the field; no draw); its two-point chart kicks behind by 1 or 8 in the fourth quarter (overtime keeps SX.12's)
+
 One NflRules object is made per game (`for_game`); the program keeps a configured one as Game.rules.
 """
 from __future__ import annotations
@@ -125,7 +129,7 @@ from .penalty_flow import PenaltyFlow, clock_after_foul
 from .playbook_flow import PlaybookFlow
 from .plays import calling, descriptions
 from .plays import play_menus as PM
-from .qb_runs import QbFlow
+from .qb_runs import QbFlow, to_goal
 from .review import CHALLENGE, CHALLENGE_ACTION, ReviewFlow, capture
 from .state import ExtrasRecord
 
@@ -930,6 +934,18 @@ class NflRules(ClassicRules):
         if behind <= 3 and state.half != own_half(state.wisoff) and state.yard_line < 41:
             return "kick"
         return "go"
+
+    def late_fourth_down(self, state) -> str | None:
+        """H25 (D-175, Q-037): the computer's fourth down in the fourth quarter of a game that plays the catalog, by the coaches' chart of
+        calling.fourth_down_call (the offense's own lead, the time and the field; no draw). A side that plays the original's plays keeps
+        the original's rule (None)."""
+        if not self.books.catalog_side(state, state.wisoff, "O"):
+            return None
+        lead = state.score(state.wisoff) - state.score(other(state.wisoff))
+        call = calling.fourth_down_call(state.extras.left, lead, to_goal(state), state.to_go)
+        debuglog.event("extras", "computer_fourth_down", side=state.wisoff, lead=lead, left=state.extras.left, to_goal=to_goal(state),
+                       to_go=state.to_go, call=call)
+        return call
 
     def game_over_lines(self, state) -> list[str]:
         if state.quarter >= 5 and state.score(1) == state.score(2):

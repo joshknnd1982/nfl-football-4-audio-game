@@ -797,6 +797,13 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         if s.half == 2 and s.yard_line < 41:
             s.offense_play = 6
         lead = s.score(1) - s.score(2)
+        if s.quarter == 4:
+            choice = self.rules.late_fourth_down(s)        # H25 (D-175): the N. F. L. rules' fourth quarter (Classic: None, no draw)
+            if choice == "go":
+                return self._go_for_it()
+            if choice in ("kick", "punt"):
+                s.offense_play = 6 if choice == "kick" else 7
+                return self.snap
         if s.quarter not in (2, 4, 5):                     # quarters 1 and 3
             if s.half == 1 and s.yard_line < 40:
                 return self.snap

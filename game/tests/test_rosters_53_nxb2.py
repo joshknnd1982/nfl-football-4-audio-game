@@ -25,7 +25,7 @@ def fresh_defaults():
 
 def test_the_shipped_file_is_the_53_man_rosters_of_2026_10_24():
     real = R.defaults()
-    assert "VERSION = season 2026, as of 2026-10-25" in R.shipped_text(R.ROSTERS)     # SR.2: the real rosters of 2026-10-25        # (RealNames.version is coaches.txt's: the coaches of 2026-10-22)
+    assert "VERSION = season 2026, as of 2026-10-26" in R.shipped_text(R.ROSTERS)     # D-177: the real rosters of 2026-10-26 (SR.2's of 2026-10-25)        # (RealNames.version is coaches.txt's: the coaches of 2026-10-22)
     for team in range(1, 33):
         active, squad = real.active(team), real.squad(team)
         playing = [p for p in active if p.pos != "RET"]
@@ -82,7 +82,7 @@ def test_an_older_shipped_copy_is_refreshed_once_and_kept_aside(tmp_path, monkey
     assert C.refresh_old_rosters(str(tmp_path)) == "refreshed"
     assert C.refresh_old_rosters(str(tmp_path)) == ""                  # once
     now = (tmp_path / "rosters.txt").read_text(encoding="utf-8")
-    assert "as of 2026-10-25" in now and " = PS " in now
+    assert "as of 2026-10-26" in now and " = PS " in now          # D-177: the shipped file of 2026-10-26
     assert (tmp_path / ("rosters.txt" + C.ROSTERS_BEFORE_REFRESH)).read_text(encoding="utf-8").replace("\r\n", "\n") == old
 
 

@@ -130,7 +130,8 @@ def short_game(entry, with_slot: bool = True) -> str:
 
 
 def _record_words(wins: int, losses: int) -> str:
-    return S.WINS_AND_LOSSES % (wins, _plural(wins), losses, _plural(losses))
+    """"1 win and 2 losses" (D-176: "losses" was said "losss", one "s" added to "loss")."""
+    return S.WINS_AND_LOSSES % (wins, _plural(wins), losses, "" if losses == 1 else "es")
 
 
 def season_sentence(coach: str, team: str, gtp: int, wins: int, losses: int) -> str:

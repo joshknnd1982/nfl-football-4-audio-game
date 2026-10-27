@@ -35,6 +35,7 @@ from typing import Mapping
 from ..game.banter import NAME_LIST_SIZE, play_line
 from ..game.banter_markup import NameRef, OneOf, Speak, Text, choice_sizes, parse_markup, to_markup
 from . import commentators, nx_texts
+from .remarks_retired import RETIRED
 from .state import RECENT_REMARKS
 
 log = logging.getLogger("nfl4.extras")
@@ -347,6 +348,8 @@ def overrides_of(entries, problems) -> dict[str, str | None]:
             overrides[key] = None
         elif entry.value == "":
             problems.add(key, "the line has no text (write off to switch a line off), the original is used")
+        elif entry.value.strip() in RETIRED.get(key, ()):
+            continue          # RS.1 (D-179): an unchanged default of an earlier build, not the player's line: the new default is used
         else:
             overrides[key] = entry.value
     return overrides

@@ -198,6 +198,7 @@ OLD_SHIPPED_ROSTERS = {
     "e77caff85373148b9fe39fc9951b59d5ef6661ef49208d94ac937572fd273960",     # 0.14.0: as of 2026-10-24, format 1 (NX-B2; missed in 0.15.0, added in SR.2)
     "4ea4f247acd43e6698ea3cab300dcca8039d65e912a19b4b009020ab1732edc4",     # 0.15.0 to 0.16.1: as of 2026-10-24, format 1 with NX-D1's positions
     "10ce66ecfcf0de6766092d88e5bd5b042ab80c355f6cce625ecfc457f44d57a3",     # 0.16.2: as of 2026-10-25, layout 2 without ages (SR.7 adds them, D-167)
+    "1ce8a093c45f139b2df35c190d92d1816aba61dea496dea022618651cb51c4ed",     # 0.16.3 to 0.16.6: as of 2026-10-25 with ages (D-177: the starters audit)
 }
 ROSTERS_BEFORE_REFRESH = ".before-layout-2"    # SR.2: the copy of the player's old file when the layout-2 rosters replace it (was .before-2026-10-24)
 
@@ -207,6 +208,7 @@ OLD_SHIPPED_FREE_AGENTS = {
     "016328cf7ab998d2fe3f8763756871b03e02fcd196942d6e758c0da741ba892d",     # 0.14.0 to 0.16.1: as of 2026-10-24 (NX-B3)
     "48b1300b1a6c8b3b08134af599c73e3adc53d2a9025d9aa4b272d86225ca9304",     # 0.16.2 to 0.16.4: as of 2026-10-25, 170 men (D-169 adds the whole pool)
     "d44f6dd5f1c63fa74819cd551ceb5a1f8f68574dbbbb970b13875f75567f68fa",     # 0.16.5: 771 men (D-172 adds the men out a season who are still in the news)
+    "94aae97409bbf27e44177d4b82714b5a4dc53b316a06d555f681383f9d42ec0a",     # 0.16.6: 836 men as of 2026-10-25 (D-177: the file of 2026-10-26)
 }
 
 

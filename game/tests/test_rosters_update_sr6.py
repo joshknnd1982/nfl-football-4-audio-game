@@ -124,7 +124,7 @@ def test_versions_compare_by_their_dates_and_are_said_as_dates():
     assert RU.newer(NEW, "season 2026, as of 2026-10-25") and not RU.newer("season 2026, as of 2026-10-25", NEW)
     assert not RU.newer(NEW, NEW) and RU.spoken_date(NEW) == NEW_SPOKEN
     assert RU.date_of("as of 2027-01-05") == "2027-01-05" and RU.spoken_date("my own rosters") == "my own rosters"
-    assert R.defaults().roster_version == RF.text_version(shipped()) == "season 2026, as of 2026-10-25"
+    assert R.defaults().roster_version == RF.text_version(shipped()) == "season 2026, as of 2026-10-26"      # D-177: the file of the audit
 
 
 def test_the_shipped_files_pass_the_downloads_own_checks():
@@ -147,9 +147,9 @@ def test_newer_rosters_are_checked_saved_with_a_copy_of_the_old_and_read_at_once
 
 def test_the_same_or_an_older_version_changes_nothing(game, folder):
     before = read(folder / "rosters.txt")
-    for version in ("season 2026, as of 2026-10-25", "season 2026, as of 2026-09-01"):
+    for version in ("season 2026, as of 2026-10-26", "season 2026, as of 2026-09-01"):
         text = RF.run(game, Speech(), Keys(), None, fetch=Net({"rosters.txt": body(with_version(shipped(), version))}))
-        assert text == X.text("NXZ-U04", label="October 25, 2026")
+        assert text == X.text("NXZ-U04", label="October 26, 2026")
     assert read(folder / "rosters.txt") == before and game.applied == 0
     assert not [n for n in os.listdir(folder) if ".before-" in n and "layout" not in n]
 
@@ -157,7 +157,7 @@ def test_the_same_or_an_older_version_changes_nothing(game, folder):
 def test_the_repository_without_a_rosters_folder_says_you_have_the_newest(game, folder):
     net = Net()
     text = RF.run(game, Speech(), Keys(), None, fetch=net)
-    assert text == X.text("NXZ-U04", label="October 25, 2026") and net.asked == [RF.url_of("rosters.txt")]
+    assert text == X.text("NXZ-U04", label="October 26, 2026") and net.asked == [RF.url_of("rosters.txt")]
 
 
 @pytest.mark.parametrize("damage", ["parse", "check", "team", "header", "free"])
@@ -255,7 +255,7 @@ def test_f9_customize_has_the_item_with_the_nfl_rules_and_it_asks_github(tmp_pat
     rig.game.functions.run()
     spoken = said(rig)
     assert "Customize. 6 items. Press F1 for help. " in spoken[3] and X.text("NXZ-U01") + "." in spoken
-    assert asked == [RF.url_of("rosters.txt")] and X.text("NXZ-U04", label="October 25, 2026") in spoken
+    assert asked == [RF.url_of("rosters.txt")] and X.text("NXZ-U04", label="October 26, 2026") in spoken
     rig = program_rig(tmp_path / "classic", [], preset=preset_season())
     rig.game.customization = Customization(str(tmp_path / "classic" / "customize"))       # Classic: the five items of the original's files
     rig.keys.answers = [DOWN, DOWN, ENTER, ESC, ESC]

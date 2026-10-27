@@ -211,11 +211,11 @@ def test_the_last_play_of_a_half_is_the_hail_mary_or_the_laterals_when_only_a_to
 def test_the_two_point_chart_in_the_last_ten_minutes_has_no_draw(margin):
     rnd = ScriptedRandom([], strict=True)
     assert K.goes_for_two(4, margin, rnd, left=K.CHART_SECONDS) == (margin in K.TWO_POINT_CHART)
-    assert K.goes_for_two(5, margin, rnd, left=900) == (margin in K.TWO_POINT_CHART)
+    assert K.goes_for_two(5, margin, rnd, left=900) == (margin in K.TWO_POINT_CHART_OVERTIME)       # D-175: overtime keeps SX.12's chart
 
 
 def test_the_chart_is_the_papers_and_earlier_one_draw_decides():
-    assert K.TWO_POINT_CHART == frozenset((-10, -8, -5, -2, -1, 1, 2, 4, 5, 7))
+    assert K.TWO_POINT_CHART == frozenset((-10, -5, -2, 1, 2, 4, 5, 7))   # D-175: behind by 1 or 8 the league's coaches kick
     yes = ScriptedRandom([("below", 10000, K.TWO_POINT_EARLY - 1)], strict=True)
     no = ScriptedRandom([("below", 10000, K.TWO_POINT_EARLY)], strict=True)
     assert K.goes_for_two(2, -8, yes) is True and K.goes_for_two(4, -8, no, left=K.CHART_SECONDS + 1) is False

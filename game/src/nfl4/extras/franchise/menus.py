@@ -309,6 +309,35 @@ def franchise_menu(g, speech, keys) -> None:
         from . import rosters_flow
         return rosters_flow.run(g, speech, keys, store if store.exists else None)
 
+    # ----- D-176: a deleted franchise restored while playing (the start-up menu has the same) -----
+
+    def restore_menu():
+        from ...game import save_texts as S
+        from . import kept
+        copies = kept.kept(g)
+        if not copies:
+            return words.NOTHING_CHANGED
+        labels = [kept.label(g, slot, number) for slot, number in copies]
+        chosen = ListPicker(speech, keys, S.RESTORE_A_FRANCHISE, len(labels), lambda i: labels[i]).run()
+        if chosen is None:
+            return words.NOTHING_CHANGED
+        result, target = kept.restore(g, *copies[chosen])
+        if result == kept.FULL:
+            return S.EVERY_FRANCHISE_FULL.strip()
+        if result != kept.OK:
+            return S.COULD_NOT_RESTORE.strip()
+        if in_use:                                   # a franchise is being played: the restored one waits for the next start
+            return S.FRANCHISE_RESTORED_NEXT_START.strip() % target
+        speech.stop()
+        speech.say_async(S.FRANCHISE_RESTORED_PLAY_NOW % target)
+        if keys.read_key() != KEY_ENTER:
+            return words.NOTHING_CHANGED
+        if target != g.franchise_slot:
+            g.select_franchise_slot(target)
+        mode.set_kind(g, "franchise")
+        g.program.request_switch("franchise")
+        raise _Closed()
+
     # ----- between the kinds of season (design 3.5) -----
 
     def confirmed(text_id: str) -> bool:
@@ -345,6 +374,10 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(lambda: X.text("NXF-14"), enter=history_menu)]
     else:
         items = [Item(lambda: X.text("NXF-19"), enter=ask_switch("franchise", "NXF-27"))]
+    from . import kept
+    if kept.kept(g):                                                          # D-176: only while a kept copy is there
+        from ...game import save_texts as S
+        items.append(Item(lambda: S.RESTORE_A_FRANCHISE, enter=restore_menu))
     items.append(Item(lambda: X.text("NXF-48"), enter=latest_calendar))      # D-128: the last item in every case (only when the player asks)
     items.append(Item(lambda: X.text("NXZ-U01"), enter=latest_rosters))     # SR.6 (NX-L9): the newest real rosters, only when the player asks
     try:

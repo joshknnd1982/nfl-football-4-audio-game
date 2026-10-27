@@ -37,7 +37,7 @@ def test_the_shipped_list_is_the_real_free_agents_of_2026_10_24_and_none_of_them
     real = R.defaults()
     agents = [agent for _ident, agent in real.free_agents]
     assert len(agents) >= 100
-    assert "VERSION = season 2026, as of 2026-10-25" in R.shipped_text(R.FREE_AGENTS)     # SR.2: refreshed
+    assert "VERSION = season 2026, as of 2026-10-26" in R.shipped_text(R.FREE_AGENTS)     # SR.2: refreshed; D-177: 2026-10-26
     on_teams = {p.name.casefold() for team in range(1, 33) for p in real.rosters[team - 1]}
     assert not [a.name for a in agents if a.name.casefold() in on_teams]
     assert all(R.name_problem(a.name) is None and a.pos in R.POSITIONS and a.pos != "RET" for a in agents)

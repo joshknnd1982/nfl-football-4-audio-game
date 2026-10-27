@@ -222,14 +222,15 @@ class StartupMenu:
 
     def run(self) -> str:
         """Ask until the player moves on. Returns GO. Nothing is asked when nothing is saved (the program starts as it always did); a kept copy of a
-        franchise counts as saved (D-173: a franchise deleted at one start could not be restored at the next, the menu was never shown)."""
+        franchise counts as saved (D-173: a franchise deleted at one start could not be restored at the next, the menu was never shown), and so
+        does every other thing the player deleted (D-176, a tester of 0.16.6: a backup must always be reachable; a deleted saved game or season
+        alone never brought the menu back)."""
         while True:
             facts = self.gather()
-            kept_franchise = any(kind == "franchise" for kind, _owner in facts.restorable)
-            if not facts.live and not kept_franchise and not (self.acted and facts.restorable):
+            if not facts.live and not facts.restorable:
                 return GO
             items = self.items(facts)
-            situation = self.sentences(facts) + [S.MENU_PROMPT]
+            situation = self.sentences(facts) + ([S.BACKUP_ONLY] if not facts.live else []) + [S.MENU_PROMPT]     # D-176
             debuglog.event("save", "startup_menu", games=[(o, e.name, e.status) for o, e in facts.games], season=facts.season is not None,
                            franchise=facts.franchise, franchises=[slot for slot, _s, _t in facts.franchises],
                            kept=[owner for kind, owner in facts.restorable if kind == "franchise"], items=[label for label, _ in items])
@@ -363,6 +364,14 @@ class StartupMenu:
         self.acted = True
         return AGAIN
 
+    def _restore_which_franchise(self, kept: list) -> None:
+        """D-176: the kept copies of every franchise slot, each named by its team and season, then go back; the one chosen is restored."""
+        labels = [self._restore_label("franchise", owner) for owner in kept]
+        answer = FranchiseQuestion(self.g, S.WHICH_FRANCHISE_RESTORE, labels + [S.LIST_BACK], escape_value=-1).ask()
+        if answer in (-1, len(labels)):
+            return
+        self._restore_franchise(*kept[answer])
+
     def _restore_franchise(self, slot: int, number: int) -> None:
         """D-173: the kept copy goes back to its own slot when that is empty, else to the first empty slot; with three franchises nothing moves."""
         g = self.g
@@ -387,12 +396,19 @@ class StartupMenu:
         kinds = [("season", S.NEW_SEASON)]
         if is_nfl(g.rules) and self._franchise_store() is not None:
             kinds.append(("franchise", S.NEW_FRANCHISE))
-        last = 1 if g.options.settings.game.nx_season_kind == "franchise" and len(kinds) > 1 else 0
+        kept = [owner for kind, owner in facts.restorable if kind == "franchise"]
+        if kept:                                           # D-176: a deleted franchise can be brought back from the new-game question too
+            kinds.append(("restore", S.RESTORE_A_FRANCHISE))
+        last = 1 if g.options.settings.game.nx_season_kind == "franchise" and len(kinds) > 1 and kinds[1][0] == "franchise" else 0
         if len(kinds) > 1:
             answer = FranchiseQuestion(g, S.NEW_KIND_QUESTION, [label for _kind, label in kinds], start=last).ask()
         else:
             answer = 0
         kind = kinds[answer][0]
+        if kind == "restore":
+            self._restore_which_franchise(kept)
+            self.acted = True
+            return False
         if kind == "season":
             peek = facts.season
             if peek is not None:

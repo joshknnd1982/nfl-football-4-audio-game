@@ -134,22 +134,26 @@ def test_the_refresh_adds_the_pool_after_the_old_ids_and_writes_the_new_header()
 def test_a_players_copy_of_the_older_shipped_list_is_refreshed():
     assert "48b1300b1a6c8b3b08134af599c73e3adc53d2a9025d9aa4b272d86225ca9304" in customize.OLD_SHIPPED_FREE_AGENTS     # 0.16.2 to 0.16.4
     assert "d44f6dd5f1c63fa74819cd551ceb5a1f8f68574dbbbb970b13875f75567f68fa" in customize.OLD_SHIPPED_FREE_AGENTS     # 0.16.5
+    assert "94aae97409bbf27e44177d4b82714b5a4dc53b316a06d555f681383f9d42ec0a" in customize.OLD_SHIPPED_FREE_AGENTS     # 0.16.6 (D-177)
+    assert "1ce8a093c45f139b2df35c190d92d1816aba61dea496dea022618651cb51c4ed" in customize.OLD_SHIPPED_ROSTERS         # 0.16.3 to 0.16.6
 
 
 # ----- D-170: the staff keeps a real starter until a man is clearly better -----
 
-def test_the_giants_start_jameis_winston_and_a_few_points_never_give_mccarthy_the_job():
+def test_the_giants_start_jj_mccarthy_and_a_few_points_never_give_winston_the_job():
+    """D-177 (the tester, 2026-10-26: "Winston is not the Giants starter at QB"): the file of 2026-10-26 starts McCarthy, named the starter on
+    2026-10-21; D-170's hold keeps him."""
     record = real_league()
     chart = record.chart[GIANTS - 1]
-    winston, mccarthy = (record.players[pid] for pid in chart["QB"][:2])
-    assert (winston.name, mccarthy.name) == ("Jameis Winston", "J.J. McCarthy")
-    assert record.player_at(GIANTS, D.PLACES_OF["QB"][0]) is winston
-    mccarthy.rating = winston.rating + T.FR_DEPTH_HOLD["QB"] - 1
+    mccarthy, winston = (record.players[pid] for pid in chart["QB"][:2])
+    assert (mccarthy.name, winston.name) == ("J.J. McCarthy", "Jameis Winston")
+    assert record.player_at(GIANTS, D.PLACES_OF["QB"][0]) is mccarthy
+    winston.rating = mccarthy.rating + T.FR_DEPTH_HOLD["QB"] - 1
     RR.refresh_view(record, GIANTS)
-    assert record.chart[GIANTS - 1]["QB"][0] == winston.id and record.player_at(GIANTS, D.PLACES_OF["QB"][0]) is winston
-    mccarthy.rating = winston.rating + T.FR_DEPTH_HOLD["QB"]
+    assert record.chart[GIANTS - 1]["QB"][0] == mccarthy.id and record.player_at(GIANTS, D.PLACES_OF["QB"][0]) is mccarthy
+    winston.rating = mccarthy.rating + T.FR_DEPTH_HOLD["QB"]
     RR.refresh_view(record, GIANTS)
-    assert record.chart[GIANTS - 1]["QB"][0] == mccarthy.id           # clearly better: the staff starts him
+    assert record.chart[GIANTS - 1]["QB"][0] == winston.id            # clearly better: the staff starts him
 
 
 def test_every_position_keeps_its_order_within_the_hold_and_a_newcomer_needs_his_own_margin():

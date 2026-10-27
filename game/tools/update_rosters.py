@@ -8,7 +8,14 @@ A MAINTAINER'S tool: it is never run by the game or by a player (D-154, D-156). 
   2. nflverse's roster file and newest depth chart snapshot (CC BY 4.0; GitHub's API, one release listing and one file each): the positions with
      left and right (LDE, RDE, WLB, ...), the comparison of membership;
   3. Sleeper's player feed (free for non-commercial use, at most once a day: a feed saved today is reused): the second comparison, the free agents' ages.
+  4. nflverse's snap counts (CC BY 4.0, from Pro Football Reference's game pages; one file): who played the snaps of the team's last two games.
 Every page and feed is saved as it was served in <out>/raw/ (kept local, never published). A pause of --pause seconds separates two requests.
+
+THE STARTERS (D-177, the tester's report of 2026-10-26: the Giants' page still started Jameis Winston after J.J. McCarthy was named the starter):
+the team's own depth chart gives the order, except (a) where nflverse's newest chart and Sleeper's depth chart agree on a starter who is active at
+that position (agreed_starters_first), and (b) where a starter played under 40 percent of the snaps in each of the last two games while a man of the
+position or its other side played over 70 percent in each (snap_starters); then (c) roster_settlements.txt, whose "depth N" lines settle an order
+the news gives. Every move is a warning line of the report. A man injured for a few games stays his team's starter (only a reserve list moves him).
 
     py -3.14 -I update_rosters.py                         pull, check, write into work\\rosters\\<date>\\ (never into the game)
     py -3.14 -I update_rosters.py --write                 the same, then copy the files into game\\assets\\data when every check passes
@@ -478,6 +485,7 @@ def build_team(t, page_men, depth, nv_rows, nv_chart, sl_rows):
         best = min(options, key=lambda p: (counts.get((m.status == "", p), 0), options.index(p)))
         counts[(m.status == "", best)] = counts.get((m.status == "", best), 0) + 1
         m.pos = best
+    men = agreed_starters_first(men, chart_rows, sl_rows, three4, asof, notes)      # D-177: the fresher sources' starters
     order = {p: n for n, p in enumerate(RF.MADDEN)}
     active = sorted([r for r in men if r[1].status == ""], key=lambda r: (order.get(r[1].pos, 99), r[0]))
     squad = [r for r in men if r[1].status == "PS"]
@@ -500,6 +508,146 @@ def build_team(t, page_men, depth, nv_rows, nv_chart, sl_rows):
                     names.append(real)
         team.roles[role] = names
     return Built(team, notes, "official", asof or snap)
+
+
+CHART_SKIP_ROWS = ("NB", "NCB", "DB", "H", "KR", "PR")        # roles and nickel rows, not starting places
+
+
+def _top(ranked: dict) -> dict:
+    """{position: [(rank, name)]} -> {position: [names]} of the STARTERS[pos] smallest ranks (a tie at the last rank keeps every tied man)."""
+    out = {}
+    for pos, rows in ranked.items():
+        k = RF.STARTERS.get(pos, 1)
+        rows = sorted(set(rows))
+        if len(rows) > k:
+            rows = [r for r in rows if r[0] <= rows[k - 1][0]]
+        out[pos] = [n for _r, n in rows]
+    return out
+
+
+def chart_starters(chart_rows, three4: bool) -> dict:
+    """nflverse's newest snapshot (an ESPN-style chart): the starters of each position, by rank."""
+    ranked = {}
+    for r in chart_rows:
+        if r.get("pos_abb", "").upper() in CHART_SKIP_ROWS:
+            continue
+        pos = map_chart(r.get("pos_abb", ""), "3-4" if three4 else r.get("pos_grp", ""))
+        for p in (OPEN[pos] if pos in OPEN else (pos,) if pos else ()):
+            ranked.setdefault(p, []).append((int(r.get("pos_rank") or 99), r.get("player_name", "")))
+    return _top(ranked)
+
+
+def sleeper_starters(sl_rows, three4: bool) -> dict:
+    """Sleeper's depth chart order: the starters of each position."""
+    ranked = {}
+    for p in sl_rows:
+        if not p.get("depth_chart_order") or not p.get("depth_chart_position"):
+            continue
+        pos = map_chart(p["depth_chart_position"], "3-4" if three4 else "4-3")
+        for q in (OPEN[pos] if pos in OPEN else (pos,) if pos else ()):
+            ranked.setdefault(q, []).append((int(p["depth_chart_order"]), p.get("full_name", "")))
+    return _top(ranked)
+
+
+def agreed_starters_first(men, chart_rows, sl_rows, three4: bool, asof: str, notes: list):
+    """D-177 (the tester's report of 2026-10-26: the Giants' page still started Jameis Winston a day after J.J. McCarthy was named the starter;
+    47 such places in the file of 2026-10-25): a team's own depth chart page can lag a change of starter. Where nflverse's newest chart and
+    Sleeper's depth chart BOTH name a man among a position's starters, and he is on the active roster at that position, he goes before the
+    men the team's page put first. A man the two sources agree on at another position is only reported (the team's word decides the
+    position, D-157). Returns `men` with new depth keys; every move is a note for the report."""
+    if not chart_rows or not sl_rows:
+        return men
+    nv, sl = chart_starters(chart_rows, three4), sleeper_starters(sl_rows, three4)
+    out = []
+    by_pos = {}
+    for key, m in men:
+        if m.status == "":
+            by_pos.setdefault(m.pos, []).append((key, m))
+    moved = {}
+    for pos, rows in by_pos.items():
+        agreed = [n for n in nv.get(pos, []) if name_key(n) in {name_key(x) for x in sl.get(pos, [])}]
+        if not agreed:
+            continue
+        keys = [name_key(n) for n in agreed]
+        before = [m.name for _k, m in sorted(rows, key=lambda r: r[0])][:RF.STARTERS.get(pos, 1)]
+        here = {name_key(m.name): m for _k, m in rows}
+        first = [here[k] for k in keys if k in here]
+        if first:
+            for rank, m in enumerate(first):
+                moved[id(m)] = (-1, rank, 0, 0)
+            after = [m.name for m in first] + [n for n in before if name_key(n) not in keys]
+            after = after[:RF.STARTERS.get(pos, 1)]
+            if [name_key(n) for n in after] != [name_key(n) for n in before]:
+                notes.append("%s starters %s (nflverse's chart and Sleeper agree; the team's page%s had %s)" % (
+                    pos, "/".join(after), " of %s" % asof if asof else "", "/".join(before) or "nobody"))
+        for k, n in zip(keys, agreed):
+            if k not in here:
+                notes.append("%s: nflverse's chart and Sleeper start %s, who is not an active %s here (kept as the team's page has him)" % (
+                    pos, n, pos))
+    for key, m in men:
+        out.append((moved.get(id(m), key), m))
+    return out
+
+
+SNAP_LOW, SNAP_HIGH = 0.40, 0.70     # D-177: a starter under 40 percent of the snaps in each of the last two games, a backup over 70 in each
+SNAP_SIDES = {"LT": ("RT",), "RT": ("LT",), "LG": ("RG",), "RG": ("LG",), "LEDG": ("REDG",), "REDG": ("LEDG",), "FS": ("SS",), "SS": ("FS",),
+              "SAM": ("MIKE", "WILL"), "MIKE": ("SAM", "WILL"), "WILL": ("SAM", "MIKE")}     # the other side a man may take (roster_model)
+SNAP_NEVER = ("K", "P", "LS", "FB")
+
+
+def parse_snaps(data: bytes) -> dict:
+    """{team: {name key: {week: share of the team's offensive or defensive snaps}}} of nflverse's snap counts (regular season)."""
+    out = {}
+    for r in csv.DictReader(io.StringIO(data.decode("utf-8", "replace"))):
+        if r.get("game_type") != "REG":
+            continue
+        t = NV_TEAM.get(r.get("team"))
+        if not t:
+            continue
+        share = max(float(r.get("offense_pct") or 0), float(r.get("defense_pct") or 0))
+        out.setdefault(t, {}).setdefault(name_key(r.get("player", "")), {})[int(r.get("week") or 0)] = share
+    return out
+
+
+def snap_starters(team: RF.Team, snaps: dict, notes: list) -> list:
+    """D-177: who actually plays. In the team's last two games (nflverse's snap counts), a starter who played in both under SNAP_LOW of the
+    snaps while a man of the same position (or its other side, SNAP_SIDES) who is not a starter played over SNAP_HIGH in both gives that man his
+    place: the man starts, at the starter's position, and the starter follows him. A man absent from a game (injured, inactive) is never moved
+    either way: the team's starter when healthy stays the starter (a short injury is not modelled; a reserve list is). Returns the weeks read."""
+    weeks = sorted({w for man in snaps.values() for w in man})[-2:]
+    if len(weeks) < 2:
+        return weeks
+
+    def every(m, test):
+        v = snaps.get(name_key(m.name), {})
+        return all(w in v and test(v[w]) for w in weeks)
+
+    for pos in RF.MADDEN:
+        if pos in SNAP_NEVER:
+            continue
+        active = team.active()
+        k = RF.STARTERS.get(pos, 1)
+        starters = [m for m in active if m.pos == pos][:k]
+        taken = {id(m) for p in RF.MADDEN for m in [x for x in active if x.pos == p][:RF.STARTERS.get(p, 1)]}
+        for s in starters:
+            if not every(s, lambda x: x < SNAP_LOW):
+                continue
+            pool = [m for m in active if id(m) not in taken and (m.pos == pos or m.pos in SNAP_SIDES.get(pos, ()))]
+            best = [m for m in pool if every(m, lambda x: x > SNAP_HIGH)]
+            if not best:
+                continue
+            c = max(best, key=lambda m: sum(snaps[name_key(m.name)][w] for w in weeks))
+            was = c.pos
+            team.men.remove(c)
+            c.pos = pos
+            team.men.insert(team.men.index(s), c)
+            taken.add(id(c))
+            notes.append("%s %s starts before %s (snaps in weeks %s: %s and %s)%s" % (
+                pos, c.name, s.name, "/".join(map(str, weeks)),
+                "/".join("%d%%" % round(100 * snaps[name_key(c.name)][w]) for w in weeks),
+                "/".join("%d%%" % round(100 * snaps[name_key(s.name)][w]) for w in weeks),
+                "" if was == pos else "; he moves from %s" % was))
+    return weeks
 
 
 def team_from_nflverse(t, nv_rows, nv_chart, sl_rows):
@@ -834,7 +982,20 @@ def apply_settlements(teams, settlements, notes):
         if man is None:
             notes.append("settlement %s no longer applies: T%02d has no %s (remove it from roster_settlements.txt)" % (ident, t, name))
             continue
-        if what.casefold() == "off":
+        depth = re.fullmatch(r"depth\s+(\d{1,2})", what.casefold())
+        if depth:                                   # D-177: the man's place in his position's depth order on the active roster (news settles it)
+            n = int(depth.group(1))
+            same = [m for m in team.men if m.status == "" and m.pos == man.pos]
+            if man.status != "" or not 1 <= n <= len(same):
+                notes.append("settlement %s: %s is not an active man with a depth %d (check it)" % (ident, man.name, n))
+                continue
+            if same.index(man) + 1 == n:
+                notes.append("settlement %s is already true: the sources have %s at depth %d (remove it)" % (ident, man.name, n))
+                continue
+            team.men.remove(man)
+            same.remove(man)
+            team.men.insert(team.men.index(same[n - 1]) if n - 1 < len(same) else team.men.index(same[-1]) + 1, man)
+        elif what.casefold() == "off":
             team.men.remove(man)
             for role in RF.ROLES:
                 team.roles[role] = [n for n in team.roles[role] if n != man.name]
@@ -874,6 +1035,8 @@ def run(out: Path, offline: bool, official: bool, pause: float, today: str, prev
     nv_ros = nv_asset(fetch, "rosters", "roster_%d.csv" % SEASON, "nflverse_roster_%d.csv" % SEASON)
     nv_dep = nv_asset(fetch, "depth_charts", "depth_charts_%d.csv.gz" % SEASON, "nflverse_depth_charts_%d.csv.gz" % SEASON)
     sl = fetch.get("sleeper_players_nfl.json", SLEEPER, accept="application/json")
+    nv_snaps = nv_asset(fetch, "snap_counts", "snap_counts_%d.csv" % SEASON, "nflverse_snap_counts_%d.csv" % SEASON)     # D-177
+    snaps = parse_snaps(nv_snaps) if nv_snaps else {}
     nv_rows = parse_nv_roster(nv_ros) if nv_ros else {}
     nv_charts = parse_nv_depth(nv_dep) if nv_dep else {}
     sl_teams, sl_free = parse_sleeper(sl) if sl else ({}, [])
@@ -890,6 +1053,7 @@ def run(out: Path, offline: bool, official: bool, pause: float, today: str, prev
                 report.append("T%02d %s: the team's roster page could not be read (%d rows): nflverse gives the lists" % (t, nick, len(page_men)))
         if b is None:
             b = team_from_nflverse(t, nv_rows.get(t, []), nv_charts.get(t), sl_teams.get(t, []))
+        snap_starters(b.team, snaps.get(t, {}), b.notes)                # D-177: who played the most snaps in the last two games
         teams[t], built[t] = b.team, b
     previous_text = (previous_dir / "rosters.txt").read_bytes().decode("utf-8")
     previous = read_previous(previous_text)
@@ -899,6 +1063,8 @@ def run(out: Path, offline: bool, official: bool, pause: float, today: str, prev
     aged = add_ages(teams, nv_rows, sl_teams, today)                    # SR.7 (D-167): the real ages and seasons
     failures, warnings = RF.check(teams)
     men = sum(len(team.men) for team in teams.values())
+    if not snaps:
+        warnings.append("nflverse's snap counts could not be read: the starters are the charts' only (D-177)")
     if men and aged < 0.95 * men:
         warnings.append("only %d of %d men have an age (the sources' birth dates are missing)" % (aged, men))
     warnings.extend(n for n in settle_notes if "no longer applies" in n or "unknown list" in n)

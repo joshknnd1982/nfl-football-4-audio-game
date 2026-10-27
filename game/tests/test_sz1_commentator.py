@@ -99,7 +99,7 @@ def test_the_announcer_turns_to_the_commentator_by_name(tmp_path, name):
     assert RM.commentator_of(rig.game) == name
     remark = RM.say_remark(rig.game, rig.engine.s, rig.engine.s.extras, "ASK", {})
     assert remark.id == "ASK01"
-    assert [t for t, _, _ in rig.said] == [" %s, what did you make of that one? " % name]
+    assert [t for t, _, _ in rig.said] == [" %s, what did you see on that one? " % name]       # RS.1 (D-179): the hand-off in the real broadcasts' words
     assert rig.rnd.trace == [12]                                  # the name takes no draw
 
 
@@ -108,8 +108,8 @@ def test_the_remarks_of_the_features_and_the_radio_banter_say_the_name_too(tmp_p
     RM.say_remark(rig.game, rig.engine.s, rig.engine.s.extras, "TO", {})
     assert [t for t, _, _ in rig.said] == [" Chris Long, that time out could come in handy later. "]
     lines = {line.number: line for line in rig.rules.broadcast.banter_lines(rig.game)}
-    said = lines[41].pieces[0].items[0].text
-    assert said.startswith(" Chris Long, I notice your headphones") and "<commentator>" not in said
+    said = lines[69].pieces[0].items[0].text                      # RS.1 (D-179): the first of the booth lines that name the analyst
+    assert said.startswith(" Chris Long is taking notes over there") and "<commentator>" not in said
     assert "Ghip" not in said and len(lines) == 142
 
 
