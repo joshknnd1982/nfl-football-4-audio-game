@@ -174,7 +174,72 @@ NFL is copied.
 
 ## The radio broadcast
 
-With the comments on, in both rule sets, the game is a radio broadcast of the Gridiron Radio Network (version 0.16.8, and since 0.16.9 the crew talks more; the original game's jokes are gone from every mode). The crew are made-up people: Walt Kessler calls the game, Gus Delgado is the color analyst and Nora Banks the sideline reporter, each in a voice of their own, until you choose other names in F9, Rules, Broadcast crew. Walt signs on before the coin toss and introduces the crew, Nora reports from the field and Gus gives his first thought; during the game Gus explains some plays and moments, Walt says the network's name now and then, the score when nobody has said it for a while, the quarter and half updates, the station breaks at the two-minute warning and at half time (before your commercials) and a few asides; Nora reports at half time; after the final score Gus sums up, and after the final statistics Walt signs off. With the N. F. L. rules' real clock Walt also says the time left late in each half and sums up some scoring drives, and in a franchise game Nora reports a player who was hurt. The style follows real NFL radio broadcasts (spec/RADIO_NFL_STYLE.md). How much they talk is yours: F9, Rules, How much the crew talks has four levels, a little (as in 0.16.8), some, a lot (the default: Gus after about one play in two, Walt's asides between) and the most (a line after nearly every play); Enter goes round them, and the change is used at once, also in the game you are playing. Every line is customizable (CUSTOMIZE.md), F8 switches the whole broadcast off, and F9, Rules, Broadcast switches Gus and Nora off. The broadcast never changes how a game goes: it draws only its own random numbers, so a Classic game is the original's game with it or without it.
+With the comments on, every game is called like a radio broadcast of the Gridiron Radio Network, a made-up network. It works in both rule sets, Classic and the N. F. L. rules. The game's own play-by-play (the snap, the run, the tackle, the yards) stays as it always was; the broadcast crew talks around it, between the plays and at the big moments, the way a real radio crew does. The style is modelled on real NFL radio broadcasts. The original game's jokes and its commentator are gone.
+
+### The crew
+
+- **Walt Kessler**, play-by-play, in the announcer's voice. He opens and closes the broadcast and fills the breaks.
+- **Gus Delgado**, the color analyst, in a voice of his own. He explains what just happened and what to watch next.
+- **Nora Banks**, the sideline reporter, in a voice of her own. She reports from the field.
+
+They are made-up people. You can give them, and the network, other names (see "Names, voices and volumes" below).
+
+### What you hear during a game
+
+- **Before the coin toss:** Walt signs on and names the two teams, introduces Gus and Nora, Nora has a note from the field, and Gus gives his first thought. The first game after you start the program also has one sentence about the keys for the crew's voices and names.
+- **After a play:** Gus explains it: why a run worked or was stopped, a catch or an incompletion, a sack, a turnover, a big gain, a third down made or stopped, a team going for it on fourth down, a trip inside the 20, a penalty, a punt, a kick off. Now and then Walt turns to him first ("walk us through that play").
+- **At the other breaks between plays:** Walt has an aside about the game, the crowd or football in general, says the network's name now and then, and says the score again when nobody has said it for a while.
+- **After a score:** Gus on the touchdown or the field goal. With the N. F. L. rules Walt sometimes sums up the drive that scored (the plays, the yards and the minutes).
+- **The end of the first and third quarter:** Walt's update with the score, then Gus.
+- **The two-minute warning:** Walt's station break (your own commercial plays there if you have turned commercials on: CUSTOMIZE.md, "Commercials"), then Gus.
+- **Half time:** Walt's update, Nora's report from the field, Gus's look at the first half, then Walt's station break (and your commercial, if any).
+- **Late in each half (N. F. L. rules only):** in the last two minutes Walt says the time left after every second play.
+- **A player hurt (a franchise game only):** after the game says so, Nora reports on him at the next break.
+- **The end of the game:** after the final score Gus sums up the game. After the final statistics Walt signs off; his are the last words of the game.
+
+Every game has lines of its own, so a season does not open every week with the same words, and the crew does not repeat a line in one game while it still has others for that moment.
+
+### Turning the broadcast on and off
+
+- **F8** switches all the comments on and off, the whole broadcast with them. The game says "comments toggle, ON!" or "comments toggle off".
+- **F9, Rules, Broadcast** (the tenth item) switches Gus and Nora off and on. With them off, Walt still signs on, gives the updates and the breaks, and signs off, and his lines that name Gus or Nora are left out. Like the other rules, this applies from the next game.
+
+### How much the crew talks
+
+You choose how often the crew speaks: **F9, Rules, How much the crew talks**.
+
+1. Press F9.
+2. Press Down until you hear "Rules", then press Enter.
+3. Press Down until you hear "How much the crew talks: a lot" (it is the eleventh item; pressing 0 jumps to Broadcast, the item just before it).
+4. Press Enter to go to the next level. The levels go round: a little, some, a lot, the most. Left and Right also go down and up one level.
+5. Press Escape twice to go back.
+
+The levels:
+
+- **a little:** the crew speaks only at the special plays and moments. This is how version 0.16.8 sounded: about 64 lines of the crew in a game, Gus after about one play in eight.
+- **some:** Gus after about one play in three or four, about as often as on a real radio broadcast. About 98 lines in a game.
+- **a lot** (the default): Gus after about one play in two, and Walt fills more of the breaks Gus leaves. About 140 lines in a game.
+- **the most:** someone of the crew after nearly every play. About 190 lines in a game.
+
+The change is saved at once and used at once, also in the game you are playing: you do not wait for the next game. F9, Rules, Reset brings back "a lot". The setting is `nx_crew_talk` in settings.txt (little, some, lots or most).
+
+### Names, voices and volumes
+
+- **Names:** F9, Rules, Broadcast crew (the thirteenth item) says the three names. Press Enter to open the crew: Play by play announcer, Color analyst, Sideline reporter and Network. On one of them, Enter opens a short list: the original name, the name you typed last time, and "Type a name of your own". Left and Right switch between the original name and yours without the list. You never have to type anything. New names are used from the next game.
+- **Voices:** with the game's own Windows voices, F12 asks for Gus's and Nora's voices after the other speakers (while the comments and the broadcast are on). The first time, the game picks voices for them that differ from the announcer's. With NVDA or JAWS speaking for the game, the screen reader reads every line in its own one voice, so the crew all sound alike; to hear three voices, choose the game's own voices in F9, Speech settings, Speech output.
+- **Volumes:** F11 sets each speaker's volume, Gus's and Nora's too while the comments and the broadcast are on.
+
+### Your own lines
+
+Every line of the crew is in remarks.txt in your customize folder (F9, Customize, "Open the folder with the customization files"). You can change any line, switch one off (for example `CRS01 = off`), add new lines with new numbers, and play your own sound files in a line. The lines are in groups by moment, for example SGN for Walt's sign on, CTD for Gus after a touchdown and CRG for Gus after a good run. CUSTOMIZE.md, "The radio broadcast", lists every group, when it is said and the words in angle brackets each group can use, such as `<team>` and `<quarterback>`.
+
+### Good to know
+
+- The first key you press cuts off the line being spoken, as with every other sentence of the game. If you choose your plays quickly you hear only the start of the crew's lines; wait a moment before the next key to hear them all.
+- F2, the instant replay, repeats the play-by-play only, not the crew.
+- F6 explains the broadcast and names these menu items.
+- The broadcast never changes how a game goes. It uses its own random numbers, so the plays, the scores and the clock are the same with the crew on or off, and a Classic game is the original's game with or without it.
+- Tell us what you think: is "a lot" the right amount, does a line not fit the play it follows, does one come too often? To report a problem, press F9, choose Speech settings, "Save a problem report", and send the file it saves.
 
 ## The stadium sounds and the referee
 

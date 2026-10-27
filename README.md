@@ -11,7 +11,7 @@ This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many 
 ## Two ways to play
 
 - **Classic** plays the way Jim Kitchen's game played, so that anyone who knew it feels at home: the same menus, keys, plays, pace and sounds.
-- **The radio broadcast**, in both: with the comments on (F8), a made-up radio crew calls the game around the play-by-play, in a radio format modelled on real NFL radio broadcasts: Walt Kessler (play-by-play), Gus Delgado (color analyst) and Nora Banks (sideline reporter) of the Gridiron Radio Network, each in a voice of their own, with names you may change (F9, Rules, Broadcast crew) and as much talk as you want (F9, Rules, How much the crew talks: a little, some, a lot or the most). The original game's jokes are gone from every mode.
+- **The radio broadcast**, in both: with the comments on (F8), a made-up radio crew calls the game around the play-by-play, in a radio format modelled on real NFL radio broadcasts: Walt Kessler (play-by-play), Gus Delgado (color analyst) and Nora Banks (sideline reporter) of the Gridiron Radio Network, each in a voice of their own, with names you may change (F9, Rules, Broadcast crew) and as much talk as you want (F9, Rules, How much the crew talks: a little, some, a lot or the most). The original game's jokes are gone from every mode. How the broadcast works and how to control it: [game/README_nfl_rules_and_franchise.md](game/README_nfl_rules_and_franchise.md), "The radio broadcast".
 - **N. F. L. rules** is the default for a new player. The way you play stays like the original (short spoken menus, the same function keys), and the game adds the real National Football League:
   - a real game clock of 15 minutes a quarter, time outs and the two-minute warning;
   - penalties you may accept or decline, onside kicks, quarterback runs, replay challenges and the replay official's reviews;
@@ -62,7 +62,7 @@ The game opens a small window that receives the keys, and speaks its welcome.
 ## Documents
 
 - [game/README_keys.md](game/README_keys.md): every key, as below.
-- [game/README_nfl_rules_and_franchise.md](game/README_nfl_rules_and_franchise.md): the N. F. L. rules, the Franchise, saved games, the real names, the broadcast.
+- [game/README_nfl_rules_and_franchise.md](game/README_nfl_rules_and_franchise.md): the N. F. L. rules, the Franchise, saved games, the real names, and the radio broadcast (the crew, what they say and when, how to turn them off, how much they talk, their names and voices).
 - [game/PLAYS_GUIDE.md](game/PLAYS_GUIDE.md): every play with a short plain description.
 - [game/CUSTOMIZE.md](game/CUSTOMIZE.md): names, commentary and sounds.
 - [game/README_if_something_goes_wrong.md](game/README_if_something_goes_wrong.md): problem reports.

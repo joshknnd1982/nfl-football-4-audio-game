@@ -112,6 +112,8 @@ A remark is never one of the last three said. F8 switches the remarks off with t
 
 ## The radio broadcast
 
+How the broadcast sounds and how to control it while you play (the crew, the keys, how much they talk) is in README_nfl_rules_and_franchise.md, "The radio broadcast". This part is about its lines.
+
 With the comments on (F8), in both rule sets, the game is a radio broadcast of the Gridiron Radio Network with a crew of three, made-up people whose names you may change (see "The crew's names" below): Walt Kessler calls the game in the announcer's voice, Gus Delgado is the color analyst and Nora Banks the sideline reporter, each in a voice of their own. Its lines are in remarks.txt, in pools you change, switch off and add to like every other remark (BN143 and up, CTD11 and up, SGN05 and up), and they may name your own sound files. The game's own play by play of every play stays as it was; the crew speaks around it:
 
 - Before the opening coin toss, as on the radio: the sign on (SGN), the crew (CRW), Nora's note from the field (SON) and Gus's first thought (CKO).
