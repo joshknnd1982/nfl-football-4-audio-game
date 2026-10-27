@@ -294,3 +294,7 @@ If you want to hear a league that is already many seasons old without playing th
 136. Added 2026-10-27 (D-191, BC.4's listening test): with comments on, do Walt's sign-on, the crew, Nora and Gus come before the coin toss? Is Walt's sign-off the last thing you hear, after the final statistics?
 137. Added 2026-10-27 (D-191): play two games in one session (the first two weeks of a season): does the crew open the second game with other words than the first?
 138. Added 2026-10-27 (D-191): at the two-minute warning with no commercials of your own, Walt says a station break ("back in a moment", "we'll be right back") and the game goes straight on: does that sound right, or should he say only the network's name then?
+139. Added 2026-10-27 (D-193, 0.16.9): with comments on and F9, Rules, How much the crew talks at "a lot" (the default), does the crew now talk enough? Too much? Gus should speak after about one play in two.
+140. Added 2026-10-27 (D-193): during a game, F9, Rules, How much the crew talks, Enter to "the most", Escape twice, play on: does the crew talk after nearly every play at once, in the same game? Then "a little": as quiet as 0.16.8?
+141. Added 2026-10-27 (D-193): Gus's new lines after ordinary plays (a run that gains, a run stopped, a pass caught or incomplete, a punt, a kick off): does each fit the play it follows? Any line you hear too often?
+142. Added 2026-10-27 (D-193): which level do you like best, and should a different one be the default?

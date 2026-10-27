@@ -12,12 +12,16 @@ Down move, Enter or Space changes the current item and speaks its new value, Lef
 leaves (game/spoken_menu.py). A switch says " used with the N. F. L. rules " after its value while Rules is Classic, except Broadcast and
 Broadcast crew, which both modes use since BC.3 (D-189). Every change is saved in settings.txt at once and
 applies from the next game (" the new rules apply from the next game. "): a game in progress keeps the rules it began with.
+S-D (D-193) added How much the crew talks after Broadcast (11; Stadium sounds is 12, Broadcast crew 13): a little, some, a lot (the default)
+or the most; Enter goes round, Left and Right go down and up; it applies at once, also in the game being played (" from now on, also in the
+game you are playing. "), because the broadcast reads the setting at every line.
 Rules = N. F. L. rules also makes the program read the extras' files (remarks.txt, CUSTOMIZABLE_CONTENT 13).
 """
 from __future__ import annotations
 
 from ..game.spoken_menu import Item, SpokenMenu
 from . import crew_menu
+from .broadcast import DEFAULT_TALK, next_talk, talk_words
 from . import depth_flow
 from . import nx_texts as X
 from . import quarterbacks
@@ -27,9 +31,9 @@ CLASSIC, NFL = "classic", "nfl"
 DEFAULTS = {"rules": NFL, "nx_timeouts": True, "nx_penalties": True, "nx_onside": True,
             "nx_onside_question": "always", "nx_onside_question_chosen": False, "nx_qb_runs": True, "nx_challenges": True,    # design 12.1 (NQ2: the N. F. L. rules since SX.9)
             "nx_offense_playbook": TEAM_KEY, "nx_defense_playbook": TEAM_KEY,      # SX.10e (D-095, Q-035): the team's playbook is the default
-            "nx_playbook_chosen": False, "nx_broadcast": True, "nx_stadium": True}
+            "nx_playbook_chosen": False, "nx_broadcast": True, "nx_stadium": True, "nx_crew_talk": DEFAULT_TALK}
 SWITCHES = ("rules", "nx_timeouts", "nx_challenges", "nx_qb_runs", "nx_penalties", "nx_onside", "nx_onside_question", "nx_onside_question_chosen",
-            "nx_offense_playbook", "nx_defense_playbook", "nx_playbook_chosen", "nx_broadcast", "nx_stadium")
+            "nx_offense_playbook", "nx_defense_playbook", "nx_playbook_chosen", "nx_broadcast", "nx_stadium", "nx_crew_talk")
 
 
 def rules_label(game_settings) -> str:
@@ -41,6 +45,11 @@ def switch_label(game_settings, name_id: str, value: bool) -> str:
     if game_settings.rules != NFL:
         text += X.text("NXM-22")
     return text
+
+
+def talk_label(game_settings) -> str:
+    """S-D (D-193): "How much the crew talks: a lot". Both modes: no " used with the N. F. L. rules "."""
+    return X.text("NXM-64") + ": " + talk_words(getattr(game_settings, "nx_crew_talk", DEFAULT_TALK))
 
 
 def playbook_name(choice: str) -> str:
@@ -106,6 +115,16 @@ def rules_menu(game, speech, keys) -> None:
     def toggle_broadcast(step: int = 1) -> None:
         settings.nx_broadcast = not settings.nx_broadcast
         apply()
+
+    def change_talk(step: int = 1) -> None:
+        """S-D: the next level; saved at once. The broadcast reads it at every line, so it needs no new rules object."""
+        from ..data import debuglog
+        settings.nx_crew_talk = next_talk(settings.nx_crew_talk, step)
+        options.save()
+        debuglog.event("setting", "change", name="nx_crew_talk", value=settings.nx_crew_talk)
+
+    def talk_item() -> str:
+        return talk_label(settings)
 
     def toggle_stadium(step: int = 1) -> None:
         settings.nx_stadium = not settings.nx_stadium
@@ -183,7 +202,7 @@ def rules_menu(game, speech, keys) -> None:
         text = (rules_item() + ". " + timeouts_item().rstrip() + ". " + challenges_item().rstrip() + ". "
                 + qb_runs_item().rstrip() + ". " + onside_item().rstrip() + ". " + question_item().rstrip() + ". "
                 + penalties_item().rstrip() + ". " + offense_playbook_item().rstrip() + ". " + defense_playbook_item().rstrip()
-                + ". " + broadcast_item().rstrip() + ". " + stadium_item())
+                + ". " + broadcast_item().rstrip() + ". " + talk_item() + ". " + stadium_item())
         if tuple(getattr(settings, name) for name in SWITCHES) == before:
             return text
         apply()
@@ -202,6 +221,7 @@ def rules_menu(game, speech, keys) -> None:
         Item(defense_playbook_item, enter=lambda: (change_defense_playbook(), changed(defense_playbook_item))[1],
              change=change_defense_playbook),
         Item(broadcast_item, enter=lambda: (toggle_broadcast(), changed(broadcast_item))[1], change=toggle_broadcast),
+        Item(talk_item, enter=lambda: (change_talk(), talk_item() + "," + X.text("NXM-69"))[1], change=change_talk),     # S-D (D-193)
         Item(stadium_item, enter=lambda: (toggle_stadium(), changed(stadium_item))[1], change=toggle_stadium),
         Item(crew_item, enter=choose_crew),
         Item(lambda: quarterbacks.item_label(settings), enter=lambda: (quarterbacks.quarterbacks_menu(game, speech, keys), None)[1]),    # D-132

@@ -17,7 +17,8 @@ from nfl4.extras import remarks as RM
 from nfl4.extras.remarks_retired import RETIRED
 
 SIZES = {"BN": 142, "ASK": 12, "CKO": 8, "CTD": 10, "CFG": 8, "CFM": 8, "CTV": 10, "CBG": 10, "CSK": 10, "CTC": 8, "CTS": 8, "CFD": 8,
-         "CRZ": 8, "CPN": 8, "CHT": 8, "CFN": 8, "CFT": 6, "CTM": 8, "CQE": 8, "CTT": 8, "CBO": 8}
+         "CRZ": 8, "CPN": 8, "CHT": 8, "CFN": 8, "CFT": 6, "CTM": 8, "CQE": 8, "CTT": 8, "CBO": 8,
+         "CRG": 20, "CRS": 20, "CPC": 24, "CPI": 18, "CPT": 12, "CKR": 10}     # S-D (D-193): the analyst after ordinary plays
 GUIDE = Path(__file__).resolve().parents[2] / "spec" / "RADIO_NFL_STYLE.md"
 
 

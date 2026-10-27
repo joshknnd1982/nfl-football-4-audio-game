@@ -121,7 +121,7 @@ from .clock import RUNNING_KINDS, NflPeriodClock, late_window
 from .defense_flow import DefenseFlow
 from .kick_flow import KickFlow
 from .offense_flow import W_FOR, W_NO_BOOK, OffenseFlow, text_for
-from .broadcast import Broadcast
+from .broadcast import DEFAULT_TALK, Broadcast, talk_key
 from .choices import Choices
 from .stadium import Stadium
 from .onside import OnsideFlow
@@ -155,7 +155,8 @@ class NflRules(ClassicRules):
     def __init__(self, timeouts_on: bool = True, auto_sides: tuple[int, ...] = (2,), penalties_on: bool = False,
                  onside_on: bool = False, onside_always: bool = False, qb_on: bool = False, challenges_on: bool = False,
                  offense_book: str = "classic", defense_book: str = "classic", playbooks_on: bool = False,
-                 broadcast_on: bool = False, stadium_on: bool = False, commentator: str = "", crew_names: dict | None = None):
+                 broadcast_on: bool = False, stadium_on: bool = False, commentator: str = "", crew_names: dict | None = None,
+                 crew_talk: str = ""):
         # the switches for a new game; a game reads its own from state.extras (a loaded game keeps the switches it was saved
         # with, C1). penalties_on and onside_on are off unless given: the program's rules come from the settings
         # (rules_from_settings, nx_penalties and nx_onside on by default), and a rules object made by hand (the clock's
@@ -179,6 +180,8 @@ class NflRules(ClassicRules):
         # game's generator is gone with the original's banter step, D-180). BC.3 (D-189): the crew's names (extras/crew.py), the defaults
         # when none are given; `commentator` is SZ.1's analyst's name
         self.broadcast = Broadcast(self, analyst=broadcast_on, commentator=commentator, crew_names=crew_names)
+        if crew_talk:
+            self.broadcast.talk_level = talk_key(crew_talk) or DEFAULT_TALK     # S-D (D-193); a game reads the player's setting live
         self.stadium = Stadium(self, on=stadium_on)      # SY.2: the crowd, the hits and the chain; a hand-made object has none
         self.choices = Choices(self)                     # SY.4, SY.5: the player's target and blitzer (nothing until he chooses)
         self.game = None
@@ -200,6 +203,7 @@ class NflRules(ClassicRules):
                            self.qb_on, self.challenges_on, self.offense_book, self.defense_book, self.playbooks_on,
                            self.broadcast.analyst, self.stadium.on)
         fresh.broadcast.names = dict(self.broadcast.names)          # SZ.1, BC.3: the crew's names (set on the object, so a subclass's constructor stays as it is)
+        fresh.broadcast.talk_level = self.broadcast.talk_level      # S-D (D-193): how much the crew talks
         return fresh
 
     # ----- H1 -----
@@ -1031,7 +1035,7 @@ class NflRules(ClassicRules):
 
     def extra_help(self, key: str) -> list[str]:
         ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-47", "NXH-14", "NXH-18", "NXH-27"),
-               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-79", "NXH-80", "NXH-81", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-83", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-79", "NXH-80", "NXH-81", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
                         "NXH-16", "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30") + MENU_HELP_F6,     # SX.12: overtime after the clock
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
                         "NXH-33") + descriptions.F7_WORD_ROWS}.get(key, ())
@@ -1083,7 +1087,8 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
                     offense_book=getattr(game_settings, "nx_offense_playbook", "team"),
                     defense_book=getattr(game_settings, "nx_defense_playbook", "team"),
                     playbooks_on=True, broadcast_on=getattr(game_settings, "nx_broadcast", True),
-                    stadium_on=getattr(game_settings, "nx_stadium", True), crew_names=crew.names(game_settings))
+                    stadium_on=getattr(game_settings, "nx_stadium", True), crew_names=crew.names(game_settings),
+                    crew_talk=getattr(game_settings, "nx_crew_talk", ""))
 
 
 def has_broadcast(rules) -> bool:

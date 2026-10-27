@@ -28,11 +28,18 @@ The modes: the N. F. L. rules call it from their hooks (extras/nfl_rules.py), Cl
 (extras/classic_radio.py); the bare Classic rules of the engine (game/rules.CLASSIC: the golden transcript) say nothing. The drive summary and
 the clock need the real clock and are said only with the N. F. L. rules (Classic's time is made up from the play counter with a draw of the
 game's generator, which the broadcast must never make).
+
+How much the crew talks (S-D, D-193; the owner on 0.16.8: "the new sports commentators are not talking enough even though comments are turned
+on", then "add a working menu option which lets the user control how much the sports commentators talk"): F9, Rules, How much the crew talks,
+four levels (TALK_LEVELS): a little (exactly the rates of 0.16.8), some, a lot (the default) and the most. Gus also speaks after ordinary
+plays (CRG, CRS, CPC, CPI, CPT, CKR), and Walt fills more of the dead balls Gus leaves. The level is read from the player's settings at every
+line, so a change in F9 applies at once, also in the game being played; a rules object made by hand (tests) uses its own `talk`.
 """
 from __future__ import annotations
 
 import logging
 import random
+from dataclasses import dataclass
 from types import SimpleNamespace
 
 from ..game import outcome as O
@@ -46,7 +53,8 @@ from . import remarks
 
 log = logging.getLogger("nfl4.extras")
 
-# The chance in percent of the analyst at each kind of moment (his pool), and how often the announcer turns to him first.
+# The chance in percent of the analyst at each kind of moment (his pool), and how often the announcer turns to him first: the level "a little"
+# (S-D, D-193: exactly the rates of 0.16.8; TALK_LEVELS below has the others).
 # The owner, 2026-10-25 (Q-043): "Talks too much". Measured 26.5 lines a game (work\sr4\ghip_rate.py, 12 games); the ordinary moments' chances,
 # the gap and the announcer's turn to him were lowered to about half that (the kick-off, half time and the final whistle stay). Was: CTD 85, CFG 55,
 # CFM 70, CTV 80, CBG 60, CSK 40, CTC 15, CTS 15, CFD 70, CRZ 35, CPN 30, CTM 75, CQE 60, CTT 60, CBO 50; ASK_CHANCE 40; MIN_GAP 2.
@@ -78,6 +86,74 @@ CLOCK_GAP = 2                  # CLK: at most every second play
 DRIVE_ONE_IN = 3               # DRV: about one score in three
 DRIVE_MIN = 2                  # DRV: a drive of at least two plays, two yards and two minutes ("1 minutes" is not said)
 QUARTER_SECONDS = 900
+
+# S-D (D-193): the analyst after an ordinary play, a pool for each kind (a run that gains RUN_GOOD yards or more, a run stopped short, a pass
+# caught, a pass that falls incomplete, a punt, a kick off). Third downs, big gains, sacks, turnovers and scores keep their own pools.
+PLAIN_POOLS = ("CRG", "CRS", "CPC", "CPI", "CPT", "CKR")
+RUN_GOOD = 4
+FAR_GAP = 99                   # a gap counter that allows the next line at any level
+
+
+@dataclass(frozen=True)
+class Talk:
+    """How much the crew talks: the analyst's chance in percent at each pool, the plays between two of his ordinary lines, the announcer's
+    hand-off to him, and the announcer's own asides, network identifications and score resets at the dead balls the analyst leaves."""
+    key: str
+    text_id: str                   # the spoken level (NXM-65 to NXM-68)
+    chance: dict
+    min_gap: int
+    ask: int
+    aside_one_in: int
+    aside_gap: int
+    network_every: int
+    score_after: int
+    score_one_in: int
+
+
+def _chances(plain: int, **special) -> dict:
+    out = dict(CHANCE, **special)
+    out.update({pool: plain for pool in PLAIN_POOLS})
+    return out
+
+
+# A real call has the analyst after about one play in three (RADIO_NFL_STYLE 2); 0.16.8 had him after about one play in ten. The crew's lines
+# a game at each level were measured with whole games (work\sd_talk_1027, D-193).
+TALK_LEVELS = {
+    "little": Talk("little", "NXM-65", _chances(0), MIN_GAP, ASK_CHANCE, ASIDE_ONE_IN, ASIDE_GAP, NETWORK_EVERY, SCORE_RESET_AFTER,
+                   SCORE_RESET_ONE_IN),
+    "some": Talk("some", "NXM-66", _chances(25, CTD=75, CFG=45, CFM=55, CTV=65, CBG=50, CSK=35, CTC=25, CTS=25, CFD=55, CRZ=30, CPN=30,
+                                            CTM=60, CQE=50, CTT=50, CBO=40),
+                 2, 20, 4, 2, 420, 300, 2),
+    "lots": Talk("lots", "NXM-67", _chances(50, CTD=90, CFG=65, CFM=75, CTV=85, CBG=75, CSK=60, CTC=50, CTS=50, CFD=75, CRZ=55, CPN=50,
+                                            CTM=85, CQE=75, CTT=75, CBO=60),
+                 1, 15, 3, 2, 360, 240, 2),
+    "most": Talk("most", "NXM-68", _chances(85, CTD=100, CFG=90, CFM=95, CTV=100, CBG=100, CSK=90, CTC=80, CTS=80, CFD=95, CRZ=90, CPN=80,
+                                            CTM=100, CQE=100, CTT=100, CBO=90),
+                 1, 10, 1, 1, 300, 180, 1),
+}
+TALK_ORDER = ("little", "some", "lots", "most")
+DEFAULT_TALK = "lots"
+TALK_WORDS = {"a little": "little", "alittle": "little", "less": "little", "low": "little", "medium": "some", "normal": "some",
+              "a lot": "lots", "alot": "lots", "more": "lots", "high": "lots", "the most": "most", "max": "most", "nonstop": "most"}
+
+
+def talk_key(value) -> str | None:
+    """A level of the settings file: its key, or None when it is none (the spoken words, as a player may type them, are read too)."""
+    word = " ".join(str(value or "").lower().split())
+    if word in TALK_LEVELS:
+        return word
+    return TALK_WORDS.get(word)
+
+
+def next_talk(key: str, step: int) -> str:
+    """The next level in the order a little, some, a lot, the most (Left and Right go both ways, Enter goes round)."""
+    index = TALK_ORDER.index(key) if key in TALK_ORDER else TALK_ORDER.index(DEFAULT_TALK)
+    return TALK_ORDER[(index + step) % len(TALK_ORDER)]
+
+
+def talk_words(key: str) -> str:
+    """The spoken level: "a little", "some", "a lot", "the most"."""
+    return X.text(TALK_LEVELS.get(key, TALK_LEVELS[DEFAULT_TALK]).text_id)
 
 WALT_POOLS = ("SGN", "CRW", "BN", "ASK", "ASN", "UPD", "QUP", "STA", "NID", "LID", "DRV", "CLK", "SGO")
 NORA_POOLS = ("SON", "SIN", "SHT")
@@ -138,9 +214,11 @@ def time_words(seconds: int) -> str:
 
 
 class Broadcast:
-    def __init__(self, rules, analyst: bool = False, commentator: str = "", crew_names: dict | None = None):
+    def __init__(self, rules, analyst: bool = False, commentator: str = "", crew_names: dict | None = None, talk: str = DEFAULT_TALK):
         self.rules = rules
         self.analyst = bool(analyst)                # Gus, Nora and Walt's hand-offs to them (F9, Rules, Broadcast)
+        self.talk_level = talk_key(talk) or DEFAULT_TALK   # S-D: used when the game has no settings of the player (a test's game)
+        self._talk_told = None                      # the level the log last named
         names = dict(crew.DEFAULTS)
         names.update(crew_names or {})
         if commentator:
@@ -154,13 +232,13 @@ class Broadcast:
 
     def _reset(self) -> None:
         self.facts: Facts | None = None
-        self.since = MIN_GAP
+        self.since = FAR_GAP
         self.opened = False
         self.red_zone_side = 0
         self.spoken = 0                              # how many lines of the crew this game (the log says it at the end)
         self.plays = 0                               # the plays told this game (note_outcome)
         self.handled = -1                            # the play whose dead ball was last handled (between)
-        self.aside_since = ASIDE_GAP
+        self.aside_since = FAR_GAP
         self.clock_since = CLOCK_GAP
         self.last_id = 0                             # game seconds of the last identification of the network
         self.listener_done = False
@@ -185,6 +263,17 @@ class Broadcast:
     def crew_values(self) -> dict[str, str]:
         return crew.placeholders(self.names)
 
+    # ----- how much the crew talks (S-D, D-193) -----
+
+    def talk(self) -> Talk:
+        """The level in use: the player's setting as it is now (F9 changes it during a game too), else this object's own."""
+        settings = getattr(getattr(getattr(self.game, "options", None), "settings", None), "game", None)
+        key = talk_key(getattr(settings, "nx_crew_talk", None)) or self.talk_level
+        if key != self._talk_told:
+            self._talk_told = key
+            log.info("broadcast: the crew talks %s (%s)", talk_words(key).strip(), key)
+        return TALK_LEVELS[key]
+
     # ----- the game -----
 
     def attach(self, game, state, clock=None) -> None:
@@ -196,6 +285,8 @@ class Broadcast:
         log.info("broadcast: a new game; its generator from the program's seed and %s draws of the game's",
                  getattr(game_rnd, "draws", "no") if getattr(game_rnd, "seed", None) is not None else "a test's source, no")
         self._reset()
+        self._talk_told = None
+        self.talk()                                   # the log names the level of this game
         if self.analyst:
             self._own_voice()                         # starts the reading of the voice list when it is needed; the opening takes the voice
 
@@ -344,8 +435,30 @@ class Broadcast:
             pool = self._red_zone(state)
             side = state.wisoff
             if pool is None:
-                return False
+                pool, side = self._plain_pool(f), f.offense       # S-D: an ordinary play (never at the level "a little": no draw)
+                if pool is None:
+                    return False
         return self._try(state, pool, self._values(state, side, yards=f.yards))
+
+    def _plain_pool(self, f: Facts) -> str | None:
+        """The pool of an ordinary play, or None (a score, a turnover, a muffed punt, an onside kick, or a level without these lines)."""
+        if f.score or (f.turnover and f.kind != O.PUNT):
+            return None
+        if f.kind == O.RUN:
+            pool = "CRG" if f.yards >= RUN_GOOD else "CRS"
+        elif f.kind == O.PASS_COMPLETE:
+            pool = "CPC" if f.yards > 0 else None
+        elif f.kind == O.PASS_INCOMPLETE:
+            pool = "CPI"
+        elif f.kind == O.PUNT:
+            pool = "CPT" if f.turnover else None        # a normal punt gives the ball away; the kicking team's muff recovery has no line
+        elif f.kind in (O.KICKOFF_RETURN, O.KICKOFF_TOUCH_BACK):
+            pool = "CKR"
+        else:
+            pool = None
+        if pool is None or not self.talk().chance.get(pool):
+            return None
+        return pool
 
     def _injury_report(self, state) -> bool:
         if self.hurt is None:
@@ -374,7 +487,8 @@ class Broadcast:
             return                                           # the last two minutes of a half belong to the situation and the clock
         now = self.game_seconds(state)
         values = self._values(state, state.wisoff)
-        if now - self.last_id >= NETWORK_EVERY:
+        t = self.talk()
+        if now - self.last_id >= t.network_every:
             self.last_id = now
             if not self.listener_done and not self._commercials_on() and self.rnd(LISTENER_ONE_IN) == 1:
                 self.listener_done = True
@@ -383,11 +497,11 @@ class Broadcast:
                 self._line(state, "NID", values, self.game.say5)
             return
         scored = state.score(1) or state.score(2)            # "tied at 0" is not said: a score reset needs a score
-        if scored and now - self.score_said >= SCORE_RESET_AFTER and self.rnd(SCORE_RESET_ONE_IN) == 1:
+        if scored and now - self.score_said >= t.score_after and self.rnd(t.score_one_in) == 1:
             if self._line(state, "UPD", values, self.game.say5) is not None:
                 self.score_said = now
             return
-        if self.aside_since >= ASIDE_GAP and self.rnd(ASIDE_ONE_IN) == 1:
+        if self.aside_since >= t.aside_gap and self.rnd(t.aside_one_in) == 1:
             if self._line(state, "BN", {}, self.game.say5) is not None:
                 self.aside_since = 0
 
@@ -605,9 +719,10 @@ class Broadcast:
         return "the analyst (%s)" % self.names[crew.ANALYST]
 
     def _try(self, state, pool: str, values: dict[str, str]) -> bool:
-        if not self.active() or (pool not in MAJOR and self.since < MIN_GAP):
+        t = self.talk()
+        if not self.active() or (pool not in MAJOR and self.since < t.min_gap):
             return False
-        if self.rnd(100) > CHANCE[pool]:
+        if self.rnd(100) > t.chance[pool]:
             return False
         self._say(state, pool, values, ask=pool not in NO_ASK)
         return True
@@ -615,7 +730,7 @@ class Broadcast:
     def _say(self, state, pool: str, values: dict[str, str], ask: bool = True) -> None:
         if pool in ("CFN", "CFT"):
             values = dict(values, **{"<situation>": self._final_clause(state)})
-        if ask and self.rnd(100) <= ASK_CHANCE:
+        if ask and self.rnd(100) <= self.talk().ask:
             self._line(state, "ASK", {}, self.game.say5)
         if self._line(state, pool, values, self._gus) is not None:
             self.since = 0

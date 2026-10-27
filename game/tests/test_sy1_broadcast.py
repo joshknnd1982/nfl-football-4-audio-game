@@ -29,7 +29,9 @@ SIZES = {"BN": 142, "ASK": 12, "CKO": 8, "CBG": 10, "CSK": 10, "CTV": 10, "CTD":
          "CPN": 8, "CTM": 8, "CQE": 8, "CHT": 8, "CFN": 8, "CFT": 6, "CTT": 8, "CBO": 8,
          # BC.3 (D-189): the radio format's pools (spec/NFL_BROADCAST_DESIGN.md sections 10 and 11)
          "SGN": 4, "CRW": 3, "SON": 8, "UPD": 4, "QUP": 4, "STA": 6, "ASN": 4, "SIN": 6, "SHT": 8, "SGO": 4, "NID": 6, "LID": 6, "DRV": 6,
-         "CLK": 4}
+         "CLK": 4,
+         # S-D (D-193): the analyst after ordinary plays
+         "CRG": 20, "CRS": 20, "CPC": 24, "CPI": 18, "CPT": 12, "CKR": 10}
 
 
 # ----- the texts -----
@@ -124,7 +126,9 @@ def test_the_same_seed_gives_the_same_commentary_and_another_seed_another(tmp_pa
 def test_the_analyst_leaves_two_plays_between_his_ordinary_lines_and_is_in_every_game_at_the_big_moments(tmp_path):
     rig, engine, said, result = whole_game(tmp_path, 23, True)
     texts = [t for r, t in said if r == COLOR]
-    assert 8 <= len(texts) <= 60, len(texts)                                  # a radio crew fills the gaps, it does not talk over the game
+    # S-D (D-193): the default level "a lot" has the analyst after about one play in two (0.16.8's limit of 60 is the level "a little",
+    # tests/test_sd_crew_talk.py); he still never speaks after every play
+    assert 40 <= len(texts) <= 140, len(texts)
     rig2, engine2, said2, result2 = whole_game(tmp_path / "again", 24, True)
     assert any("half" in t.lower() for t in [t for r, t in said2 if r == COLOR] + texts)   # the halftime line is certain (CHT 100 percent)
 

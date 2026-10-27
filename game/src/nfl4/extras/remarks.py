@@ -29,6 +29,9 @@ announcer's SGN (sign-on), CRW (the crew), UPD (the score), QUP (a quarter or ha
 (sign-off), NID (the network), LID (a listener), DRV (a drive) and CLK (the clock); the sideline reporter's SON (before the kick-off), SIN
 (an injury) and SHT (half time), in her own voice. Every pool knows the crew's names: <announcer>, <analyst> (also <commentator>),
 <sideline> and <network>.
+S-D (D-193, the owner: "the commentators are not talking enough"): the analyst's pools after ordinary plays, CRG (a run that gains well),
+CRS (a run stopped short), CPC (a pass caught), CPI (a pass that falls incomplete), CPT (a punt) and CKR (a kick off); how often the crew
+speaks is the Rules item "How much the crew talks" (extras/broadcast.py TALK_LEVELS).
 """
 from __future__ import annotations
 
@@ -46,11 +49,11 @@ from .state import RECENT_REMARKS
 log = logging.getLogger("nfl4.extras")
 
 ANALYST_POOLS = ("CKO", "CBG", "CSK", "CTV", "CTD", "CFG", "CFM", "CTC", "CTS", "CFD", "CRZ", "CPN", "CTM", "CQE", "CHT", "CFN", "CFT", "CTT",
-                 "CBO")                                                    # SY.1: the analyst's pools (rule 0.27)
+                 "CBO") + ("CRG", "CRS", "CPC", "CPI", "CPT", "CKR")      # SY.1: the analyst's pools (rule 0.27); S-D: after ordinary plays
 ANNOUNCER_POOLS = ("BN", "ASK", "SGN", "CRW", "UPD", "QUP", "STA", "ASN", "SGO", "NID", "LID", "DRV", "CLK")   # SY.1, BC.3: the announcer's
 SIDELINE_POOLS = ("SON", "SIN", "SHT")                                     # BC.3: the sideline reporter's
-BROADCAST_POOLS = ("BN", "ASK") + ANALYST_POOLS + ("SGN", "CRW", "SON", "UPD", "QUP", "STA", "ASN", "SIN", "SHT", "SGO", "NID", "LID", "DRV",
-                                                   "CLK")                  # the order of remarks.txt
+BROADCAST_POOLS = ("BN", "ASK") + ANALYST_POOLS[:19] + ("SGN", "CRW", "SON", "UPD", "QUP", "STA", "ASN", "SIN", "SHT", "SGO", "NID", "LID",
+                                                        "DRV", "CLK") + ANALYST_POOLS[19:]   # the order of remarks.txt (S-D's pools last)
 COLOR_POOLS = ANALYST_POOLS                                                # said by the analyst's voice
 POOLS_BUILT = ("TO", "CHS", "CHC", "RVR", "RVC", "ON", "QB", "PN") + BROADCAST_POOLS     # the pools whose feature exists (SX.2 timeouts, SX.6 replay
 #                                                         challenges, SX.4 onside kicks, SX.5 quarterback runs, SX.3 penalties),
@@ -76,7 +79,11 @@ for _pool, _names in (("CKO", ("<team>", "<opponent>", "<coach>", "<quarterback>
                       ("CTM", ("<situation>", "<quarter>", "<team>", "<opponent>")), ("CQE", ("<situation>", "<quarter>", "<team>", "<opponent>")),
                       ("CHT", ("<situation>", "<team>", "<opponent>")), ("CFN", ("<situation>", "<team>", "<opponent>")),
                       ("CFT", ("<situation>", "<team>", "<opponent>")), ("CTT", ("<situation>", "<team>", "<opponent>")),
-                      ("CBO", ("<situation>", "<team>", "<opponent>"))):
+                      ("CBO", ("<situation>", "<team>", "<opponent>")),
+                      # S-D (D-193): after an ordinary play, <team> the side that had the ball at the snap (the punting team for CPT)
+                      ("CRG", ("<team>", "<opponent>", "<quarterback>")), ("CRS", ("<team>", "<opponent>", "<quarterback>")),
+                      ("CPC", ("<team>", "<opponent>", "<quarterback>")), ("CPI", ("<team>", "<opponent>", "<quarterback>")),
+                      ("CPT", ("<team>", "<opponent>")), ("CKR", ())):
     PLACEHOLDERS[_pool] = _names
 # BC.3: the radio format's pools. <visitors> and <home> the two teams, <situation> the score clause, <quarter> the quarter (or "first half"),
 # <player> the man who was hurt, <team> and <opponent> as in the analyst's pools, <plays> <yards> <minutes> a drive, <time> the time left

@@ -16,24 +16,24 @@ the engine's Classic, comments on or off (tests/test_bc3_radio_crew.py proves it
 from __future__ import annotations
 
 from ..game.rules import ClassicRules
-from .broadcast import Broadcast
+from .broadcast import DEFAULT_TALK, Broadcast
 
 KEY_F6 = "117"
-HELP_F6 = ("NXH-65", "NXH-66", "NXH-70")          # the broadcast's lines of F6 (the N. F. L. rules say them too)
+HELP_F6 = ("NXH-65", "NXH-66", "NXH-83", "NXH-70")          # the broadcast's lines of F6 (the N. F. L. rules say them too)
 
 
 class ClassicRadioRules(ClassicRules):
     name = "Classic"
 
-    def __init__(self, broadcast_on: bool = True, crew_names: dict | None = None):
-        self.broadcast = Broadcast(self, analyst=broadcast_on, crew_names=crew_names)
+    def __init__(self, broadcast_on: bool = True, crew_names: dict | None = None, crew_talk: str = ""):
+        self.broadcast = Broadcast(self, analyst=broadcast_on, crew_names=crew_names, talk=crew_talk or DEFAULT_TALK)
         self.game = None
         self.state = None
         self.clock = None
 
     def for_game(self) -> "ClassicRadioRules":
         """A fresh object for one game, with the same switches and names (Game.play_game)."""
-        return type(self)(self.broadcast.analyst, dict(self.broadcast.names))
+        return type(self)(self.broadcast.analyst, dict(self.broadcast.names), self.broadcast.talk_level)
 
     def period_clock(self, game, state):
         self.game, self.state = game, state
@@ -72,4 +72,5 @@ class ClassicRadioRules(ClassicRules):
 def classic_rules(game_settings) -> ClassicRadioRules:
     """The program's Classic for a Rules setting: the original's rules and the radio broadcast with the player's switch and names."""
     from . import crew
-    return ClassicRadioRules(broadcast_on=getattr(game_settings, "nx_broadcast", True), crew_names=crew.names(game_settings))
+    return ClassicRadioRules(broadcast_on=getattr(game_settings, "nx_broadcast", True), crew_names=crew.names(game_settings),
+                             crew_talk=getattr(game_settings, "nx_crew_talk", ""))

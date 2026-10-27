@@ -327,5 +327,5 @@ def test_the_keys_and_the_help_name_the_crew_in_both_modes():
     readme = (Path(__file__).resolve().parents[1] / "README_keys.md").read_text(encoding="utf-8")
     assert "sideline reporter" in readme
     help6 = ClassicRadioRules().extra_help("117")
-    assert help6[-3:] == [X.text("NXH-65"), X.text("NXH-66"), X.text("NXH-70")]
+    assert help6[-4:] == [X.text("NXH-65"), X.text("NXH-66"), X.text("NXH-83"), X.text("NXH-70")]     # S-D: NXH-83, how much the crew talks
     assert "Broadcast crew" in X.text("NXH-70") and "Walt Kessler" in X.text("NXH-70")

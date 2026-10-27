@@ -11,7 +11,7 @@ This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many 
 ## Two ways to play
 
 - **Classic** plays the way Jim Kitchen's game played, so that anyone who knew it feels at home: the same menus, keys, plays, pace and sounds.
-- **The radio broadcast**, in both: with the comments on (F8), a made-up radio crew calls the game around the play-by-play, in a radio format modelled on real NFL radio broadcasts: Walt Kessler (play-by-play), Gus Delgado (color analyst) and Nora Banks (sideline reporter) of the Gridiron Radio Network, each in a voice of their own, with names you may change (F9, Rules, Broadcast crew). The original game's jokes are gone from every mode.
+- **The radio broadcast**, in both: with the comments on (F8), a made-up radio crew calls the game around the play-by-play, in a radio format modelled on real NFL radio broadcasts: Walt Kessler (play-by-play), Gus Delgado (color analyst) and Nora Banks (sideline reporter) of the Gridiron Radio Network, each in a voice of their own, with names you may change (F9, Rules, Broadcast crew) and as much talk as you want (F9, Rules, How much the crew talks: a little, some, a lot or the most). The original game's jokes are gone from every mode.
 - **N. F. L. rules** is the default for a new player. The way you play stays like the original (short spoken menus, the same function keys), and the game adds the real National Football League:
   - a real game clock of 15 minutes a quarter, time outs and the two-minute warning;
   - penalties you may accept or decline, onside kicks, quarterback runs, replay challenges and the replay official's reviews;
