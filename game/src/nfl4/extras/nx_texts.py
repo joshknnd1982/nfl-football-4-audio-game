@@ -2641,6 +2641,11 @@ TEXTS: dict[str, str] = {
     'NXM-71': 'radio style, exciting',
     'NXM-72': "plain, the original's words",
     'NXH-84': " F9, Rules, Play calls chooses how the plays are called: radio style, exciting, which is the default, or plain, the original's words. ",
+    'NXM-73': 'Excited voice',
+    'NXM-74': 'on, the big plays are said higher, faster and a little louder',
+    'NXM-75': 'off, every call in the voice as it is',
+    'NXM-76': ' JAWS says the words only, because it cannot change its voice for a program. ',
+    'NXH-85': " F9, Rules, Excited voice says the big plays higher, faster and a little louder, with the game's own voices or NVDA. It is on by default; press Enter on it to turn it off or on. ",
 }
 
 SPEAKERS: dict[str, str] = {
@@ -5277,6 +5282,11 @@ SPEAKERS: dict[str, str] = {
     'NXM-71': 'piece',
     'NXM-72': 'piece',
     'NXH-84': 'say5',
+    'NXM-73': 'say5',
+    'NXM-74': 'piece',
+    'NXM-75': 'piece',
+    'NXM-76': 'say5',
+    'NXH-85': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -7913,6 +7923,11 @@ KINDS: dict[str, str] = {
     'NXM-71': 'piece',
     'NXM-72': 'piece',
     'NXH-84': 'help',
+    'NXM-73': 'menu',
+    'NXM-74': 'piece',
+    'NXM-75': 'piece',
+    'NXM-76': 'sentence',
+    'NXH-85': 'help',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

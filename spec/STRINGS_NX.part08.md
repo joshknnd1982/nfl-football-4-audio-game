@@ -1,8 +1,3 @@
-- NXM-49 (piece, piece): "the original sound". the count of a family with one shipped sound (SZ.2)
-- NXM-50 (piece, piece): "your sound". the count of a family whose one sound is the player's file (SZ.2)
-- NXM-51 (piece, piece): "<n> sounds, <m> of them yours". the count of a family with several sounds (SZ.2)
-- NXM-52 (help, say5): " Enter plays the sound, and again plays the next one of its family. To use your own sound, put a file with the same name in your sounds folder, and it replaces this one. ". F1 in that list (SZ.2)
-- NXM-53 (help, say5): " To add one more, give it a number, like crowd_cheer2. Delete your file to get the original back. The sounds folder is in the Sounds menu. These sounds play only with the N. F. L. rules. ". F1 in that list, second part (SZ.2)
 - NXM-54 (menu, say5): "Put the stadium sounds back". F9 Sounds item: the player's stadium and referee files are moved aside (SZ.2)
 - NXM-55 (prompt, say5): " this moves your own stadium and referee sound files to the removed sounds folder. Press Enter to do it, or any other key to cancel. ". the confirmation of that item (SZ.2)
 - NXM-56 (sentence, say5): " <n> of your files were moved. The original sounds are back. ". after that item (SZ.2)
@@ -290,4 +285,9 @@
 - NXM-71 (piece, piece): "radio style, exciting". the value of NXM-70: every play called like a radio broadcast, the default (RC, D-195)
 - NXM-72 (piece, piece): "plain, the original's words". the value of NXM-70: the plays told in the original's sentences (RC, D-195)
 - NXH-84 (help, say5): " F9, Rules, Play calls chooses how the plays are called: radio style, exciting, which is the default, or plain, the original's words. ". F6 addition after NXH-83, both modes (RC, D-195)
+- NXM-73 (menu, say5): "Excited voice". F9, Rules, the item after Play calls: followed by its value (XV, D-198)
+- NXM-74 (piece, piece): "on, the big plays are said higher, faster and a little louder". the value of NXM-73: the radio calls said with their excitement, the default (XV, D-198)
+- NXM-75 (piece, piece): "off, every call in the voice as it is". the value of NXM-73: the radio calls said in the voice as it is (XV, D-198)
+- NXM-76 (sentence, say5): " JAWS says the words only, because it cannot change its voice for a program. ". after NXM-73's value while JAWS speaks the game (XV, D-198)
+- NXH-85 (help, say5): " F9, Rules, Excited voice says the big plays higher, faster and a little louder, with the game's own voices or NVDA. It is on by default; press Enter on it to turn it off or on. ". F6 addition after NXH-84, both modes (XV, D-198)
 

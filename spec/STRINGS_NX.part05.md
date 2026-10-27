@@ -491,3 +491,4 @@
 - NXV-G01 (piece, piece): "win at least <n> games". a goal of the owner (FR_GOALS: wins)
 - NXV-G02 (piece, piece): "reach the play offs". a goal of the owner (FR_GOALS: playoffs)
 - NXV-G03 (piece, piece): "reach the conference championship game". a goal of the owner (FR_GOALS: title_game)
+- NXV-10 (sentence, say2): " the owner has fired you. your job rating was <a>, after <w> wins and <l> losses. ". stage 9: the player is fired (never after a winning season)

@@ -34,9 +34,9 @@ import struct
 import sys
 import threading
 import time
-from xml.sax.saxutils import escape
 
 from .backend import SpeechBackend
+from .lift import nvda_ssml
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +70,7 @@ def has_words(text: str) -> bool:
 
 class NvdaBackend(SpeechBackend):
     name = "NVDA"
+    takes_lift = True         # XV (D-198): a radio call's excitement as SSML prosody (speech/lift.py); plain speakText ignores it
 
     def __init__(self, path: str | None = None, loader=ctypes.WinDLL, clock=time.monotonic):
         self._path = path or dll_path()
@@ -80,7 +81,7 @@ class NvdaBackend(SpeechBackend):
         self._lock = threading.Lock()                 # loading the DLL
         self._ssml_ok = True
         self._cv = threading.Condition()
-        self._queue: collections.deque = collections.deque()    # (generation, text)
+        self._queue: collections.deque = collections.deque()    # (generation, text, lift)
         self._generation = 0
         self._in_flight: tuple[str, float] | None = None        # (text, when the blocking call began)
         self._hold_until = 0.0                        # end of speech that cannot be waited for call by call
@@ -146,14 +147,15 @@ class NvdaBackend(SpeechBackend):
             return False
         return self._call("nvdaController_testIfRunning") == 0
 
-    def speak(self, text: str) -> bool:
+    def speak(self, text: str, lift: int = 0) -> bool:
+        """Queue text. `lift` (XV, D-198): a radio call's excitement, said through SSML prosody (speech/lift.py)."""
         log.debug("NVDA speak %r", text)         # NFL4_DEBUG=1: the timing tools read this
         if self._load() is None:
             return False
         with self._cv:
             if self._closed:
                 return False
-            self._queue.append((self._generation, text))
+            self._queue.append((self._generation, text, int(lift or 0)))
             if self._worker is None:
                 self._worker = threading.Thread(target=self._run, name="nvda-speech", daemon=True)
                 self._worker.start()
@@ -215,22 +217,22 @@ class NvdaBackend(SpeechBackend):
                     self._cv.wait()
                 if self._closed:
                     return
-                generation, text = self._queue.popleft()
+                generation, text, lift = self._queue.popleft()
                 if generation != self._generation:
                     continue
                 if has_words(text) and self._ssml_ok:
                     self._in_flight = (text, self._clock())
             try:
-                self._speak_one(text, generation)
+                self._speak_one(text, generation, lift)
             except Exception as exc:               # a worker must never die
                 log.warning("NVDA speech failed: %s", exc)
             with self._cv:
                 self._in_flight = None
                 self._cv.notify_all()
 
-    def _speak_one(self, text: str, generation: int = 0) -> None:
+    def _speak_one(self, text: str, generation: int = 0, lift: int = 0) -> None:
         if self._ssml_ok:
-            ssml = f"<speak>{escape(text)}</speak>"
+            ssml = nvda_ssml(text, lift)          # "<speak>text</speak>", or inside <prosody> for a lifted radio call (XV, D-198)
             blocking = has_words(text)
             for attempt in (1, 2):
                 began = self._clock()

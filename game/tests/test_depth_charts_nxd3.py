@@ -26,7 +26,7 @@ from nfl4.game.rnd import GameRandom
 from nfl4.game.setup import Roster
 
 RULES = [DOWN, DOWN, DOWN, ENTER]                        # F9's fourth item
-DEPTH = [DOWN] * 15 + [ENTER]                            # the Rules menu's sixteenth item, after Quarterbacks (S-D: How much the crew talks is 11, RC: Play calls 12)
+DEPTH = [DOWN] * 16 + [ENTER]                            # the Rules menu's seventeenth item, after Quarterbacks (S-D: How much the crew talks is 11, RC: Play calls 12, XV: Excited voice 13)
 BENGALS, BILLS = 1, 5
 
 

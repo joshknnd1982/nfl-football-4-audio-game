@@ -75,8 +75,9 @@ class SpeechManager:
                 log.warning("%s availability check failed: %s", backend.name, exc, exc_info=exc)
         return None
 
-    def _send(self, text: str, role: str | None, rate_step: int) -> SpeechBackend | None:
-        """Queue text on the first engine that takes it. Returns that engine."""
+    def _send(self, text: str, role: str | None, rate_step: int, lift: int = 0) -> SpeechBackend | None:
+        """Queue text on the first engine that takes it. Returns that engine. `lift` (XV, D-198: the excitement of a radio call, 1 to 5,
+        speech/lift.py) goes only to an engine that says it takes it (`takes_lift`: SAPI 5 and NVDA; JAWS has no pitch or rate)."""
         self.last_role = role
         began = time.perf_counter()
         skipped = []
@@ -85,16 +86,17 @@ class SpeechManager:
                 if not backend.is_available():
                     skipped.append(backend.name)
                     continue
+                extra = {"lift": lift} if lift and getattr(backend, "takes_lift", False) else {}
                 if getattr(backend, "takes_roles", False):
-                    taken = backend.speak(text, role=role, rate_step=rate_step)
+                    taken = backend.speak(text, role=role, rate_step=rate_step, **extra)
                 else:
-                    taken = backend.speak(text)
+                    taken = backend.speak(text, **extra)
                 if taken:
                     if i and not self._fallback_logged:
                         self._fallback_logged = True
                         log.warning("speech mode %s: preferred engine unavailable, using %s",
                                     self._mode, backend.name)
-                    self._log_request(backend, text, role, rate_step, began, skipped)
+                    self._log_request(backend, text, role, rate_step, began, skipped, extra.get("lift", 0))
                     return backend
                 skipped.append(backend.name + " refused")
             except Exception as exc:  # backends should not raise; be safe anyway
@@ -104,7 +106,7 @@ class SpeechManager:
         return None
 
     @staticmethod
-    def _log_request(backend, text, role, rate_step, began, skipped) -> None:
+    def _log_request(backend, text, role, rate_step, began, skipped, lift=0) -> None:
         """The log line of a text an engine took. Whatever goes wrong while it is written (an engine whose queue_length raises, a log
         that fails) is not a refusal: the text is spoken already and must not be offered to the next engine (S8.3, fixesforgames B-P118)."""
         try:
@@ -113,7 +115,7 @@ class SpeechManager:
             log.debug("%s queue_length failed: %s", backend.name, exc)
             queued = None
         try:
-            debuglog.event("speech", "request", role=role, rate_step=rate_step or None, backend=backend.name,
+            debuglog.event("speech", "request", role=role, rate_step=rate_step or None, lift=lift or None, backend=backend.name,
                            accepted_ms=round((time.perf_counter() - began) * 1000, 2), tried_first=skipped or None,
                            chars=len(text), queued=queued,
                            text="<typed echo>" if debuglog.typing_now() and len(text.strip()) <= 3 else text)
@@ -121,9 +123,9 @@ class SpeechManager:
             log.debug("the log line of a speech request failed: %s", exc)
 
     def say(self, text: str, abort: threading.Event | None = None, *, role: str | None = None,
-            rate_step: int = 0) -> None:
+            rate_step: int = 0, lift: int = 0) -> None:
         """Speak and wait until everything queued is spoken (the original's say). abort ends the wait early."""
-        backend = self._send(text, role, rate_step)
+        backend = self._send(text, role, rate_step, lift) if lift else self._send(text, role, rate_step)
         if backend is not None:
             began = time.perf_counter()
             previous = debuglog.state()
@@ -138,9 +140,12 @@ class SpeechManager:
                 debuglog.event("speech", "ended", backend=backend.name, waited_ms=round((time.perf_counter() - began) * 1000),
                                aborted=bool(abort is not None and abort.is_set()) or None)
 
-    def say_async(self, text: str, *, role: str | None = None, rate_step: int = 0) -> None:
-        """Queue after current speech and return at once (the original's say2)."""
-        self._send(text, role, rate_step)
+    def say_async(self, text: str, *, role: str | None = None, rate_step: int = 0, lift: int = 0) -> None:
+        """Queue after current speech and return at once (the original's say2). `lift`: a radio call's excitement (XV, D-198)."""
+        if lift:
+            self._send(text, role, rate_step, lift)
+        else:
+            self._send(text, role, rate_step)
 
     def stop(self) -> None:
         """Stop speech at once (the original's stopspeech), on every engine."""

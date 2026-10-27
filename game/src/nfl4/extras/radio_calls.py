@@ -15,8 +15,19 @@ sentences (work/rc_1027/shapes.txt: every shape of ten whole games of both modes
     * the down and distance as a radio call says it: "Third and 4! A big down here!", "First down, Bengals!";
     * the gain by its size: "A gain of 3.", "Good for 7 yards!", "What a play! 34 yards!";
     * growing excitement on a long run or a return: "He's at the 40! the 30! the 20! the 10! 5! 4! 3! 2! 1!".
-A sentence of no known shape (the player's own lines, a sentence a later session adds) is said exactly as it is. A screen reader speaks the
-words and the exclamation marks; the game's own voices also say a big call one rate step faster (`EXCITED`).
+A sentence of no known shape (the player's own lines, a sentence a later session adds) is said exactly as it is.
+
+XV (D-198; the owner on 2026-10-27 asked for "an enthusiastic 1990s NFL radio play-by-play announcer": short punchy fragments on big plays,
+exclamations, a color commentator chiming in after the call, "a randomized list of 10+ broadcast templates per play result type so it never
+feels repetitive", and the voice faster and louder with the excitement, which "user should be able to turn it on or off"):
+    * every kind of play result (RESULT_CALLS) has at least ten ways to say it; the sentences of one kind share a pool (the six sack
+      sentences, the two interceptions, the three plain catches), so the variety is the pool's;
+    * every call has a level of excitement (LEVELS: 1 routine, 2 a gain, 3 a big play, 4 a turnover or a sack, 5 the touchdown), and with
+      F9, Rules, Excited voice on (nx_excited_voice, the default) the call is said with it: the game's own voices and NVDA say it higher,
+      faster and a little louder as the level grows (speech/lift.py has the amounts and the measurements); JAWS says the words only;
+    * the calls are written in normal case: the owner's example used capitals "so the system TTS raises its pitch", but MEASURED on 14 voices
+      capitals raise no pitch and make many voices spell or stretch the word (work/xv_1027/sapi.txt), so the lift does that job;
+    * the color analyst after the call is the broadcast's (extras/broadcast.py: Gus after a play, 10 to 24 lines a kind of play).
 
 The switch: F9, Rules, Play calls (setting nx_play_calls): radio (the default) or plain, the original's words. It is read at every sentence,
 so a change applies at once, also in the game being played; it is its own switch, not F8's (the comments): a player who turns the crew off
@@ -34,6 +45,7 @@ import random
 import re
 
 from ..game.rnd import side_seed
+from ..speech.lift import BIG_PLAY, GAIN, ROUTINE, TOUCHDOWN, TURNOVER
 
 log = logging.getLogger("nfl4.extras")
 
@@ -42,7 +54,7 @@ RADIO, PLAIN = "radio", "plain"
 DEFAULT_CALLS = RADIO
 CALLS_WORDS = {"radio": RADIO, "radio style": RADIO, "exciting": RADIO, "on": RADIO,
                "plain": PLAIN, "original": PLAIN, "the original's words": PLAIN, "off": PLAIN}
-EXCITED = 1                       # the rate step of a big call (the game's own voices; a screen reader keeps its own rate)
+DEFAULT_EXCITED_VOICE = True      # XV (D-198): the calls said with their excitement (speech/lift.py); F9, Rules, Excited voice
 BIG, HUGE = 20, 40                # yards: a big play, a huge one
 MARKS_EXCITED = 3                 # a return: from the third yard marker on, every marker is called with an exclamation
 
@@ -60,7 +72,10 @@ def next_calls(key: str) -> str:
 
 # ----- the calls: each a tuple of variants, drawn with the caller's own generator, never the same variant twice in a row -----
 # {team} the team the sentence is about, {spot} where the ball is ("their own 25", "the Jets 47", "midfield"), {n} a number, the others
-# the names the original's sentence holds. Every variant is ASCII, at most 150 characters, one to three short sentences.
+# the names the original's sentence holds. Every variant is ASCII, at most 150 characters, one to three short sentences, in normal case:
+# capitals raise no voice's pitch and make many voices spell the word (speech/lift.py, MEASURED), so the excitement is the voice's lift.
+# XV (D-198): every kind of play result (RESULT_CALLS) has at least MIN_RESULT_VARIANTS ways to say it, so it never feels repetitive; the
+# big plays are short, punchy fragments with exclamations.
 
 CALLS = {
     # the huddle and the line (the start of a play)
@@ -97,19 +112,19 @@ CALLS = {
     "throw_side": ("{q} throws it sidearm!", "{q} sidearms it!"),
     "throw_wobble": ("{q} throws a wobbler, end over end!", "{q} gets off an ugly wobbler!"),
     "throw_rifle": ("{q} rifles it!", "{q} fires!"),
-    # the catch
-    "catch": ("Caught by {r}!", "And {r} has it!", "{r} makes the catch!"),
-    "catch_grab": ("{r} grabs it!", "Caught by {r}!"),
-    "catch_down": ("{r} comes down with it!", "And {r} hauls it in!"),
+    # the catch: the original's three plain catch sentences share one pool; the others keep their own detail
+    "catch": ("Caught by {r}!", "And {r} has it!", "{r} makes the catch!", "{r} grabs it!", "And {r} hauls it in!", "{r} comes down with it!",
+              "Complete to {r}!", "{r} pulls it in!", "Got it! {r} makes the grab!", "And it's caught! {r} has it!", "{r} reels it in!",
+              "Right on target! Caught by {r}!"),
     "catch_hit": ("Caught by {r}, and he takes a big hit!", "{r} makes the catch and gets drilled!"),
     "catch_one_hand": ("One hand! {r} makes a one-handed catch!", "{r} with a one-handed grab! What a catch!"),
-    "catch_leap": ("{r} leaps and makes the catch!", "A leaping grab by {r}!"),
+    "catch_leap": ("{r} leaps and makes the catch!", "A leaping grab by {r}! What a catch!"),
     "catch_back": ("{r} comes back to the ball and makes the catch!", "{r} comes back for it and makes the grab!"),
     "catch_run": ("Caught on the run by {r}!", "{r} catches it in stride!"),
     "catch_shoulder": ("Over the shoulder! Caught by {r}!", "{r} with an over-the-shoulder catch! Beautiful!"),
-    "td_catch_zone": ("{r} catches it in the end zone!", "Caught in the end zone by {r}!"),
-    "td_catch_break": ("Caught by {r}! He breaks a tackle and he's gone!", "{r} makes the catch, breaks a tackle, and heads up field!"),
-    "td_catch_run": ("Caught by {r}, and he's off and running!", "{r} hauls it in and races up field!"),
+    "td_catch_zone": ("{r} catches it in the end zone!", "Caught in the end zone by {r}!", "In the end zone! {r} has it!"),
+    "td_catch_break": ("Caught by {r}! He breaks a tackle and he's gone!", "{r} makes the catch, breaks a tackle, and he's off to the races!"),
+    "td_catch_run": ("Caught by {r}, and he's off and running!", "{r} hauls it in and races up field! Look at him go!"),
     # the pass that is not caught
     "through_hands": ("Right through the hands of {r}!", "It goes right through the hands of {r}!"),
     "over_head": ("It sails over the head of {r}!", "Over the head of {r}!"),
@@ -120,19 +135,22 @@ CALLS = {
     "off_back": ("It bounces off the back of {r}!",),
     "dropped": ("Dropped by {r}!", "{r} drops it! He had it, and he dropped it!"),
     "out_of_bounds": ("{r} catches it, but he's out of bounds!", "{r} has it, but he's out of bounds!"),
-    # takeaways
-    "intercepts": ("Intercepted! {y} picks it off!", "And it's picked off! {y} has it!"),
-    "picks_off": ("Picked off! {y} intercepts the pass!", "Intercepted! {y} picks off the pass!"),
-    "fumble": ("Fumble! The ball is loose!", "He fumbles! The ball is on the ground!"),
-    "scramble_ball": ("There's a scramble for it!",),
-    "falls_on": ("And {y} falls on it!",),
-    # sacks
-    "sacks": ("Sacked! {y} gets {q}!", "{y} sacks {q}! Down he goes!"),
-    "is_sacked": ("{q} is sacked! {y} gets him!", "Sacked! {y} brings down {q}!"),
-    "slams": ("{y} slams {q} to the turf! Sacked!",),
-    "is_slammed": ("{q} is slammed to the turf by {y}! Sacked!",),
-    "chased": ("{q} is chased down by {y}! Sacked!",),
-    "smother": ("{y} and {z} smother {q}! A big sack!",),
+    # takeaways: both interception sentences of the original share one pool
+    "pick": ("Intercepted! {y} picks it off!", "And it's picked off! {y} has it!", "Picked off! {y} intercepts the pass!",
+             "Intercepted! {y} steps in front of it!", "Oh, it's picked! {y} comes up with it!", "Interception! {y} jumps the route!",
+             "{y} picks it off! Intercepted!", "Intercepted by {y}! What a play!", "It's picked off! {y} read it all the way!",
+             "Interception! {y} has the ball!", "Up for grabs, and {y} takes it away! Intercepted!", "Intercepted! {y} snags it out of the air!"),
+    "fumble": ("Fumble! The ball is loose!", "He fumbles! The ball is on the ground!", "Fumble! Loose ball, loose ball!",
+               "The ball is out! Fumble!", "Fumble! It's on the turf!", "He coughs it up! Fumble!", "Loose ball! It's a fumble!",
+               "Fumble! The ball is bouncing around!", "It's knocked loose! Fumble!", "Fumble! Somebody fall on it!",
+               "Oh, he put it on the ground! Fumble!", "Fumble! Bodies flying everywhere!"),
+    "scramble_ball": ("There's a scramble for it!", "Everybody dives for it!", "A pile of bodies going after it!"),
+    "falls_on": ("And {y} falls on it!", "And {y} comes up with it!"),
+    # sacks: the original's six sack sentences share one pool ({y} may be two names joined by "and", so every line works with both)
+    "sack": ("Sacked! {q} goes down, and that's {y}!", "Down goes {q}! Sacked by {y}!", "{q} is buried by {y}! Sacked!",
+             "Sacked! {q} never had a chance against {y}!", "Sacked! {q} is dropped by {y}!", "{q} is taken down by {y}! Sacked!",
+             "Sacked! {q} is brought down by {y}!", "Pressure, and down goes {q}! A sack by {y}!", "Sacked! {q} is swallowed up by {y}!",
+             "{q} is wrapped up by {y}! Sacked!", "Sacked! {y} with a huge play on {q}!", "Oh, {q} is crushed! Sacked by {y}!"),
     # the quarterback's own runs (the QB pool's default lines; a player's own line is said as written)
     "qb_scramble": ("Nobody open! {q} takes off running!",),
     "qb_fake_keep": ("{q} fakes the handoff and keeps it!",),
@@ -146,11 +164,11 @@ CALLS = {
     "middle": ("{x} straight up the middle!", "{x} runs right up the middle!"),
     "off_tackle": ("{x} runs off tackle!", "{x} hits it off tackle!"),
     "hole": ("{x} bursts through a hole {w}!", "{x} through a hole {w}!"),
-    "hole_free": ("{x} bursts through a hole {w}! He's into the open field!", "{x} through a hole {w}, and he's running free!"),
-    "secondary": ("{x} finds a hole {w}, and he's into the secondary!", "{x} squirts through {w}! He's into the secondary!"),
-    "around_up": ("{x} gets around {w}! He heads up field!", "{x} turns the corner around {w}! He's heading up field!"),
+    "hole_free": ("{x} bursts through a hole {w}! He's into the open field!", "{x} through a hole {w}, and he's off to the races!"),
+    "secondary": ("{x} finds a hole {w}, and he's into the secondary!", "{x} squirts through {w}! He's into the secondary! Look out!"),
+    "around_up": ("{x} gets around {w}! He heads up field!", "{x} turns the corner around {w}! He's off to the races!"),
     "tries_around": ("{x} tries to get around {w}.", "{x} tries {w}."),
-    "around_past": ("{x} around {w}, right past {y}!", "{x} races around {w}, and he's past {y}!"),
+    "around_past": ("{x} around {w}, right past {y}!", "{x} races around {w}, and he's past {y}! Look at him go!"),
     "around": ("{x} runs around {w}!", "{x} around {w}!"),
     "finds_way": ("{x} finds his way around {w}!", "{x} works his way around {w}!"),
     "avoids_blitz": ("{x} makes {y} miss!", "{x} slips away from the blitzing {y}!"),
@@ -171,30 +189,75 @@ CALLS = {
     "before_tackle": ("before {y} and {z} bring him down!",),
     "pile_up": ("and there's a big pile-up!", "and he disappears into a big pile!"),
     "pushed_out": ("and he's pushed out of bounds.",),
-    # the result
-    "gain_1": ("A gain of 1.", "Just a yard on the play.", "He picks up a yard."),
-    "gain_short": ("A gain of {n}.", "{n} yards on the play.", "He picks up {n}."),
-    "gain": ("A gain of {n}!", "Good for {n} yards!", "{n} yards on the play!", "He picks up {n}!"),
-    "gain_good": ("A big gain of {n}!", "That's good for {n} yards!", "What a pickup! {n} yards!", "{n} yards on the play! Nice gain!"),
-    "gain_big": ("What a play! A gain of {n} yards!", "{n} yards! A huge gain!", "A big, big play! {n} yards!"),
-    "gain_huge": ("Oh, what a play! {n} yards!", "A gain of {n} yards! What a play!", "{n} yards! That's a monster play!"),
-    "return": ("A return of {n} yards.", "{n} yards on the return."),
-    "return_big": ("What a return! {n} yards!", "A big return! {n} yards!"),
-    "loss_1": ("A loss of 1.", "He loses a yard."),
-    "loss": ("A loss of {n}!", "Thrown for a loss of {n}!", "He loses {n} on the play!"),
-    "loss_sack": ("A loss of {n} on the sack!", "That sack costs {n} yards!"),
-    "no_gain_incomplete": ("Incomplete.", "The pass falls incomplete.", "Incomplete, no gain."),
-    "no_gain_run": ("No gain on the play!", "Stopped cold! No gain!", "Nothing there! No gain."),
-    "no_gain": ("No gain on the play.",),
+    # the result of the play: routine gains are calm, the bigger the play the shorter and louder the call
+    "gain_1": ("A gain of 1.", "Just a yard on the play.", "He picks up a yard.", "A yard on the play.", "One yard, that's all.",
+               "He gets a yard.", "Just one yard there.", "A short gain of 1.", "He falls forward for a yard.", "Only a yard on that one.",
+               "A yard and no more."),
+    "gain_short": ("A gain of {n}.", "{n} yards on the play.", "He picks up {n}.", "A short gain of {n}.", "{n} yards, and he's down.",
+                   "He gets {n} on the play.", "Good for {n}.", "A pickup of {n}.", "He pushes ahead for {n}.", "{n} yards there.",
+                   "A modest gain of {n}."),
+    "gain": ("A gain of {n}!", "Good for {n} yards!", "{n} yards on the play!", "He picks up {n}!", "A nice gain of {n}!", "That's {n} yards!",
+             "He gets {n} on the play!", "A solid gain of {n}!", "{n} yards, a good chunk!", "He moves it {n} yards!",
+             "Positive yards! A gain of {n}!", "That's a pickup of {n}!"),
+    "gain_good": ("A big gain of {n}!", "That's good for {n} yards!", "What a pickup! {n} yards!", "{n} yards on the play! Nice gain!",
+                  "A chunk play! {n} yards!", "He rips off {n} yards!", "A gain of {n}, and that's a nice play!", "{n} yards! That moves the ball!",
+                  "Nice gain! {n} yards on that one!", "He breaks off {n} yards!", "A healthy gain of {n}!", "That's {n} yards! Good football!"),
+    "gain_big": ("What a play! A gain of {n} yards!", "{n} yards! A huge gain!", "A big, big play! {n} yards!", "Look at him go! {n} yards!",
+                 "Big play! {n} yards on that one!", "{n} yards! What a gain!", "Off to the races! A gain of {n}!", "A breakaway! {n} yards!",
+                 "Big play! He rips off {n} yards!", "Wow! {n} yards on the play!", "{n} yards! The crowd is on its feet!",
+                 "Huge gain! {n} yards!"),
+    "gain_huge": ("Oh, what a play! {n} yards!", "A gain of {n} yards! What a play!", "{n} yards! That's a monster play!", "Unbelievable! {n} yards!",
+                  "A monster gain! {n} yards!", "{n} yards! What a play! The place is going crazy!", "Wow! {n} yards! What a play!",
+                  "A huge, huge play! {n} yards!", "Oh, my! {n} yards on that one!", "{n} yards! Unbelievable!",
+                  "What a play! {n} yards! You will not see many better than that!", "Explosive! {n} yards on the play!"),
+    "return": ("A return of {n} yards.", "{n} yards on the return.", "He brings it back {n} yards!", "A nice return of {n}!",
+               "{n} yards on the runback.", "He returns it {n} yards.", "A return of {n}, and decent field position.", "He takes it back {n}.",
+               "That's {n} yards on the return!", "A solid return of {n} yards."),
+    "return_big": ("What a return! {n} yards!", "A big return! {n} yards!", "{n} yards! What a return!", "He brings it back {n} yards! Huge return!",
+                   "A monster return! {n} yards!", "Wow! {n} yards on the return!", "{n} yards! The return team came up big!",
+                   "What a runback! {n} yards!", "Big play! A return of {n}!", "{n} yards on the return! Unbelievable!"),
+    "loss_1": ("A loss of 1.", "He loses a yard.", "Dropped for a loss of 1.", "A yard lost on the play.", "Back one yard.",
+               "He's stopped for a loss of 1.", "One yard lost.", "A loss of a yard there.", "They lose a yard.", "Stopped behind the line, a loss of 1."),
+    "loss": ("A loss of {n}!", "Thrown for a loss of {n}!", "He loses {n} on the play!", "Dropped for a loss of {n}!",
+             "A loss of {n}! The defense wins that one!", "Back {n} yards!", "Stopped behind the line! A loss of {n}!", "{n} yards lost on the play!",
+             "The defense blows it up! A loss of {n}!", "Nowhere to go! A loss of {n}!", "He gives up {n} yards!"),
+    "loss_sack": ("A loss of {n} on the sack!", "That sack costs {n} yards!", "{n} yards lost on the sack!", "The sack backs them up {n} yards!",
+                  "A loss of {n}, and that hurts!", "That's {n} yards in the wrong direction!", "{n} yards back on the sack!",
+                  "A drive killer! {n} yards lost!", "The sack takes away {n} yards!", "Back go the {t}, {n} yards!", "A big loss of {n} on the sack!"),
+    "no_gain_incomplete": ("Incomplete.", "The pass falls incomplete.", "Incomplete, no gain.", "Incomplete pass.", "Incomplete. Nothing there.",
+                           "No good, the pass is incomplete.", "And that one falls incomplete.", "Incomplete, and the play goes nowhere.",
+                           "The pass is incomplete.", "Incomplete, no gain on the play.", "Incomplete. Nothing doing."),
+    "no_gain_run": ("No gain on the play!", "Stopped cold! No gain!", "Nothing there! No gain.", "No gain! The defense holds!",
+                    "He's stuffed at the line! No gain!", "No gain on that one.", "Stopped right there! No gain!", "Met at the line! No gain!",
+                    "Going nowhere! No gain!", "The wall holds! No gain on the play!", "Nothing doing! No gain!"),
+    "no_gain": ("No gain on the play.", "No gain.", "Nothing gained on the play.", "No gain there.", "And no gain.", "No gain on that one.",
+                "That's no gain.", "Zero yards on the play.", "No gain, the ball stays put.", "No yards on the play."),
     # the ball and the downs ({spot} is "their own 25", "the Jets 47" or "midfield")
     "ball": ("The {t} are at {spot}.", "{t} ball at {spot}.", "The {t} have it at {spot}."),
     "ball_new": ("The {t} take over at {spot}.", "{t} ball, starting at {spot}.", "The {t} will start this drive at {spot}."),
-    "ball_turnover": ("And the {t} take over at {spot}!", "The {t} have it now, at {spot}!", "Change of possession! {t} ball at {spot}!"),
-    "ball_downs": ("Turnover on downs! The {t} take over at {spot}!", "They come up short! The {t} take over on downs at {spot}!"),
-    "first_gained": ("First down!", "First down, {t}!", "And that's a first down!", "That moves the chains! First down, {t}!"),
-    "first_gained_n": ("First down, {t}! First and {n}.", "That's a first down! First and {n}."),
+    "ball_turnover": ("And the {t} take over at {spot}!", "The {t} have it now, at {spot}!", "Change of possession! {t} ball at {spot}!",
+                      "Turnover! The {t} take over at {spot}!", "The {t} get the ball back at {spot}!",
+                      "A huge change of possession! The {t} have it at {spot}!", "Takeaway! The {t} take over at {spot}!",
+                      "The {t} will take it from {spot}! What a turn of events!", "And now it's {t} ball, at {spot}!",
+                      "A gift for the {t}! They take over at {spot}!"),
+    "ball_downs": ("Turnover on downs! The {t} take over at {spot}!", "They come up short! The {t} take over on downs at {spot}!",
+                   "Stopped! Turnover on downs! {t} ball at {spot}!", "The defense holds! The {t} take over on downs at {spot}!",
+                   "Short! And the {t} get it on downs at {spot}!", "Turnover on downs! What a stand! The {t} have it at {spot}!",
+                   "No first down! The {t} take over at {spot}!", "The gamble fails! Turnover on downs! {t} ball at {spot}!",
+                   "A huge stop! Turnover on downs! The {t} take over at {spot}!", "They didn't get it! The {t} take over on downs at {spot}!"),
+    "first_gained": ("First down!", "First down, {t}!", "And that's a first down!", "That moves the chains! First down, {t}!",
+                     "Move the chains! First down!", "First down! The drive rolls on!", "They've got the first down!",
+                     "That's enough for a first down, {t}!", "First down! The {t} keep it going!", "Moving the sticks! First down!",
+                     "And he's got the first down!", "First down, and the {t} keep coming!"),
+    "first_gained_n": ("First down, {t}! First and {n}.", "That's a first down! First and {n}.", "First down! First and {n} now.",
+                       "Move the chains! First and {n}.", "The {t} pick up the first down! First and {n}.", "First down! It's first and {n}.",
+                       "They've got it! First and {n}, {t}!", "That's a first down! Now first and {n}!", "First down, {t}! It'll be first and {n}.",
+                       "The chains move! First and {n}!"),
     "first": ("First and {n}.", "First and {n} to start the drive.", "First and {n}, here we go."),
-    "first_goal_gained": ("First and goal, {t}!", "First and goal!"),
+    "first_goal_gained": ("First and goal, {t}!", "First and goal!", "First down, and it's first and goal!",
+                          "First and goal! The {t} are knocking on the door!", "They're in close now! First and goal!",
+                          "First and goal, and the {t} can smell the end zone!", "In close! First and goal!", "First and goal! Here we go!",
+                          "That's first and goal for the {t}!", "First and goal! The end zone is right there!"),
     "first_goal": ("First and goal.",),
     "second_short": ("Second and {n}. Short yardage.", "Second and {n}, just {n} to go!"),
     "second_long": ("Second and {n}.", "Second and long, {n} to go."),
@@ -212,7 +275,9 @@ CALLS = {
     "kickoff_up": ("And here's the kick! It's headed for the end zone!", "The kick is in the air! It's deep, headed for the end zone!"),
     "deep_catch": ("{x} takes it {n} yards deep in the end zone!", "{x} catches it {n} yards deep in the end zone!"),
     "downs_end_zone": ("He takes a knee in the end zone. Touchback.", "He downs it in the end zone. Touchback."),
-    "touch_back": ("Touchback.", "It's a touchback."),
+    "touch_back": ("Touchback.", "It's a touchback.", "Touchback, no return.", "And that will be a touchback.", "A touchback.",
+                   "No return, touchback.", "That's a touchback.", "Into the end zone, touchback.", "It's a touchback, nothing more.",
+                   "Touchback, and the ball comes out."),
     "ret_left_right": ("He's running left, he turns back right, now he's going left again!",),
     "ret_cuts": ("He's running left, he cuts right, he cuts back to the left!",),
     "ret_middle": ("He looks left, he looks right, and heads for the middle of the field!",),
@@ -230,32 +295,66 @@ CALLS = {
     "punt_pooch": ("A little pooch kick.",),
     "punt_travels": ("It travels {n} yards in the air.", "{n} yards in the air."),
     "downed": ("Downed by {x}.",),
-    "fair_catch": ("{x} waves for a fair catch.", "{x} calls for the fair catch."),
+    "fair_catch": ("{x} waves for a fair catch.", "{x} calls for the fair catch.", "Fair catch signaled by {x}.", "{x} puts up his hand. Fair catch.",
+                   "{x} signals for a fair catch.", "No return, {x} calls for the fair catch.", "{x} waves his arm. Fair catch.",
+                   "{x} will fair catch it.", "Fair catch by {x}.", "{x} takes the fair catch."),
     "bounces_out": ("It bounces out of bounds.",),
-    # field goals and tries
+    # field goals and tries ({t} the kicking team)
     "fg_in": ("{k} comes on for the field goal try.", "Here comes {k} for the field goal attempt."),
     "xp_in": ("{k} is on for the extra point.", "Here's {k} for the extra point."),
     "holder": ("{x} will hold.", "{x} is the holder."),
     "snap_good": ("The snap is good,", "Good snap,"),
     "hold_good": ("the hold is down,", "the hold is good,"),
     "kick_up": ("The kick is up, and it",),
-    "fg_good": ("is good! It's good!", "is good! Right down the middle!"),
-    "xp_good": ("is good! The extra point is good!", "is good! And that's the extra point!"),
-    "fg_miss": ("{m}! No good!",),
+    "fg_good": ("is good! It's good!", "is good! Right down the middle!", "is good! Right through the uprights!", "is good! Three points for the {t}!",
+                "is good! Split the uprights!", "is good! The kick is good!", "is good! Plenty of leg on that one!", "is good! Right between the pipes!",
+                "is good! Never a doubt!", "is good! The {t} put three on the board!", "is good! Dead center!", "is good! The {t} add three!"),
+    "xp_good": ("is good! The extra point is good!", "is good! And that's the extra point!", "is good! The point after is good!",
+                "is good! Tack on the extra point!", "is good! Right through!", "is good! No trouble there!", "is good! The {t} add the point!",
+                "is good! Automatic!", "is good! That one splits the uprights!", "is good! The point after is in!"),
+    "fg_miss": ("{m}! No good!", "{m}! The kick is no good!", "{m}! It's no good!", "{m}! Oh, no good!", "{m}! And that one is no good!",
+                "{m}! No good! The {t} come away empty!", "{m}! No good! What a miss!", "{m}! And it's no good! Oh, my!",
+                "{m}! No good! That one will sting!", "{m}! No good, and the {t} get nothing!", "{m}! The kick is no good! A big miss!"),
     "fg_way_short": ("is way too short! No good!",),
-    "two_good": ("The two-point conversion is good!", "They get it! The two-point try is good!"),
+    "two_good": ("The two-point conversion is good!", "They get it! The two-point try is good!", "Two points! The conversion is good!",
+                 "It's good! The {t} get the two points!", "They're in! The two-point try is good!", "The conversion is good! Two more for the {t}!",
+                 "Yes! The two-point try is good!", "Got it! The {t} convert the two!", "The two-point play works! It's good!",
+                 "Two points for the {t}! The conversion is good!"),
     # the touchdown and the safety
     "he_is_at": ("He's at the",),
-    "touchdown": ("Touchdown! Touchdown, {t}!", "Touchdown {t}! What a play!", "He's in! Touchdown!", "Touchdown! The {t} score!"),
-    "safety": ("in the end zone! It's a safety!",),
+    "touchdown": ("Touchdown! Touchdown, {t}!", "Touchdown {t}! What a play!", "He's in! Touchdown!", "Touchdown! The {t} score!",
+                  "He scores! Touchdown, {t}!", "Into the end zone! Touchdown!", "Touchdown! Six points for the {t}!",
+                  "Oh, he's in there! Touchdown, {t}!", "Touchdown! The {t} find the end zone!", "And that's a touchdown! The {t} score!",
+                  "Touchdown! Unbelievable! The {t} put six on the board!", "Six points! Touchdown, {t}!"),
+    "safety": ("in the end zone! It's a safety!", "in the end zone! Safety! Two points for the defense!", "in the end zone! That's a safety!",
+               "in the end zone! A safety! What a play by the defense!", "in the end zone! Safety! The defense comes up big!",
+               "in the end zone! It's a safety, and two points!", "in the end zone! Safety! Oh, what a stop!", "in the end zone! A safety! The defense scores!",
+               "in the end zone! Safety! They trapped him!", "in the end zone! It's a safety! Two points on the board!"),
     # the onside kick
-    "onside": ("The {t} are going for the onside kick!",),
+    "onside": ("The {t} are going for the onside kick!", "Here it comes! The {t} try the onside kick!"),
 }
 
-# the calls said one rate step faster by the game's own voices
-EXCITED_CALLS = frozenset(("intercepts", "picks_off", "fumble", "sacks", "is_sacked", "slams", "is_slammed", "chased", "smother",
-                           "gain_big", "gain_huge", "return_big", "touchdown", "safety", "fg_good", "two_good", "one_man",
-                           "ball_turnover", "ball_downs", "catch_one_hand", "td_catch_break"))
+# XV (D-198): the excitement of each call (speech/lift.py): 2 a gain, 3 a big play, 4 a turnover or a sack, 5 the touchdown; every other call
+# is routine (1). A countdown's yard marker is a big play, a return's first markers a gain (_r_mark).
+LEVELS = {
+    GAIN: ("catch", "catch_hit", "catch_back", "catch_run", "first_gained", "first_gained_n", "first_goal_gained", "gain_good", "return",
+           "loss", "loss_sack", "xp_good", "third", "third_short", "third_long", "third_goal", "fourth", "fourth_goal", "flushed",
+           "scramble_left", "scramble_right", "avoids_blitz", "kickoff_up", "punt_booming", "no_huddle", "ret_at_5", "dropped", "batted"),
+    BIG_PLAY: ("gain_big", "gain_huge", "return_big", "one_man", "he_is_at", "hole_free", "secondary", "around_up", "around_past",
+               "td_catch_break", "td_catch_run", "catch_one_hand", "catch_leap", "catch_shoulder", "fg_good", "two_good", "fg_miss", "onside",
+               "fg_way_short"),
+    TURNOVER: ("pick", "fumble", "scramble_ball", "falls_on", "sack", "ball_turnover", "ball_downs", "safety", "bats_back"),
+    TOUCHDOWN: ("touchdown", "td_catch_zone"),
+}
+LEVEL_OF = {key: level for level, keys in LEVELS.items() for key in keys}
+# XV (D-198): the kinds of play result, each said in at least MIN_RESULT_VARIANTS ways (the owner's request: "a randomized list of 10+
+# broadcast templates per play result type so it never feels repetitive"; tests/test_xv_excited_voice.py)
+MIN_RESULT_VARIANTS = 10
+RESULT_CALLS = ("gain_1", "gain_short", "gain", "gain_good", "gain_big", "gain_huge", "return", "return_big", "loss_1", "loss", "loss_sack",
+                "no_gain_incomplete", "no_gain_run", "no_gain", "first_gained", "first_gained_n", "first_goal_gained", "touchdown", "safety",
+                "pick", "fumble", "sack", "ball_turnover", "ball_downs", "fg_good", "xp_good", "fg_miss", "two_good", "touch_back", "fair_catch",
+                "catch")
+TEAM_CALLS = frozenset(("touchdown", "onside", "fg_good", "xp_good", "fg_miss", "two_good"))   # {t}: the team with the ball
 
 _W = r"(?P<w>up the middle|on the left side|on the right side|the left end|the right end|the left side|the right side)"
 _N = r"(?P<n>\d+)"
@@ -319,8 +418,8 @@ PATTERNS = [
     # the catch
     (r"and (?P<r>.+?) catches the ball on the run", "catch_run"),
     (r"and (?P<r>.+?) catches the ball", "catch"),
-    (r"and (?P<r>.+?) grabs it", "catch_grab"),
-    (r"and (?P<r>.+?) comes down with it", "catch_down"),
+    (r"and (?P<r>.+?) grabs it", "catch"),
+    (r"and (?P<r>.+?) comes down with it", "catch"),
     (r"and (?P<r>.+?) is hit as he catches the pass", "catch_hit"),
     (r"and (?P<r>.+?) makes a one handed catch", "catch_one_hand"),
     (r"and (?P<r>.+?) makes a leaping catch", "catch_leap"),
@@ -340,18 +439,18 @@ PATTERNS = [
     (r"(?P<r>.+?) drops the ball", "dropped"),
     (r"(?P<r>.+?) catches it out of bounds", "out_of_bounds"),
     # takeaways
-    (r"and (?P<y>.+?) intercepts the ball", "intercepts"),
-    (r"and (?P<y>.+?) picks off the pass", "picks_off"),
+    (r"and (?P<y>.+?) intercepts the ball", "pick"),
+    (r"and (?P<y>.+?) picks off the pass", "pick"),
     (r"there is a fumble on the play", "fumble"),
     (r"there is a scramble for the ball\.?", "scramble_ball"),
     (r"and (?P<y>.+?) falls on the ball\.?", "falls_on"),
     # sacks
-    (r"(?P<y>.+?) and (?P<z>.+?) smother (?P<q>.+)", "smother"),
-    (r"(?P<q>.+?) is sacked by (?P<y>.+)", "is_sacked"),
-    (r"(?P<q>.+?) is slammed to the ground by (?P<y>.+)", "is_slammed"),
-    (r"(?P<q>.+?) is chased down by (?P<y>.+)", "chased"),
-    (r"(?P<y>.+?) slams (?P<q>.+?) to the ground", "slams"),
-    (r"(?P<y>.+?) sacks (?P<q>.+)", "sacks"),
+    (r"(?P<y>.+?) and (?P<z>.+?) smother (?P<q>.+)", "SMOTHER"),
+    (r"(?P<q>.+?) is sacked by (?P<y>.+)", "sack"),
+    (r"(?P<q>.+?) is slammed to the ground by (?P<y>.+)", "sack"),
+    (r"(?P<q>.+?) is chased down by (?P<y>.+)", "sack"),
+    (r"(?P<y>.+?) slams (?P<q>.+?) to the ground", "sack"),
+    (r"(?P<y>.+?) sacks (?P<q>.+)", "sack"),
     # runs
     (r"(?P<x>.+?) runs straight up the middle", "middle"),
     (r"(?P<x>.+?) runs off tackle", "off_tackle"),
@@ -439,14 +538,14 @@ PATTERNS = [
 COMPILED = [(re.compile(pattern, re.IGNORECASE), rule) for pattern, rule in PATTERNS]
 
 # what the last action of a play was (the result's words follow it)
-ACTION_OF = {"catch": "catch", "catch_grab": "catch", "catch_down": "catch", "catch_hit": "catch", "catch_one_hand": "catch",
+ACTION_OF = {"catch": "catch", "catch_hit": "catch", "catch_one_hand": "catch",
              "catch_leap": "catch", "catch_back": "catch", "catch_run": "catch", "catch_shoulder": "catch", "td_catch_zone": "catch",
              "td_catch_break": "catch", "td_catch_run": "catch",
              "through_hands": "incomplete", "over_head": "incomplete", "short_of": "incomplete", "batted": "incomplete",
              "bats_back": "incomplete", "off_chest": "incomplete", "off_back": "incomplete", "dropped": "incomplete",
              "out_of_bounds": "incomplete", "throw_away": "incomplete",
-             "intercepts": "takeaway", "picks_off": "takeaway", "fumble": "takeaway",
-             "sacks": "sack", "is_sacked": "sack", "slams": "sack", "is_slammed": "sack", "chased": "sack", "smother": "sack",
+             "pick": "takeaway", "fumble": "takeaway",
+             "sack": "sack",
              "middle": "run", "off_tackle": "run", "hole": "run", "hole_free": "run", "secondary": "run", "around_up": "run",
              "tries_around": "run", "around_past": "run", "around": "run", "finds_way": "run", "avoids_blitz": "run",
              "qb_scramble": "run", "qb_fake_keep": "run", "qb_roll": "run", "qb_sneak": "run", "qb_draw": "run", "qb_keeps": "run",
@@ -467,6 +566,7 @@ class RadioCalls:
         self.game = None
         self.rnd = random.Random(SEED_MIX)
         self._told = None                     # the setting the log last named
+        self._voice_told = None               # XV: the Excited voice setting the log last named
         self._reset()
 
     def _reset(self) -> None:
@@ -484,7 +584,9 @@ class RadioCalls:
         self.rnd = random.Random(side_seed(getattr(game, "rnd", None), SEED_MIX))
         self._reset()
         self._told = None
+        self._voice_told = None
         self.on()                             # the log names the setting of this game
+        self.excited()
 
     # ----- the switch -----
 
@@ -500,11 +602,24 @@ class RadioCalls:
                      else "off, the play-by-play in the original's words")
         return key == RADIO and self.game is not None
 
+    def excited(self) -> bool:
+        """XV (D-198): F9, Rules, Excited voice (nx_excited_voice), read at every call so a change applies at once."""
+        settings = getattr(getattr(getattr(self.game, "options", None), "settings", None), "game", None)
+        value = getattr(settings, "nx_excited_voice", None)
+        if value is None:
+            value = getattr(self.b, "excited_voice", DEFAULT_EXCITED_VOICE)
+        value = bool(value)
+        if value != self._voice_told:
+            self._voice_told = value
+            log.info("radio calls: excited voice %s", "on, the big plays are said higher, faster and louder" if value
+                     else "off, every call in the voice as it is")
+        return value
+
     # ----- the call -----
 
     def call(self, text: str) -> tuple[str, int]:
-        """The radio call of one sentence of the play-by-play and its rate step; the sentence itself when it has no known shape or the
-        radio calls are off."""
+        """The radio call of one sentence of the play-by-play and its excitement (XV, D-198: 1 to 5, or 0 with the Excited voice off); the
+        sentence itself and 0 when it has no known shape or the radio calls are off."""
         if not self.on():
             return text, 0
         plain = " ".join(text.split())
@@ -517,8 +632,15 @@ class RadioCalls:
                 return text, 0
             key, out = said
             self.calls += 1
-            return " " + out + " ", EXCITED if key in EXCITED_CALLS else 0
+            return " " + out + " ", (self.level(key, out) if self.excited() else 0)
         return text, 0
+
+    @staticmethod
+    def level(key: str, said: str) -> int:
+        """XV (D-198): the excitement of a call: its LEVELS entry; a yard marker is a big play in a countdown or with its exclamation."""
+        if key == "mark":
+            return BIG_PLAY if said.endswith("!") else GAIN
+        return LEVEL_OF.get(key, ROUTINE)
 
     def _rule(self, rule: str, m) -> tuple[str, str] | None:
         values = {k: v.strip() for k, v in m.groupdict().items() if v is not None}
@@ -535,7 +657,7 @@ class RadioCalls:
             self.countdown, self.marks = 0, None
         elif rule in ("touchdown", "safety", "touch_back", "downs_end_zone"):
             self.countdown, self.marks = None, None
-        if rule == "touchdown" or rule == "onside":
+        if rule in TEAM_CALLS:
             values["t"] = values.get("t") or self.team(self.side_with_ball())
         return rule, self.pick(rule, values)
 
@@ -563,7 +685,12 @@ class RadioCalls:
     def _r_loss(self, v):
         n = int(v["n"])
         key = "loss_sack" if self.action == "sack" else "loss_1" if n == 1 else "loss"
-        return key, self.pick(key, {"n": str(n)})
+        return key, self.pick(key, {"n": str(n), "t": self.team(self.side_with_ball())})
+
+    def _r_smother(self, v):
+        """Two tacklers smother the quarterback: the sack pool, its lines said with both names (XV: every sack line fits two names)."""
+        self.action = "sack"
+        return "sack", self.pick("sack", {"y": v["y"] + " and " + v["z"], "q": v["q"]})
 
     def _r_no_gain(self, v):
         key = {"incomplete": "no_gain_incomplete", "run": "no_gain_run"}.get(self.action, "no_gain")

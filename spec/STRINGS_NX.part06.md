@@ -1,4 +1,3 @@
-- NXV-10 (sentence, say2): " the owner has fired you. your job rating was <a>, after <w> wins and <l> losses. ". stage 9: the player is fired (never after a winning season)
 - NXV-11 (prompt, say2): " <coach> these teams want you as their head coach. choose your new team. ". stage 9: the offers (never the team that fired him)
 - NXV-A01 (answer, say2): "the <team>, rating <r>, number <k> of 32". stage 9: an offer, the best ranked first (the staff's recommendation)
 - NXV-12 (sentence, say2): " you are the new head coach of the <team>. ". stage 9: the job the player took
@@ -332,3 +331,5 @@
 - BN64 (remark, say): " A few clouds are rolling through, but nothing that should bother anyone on the field. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN65 (remark, say): " There is a hush before the snap and a roar after the whistle. That is football on the radio, too. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN66 (remark, say): " The grass is holding up well, and the footing looks good for both teams. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN67 (remark, say): " You can tell the fans are into it from the way they stand for every third down. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN68 (remark, say): " The players' breath is showing in the huddle. It is that kind of day. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)

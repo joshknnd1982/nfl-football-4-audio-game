@@ -1,4 +1,3 @@
-- NXB-E30 (help, say5): " Short passes that are easier to complete but gain fewer yards. ". description of an item or menu word (NX-P8)
 - NXB-E31 (help, say5): " Long passes down the field, with big gains and bigger risks. ". description of an item or menu word (NX-P8)
 - NXB-E32 (help, say5): " Pass plays that begin with a fake handoff. ". description of an item or menu word (NX-P8)
 - NXB-E33 (help, say5): " Plays where the quarterback runs with the ball. ". description of an item or menu word (NX-P8)

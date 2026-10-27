@@ -275,7 +275,7 @@ def test_f5_f6_f7_add_their_lines_after_the_original_text_during_an_nfl_game(tmp
         lead = [original] + ([words.KEYS_ADDED_F9] if menu == hot.speckeys else [])      # S8.2: F9 is in the key list, in every mode
         assert said[:len(lead)] == lead and said[len(lead):len(lead) + len(ids)] == [X.text(i) for i in ids]     # then SX.10b2's lines
     rig.rules.state.extras.timeouts_on = False
-    assert feature_help(rig.rules, "117") == [X.text(i) for i in ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-83", "NXH-84", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-79", "NXH-80", "NXH-81", "NXH-06")]     # D-140: the quarterbacks   # SX.12: overtime; SY.1: the broadcast; SY.2: the stadium; SZ.1, SZ.2: the name and the player's own sounds
+    assert feature_help(rig.rules, "117") == [X.text(i) for i in ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-83", "NXH-84", "NXH-85", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-79", "NXH-80", "NXH-81", "NXH-06")]     # D-140: the quarterbacks   # SX.12: overtime; SY.1: the broadcast; SY.2: the stadium; SZ.1, SZ.2: the name and the player's own sounds
 
 
 def test_the_help_of_a_classic_program_has_no_feature_lines_only_the_keys(tmp_path):

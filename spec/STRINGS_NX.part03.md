@@ -250,3 +250,4 @@
 - NXB-E27 (help, say5): " Runs straight ahead through the middle of the line for short, steady gains. ". description of an item or menu word (NX-P8)
 - NXB-E28 (help, say5): " Runs toward the side line that try to get around the end of the line. ". description of an item or menu word (NX-P8)
 - NXB-E29 (help, say5): " Short passes to a runner or receiver with blockers in front, to beat a pass rush. ". description of an item or menu word (NX-P8)
+- NXB-E30 (help, say5): " Short passes that are easier to complete but gain fewer yards. ". description of an item or menu word (NX-P8)

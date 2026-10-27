@@ -50,7 +50,7 @@ from . import commentators
 from . import crew
 from . import nx_texts as X
 from . import remarks
-from .radio_calls import DEFAULT_CALLS, RadioCalls
+from .radio_calls import DEFAULT_CALLS, DEFAULT_EXCITED_VOICE, RadioCalls
 
 log = logging.getLogger("nfl4.extras")
 
@@ -245,6 +245,7 @@ class Broadcast:
         self.clock = None
         self.rnd: GameRandom | None = None
         self.play_calls = DEFAULT_CALLS             # RC (D-195): used when the game has no settings of the player (a test's game)
+        self.excited_voice = DEFAULT_EXCITED_VOICE  # XV (D-198): the same for the Excited voice
         self.calls = RadioCalls(self)               # the radio play-by-play (extras/radio_calls.py), attached with every game
         self._reset()
 

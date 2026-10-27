@@ -2632,3 +2632,8 @@ NXM-70	broadcast	menu	say5	Play calls	F9, Rules, the item after How much the cre
 NXM-71	broadcast	piece	piece	radio style, exciting	the value of NXM-70: every play called like a radio broadcast, the default (RC, D-195)
 NXM-72	broadcast	piece	piece	plain, the original's words	the value of NXM-70: the plays told in the original's sentences (RC, D-195)
 NXH-84	broadcast	help	say5	 F9, Rules, Play calls chooses how the plays are called: radio style, exciting, which is the default, or plain, the original's words. 	F6 addition after NXH-83, both modes (RC, D-195)
+NXM-73	broadcast	menu	say5	Excited voice	F9, Rules, the item after Play calls: followed by its value (XV, D-198)
+NXM-74	broadcast	piece	piece	on, the big plays are said higher, faster and a little louder	the value of NXM-73: the radio calls said with their excitement, the default (XV, D-198)
+NXM-75	broadcast	piece	piece	off, every call in the voice as it is	the value of NXM-73: the radio calls said in the voice as it is (XV, D-198)
+NXM-76	broadcast	sentence	say5	 JAWS says the words only, because it cannot change its voice for a program. 	after NXM-73's value while JAWS speaks the game (XV, D-198)
+NXH-85	broadcast	help	say5	 F9, Rules, Excited voice says the big plays higher, faster and a little louder, with the game's own voices or NVDA. It is on by default; press Enter on it to turn it off or on. 	F6 addition after NXH-84, both modes (XV, D-198)

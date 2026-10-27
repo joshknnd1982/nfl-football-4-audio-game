@@ -60,7 +60,7 @@ def test_every_call_is_short_plain_ascii_with_known_names_and_every_rule_has_its
             assert "Jim" not in text and "Kitchen" not in text
     for _pattern, rule in RC.PATTERNS:
         assert rule.isupper() or rule in RC.CALLS, rule
-    assert RC.EXCITED_CALLS <= set(RC.CALLS)
+    assert set(RC.LEVEL_OF) <= set(RC.CALLS)                    # XV (D-198): the levels name only calls that exist
 
 
 @pytest.mark.parametrize("value, key", [("radio", "radio"), ("Radio Style", "radio"), ("plain", "plain"), ("the original's words", "plain"),
@@ -74,8 +74,8 @@ def test_the_setting_is_read_from_a_word(value, key):
     (" it's your ball on my 47yard line", r"Bengals .*(at|have it at) the Jets 47\."),
     (" it's  mine on my 46 yard line", r"Jets .*their own 46\."),
     (" it's my ball on the 50yard line", r"Jets .*midfield\."),
-    (" ball turned over on downs the ball is now  mine on your 16 yard line", r"!.*Jets take over .*the Bengals 16!"),
-    (" the ball is now your ball on my 9 yard line", r"Bengals .*the Jets 9!"),
+    (" ball turned over on downs the ball is now  mine on your 16 yard line", r"!.*Jets\b.*the Bengals 16!"),
+    (" the ball is now your ball on my 9 yard line", r"Bengals\b.*the Jets 9!"),
 ])
 def test_the_ball_is_said_with_the_team_names(text, wanted):
     assert re.search(wanted, said_text(caller(), text)), said_text(caller(), text)
@@ -107,7 +107,7 @@ def test_the_gain_grows_with_its_size(yards, key):
     text, step = c.call(" There is a gain of %d yard%s on the play" % (yards, "" if yards == 1 else "s"))
     filled = {v.replace("{n}", str(yards)) for v in RC.CALLS[key]}
     assert " ".join(text.split()) in filled
-    assert step == (RC.EXCITED if yards >= RC.BIG else 0)
+    assert step == (3 if yards >= RC.BIG else 2 if yards >= 10 else 1)        # XV (D-198): the excitement grows with the gain
 
 
 def test_the_owners_example_caught_by_and_touchdown_with_the_team():
@@ -115,7 +115,7 @@ def test_the_owners_example_caught_by_and_touchdown_with_the_team():
     catch = said_text(c, " and Seals catches the ball ")
     assert catch.endswith("!") and "Seals" in catch
     td, step = c.call(" TOUCH DOWN")
-    assert "Touchdown" in td and "!" in td and step == RC.EXCITED
+    assert "Touchdown" in td and "!" in td and step == 5                     # XV (D-198): the touchdown is the most excited call
     assert any("Bengals" in v.replace("{t}", "Bengals") for v in RC.CALLS["touchdown"])
 
 
@@ -123,6 +123,7 @@ def test_the_countdown_and_a_return_build_up():
     c = caller()
     assert said_text(c, " he is at the") == "He's at the"
     assert [said_text(c, n) for n in ("40", "30", "5", "1")] == ["40!", "the 30!", "5!", "1!"]
+    assert c.call("the 20")[1] == 3                           # XV (D-198): a countdown's marker is a big play
     c.call(" TOUCH DOWN")
     assert said_text(c, "30") == "30"                       # outside a countdown or a return a bare number stays
     c.call(" Powers is at the 5")
@@ -158,8 +159,8 @@ def test_the_speakers_use_the_caller_for_the_play_by_play_only_and_f2_replays_th
     g.say4(" TOUCH DOWN")
     g.say5(" TOUCH DOWN")                                   # a menu's speaker is never the caller's
     texts = [t for t, _r, _s in rig.said]
-    assert "Touchdown" in texts[-2] and texts[-1] == " TOUCH DOWN"
-    assert "Touchdown" in g.replay[-1]                     # F2 says what was said
+    assert "touchdown" in texts[-2].lower() and texts[-1] == " TOUCH DOWN"
+    assert "touchdown" in g.replay[-1].lower()             # F2 says what was said
 
 
 def test_a_failing_caller_leaves_the_original_words(tmp_path, caplog):
@@ -193,7 +194,7 @@ def test_classic_radio_calls_change_words_only_and_the_bare_classic_has_none(tmp
     assert radio != plain and len(radio) == len(plain)      # the same sentences in number, said as radio calls
     assert not any("TOUCH DOWN" in t or "it's" in t and "yard line" in t for t in radio)    # F1's "its ... yard line" is the original's
     #                                                                                         prompt again, word for word (rule 0.17)
-    assert any("Touchdown" in t for t in radio) and any(t.strip().endswith("!") for t in radio)
+    assert any("touchdown" in t.lower() for t in radio) and any(t.strip().endswith("!") for t in radio)
     assert len(doubles(radio)) <= len(doubles(plain))
 
 
@@ -203,11 +204,12 @@ def test_the_engine_clears_the_caller_so_a_bare_classic_after_a_radio_game_says_
     rig.game.options.settings.game.nx_play_calls = "radio"
     play(rig, rules=ClassicRadioRules(broadcast_on=True))
     assert rig.game.radio_calls is not None
-    assert any(t.strip().startswith("Touchdown") or "Touchdown" in t for t, _r, _s in rig.said)
+    assert any("touchdown" in t.lower() for t, _r, _s in rig.said)
     start = len(rig.said)
     play(rig, rules=CLASSIC)
     assert rig.game.radio_calls is None
-    assert not any(t.strip().startswith("Touchdown") for t, _r, _s in rig.said[start:])
+    td_calls = tuple(v.split("{")[0].strip() for v in RC.CALLS["touchdown"] if v.split("{")[0].strip())   # XV: every touchdown call's start
+    assert not any(t.strip().startswith(td_calls) for t, _r, _s in rig.said[start:])
 
 
 def nfl_game(tmp_path, seed, calls="radio", level="lots", broadcast=True):

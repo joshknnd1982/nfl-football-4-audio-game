@@ -21,7 +21,7 @@ from nfl4.extras.franchise import practice as P
 BENGALS, RAVENS = 1, 3
 F9 = 120
 RULES = [DOWN, DOWN, DOWN, ENTER]                        # F9's fourth item
-QUARTERBACKS = [DOWN] * 14 + [ENTER]                       # the Rules menu's fifteenth item (S-D: How much the crew talks is 11, RC: Play calls 12)
+QUARTERBACKS = [DOWN] * 15 + [ENTER]                       # the Rules menu's sixteenth item (S-D: How much the crew talks is 11, RC: Play calls 12, XV: Excited voice 13)
 
 
 def shipped():

@@ -18,6 +18,10 @@ game you are playing. "), because the broadcast reads the setting at every line.
 RC (D-195; the owner: "Make it an exciting radio broadcast") added Play calls after it (12; Stadium sounds is 13, Broadcast crew 14,
 Reset 17): radio style, exciting (the default: every play called like a radio broadcast, extras/radio_calls.py) or plain, the original's
 words; Enter, Left and Right switch it; it applies at once, also in the game being played (the caller reads the setting at every sentence).
+XV (D-198; the owner: the voice raised with the excitement, and "user should be able to turn it on or off") added Excited voice after Play
+calls (13; Stadium sounds is 14, Broadcast crew 15, Quarterbacks 16, Depth charts 17, Reset 18): on (the default: the big plays are said
+higher, faster and a little louder by the game's own voices and NVDA, speech/lift.py) or off; Enter, Left and Right switch it; it applies at
+once, also in the game being played. While JAWS speaks the game the item says that JAWS says the words only.
 Rules = N. F. L. rules also makes the program read the extras' files (remarks.txt, CUSTOMIZABLE_CONTENT 13).
 """
 from __future__ import annotations
@@ -25,7 +29,7 @@ from __future__ import annotations
 from ..game.spoken_menu import Item, SpokenMenu
 from . import crew_menu
 from .broadcast import DEFAULT_TALK, next_talk, talk_words
-from .radio_calls import DEFAULT_CALLS, RADIO, calls_key, next_calls
+from .radio_calls import DEFAULT_CALLS, DEFAULT_EXCITED_VOICE, RADIO, calls_key, next_calls
 from . import depth_flow
 from . import nx_texts as X
 from . import quarterbacks
@@ -36,10 +40,10 @@ DEFAULTS = {"rules": NFL, "nx_timeouts": True, "nx_penalties": True, "nx_onside"
             "nx_onside_question": "always", "nx_onside_question_chosen": False, "nx_qb_runs": True, "nx_challenges": True,    # design 12.1 (NQ2: the N. F. L. rules since SX.9)
             "nx_offense_playbook": TEAM_KEY, "nx_defense_playbook": TEAM_KEY,      # SX.10e (D-095, Q-035): the team's playbook is the default
             "nx_playbook_chosen": False, "nx_broadcast": True, "nx_stadium": True, "nx_crew_talk": DEFAULT_TALK,
-            "nx_play_calls": DEFAULT_CALLS}
+            "nx_play_calls": DEFAULT_CALLS, "nx_excited_voice": DEFAULT_EXCITED_VOICE}
 SWITCHES = ("rules", "nx_timeouts", "nx_challenges", "nx_qb_runs", "nx_penalties", "nx_onside", "nx_onside_question", "nx_onside_question_chosen",
             "nx_offense_playbook", "nx_defense_playbook", "nx_playbook_chosen", "nx_broadcast", "nx_stadium", "nx_crew_talk",
-            "nx_play_calls")
+            "nx_play_calls", "nx_excited_voice")
 
 
 def rules_label(game_settings) -> str:
@@ -62,6 +66,20 @@ def calls_label(game_settings) -> str:
     """RC (D-195): "Play calls: radio style, exciting" or "Play calls: plain, the original's words". Both modes."""
     key = calls_key(getattr(game_settings, "nx_play_calls", DEFAULT_CALLS)) or DEFAULT_CALLS
     return X.text("NXM-70") + ": " + X.text("NXM-71" if key == RADIO else "NXM-72")
+
+
+def excited_label(game_settings, speech=None) -> str:
+    """XV (D-198): "Excited voice: on, the big plays are said higher, faster and a little louder" (or off). Both modes. While JAWS speaks
+    the game the item adds that JAWS says the words only (it has no pitch or rate a program can set)."""
+    on = bool(getattr(game_settings, "nx_excited_voice", DEFAULT_EXCITED_VOICE))
+    text = X.text("NXM-73") + ": " + X.text("NXM-74" if on else "NXM-75")
+    try:
+        engine = speech.active_engine() if speech is not None and hasattr(speech, "active_engine") else None
+    except Exception:
+        engine = None
+    if getattr(engine, "name", "") == "JAWS":
+        text += "." + X.text("NXM-76")
+    return text
 
 
 def playbook_name(choice: str) -> str:
@@ -148,6 +166,16 @@ def rules_menu(game, speech, keys) -> None:
     def calls_item() -> str:
         return calls_label(settings)
 
+    def change_excited(step: int = 1) -> None:
+        """XV (D-198): on or off; saved at once. The radio caller reads it at every call, so it needs no new rules object."""
+        from ..data import debuglog
+        settings.nx_excited_voice = not bool(getattr(settings, "nx_excited_voice", DEFAULT_EXCITED_VOICE))
+        options.save()
+        debuglog.event("setting", "change", name="nx_excited_voice", value="on" if settings.nx_excited_voice else "off")
+
+    def excited_item() -> str:
+        return excited_label(settings, speech)
+
     def toggle_stadium(step: int = 1) -> None:
         settings.nx_stadium = not settings.nx_stadium
         apply()
@@ -224,7 +252,7 @@ def rules_menu(game, speech, keys) -> None:
         text = (rules_item() + ". " + timeouts_item().rstrip() + ". " + challenges_item().rstrip() + ". "
                 + qb_runs_item().rstrip() + ". " + onside_item().rstrip() + ". " + question_item().rstrip() + ". "
                 + penalties_item().rstrip() + ". " + offense_playbook_item().rstrip() + ". " + defense_playbook_item().rstrip()
-                + ". " + broadcast_item().rstrip() + ". " + talk_item() + ". " + calls_item() + ". " + stadium_item())
+                + ". " + broadcast_item().rstrip() + ". " + talk_item() + ". " + calls_item() + ". " + excited_item() + ". " + stadium_item())
         if tuple(getattr(settings, name) for name in SWITCHES) == before:
             return text
         apply()
@@ -245,6 +273,7 @@ def rules_menu(game, speech, keys) -> None:
         Item(broadcast_item, enter=lambda: (toggle_broadcast(), changed(broadcast_item))[1], change=toggle_broadcast),
         Item(talk_item, enter=lambda: (change_talk(), talk_item() + "," + X.text("NXM-69"))[1], change=change_talk),     # S-D (D-193)
         Item(calls_item, enter=lambda: (change_calls(), calls_item() + "," + X.text("NXM-69"))[1], change=change_calls),  # RC (D-195)
+        Item(excited_item, enter=lambda: (change_excited(), excited_item() + "," + X.text("NXM-69"))[1], change=change_excited),  # XV
         Item(stadium_item, enter=lambda: (toggle_stadium(), changed(stadium_item))[1], change=toggle_stadium),
         Item(crew_item, enter=choose_crew),
         Item(lambda: quarterbacks.item_label(settings), enter=lambda: (quarterbacks.quarterbacks_menu(game, speech, keys), None)[1]),    # D-132

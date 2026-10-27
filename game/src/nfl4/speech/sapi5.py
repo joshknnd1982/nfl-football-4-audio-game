@@ -48,6 +48,7 @@ from xml.sax.saxutils import escape
 
 from . import pa_effect
 from .backend import SpeechBackend
+from .lift import lift_of
 from .waveout import trim_silence
 
 log = logging.getLogger(__name__)
@@ -252,6 +253,7 @@ class _Entry:
     rate_step: int = 0
     chunked: bool = False        # already one sentence of a longer text (rendered mode)
     alts: list | None = None     # other ways to write it still to try; None = not tried yet
+    lift: int = 0                # XV (D-198): the excitement of a radio call (speech/lift.py): its rate, pitch and volume steps
 
 
 class _Work:
@@ -269,6 +271,7 @@ class _Work:
 class SapiBackend(SpeechBackend):
     name = "SAPI 5"
     takes_roles = True        # the manager passes role and rate_step to speak()
+    takes_lift = True         # XV (D-198): and a radio call's excitement (speech/lift.py)
 
     def __init__(self, voice_id: str | None = None, rate: int | None = None,
                  volume: int = ORIGINAL_VOLUME, pitch: int = 0,
@@ -339,16 +342,21 @@ class SapiBackend(SpeechBackend):
     def is_available(self) -> bool:
         return self.started.ok and self._thread is not None and self._thread.is_alive()
 
-    def speak(self, text: str, role: str | None = None, rate_step: int = 0) -> bool:
-        """Queue text for the speaker `role` (None: the default speaker), rate_step steps faster than the rate."""
+    def speak(self, text: str, role: str | None = None, rate_step: int = 0, lift: int = 0) -> bool:
+        """Queue text for the speaker `role` (None: the default speaker), rate_step steps faster than the rate; `lift` the excitement
+        of a radio call (XV, D-198, speech/lift.py: higher, faster, louder)."""
         if not self.is_available():
             return False
         if not self._first_request:
             self._first_request = time.monotonic()
         with self._cv:
             self._queued += 1
-        self._commands.put(("speak", text, role if role in self._roles else self._default_role, int(rate_step)))
+        self._commands.put(("speak", text, role if role in self._roles else self._default_role, int(rate_step), int(lift or 0)))
         return True
+
+    def _pitch_of(self, entry: _Entry) -> int:
+        """The player's pitch plus a radio call's pitch steps (XV, D-198); 0 sends the text untouched, as the original did."""
+        return clamp(self._pitch + (lift_of(entry.lift).pitch if entry.lift else 0), PITCH_MIN, PITCH_MAX)
 
     def stop(self) -> None:
         if self.is_available():
@@ -705,11 +713,11 @@ class SapiBackend(SpeechBackend):
                     self._purge(work, pending)
                     return
                 if kind == "speak":
-                    _kind, text, role, step = command
+                    _kind, text, role, step, *more = command
                     with self._cv:
                         self._queued -= 1
                         if text.strip():         # the original's Speak " " is only a barrier: say() waits for the queue
-                            pending.append(_Entry(role, text, step))
+                            pending.append(_Entry(role, text, step, lift=more[0] if more else 0))
                             self._busy = True
                         self._cv.notify_all()
                 elif kind == "purge":
@@ -738,9 +746,11 @@ class SapiBackend(SpeechBackend):
                     self._cv.notify_all()
 
     def _apply(self, voice: _Voice, entry: _Entry) -> None:
-        """The speaker's volume and the rate (plus the text's rate step) on the voice object, just before its text."""
-        volume = self.role_voice(entry.role).volume
-        rate = clamp(self._rate + entry.rate_step, RATE_MIN, RATE_MAX)
+        """The speaker's volume and the rate (plus the text's rate step) on the voice object, just before its text. XV (D-198): a radio
+        call's lift adds its rate steps and volume points (the volume at most 100)."""
+        lift = lift_of(entry.lift)
+        volume = clamp(self.role_voice(entry.role).volume + (lift.volume if entry.lift else 0), VOLUME_MIN, VOLUME_MAX)
+        rate = clamp(self._rate + entry.rate_step + lift.rate, RATE_MIN, RATE_MAX)
         try:
             if voice.volume != volume:
                 voice.com.Volume = volume
@@ -765,7 +775,7 @@ class SapiBackend(SpeechBackend):
                 return None                          # rendered speech before it is still playing: keep the order
             pending.popleft()
             self._apply(voice, entry)
-            text, flags = apply_pitch(entry.text, self._pitch)
+            text, flags = apply_pitch(entry.text, self._pitch_of(entry))
             try:
                 voice.com.Speak(text, SVSF_ASYNC | flags)
             except Exception as exc:
@@ -782,13 +792,13 @@ class SapiBackend(SpeechBackend):
             if not chunks:
                 return None
             for chunk in reversed(chunks[1:]):
-                pending.appendleft(_Entry(entry.role, chunk, entry.rate_step, True))
-            entry = _Entry(entry.role, chunks[0], entry.rate_step, True)
+                pending.appendleft(_Entry(entry.role, chunk, entry.rate_step, True, lift=entry.lift))
+            entry = _Entry(entry.role, chunks[0], entry.rate_step, True, lift=entry.lift)
         try:
             stream = self._stream_factory()
             voice.com.AudioOutputStream = stream
             self._apply(voice, entry)
-            text, flags = apply_pitch(entry.text, self._pitch)
+            text, flags = apply_pitch(entry.text, self._pitch_of(entry))
             voice.com.Speak(text, SVSF_ASYNC | flags)
         except Exception as exc:
             self._log_error("Speak", exc)
@@ -816,7 +826,7 @@ class SapiBackend(SpeechBackend):
                 alts = speech_variants(entry.text) if entry.alts is None else entry.alts
                 if alts:
                     log.debug("no audio for %r, trying %r", entry.text, alts[0])
-                    pending.appendleft(_Entry(entry.role, alts[0], entry.rate_step, True, alts[1:]))
+                    pending.appendleft(_Entry(entry.role, alts[0], entry.rate_step, True, alts[1:], lift=entry.lift))
             return True
         try:
             done = bool(com.WaitUntilDone(WAIT_SLICE_MS))

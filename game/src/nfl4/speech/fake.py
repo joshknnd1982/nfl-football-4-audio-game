@@ -17,12 +17,14 @@ class FakeBackend(SpeechBackend):
     """Each spoken text 'plays' for seconds_per_char * len(text); events are recorded in order."""
 
     def __init__(self, name="fake", available=True, seconds_per_char=0.0, fail_speak=False, takes_roles=False,
-                 clock=time.monotonic, sleep=time.sleep):
+                 clock=time.monotonic, sleep=time.sleep, takes_lift=False):
         self.name = name
         self.available = available
         self.seconds_per_char = seconds_per_char
         self.fail_speak = fail_speak
         self.takes_roles = takes_roles
+        self.takes_lift = takes_lift          # XV (D-198): like SAPI 5 and NVDA, given a radio call's excitement
+        self.lifts: list[tuple[str, int]] = []   # (text, lift) of every text taken with a lift (said keeps its old shape)
         self.events: list[tuple[str, str]] = []  # ("speak", text), ("stop", ""), ("wait", ""), settings
         self.said: list[tuple[str, str | None, int]] = []   # (text, speaker, rate step) of every text taken
         self.genders: dict[str, str] = {}   # speaker -> the Gender attribute of its voice (role_details)
@@ -35,12 +37,14 @@ class FakeBackend(SpeechBackend):
     def is_available(self) -> bool:
         return self.available
 
-    def speak(self, text: str, role: str | None = None, rate_step: int = 0) -> bool:
+    def speak(self, text: str, role: str | None = None, rate_step: int = 0, lift: int = 0) -> bool:
         if self.fail_speak:
             return False
         with self._lock:
             self.events.append(("speak", text))
             self.said.append((text, role, rate_step))
+            if lift:
+                self.lifts.append((text, lift))
             self._end = max(self._clock(), self._end) + self.seconds_per_char * len(text)
         return True
 
