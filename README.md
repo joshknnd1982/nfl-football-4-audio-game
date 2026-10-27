@@ -11,13 +11,14 @@ This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many 
 ## Two ways to play
 
 - **Classic** plays the way Jim Kitchen's game played, so that anyone who knew it feels at home: the same menus, keys, plays, pace and sounds.
+- **The radio broadcast**, in both: with the comments on (F8), a made-up radio crew calls the game around the play-by-play, in a radio format modelled on real NFL radio broadcasts: Walt Kessler (play-by-play), Gus Delgado (color analyst) and Nora Banks (sideline reporter) of the Gridiron Radio Network, each in a voice of their own, with names you may change (F9, Rules, Broadcast crew). The original game's jokes are gone from every mode.
 - **N. F. L. rules** is the default for a new player. The way you play stays like the original (short spoken menus, the same function keys), and the game adds the real National Football League:
   - a real game clock of 15 minutes a quarter, time outs and the two-minute warning;
   - penalties you may accept or decline, onside kicks, quarterback runs, replay challenges and the replay official's reviews;
   - every real NFL play, grouped into lists you reach with Right and M, each with a plain description (D) for people who do not know football, and a W key that says which play the playbook would most likely pick;
   - playbooks in seven styles, for your team and for the computer's;
   - the real head coaches and players of the 32 teams, so you type no names, and a list of every team's quarterbacks where you choose who starts (F9, Rules, Quarterbacks);
-  - a radio-style broadcast: a color analyst in a voice of his own, stadium sounds, and a referee who announces over a microphone;
+  - stadium sounds and a referee who announces over a microphone;
   - a Franchise: a league of 32 teams that lasts from season to season, with the real 2026 schedule and bye weeks, the NFL's 14-team play-offs, ratings, aging, the draft, contracts and the salary cap, free agency, trades from free agency to the deadline, practice squads, injuries, coaches and history.
 
 Choose the rules in the game: press F9, then Rules. The full description is in [game/README_nfl_rules_and_franchise.md](game/README_nfl_rules_and_franchise.md).
@@ -79,10 +80,10 @@ Every key the game handles, where it works and what it does. This list is made f
 - **F5**: Anywhere. Reads the special key instructions. (original game)
 - **F6**: Anywhere. Reads the game instructions. (original game)
 - **F7**: Anywhere. Reads the football words and hints; in Classic it also describes the original's plays. (original game)
-- **F8**: Anywhere. Switches the comments off and on. (original game)
+- **F8**: Anywhere. Switches the comments off and on: with them on, the radio crew of the broadcast speaks (the sign-on, the color analyst, the sideline reporter, the breaks and the sign-off). (original game)
 - **F9**: Anywhere. Opens the added functions: the speech settings, the sounds, the names and the commentary, the rules, the franchise and the about text. (added)
-- **F11**: Anywhere. Adjusts the volume of the voices and the sounds: Up and Down, Enter for the next (with the N. F. L. rules and the broadcast on, the volumes of the color commentator and the referee too). (original game)
-- **F12**: Anywhere. Changes the voices (with the N. F. L. rules and the broadcast on, the voices of the color commentator and the referee too). (original game)
+- **F11**: Anywhere. Adjusts the volume of the voices and the sounds: Up and Down, Enter for the next (with the comments and the broadcast on, the volumes of the color commentator and the sideline reporter too, and with the N. F. L. rules the referee's). (original game)
+- **F12**: Anywhere. Changes the voices (with the comments and the broadcast on, the voices of the color commentator and the sideline reporter too, and with the N. F. L. rules the referee's). (original game)
 - **Control**: Anywhere. Adjusts the rate of speech: Up and Down, Enter to keep it. (original game)
 - **Escape**: Anywhere. Exits the game; in a play menu it asks whether you concede the game; in the F9 menus and lists it goes back. (original game)
 - **Alt, or F10**: Anywhere. Does what Escape does. (original game)

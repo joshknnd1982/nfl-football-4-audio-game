@@ -36,16 +36,25 @@ HOSTILE_NAMES = {
 }
 
 
+@pytest.mark.parametrize("role", ["announcer", "analyst", "sideline", "network"])
 @pytest.mark.parametrize("kind", sorted(HOSTILE_NAMES))
-def test_a_hostile_commentator_name_in_the_settings_file_is_cleaned_or_refused_and_the_file_stays_whole(kind):
-    text = settingsfile.render(Settings.defaults()).replace("nx_commentator = Ghip", "nx_commentator = " + HOSTILE_NAMES[kind].replace("\n", " "))
+def test_a_hostile_commentator_name_in_the_settings_file_is_cleaned_or_refused_and_the_file_stays_whole(kind, role):
+    # BC.3: every name of the radio crew (and the name the player typed for it) is cleaned the same way
+    from nfl4.extras import crew
+    hostile = HOSTILE_NAMES[kind].replace("\n", " ")
+    text = settingsfile.render(Settings.defaults())
+    text = text.replace("nx_%s = %s\n" % (role, crew.DEFAULTS[role]), "nx_%s = %s\n" % (role, hostile))
+    text = text.replace("nx_%s_own = \n" % role, "nx_%s_own = %s\n" % (role, hostile))
+    assert hostile in text or kind == "empty"
     settings, problems = settingsfile.parse(text)
-    name = settings.game.nx_commentator
+    name, own = getattr(settings.game, "nx_" + role), getattr(settings.game, "nx_%s_own" % role)
     assert name == CO.clean(name) and 2 <= len(name) <= CO.NAME_MAX                  # stored as it is spoken: safe, short, never empty
-    assert "<" not in name and ">" not in name and "=" not in name and "#" not in name
-    assert CO.name_of(settings.game) == name
+    assert own == "" or (own == CO.clean(own) and 2 <= len(own) <= CO.NAME_MAX)
+    for value in (name, own):
+        assert "<" not in value and ">" not in value and "=" not in value and "#" not in value
+    assert crew.name_of(settings.game, role) == name
     again, problems_again = settingsfile.parse(settingsfile.render(settings))       # what the program writes back reads back the same
-    assert again.game.nx_commentator == name and problems_again == []
+    assert getattr(again.game, "nx_" + role) == name and getattr(again.game, "nx_%s_own" % role) == own and problems_again == []
 
 
 def test_an_accented_commentator_name_keeps_its_letters_without_the_accents():
@@ -70,9 +79,10 @@ def older_settings(version):
     """The settings file as version 0.9.0, 0.10.0 or 0.11.0 wrote it: the lines that came later are not in it, and its speech output is the old
     default (sapi) where that version had it."""
     text = settingsfile.render(Settings.defaults())
-    later = {"0.9.0": ("speech_output_chosen", "nx_commentator", "nx_menu_hints", "nx_broadcast"),
-             "0.10.0": ("speech_output_chosen", "nx_commentator", "nx_menu_hints"),
-             "0.11.0": ()}[version]
+    crew_lines = tuple("nx_" + role + own for role in ("announcer", "analyst", "sideline", "network") for own in ("", "_own"))   # BC.3
+    later = {"0.9.0": ("speech_output_chosen", "nx_menu_hints", "nx_broadcast") + crew_lines,
+             "0.10.0": ("speech_output_chosen", "nx_menu_hints") + crew_lines,
+             "0.11.0": crew_lines}[version]
     lines = [line for line in text.splitlines() if not line.split("=", 1)[0].strip() in later]
     text = "\n".join(lines) + "\n"
     if version != "0.11.0":
@@ -85,7 +95,8 @@ def test_a_settings_file_of_an_earlier_version_is_read_without_a_problem_and_get
     settings, problems = settingsfile.parse(older_settings(version))
     assert problems == []
     assert settings.speech.mode == "auto" and settings.speech.mode_chosen is False      # the old default sapi, never chosen: automatic, once
-    assert settings.game.nx_commentator == CO.DEFAULT
+    from nfl4.extras import crew
+    assert crew.names(settings.game) == crew.DEFAULTS
     again, _ = settingsfile.parse(settingsfile.render(settings))
     assert "speech_output_chosen = no" in settingsfile.render(settings) and again.speech.mode == "auto"
 

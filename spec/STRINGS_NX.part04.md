@@ -1,37 +1,3 @@
-- NXB-E24 (help, say5): " Asks the referee to look at the video of the last play. A challenge that loses costs a time out. ". description of an item or menu word (NX-P8)
-- NXB-E25 (help, say5): " Saves the game so you can finish it later. ". description of an item or menu word (NX-P8)
-- NXB-E27 (help, say5): " Runs straight ahead through the middle of the line for short, steady gains. ". description of an item or menu word (NX-P8)
-- NXB-E28 (help, say5): " Runs toward the side line that try to get around the end of the line. ". description of an item or menu word (NX-P8)
-- NXB-E29 (help, say5): " Short passes to a runner or receiver with blockers in front, to beat a pass rush. ". description of an item or menu word (NX-P8)
-- NXB-E30 (help, say5): " Short passes that are easier to complete but gain fewer yards. ". description of an item or menu word (NX-P8)
-- NXB-E31 (help, say5): " Long passes down the field, with big gains and bigger risks. ". description of an item or menu word (NX-P8)
-- NXB-E32 (help, say5): " Pass plays that begin with a fake handoff. ". description of an item or menu word (NX-P8)
-- NXB-E33 (help, say5): " Plays where the quarterback runs with the ball. ". description of an item or menu word (NX-P8)
-- NXB-F01 (help, say5): " Runs straight ahead through the middle of the line for short, steady gains. ". description of the list og01 Inside Runs (NX-P8)
-- NXB-F02 (help, say5): " Runs where blockers lead the way or hit a defender from the side. ". description of the list og02 Power and Gap Runs (NX-P8)
-- NXB-F03 (help, say5): " Runs toward the side line that try to get around the end of the line. ". description of the list og03 Outside Runs (NX-P8)
-- NXB-F04 (help, say5): " Runs that start one way and then go another to fool the defense. ". description of the list og04 Misdirection Runs (NX-P8)
-- NXB-F05 (help, say5): " Short passes to a runner or receiver with blockers in front, to beat a pass rush. ". description of the list og05 Screens (NX-P8)
-- NXB-F06 (help, say5): " Short, fast passes thrown before the defense can rush. ". description of the list og06 Quick Passes (NX-P8)
-- NXB-F07 (help, say5): " Passes to receivers running across the field and to running backs. ". description of the list og07 Crossers and Backs (NX-P8)
-- NXB-F08 (help, say5): " Passes of medium length, usually over the middle or toward the sideline. ". description of the list og08 Intermediate Passes (NX-P8)
-- NXB-F09 (help, say5): " Long passes down the field, with big gains and bigger risks. ". description of the list og09 Deep Passes (NX-P8)
-- NXB-F10 (help, say5): " Plays where two or three receivers run different long patterns. ". description of the list og10 Deep Combinations (NX-P8)
-- NXB-F11 (help, say5): " Pass plays that begin with a fake handoff. ". description of the list og11 Play Action (NX-P8)
-- NXB-F12 (help, say5): " Pass plays where the quarterback runs to the side before he throws. ". description of the list og12 Moving Pocket (NX-P8)
-- NXB-F13 (help, say5): " Plays where the quarterback runs with the ball. ". description of the list og13 Quarterback Runs (NX-P8)
-- NXB-F14 (help, say5): " Runs where the quarterback chooses at the last moment to keep the ball or give it away. ". description of the list og14 Option Runs (NX-P8)
-- NXB-F15 (help, say5): " Plays that are a run and a quick pass at once. The quarterback chooses after the snap. ". description of the list og15 Run Pass Options (NX-P8)
-- NXB-F16 (help, say5): " Unusual plays meant to fool the defense. They are rare and risky. ". description of the list og16 Trick Plays (NX-P8)
-- NXB-F17 (help, say5): " Plays for when only a few yards are needed or the goal line is close. ". description of the list og17 Goal Line and Short Yardage (NX-P8)
-- NXB-F18 (help, say5): " Plays that stop or run the clock, and last chance throws. ". description of the list og18 Clock Plays (NX-P8)
-- NXB-F19 (help, say5): " Plays from old fashioned lineups, which are now rare. ". description of the list og19 Old Formations (NX-P8)
-- NXB-F20 (help, say5): " More short and medium passes. ". description of the list og20 More Routes (NX-P8)
-- NXB-F21 (help, say5): " Defenses that crowd the line to stop runs close to the goal line. ". description of the list dg01 Goal Line Defenses (NX-P8)
-- NXB-F22 (help, say5): " Defenses set to stop runs, with different numbers of players near the line. ". description of the list dg02 Run Fronts (NX-P8)
-- NXB-F23 (help, say5): " Defenses where the linemen move at the snap to stop a run. ". description of the list dg03 Run Stunts (NX-P8)
-- NXB-F24 (help, say5): " Defenses that keep the ball carrier or quarterback from getting around the end. ". description of the list dg04 Edge and Contain (NX-P8)
-- NXB-F25 (help, say5): " Defenses where extra players rush the quarterback. ". description of the list dg05 Blitzes (NX-P8)
 - NXB-F26 (help, say5): " Defenses that look like a blitz or confuse the blockers. ". description of the list dg06 Pressure Looks (NX-P8)
 - NXB-F27 (help, say5): " Defenses where the defenders guard areas of the field. ". description of the list dg07 Zone Coverages (NX-P8)
 - NXB-F28 (help, say5): " Defenses where each defender covers one receiver. ". description of the list dg08 Man Coverages (NX-P8)
@@ -345,3 +311,156 @@
 - NXS-08 (stat, say2): " Quarterback Runs". statistics line
 - NXS-09 (stat, say2): " Quarterback Running Yardage". statistics line
 
+## Franchise (design section 11)
+
+- NXF-01 (prompt, say2): " <coach> which kind of season do you wish to play ". new season, N. F. L. rules only (design 11.2)
+- NXF-A01 (answer, say2): " classic season ". answer
+- NXF-A02 (answer, say2): " franchise ". answer
+- NXF-A03 (answer, say2): " your franchise with the <team> ". the question, when a franchise exists
+- NXF-A04 (answer, say2): " a new franchise ". the question, when a franchise exists
+- NXF-02 (prompt, say2): " your franchise with the <team> will be kept as a copy. do you wish to start a new franchise? ". a yes or no question whose answer starts at no (design 3.2)
+- NXF-04 (sentence, say5): " your franchise waits until the rules are the N. F. L. rules again. ". F9 Rules, after NXM-23
+- NXF-05 (sentence, say2): " back to your franchise with the <team>. ". a switch to the franchise (design 3.1)
+- NXF-06 (sentence, say2): " your franchise waits. the classic season goes on. ". a switch to the classic season (design 3.1)
+- NXF-07 (sentence, say2): " your new league is ready. 32 teams and their players. ". a new league (design 3.2)
+- NXF-08 (sentence, say2): " this is season <n> of your franchise. ". week 1 of a franchise season (design 3.4)
+- NXF-09 (sentence, say2): " your team's rating is <r>, number <k> of 32. ". a new league and stage 6 (SX.8b speaks it)
+- NXF-10 (menu, say5): "Franchise". F9 item, only with the N. F. L. rules
+- NXF-11 (menu, say5): "to do list". F9 Franchise item (SX.8e)
+- NXF-12 (menu, say5): "news". F9 Franchise item (SX.8e)
+- NXF-13 (menu, say5): "your roster". F9 Franchise item
+- NXF-14 (menu, say5): "league history". F9 Franchise item
+- NXF-15 (menu, say5): "team ratings". F9 Franchise item (SX.8b)
+- NXF-16 (menu, say5): "franchise settings". F9 Franchise item
+- NXF-17 (menu, say5): "play classic seasons". F9 Franchise item while the franchise is in use
+- NXF-18 (menu, say5): "back to your franchise". F9 Franchise item while a classic season is in use and a franchise exists
+- NXF-19 (menu, say5): "start a franchise now". F9 Franchise item while a classic season is in use and no franchise exists
+- NXF-20 (menu, say5): "staff handles the to do list". franchise setting, followed by NXM-20 or NXM-21 (SX.8e)
+- NXF-21 (menu, say5): "offseason: every stage". franchise setting
+- NXF-22 (menu, say5): "draft picks told: first and yours". franchise setting (SX.8d)
+- NXF-23 (sentence, say5): " your franchise will wait. press enter to play classic seasons now, or escape to stay. ". confirming question of NXF-17
+- NXF-24 (menu, say5): "offseason: short". franchise setting
+- NXF-25 (menu, say5): "draft picks told: only yours". franchise setting (SX.8d)
+- NXF-26 (menu, say5): "draft picks told: every pick". franchise setting (SX.8d)
+- NXF-27 (sentence, say5): " your classic season will wait. press enter to start a franchise now, or escape to stay. ". confirming question of NXF-19
+- NXF-30 (sentence, say): " the franchise file was damaged. the copy from before the last save is used, and a copy of the damaged file was kept. ". start-up notice (design 10.1)
+- NXF-31 (sentence, say): " your franchise could not be read and was set aside. a classic season begins. ". start-up notice
+- NXF-32 (sentence, say): " the franchise could not be saved, so this season's changes will not be kept. ". start-up notice
+- NXF-33 (sentence, say): " the saved game belongs to another week of your franchise and was set aside. ". start-up notice
+- NXF-34 (sentence, say): " this franchise was saved by a newer version of the game and cannot be played here. a classic season begins. ". start-up notice
+- NXF-35 (sentence, say): " the franchise file is in use by another program. a classic season is played this time. ". start-up notice
+- NXF-36 (sentence, say): " the franchise file was missing. the copy from before the last save is used. ". start-up notice
+- NXF-37 (sentence, say): " your franchise could not be found. a classic season begins. ". start-up notice
+- NXF-46 (sentence, say): " the real N. F. L. calendar could not be read, so this season plays the original game's 16 weeks. ". notice when schedule_<year>.txt is missing or not whole at the start of a franchise season (S8.3 round 2)
+- NXF-47 (menu, say5): "practice squad". F9 Franchise item (D-136)
+- NXF-40 (menu, say2): "more". paging of a long list in a franchise question (the back item is NXB-10)
+- NXF-42 (sentence, say2): " page <n> of <m>. ". each page of a paged franchise question
+- NXE-01 (sentence, say2): " the season is over. the offseason begins. ". design 3.3
+- NXE-02 (sentence, say2): " stage <n> of <m>. <stage>. ". the start of every stage
+- NXE-03 (sentence, say2): " press enter to go on. F1 says it again. ". the wait at the end of a stage
+- NXE-11 (piece, piece): "the season in review". stage 1 name
+- NXE-12 (piece, piece): "retirements". stage 2 name (SX.8c)
+- NXE-13 (piece, piece): "player development". stage 3 name (SX.8c)
+- NXE-14 (piece, piece): "the draft". stage 4 name (SX.8d)
+- NXE-15 (piece, piece): "the roster cut". stage 5 name (SX.8d)
+- NXE-16 (piece, piece): "the new season". stage 6 name
+- NXE-20 (sentence, say2): " the <champion> won the Super Bowl of season <n>. ". stage 1
+- NXE-21 (sentence, say2): " your team finished <w> and <l>, <finish>. ". stage 1
+- NXE-22 (piece, piece): "and missed the play offs". the finish piece
+- NXE-23 (piece, piece): "and lost in the wild card round". the finish piece
+- NXE-24 (piece, piece): "and lost in the division round". the finish piece
+- NXE-25 (piece, piece): "and lost in the conference championship". the finish piece
+- NXE-26 (piece, piece): "and lost the Super Bowl". the finish piece
+- NXE-27 (piece, piece): "and won the Super Bowl". the finish piece
+- NXE-28 (sentence, say2): " the best record: the <best>, <best_w> and <best_l>. the worst: the <worst>, <worst_w> and <worst_l>. ". stage 1
+- NXE-29 (sentence, say2): " as a head coach: seasons <n>, wins <w>, losses <l>. ". stage 1
+- NXE-60 (sentence, say2): " season <n> begins. ". stage 6, followed by NXF-09 once SX.8b speaks the ratings
+- NXE-61 (sentence, say2): " the new schedule is made. ". stage 6
+- NXL-01 (piece, piece): "running back". position
+- NXL-02 (piece, piece): "receiver". position
+- NXL-03 (piece, piece): "quarterback". position
+- NXL-04 (piece, piece): "defensive lineman". position
+- NXL-05 (piece, piece): "linebacker". position
+- NXL-06 (piece, piece): "cornerback". position
+- NXL-07 (piece, piece): "safety". position
+- NXL-08 (piece, piece): "returner". position
+- NXL-09 (piece, piece): "kicker". position
+- NXL-10 (piece, piece): "punter". position
+- NXL-11 (piece, piece): "running backs". group of more than one place
+- NXL-12 (piece, piece): "receivers". group
+- NXL-14 (piece, piece): "defensive linemen". group
+- NXL-15 (piece, piece): "linebackers". group
+- NXL-16 (piece, piece): "cornerbacks". group
+- NXL-17 (piece, piece): "safeties". group
+- NXL-18 (piece, piece): "returners". group
+- NXL-21 (piece, piece): "<position> <n>". an open place count (SX.8d)
+- NXL-30 (sentence, say5): " <group>: <n> ". a roster group in F9
+- NXL-31 (sentence, say5): " <player>, <position>, rating <r>, age <a>, <potential> potential ". a player in a list (SX.8b speaks the rating)
+- NXL-32 (sentence, say5): " <player>, <position>, age <a> ". a player in a list until SX.8b speaks the ratings (added by SX.8a)
+- NXL-40 (sentence, say5): " <k>. the <team>, <r>. ". a team in the ratings list (SX.8b)
+- NXL-41 (sentence, say5): " your team is number <k> of 32. ". the ratings list (SX.8b)
+- NXG-01 (menu, say5): "champions by season". history menu
+- NXG-02 (menu, say5): "your record". history menu
+- NXG-03 (menu, say5): "season by season". history menu
+- NXG-04 (menu, say5): "league records". history menu
+- NXG-05 (menu, say5): "retired stars". history menu
+- NXG-10 (sentence, say5): " season <n>: the <champion> over the <runner_up>. ". history line
+- NXG-11 (sentence, say5): " seasons: <n>. wins: <w>. losses: <l>. play off seasons: <p>. Super Bowls won: <s>. ". history line
+- NXG-12 (sentence, say5): " season <n>: you were <w> and <l>, <finish>. champion: the <champion>. the best record: the <best>. the worst: the <worst>. ". history line
+- NXG-13 (sentence, say5): " most wins in a season: the <team>, <w>, season <n>. ". history line
+- NXG-14 (sentence, say5): " most points in a game: the <team>, <p> against the <other>, season <n>. ". history line
+- NXG-15 (sentence, say5): " the biggest win: the <team> over the <other>, <score>, season <n>. ". history line
+- NXG-16 (sentence, say5): " the longest winning streak: the <team>, <k> games, season <n>. ". history line
+- NXG-17 (sentence, say5): " <player>, <position>, the <team>. seasons played: <n>. best rating <r>. retired after season <s>. ". history line
+- NXG-18 (sentence, say5): " nothing yet. ". an empty history list
+- NXK-20 (piece, piece): "high". the potential words (the roster in SX.8b, the draft in SX.8d)
+- NXK-21 (piece, piece): "average". the potential words
+- NXK-22 (piece, piece): "low". the potential words
+- NXE-30 (sentence, say2): " from your team: ". stage 2, before the player's team's retiring players
+- NXE-31 (sentence, say2): " <player>, <position>, age <a>, rating <r>, retires. seasons played: <n>. ". stage 2, a retiring player of the player's team
+- NXE-32 (sentence, say2): " nobody from your team retires. ". stage 2
+- NXE-33 (sentence, say2): " players retiring in the whole league: <n>. ". stage 2
+- NXE-35 (sentence, say2): " <player> of the <team>, <position>, retires. seasons played: <n>. ". stage 2, a star of another team
+- NXE-40 (sentence, say2): " your players: improved <n>, declined <m>, the same <k>. ". stage 3
+- NXE-41 (sentence, say2): " most improved: <player>, <position>, up <d> to <r>. ". stage 3
+- NXE-42 (sentence, say2): " the biggest drop: <player>, <position>, down <d> to <r>. ". stage 3, none when nobody went down
+- NXE-43 (sentence, say2): " your whole roster is in the franchise menu on F9. ". stage 3
+- NXE-71 (sentence, say2): " retiring: <n> in the league, <m> from your team. ". stage 2 in the short offseason
+- NXE-72 (sentence, say2): " your players: improved <n>, declined <m>. ". stage 3 in the short offseason
+- NXK-01 (sentence, say2): " the draft has 7 rounds. you have pick number <n> in every round. ". stage 4, after the stage's name
+- NXK-02 (sentence, say2): " round <n>. ". stage 4, before the first spoken line of a round
+- NXK-03 (sentence, say2): " pick <n>: the <team> take <player>, <position>. ". stage 4, a told pick of a computer team (n: the pick in the round)
+- NXK-04 (prompt, say2): " <coach> it is your pick, round <round>, pick <pick>. your open places: <list>. ". stage 4, the player's pick
+- NXK-05 (sentence, say2): " the staff's list. ". stage 4, before the staff's five
+- NXK-06 (sentence, say2): " <player>, <position>, about <lo> to <hi>, age <a>, <potential> potential ". a prospect or a rookie before the cut in a list
+- NXK-07 (menu, say2): "hear more prospects". stage 4, item 6 of the player's pick
+- NXK-08 (menu, say2): "let the staff pick". stage 4, item 7
+- NXK-09 (menu, say2): "staff makes your other picks". stage 4, item 8
+- NXK-10 (sentence, say2): " you take <player>, <position>. ". stage 4, after the player chose a prospect
+- NXK-11 (sentence, say2): " the draft is over. your rookies: ". stage 4, before the player's rookies
+- NXK-12 (sentence, say2): " the staff took <player>, <position>. ". stage 4, the staff made the player's pick
+- NXK-13 (piece, piece): "none". the open places when there are none
+- NXE-50 (sentence, say2): " the roster cut. the staff would release: ". stage 5, before the staff's releases of the player's team
+- NXE-51 (sentence, say2): " <player>, <position>, age <a>, rating <r>. ". stage 5, a player the staff would release
+- NXE-52 (menu, say2): "release them". stage 5, the staff's cuts
+- NXE-53 (menu, say2): "choose yourself". stage 5, the player chooses
+- NXE-54 (prompt, say2): " <position>: players <n>, places <m>. choose who is released. ". stage 5, a group with too many players
+- NXE-55 (sentence, say2): " <player> is released. ". stage 5, the player released him
+- NXE-56 (sentence, say2): " players released by the staff: <n>. ". stage 5, with the setting that the staff handles the roster cut
+- NXE-57 (sentence, say2): " empty places filled with undrafted rookies: <n>. ". stage 5, the fill of the player's team
+- NXE-58 (sentence, say2): " nobody on your team has to be released. ". stage 5, the player's team has no surplus (added by SX.8d)
+- NXD-01 (sentence, say2): " <coach> your to do list has <n> items. ". the to-do list, before its items (design 8.1)
+- NXD-02 (sentence, say2): " <coach> your to do list has 1 item. ". the to-do list, one item
+- NXD-03 (sentence, say2): " the staff took care of <n> items. ". with the setting that the staff handles the to do list
+- NXD-04 (sentence, say2): " the staff took care of 1 item. ". the same, one item
+- NXD-05 (sentence, say2): " item <n>. ". before each item
+- NXD-06 (sentence, say2): " items still on your to do list: <n>. ". choosing play game with items waiting
+- NXD-07 (sentence, say5): " nothing is waiting. ". F9 to do list with no waiting item
+- NXD-10 (prompt, say2): " extra work this week for one young player. ". T1, the question
+- NXD-11 (sentence, say2): " <player> gets extra work this week. ". T1, the point is given
+- NXD-20 (prompt, say2): " the game plan against the <team>. they play <their_offense> on offense and <their_defense> on defense. the staff recommends <our_offense> and <our_defense>. ". T2, the question
+- NXD-21 (answer, say2): "use the staff's game plan". T2, the staff's answer
+- NXD-22 (answer, say2): "keep your playbooks". T2, the do-nothing answer
+- NXD-23 (sentence, say2): " the game plan is set for this game. ". T2, the plan is taken
+- NXD-30 (sentence, say2): " the items you left for later were not done. ". the kick-off came with items still waiting
+- NXD-A01 (answer, say2): "later". every item

@@ -1,55 +1,3 @@
-- BN73 (remark, say): " The booth is quiet for a moment while <commentator> and I watch the formation. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN74 (remark, say): " <commentator> is nodding at that, which on the radio means I have to say it out loud. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN75 (remark, say): " There is a lot of coffee in this booth, and <commentator> is doing most of the drinking. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN76 (remark, say): " I am told <commentator> has an opinion on that, and I am told it is a strong one. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN77 (remark, say): " It takes a lot of preparation to sit next to <commentator>. Mostly patience. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN78 (remark, say): " <commentator> has been studying the film all week, and it shows. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN79 (remark, say): " We have a good view from up here, and <commentator> has the headset to prove it. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN80 (remark, say): " The view from the booth is wonderful, and <commentator> has already pointed out three things I missed. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN81 (remark, say): " If I get a play wrong, <commentator> will tell you. Politely, of course. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN82 (remark, say): " Stay with us. <commentator> and I have plenty more to say, and a few things to get right. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN83 (remark, say): " Momentum is a funny thing. It shows up out of nowhere and leaves the same way. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN84 (remark, say): " One big play can change the feel of an entire stadium. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN85 (remark, say): " You can sense a game turning before anyone can say which way. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN86 (remark, say): " Most games are decided by who makes the fewer mistakes. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN87 (remark, say): " Tight games tend to be won by a single play, and nobody knows which one until it happens. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN88 (remark, say): " Nerves settle down as a game goes along, and the football usually gets better. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN89 (remark, say): " There is always one more twist in football, and it usually comes when you stop watching for it. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN90 (remark, say): " The score is only the headline. The story is in how the teams got there. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN91 (remark, say): " Nothing is decided until the clock says so. Football has a long memory for teams that stop playing. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN92 (remark, say): " A good game builds play by play, and then suddenly you look up and the quarter is over. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN93 (remark, say): " Football rewards the team that keeps working, even when the play before it did not go its way. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN94 (remark, say): " The pace of a game changes in an instant, and so does the volume of the crowd. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN95 (remark, say): " The team that settles down first usually settles the game. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN96 (remark, say): " Every game has a few plays that turn it, and the hard part is knowing which ones they were. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN97 (remark, say): " Special teams are the third phase of the game, and the part everyone forgets until it matters. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN98 (remark, say): " A kicker spends the whole week waiting for one moment, and it lasts about a second and a half. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN99 (remark, say): " Ball security is the first rule of football, and the last rule, too. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN100 (remark, say): " The return team is lining up and the coverage team is sprinting. Nobody enjoys running that far downhill. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN101 (remark, say): " A fumble is the quickest way to lose a drive. All it takes is a loose arm and a bad bounce. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN102 (remark, say): " Turnovers decide more games than any play call. Ask anyone who has been on the wrong end of one. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN103 (remark, say): " The punter is about to earn a paycheck. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN104 (remark, say): " Good kickoff coverage is the sign of a disciplined team. Every player stays in the lane. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN105 (remark, say): " The long snapper never gets a mention until the snap goes wrong. Respect to all of them. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN106 (remark, say): " The holder and the kicker have to be perfectly in sync, and it looks easy until the day it is not. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN107 (remark, say): " The officials are doing their job, and the less we notice them, the better they are doing it. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN108 (remark, say): " A flag can change a drive in the blink of an eye, and half the stadium holds its breath. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN109 (remark, say): " Penalties are drive killers. Nobody ever drew up a play that starts with first and fifteen. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN110 (remark, say): " The officials are huddling up, and everyone in the stadium wants to know what they have. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN111 (remark, say): " If there is a flag, the first question is always whether it is on the offense or the defense. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN112 (remark, say): " Replay can take a minute, so take a breath and a sip of whatever you are holding. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN113 (remark, say): " It is a tough job, calling this game at full speed, and the officials get it right far more often than they get credit for. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN114 (remark, say): " Discipline shows on the penalty report, and the rules are the same for everybody. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN115 (remark, say): " Coaches spend all week on a plan and about ten seconds deciding whether to keep it. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN116 (remark, say): " Plays come in from the sideline fast, and the quarterback has about a minute to figure out what the defense is doing. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN117 (remark, say): " The film room wins games before anyone steps on the field. Today we see how much was learned. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN118 (remark, say): " A good game plan survives the first quarter. A great one survives the second half. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN119 (remark, say): " The best coaches make their players look smarter, and the best players make their coaches look smarter. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN120 (remark, say): " Veterans know where to be. Rookies learn it the hard way, and it makes for great football to watch. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN121 (remark, say): " Everybody on the sideline has a job, and half of them are just trying to stay warm. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN122 (remark, say): " The huddle is where a team becomes a team, even if it only lasts ten seconds. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN123 (remark, say): " Preparation is invisible when it works. You only see it when it is missing. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN124 (remark, say): " They have been working on that all week, and you could tell by the way it was run. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN125 (remark, say): " Somewhere in the stands, someone is holding a hot drink and a very strong opinion. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN126 (remark, say): " The food in this stadium smells better than anything on the field, and I have been told not to say that. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN127 (remark, say): " Every fan thinks they have the best seat in the house, and from up here I can tell you they are not wrong. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
@@ -68,191 +16,191 @@
 - BN140 (remark, say): " A quiet moment between plays, so let us catch our breath. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN141 (remark, say): " Both sides are ready to go. Back to the action. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN142 (remark, say): " We are moving along nicely here, so let us see what the next snap brings. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- ASK01 (remark, say): " <commentator>, what did you see on that one? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK02 (remark, say): " <commentator>, walk us through that play. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK03 (remark, say): " <commentator>, was that the call you expected? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK04 (remark, say): " What did the defense show you there, <commentator>? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK05 (remark, say): " <commentator>, how did that play develop from up there? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK06 (remark, say): " Let us bring in <commentator>. What stood out? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK07 (remark, say): " <commentator>, what do you make of that one? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK08 (remark, say): " Over to you, <commentator>. What are you watching for next? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK09 (remark, say): " <commentator>, give us the reason behind that call. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK10 (remark, say): " <commentator>, tell the folks at home what changed on that snap. ". pool ASK default: the announcer turns to Ghip before his line
-- ASK11 (remark, say): " Your read on that one, <commentator>? ". pool ASK default: the announcer turns to Ghip before his line
-- ASK12 (remark, say): " <commentator>, was that more the scheme or more the execution? ". pool ASK default: the announcer turns to Ghip before his line
-- CTC01 (remark, color): " Third down is where drives live or die, and this one lives. The <team> keep the ball. ". pool CTC default: Ghip, after a third down conversion
-- CTC02 (remark, color): " That is a big conversion. Every third down made leaves the <opponent> defense a little more tired. ". pool CTC default: Ghip, after a third down conversion
-- CTC03 (remark, color): " First down. The drive was wobbling a second ago, and now it is standing tall again. ". pool CTC default: Ghip, after a third down conversion
-- CTC04 (remark, color): " The <opponent> had them in a tough spot, and the <team> found a way out. ". pool CTC default: Ghip, after a third down conversion
-- CTC05 (remark, color): " Good play call for the distance. You do not need a miracle on third down, just a smart route and a clean catch. ". pool CTC default: Ghip, after a third down conversion
-- CTC06 (remark, color): " That is a fresh set of downs, and with it the <team> get some confidence back. ". pool CTC default: Ghip, after a third down conversion
-- CTC07 (remark, color): " The <team> stayed on the field because the offense made the right decision at the right moment. ". pool CTC default: Ghip, after a third down conversion
-- CTC08 (remark, color): " Defenses hate that. They had it covered, and the <team> got the first down anyway. ". pool CTC default: Ghip, after a third down conversion
-- CTS01 (remark, color): " Stopped short on third down. The <opponent> defense earned that one, and the <team> are in a tougher spot now. ". pool CTS default: Ghip, after a third down stop
-- CTS02 (remark, color): " Great coverage and a good rush at the same time. The <opponent> rarely stop a drive without both, and they had both there. ". pool CTS default: Ghip, after a third down stop
-- CTS03 (remark, color): " Third and long is a defense's best friend, and the <opponent> made good use of it. ". pool CTS default: Ghip, after a third down stop
-- CTS04 (remark, color): " The <team> could not get the yards they needed. The <opponent> stayed in front of the sticks and tackled well. Textbook. ". pool CTS default: Ghip, after a third down stop
-- CTS05 (remark, color): " Nothing there for the <team>. The <opponent> took away the first read, and the second one was not open either. ". pool CTS default: Ghip, after a third down stop
-- CTS06 (remark, color): " A stop like that gets a whole sideline on its feet. Defense is about moments, and the <opponent> just had one. ". pool CTS default: Ghip, after a third down stop
-- CTS07 (remark, color): " The <team> will have to find a new answer on the next series. The <opponent> are playing disciplined football. ". pool CTS default: Ghip, after a third down stop
-- CTS08 (remark, color): " Good discipline from the <opponent> there: nobody jumped, nobody over-pursued, and the drive stalled. ". pool CTS default: Ghip, after a third down stop
-- CFD01 (remark, color): " They are going for it. That is a bold call, and the <team> must trust the line to get the job done. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD02 (remark, color): " Fourth down, and the <team> keep the offense on the field. A decision like this says a lot about a coach. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD03 (remark, color): " It takes confidence to go for it, and the <opponent> know what is coming. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD04 (remark, color): " The numbers say go for it in the right spot, and the <team> must think this is the right spot. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD05 (remark, color): " No punt, no kick. The <team> are all in on one play, and the stadium knows it. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD06 (remark, color): " Sometimes you have to take a risk. The <team> are in a spot where the risk makes sense. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD07 (remark, color): " The <opponent> defense needs one stop, and the whole crowd knows it. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CFD08 (remark, color): " This is the kind of decision that wins or loses a game, and the <team> have made theirs. ". pool CFD default: Ghip, when a team goes for it on fourth down
-- CBG01 (remark, color): " <yards> yards in one play. That is what happens when the defense loses a player in coverage for just a second. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG02 (remark, color): " Big play for the <team>. The protection held, <quarterback> had time, and the receiver did the rest. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG03 (remark, color): " That is a chunk play, <yards> yards, and the <opponent> will want to see exactly where the breakdown was. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG04 (remark, color): " Somebody missed a tackle or a read there. Big gains almost always begin with one small mistake. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG05 (remark, color): " The <team> flipped the field in one snap, and now the whole drive looks different. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG06 (remark, color): " That is the play the <team> were hoping for all week, and <quarterback> saw it before the snap. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG07 (remark, color): " <yards> yards. The <opponent> defense just got stretched, and now the whole field is open. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG08 (remark, color): " Explosive plays win games. The <team> just made one, and the <opponent> are running out of answers. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG09 (remark, color): " That one happened fast. A good fake, a step of separation, and the ball was already gone. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBG10 (remark, color): " Good design and good execution. The <team> got exactly the matchup they wanted. ". pool CBG default: Ghip, after a gain of 20 or more yards
-- CBO01 (remark, color): " The game is getting away from one side, and <situation>. The trailing team needs something big, and soon. ". pool CBO default: Ghip, in a game that is decided
-- CBO02 (remark, color): " At this stage the game is about pride and getting everybody home healthy. ". pool CBO default: Ghip, in a game that is decided
-- CBO03 (remark, color): " Well, <situation>, so the scoreboard is doing the talking now. ". pool CBO default: Ghip, in a game that is decided
-- CBO04 (remark, color): " Bright side for the trailing team: some young players are about to get snaps they would not get in a close game. ". pool CBO default: Ghip, in a game that is decided
-- CBO05 (remark, color): " A comeback from here would need a few turnovers and a very generous clock. ". pool CBO default: Ghip, in a game that is decided
-- CBO06 (remark, color): " The leading side can run the clock and protect what it has. The trailing side can only keep trying. ". pool CBO default: Ghip, in a game that is decided
-- CBO07 (remark, color): " The best thing the trailing side can do is play hard and learn something for the next game. ". pool CBO default: Ghip, in a game that is decided
-- CBO08 (remark, color): " This one is mostly decided. The coaches will think about next week, and the fans will think about traffic. ". pool CBO default: Ghip, in a game that is decided
-- CFG01 (remark, color): " Three points, and the <team> will take them. When a drive stalls, a field goal at least puts something on the board. ". pool CFG default: Ghip, after a field goal
-- CFG02 (remark, color): " The <opponent> defense held in the red zone, and that matters. Holding a team to a field goal is a win for them, too. ". pool CFG default: Ghip, after a field goal
-- CFG03 (remark, color): " Good kick. That is the job done, and now <situation>. ". pool CFG default: Ghip, after a field goal
-- CFG04 (remark, color): " You always want a touchdown there, but points are points, and <situation>. ". pool CFG default: Ghip, after a field goal
-- CFG05 (remark, color): " The <team> had to settle, but a steady kicker makes settling a lot easier. ". pool CFG default: Ghip, after a field goal
-- CFG06 (remark, color): " Credit the snap and the hold. That kick looks easy only because the two players before the kicker did their jobs. ". pool CFG default: Ghip, after a field goal
-- CFG07 (remark, color): " That drive ran out of steam near the goal line. The <opponent> will take it, and <situation>. ". pool CFG default: Ghip, after a field goal
-- CFG08 (remark, color): " A field goal moves the <team> one step forward, and the clock still has something to say about the rest. ". pool CFG default: Ghip, after a field goal
-- CFM01 (remark, color): " That is a costly miss. The <team> did everything right to get there, and it comes down to a few inches. ". pool CFM default: Ghip, after a missed kick
-- CFM02 (remark, color): " Everyone feels for a kicker after that, but the <opponent> will take the reprieve and run with it. ". pool CFM default: Ghip, after a missed kick
-- CFM03 (remark, color): " A miss like that changes the math for both sides, and the <opponent> just got a little breathing room. ". pool CFM default: Ghip, after a missed kick
-- CFM04 (remark, color): " That is a tough one. The <team> will need to find the points somewhere else now. ". pool CFM default: Ghip, after a missed kick
-- CFM05 (remark, color): " Kickers live with this pressure on every attempt. One bad hop, one tiny angle and it is gone. ". pool CFM default: Ghip, after a missed kick
-- CFM06 (remark, color): " You work so hard to get in range, and then it comes down to one kick. The <team> needed that one. ". pool CFM default: Ghip, after a missed kick
-- CFM07 (remark, color): " The <opponent> were lucky there, and they know it. Now they have to do something with it. ". pool CFM default: Ghip, after a missed kick
-- CFM08 (remark, color): " The <team> can only shake it off. Another chance will come, and the kicker will be ready. ". pool CFM default: Ghip, after a missed kick
-- CFN01 (remark, color): " And that is the game: <situation>. The <team> earned it with a complete performance. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN02 (remark, color): " Credit to the <team> for finishing the job. The <opponent> fought hard, but the win belongs to the side that executed. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN03 (remark, color): " In the end, <situation>, and it came down to who made fewer mistakes. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN04 (remark, color): " The <team> found a way when it mattered, and that is the mark of a good football team. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN05 (remark, color): " A win is a win. The <team> will enjoy it, and the <opponent> will go back to the film room. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN06 (remark, color): " The final tells the story: <situation>, and the trenches decided it. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN07 (remark, color): " Well played by both sides, but the <team> made the plays that decided it. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFN08 (remark, color): " The <opponent> have plenty to build on, but the <team> go home with the win. ". pool CFN default: Ghip, at the final whistle (a winner)
-- CFT01 (remark, color): " And that is the game, <situation>. Nobody wins and nobody loses, which feels strange after all that work. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT02 (remark, color): " A tie is rare, and it is an odd feeling. Both sides had chances, and neither took them all. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT03 (remark, color): " Evenly matched teams make for ties, and this was as even as it gets: <situation>. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT04 (remark, color): " Both the <team> and the <opponent> can say they did enough to avoid a loss, and neither can say they did enough to win. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT05 (remark, color): " That is the story of the day: <situation>, with plenty of football in between. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CFT06 (remark, color): " A fair result for a hard-fought game, and both sides can hold their heads up. ". pool CFT default: Ghip, at the final whistle (a tie)
-- CHT01 (remark, color): " That is the half, and <situation>. The next thirty minutes will be about adjustments. ". pool CHT default: Ghip, at half time
-- CHT02 (remark, color): " Both locker rooms will be busy at the half. The <team> and the <opponent> each have things to fix and things to keep. ". pool CHT default: Ghip, at half time
-- CHT03 (remark, color): " The coaches will look at the film, find what worked, and change what did not. That is what halftime is for. ". pool CHT default: Ghip, at half time
-- CHT04 (remark, color): " Watch the first drive of the second half. It usually tells you who made the better adjustments. ". pool CHT default: Ghip, at half time
-- CHT05 (remark, color): " The <team> will want to stay with what has worked in the second half, while the <opponent> need to find something new. ". pool CHT default: Ghip, at half time
-- CHT06 (remark, color): " It is a game of two halves, and so far <situation>. The second half starts fresh. ". pool CHT default: Ghip, at half time
-- CHT07 (remark, color): " The best thing for both sides at the half is a drink of water, a deep breath and a clear plan. ". pool CHT default: Ghip, at half time
-- CHT08 (remark, color): " We have seen enough in this half to know both teams are capable. What happens next depends on who adjusts best. ". pool CHT default: Ghip, at half time
-- CKO01 (remark, color): " Here is what I am watching early: whether the <team> can run the ball. If they can, the whole game opens up. ". pool CKO default: Ghip, before the opening kick-off
-- CKO02 (remark, color): " The <opponent> will want to set the tone on defense, and the first few snaps will tell us how they plan to do it. ". pool CKO default: Ghip, before the opening kick-off
-- CKO03 (remark, color): " Coach <coach> has had a long week to prepare, and the first drive is usually the script. We find out how well it was written. ". pool CKO default: Ghip, before the opening kick-off
-- CKO04 (remark, color): " <quarterback> needs a clean first series. Get the first completion, settle the nerves, and everything gets easier. ". pool CKO default: Ghip, before the opening kick-off
-- CKO05 (remark, color): " Early in a game like this, field position matters more than flash. Punt well, tackle well, and the rest takes care of itself. ". pool CKO default: Ghip, before the opening kick-off
-- CKO06 (remark, color): " I want to see how the <opponent> line holds up in the first quarter. Games are decided up front, and this one will be too. ". pool CKO default: Ghip, before the opening kick-off
-- CKO07 (remark, color): " The coaches have scripted the first plays, so watch how each side reacts when the script runs out. ". pool CKO default: Ghip, before the opening kick-off
-- CKO08 (remark, color): " Both teams have a plan. By halftime, one of those plans will have needed some rewriting. ". pool CKO default: Ghip, before the opening kick-off
-- CPN01 (remark, color): " That flag hurts the <team>. A penalty costs yards, and it costs momentum, too. ". pool CPN default: Ghip, after an accepted penalty
-- CPN02 (remark, color): " A penalty like that takes a good play off the board, and the <team> must start over. ". pool CPN default: Ghip, after an accepted penalty
-- CPN03 (remark, color): " Discipline, discipline, discipline. A drive can do everything right and still be undone by one flag. ". pool CPN default: Ghip, after an accepted penalty
-- CPN04 (remark, color): " The <opponent> will take that gift, and now the <team> must work for every yard they lost. ". pool CPN default: Ghip, after an accepted penalty
-- CPN05 (remark, color): " The officials saw it clearly, and there was no arguing with that one. ". pool CPN default: Ghip, after an accepted penalty
-- CPN06 (remark, color): " Penalties kill drives and sometimes games. The <team> cannot afford many more of those. ". pool CPN default: Ghip, after an accepted penalty
-- CPN07 (remark, color): " That is free yardage for the <opponent>, and the kind of mistake coaches talk about all week. ". pool CPN default: Ghip, after an accepted penalty
-- CPN08 (remark, color): " The <team> have to clean that up. It is the sort of mistake that shows up in the film room on Monday. ". pool CPN default: Ghip, after an accepted penalty
-- CQE01 (remark, color): " That wraps up the <quarter>, and <situation>. Plenty of football left, and both benches know it. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE02 (remark, color): " The ends of the field switch now. The <quarter> is done, and a lot can change in the next one. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE03 (remark, color): " Well, <situation>, but nobody hands out trophies after the <quarter>. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE04 (remark, color): " Quick breather for everybody. The <team> and the <opponent> both have notes to read and plans to tweak. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE05 (remark, color): " The <quarter> is in the books. This is the time for coaches to check the plan and adjust. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE06 (remark, color): " Fresh legs and fresh ideas. Whoever uses this break to fix their mistakes gets the edge. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE07 (remark, color): " Players are grabbing water and coaches are grabbing notes, and <situation> as we turn the page on the <quarter>. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CQE08 (remark, color): " Whatever you thought after the <quarter>, hold on to it loosely. This game can still change. ". pool CQE default: Ghip, at the end of the first or third quarter
-- CRZ01 (remark, color): " The <team> are in the red zone, and the field shrinks. Every route gets tighter, and every yard is earned. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ02 (remark, color): " Inside the twenty, the <opponent> defense has less room to cover, but the <team> have less room to work. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ03 (remark, color): " This is where games are won. Touchdowns, not field goals, are the goal for the <team> now. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ04 (remark, color): " The <opponent> will get tighter in coverage here. The <team> need a good call and a clean snap. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ05 (remark, color): " Down here the run game matters, because you cannot throw deep when there is no deep to throw to. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ06 (remark, color): " A stalled drive in the red zone is a missed chance. The <team> know that, and so do the <opponent>. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ07 (remark, color): " The pocket will be crowded and the windows small. Precision matters more than power down here. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CRZ08 (remark, color): " Points are close, but the last twenty yards are the hardest. Watch how the <team> approach them. ". pool CRZ default: Ghip, when a team gets inside the twenty
-- CSK01 (remark, color): " <quarterback> had nowhere to go. The protection broke down, and the <opponent> rush closed the door. ". pool CSK default: Ghip, after a sack
-- CSK02 (remark, color): " That is a drive killer. A sack puts the <team> behind the chains, and now every call gets harder. ". pool CSK default: Ghip, after a sack
-- CSK03 (remark, color): " The pass rush got home before the routes could develop. That is how you disrupt an offense. ". pool CSK default: Ghip, after a sack
-- CSK04 (remark, color): " Good pressure from the <opponent>. They did not need a blitz, just a better step and a better angle. ". pool CSK default: Ghip, after a sack
-- CSK05 (remark, color): " You hate to see that. <quarterback> held the ball a beat too long, and the rush made the most of it. ". pool CSK default: Ghip, after a sack
-- CSK06 (remark, color): " Pass protection is teamwork, and one missed block ruins the whole play. ". pool CSK default: Ghip, after a sack
-- CSK07 (remark, color): " A sack is worth more than the yards. It takes away down and distance and half the call sheet. ". pool CSK default: Ghip, after a sack
-- CSK08 (remark, color): " The <opponent> defense is winning up front, and that makes everything harder for the <team>. ". pool CSK default: Ghip, after a sack
-- CSK09 (remark, color): " That is a negative play, and a negative play usually means a punt is coming. ". pool CSK default: Ghip, after a sack
-- CSK10 (remark, color): " A quarterback can only hold the ball so long, and the <opponent> rush made sure that time ran out. ". pool CSK default: Ghip, after a sack
-- CTD01 (remark, color): " That is a well-built drive. The <team> stayed patient, kept the chains moving and finished it off, and now <situation>. ". pool CTD default: Ghip, after a touchdown
-- CTD02 (remark, color): " You could see that one coming. The <team> kept going back to what worked, and the <opponent> never found an answer. ". pool CTD default: Ghip, after a touchdown
-- CTD03 (remark, color): " Great call at the right time. The <opponent> had that covered most of the way, but the <team> found the one place it did not. ". pool CTD default: Ghip, after a touchdown
-- CTD04 (remark, color): " The <team> executed that perfectly, and with that touchdown <situation>. ". pool CTD default: Ghip, after a touchdown
-- CTD05 (remark, color): " That is what a finished drive looks like: protection, a good call and a player making a play. Now <situation>. ". pool CTD default: Ghip, after a touchdown
-- CTD06 (remark, color): " The <opponent> will want to talk about that one on the sideline. They gave up the one thing they could not afford to give up. ". pool CTD default: Ghip, after a touchdown
-- CTD07 (remark, color): " Every part of that drive worked, the line, the quarterback and the call. Now <situation>. ". pool CTD default: Ghip, after a touchdown
-- CTD08 (remark, color): " Notice how the <team> got there: no wasted plays, no mistakes, no hurry. That is how you score. ". pool CTD default: Ghip, after a touchdown
-- CTD09 (remark, color): " It is a big answer by the <team>, and the <opponent> must find some points of their own to stay in this game. ". pool CTD default: Ghip, after a touchdown
-- CTD10 (remark, color): " Points like that change the mood of a stadium, and the <team> have the momentum now. ". pool CTD default: Ghip, after a touchdown
-- CTM01 (remark, color): " Two minutes left in the <quarter>, and <situation>. This is where clock management earns its paycheck. ". pool CTM default: Ghip, at the two-minute warning
-- CTM02 (remark, color): " The two-minute warning means every second counts double now, and every decision is a big one. ". pool CTM default: Ghip, at the two-minute warning
-- CTM03 (remark, color): " The <team> have to be sharp here. The <opponent> only need to stay disciplined and make them work for it. ". pool CTM default: Ghip, at the two-minute warning
-- CTM04 (remark, color): " Smart teams plan for this stretch all week, and now we find out if the <team> did their homework. ". pool CTM default: Ghip, at the two-minute warning
-- CTM05 (remark, color): " A timeout here, a first down there, and suddenly the <quarter> is over. Two minutes is no time at all. ". pool CTM default: Ghip, at the two-minute warning
-- CTM06 (remark, color): " Watch the sideline. The next three plays are going to be called in a hurry and executed with care. ". pool CTM default: Ghip, at the two-minute warning
-- CTM07 (remark, color): " Everything speeds up now: the calls, the snap count and the heartbeat. ". pool CTM default: Ghip, at the two-minute warning
-- CTM08 (remark, color): " Take a breath, folks. After this warning, nobody on either bench gets to rest until the whistle. ". pool CTM default: Ghip, at the two-minute warning
-- CTT01 (remark, color): " Fourth quarter, and <situation>. Every snap now feels like it weighs a ton. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT02 (remark, color): " Nobody can relax when it is this close. One mistake from either side could decide it. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT03 (remark, color): " Tight game, tight nerves. This is when one dropped pass, one bad bounce or one flag decides who celebrates. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT04 (remark, color): " The <team> and the <opponent> have been trading blows all day, and neither wants to blink first. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT05 (remark, color): " A game this close turns on small things: a yard here, a flag there. Both sides know it. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT06 (remark, color): " Watch the clock and the field position. In a close game, they decide who gets the last possession. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT07 (remark, color): " This is the kind of game where a field goal can swing everything. ". pool CTT default: Ghip, in a close fourth quarter
-- CTT08 (remark, color): " It comes down to execution now. No more feeling out and no more adjustments, just football. ". pool CTT default: Ghip, in a close fourth quarter
-- CTV01 (remark, color): " That is a huge swing. The <opponent> take it away, and the whole feel of the game just changed. ". pool CTV default: Ghip, after a turnover
-- CTV02 (remark, color): " Ball security is the first rule, and the <team> just paid for breaking it. ". pool CTV default: Ghip, after a turnover
-- CTV03 (remark, color): " Look at the effort from the <opponent> defense: eyes up, hands out, and the ball was there for the taking. ". pool CTV default: Ghip, after a turnover
-- CTV04 (remark, color): " Turnovers decide games, and this one could decide this one. The <opponent> now have a short field to work with. ". pool CTV default: Ghip, after a turnover
-- CTV05 (remark, color): " The <team> offense was moving, and then it was not. That is the cost of one mistake. ". pool CTV default: Ghip, after a turnover
-- CTV06 (remark, color): " You cannot coach that out of a game. The ball bounces, and today it bounced to the <opponent>. ". pool CTV default: Ghip, after a turnover
-- CTV07 (remark, color): " Good defense makes its own luck. The <opponent> were in the right place and made the play. ". pool CTV default: Ghip, after a turnover
-- CTV08 (remark, color): " The <team> must answer this with their defense now, and fast, because points off a turnover are the hardest to take. ". pool CTV default: Ghip, after a turnover
-- CTV09 (remark, color): " That was a gift, and the <opponent> will turn it into points if they stay focused. ". pool CTV default: Ghip, after a turnover
-- CTV10 (remark, color): " A turnover and a short field are what every coach fears most, and the <team> have just handed the <opponent> both. ". pool CTV default: Ghip, after a turnover
-- NXM-37 (menu, say5): "Broadcast". F9 Rules item 10: the radio broadcast (the announcer's banter and Ghip), followed by on or off (SY.1)
-- NXH-65 (help, say5): " The broadcast: with the N. F. L. rules and the comments on, the announcer chats like a radio broadcast, and a color commentator adds thoughts in a separate voice. ". F6 addition (SY.1, rule 0.27)
-- NXH-66 (help, say5): " F8 switches all the comments off. F9, Rules, Broadcast switches the commentator off. ". F6 addition (SY.1, rule 0.27)
-- NXB-B01 (sentence, say5): " <commentator>, the color commentator, is in the booth with me. F12 chooses the voice, and F9, Rules, Broadcast sends the commentator home. ". said once per program run before the opening kick-off, in the N. F. L. rules with the broadcast on (SY.1)
+- ASK01 (remark, say): " <commentator>, what did you see on that one? ". pool ASK default: the announcer turns to the analyst before his line
+- ASK02 (remark, say): " <commentator>, walk us through that play. ". pool ASK default: the announcer turns to the analyst before his line
+- ASK03 (remark, say): " <commentator>, was that the call you expected? ". pool ASK default: the announcer turns to the analyst before his line
+- ASK04 (remark, say): " What did the defense show you there, <commentator>? ". pool ASK default: the announcer turns to the analyst before his line
+- ASK05 (remark, say): " <commentator>, how did that play develop from up there? ". pool ASK default: the announcer turns to the analyst before his line
+- ASK06 (remark, say): " Let us bring in <commentator>. What stood out? ". pool ASK default: the announcer turns to the analyst before his line
+- ASK07 (remark, say): " <commentator>, what do you make of that one? ". pool ASK default: the announcer turns to the analyst before his line
+- ASK08 (remark, say): " Over to you, <commentator>. What are you watching for next? ". pool ASK default: the announcer turns to the analyst before his line
+- ASK09 (remark, say): " <commentator>, give us the reason behind that call. ". pool ASK default: the announcer turns to the analyst before his line
+- ASK10 (remark, say): " <commentator>, tell the folks at home what changed on that snap. ". pool ASK default: the announcer turns to the analyst before his line
+- ASK11 (remark, say): " Your read on that one, <commentator>? ". pool ASK default: the announcer turns to the analyst before his line
+- ASK12 (remark, say): " <commentator>, was that more the scheme or more the execution? ". pool ASK default: the announcer turns to the analyst before his line
+- CTC01 (remark, color): " Third down is where drives live or die, and this one lives. The <team> keep the ball. ". pool CTC default: the analyst, after a third down conversion
+- CTC02 (remark, color): " That is a big conversion. Every third down made leaves the <opponent> defense a little more tired. ". pool CTC default: the analyst, after a third down conversion
+- CTC03 (remark, color): " First down. The drive was wobbling a second ago, and now it is standing tall again. ". pool CTC default: the analyst, after a third down conversion
+- CTC04 (remark, color): " The <opponent> had them in a tough spot, and the <team> found a way out. ". pool CTC default: the analyst, after a third down conversion
+- CTC05 (remark, color): " Good play call for the distance. You do not need a miracle on third down, just a smart route and a clean catch. ". pool CTC default: the analyst, after a third down conversion
+- CTC06 (remark, color): " That is a fresh set of downs, and with it the <team> get some confidence back. ". pool CTC default: the analyst, after a third down conversion
+- CTC07 (remark, color): " The <team> stayed on the field because the offense made the right decision at the right moment. ". pool CTC default: the analyst, after a third down conversion
+- CTC08 (remark, color): " Defenses hate that. They had it covered, and the <team> got the first down anyway. ". pool CTC default: the analyst, after a third down conversion
+- CTS01 (remark, color): " Stopped short on third down. The <opponent> defense earned that one, and the <team> are in a tougher spot now. ". pool CTS default: the analyst, after a third down stop
+- CTS02 (remark, color): " Great coverage and a good rush at the same time. The <opponent> rarely stop a drive without both, and they had both there. ". pool CTS default: the analyst, after a third down stop
+- CTS03 (remark, color): " Third and long is a defense's best friend, and the <opponent> made good use of it. ". pool CTS default: the analyst, after a third down stop
+- CTS04 (remark, color): " The <team> could not get the yards they needed. The <opponent> stayed in front of the sticks and tackled well. Textbook. ". pool CTS default: the analyst, after a third down stop
+- CTS05 (remark, color): " Nothing there for the <team>. The <opponent> took away the first read, and the second one was not open either. ". pool CTS default: the analyst, after a third down stop
+- CTS06 (remark, color): " A stop like that gets a whole sideline on its feet. Defense is about moments, and the <opponent> just had one. ". pool CTS default: the analyst, after a third down stop
+- CTS07 (remark, color): " The <team> will have to find a new answer on the next series. The <opponent> are playing disciplined football. ". pool CTS default: the analyst, after a third down stop
+- CTS08 (remark, color): " Good discipline from the <opponent> there: nobody jumped, nobody over-pursued, and the drive stalled. ". pool CTS default: the analyst, after a third down stop
+- CFD01 (remark, color): " They are going for it. That is a bold call, and the <team> must trust the line to get the job done. ". pool CFD default: the analyst, when a team goes for it on fourth down
+- CFD02 (remark, color): " Fourth down, and the <team> keep the offense on the field. A decision like this says a lot about a coach. ". pool CFD default: the analyst, when a team goes for it on fourth down
+- CFD03 (remark, color): " It takes confidence to go for it, and the <opponent> know what is coming. ". pool CFD default: the analyst, when a team goes for it on fourth down
+- CFD04 (remark, color): " The numbers say go for it in the right spot, and the <team> must think this is the right spot. ". pool CFD default: the analyst, when a team goes for it on fourth down
+- CFD05 (remark, color): " No punt, no kick. The <team> are all in on one play, and the stadium knows it. ". pool CFD default: the analyst, when a team goes for it on fourth down
+- CFD06 (remark, color): " Sometimes you have to take a risk. The <team> are in a spot where the risk makes sense. ". pool CFD default: the analyst, when a team goes for it on fourth down
+- CFD07 (remark, color): " The <opponent> defense needs one stop, and the whole crowd knows it. ". pool CFD default: the analyst, when a team goes for it on fourth down
+- CFD08 (remark, color): " This is the kind of decision that wins or loses a game, and the <team> have made theirs. ". pool CFD default: the analyst, when a team goes for it on fourth down
+- CBG01 (remark, color): " <yards> yards in one play. That is what happens when the defense loses a player in coverage for just a second. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBG02 (remark, color): " Big play for the <team>. The protection held, <quarterback> had time, and the receiver did the rest. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBG03 (remark, color): " That is a chunk play, <yards> yards, and the <opponent> will want to see exactly where the breakdown was. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBG04 (remark, color): " Somebody missed a tackle or a read there. Big gains almost always begin with one small mistake. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBG05 (remark, color): " The <team> flipped the field in one snap, and now the whole drive looks different. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBG06 (remark, color): " That is the play the <team> were hoping for all week, and <quarterback> saw it before the snap. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBG07 (remark, color): " <yards> yards. The <opponent> defense just got stretched, and now the whole field is open. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBG08 (remark, color): " Explosive plays win games. The <team> just made one, and the <opponent> are running out of answers. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBG09 (remark, color): " That one happened fast. A good fake, a step of separation, and the ball was already gone. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBG10 (remark, color): " Good design and good execution. The <team> got exactly the matchup they wanted. ". pool CBG default: the analyst, after a gain of 20 or more yards
+- CBO01 (remark, color): " The game is getting away from one side, and <situation>. The trailing team needs something big, and soon. ". pool CBO default: the analyst, in a game that is decided
+- CBO02 (remark, color): " At this stage the game is about pride and getting everybody home healthy. ". pool CBO default: the analyst, in a game that is decided
+- CBO03 (remark, color): " Well, <situation>, so the scoreboard is doing the talking now. ". pool CBO default: the analyst, in a game that is decided
+- CBO04 (remark, color): " Bright side for the trailing team: some young players are about to get snaps they would not get in a close game. ". pool CBO default: the analyst, in a game that is decided
+- CBO05 (remark, color): " A comeback from here would need a few turnovers and a very generous clock. ". pool CBO default: the analyst, in a game that is decided
+- CBO06 (remark, color): " The leading side can run the clock and protect what it has. The trailing side can only keep trying. ". pool CBO default: the analyst, in a game that is decided
+- CBO07 (remark, color): " The best thing the trailing side can do is play hard and learn something for the next game. ". pool CBO default: the analyst, in a game that is decided
+- CBO08 (remark, color): " This one is mostly decided. The coaches will think about next week, and the fans will think about traffic. ". pool CBO default: the analyst, in a game that is decided
+- CFG01 (remark, color): " Three points, and the <team> will take them. When a drive stalls, a field goal at least puts something on the board. ". pool CFG default: the analyst, after a field goal
+- CFG02 (remark, color): " The <opponent> defense held in the red zone, and that matters. Holding a team to a field goal is a win for them, too. ". pool CFG default: the analyst, after a field goal
+- CFG03 (remark, color): " Good kick. That is the job done, and now <situation>. ". pool CFG default: the analyst, after a field goal
+- CFG04 (remark, color): " You always want a touchdown there, but points are points, and <situation>. ". pool CFG default: the analyst, after a field goal
+- CFG05 (remark, color): " The <team> had to settle, but a steady kicker makes settling a lot easier. ". pool CFG default: the analyst, after a field goal
+- CFG06 (remark, color): " Credit the snap and the hold. That kick looks easy only because the two players before the kicker did their jobs. ". pool CFG default: the analyst, after a field goal
+- CFG07 (remark, color): " That drive ran out of steam near the goal line. The <opponent> will take it, and <situation>. ". pool CFG default: the analyst, after a field goal
+- CFG08 (remark, color): " A field goal moves the <team> one step forward, and the clock still has something to say about the rest. ". pool CFG default: the analyst, after a field goal
+- CFM01 (remark, color): " That is a costly miss. The <team> did everything right to get there, and it comes down to a few inches. ". pool CFM default: the analyst, after a missed kick
+- CFM02 (remark, color): " Everyone feels for a kicker after that, but the <opponent> will take the reprieve and run with it. ". pool CFM default: the analyst, after a missed kick
+- CFM03 (remark, color): " A miss like that changes the math for both sides, and the <opponent> just got a little breathing room. ". pool CFM default: the analyst, after a missed kick
+- CFM04 (remark, color): " That is a tough one. The <team> will need to find the points somewhere else now. ". pool CFM default: the analyst, after a missed kick
+- CFM05 (remark, color): " Kickers live with this pressure on every attempt. One bad hop, one tiny angle and it is gone. ". pool CFM default: the analyst, after a missed kick
+- CFM06 (remark, color): " You work so hard to get in range, and then it comes down to one kick. The <team> needed that one. ". pool CFM default: the analyst, after a missed kick
+- CFM07 (remark, color): " The <opponent> were lucky there, and they know it. Now they have to do something with it. ". pool CFM default: the analyst, after a missed kick
+- CFM08 (remark, color): " The <team> can only shake it off. Another chance will come, and the kicker will be ready. ". pool CFM default: the analyst, after a missed kick
+- CFN01 (remark, color): " And that is the game: <situation>. The <team> earned it with a complete performance. ". pool CFN default: the analyst, at the final whistle (a winner)
+- CFN02 (remark, color): " Credit to the <team> for finishing the job. The <opponent> fought hard, but the win belongs to the side that executed. ". pool CFN default: the analyst, at the final whistle (a winner)
+- CFN03 (remark, color): " In the end, <situation>, and it came down to who made fewer mistakes. ". pool CFN default: the analyst, at the final whistle (a winner)
+- CFN04 (remark, color): " The <team> found a way when it mattered, and that is the mark of a good football team. ". pool CFN default: the analyst, at the final whistle (a winner)
+- CFN05 (remark, color): " A win is a win. The <team> will enjoy it, and the <opponent> will go back to the film room. ". pool CFN default: the analyst, at the final whistle (a winner)
+- CFN06 (remark, color): " The final tells the story: <situation>, and the trenches decided it. ". pool CFN default: the analyst, at the final whistle (a winner)
+- CFN07 (remark, color): " Well played by both sides, but the <team> made the plays that decided it. ". pool CFN default: the analyst, at the final whistle (a winner)
+- CFN08 (remark, color): " The <opponent> have plenty to build on, but the <team> go home with the win. ". pool CFN default: the analyst, at the final whistle (a winner)
+- CFT01 (remark, color): " And that is the game, <situation>. Nobody wins and nobody loses, which feels strange after all that work. ". pool CFT default: the analyst, at the final whistle (a tie)
+- CFT02 (remark, color): " A tie is rare, and it is an odd feeling. Both sides had chances, and neither took them all. ". pool CFT default: the analyst, at the final whistle (a tie)
+- CFT03 (remark, color): " Evenly matched teams make for ties, and this was as even as it gets: <situation>. ". pool CFT default: the analyst, at the final whistle (a tie)
+- CFT04 (remark, color): " Both the <team> and the <opponent> can say they did enough to avoid a loss, and neither can say they did enough to win. ". pool CFT default: the analyst, at the final whistle (a tie)
+- CFT05 (remark, color): " That is the story of the day: <situation>, with plenty of football in between. ". pool CFT default: the analyst, at the final whistle (a tie)
+- CFT06 (remark, color): " A fair result for a hard-fought game, and both sides can hold their heads up. ". pool CFT default: the analyst, at the final whistle (a tie)
+- CHT01 (remark, color): " That is the half, and <situation>. The next thirty minutes will be about adjustments. ". pool CHT default: the analyst, at half time
+- CHT02 (remark, color): " Both locker rooms will be busy at the half. The <team> and the <opponent> each have things to fix and things to keep. ". pool CHT default: the analyst, at half time
+- CHT03 (remark, color): " The coaches will look at the film, find what worked, and change what did not. That is what halftime is for. ". pool CHT default: the analyst, at half time
+- CHT04 (remark, color): " Watch the first drive of the second half. It usually tells you who made the better adjustments. ". pool CHT default: the analyst, at half time
+- CHT05 (remark, color): " The <team> will want to stay with what has worked in the second half, while the <opponent> need to find something new. ". pool CHT default: the analyst, at half time
+- CHT06 (remark, color): " It is a game of two halves, and so far <situation>. The second half starts fresh. ". pool CHT default: the analyst, at half time
+- CHT07 (remark, color): " The best thing for both sides at the half is a drink of water, a deep breath and a clear plan. ". pool CHT default: the analyst, at half time
+- CHT08 (remark, color): " We have seen enough in this half to know both teams are capable. What happens next depends on who adjusts best. ". pool CHT default: the analyst, at half time
+- CKO01 (remark, color): " Here is what I am watching early: whether the <team> can run the ball. If they can, the whole game opens up. ". pool CKO default: the analyst, before the opening kick-off
+- CKO02 (remark, color): " The <opponent> will want to set the tone on defense, and the first few snaps will tell us how they plan to do it. ". pool CKO default: the analyst, before the opening kick-off
+- CKO03 (remark, color): " Coach <coach> has had a long week to prepare, and the first drive is usually the script. We find out how well it was written. ". pool CKO default: the analyst, before the opening kick-off
+- CKO04 (remark, color): " <quarterback> needs a clean first series. Get the first completion, settle the nerves, and everything gets easier. ". pool CKO default: the analyst, before the opening kick-off
+- CKO05 (remark, color): " Early in a game like this, field position matters more than flash. Punt well, tackle well, and the rest takes care of itself. ". pool CKO default: the analyst, before the opening kick-off
+- CKO06 (remark, color): " I want to see how the <opponent> line holds up in the first quarter. Games are decided up front, and this one will be too. ". pool CKO default: the analyst, before the opening kick-off
+- CKO07 (remark, color): " The coaches have scripted the first plays, so watch how each side reacts when the script runs out. ". pool CKO default: the analyst, before the opening kick-off
+- CKO08 (remark, color): " Both teams have a plan. By halftime, one of those plans will have needed some rewriting. ". pool CKO default: the analyst, before the opening kick-off
+- CPN01 (remark, color): " That flag hurts the <team>. A penalty costs yards, and it costs momentum, too. ". pool CPN default: the analyst, after an accepted penalty
+- CPN02 (remark, color): " A penalty like that takes a good play off the board, and the <team> must start over. ". pool CPN default: the analyst, after an accepted penalty
+- CPN03 (remark, color): " Discipline, discipline, discipline. A drive can do everything right and still be undone by one flag. ". pool CPN default: the analyst, after an accepted penalty
+- CPN04 (remark, color): " The <opponent> will take that gift, and now the <team> must work for every yard they lost. ". pool CPN default: the analyst, after an accepted penalty
+- CPN05 (remark, color): " The officials saw it clearly, and there was no arguing with that one. ". pool CPN default: the analyst, after an accepted penalty
+- CPN06 (remark, color): " Penalties kill drives and sometimes games. The <team> cannot afford many more of those. ". pool CPN default: the analyst, after an accepted penalty
+- CPN07 (remark, color): " That is free yardage for the <opponent>, and the kind of mistake coaches talk about all week. ". pool CPN default: the analyst, after an accepted penalty
+- CPN08 (remark, color): " The <team> have to clean that up. It is the sort of mistake that shows up in the film room on Monday. ". pool CPN default: the analyst, after an accepted penalty
+- CQE01 (remark, color): " That wraps up the <quarter>, and <situation>. Plenty of football left, and both benches know it. ". pool CQE default: the analyst, at the end of the first or third quarter
+- CQE02 (remark, color): " The ends of the field switch now. The <quarter> is done, and a lot can change in the next one. ". pool CQE default: the analyst, at the end of the first or third quarter
+- CQE03 (remark, color): " Well, <situation>, but nobody hands out trophies after the <quarter>. ". pool CQE default: the analyst, at the end of the first or third quarter
+- CQE04 (remark, color): " Quick breather for everybody. The <team> and the <opponent> both have notes to read and plans to tweak. ". pool CQE default: the analyst, at the end of the first or third quarter
+- CQE05 (remark, color): " The <quarter> is in the books. This is the time for coaches to check the plan and adjust. ". pool CQE default: the analyst, at the end of the first or third quarter
+- CQE06 (remark, color): " Fresh legs and fresh ideas. Whoever uses this break to fix their mistakes gets the edge. ". pool CQE default: the analyst, at the end of the first or third quarter
+- CQE07 (remark, color): " Players are grabbing water and coaches are grabbing notes, and <situation> as we turn the page on the <quarter>. ". pool CQE default: the analyst, at the end of the first or third quarter
+- CQE08 (remark, color): " Whatever you thought after the <quarter>, hold on to it loosely. This game can still change. ". pool CQE default: the analyst, at the end of the first or third quarter
+- CRZ01 (remark, color): " The <team> are in the red zone, and the field shrinks. Every route gets tighter, and every yard is earned. ". pool CRZ default: the analyst, when a team gets inside the twenty
+- CRZ02 (remark, color): " Inside the twenty, the <opponent> defense has less room to cover, but the <team> have less room to work. ". pool CRZ default: the analyst, when a team gets inside the twenty
+- CRZ03 (remark, color): " This is where games are won. Touchdowns, not field goals, are the goal for the <team> now. ". pool CRZ default: the analyst, when a team gets inside the twenty
+- CRZ04 (remark, color): " The <opponent> will get tighter in coverage here. The <team> need a good call and a clean snap. ". pool CRZ default: the analyst, when a team gets inside the twenty
+- CRZ05 (remark, color): " Down here the run game matters, because you cannot throw deep when there is no deep to throw to. ". pool CRZ default: the analyst, when a team gets inside the twenty
+- CRZ06 (remark, color): " A stalled drive in the red zone is a missed chance. The <team> know that, and so do the <opponent>. ". pool CRZ default: the analyst, when a team gets inside the twenty
+- CRZ07 (remark, color): " The pocket will be crowded and the windows small. Precision matters more than power down here. ". pool CRZ default: the analyst, when a team gets inside the twenty
+- CRZ08 (remark, color): " Points are close, but the last twenty yards are the hardest. Watch how the <team> approach them. ". pool CRZ default: the analyst, when a team gets inside the twenty
+- CSK01 (remark, color): " <quarterback> had nowhere to go. The protection broke down, and the <opponent> rush closed the door. ". pool CSK default: the analyst, after a sack
+- CSK02 (remark, color): " That is a drive killer. A sack puts the <team> behind the chains, and now every call gets harder. ". pool CSK default: the analyst, after a sack
+- CSK03 (remark, color): " The pass rush got home before the routes could develop. That is how you disrupt an offense. ". pool CSK default: the analyst, after a sack
+- CSK04 (remark, color): " Good pressure from the <opponent>. They did not need a blitz, just a better step and a better angle. ". pool CSK default: the analyst, after a sack
+- CSK05 (remark, color): " You hate to see that. <quarterback> held the ball a beat too long, and the rush made the most of it. ". pool CSK default: the analyst, after a sack
+- CSK06 (remark, color): " Pass protection is teamwork, and one missed block ruins the whole play. ". pool CSK default: the analyst, after a sack
+- CSK07 (remark, color): " A sack is worth more than the yards. It takes away down and distance and half the call sheet. ". pool CSK default: the analyst, after a sack
+- CSK08 (remark, color): " The <opponent> defense is winning up front, and that makes everything harder for the <team>. ". pool CSK default: the analyst, after a sack
+- CSK09 (remark, color): " That is a negative play, and a negative play usually means a punt is coming. ". pool CSK default: the analyst, after a sack
+- CSK10 (remark, color): " A quarterback can only hold the ball so long, and the <opponent> rush made sure that time ran out. ". pool CSK default: the analyst, after a sack
+- CTD01 (remark, color): " That is a well-built drive. The <team> stayed patient, kept the chains moving and finished it off, and now <situation>. ". pool CTD default: the analyst, after a touchdown
+- CTD02 (remark, color): " You could see that one coming. The <team> kept going back to what worked, and the <opponent> never found an answer. ". pool CTD default: the analyst, after a touchdown
+- CTD03 (remark, color): " Great call at the right time. The <opponent> had that covered most of the way, but the <team> found the one place it did not. ". pool CTD default: the analyst, after a touchdown
+- CTD04 (remark, color): " The <team> executed that perfectly, and with that touchdown <situation>. ". pool CTD default: the analyst, after a touchdown
+- CTD05 (remark, color): " That is what a finished drive looks like: protection, a good call and a player making a play. Now <situation>. ". pool CTD default: the analyst, after a touchdown
+- CTD06 (remark, color): " The <opponent> will want to talk about that one on the sideline. They gave up the one thing they could not afford to give up. ". pool CTD default: the analyst, after a touchdown
+- CTD07 (remark, color): " Every part of that drive worked, the line, the quarterback and the call. Now <situation>. ". pool CTD default: the analyst, after a touchdown
+- CTD08 (remark, color): " Notice how the <team> got there: no wasted plays, no mistakes, no hurry. That is how you score. ". pool CTD default: the analyst, after a touchdown
+- CTD09 (remark, color): " It is a big answer by the <team>, and the <opponent> must find some points of their own to stay in this game. ". pool CTD default: the analyst, after a touchdown
+- CTD10 (remark, color): " Points like that change the mood of a stadium, and the <team> have the momentum now. ". pool CTD default: the analyst, after a touchdown
+- CTM01 (remark, color): " Two minutes left in the <quarter>, and <situation>. This is where clock management earns its paycheck. ". pool CTM default: the analyst, at the two-minute warning
+- CTM02 (remark, color): " The two-minute warning means every second counts double now, and every decision is a big one. ". pool CTM default: the analyst, at the two-minute warning
+- CTM03 (remark, color): " The <team> have to be sharp here. The <opponent> only need to stay disciplined and make them work for it. ". pool CTM default: the analyst, at the two-minute warning
+- CTM04 (remark, color): " Smart teams plan for this stretch all week, and now we find out if the <team> did their homework. ". pool CTM default: the analyst, at the two-minute warning
+- CTM05 (remark, color): " A timeout here, a first down there, and suddenly the <quarter> is over. Two minutes is no time at all. ". pool CTM default: the analyst, at the two-minute warning
+- CTM06 (remark, color): " Watch the sideline. The next three plays are going to be called in a hurry and executed with care. ". pool CTM default: the analyst, at the two-minute warning
+- CTM07 (remark, color): " Everything speeds up now: the calls, the snap count and the heartbeat. ". pool CTM default: the analyst, at the two-minute warning
+- CTM08 (remark, color): " Take a breath, folks. After this warning, nobody on either bench gets to rest until the whistle. ". pool CTM default: the analyst, at the two-minute warning
+- CTT01 (remark, color): " Fourth quarter, and <situation>. Every snap now feels like it weighs a ton. ". pool CTT default: the analyst, in a close fourth quarter
+- CTT02 (remark, color): " Nobody can relax when it is this close. One mistake from either side could decide it. ". pool CTT default: the analyst, in a close fourth quarter
+- CTT03 (remark, color): " Tight game, tight nerves. This is when one dropped pass, one bad bounce or one flag decides who celebrates. ". pool CTT default: the analyst, in a close fourth quarter
+- CTT04 (remark, color): " The <team> and the <opponent> have been trading blows all day, and neither wants to blink first. ". pool CTT default: the analyst, in a close fourth quarter
+- CTT05 (remark, color): " A game this close turns on small things: a yard here, a flag there. Both sides know it. ". pool CTT default: the analyst, in a close fourth quarter
+- CTT06 (remark, color): " Watch the clock and the field position. In a close game, they decide who gets the last possession. ". pool CTT default: the analyst, in a close fourth quarter
+- CTT07 (remark, color): " This is the kind of game where a field goal can swing everything. ". pool CTT default: the analyst, in a close fourth quarter
+- CTT08 (remark, color): " It comes down to execution now. No more feeling out and no more adjustments, just football. ". pool CTT default: the analyst, in a close fourth quarter
+- CTV01 (remark, color): " That is a huge swing. The <opponent> take it away, and the whole feel of the game just changed. ". pool CTV default: the analyst, after a turnover
+- CTV02 (remark, color): " Ball security is the first rule, and the <team> just paid for breaking it. ". pool CTV default: the analyst, after a turnover
+- CTV03 (remark, color): " Look at the effort from the <opponent> defense: eyes up, hands out, and the ball was there for the taking. ". pool CTV default: the analyst, after a turnover
+- CTV04 (remark, color): " Turnovers decide games, and this one could decide this one. The <opponent> now have a short field to work with. ". pool CTV default: the analyst, after a turnover
+- CTV05 (remark, color): " The <team> offense was moving, and then it was not. That is the cost of one mistake. ". pool CTV default: the analyst, after a turnover
+- CTV06 (remark, color): " You cannot coach that out of a game. The ball bounces, and today it bounced to the <opponent>. ". pool CTV default: the analyst, after a turnover
+- CTV07 (remark, color): " Good defense makes its own luck. The <opponent> were in the right place and made the play. ". pool CTV default: the analyst, after a turnover
+- CTV08 (remark, color): " The <team> must answer this with their defense now, and fast, because points off a turnover are the hardest to take. ". pool CTV default: the analyst, after a turnover
+- CTV09 (remark, color): " That was a gift, and the <opponent> will turn it into points if they stay focused. ". pool CTV default: the analyst, after a turnover
+- CTV10 (remark, color): " A turnover and a short field are what every coach fears most, and the <team> have just handed the <opponent> both. ". pool CTV default: the analyst, after a turnover
+- NXM-37 (menu, say5): "Broadcast". F9 Rules item 10: the radio crew (the color analyst and the sideline reporter), followed by on or off; both modes (SY.1, BC.3)
+- NXH-65 (help, say5): " The radio broadcast: with the comments on, a radio crew calls the game. The announcer signs on, keeps you posted and signs off, and an analyst and a sideline reporter have voices of their own. ". F6 addition, both modes (SY.1, BC.3, rule 0.27)
+- NXH-66 (help, say5): " F8 switches the whole broadcast off. F9, Rules, Broadcast switches the analyst and the reporter off, and F9, Rules, Broadcast crew changes their names. ". F6 addition, both modes (SY.1, BC.3, rule 0.27)
+- NXB-B01 (sentence, say5): " F12 chooses the voices of the crew, and F9, Rules, Broadcast crew changes our names. ". said by the announcer once per program run after the crew is introduced, both modes with the Broadcast item on (SY.1, BC.3)
 - NXM-38 (menu, say5): "Stadium sounds". F9 Rules item 11: the crowd, the hits and the chain, followed by on or off (SY.2)
 - NXH-67 (help, say5): " The stadium sounds: the crowd cheers, groans and boos, hits sound, and the chain clanks at a first down. F9, Rules, Stadium sounds switches them off. ". F6 addition (SY.2)
 - NXH-68 (help, say5): " The referee announces the flags and the reviews over a microphone, in a separate voice. F12 and F11 ask for that voice and its volume, and F9, Rules, Broadcast switches the referee off. ". F6 addition (SY.3)
-- NXH-70 (help, say5): " The color analyst is called Gus Delgado until you type a name of your own in F9, Rules, Commentator. ". F6 addition (SZ.1)
+- NXH-70 (help, say5): " The crew are Walt Kessler, Gus Delgado and Nora Banks of the Gridiron Radio Network until you choose names of your own in F9, Rules, Broadcast crew. ". F6 addition, both modes (SZ.1, BC.3)
 - NXH-71 (help, say5): " The stadium and referee sounds can be replaced with your own sound files: F9, Sounds, Stadium and referee sounds lists them with the file name each one takes. ". F6 addition (SZ.2)
 - NXH-81 (help, say5): " Your own music and celebrations: put music.wav, or celebration1.wav and up, in the sounds folder. The game plays no music or celebrations of its own. ". F6 addition (NX-M1, NX-M2)
-- NXM-39 (menu, say5): "Commentator". F9 Rules item 12: the color commentator's name, followed by the name (SZ.1, D-106)
-- NXM-40 (menu, say5): "Choose the commentator". the title of the list of names (SZ.1)
+- NXM-39 (menu, say5): "Broadcast crew". F9 Rules item 12: the radio crew's names, followed by them (SZ.1, D-106; BC.3, D-189)
+- NXM-40 (menu, say5): "Choose a name". the title of the list of names of one of the crew (SZ.1, BC.3)
 - NXM-41 (help, say5): " Up and Down move through the items. Enter chooses one, and Escape goes back without a change. The last item lets you type a name of your own. ". F1 in the list of names (SZ.1)
 - NXM-42 (menu, say5): "Type a name of your own". the last item of the list of names (SZ.1)
-- NXM-43 (prompt, say5): " Type the commentator's name, then press Enter. ". the typed prompt of the commentator's own name (SZ.1)
+- NXM-43 (prompt, say5): " Type the name, then press Enter. ". the typed prompt of a name of the crew (SZ.1, BC.3)
 - NXM-44 (sentence, say5): " no name was typed. ". said after an empty typed name (SZ.1)
 - NXM-45 (menu, say5): "<name>, the default". an item of the list of names: the default (SZ.1)
 - NXM-46 (menu, say5): "<name>, the name you typed". an item of the list of names: the player's own name (SZ.1)
@@ -289,4 +237,82 @@
 - NXB-S20 (menu, say5): "Crowd roars for your big play". F9 Sounds, stadium sounds list: crowd_big_play (tester 2026-10-23)
 - NXB-S21 (menu, say5): "Crowd cheers a flag on them". F9 Sounds, stadium sounds list: crowd_flag_cheer (tester 2026-10-23)
 - NXB-S22 (menu, say5): "One file for every whistle". F9 Sounds, stadium sounds list: whistle (tester 2026-10-23)
+- SGN01 (remark, say): " Good afternoon, everybody, and welcome to <network> coverage of N. F. L. football: the <visitors> at the <home>. I'm <announcer>. ". pool SGN default: the play-by-play announcer's sign-on before the opening kick-off, both modes (BC.3, D-189; customizable)
+- SGN02 (remark, say): " Hello again, everybody, from the booth. It's the <visitors> and the <home> today, and I'm <announcer> for <network>. ". pool SGN default: the sign-on (BC.3)
+- SGN03 (remark, say): " Welcome to <network>. The <visitors> visit the <home> this afternoon, and I'm <announcer> with you for every snap. ". pool SGN default: the sign-on (BC.3)
+- SGN04 (remark, say): " It's football time on <network>. The <visitors> at the <home>, and I'm <announcer> calling it for you. ". pool SGN default: the sign-on (BC.3)
+- CRW01 (remark, say): " Alongside me as always is <analyst>, and <sideline> is down on the field. ". pool CRW default: the announcer introduces the crew right after the sign-on, with the Broadcast item on (BC.3)
+- CRW02 (remark, say): " <analyst> is here in the booth with me, and <sideline> has the sideline for us. ". pool CRW default: the crew (BC.3)
+- CRW03 (remark, say): " With me, <analyst>. On the field, <sideline>. Let's get to it. ". pool CRW default: the crew (BC.3)
+- SON01 (remark, sideline): " <sideline> here on the field. A light wind is blowing toward the south end zone, and both kickers spent warm-ups testing it. ". pool SON default: the sideline reporter before the opening kick-off, in her own voice (BC.3)
+- SON02 (remark, sideline): " Down here it's loud already. The <home> fans were in their seats a good half hour before the kick-off. ". pool SON default: the reporter before the kick-off (BC.3)
+- SON03 (remark, sideline): " The <visitors> came out for warm-ups looking loose, plenty of laughter in the stretching lines. Back to you, <announcer>. ". pool SON default: the reporter before the kick-off (BC.3)
+- SON04 (remark, sideline): " It's a perfect afternoon for football down here: cool air, dry grass, and a crowd that's ready to go. ". pool SON default: the reporter before the kick-off (BC.3)
+- SON05 (remark, sideline): " I talked to the <home> equipment staff, and they say this field is as fast as it's been all season. ". pool SON default: the reporter before the kick-off (BC.3)
+- SON06 (remark, sideline): " The <visitors> quarterbacks threw for a long time in warm-ups. They look ready. <announcer>, back up to you. ". pool SON default: the reporter before the kick-off (BC.3)
+- SON07 (remark, sideline): " A few clouds rolling in, but nothing that should bother anybody. It's a good day to throw the ball. ". pool SON default: the reporter before the kick-off (BC.3)
+- SON08 (remark, sideline): " From the sideline: both teams are fully dressed and stretching. We're just about ready. ". pool SON default: the reporter before the kick-off (BC.3)
+- UPD01 (remark, say): " So <situation>. ". pool UPD default: the announcer says the score again at a dead ball when nobody said it for six minutes of game time (BC.3; the game's own score sentence comes after every score)
+- UPD02 (remark, say): " And with that, <situation>. ". pool UPD default: the score again (BC.3)
+- UPD03 (remark, say): " Let's reset it for you: <situation>. ". pool UPD default: the score again (BC.3)
+- UPD04 (remark, say): " The scoreboard tells it: <situation>. ". pool UPD default: the score again (BC.3)
+- QUP01 (remark, say): " That's the end of the <quarter>, and <situation>. ". pool QUP default: the announcer at the end of the first and third quarters and of the first half (BC.3)
+- QUP02 (remark, say): " We've reached the end of the <quarter> here on <network>, and <situation>. ". pool QUP default: a quarter or the half (BC.3)
+- QUP03 (remark, say): " The <quarter> is in the books, and <situation>. ". pool QUP default: a quarter or the half (BC.3)
+- QUP04 (remark, say): " And that will do it for the <quarter>: <situation>. ". pool QUP default: a quarter or the half (BC.3)
+- STA01 (remark, say): " You're listening to <network> coverage of N. F. L. football. ". pool STA default: the station break at the two-minute warning and at half time, before the commercial slot of rule 0.14 (BC.3)
+- STA02 (remark, say): " This is <network>. Stay with us. ". pool STA default: a station break (BC.3)
+- STA03 (remark, say): " You're tuned to <network>, and we'll be right back. ". pool STA default: a station break (BC.3)
+- STA04 (remark, say): " We'll take a break here on <network>. Don't go anywhere. ". pool STA default: a station break (BC.3)
+- STA05 (remark, say): " <network> coverage continues after this. ". pool STA default: a station break (BC.3)
+- STA06 (remark, say): " This is <announcer> with <analyst> and <sideline> on <network>. Back in a moment. ". pool STA default: a station break; left out while the Broadcast item is off (BC.3)
+- ASN01 (remark, say): " Let's go down to <sideline> on the sideline. ". pool ASN default: the announcer turns to the sideline reporter before her injury and half-time reports (BC.3)
+- ASN02 (remark, say): " <sideline>, what are you seeing down there? ". pool ASN default: the turn to the reporter (BC.3)
+- ASN03 (remark, say): " We'll check in with <sideline>. ". pool ASN default: the turn to the reporter (BC.3)
+- ASN04 (remark, say): " <sideline> has more from the field. ". pool ASN default: the turn to the reporter (BC.3)
+- SIN01 (remark, sideline): " The trainers are with <player> on the <team> sideline. <player> walked off without help. ". pool SIN default: the reporter on an injury of a Franchise game, no pronoun for the player (design 11.5; BC.3)
+- SIN02 (remark, sideline): " <player> is being looked at in the medical tent. The <team> will let us know more soon. ". pool SIN default: an injury (BC.3)
+- SIN03 (remark, sideline): " <player> was favoring a leg on the way off. The <team> staff are taking a careful look. ". pool SIN default: an injury (design 11.5; BC.3)
+- SIN04 (remark, sideline): " The <team> have <player> on the bench with a trainer. <player> is talking and alert. ". pool SIN default: an injury (design 11.5; BC.3)
+- SIN05 (remark, sideline): " From the sideline: <player> is getting some attention from the <team> medical staff. We'll keep you posted. ". pool SIN default: an injury (BC.3)
+- SIN06 (remark, sideline): " <player> came off slowly, and the <team> trainers are taking a look right now. ". pool SIN default: an injury, no pronoun for the player (BC.3)
+- SHT01 (remark, sideline): " Both locker rooms will be busy. The <team> coaches were already talking with their offensive line on the way in. ". pool SHT default: the reporter at half time; <team> leads (the home team when it is tied) (BC.3)
+- SHT02 (remark, sideline): " The <opponent> went in fast and quiet. You can bet there are some adjustments coming. ". pool SHT default: half time (BC.3)
+- SHT03 (remark, sideline): " Down here the crowd is on its feet for the halftime show, but the players went straight inside. ". pool SHT default: half time (BC.3)
+- SHT04 (remark, sideline): " I spoke briefly with the <team> staff: they want to run the ball more in the second half. ". pool SHT default: half time (BC.3)
+- SHT05 (remark, sideline): " The <opponent> kicker stayed out to practice a few kicks into the wind before heading in. ". pool SHT default: half time (BC.3)
+- SHT06 (remark, sideline): " The temperature has dropped a few degrees, and the field is holding up well. ". pool SHT default: half time (BC.3)
+- SHT07 (remark, sideline): " The <team> sideline was all smiles heading in. The <opponent> sideline, a little less so. ". pool SHT default: half time (BC.3)
+- SHT08 (remark, sideline): " Plenty of energy down here. Whatever happens next, this crowd is ready for it. ". pool SHT default: half time (BC.3)
+- SGO01 (remark, say): " For <analyst> and <sideline>, I'm <announcer>. Thanks for listening to <network>. ". pool SGO default: the announcer signs off after the final score (BC.3)
+- SGO02 (remark, say): " That's our broadcast. On behalf of <analyst> and <sideline>, I'm <announcer>. Good night, everybody. ". pool SGO default: the sign-off (BC.3)
+- SGO03 (remark, say): " Thank you for spending the afternoon with us on <network>. I'm <announcer>, so long, everybody. ". pool SGO default: the sign-off; the one said while the Broadcast item is off (BC.3)
+- SGO04 (remark, say): " <analyst>, <sideline>, and I thank you for listening. This has been <network>. ". pool SGO default: the sign-off (BC.3)
+- NID01 (remark, say): " You are listening to <network> coverage of N. F. L. football. ". pool NID default: the network's identification about every seven minutes of game time, never in the last two minutes of a half (design 11.1; BC.3)
+- NID02 (remark, say): " This is <network>, your home for football today. ". pool NID default: the network (BC.3)
+- NID03 (remark, say): " Stay with us. You are listening to <network>. ". pool NID default: the network (BC.3)
+- NID04 (remark, say): " This is <announcer> with <analyst> and <sideline> on <network>. ". pool NID default: the network; left out while the Broadcast item is off (BC.3)
+- NID05 (remark, say): " It's <network>, live from the stadium. ". pool NID default: the network (BC.3)
+- NID06 (remark, say): " Thanks for being with us on <network>. ". pool NID default: the network (BC.3)
+- LID01 (remark, say): " My name is Dolores, I am seventy-nine, and I listen from a porch swing. You are listening to <network>. ". pool LID default: a made-up listener's own identification, read by the announcer, at most once a game and only with the commercials off (design 11.2; BC.3)
+- LID02 (remark, say): " My name is Marcus, I am thirty-four, and I am listening from the cab of a truck. You are listening to <network>. ". pool LID default: a listener (BC.3)
+- LID03 (remark, say): " My name is Priya, I am twelve, and I am listening under the covers. You are listening to <network>. ". pool LID default: a listener (BC.3)
+- LID04 (remark, say): " My name is Walter, I am eighty-one, and I have not missed a game on the radio since I was a boy. You are listening to <network>. ". pool LID default: a listener (BC.3)
+- LID05 (remark, say): " My name is Tanya, I am fifty-two, and I am listening in the kitchen with the stove on. You are listening to <network>. ". pool LID default: a listener (BC.3)
+- LID06 (remark, say): " My name is Eli, I am nineteen, and I am listening from a dorm room, trying not to wake anyone. You are listening to <network>. ". pool LID default: a listener (BC.3)
+- DRV01 (remark, say): " That drive took <plays> plays, covered <yards> yards, and used up <minutes> minutes. ". pool DRV default: the drive that scored, about once in three scores, the N. F. L. rules' real clock only (design 11.3; BC.3)
+- DRV02 (remark, say): " A <plays> play drive, <yards> yards in all, and <minutes> minutes off the clock. ". pool DRV default: a drive (BC.3)
+- DRV03 (remark, say): " The <team> went <yards> yards on <plays> plays, and took <minutes> minutes to do it. ". pool DRV default: a drive (BC.3)
+- DRV04 (remark, say): " That was a <yards> yard drive. <plays> plays, <minutes> minutes, and points at the end of it. ". pool DRV default: a drive (BC.3)
+- DRV05 (remark, say): " It took <plays> plays and <yards> yards, and the <team> got it done. ". pool DRV default: a drive (BC.3)
+- DRV06 (remark, say): " <minutes> minutes, <plays> plays and <yards> yards. That is how the <team> built that score. ". pool DRV default: a drive (BC.3)
+- CLK01 (remark, say): " The clock is at <time> in the <quarter>, and <situation>. ". pool CLK default: the time left, after every second play in the last two minutes of each half, the N. F. L. rules' real clock only (design 11.4; BC.3)
+- CLK02 (remark, say): " <time> to play in the <quarter>, and <situation>. ". pool CLK default: the clock (BC.3; the design's two sentences made one, so the score clause is not a sentence of its own)
+- CLK03 (remark, say): " We have <time> left in the <quarter>, and <situation>. ". pool CLK default: the clock (BC.3)
+- CLK04 (remark, say): " The clock stands at <time>, and <situation>. ". pool CLK default: the clock (BC.3)
+- NXM-59 (menu, say5): "Play by play announcer". F9, Rules, Broadcast crew, item 1: followed by the name (BC.3)
+- NXM-60 (menu, say5): "Color analyst". F9, Rules, Broadcast crew, item 2: followed by the name (BC.3)
+- NXM-61 (menu, say5): "Sideline reporter". F9, Rules, Broadcast crew, item 3: followed by the name (BC.3)
+- NXM-62 (menu, say5): "Network". F9, Rules, Broadcast crew, item 4: followed by the name (BC.3)
+- NXM-63 (help, say5): " Up and Down move through the crew. Enter chooses a name, Left and Right go between the original name and the one you typed, and Escape goes back. ". F1 in the Broadcast crew menu (BC.3)
 

@@ -199,13 +199,14 @@ def test_a_remarks_txt_held_by_another_program_is_not_damage(tmp_path):
     assert custom.snapshot.remarks.lines("TO")[0].pieces == (Speak((Text("mine"),)),)
 
 
-def test_reset_of_one_list_offers_remarks_only_with_the_nfl_rules_and_keeps_the_players_file(tmp_path):
+def test_reset_of_one_list_offers_remarks_in_both_modes_and_keeps_the_players_file(tmp_path):
     folder = str(tmp_path / "customize")
     write(folder, "TO01 = mine\n")
     classic = Customization(folder)
-    assert "remarks" not in [spec.key for spec in classic.specs]
-    assert classic.reset(None).done == ["teams.txt", "divisions.txt", "surnames.txt"]      # BC.2: no banter.txt
-    assert "mine" in open(os.path.join(folder, "remarks.txt"), encoding="utf-8").read()
+    assert "remarks" in [spec.key for spec in classic.specs] and "penalties" not in [spec.key for spec in classic.specs]   # BC.3
+    assert classic.reset(None).done == ["teams.txt", "divisions.txt", "surnames.txt", "remarks.txt"]      # BC.2: no banter.txt
+    assert "mine" in open(os.path.join(folder, "remarks.txt.before-reset"), encoding="utf-8").read()
+    write(folder, "TO01 = mine\n")
     custom = Customization(folder, extras=True)
     result = custom.reset("remarks")
     assert result.done == ["remarks.txt"] and result.kept == ["remarks.txt"]

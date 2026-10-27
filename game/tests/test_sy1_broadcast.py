@@ -18,14 +18,18 @@ from nfl4.data.settings import Settings
 from nfl4.extras import broadcast as BC
 from nfl4.extras import nx_texts as X
 from nfl4.extras import remarks as RM
+from nfl4.extras.classic_radio import ClassicRadioRules
 from nfl4.extras.nfl_rules import NflRules, rules_from_settings
 from nfl4.game.rules import CLASSIC, ClassicRules
-from nfl4.speech.roles import ALL_ROLES, ANNOUNCER, COLOR, ROLES
+from nfl4.speech.roles import ALL_ROLES, ANNOUNCER, COLOR, ROLES, SIDELINE
 from nflrig import RecordingRules, sim_game
 
 COLOR_POOLS = RM.COLOR_POOLS
 SIZES = {"BN": 142, "ASK": 12, "CKO": 8, "CBG": 10, "CSK": 10, "CTV": 10, "CTD": 10, "CFG": 8, "CFM": 8, "CTC": 8, "CTS": 8, "CFD": 8, "CRZ": 8,
-         "CPN": 8, "CTM": 8, "CQE": 8, "CHT": 8, "CFN": 8, "CFT": 6, "CTT": 8, "CBO": 8}
+         "CPN": 8, "CTM": 8, "CQE": 8, "CHT": 8, "CFN": 8, "CFT": 6, "CTT": 8, "CBO": 8,
+         # BC.3 (D-189): the radio format's pools (spec/NFL_BROADCAST_DESIGN.md sections 10 and 11)
+         "SGN": 4, "CRW": 3, "SON": 8, "UPD": 4, "QUP": 4, "STA": 6, "ASN": 4, "SIN": 6, "SHT": 8, "SGO": 4, "NID": 6, "LID": 6, "DRV": 6,
+         "CLK": 4}
 
 
 # ----- the texts -----
@@ -51,7 +55,7 @@ def test_every_line_of_the_broadcast_follows_the_text_rules_of_the_playbook():
             assert all(p in known for p in re.findall(r"<[^<>]+>", text)), (remark.id, known)
             assert text not in seen, (remark.id, seen.get(text))
             seen[text] = remark.id
-            assert X.SPEAKERS[remark.id] == ("color" if pool in COLOR_POOLS else "say")
+            assert X.SPEAKERS[remark.id] == ("color" if pool in COLOR_POOLS else "sideline" if pool in RM.SIDELINE_POOLS else "say")
 
 
 def test_the_radio_banter_lines_are_generic():
@@ -97,7 +101,10 @@ def test_the_analyst_does_not_move_a_single_draw_or_the_result_of_a_game(tmp_pat
 
 def test_the_analyst_speaks_in_his_own_voice_after_the_opening_and_the_lines_are_those_of_his_pools(tmp_path):
     rig, engine, said, result = whole_game(tmp_path, 22, True)
-    assert all(role == COLOR for role, _ in said)
+    assert {role for role, _ in said} == {COLOR, SIDELINE}                  # BC.3: the sideline reporter speaks in her own voice too
+    nora = [re.sub(r"<[a-z ]+>", ".+", re.escape(X.TEXTS[r.id].strip())) for pool in RM.SIDELINE_POOLS for r in RM.DEFAULT_POOLS.lines(pool)]
+    assert all(any(re.fullmatch(pattern, text.strip()) for pattern in nora) for role, text in said if role == SIDELINE)
+    said = [(role, text) for role, text in said if role == COLOR]
     patterns = [re.sub(r"<[a-z ]+>", ".+", re.escape(X.TEXTS[r.id].strip())) for pool in COLOR_POOLS for r in RM.DEFAULT_POOLS.lines(pool)]
     for _role, text in said:
         body = text.strip()
@@ -116,10 +123,10 @@ def test_the_same_seed_gives_the_same_commentary_and_another_seed_another(tmp_pa
 
 def test_the_analyst_leaves_two_plays_between_his_ordinary_lines_and_is_in_every_game_at_the_big_moments(tmp_path):
     rig, engine, said, result = whole_game(tmp_path, 23, True)
-    texts = [t for _r, t in said]
+    texts = [t for r, t in said if r == COLOR]
     assert 8 <= len(texts) <= 60, len(texts)                                  # a radio crew fills the gaps, it does not talk over the game
     rig2, engine2, said2, result2 = whole_game(tmp_path / "again", 24, True)
-    assert any("half" in t.lower() for t in [t for _r, t in said2] + texts)   # the halftime line is certain (CHT 100 percent)
+    assert any("half" in t.lower() for t in [t for r, t in said2 if r == COLOR] + texts)   # the halftime line is certain (CHT 100 percent)
 
 
 def test_f8_switches_the_analyst_off(tmp_path):
@@ -147,9 +154,9 @@ def test_f8_switches_the_analyst_off(tmp_path):
 
 def test_the_intro_of_the_analyst_is_said_once_per_program_run_by_the_announcer(tmp_path):
     rig, engine, said, result = whole_game(tmp_path, 25, True)
-    assert rig.game.analyst_introduced is True
+    assert rig.game.crew_introduced is True                                      # BC.3: the crew's hint, after the crew is introduced
     spoken = [t for t, role, step in rig.said]
-    assert spoken.count(X.text("NXB-B01", commentator="Gus Delgado")) == 1          # SZ.1: the name is filled in (BC.2: the made-up default)
+    assert spoken.count(X.text("NXB-B01")) == 1
     assert not any("Ghip" in t for t in spoken)
 
 
@@ -158,13 +165,13 @@ def test_a_players_own_line_and_off_for_the_analysts_pools(tmp_path):
     pools = RM.build_pools({"CTD01": None, "CTD11": "<team> score, says <coach>", "CTD12": "oops <nothing>"}, problems)
     assert [r.id for r in pools.lines("CTD")][0] == "CTD02" and pools.lines("CTD")[-1].id == "CTD12"
     assert [key for key, _ in problems.items] == ["CTD11", "CTD12"]          # <coach> is not in the CTD pool, nor is <nothing>: spoken as written
-    assert RM.PLACEHOLDERS["CTD"] == ("<team>", "<opponent>", "<situation>", "<commentator>")      # SZ.1: the name fits every pool
+    assert RM.PLACEHOLDERS["CTD"] == ("<team>", "<opponent>", "<situation>") + RM.CREW_PLACEHOLDERS     # SZ.1, BC.3: the names fit every pool
 
 
 # ----- the voice and the settings -----
 
 def test_the_analyst_is_a_sixth_speaker_outside_the_five_of_the_original():
-    assert COLOR == "color" and COLOR not in ROLES and ALL_ROLES == ROLES + (COLOR, "referee")           # SY.3 added the referee
+    assert COLOR == "color" and COLOR not in ROLES and ALL_ROLES == ROLES + (COLOR, SIDELINE, "referee")   # SY.3 the referee, BC.3 the reporter
     settings = Settings.defaults()
     assert set(settings.speech.voices) == set(ALL_ROLES) and settings.speech.volumes[COLOR] == 95
     assert settings.game.nx_broadcast is True
@@ -192,7 +199,9 @@ def test_the_programs_rules_follow_the_setting():
     rules = rules_from_settings(settings.game)
     assert rules.broadcast.analyst is False and rules.for_game().broadcast.analyst is False
     settings.game.rules = "classic"
-    assert rules_from_settings(settings.game) is CLASSIC
+    classic = rules_from_settings(settings.game)                            # BC.3: Classic with the radio broadcast, not the engine's bare one
+    assert isinstance(classic, ClassicRadioRules) and classic is not CLASSIC and classic.name == "Classic"
+    assert classic.broadcast.analyst is False and classic.for_game().broadcast.names == classic.broadcast.names
 
 
 def test_classic_answers_the_broadcast_hooks_with_nothing():
@@ -225,7 +234,8 @@ def test_the_analyst_gets_a_voice_of_his_own_when_the_player_has_not_chosen_one(
     b = BC.Broadcast(NflRules(), analyst=True)
     b.game = rig.game
     b._own_voice()
-    assert options.voice(COLOR) == "id2" and options.voice("referee") == "id3" and saves == [1]     # the announcer's engine, the next voices
+    assert options.voice(COLOR) == "id2" and options.voice(SIDELINE) == "id3" and options.voice("referee") == "id1" and saves == [1]
+    #                                                                     the announcer's engine first, then another (BC.3: the reporter before the referee)
     assert ("role_voice", "color=id2") in rig.sapi.events
     options.set_voice(COLOR, "id1")
     b._own_voice()
@@ -283,5 +293,6 @@ def test_f11_asks_for_the_analyst_after_the_five_speakers_only_with_the_nfl_rule
 
 def test_the_analysts_role_name_and_the_originals_names_stay_apart():
     from nfl4.speech.roles import EXTRA_NAMES, F11_NAMES, F12_NAMES, spoken_name
-    assert set(F11_NAMES) == set(F12_NAMES) == set(ROLES) and EXTRA_NAMES == {COLOR: "the color commentator", "referee": "the referee"}
+    assert set(F11_NAMES) == set(F12_NAMES) == set(ROLES)
+    assert EXTRA_NAMES == {COLOR: "the color commentator", "referee": "the referee", SIDELINE: "the sideline reporter"}
     assert spoken_name(COLOR) == "the color commentator" and spoken_name(ANNOUNCER) == F11_NAMES[ANNOUNCER]       # SZ.1: the name is a setting

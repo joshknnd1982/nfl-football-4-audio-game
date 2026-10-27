@@ -112,6 +112,11 @@ podcasters' names become Gus Delgado.
 - BC.3 The crew and the format: the broadcast in both modes (the moments of section 4 from both rules' hooks), the new pools and texts
   (strings_nx.tsv), the names and their menu, SIDELINE in roles, F11, F12, the help, the keys (0.24), CHANGELOG 0.16.8, CUSTOMIZE.md, README.
   Opus 5.5, high.
+  DONE 2026-10-27 (D-189, Opus 5.5): as designed, with section 11; Classic through extras/classic_radio.py (the engine's exact Classic and the
+  golden transcript unchanged: the same draws and score with the crew); differences recorded in D-189: UPD is the score said again when
+  nobody said it for six minutes (the game's own score sentence follows every score), DRV and CLK only with the real clock, LID in place of
+  one NID, the moments two_minute_break, half_time_break and final_score, remarks.txt read in both modes, eight name settings with the
+  last typed name kept, the reporter's voice the next free one (no gender in the voice list).
 - BC.4 Verification: full suites 64 and 32, a listening test of a whole game's broadcast transcript (work script: every line in order, no doubled
   sentence), the playtest list, a test build at the owner's word.
 

@@ -19,6 +19,7 @@ from nfl4.extras.nfl_rules import NflRules, is_nfl, rules_from_settings
 from nfl4.extras.state import ExtrasRecord
 from nfl4.game import menus
 from nfl4.game.playtables import QB_DRAW, QB_KEEPER, QB_SNEAK, QBRunEntry
+from nfl4.extras.classic_radio import ClassicRadioRules
 from nfl4.game.rules import CLASSIC, SCRAMBLE, ClassicRules
 from nflrig import nfl_engine_rig
 from pagrig import engine_rig
@@ -211,7 +212,7 @@ def test_the_programs_rules_follow_the_quarterback_runs_setting():
     rules = rules_from_settings(settings.game)
     assert rules.qb_on is False and rules.for_game().qb_on is False
     settings.game.rules = "classic"
-    assert rules_from_settings(settings.game) is CLASSIC
+    assert isinstance(rules_from_settings(settings.game), ClassicRadioRules)
 
 
 def test_a_rules_object_made_by_hand_has_no_quarterback_runs():
@@ -257,7 +258,8 @@ def test_the_default_file_lists_the_pool_in_its_place_between_on_and_pn():
     pools = [e[0][:2] for e in RM.default_entries()]
     # the design's order (CUSTOMIZABLE_CONTENT 13): TO, the replay pools (SX.6: CH, CH, RV, RV), ON, QB, PN
     base = ["TO"] * 5 + ["CH"] * 7 + ["RV"] * 6 + ["ON"] * 3 + ["QB"] * 5 + ["PN"] * 4
-    assert pools[:len(base)] == base and len(pools) == len(base) + 142 + 12 + 158        # SY.1: then BN, ASK and Ghip's pools
+    # SY.1: then BN, ASK and the analyst's pools; BC.3: then the radio format's 73 lines (SGN to CLK)
+    assert pools[:len(base)] == base and len(pools) == len(base) + 142 + 12 + 158 + 73
 
 
 # ----- the statistics and the help -----

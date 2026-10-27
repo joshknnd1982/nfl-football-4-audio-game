@@ -47,12 +47,12 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("f6", "F6", "Anywhere", "reads the game instructions", "all", True, "F6. reed Game instructions.", consts=("KEY_F6",)),
     KeyRow("f7", "F7", "Anywhere", "reads the football words and hints; in Classic it also describes the original's plays", "all", True,
            "f7. football terminology And hints.", consts=("KEY_F7",)),
-    KeyRow("f8", "F8", "Anywhere", "switches the comments off and on", "all", True, "f8. comments toggle.", consts=("KEY_F8",)),
+    KeyRow("f8", "F8", "Anywhere", "switches the comments off and on: with them on, the radio crew of the broadcast speaks (the sign-on, the color analyst, the sideline reporter, the breaks and the sign-off)", "all", True, "f8. comments toggle.", consts=("KEY_F8",)),
     KeyRow("f9", "F9", "Anywhere", "opens the added functions: the speech settings, the sounds, the names and the commentary, the rules, "
            "the franchise and the about text", "all", False, "F9. added functions", consts=("KEY_F9",)),
-    KeyRow("f11", "F11", "Anywhere", "adjusts the volume of the voices and the sounds: Up and Down, Enter for the next (with the N. F. L. rules and the broadcast on, the volumes of the color commentator and the referee too)", "all", True,
+    KeyRow("f11", "F11", "Anywhere", "adjusts the volume of the voices and the sounds: Up and Down, Enter for the next (with the comments and the broadcast on, the volumes of the color commentator and the sideline reporter too, and with the N. F. L. rules the referee's)", "all", True,
            "F11. adjust volume of voices and sounds.", consts=("KEY_F11",)),
-    KeyRow("f12", "F12", "Anywhere", "changes the voices (with the N. F. L. rules and the broadcast on, the voices of the color commentator and the referee too)", "all", True, "F12. change voice.", consts=("KEY_F12",)),
+    KeyRow("f12", "F12", "Anywhere", "changes the voices (with the comments and the broadcast on, the voices of the color commentator and the sideline reporter too, and with the N. F. L. rules the referee's)", "all", True, "F12. change voice.", consts=("KEY_F12",)),
     KeyRow("ctrl", "Control", "Anywhere", "adjusts the rate of speech: Up and Down, Enter to keep it", "all", True,
            "Control key, adjust rate of speech.", consts=("KEY_CTRL",)),
     KeyRow("escape", "Escape", "Anywhere", "exits the game; in a play menu it asks whether you concede the game; in the F9 menus and "

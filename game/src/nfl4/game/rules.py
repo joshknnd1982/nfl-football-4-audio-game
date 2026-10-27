@@ -139,7 +139,11 @@ Added in PX SX.12 (the 2026 overtime, Rule 16, D-096), each the original's answe
     (H23 banter_lines, the lines of the original's banter step, was removed in BC.2 with that step: D-178, D-180)
     H23 broadcast_moment(state, what)      a moment of the broadcast: a touchdown (after its six points), a score (after the   nothing
                                            score's pause), the end of a quarter, the two-minute warning, half time, the end of the game
-                                           (the crowd and the analyst, extras/stadium.py and broadcast.py)
+                                           (the crowd and the analyst, extras/stadium.py and broadcast.py); BC.3 (D-189) added the
+                                           station breaks before the commercial slots ("two_minute_break", "half_time_break") and the
+                                           moment after the final score ("final_score": the analyst and the sign-off). The program's
+                                           Classic answers them with the radio broadcast only (extras/classic_radio.py); this object,
+                                           the engine's exact Classic, with nothing
     H22 overtime_lines(state)              said after " We are going into over time number "  no lines
     H22 overtime_toss(state)               the overtime begins with a coin toss                False (the side with the ball
                                                                                               at the end receives)

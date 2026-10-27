@@ -44,9 +44,18 @@ class GameSettings:
     #                                        the team's since SX.10e (D-095): every play of the catalog by default (D-083)
     nx_defense_playbook: str = "team"      # and the defense playbook
     nx_stadium: bool = True      # the stadium sounds of the N. F. L. rules: the crowd, the hits, the chain (SY.2)
-    nx_broadcast: bool = True    # the radio broadcast of the N. F. L. rules: the color analyst and the announcer's questions to him (SY.1, rule 0.27, BC.2)
+    nx_broadcast: bool = True    # the radio crew of the broadcast, both modes: the color analyst and the sideline reporter (SY.1, rule 0.27, BC.3)
     nx_menu_hints: int = 0       # how many program runs gave the hint of the play menus (where Right and M are); 3 or more: no more (SZ.5)
-    nx_commentator: str = "Gus Delgado"  # the color analyst's name (SZ.1, D-106; BC.2, D-180): the made-up default or one the player typed
+    # BC.3 (D-178, D-189): the radio crew's names (extras/crew.py), made-up defaults; *_own is the last name the player typed (kept when he
+    # goes back to the default). An older file's nx_commentator is read once into nx_analyst.
+    nx_announcer: str = "Walt Kessler"
+    nx_announcer_own: str = ""
+    nx_analyst: str = "Gus Delgado"
+    nx_analyst_own: str = ""
+    nx_sideline: str = "Nora Banks"
+    nx_sideline_own: str = ""
+    nx_network: str = "the Gridiron Radio Network"
+    nx_network_own: str = ""
     nx_qb_starters: str = ""      # D-132: the starters the player chose, "T05=Tyler Huntley; T12=Kenny Pickett" (extras/quarterbacks.py); "": the rosters' first
     nx_depth: str = ""            # NX-D3: the depth charts the player set, "T05 RB=Ray Davis; T05 WR=Khalil Shakir,DJ Moore" (extras/depth_chart.py); "": the real order
     nx_key_players: str = ""      # NX-D4: his players for the key downs and moments, "T05 redzone receiver=Dalton Kincaid" (extras/depth_chart.py); "": the starters

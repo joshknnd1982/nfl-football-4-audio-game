@@ -18,6 +18,7 @@ from nfl4.extras.nfl_rules import NflRules
 from nfl4.extras.saved import rules_for_saved_game
 from nfl4.extras.state import ExtrasRecord
 from nfl4.game.gamestate import GameState, SavedGame, SideStats
+from nfl4.extras.classic_radio import ClassicRadioRules
 from nfl4.game.rules import CLASSIC
 from nflrig import nfl_engine_rig
 from pagrig import make_rig
@@ -191,18 +192,20 @@ def test_a_classic_program_asks_once_and_yes_plays_the_save_with_the_nfl_rules(t
     rig = program(tmp_path, answers=[ENTER])
     rules = rules_for_saved_game(rig.game, a_save(extras=a_record().to_json(), extras_marked=True))
     assert isinstance(rules, NflRules) and rig.game.rules is CLASSIC          # the setting stays Classic
+    assert rules.broadcast.analyst is True                                   # BC.3: the crew comes with it
     assert [t for t, _, _ in rig.said] == [X.text("NXM-24"), " yes "]
 
 
 def test_no_plays_the_save_as_classic(tmp_path):
     rig = program(tmp_path, answers=["n", ENTER])
-    assert rules_for_saved_game(rig.game, a_save(extras=a_record().to_json(), extras_marked=True)) is CLASSIC
+    # BC.3: the program's Classic, the engine's exact Classic with the radio broadcast
+    assert isinstance(rules_for_saved_game(rig.game, a_save(extras=a_record().to_json(), extras_marked=True)), ClassicRadioRules)
     assert [t for t, _, _ in rig.said] == [X.text("NXM-24"), " yes ", "n", " no "]
 
 
 def test_the_question_toggles_with_up_and_down_and_f1_asks_again(tmp_path):
     rig = program(tmp_path, answers=[DOWN, 112, ENTER])
-    assert rules_for_saved_game(rig.game, a_save(extras=a_record().to_json(), extras_marked=True)) is CLASSIC
+    assert isinstance(rules_for_saved_game(rig.game, a_save(extras=a_record().to_json(), extras_marked=True)), ClassicRadioRules)
     said = [t for t, _, _ in rig.said]
     assert said == [X.text("NXM-24"), " yes ", " no ", X.text("NXM-24"), " no "]
 

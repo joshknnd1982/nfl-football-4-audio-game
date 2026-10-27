@@ -167,7 +167,12 @@ def test_an_old_resume_with_banter_fields_is_used_whole(tmp_path):
 def test_a_retired_commentator_name_reads_as_the_default(stored):
     from nfl4.data import settingsfile
     assert commentators.name_of_text(stored) == "Gus Delgado"
-    settings, _problems = settingsfile.parse("nx_commentator = %s\n" % stored)
-    assert settings.game.nx_commentator == "Gus Delgado" and commentators.name_of(settings.game) == "Gus Delgado"
-    assert all(not commentators.is_retired(name) for _kind, name in commentators.choices(stored))
+    from nfl4.extras import crew
+    settings, _problems = settingsfile.parse("nx_commentator = %s\n" % stored)       # a settings file of 0.16.7 or older (BC.3 reads it once)
+    assert settings.game.nx_analyst == "Gus Delgado" and settings.game.nx_analyst_own == "" and commentators.name_of(settings.game) == "Gus Delgado"
+    assert all(not commentators.is_retired(name) for _kind, name in crew.choices(settings.game, crew.ANALYST))
+    for role in crew.ROLES:                                                          # BC.3: no name of the crew can be a retired one
+        assert crew.name_of_text(role, stored) == crew.DEFAULTS[role]
+        typed, _problems = settingsfile.parse("nx_%s = %s\nnx_%s_own = %s\n" % (role, stored, role, stored))
+        assert crew.name_of(typed.game, role) == crew.DEFAULTS[role] and crew.own_of(typed.game, role) == ""
     assert commentators.name_of_text("Sam Rivera") == "Sam Rivera"

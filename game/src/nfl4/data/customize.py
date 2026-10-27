@@ -26,7 +26,9 @@ semicolon, no control character; the count of teams (32), divisions (8) and surn
 nfl4 only (rule 0.13, CUSTOMIZABLE_CONTENT 13, PX SX.2): remarks.txt holds the remark pools of the extra features
 (extras/remarks.py), since SX.3 penalties.txt the names, switches and weights of the fouls (extras/penalty_list.py), and since
 SX.7 the folder `playbooks` with plays.txt, styles.txt and team_styles.txt (extras/playbook_list.py). They are lists in the same format with the same healing, but in use only while the Rules setting is the N. F. L. rules
-(`extras` / `use_extras`): with Classic they are never read, made, checked or reset.
+(`extras` / `use_extras`): with Classic they are never read, made, checked or reset. BC.3 (D-189): remarks.txt holds the radio broadcast's
+lines, and the broadcast speaks in Classic too, so remarks.txt is read in both modes (BROADCAST_SPECS); its N. F. L. rules' pools (time outs,
+penalties and the others) are simply never drawn in Classic.
 """
 from __future__ import annotations
 
@@ -54,7 +56,7 @@ SOUNDS_FOLDER = "sounds"
 NAME_MIN, NAME_MAX = 1, 30
 
 TEAMS, DIVISIONS, SURNAMES = "teams", "divisions", "surnames"
-REMARKS = "remarks"         # nfl4 only (rule 0.13): the extras' remark pools, read only with the N. F. L. rules (SX.2)
+REMARKS = "remarks"         # nfl4 only (rule 0.13): the remark pools and the radio broadcast's lines, read in both modes (SX.2, BC.3)
 PENALTIES = "penalties"     # nfl4 only (rule 0.13): the fouls' names, switches and weights (SX.3)
 PLAYS, STYLES, TEAMSTYLES = "plays", "styles", "teamstyles"     # nfl4 only: the playbooks' files in `playbooks` (SX.7)
 NEWS = "news"               # nfl4 only (rule 0.13): the Franchise's news lines, read only with the N. F. L. rules (SX.8e)
@@ -80,6 +82,11 @@ SPECS: tuple[ListSpec, ...] = (
     ListSpec(DIVISIONS, "divisions.txt", "division names", "the original division names"),
     ListSpec(SURNAMES, "surnames.txt", "surnames", "the original surnames"),
 )
+# BC.3 (D-189): remarks.txt carries the radio broadcast's lines, which both modes speak: it is read, made, checked and reset in both
+BROADCAST_SPECS: tuple[ListSpec, ...] = (
+    ListSpec(REMARKS, "remarks.txt", "remarks", "the original remarks"),
+)
+ALWAYS_SPECS = SPECS + BROADCAST_SPECS
 # CUSTOMIZABLE_CONTENT 13: the files of the extra features are read, made, checked and reset only while the Rules setting is
 # the N. F. L. rules (`Customization.use_extras`); with Classic none of them is ever opened
 EXTRA_SPECS: tuple[ListSpec, ...] = (
@@ -88,7 +95,6 @@ EXTRA_SPECS: tuple[ListSpec, ...] = (
     ListSpec(RESPELLINGS, "respellings.txt", "respellings", "the original respellings"),
     ListSpec(FREE_AGENTS, "free_agents.txt", "free agents", "the original free agents"),       # NX-B3
     ListSpec(NFL_SURNAMES, "nfl_surnames.txt", "surnames of real players", "the original surnames of real players"),     # NX-L12
-    ListSpec(REMARKS, "remarks.txt", "remarks", "the original remarks"),
     ListSpec(PENALTIES, "penalties.txt", "penalty names", "the original penalty names"),
     ListSpec(PLAYS, "plays.txt", "play names", "the original play names", PLAYBOOKS_FOLDER),
     ListSpec(STYLES, "styles.txt", "styles", "the original styles", PLAYBOOKS_FOLDER),
@@ -97,7 +103,7 @@ EXTRA_SPECS: tuple[ListSpec, ...] = (
     ListSpec(INJURIES, "injuries.txt", "injury words", "the original injury words"),
     ListSpec(FAVOURITES, "favourites.txt", "favourite plays", "no favourite plays", PLAYBOOKS_FOLDER),
 )
-SPEC_BY_KEY = {spec.key: spec for spec in SPECS + EXTRA_SPECS}
+SPEC_BY_KEY = {spec.key: spec for spec in ALWAYS_SPECS + EXTRA_SPECS}
 
 # The texts the game adds (CLONE texts, GAP_REGISTER section 8; S8.2 listens to them)
 DAMAGED_RESET = " The file %s was damaged and has been reset to %s. A copy was saved. "
@@ -344,7 +350,6 @@ class Customization:
         self._surname_defaults: list[str] | None = None
         self.sound_probe = sound_probe or probe_sound_file
         self.extras = bool(extras)        # nfl4 only: the N. F. L. rules are in use, so remarks.txt is read too (SX.2)
-        self._parked_remarks = None       # the remarks loaded before the extras were switched off
         self._parked_fouls = None         # and the foul table (SX.3)
         self._parked_playbooks = None     # and the playbooks (SX.7)
         self._parked_news = None          # and the Franchise's news lines (SX.8e)
@@ -354,7 +359,7 @@ class Customization:
         self.files: dict[str, cl.ListFile] = {
             spec.key: cl.ListFile(os.path.join(folder, spec.folder) if spec.folder else folder, spec.file_name, GAME, spec.key,
                                   lambda key=spec.key: self.default_text(key))
-            for spec in SPECS + EXTRA_SPECS}
+            for spec in ALWAYS_SPECS + EXTRA_SPECS}
         self._notices: list[str] = []
         self._unwritable_told: set[str] = set()
         migrate_team_names(folder)                    # Q-026: a teams.txt of an older version says Redskins for T24; once, before it is read
@@ -364,18 +369,17 @@ class Customization:
 
     @property
     def specs(self) -> tuple[ListSpec, ...]:
-        """The lists in use: the four of the classic game, and the extras' files only with the N. F. L. rules."""
-        return SPECS + EXTRA_SPECS if self.extras else SPECS
+        """The lists in use: the classic game's names and remarks.txt (BC.3), and the extras' files only with the N. F. L. rules."""
+        return ALWAYS_SPECS + EXTRA_SPECS if self.extras else ALWAYS_SPECS
 
     def use_extras(self, on: bool) -> None:
-        """The Rules setting changed (nfl4 only, SX.2). On: remarks.txt is read (made or healed as every list) and its
-        sentences join the next notices; off: it is not read any more and the game uses no remark of the file."""
+        """The Rules setting changed (nfl4 only, SX.2). On: the extras' files are read (made or healed as every list) and their
+        sentences join the next notices; off: they are not read any more. remarks.txt stays in use in both modes (BC.3)."""
         on = bool(on)
         if on == self.extras:
             return
         self.extras = on
         if not on:
-            self._parked_remarks = self.snapshot.remarks      # what was loaded: used again if the file cannot be read then
             self._parked_fouls = self.snapshot.fouls
             self._parked_playbooks = self.snapshot.playbooks
             self._parked_news = self.snapshot.news
@@ -383,7 +387,6 @@ class Customization:
             self._parked_favourites = self.snapshot.favourites
             self._parked_real = self.snapshot.real_names
             self.snapshot.real_names = None
-            self.snapshot.remarks = None
             self.snapshot.fouls = None
             self.snapshot.playbooks = None
             self.snapshot.news = None
@@ -395,16 +398,14 @@ class Customization:
                 self.snapshot.kept.discard(spec.key)
             return
         from ..extras.penalty_list import DEFAULT_TABLE
-        from ..extras.remarks import DEFAULT_POOLS
         from ..extras.playbooks import DEFAULT_TABLE as DEFAULT_PLAYBOOKS
         from ..extras.franchise.news_pools import DEFAULT_POOLS as DEFAULT_NEWS
         from ..extras.franchise.injury_pools import DEFAULT_POOLS as DEFAULT_INJURIES
-        previous = dataclasses.replace(self.snapshot, remarks=self._parked_remarks, fouls=self._parked_fouls,
+        previous = dataclasses.replace(self.snapshot, fouls=self._parked_fouls,
                                        playbooks=self._parked_playbooks, news=self._parked_news, injuries=self._parked_injuries,
                                        favourites=self._parked_favourites, real_names=self._parked_real)
         from ..extras import real_names
         self.snapshot.real_names = real_names.defaults()
-        self.snapshot.remarks = DEFAULT_POOLS
         self.snapshot.fouls = DEFAULT_TABLE
         self.snapshot.playbooks = DEFAULT_PLAYBOOKS
         self.snapshot.news = DEFAULT_NEWS
@@ -473,13 +474,13 @@ class Customization:
         by another program, damaged and not replaceable, unreadable) keeps the values it had (playbook 7.10: keep the loaded
         copy), and only the very first load falls back to the originals."""
         snapshot = Snapshot(league_module.DEFAULT_TEAM_NAMES, league_module.DEFAULT_DIVISION_NAMES, None)
+        from ..extras.remarks import DEFAULT_POOLS as DEFAULT_REMARK_POOLS
+        snapshot.remarks = DEFAULT_REMARK_POOLS                # BC.3: both modes (the broadcast's lines)
         if self.extras:
             from ..extras.penalty_list import DEFAULT_TABLE
             from ..extras.playbooks import DEFAULT_TABLE as DEFAULT_PLAYBOOKS
-            from ..extras.remarks import DEFAULT_POOLS
             from ..extras.franchise.news_pools import DEFAULT_POOLS as DEFAULT_NEWS
             from ..extras.franchise.injury_pools import DEFAULT_POOLS as DEFAULT_INJURIES
-            snapshot.remarks = DEFAULT_POOLS
             snapshot.fouls = DEFAULT_TABLE
             snapshot.playbooks = DEFAULT_PLAYBOOKS
             snapshot.news = DEFAULT_NEWS
@@ -522,7 +523,7 @@ class Customization:
         elif key == SURNAMES:
             snapshot.surnames = previous.surnames
         elif key == REMARKS:
-            if previous.remarks is None:            # the extras were just switched on: nothing loaded before, originals
+            if previous.remarks is None:            # nothing loaded before: the originals
                 return
             snapshot.remarks = previous.remarks
         elif key == PENALTIES:

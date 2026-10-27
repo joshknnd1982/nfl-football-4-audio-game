@@ -59,7 +59,7 @@ def test_the_pa_sound_adds_the_tail_of_the_echo_and_never_overflows_and_is_the_s
 # ----- the speaker -----
 
 def test_the_referee_is_a_speaker_outside_the_original_five():
-    assert REFEREE == "referee" and REFEREE not in ROLES and EXTRA_ROLES == ("color", "referee") and ALL_ROLES == ROLES + EXTRA_ROLES
+    assert REFEREE == "referee" and REFEREE not in ROLES and EXTRA_ROLES == ("color", "sideline", "referee") and ALL_ROLES == ROLES + EXTRA_ROLES   # BC.3: the reporter
 
 
 def test_the_sapi_engine_gives_the_referee_the_effect_and_nobody_else(tmp_path):

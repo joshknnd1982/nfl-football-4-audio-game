@@ -6,6 +6,8 @@ Delgado, and F9, Rules, Commentator lists the default, the player's own name and
 is heard in every line that turns to the analyst (the announcer's questions, the remarks of the features, the intro); Ghip and the retired
 names in an older settings.txt read as the default; a file of version 0.10.0 that still holds an unchanged default line follows the new name;
 a line the player changed is theirs; the name is a setting that is saved, read, checked and used from the next game; no random draw moves.
+BC.3 (D-189): the item is F9, Rules, Broadcast crew, the four names of the radio crew (extras/crew_menu.py); the analyst's name is the setting
+nx_analyst (an old nx_commentator is read once into it) and the last typed name stays in the list when the player goes back to the default.
 """
 import pytest
 
@@ -13,7 +15,8 @@ from gamerig import Rig
 from nfl4.data import settingsfile
 from nfl4.data.settings import Settings
 from nfl4.extras import broadcast as BC
-from nfl4.extras import commentator_menu as CM
+from nfl4.extras import crew
+from nfl4.extras import crew_menu as CM
 from nfl4.extras import commentators as CO
 from nfl4.extras import nx_texts as X
 from nfl4.extras import remarks as RM
@@ -41,11 +44,11 @@ def test_the_default_is_the_made_up_analyst_and_no_list_of_real_names_is_offered
 def test_ghip_and_the_retired_names_read_as_the_default_from_settings_and_from_a_text(old):
     assert CO.is_retired(old) and CO.name_of_text(old) == DEFAULT
     settings = Settings.defaults()
-    text = settingsfile.render(settings).replace("nx_commentator = %s" % DEFAULT, "nx_commentator = %s" % old)
+    text = settingsfile.render(settings) + "nx_commentator = %s\n" % old           # a settings file of 0.16.7 or older
     again, problems = settingsfile.parse(text)
-    assert again.game.nx_commentator == DEFAULT and problems == []
-    assert all(not CO.is_retired(name) for _kind, name in CO.choices(old) if name)
-    assert CO.choices(old) == [("default", DEFAULT), ("type", "")]
+    assert again.game.nx_analyst == DEFAULT and again.game.nx_analyst_own == "" and problems == []
+    assert all(not CO.is_retired(name) for _kind, name in crew.choices(again.game, crew.ANALYST) if name)
+    assert crew.choices(again.game, crew.ANALYST) == [("default", DEFAULT), ("type", "")]
 
 
 def test_a_typed_name_is_made_safe_to_speak_and_store():
@@ -57,15 +60,24 @@ def test_a_typed_name_is_made_safe_to_speak_and_store():
     assert CO.name_of_text("x") == DEFAULT and CO.name_of_text(None) == DEFAULT and CO.name_of_text("Sam Smith") == "Sam Smith"
 
 
+def own(name):
+    settings = Settings.defaults().game
+    settings.nx_analyst = settings.nx_analyst_own = name
+    return settings
+
+
 def test_the_list_has_the_default_first_the_players_own_name_and_the_typing_item_last():
-    assert CO.choices(DEFAULT) == [("default", DEFAULT), ("type", "")]
-    assert CO.choices("Sam Smith") == [("default", DEFAULT), ("own", "Sam Smith"), ("type", "")]
+    assert crew.choices(Settings.defaults().game, crew.ANALYST) == [("default", DEFAULT), ("type", "")]
+    assert crew.choices(own("Sam Smith"), crew.ANALYST) == [("default", DEFAULT), ("own", "Sam Smith"), ("type", "")]
+    settings = own("Sam Smith")
+    settings.nx_analyst = DEFAULT                                          # BC.3: back to the default, the typed name stays in the list
+    assert crew.choices(settings, crew.ANALYST) == [("default", DEFAULT), ("own", "Sam Smith"), ("type", "")]
     assert CM.item_name("default", DEFAULT) == "Gus Delgado, the default" and CM.item_name("own", "Sam Smith") == "Sam Smith, the name you typed"
     assert CM.item_name("type", "") == "Type a name of your own"
 
 
 def test_typing_letters_in_the_list_jumps_to_a_name():
-    items = CO.choices("Sam Smith")
+    items = crew.choices(own("Sam Smith"), crew.ANALYST)
     find = CM.search(items)
     assert items[find("sam")][1] == "Sam Smith" and items[find("smi")][1] == "Sam Smith" and items[find("gus")][1] == DEFAULT
     assert find("zzz") is None and find("") is None
@@ -75,24 +87,26 @@ def test_typing_letters_in_the_list_jumps_to_a_name():
 
 def test_the_name_is_saved_read_back_and_a_bad_line_keeps_the_default():
     settings = Settings.defaults()
-    assert settings.game.nx_commentator == DEFAULT
-    settings.game.nx_commentator = "Sam Smith"
+    assert settings.game.nx_analyst == DEFAULT and settings.game.nx_analyst_own == ""
+    settings.game.nx_analyst = settings.game.nx_analyst_own = "Sam Smith"
     text = settingsfile.render(settings)
-    assert "nx_commentator = Sam Smith\n" in text
+    assert "nx_analyst = Sam Smith\n" in text and "nx_analyst_own = Sam Smith\n" in text and "nx_commentator" not in text
     again, problems = settingsfile.parse(text)
-    assert again.game.nx_commentator == "Sam Smith" and problems == []
-    bad, problems = settingsfile.parse(text.replace("nx_commentator = Sam Smith", "nx_commentator = x"))
-    assert bad.game.nx_commentator == DEFAULT and any("nx_commentator" in p for p in problems)
-    old, problems = settingsfile.parse(text.replace("nx_commentator = Sam Smith\n", ""))      # a file of version 0.10.0 has no such line
-    assert old.game.nx_commentator == DEFAULT and problems == []
+    assert again.game.nx_analyst == "Sam Smith" and again.game.nx_analyst_own == "Sam Smith" and problems == []
+    bad, problems = settingsfile.parse(text.replace("nx_analyst = Sam Smith", "nx_analyst = x"))
+    assert bad.game.nx_analyst == DEFAULT and any("nx_analyst" in p for p in problems)
+    old, problems = settingsfile.parse(text.replace("nx_analyst = Sam Smith\n", "").replace("nx_analyst_own = Sam Smith\n", ""))
+    assert old.game.nx_analyst == DEFAULT and problems == []                  # a file of version 0.10.0 has no such line
+    legacy, problems = settingsfile.parse("nx_commentator = Sam Smith\n")       # 0.16.7 and older: read once into the analyst's name
+    assert legacy.game.nx_analyst == "Sam Smith" and legacy.game.nx_analyst_own == "Sam Smith" and problems == []
 
 
 def test_the_programs_rules_and_every_new_game_carry_the_name():
     settings = Settings.defaults()
-    settings.game.rules, settings.game.nx_commentator = "nfl", "Sam Smith"
+    settings.game.rules, settings.game.nx_analyst = "nfl", "Sam Smith"
     rules = rules_from_settings(settings.game)
     assert rules.broadcast.commentator == "Sam Smith" and rules.for_game().broadcast.commentator == "Sam Smith"
-    settings.game.nx_commentator = "Ryen Russillo"                     # a retired name set by hand (not read from a file)
+    settings.game.nx_analyst = "Ryen Russillo"                         # a retired name set by hand (not read from a file)
     assert rules_from_settings(settings.game).broadcast.commentator == DEFAULT
     assert NflRules().broadcast.commentator == DEFAULT and BC.Broadcast(None, commentator="x").commentator == DEFAULT
     assert BC.Broadcast(None, commentator="Ghip").commentator == DEFAULT
@@ -128,9 +142,10 @@ def test_the_remarks_of_the_features_and_the_radio_banter_say_the_name_too(tmp_p
     assert "Ghip" not in said
 
 
-def test_the_intro_names_the_analyst(tmp_path):
-    assert X.text("NXB-B01", commentator="Sam Smith").startswith(" Sam Smith, the color commentator, is in the booth with me.")
-    assert "Ghip" not in X.TEXTS["NXB-B01"] and "<commentator>" in X.TEXTS["NXB-B01"]
+def test_the_intro_names_where_the_crew_is_set(tmp_path):
+    # BC.3: the crew is introduced by name in the sign-on (pool CRW); the once-per-run sentence says where their voices and names are set
+    assert "F12" in X.TEXTS["NXB-B01"] and "Broadcast crew" in X.TEXTS["NXB-B01"] and "Ghip" not in X.TEXTS["NXB-B01"]
+    assert all("<analyst>" in X.TEXTS[r.id] for r in RM.DEFAULT_POOLS.lines("CRW"))
 
 
 def test_no_default_line_says_ghip_any_more_and_none_makes_a_claim_about_a_person():
@@ -146,7 +161,7 @@ def test_the_pronoun_free_texts_of_the_help_say_the_color_commentator_and_where_
     for text_id in ("NXH-65", "NXH-66", "NXH-68", "NXH-70"):
         assert " he " not in X.TEXTS[text_id].lower() and " his " not in X.TEXTS[text_id].lower(), text_id
         assert "Ghip" not in X.TEXTS[text_id] and "podcast" not in X.TEXTS[text_id].lower(), text_id
-    assert "F9, Rules, Commentator" in X.TEXTS["NXH-70"] and DEFAULT in X.TEXTS["NXH-70"]
+    assert "F9, Rules, Broadcast crew" in X.TEXTS["NXH-70"] and DEFAULT in X.TEXTS["NXH-70"]
     assert EXTRA_NAMES[COLOR] == "the color commentator" == spoken_name(COLOR)
 
 
@@ -177,34 +192,39 @@ def test_the_commentator_placeholder_is_known_in_every_pool_and_a_player_may_use
 def rules_menu(rig, keys, name=None):
     rig.game.options.settings.game.rules = "nfl"
     if name is not None:
-        rig.game.options.settings.game.nx_commentator = name
+        rig.game.options.settings.game.nx_analyst = rig.game.options.settings.game.nx_analyst_own = name
     rig.keys.answers = [DOWN, DOWN, DOWN, ENTER] + keys + [ESC, ESC]
     rig.game.functions.run()
     from programrig import said
     return said(rig)
 
 
-def test_the_rules_menu_has_the_commentator_before_reset_and_enter_chooses_from_the_list(tmp_path):
+def test_the_rules_menu_has_the_crew_before_reset_and_enter_chooses_from_the_list(tmp_path):
     rig = rig_for(tmp_path, [])
-    spoken = rules_menu(rig, [END, UP, UP, UP, ENTER, UP, ENTER], "Sam Smith")     # D-140, NX-D3: Quarterbacks and Depth charts between it and Reset
-    assert "Commentator: Sam Smith" in spoken
-    assert any(s.startswith("Choose the commentator. 3 items.") for s in spoken)
+    # D-140, NX-D3: Quarterbacks and Depth charts between it and Reset; BC.3: Enter opens the crew, Down to the analyst, Enter his list
+    spoken = rules_menu(rig, [END, UP, UP, UP, ENTER, DOWN, ENTER, UP, ENTER, ESC], "Sam Smith")
+    assert "Broadcast crew: Walt Kessler, Sam Smith, Nora Banks" in spoken
+    assert any(s.startswith("Broadcast crew. 4 items.") for s in spoken)
+    assert "Color analyst: Sam Smith" in spoken
+    assert any(s.startswith("Choose a name. 3 items.") for s in spoken)
     assert "Gus Delgado, the default" in spoken
-    assert "Commentator: Gus Delgado" + X.text("NXM-23") in spoken
-    assert rig.game.options.settings.game.nx_commentator == DEFAULT and rig.saves.count >= 1
+    assert "Color analyst: Gus Delgado" + X.text("NXM-23") in spoken
+    assert "Broadcast crew: Walt Kessler, Gus Delgado, Nora Banks" + X.text("NXM-23") in spoken
+    assert rig.game.options.settings.game.nx_analyst == DEFAULT and rig.saves.count >= 1
+    assert rig.game.options.settings.game.nx_analyst_own == "Sam Smith"     # the typed name is remembered
     assert rig.game.rules.broadcast.commentator == DEFAULT                    # the next game's rules object has it
 
 
 def test_escape_in_the_list_changes_nothing_and_left_and_right_step_between_the_names(tmp_path):
     rig = rig_for(tmp_path, [])
-    spoken = rules_menu(rig, [END, UP, UP, UP, ENTER, UP, ESC], "Sam Smith")
-    assert rig.game.options.settings.game.nx_commentator == "Sam Smith" and not any(s.startswith("Commentator: Gus") for s in spoken)
+    spoken = rules_menu(rig, [END, UP, UP, UP, ENTER, DOWN, ENTER, UP, ESC, ESC], "Sam Smith")
+    assert rig.game.options.settings.game.nx_analyst == "Sam Smith" and not any(s.startswith("Color analyst: Gus") for s in spoken)
     rig = rig_for(tmp_path / "step", [])
-    spoken = rules_menu(rig, [END, UP, UP, UP, 39, 39, 37], "Sam Smith")
-    # the typed name is an item only while it is the current one (as in SZ.1): once Right steps to the default, the list is the default alone
-    assert [s for s in spoken if s.startswith("Commentator:")] == ["Commentator: Sam Smith", "Commentator: Gus Delgado", "Commentator: Gus Delgado",
-                                                                     "Commentator: Gus Delgado"]
-    assert rig.game.options.settings.game.nx_commentator == DEFAULT
+    spoken = rules_menu(rig, [END, UP, UP, UP, ENTER, DOWN, 39, 39, 37, ESC], "Sam Smith")
+    # BC.3: the typed name stays an item when Right steps to the default (BC.2 lost it), so Right comes back to it
+    assert [s for s in spoken if s.startswith("Color analyst:")] == ["Color analyst: Sam Smith", "Color analyst: Gus Delgado",
+                                                                       "Color analyst: Sam Smith", "Color analyst: Gus Delgado"]
+    assert rig.game.options.settings.game.nx_analyst == DEFAULT and rig.game.options.settings.game.nx_analyst_own == "Sam Smith"
 
 
 def test_a_name_of_the_players_own_is_typed_with_the_originals_prompt_and_kept(tmp_path):
@@ -217,13 +237,13 @@ def test_a_name_of_the_players_own_is_typed_with_the_originals_prompt_and_kept(t
         rig.keys.post_char(char)
     rig.keys.post(13)
     assert CM.pick(rig.game, rig.speech, rig.keys, settings) is True
-    assert settings.nx_commentator == "sam j"
+    assert settings.nx_analyst == "sam j" and settings.nx_analyst_own == "sam j"
     assert X.text("NXM-43") in [t for t, *_ in rig.said]
     rig.keys.post(END)                                      # typing nothing keeps the name and says so
     rig.keys.post(13)
     rig.keys.post(13)
     assert CM.pick(rig.game, rig.speech, rig.keys, settings) is False
-    assert settings.nx_commentator == "sam j" and X.text("NXM-44") in [t for t, *_ in rig.said]
+    assert settings.nx_analyst == "sam j" and X.text("NXM-44") in [t for t, *_ in rig.said]
     rig.keys.post(END)                                      # typing a retired name gives the default
     rig.keys.post(13)
     for code, char in ((71, "g"), (72, "h"), (73, "i"), (80, "p")):

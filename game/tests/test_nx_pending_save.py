@@ -22,6 +22,7 @@ from nfl4.extras.nfl_rules import NflRules
 from nfl4.extras.saved import rules_for_saved_game
 from nfl4.extras.state import ExtrasRecord
 from nfl4.game.gamestate import GameState
+from nfl4.extras.classic_radio import ClassicRadioRules
 from nfl4.game.rules import CLASSIC, NEXT_DOWN
 from nflrig import RecordingRules, nfl_engine_rig
 from pagrig import make_rig, play
@@ -150,7 +151,7 @@ def test_a_classic_program_that_says_no_plays_the_declined_board(tmp_path):
     saved = savedgame.decode(savedgame.encode(kept[0]))
     prog = make_rig(tmp_path / "b")
     prog.keys.answers.extend([DOWN, ENTER])
-    assert rules_for_saved_game(prog.game, saved) is CLASSIC
+    assert isinstance(rules_for_saved_game(prog.game, saved), ClassicRadioRules)
     state = GameState()
     state.load(saved)
     assert (state.half, state.yard_line, state.down, state.to_go) == (2, 30, 2, 10)

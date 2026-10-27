@@ -15,11 +15,15 @@ OPPONENT_PUNTER = "opponent_punter"
 
 # The order ChangeVoice (F12) asks and footbal0.dat stores them (GAME_SPEC 4.7, 12)
 ROLES = (ANNOUNCER, OWN_QUARTERBACK, OPPONENT_QUARTERBACK, OWN_PUNTER, OPPONENT_PUNTER)
-# SY.1 (the radio broadcast, rule 0.27): the color analyst is a sixth speaker that only the N. F. L. rules use. He is NOT in ROLES:
-# the original's F11 and F12 loop over ROLES and Classic must stay exact; the extras' loops add him (game/hotkeys.py).
+# SY.1 (the radio broadcast, rule 0.27): the color analyst is a sixth speaker (since BC.3, D-189, in both modes while the comments are on).
+# He is NOT in ROLES: the original's F11 and F12 loop over ROLES; the extras' loops add him (game/hotkeys.py).
 COLOR = "color"
 REFEREE = "referee"            # SY.3: the referee over the public address (extras/stadium.py, speech/pa_effect.py)
-EXTRA_ROLES = (COLOR, REFEREE)
+SIDELINE = "sideline"          # BC.3 (D-178, D-189): the sideline reporter of the radio crew, in both modes while the comments are on
+# The order F11 and F12 ask for them and the broadcast gives them a voice of their own: the analyst, the reporter, then the referee (whose
+# public-address sound sets him apart even when he shares a voice)
+EXTRA_ROLES = (COLOR, SIDELINE, REFEREE)
+CREW_ROLES = (COLOR, SIDELINE)         # the radio crew's own voices (the play-by-play announcer is the original's announcer)
 ALL_ROLES = ROLES + EXTRA_ROLES
 # The order adjvol (F11) walks them = volumes 1 to 5 (GAME_SPEC 4.6, 9.1)
 VOLUME_ORDER = (ANNOUNCER, OWN_QUARTERBACK, OWN_PUNTER, OPPONENT_QUARTERBACK, OPPONENT_PUNTER)
@@ -31,7 +35,8 @@ F11_NAMES = {ANNOUNCER: "the announcer", OWN_QUARTERBACK: "your quarterback", OW
 F12_NAMES = {ANNOUNCER: "the announcer", OWN_QUARTERBACK: "your quarter back",
              OPPONENT_QUARTERBACK: "your opponent's quarter back", OWN_PUNTER: "your punter",
              OPPONENT_PUNTER: "your opponent's punter"}
-EXTRA_NAMES = {COLOR: "the color commentator", REFEREE: "the referee"}      # SY.1: the extras' speakers (F11 and F12 say these when they ask for them)
+EXTRA_NAMES = {COLOR: "the color commentator", REFEREE: "the referee",     # SY.1: the extras' speakers (F11 and F12 say these when they ask for them)
+               SIDELINE: "the sideline reporter"}                         # BC.3
 
 
 def spoken_name(role: str) -> str:

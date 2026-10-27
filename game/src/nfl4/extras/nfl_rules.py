@@ -155,7 +155,7 @@ class NflRules(ClassicRules):
     def __init__(self, timeouts_on: bool = True, auto_sides: tuple[int, ...] = (2,), penalties_on: bool = False,
                  onside_on: bool = False, onside_always: bool = False, qb_on: bool = False, challenges_on: bool = False,
                  offense_book: str = "classic", defense_book: str = "classic", playbooks_on: bool = False,
-                 broadcast_on: bool = False, stadium_on: bool = False, commentator: str = ""):
+                 broadcast_on: bool = False, stadium_on: bool = False, commentator: str = "", crew_names: dict | None = None):
         # the switches for a new game; a game reads its own from state.extras (a loaded game keeps the switches it was saved
         # with, C1). penalties_on and onside_on are off unless given: the program's rules come from the settings
         # (rules_from_settings, nx_penalties and nx_onside on by default), and a rules object made by hand (the clock's
@@ -175,9 +175,10 @@ class NflRules(ClassicRules):
         self.offense_book = offense_book
         self.defense_book = defense_book
         self.playbooks_on = bool(playbooks_on)
-        # SY.1 (the radio broadcast, rule 0.27): the color analyst; a hand-made object has none (BC.2: the radio banter drawn on the game's
-        # generator is gone with the original's banter step, D-180; "" is the default name)
-        self.broadcast = Broadcast(self, analyst=broadcast_on, commentator=commentator)
+        # SY.1 (the radio broadcast, rule 0.27): the crew; a hand-made object has no analyst or reporter (BC.2: the radio banter drawn on the
+        # game's generator is gone with the original's banter step, D-180). BC.3 (D-189): the crew's names (extras/crew.py), the defaults
+        # when none are given; `commentator` is SZ.1's analyst's name
+        self.broadcast = Broadcast(self, analyst=broadcast_on, commentator=commentator, crew_names=crew_names)
         self.stadium = Stadium(self, on=stadium_on)      # SY.2: the crowd, the hits and the chain; a hand-made object has none
         self.choices = Choices(self)                     # SY.4, SY.5: the player's target and blitzer (nothing until he chooses)
         self.game = None
@@ -198,7 +199,7 @@ class NflRules(ClassicRules):
         fresh = type(self)(self.timeouts_on, self.auto_sides, self.penalties_on, self.onside_on, self.onside_always,
                            self.qb_on, self.challenges_on, self.offense_book, self.defense_book, self.playbooks_on,
                            self.broadcast.analyst, self.stadium.on)
-        fresh.broadcast.commentator = self.broadcast.commentator          # SZ.1: the name (set on the object, so a subclass's constructor stays as it is)
+        fresh.broadcast.names = dict(self.broadcast.names)          # SZ.1, BC.3: the crew's names (set on the object, so a subclass's constructor stays as it is)
         return fresh
 
     # ----- H1 -----
@@ -210,7 +211,7 @@ class NflRules(ClassicRules):
                                     onside_always=self.onside_always, qb_on=self.qb_on,
                                     challenges_on=self.challenges_on)
         self.clock = NflPeriodClock(game, state)
-        self.broadcast.attach(game, state)         # SY.1: this game's own generator for the broadcast
+        self.broadcast.attach(game, state, self.clock)    # SY.1: this game's own generator for the broadcast (BC.3: and its clock)
         self.stadium.attach(game, state)           # SY.2: and for the stadium sounds
         self.modifiers.bind(state)                 # SX.8b: the ratings of the players in the play (a Franchise game's rosters)
         self.books.resolve(game, state)            # SX.7: the playbook of each side's offense and defense
@@ -358,8 +359,22 @@ class NflRules(ClassicRules):
             OT.kickers_kept_punt(x, state, outcome.offense)     # SX.12: a muffed punt the kickers kept was the receivers' chance (16-1-5 (c))
         injuries = self.game_injuries()
         if injuries is not None:                   # SX.8k (a Franchise game only): the draws of a play that can hurt a player
+            hurt = injuries.record.get("hurt", []) if isinstance(getattr(injuries, "record", None), dict) else []
+            before = len(hurt)
             injuries.after_play(state, outcome)
+            self._report_injuries(state, injuries, before)
         return outcome
+
+    def _report_injuries(self, state, injuries, before: int) -> None:
+        """BC.3 (design 4.5): the sideline reporter reports a man the play hurt, at the next dead ball (the announcer's own line came first)."""
+        try:
+            rows = injuries.record.get("hurt", [])[before:]
+            for row in rows:
+                player = injuries.league.players[row[0]]
+                side = 1 if injuries.teams[0] == player.team else 2
+                self.broadcast.injury(state, player.name.replace("[", "(").replace("]", ")"), side)
+        except Exception as exc:
+            log.warning("broadcast: the injury report could not be made: %s", exc)
 
     # ----- H23 (SY.1, the radio broadcast, rule 0.27) -----
 
@@ -616,7 +631,7 @@ class NflRules(ClassicRules):
 
     def before_kickoff(self, state, kicking_side: int) -> str:
         x = state.extras
-        self.broadcast.opening(state)              # SY.1: the analyst before the opening kick-off
+        self.broadcast.kickoff(state)              # SY.1, BC.3: a new possession; the sign-on before the opening kick-off
         x.out_of_bounds = False
         self.after_play = False
         self.books.clear()                         # SX.7: a kick-off is a new play: nothing is called
@@ -1055,9 +1070,10 @@ OVERTIME_SENTENCES = {"overtime_kicks": "NXC-09"}      # SX.12: the computer won
 
 def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
     """The program's rules for a Rules setting (design 12.1): Classic, or the N. F. L. rules with their switches."""
-    from ..game.rules import CLASSIC
+    from . import crew
+    from .classic_radio import classic_rules
     if getattr(game_settings, "rules", "classic") != "nfl":
-        return CLASSIC
+        return classic_rules(game_settings)        # BC.3 (D-189): Classic with the radio broadcast (extras/classic_radio.py)
     return NflRules(timeouts_on=getattr(game_settings, "nx_timeouts", True), auto_sides=auto_sides,
                     penalties_on=getattr(game_settings, "nx_penalties", True),
                     onside_on=getattr(game_settings, "nx_onside", True),
@@ -1067,7 +1083,12 @@ def rules_from_settings(game_settings, auto_sides: tuple[int, ...] = (2,)):
                     offense_book=getattr(game_settings, "nx_offense_playbook", "team"),
                     defense_book=getattr(game_settings, "nx_defense_playbook", "team"),
                     playbooks_on=True, broadcast_on=getattr(game_settings, "nx_broadcast", True),
-                    stadium_on=getattr(game_settings, "nx_stadium", True), commentator=getattr(game_settings, "nx_commentator", ""))
+                    stadium_on=getattr(game_settings, "nx_stadium", True), crew_names=crew.names(game_settings))
+
+
+def has_broadcast(rules) -> bool:
+    """The rules carry the radio broadcast (the N. F. L. rules, or the program's Classic: BC.3)."""
+    return getattr(rules, "broadcast", None) is not None
 
 
 def is_nfl(rules) -> bool:

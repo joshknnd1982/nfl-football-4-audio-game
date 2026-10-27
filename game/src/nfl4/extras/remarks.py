@@ -24,6 +24,11 @@ SY.1 (the radio-style broadcast, CLAUDE.md 0.27, playbook 7.19, D-101): BN is th
 longer drawn by the original's rule on the game's generator; BC.3 draws them on the broadcast's own); ASK is the announcer turning to the
 analyst; CKO CBG CSK CTV CTD CFG CFM CTC CTS CFD CRZ CPN CTM CQE CHT CFN CFT CTT CBO are the color analyst's lines, spoken in his own voice
 (extras/broadcast.py). They are drawn with the broadcast's OWN random generator, so the game's draws do not move.
+BC.3 (D-178, D-189, spec/NFL_BROADCAST_DESIGN.md sections 4, 10 and 11): the radio format's pools, in both modes. The play-by-play
+announcer's SGN (sign-on), CRW (the crew), UPD (the score), QUP (a quarter or half), STA (a station break), ASN (to the reporter), SGO
+(sign-off), NID (the network), LID (a listener), DRV (a drive) and CLK (the clock); the sideline reporter's SON (before the kick-off), SIN
+(an injury) and SHT (half time), in her own voice. Every pool knows the crew's names: <announcer>, <analyst> (also <commentator>),
+<sideline> and <network>.
 """
 from __future__ import annotations
 
@@ -34,15 +39,19 @@ from typing import Mapping
 
 from ..game.line_player import PLAYER_NAMES, play_line
 from ..game.banter_markup import NameRef, OneOf, Speak, Text, choice_sizes, parse_markup, to_markup
-from . import commentators, nx_texts
+from . import crew, nx_texts
 from .remarks_retired import RETIRED
 from .state import RECENT_REMARKS
 
 log = logging.getLogger("nfl4.extras")
 
-BROADCAST_POOLS = ("BN", "ASK", "CKO", "CBG", "CSK", "CTV", "CTD", "CFG", "CFM", "CTC", "CTS", "CFD", "CRZ", "CPN", "CTM", "CQE", "CHT",
-                   "CFN", "CFT", "CTT", "CBO")      # SY.1: the radio banter, the announcer's question and the analyst's pools (rule 0.27)
-COLOR_POOLS = tuple(pool for pool in BROADCAST_POOLS if pool not in ("BN", "ASK"))      # said by the analyst's voice
+ANALYST_POOLS = ("CKO", "CBG", "CSK", "CTV", "CTD", "CFG", "CFM", "CTC", "CTS", "CFD", "CRZ", "CPN", "CTM", "CQE", "CHT", "CFN", "CFT", "CTT",
+                 "CBO")                                                    # SY.1: the analyst's pools (rule 0.27)
+ANNOUNCER_POOLS = ("BN", "ASK", "SGN", "CRW", "UPD", "QUP", "STA", "ASN", "SGO", "NID", "LID", "DRV", "CLK")   # SY.1, BC.3: the announcer's
+SIDELINE_POOLS = ("SON", "SIN", "SHT")                                     # BC.3: the sideline reporter's
+BROADCAST_POOLS = ("BN", "ASK") + ANALYST_POOLS + ("SGN", "CRW", "SON", "UPD", "QUP", "STA", "ASN", "SIN", "SHT", "SGO", "NID", "LID", "DRV",
+                                                   "CLK")                  # the order of remarks.txt
+COLOR_POOLS = ANALYST_POOLS                                                # said by the analyst's voice
 POOLS_BUILT = ("TO", "CHS", "CHC", "RVR", "RVC", "ON", "QB", "PN") + BROADCAST_POOLS     # the pools whose feature exists (SX.2 timeouts, SX.6 replay
 #                                                         challenges, SX.4 onside kicks, SX.5 quarterback runs, SX.3 penalties),
 #                                                         in the order of remarks.txt (design 13)
@@ -69,9 +78,18 @@ for _pool, _names in (("CKO", ("<team>", "<opponent>", "<coach>", "<quarterback>
                       ("CFT", ("<situation>", "<team>", "<opponent>")), ("CTT", ("<situation>", "<team>", "<opponent>")),
                       ("CBO", ("<situation>", "<team>", "<opponent>"))):
     PLACEHOLDERS[_pool] = _names
-# SZ.1 (D-106): <commentator> is the color commentator's name (F9, Rules, Commentator) and fits every pool; the default lines that said Ghip say it
+# BC.3: the radio format's pools. <visitors> and <home> the two teams, <situation> the score clause, <quarter> the quarter (or "first half"),
+# <player> the man who was hurt, <team> and <opponent> as in the analyst's pools, <plays> <yards> <minutes> a drive, <time> the time left
+for _pool, _names in (("SGN", ("<visitors>", "<home>")), ("CRW", ()), ("SON", ("<visitors>", "<home>")),
+                      ("UPD", ("<situation>", "<quarter>", "<visitors>", "<home>")), ("QUP", ("<situation>", "<quarter>")), ("STA", ()),
+                      ("ASN", ()), ("SIN", ("<player>", "<team>")), ("SHT", ("<team>", "<opponent>", "<visitors>", "<home>")), ("SGO", ()),
+                      ("NID", ()), ("LID", ()), ("DRV", ("<plays>", "<yards>", "<minutes>", "<team>")),
+                      ("CLK", ("<time>", "<quarter>", "<situation>"))):
+    PLACEHOLDERS[_pool] = _names
+# SZ.1 (D-106): <commentator> is the color commentator's name and fits every pool; BC.3: so do the crew's other names (F9, Rules, Broadcast crew)
+CREW_PLACEHOLDERS = ("<commentator>", "<announcer>", "<analyst>", "<sideline>", "<network>")
 for _pool in PLACEHOLDERS:
-    PLACEHOLDERS[_pool] = tuple(PLACEHOLDERS[_pool]) + ("<commentator>",)
+    PLACEHOLDERS[_pool] = tuple(PLACEHOLDERS[_pool]) + CREW_PLACEHOLDERS
 # The wording the 0.10.0 files carry for the default lines that were reworded in SZ.1 (the others only had "Ghip" where "<commentator>" is now):
 # a line of the player's file that is still one of these is the unchanged default and follows the commentator's name like the new one.
 LEGACY_MARKUP = {
@@ -170,11 +188,16 @@ def legacy_markup(key: str) -> str | None:
 
 def commentator_of(game) -> str:
     """The color analyst's name for this game: the broadcast of the game's rules knows it (extras/broadcast.py); the default in a rig without."""
+    return crew_values(game)["<analyst>"]
+
+
+def crew_values(game) -> dict[str, str]:
+    """The crew's names for this game's lines (BC.3): the broadcast of the game's rules knows them; the defaults in a rig without."""
     for rules in (getattr(getattr(game, "play_engine", None), "rules", None), getattr(game, "rules", None)):    # the game being played first
-        name = getattr(getattr(rules, "broadcast", None), "commentator", None)
-        if name:
-            return name
-    return commentators.DEFAULT
+        broadcast = getattr(rules, "broadcast", None)
+        if broadcast is not None and hasattr(broadcast, "crew_values"):
+            return broadcast.crew_values()
+    return crew.placeholders(crew.DEFAULTS)
 
 
 def build_pools(overrides: Mapping[str, str | None], problems) -> RemarkPools:
@@ -287,7 +310,7 @@ def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=No
         names = state.player_names
         index = rnd(PLAYER_NAMES)
         name = names[index - 1] if index <= len(names) else ""
-    pieces = _filled(remark.pieces, {"<commentator>": commentator_of(game), **values})
+    pieces = _filled(remark.pieces, {**crew_values(game), **values})
     choices = [rnd(size) for size in choice_sizes(pieces)]
     play_line(game, pieces, name, state.quarterbacks.get(2, ""), choices, say)
     return remark
@@ -296,8 +319,8 @@ def say_remark(game, state, record, pool: str, values: Mapping[str, str], say=No
 # ----- remarks.txt -----
 
 NOTES = (
-    "These are the announcer's remarks of the N. F. L. rules. The game reads this file only when the Rules setting of the F9 "
-    "menu is N. F. L. rules.",
+    "These are the lines of the radio broadcast and the announcer's remarks. The broadcast's lines (BN to CLK below) are said in both "
+    "Rules settings; the other pools (TO to PN) only with the N. F. L. rules.",
     "Each line is an ID, an equals sign and the remark. The letters of the ID say the pool: TO are the remarks after a time out,",
     "CHS the strong hints after a ruling that was wrong and CHC the hints after a close call, RVR the remarks after a review",
     "changed a ruling and RVC after a ruling stood or was confirmed (RVC03 only after a challenge that lost),",
@@ -313,15 +336,28 @@ NOTES = (
     "These words in square brackets work in every line: [sound my laugh.wav], [pause], [bleep], [one of: a | b].",
     "A line has at most 500 characters and 20 parts. The F8 key switches all comments off, these too, except the QB lines:",
     "they are the play by play of a run and stay on; if you switch every QB line off, the original five are used.",
+    "The radio crew: the play by play announcer (Walt Kessler), the color analyst (Gus Delgado) and the sideline reporter (Nora Banks) of",
+    "the Gridiron Radio Network, until you choose other names in F9, Rules, Broadcast crew. In every pool <announcer>, <analyst> (or",
+    "<commentator>), <sideline> and <network> are those names.",
     "BN are the announcer's radio banter, 142 lines. They fit any moment, so they have few <...> words. ASK are the announcer's questions to",
-    "the color analyst, who is called Gus Delgado until you type another name in F9, Rules, Commentator. <commentator> is that name, in every pool.",
+    "the color analyst.",
     "The other new pools are the color commentator's, said in a voice of their own: CKO before the opening kick off, CBG after a gain of 20",
     "yards or more, CSK after a sack, CTV after a turn over, CTD after a touch down, CFG after a field goal, CFM after a missed kick, CTC and",
     "CTS after a third down made or stopped, CFD when a team goes for it on fourth down, CRZ inside the twenty, CPN after a penalty, CTM at the",
     "two minute warning, CQE at the end of the first and third quarter, CHT at half time, CFN and CFT at the end (a win, a tie), CTT in a",
     "close fourth quarter and CBO in a game that is decided. In them <team> is the team the line is about, <opponent> the other team,",
     "<quarterback> that team's quarterback, <yards> the gain, <situation> a whole clause with the score (the Bengals lead the Jets 17 to 10),",
-    "<quarter> the quarter and <coach> your name; each pool says which of them it has. F9, Rules, Broadcast switches the commentator off.",
+    "<quarter> the quarter and <coach> your name; each pool says which of them it has.",
+    "The announcer's pools of the radio format: SGN the sign on before the opening kick off (<visitors> and <home> are the two teams), CRW",
+    "the crew introduced, UPD the score said again when nobody said it for a while (<situation>), QUP the end of the first and third quarter",
+    "and of the first half (<quarter>, <situation>), STA the station break at the two minute warning and at half time, ASN the turn to the",
+    "sideline reporter, SGO the sign off after the final score, NID the network's name about every seven minutes of game time, LID a",
+    "listener's own words once a game when you have no commercials, DRV the drive that scored (<plays>, <yards>, <minutes>; N. F. L. rules",
+    "only) and CLK the time left late in a half (<time>, <situation>; N. F. L. rules only).",
+    "The sideline reporter's pools, in her own voice: SON before the opening kick off, SIN when a player of a franchise game is hurt (<player>",
+    "and his <team>) and SHT at half time (<team> is the team that leads).",
+    "F8 switches the whole broadcast off. F9, Rules, Broadcast switches the analyst and the reporter off; the announcer's sign on, breaks,",
+    "updates and sign off stay, without the lines that name them.",
 )
 
 

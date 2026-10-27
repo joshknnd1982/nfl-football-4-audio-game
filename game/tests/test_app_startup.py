@@ -396,8 +396,9 @@ def test_a_start_makes_the_customization_files_and_says_nothing_about_them(tmp_p
     monkeypatch.setattr(app, "create_speech", made)
     monkeypatch.setattr(window_module, "GameWindow", closing_after(1.0))
     assert app.main() == 0
-    # Classic: no file of the extras (remarks.txt) is made (nfl4 only, CUSTOMIZABLE_CONTENT 13, SX.2; the default since SX.9 is the N. F. L. rules)
-    assert sorted(p.name for p in (tmp_path / "customize").iterdir()) == ["divisions.txt", "sounds", "surnames.txt", "teams.txt"]
+    # Classic: no file of the extras is made (nfl4 only, CUSTOMIZABLE_CONTENT 13, SX.2; the default since SX.9 is the N. F. L. rules), except
+    # remarks.txt, the radio crew's lines, which Classic speaks too (BC.3, D-189)
+    assert sorted(p.name for p in (tmp_path / "customize").iterdir()) == ["divisions.txt", "remarks.txt", "sounds", "surnames.txt", "teams.txt"]
     spoken = " ".join(made.sapi.spoken())
     assert "teams.txt" not in spoken and "banter" not in spoken and "customiz" not in spoken
 

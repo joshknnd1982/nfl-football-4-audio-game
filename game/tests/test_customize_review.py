@@ -118,7 +118,7 @@ def test_one_unwritable_file_is_said_once_and_the_others_are_not_blamed(tmp_path
     expected = " The file teams.txt could not be made, so the original team names are used. "
     assert custom.take_notices() == [expected]
     assert custom.take_notices() == []
-    assert sorted(os.listdir(folder)) == sorted(["divisions.txt", "sounds", "surnames.txt", "teams.txt.tmp"])
+    assert sorted(os.listdir(folder)) == sorted(["divisions.txt", "remarks.txt", "sounds", "surnames.txt", "teams.txt.tmp"])      # BC.3
 
 
 # ----- finding 6: check never says "no problems" of a file it did not read -----

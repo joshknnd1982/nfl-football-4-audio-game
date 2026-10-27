@@ -7,16 +7,17 @@ Onside question before it, SX.5 added Quarterback runs after Time outs, SX.6 add
 added Offense playbook and Defense playbook before Reset (1 Rules, 2 Time outs, 3 Replay challenges, 4 Quarterback runs, 5 Onside
 kicks, 6 Onside question, 7 Penalties, 8 Offense playbook, 9 Defense playbook, 10 Reset: the design's ten items; SY.1 added Broadcast, the
 the color commentator, before Reset: 10 Broadcast; SY.2 added Stadium sounds: 11 Stadium sounds; SZ.1 added Commentator, the name of the color
-commentator: 12 Commentator, 13 Reset). Up and Down move, Enter or Space changes the current item and speaks its
-new value, Left and Right change it too, the digits go to an item, Escape leaves (game/spoken_menu.py). A switch says
-" used with the N. F. L. rules " after its value while Rules is Classic. Every change is saved in settings.txt at once and
+commentator: 12 Commentator, 13 Reset; BC.3 made 12 the Broadcast crew, the four names of the radio crew, extras/crew_menu.py). Up and
+Down move, Enter or Space changes the current item and speaks its new value, Left and Right change it too, the digits go to an item, Escape
+leaves (game/spoken_menu.py). A switch says " used with the N. F. L. rules " after its value while Rules is Classic, except Broadcast and
+Broadcast crew, which both modes use since BC.3 (D-189). Every change is saved in settings.txt at once and
 applies from the next game (" the new rules apply from the next game. "): a game in progress keeps the rules it began with.
 Rules = N. F. L. rules also makes the program read the extras' files (remarks.txt, CUSTOMIZABLE_CONTENT 13).
 """
 from __future__ import annotations
 
 from ..game.spoken_menu import Item, SpokenMenu
-from . import commentator_menu
+from . import crew_menu
 from . import depth_flow
 from . import nx_texts as X
 from . import quarterbacks
@@ -156,22 +157,18 @@ def rules_menu(game, speech, keys) -> None:
     def stadium_item() -> str:
         return switch_label(settings, "NXM-38", settings.nx_stadium)
 
-    def commentator_item() -> str:
-        return commentator_menu.label(settings)
+    def crew_item() -> str:
+        return crew_menu.label(settings)
 
-    def choose_commentator() -> str:
-        """Enter: the list of names (SZ.1); the item is said again afterwards, with the sentence about the next game when the name changed."""
-        if commentator_menu.pick(game, speech, keys, settings):
-            apply()
-            return changed(commentator_item)
-        return commentator_item()
-
-    def step_commentator(step: int = 1) -> None:
-        commentator_menu.step(settings, step)
-        apply()
+    def choose_crew() -> str:
+        """Enter: the crew's four names (BC.3); the item is said again afterwards, with the sentence about the next game when a name changed."""
+        if crew_menu.crew_menu(game, speech, keys, settings, apply):
+            return changed(crew_item)
+        return crew_item()
 
     def broadcast_item() -> str:
-        return switch_label(settings, "NXM-37", settings.nx_broadcast)
+        """Both modes since BC.3: no " used with the N. F. L. rules "."""
+        return X.text("NXM-37") + (X.text("NXM-20") if settings.nx_broadcast else X.text("NXM-21"))
 
     def offense_playbook_item() -> str:
         return playbook_label(settings, "NXM-17", settings.nx_offense_playbook)
@@ -206,7 +203,7 @@ def rules_menu(game, speech, keys) -> None:
              change=change_defense_playbook),
         Item(broadcast_item, enter=lambda: (toggle_broadcast(), changed(broadcast_item))[1], change=toggle_broadcast),
         Item(stadium_item, enter=lambda: (toggle_stadium(), changed(stadium_item))[1], change=toggle_stadium),
-        Item(commentator_item, enter=choose_commentator, change=step_commentator),
+        Item(crew_item, enter=choose_crew),
         Item(lambda: quarterbacks.item_label(settings), enter=lambda: (quarterbacks.quarterbacks_menu(game, speech, keys), None)[1]),    # D-132
         Item(lambda: depth_flow.item_label(settings), enter=lambda: (depth_flow.depth_menu(game, speech, keys), None)[1]),        # NX-D3, NX-D4
         Item(lambda: X.text("NXM-19"), enter=reset),

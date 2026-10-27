@@ -49,3 +49,5 @@ stops and hyphens (2 to 30 characters). The setting is `nx_commentator` in setti
 Open question for the owner (Q-049): the announcer's radio banter teases the commentator gently ("your notes have a coffee stain", "tell me honestly,
 is film study fun"). With a real person's name chosen that teasing names a real person. Default kept (it is the owner's request and the lines are mild);
 the owner can ask for the real names to be taken out of the teasing lines or from the list.
+
+BC.3 (2026-10-27, D-189): the analyst is one of the radio crew (Walt Kessler, Gus Delgado, Nora Banks, the Gridiron Radio Network), named in F9, Rules, Broadcast crew (game/src/nfl4/extras/crew.py, crew_menu.py); the setting is nx_analyst (an old nx_commentator is read once into it), and no name of the crew can be a retired one.

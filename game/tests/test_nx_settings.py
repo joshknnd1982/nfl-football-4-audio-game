@@ -17,6 +17,7 @@ from nfl4.extras import nx_texts as X
 from nfl4.extras.nfl_rules import NflRules, is_nfl, rules_from_settings
 from nfl4.extras.remarks import RemarkPools
 from nfl4.game import extra_texts as words
+from nfl4.extras.classic_radio import ClassicRadioRules
 from nfl4.game.rules import CLASSIC
 from programrig import DOWN, ENTER, ESC, F1, said
 from test_functions import TOP, rig_for
@@ -34,7 +35,7 @@ def test_the_defaults_are_the_nfl_rules_with_timeouts_on():
     assert settings.game.rules == "nfl" and settings.game.nx_timeouts is True
     assert is_nfl(rules_from_settings(settings.game))
     settings.game.rules = "classic"
-    assert rules_from_settings(settings.game) is CLASSIC
+    assert isinstance(rules_from_settings(settings.game), ClassicRadioRules)
 
 
 @pytest.mark.parametrize("line, rules", [("rules = nfl", "nfl"), ("rules = classic", "classic"),
@@ -123,7 +124,7 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert spoken[19] == "Broadcast off " + NEXT_GAME
     assert spoken[20] == "Stadium sounds on "                             # SY.2: the eleventh item
     assert spoken[21] == "Stadium sounds off " + NEXT_GAME
-    assert spoken[22] == "Commentator: Gus Delgado"                              # SZ.1: the twelfth item, only passed
+    assert spoken[22] == "Broadcast crew: Walt Kessler, Gus Delgado, Nora Banks"   # SZ.1, BC.3: the twelfth item, only passed
     assert spoken[23] == X.text("NXM-58")                                # D-132: the thirteenth item, only passed
     assert spoken[24] == X.text("NXM-D01")                               # NX-D3: the fourteenth item, only passed
     assert spoken[25] == X.text("NXM-19")
@@ -154,38 +155,40 @@ def test_a_change_during_a_game_leaves_the_game_its_rules(rig, tmp_path):
 
 # ----- the extras' files follow the setting (CUSTOMIZABLE_CONTENT 13) -----
 
-def test_remarks_txt_is_never_made_with_classic_and_is_made_and_used_with_the_nfl_rules(rig, tmp_path):
+def test_remarks_txt_is_made_and_used_in_both_modes_and_the_other_extras_only_with_the_nfl_rules(rig, tmp_path):
+    # BC.3 (D-189): remarks.txt holds the radio crew's lines, which Classic speaks too; penalties.txt and the others stay N. F. L. rules only
     folder = str(tmp_path / "customize")
     rig.game.customization = Customization(folder)
     rig.game.apply_customization()
     remarks = os.path.join(folder, "remarks.txt")
-    assert not os.path.exists(remarks) and rig.game.remark_pools is None
-    rig.game.customization.take_notices()
-    assert not os.path.exists(remarks)
+    penalties = os.path.join(folder, "penalties.txt")
+    assert os.path.isfile(remarks) and isinstance(rig.game.remark_pools, RemarkPools) and not os.path.exists(penalties)
+    assert open(remarks, encoding="utf-8").readline().strip() == "# NFL Football 4 remarks, format 1."
     rig.game.options.settings.game.rules = "nfl"
     rig.game.apply_rules_setting()
-    assert os.path.isfile(remarks) and isinstance(rig.game.remark_pools, RemarkPools)
-    assert open(remarks, encoding="utf-8").readline().strip() == "# NFL Football 4 remarks, format 1."
+    assert os.path.isfile(penalties) and isinstance(rig.game.remark_pools, RemarkPools)
     rig.game.options.settings.game.rules = "classic"
     rig.game.apply_rules_setting()
-    assert rig.game.remark_pools is None and rig.game.rules is CLASSIC
-    os.remove(remarks)
+    assert isinstance(rig.game.remark_pools, RemarkPools) and isinstance(rig.game.rules, ClassicRadioRules)
+    os.remove(penalties)
     rig.game.customization.take_notices()
-    assert not os.path.exists(remarks)                                  # Classic again: it is not made again
+    assert not os.path.exists(penalties)                                # Classic again: the extras' files are not made again
 
 
 def test_a_customization_made_with_the_nfl_rules_reads_remarks_txt_at_once(tmp_path):
     folder = str(tmp_path / "customize")
     custom = Customization(folder, extras=True)
     assert os.path.isfile(os.path.join(folder, "remarks.txt"))
-    assert [spec.file_name for spec in custom.specs][-8:-6] == ["remarks.txt", "penalties.txt"]     # SX.3
+    assert [spec.file_name for spec in custom.specs][3:4] == ["remarks.txt"]                         # BC.3: with the classic lists, both modes
+    assert [spec.file_name for spec in custom.specs][-7:-6] == ["penalties.txt"]                     # SX.3
     assert os.path.isfile(os.path.join(folder, "penalties.txt"))
     assert [spec.file_name for spec in custom.specs][-6:] == ["plays.txt", "styles.txt", "team_styles.txt", "news.txt", "injuries.txt",
                                                              "favourites.txt"]    # SX.7, SX.8e, SX.8k, SX.10c
     assert os.path.isfile(os.path.join(folder, "playbooks", "plays.txt"))
     assert custom.take_notices() == []
     assert "remarks.txt: no problems." in custom.check()
-    assert "remarks.txt" not in Customization(str(tmp_path / "classic")).check()
+    assert "remarks.txt: no problems." in Customization(str(tmp_path / "classic")).check()       # BC.3: Classic reads it too
+    assert "penalties.txt" not in Customization(str(tmp_path / "classic2")).check()
 
 
 def test_the_nfl_program_rules_are_given_to_the_game(tmp_path):

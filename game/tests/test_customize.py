@@ -14,7 +14,7 @@ import random
 import pytest
 
 from nfl4.data import customlists as cl
-from nfl4.data.customize import (DIVISIONS, SPECS, SURNAMES, TEAMS, Customization, name_problem, unique_variant)
+from nfl4.data.customize import (ALWAYS_SPECS, DIVISIONS, SPECS, SURNAMES, TEAMS, Customization, name_problem, unique_variant)
 from nfl4.game import league as league_module
 from nfl4.game.names import POOL_SIZE, load_surnames
 from wavmaker import sine, write
@@ -50,22 +50,23 @@ def append(tmp_path, name, *lines):
 # ----- the first start -----
 
 def test_a_first_start_makes_the_three_files_and_the_sounds_folder_and_says_nothing(tmp_path):
+    # BC.3 (D-189): remarks.txt, the radio broadcast's lines, is made in Classic too (the crew speaks in both modes)
     custom = make(tmp_path)
-    assert sorted(n for n in os.listdir(folder_of(tmp_path))) == ["divisions.txt", "sounds", "surnames.txt", "teams.txt"]
+    assert sorted(n for n in os.listdir(folder_of(tmp_path))) == ["divisions.txt", "remarks.txt", "sounds", "surnames.txt", "teams.txt"]
     assert custom.take_notices() == [] and custom.snapshot.notices == []
     assert [text_of(tmp_path, spec.file_name).splitlines()[0] for spec in SPECS] == [
         "# NFL Football 4 teams, format 1.", "# NFL Football 4 divisions, format 1.", "# NFL Football 4 surnames, format 1."]
-    assert custom.snapshot.statuses == {spec.key: cl.CREATED for spec in SPECS}
+    assert custom.snapshot.statuses == {spec.key: cl.CREATED for spec in ALWAYS_SPECS}
 
 
 def test_with_the_files_unchanged_the_values_are_the_originals(tmp_path):
     make(tmp_path)
     custom = make(tmp_path)                          # the second start reads the files the first start wrote
     snap = custom.snapshot
-    assert snap.statuses == {spec.key: cl.OK for spec in SPECS} and snap.notices == []
+    assert snap.statuses == {spec.key: cl.OK for spec in ALWAYS_SPECS} and snap.notices == []
     assert snap.team_names == DEFAULT_TEAMS and snap.division_names == DEFAULT_DIVISIONS
     assert snap.surnames == load_surnames() and len(snap.surnames) == POOL_SIZE
-    assert all(snap.problem_count(spec.key) == 0 for spec in SPECS)
+    assert all(snap.problem_count(spec.key) == 0 for spec in ALWAYS_SPECS)
 
 
 def test_the_file_texts_hold_every_original_value_by_its_id(tmp_path):
@@ -238,7 +239,7 @@ def test_an_old_banter_txt_is_left_untouched_and_never_read_checked_or_reset(tmp
     custom.reset(None)
     custom.reload()
     assert (folder / "banter.txt").read_bytes() == old and not (folder / "banter.txt.before-reset").exists()
-    assert sorted(os.listdir(folder)) == ["banter.txt", "divisions.txt", "sounds", "surnames.txt", "teams.txt"]
+    assert sorted(os.listdir(folder)) == ["banter.txt", "divisions.txt", "remarks.txt", "sounds", "surnames.txt", "teams.txt"]
 
 
 # ----- the notices of damage -----
@@ -301,7 +302,7 @@ def test_a_missing_folder_and_a_missing_sounds_folder_are_made_again(tmp_path):
     custom = make(tmp_path)
     shutil.rmtree(folder_of(tmp_path))
     assert custom.take_notices() == []
-    assert sorted(os.listdir(folder_of(tmp_path))) == ["divisions.txt", "sounds", "surnames.txt", "teams.txt"]
+    assert sorted(os.listdir(folder_of(tmp_path))) == ["divisions.txt", "remarks.txt", "sounds", "surnames.txt", "teams.txt"]
     shutil.rmtree(folder_of(tmp_path) / "sounds")
     custom.reload()
     assert (folder_of(tmp_path) / "sounds").is_dir()
@@ -330,8 +331,8 @@ def test_reset_all_writes_the_three_lists_and_never_touches_footplay_or_the_soun
     footplay = (folder_of(tmp_path) / "footplay.txt").read_bytes()
     sound = (folder_of(tmp_path) / "sounds" / "mine.wav").read_bytes()
     result = custom.reset(None)
-    assert result.done == ["teams.txt", "divisions.txt", "surnames.txt"] and result.failed == []
-    assert result.kept == ["teams.txt", "divisions.txt"]    # surnames.txt was the built-in text: no copy needed
+    assert result.done == ["teams.txt", "divisions.txt", "surnames.txt", "remarks.txt"] and result.failed == []
+    assert result.kept == ["teams.txt", "divisions.txt"]    # surnames.txt and remarks.txt were the built-in texts: no copy needed
     custom.reload()
     assert custom.snapshot.team_names == DEFAULT_TEAMS and custom.snapshot.division_names == DEFAULT_DIVISIONS
     assert (folder_of(tmp_path) / "footplay.txt").read_bytes() == footplay
@@ -352,7 +353,7 @@ def test_a_reset_that_cannot_write_says_which_list_failed_and_changes_nothing(tm
 
 def test_check_reads_every_file_and_says_what_it_found_without_applying_anything(tmp_path):
     custom = make(tmp_path)
-    assert custom.check() == ("teams.txt: no problems. divisions.txt: no problems. surnames.txt: no problems. "
+    assert custom.check() == ("teams.txt: no problems. divisions.txt: no problems. surnames.txt: no problems. remarks.txt: no problems. "
                               "Details of every problem are in the log.")
     edit(tmp_path, "teams.txt", "T09 = Broncos", "T09 = a,b")
     edit(tmp_path, "teams.txt", "T10 = Chargers", "T10 = ")

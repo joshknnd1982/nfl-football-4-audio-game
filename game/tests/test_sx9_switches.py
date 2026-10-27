@@ -21,6 +21,7 @@ from nfl4.extras import nx_texts as X
 from nfl4.extras import rules_menu
 from nfl4.extras.nfl_rules import NflRules, is_nfl, rules_from_settings
 from nfl4.extras.playbook_flow import PlaybookFlow
+from nfl4.extras.classic_radio import ClassicRadioRules
 from nfl4.game.rules import CLASSIC
 from nflrig import RecordingRules, SimEngine, sim_game
 
@@ -180,7 +181,7 @@ def test_a_new_players_settings_say_the_nfl_rules_with_every_switch_on_and_class
     assert rules_menu.DEFAULTS["rules"] == "nfl" and rules_menu.DEFAULTS["nx_offense_playbook"] == "team"     # SX.10e (D-095)
     assert (rules.offense_book, rules.defense_book) == ("team", "team")
     settings.rules = "classic"
-    assert rules_from_settings(settings) is CLASSIC
+    assert isinstance(rules_from_settings(settings), ClassicRadioRules)
 
 
 def test_a_settings_file_without_the_rules_line_gets_the_nfl_rules_and_one_that_says_classic_keeps_it():

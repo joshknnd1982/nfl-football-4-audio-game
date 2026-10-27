@@ -11,6 +11,7 @@ from nfl4.extras import rules_menu as RM
 from nfl4.extras.nfl_rules import NflRules, is_nfl, rules_from_settings
 from nfl4.extras.state import ExtrasRecord
 from nfl4.game.gamestate import GameState
+from nfl4.extras.classic_radio import ClassicRadioRules
 from nfl4.game.rules import CLASSIC
 from nflrig import nfl_engine_rig
 from test_nx_save import a_record, a_save
@@ -68,7 +69,7 @@ def test_the_programs_rules_carry_the_players_books_and_the_computers_team_style
     assert (again.offense_book, again.defense_book, again.playbooks_on) == ("west", "team", True)
     classic = Settings.defaults().game
     classic.rules = "classic"
-    assert rules_from_settings(classic) is CLASSIC
+    assert isinstance(rules_from_settings(classic), ClassicRadioRules)
     plain = NflRules()                                                  # made by hand: Classic plays, no style for the computer
     assert (plain.offense_book, plain.defense_book, plain.playbooks_on) == ("classic", "classic", False)
 

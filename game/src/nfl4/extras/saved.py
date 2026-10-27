@@ -16,8 +16,9 @@ from __future__ import annotations
 import logging
 
 from ..game import prompt_texts as T
-from ..game.rules import CLASSIC
+from . import crew
 from . import nx_texts as X
+from .classic_radio import classic_rules
 from .nfl_rules import NflRules, is_nfl
 from .state import ExtrasRecord
 
@@ -70,15 +71,16 @@ def rules_for_saved_game(game, saved):
         if not usable:
             game.say5(X.text("NXM-25"))
         return None
+    settings = getattr(getattr(getattr(game, "options", None), "settings", None), "game", None)
     if not ask_yes_no(game, X.text("NXM-24")):
-        return CLASSIC
+        return classic_rules(settings)          # BC.3: the program's Classic, with the radio broadcast
     if not usable:
         game.say5(X.text("NXM-25"))
-    settings = game.options.settings.game
     return NflRules(timeouts_on=settings.nx_timeouts, penalties_on=getattr(settings, "nx_penalties", True),
                     onside_on=getattr(settings, "nx_onside", True),
                     onside_always=getattr(settings, "nx_onside_question", "always") == "always",
                     qb_on=getattr(settings, "nx_qb_runs", True),
                     challenges_on=getattr(settings, "nx_challenges", True),
                     offense_book=getattr(settings, "nx_offense_playbook", "team"),
-                    defense_book=getattr(settings, "nx_defense_playbook", "team"), playbooks_on=True)
+                    defense_book=getattr(settings, "nx_defense_playbook", "team"), playbooks_on=True,
+                    broadcast_on=getattr(settings, "nx_broadcast", True), crew_names=crew.names(settings))     # BC.3: the crew

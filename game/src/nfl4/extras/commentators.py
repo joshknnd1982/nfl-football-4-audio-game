@@ -4,15 +4,17 @@ The owner (2026-10-26): "You need to forget and get rid of all of Jim Kitchen's 
 commenters." So the original's character (Ghip) and the list of real podcasters' names the player could give him (D-106) are gone from
 every mode: the analyst of the radio broadcast (extras/broadcast.py) is a made-up person, Gus Delgado (spec/NFL_BROADCAST_DESIGN.md
 section 3, checked by a web search for a real broadcaster of that name on 2026-10-26), and the player may type another name in F9, Rules,
-Commentator (nobody has to type anything, rule 0.19). BC.3 turns the item into the broadcast crew's four names.
+Broadcast crew (nobody has to type anything, rule 0.19). BC.3 (D-189) made the item the broadcast crew's four names: extras/crew.py holds
+them (the setting nx_analyst; an old settings.txt's nx_commentator is read once into it). This module keeps the analyst's default, the
+cleaning of a name and the digests of the retired names, which every name of the crew uses.
 
-The name is the setting `nx_commentator`. Every default line that turns to the analyst says `<commentator>` (strings_nx.tsv) and the name
-is put in when the line is said (extras/remarks.py), so a name chosen in the menu is heard everywhere.
+Every default line that turns to the analyst says `<commentator>` or `<analyst>` (strings_nx.tsv) and the name is put in when the line is
+said (extras/remarks.py), so a name chosen in the menu is heard everywhere.
 
     DEFAULT        "Gus Delgado"
     clean(name)    a typed or stored name made safe to speak and store, "" when it cannot be used
     name_of_text(name)  the name a stored or given text stands for: the default when it is empty, unusable or a retired name
-    choices(current)    the items of the list: the default, the player's own name when it is not the default, the item that types one
+    name_of(settings)   the analyst's name of the settings (extras/crew.py)
 """
 from __future__ import annotations
 
@@ -86,17 +88,6 @@ def name_of_text(name) -> str:
     return text if text and not is_retired(text) else DEFAULT
 
 
-def choices(current: str) -> list[tuple[str, str]]:
-    """The items of the list in F9, Rules, Commentator as (kind, name): the default first, the player's own name when it is not the
-    default, and last the item that lets the player type one. kind is "default", "own" or "type"."""
-    items = [("default", DEFAULT)]
-    current = name_of_text(current)
-    if current != DEFAULT:
-        items.append(("own", current))
-    items.append(("type", ""))
-    return items
-
-
 def name_of(game_settings) -> str:
     """The analyst's name for a game: the setting, or the default when it is missing, unusable or retired."""
-    return name_of_text(getattr(game_settings, "nx_commentator", DEFAULT))
+    return name_of_text(getattr(game_settings, "nx_analyst", DEFAULT))

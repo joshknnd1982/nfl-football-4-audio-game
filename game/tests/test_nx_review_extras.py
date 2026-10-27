@@ -14,6 +14,7 @@ from nfl4.extras.nfl_rules import NflRules, is_nfl, rules_from_settings
 from nfl4.extras.state import ExtrasRecord
 from nfl4.game import outcome as O
 from nfl4.game.gamestate import GameState
+from nfl4.extras.classic_radio import ClassicRadioRules
 from nfl4.game.rules import CLASSIC, REVIEWED_FIELD
 from pagrig import Draws, run_steps
 from programrig import ENTER
@@ -49,7 +50,7 @@ def test_the_programs_rules_follow_the_replay_challenges_setting():
     rules = rules_from_settings(settings.game)
     assert rules.challenges_on is False and rules.for_game().challenges_on is False
     settings.game.rules = "classic"
-    assert rules_from_settings(settings.game) is CLASSIC
+    assert isinstance(rules_from_settings(settings.game), ClassicRadioRules)
     assert NflRules().challenges_on is False                      # a rules object made by hand has none
 
 

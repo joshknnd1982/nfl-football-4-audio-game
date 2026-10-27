@@ -162,6 +162,8 @@ nfl4 is the first game with customization lists, so this is the format "chosen o
 
 ## 12. L12 The announcer's banter, `banter.txt`: own text and own sounds (OWNER DECISION 2026-10-14, D-035; built in S7.7)
 
+BC.3 (2026-10-27, D-189): remarks.txt holds the radio crew's lines and is read, made, checked and reset in BOTH modes (data/customize.py BROADCAST_SPECS); the new pools SGN, CRW, SON, UPD, QUP, STA, ASN, SIN, SHT, SGO, NID, LID, DRV and CLK, with the crew's placeholders <announcer>, <analyst> (<commentator>), <sideline> and <network> in every pool (game/CUSTOMIZE.md, "The radio broadcast").
+
 RETIRED 2026-10-27 (BC.2, D-180): banter.txt is no longer read, made, checked or reset; a player's file stays on disk untouched. The markup of this section lives on in remarks.txt, news.txt and injuries.txt (game/banter_markup.py, game/line_player.py).
 
 The owner, during P5 S5.2: "in the cloned game, I want to be able to customise the banter, either by adding new sounds, or by adding my own text", and the same for such features in later games (playbook 7.9, CLAUDE.md 0.12). The original's banter is GAME_SPEC 5.13 (142 lines in a table generated from the code); what follows is the game's file, a DRAFT that S7.7 builds and fixes in its tests.

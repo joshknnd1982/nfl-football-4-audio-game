@@ -52,6 +52,7 @@ class BreakSteps:
                 s.defense = other(s.wisoff)
                 s.half = own_half(s.wisoff)
                 g.halftime()
+                self.rules.broadcast_moment(s, "half_time_break")    # H23 (BC.3): the reporter, the analyst, the station break (Classic: nothing)
                 self.snd.commercial("halftime")                      # owner rule 0.14
                 self.rules.broadcast_moment(s, "half_time")          # H23
                 return self.kick_off
@@ -136,6 +137,7 @@ class BreakSteps:
             g.say4(P.TWO_MINUTE_WARNING)
             self.snd.whistle_context = "twominute"
             self.snd.play_tackle(8)
+            self.rules.broadcast_moment(self.s, "two_minute_break")  # H23 (BC.3): the station break before the commercial slot
             self.snd.commercial("two-minute-warning")                # owner rule 0.14
             self.rules.broadcast_moment(self.s, "two_minute")        # H23
             clock.warning_given()                                    # H1 (Classic: nothing; the N. F. L. clock: once)
@@ -253,6 +255,7 @@ class BreakSteps:
             g.superbowl(s.final_scores)                             # Q27: once, in place of the final score (S7.3c)
         else:
             self.final_score()
+        self.rules.broadcast_moment(s, "final_score")               # H23 (BC.3): the analyst and the sign-off after the final score
         self.snd.commercial("final")                                # owner rule 0.14: after the final score, before the statistics
         s.quarter += 1
         s.finished = True                                           # L194 = 1

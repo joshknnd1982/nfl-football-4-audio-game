@@ -54,8 +54,10 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 #                     list (original). Choose the voices with F12 rather than typing them here.
 # volume_announcer, volume_own_quarterback, volume_own_punter, volume_opponent_quarterback, volume_opponent_punter
 #                     0 to 100 for each speaker (original 95); F11 changes them
-# voice_color, volume_color   the color analyst of the radio broadcast (the N. F. L. rules): his voice and volume, F12 and F11
-#                     ask for him when the Broadcast item of F9, Rules is on
+# voice_color, volume_color   the color analyst of the radio broadcast: his voice and volume, F12 and F11 ask for him when the
+#                     comments and the Broadcast item of F9, Rules are on
+# voice_sideline, volume_sideline   the sideline reporter of the radio broadcast: the same
+# voice_referee, volume_referee     the referee of the N. F. L. rules: F12 and F11 ask for him when the Broadcast item is on
 # speech_rate         -10 to 10, or original for the voice's own rate (original); the Ctrl key changes it
 # speech_pitch        -10 to 10 (original 0). Not every voice supports it.
 # list_letters        type = typing letters searches a list for a name (default), first = a letter jumps to the
@@ -77,12 +79,14 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # nx_defense_playbook the same for your defense
 # nx_playbook_chosen  yes when you chose a playbook yourself; a file without it that says classic is read as team, once
 # nx_stadium          on or off: the stadium sounds of the N. F. L. rules, the crowd, the hits, the first down chain (default on)
-# nx_broadcast        on or off: the color analyst of the radio broadcast of the N. F. L. rules, and the announcer's
+# nx_broadcast        on or off: the color analyst and the sideline reporter of the radio broadcast, and the announcer's
 #                     questions to him (default on; F8 switches all comments off, this switches only the analyst)
 # nx_menu_hints       0 to 99: in how many program runs the play menus said where Right and M are; at 3 the hints stop (set it to 3 to
 #                     stop them, to 0 to hear them again)
-# nx_commentator      the name of the color analyst of the radio broadcast (default Gus Delgado, a made-up name): the Rules item of
-#                     the F9 menu lets you type a name of your own; it is used from the next game
+# nx_announcer, nx_analyst, nx_sideline, nx_network   the names of the radio crew and the network (default Walt Kessler, Gus
+#                     Delgado, Nora Banks and the Gridiron Radio Network, made-up names): F9, Rules, Broadcast crew lets you
+#                     type names of your own; they are used from the next game
+# nx_announcer_own, nx_analyst_own, nx_sideline_own, nx_network_own   the last name you typed for each, so you can go back to it
 # nx_qb_starters      the quarterbacks you chose to start for a team (F9, Rules, Quarterbacks), like T05=Tyler Huntley; T12=Kenny Pickett.
 #                     Empty (default): every team's first quarterback of rosters.txt starts. Used with the N. F. L. rules' real names
 # nx_depth            the depth charts you set for a team (F9, Rules, Depth charts), like T05 RB=Ray Davis; T05 WR=Khalil Shakir,DJ Moore:
@@ -148,7 +152,14 @@ def render(settings: Settings, voice_name: Callable[[str], str] = lambda role: "
         f"nx_playbook_chosen = {'yes' if game.nx_playbook_chosen else 'no'}",
         f"nx_stadium = {'on' if game.nx_stadium else 'off'}",
         f"nx_broadcast = {'on' if game.nx_broadcast else 'off'}",
-        f"nx_commentator = {game.nx_commentator}",
+        f"nx_announcer = {game.nx_announcer}",
+        f"nx_announcer_own = {game.nx_announcer_own}",
+        f"nx_analyst = {game.nx_analyst}",
+        f"nx_analyst_own = {game.nx_analyst_own}",
+        f"nx_sideline = {game.nx_sideline}",
+        f"nx_sideline_own = {game.nx_sideline_own}",
+        f"nx_network = {game.nx_network}",
+        f"nx_network_own = {game.nx_network_own}",
         f"nx_qb_starters = {game.nx_qb_starters}",
         f"nx_depth = {game.nx_depth}",
         f"nx_key_players = {game.nx_key_players}",
@@ -302,11 +313,24 @@ def _apply(name: str, value: str, sp: SpeechSettings, au: AudioSettings, game: G
         game.nx_broadcast = word
     elif name == "nx_menu_hints":
         game.nx_menu_hints = _number(value, 0, 99)
-    elif name == "nx_commentator":
-        from ..extras.commentators import clean, name_of_text
-        if not clean(value):
+    elif name == "nx_commentator":                       # BC.3: a file of 0.16.7 or older: the analyst's name and, when typed, his own
+        from ..extras import crew
+        if not crew.commentators.clean(value):
             raise ValueError("not a name (at least two letters or digits)")
-        game.nx_commentator = name_of_text(value)       # BC.2: Ghip and the retired podcasters' names read as the default
+        game.nx_analyst, own = crew.legacy_analyst(value)      # BC.2: Ghip and the retired podcasters' names read as the default
+        if own:
+            game.nx_analyst_own = own
+    elif name.startswith("nx_") and name.endswith("_own") and name[3:-4] in ("announcer", "analyst", "sideline", "network"):
+        from ..extras import crew
+        role = name[3:-4]
+        if value.strip() and not crew.commentators.clean(value):
+            raise ValueError("not a name (at least two letters or digits)")
+        setattr(game, name, crew.own_of_text(role, value))
+    elif name in ("nx_announcer", "nx_analyst", "nx_sideline", "nx_network"):
+        from ..extras import crew
+        if not crew.commentators.clean(value):
+            raise ValueError("not a name (at least two letters or digits)")
+        setattr(game, name, crew.name_of_text(name[3:], value))
     elif name == "nx_qb_starters":
         from ..extras.quarterbacks import clean as clean_starters
         if value.strip() and not clean_starters(value):

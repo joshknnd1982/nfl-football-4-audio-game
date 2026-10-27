@@ -182,7 +182,7 @@ def test_reset_one_list_asks_which_and_puts_the_original_back_keeping_the_player
     rig.game.apply_customization()
     assert rig.game.league.division_names[0] == "The North."
     spoken = customize(rig, [DOWN, DOWN, DOWN, ENTER, DOWN, ENTER, F1])
-    assert spoken[4] == "Reset one list. 3 items. Press F1 for help. Team names"
+    assert spoken[4] == "Reset one list. 4 items. Press F1 for help. Team names"      # BC.3: and the remarks, the broadcast's lines
     assert spoken[5:7] == ["Division names", "divisions.txt is back to the original. Your file was kept as "
                                              "divisions.txt.before-reset."]
     assert spoken[7] == words.CUSTOMIZE_RESET_ONE_HELP

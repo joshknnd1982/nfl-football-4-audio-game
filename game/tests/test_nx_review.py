@@ -124,21 +124,22 @@ def test_remarks_held_after_a_classic_round_trip_keep_the_loaded_lines(tmp_path)
     custom = Customization(folder, extras=True)
     custom.take_notices()
     custom.use_extras(False)
+    assert custom.snapshot.remarks.lines("TO")[0].pieces == (Speak((Text("mine"),)),)      # BC.3: Classic keeps remarks.txt in use
     with holding(os.path.join(folder, "remarks.txt")):
-        custom.use_extras(True)
-    notices = custom.take_notices()
+        custom.use_extras(True)                                         # and the switch back does not read it again
+        notices = custom.take_notices()
+        held = custom.reload()
     assert custom.snapshot.remarks.lines("TO")[0].pieces == (Speak((Text("mine"),)),)
-    assert notices == [" The file remarks.txt is in use by another program. The remarks you already had stay in use. "]
+    assert notices == [] and " The file remarks.txt is in use by another program. The remarks you already had stay in use. " in held
 
 
 def test_remarks_held_the_first_time_say_the_originals_are_used(tmp_path):
     import os
     from filedamage import holding
     folder = str(tmp_path / "customize")
-    custom = Customization(folder)
     Customization(folder, extras=True)                                 # the file exists
     with holding(os.path.join(folder, "remarks.txt")):
-        custom.use_extras(True)
+        custom = Customization(folder)                                  # BC.3: Classic reads remarks.txt too
     assert custom.take_notices() == [" The file remarks.txt is in use by another program. The original remarks are used "
                                      "this time. "]
 
