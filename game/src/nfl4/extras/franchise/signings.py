@@ -66,8 +66,9 @@ def add_real_free_agents(league, real) -> int:
     base, span = T.FR_FA_SEASON_RATING
     age_base, age_span = T.FR_FA_SEASON_AGE
     added = 0
+    from .. import roster_model as RM
     for _ident, agent in real.free_agents:
-        position = REAL_GROUP.get(agent.pos)
+        position = RM.GROUP.get(agent.pos.upper()) or REAL_GROUP.get(agent.pos)     # D-185: the 22 positions, or an older family word
         name = real.spoken(agent.name) if hasattr(real, "spoken") else agent.name
         if position is None or name.casefold() in known:
             continue
@@ -75,8 +76,8 @@ def add_real_free_agents(league, real) -> int:
         rating = max(D.RATING_MIN, min(D.RATING_MAX, base + h % span))
         age = agent.age if agent.age is not None else age_base + (h >> 8) % age_span
         player = _new_player(league, name, position, rating, max(D.AGE_MIN, min(D.AGE_MAX, age)))
-        from .. import roster_model as RM
-        player.position = RM.WORD_POSITIONS.get(agent.pos.upper(), (RM.WORD_POSITIONS[position][0],))[0]   # the file's position (a TE stays a TE)
+        # the file's position: one of the 22 as it is (D-185: a guard stays a guard, an edge an edge), an older word its first position (a TE stays a TE)
+        player.position = agent.pos.upper() if agent.pos.upper() in RM.GROUP else             RM.WORD_POSITIONS.get(agent.pos.upper(), (RM.WORD_POSITIONS[position][0],))[0]
         player.pos = RM.GROUP[player.position]
         league.players[player.id] = player
         league.next_id += 1

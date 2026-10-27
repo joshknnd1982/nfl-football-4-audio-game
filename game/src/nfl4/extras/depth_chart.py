@@ -278,6 +278,22 @@ def choose_starter(depth: dict, real, team: int, position: str, name: str, slot:
     return out
 
 
+def move_in_order(depth: dict, real, team: int, position: str, name: str, index: int) -> dict:
+    """The tester's report of 2026-10-27 (D-186) in a quick game or a season: the setting after the player moved `name` to place `index` (0 the first) of
+    the depth chart of `position` (or a return role) of `team`; the men between move one place. The whole order is kept, so it holds until he changes
+    it. ValueError when the man is not on that chart."""
+    from . import roster_model as RM
+    moved = migrate_depth(depth, real)
+    chart, roles, _squad = with_depth(real, moved).chart(team)
+    order = list((roles if position in RM.ROLES else chart).get(position) or [])
+    if name not in order:
+        raise ValueError("%s is not on the %s chart" % (name, position))
+    order.insert(max(0, min(index, len(order) - 1)), order.pop(order.index(name)))
+    out = {t: dict(g) for t, g in moved.items()}
+    out.setdefault(team, {})[position] = order
+    return out
+
+
 class ElevationLimit(ValueError):
     """SR.6: the team already brings up ELEVATIONS_MAX practice squad men for the game."""
 

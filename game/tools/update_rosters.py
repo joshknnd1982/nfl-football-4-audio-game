@@ -802,9 +802,23 @@ def add_ages(teams, nv_rows, sl_teams, today: str) -> int:
 FA_LINE = re.compile(r"^\s*F(\d{1,4})\s*=\s*(\S+)\s+(\d{1,2}|-)\s+(.+?)\s*$")
 
 
-# D-169 (the owner 2026-10-26: "it doesn't have all free agents example is kicker"): the whole pool of real free agents. A man is a free agent when
-# nflverse's players table says he was on an NFL roster in this season or the one before (last_season), has not retired (RET, RSR), is on no team of
-# the new rosters.txt nor of Sleeper, and Sleeper has him active without a team (the second source). nflverse's positions become the file's words.
+# D-169 (the owner 2026-10-26: "it doesn't have all free agents example is kicker"): the whole pool of real free agents, from nflverse's players table.
+# D-185 (a tester 2026-10-27: "Make sure all free agents are completely accurate. Do a full audit and correct any inaccuracies."; the owner: "claude
+# should search the internet to do the audit if needed to ensure player and field position accuracy"). The audit of 2026-10-27
+# (work\tester_1027\FREE_AGENTS_AUDIT_1027.md) found the matching by names wrong: a loose key (first initial and last name) took another man's Sleeper
+# record (Daxton Hill of the Bengals was "free" through a teamless D. Hill; ages of 35 and 38 for men of 28 and 22), the old list's men were kept
+# without a check (Ogbo Okoronkwo of the 49ers, a man retired since), and nflverse's weekly roster, the third source, was not read (20 men on a team's
+# active roster, practice squad or reserve list in its newest week). And the file said only OL, DL, LB and S, so every free lineman became a left
+# tackle in a franchise. So now:
+#   * a man is matched across the sources by his league ID first (nflverse's gsis_id, which Sleeper and nflverse's roster carry), by his exact name
+#     only when no ID links him, never by the loose key;
+#   * a free agent is a man of nflverse's players table, not retired (FA_GONE), of this season or the one before (or the one before that while he
+#     is in the news, D-172), on NO team in any of the three sources (the teams' own pages, nflverse's newest weekly roster, Sleeper), and active
+#     and teamless in Sleeper (the second source must agree); a man of the old list or of the previous rosters is kept only by the same rule;
+#   * his position is the league's own (nflverse's GSIS word), made a Madden position (D-152) by his newest depth chart row of his family
+#     (nflverse's charts of 2026, 2025 and 2024: the side of a tackle, a guard or an edge, the role of a backer, free or strong safety); a word
+#     no row settles takes one of its positions by a hash of the name (no draw), and the report lists those men;
+#   * the age is the linked record's birth date.
 FA_POSITION = {"QB": "QB", "RB": "RB", "HB": "RB", "FB": "FB", "WR": "WR", "TE": "TE",
                "OT": "OL", "T": "OL", "G": "OL", "OG": "OL", "C": "OL", "OL": "OL",
                "DE": "DL", "DT": "DL", "NT": "DL", "DL": "DL", "EDGE": "DL",
@@ -817,31 +831,59 @@ FA_SEASONS = 2                                  # this season and the one before
 # out of the league (2026-10-25: 64 such men kept, 449 left out). Neither source marks every retirement, so known retirees are settled by hand.
 FA_OLDER_SEASONS = 3
 FA_NEWS_DAYS = 365
+FA_ON_TEAM = ("ACT", "RES", "INA", "DEV", "PUP", "EXE", "SUS", "NWT", "RSN")   # D-185: nflverse's weekly statuses of a man on a team's lists
+# D-185: the reserve lists (injured reserve and the others), which a team's roster page does not always show (the Bears' page of 2026-10-27 lacks Dallis
+# Flowers, on their injured reserve since 2026-08-07): nflverse's week decides. For the active roster and the practice squad (ACT, INA, DEV) the team's
+# page of today is newer than the week's list (the Colts released Thomas Morstead from their squad after week 7): a man the page was read for and
+# does not list is free again.
+FA_RESERVE = ("RES", "PUP", "SUS", "EXE", "NWT", "RSN")
 FA_SETTLEMENTS = Path(__file__).resolve().parent / "free_agent_settlements.txt"
+# D-185: the file's positions are the 22 of Madden NFL (D-152) in this order; the older family words still read in the game (real_names)
+FA_ORDER = ("QB", "HB", "FB", "WR", "TE", "LT", "LG", "C", "RG", "RT", "LEDG", "REDG", "DT", "SAM", "MIKE", "WILL", "CB", "FS", "SS", "K", "P", "LS")
+FA_WORD_CODE = {"RB": "HB", "OL": "OL?", "DL": "DT", "LB": "LB?", "S": "S?"}      # an old line's family word as a code to settle
+_CB_WORDS, _SAFETY_WORDS = ("CB",), ("S", "SAF", "FS", "SS")
 
 
-def read_fa_settlements(text: str) -> set:
-    """name keys of free_agent_settlements.txt: "X001 = name | why | source"; a man there is never a free agent."""
-    out = set()
+def read_fa_rules(text: str) -> tuple:
+    """free_agent_settlements.txt: "X001 = name | why | source". The why "free: ..." makes a man a free agent although a source still has him on a
+    list (a release the sources have not caught up with), "position XX: ..." gives his field position (D-185); any other why means he is never a free
+    agent (a retiree, a man on a list no source shows). Returns (never: set of name keys, free: set, positions: {name key: code})."""
+    never, free, positions = set(), set(), {}
     for line in text.replace("\r\n", "\n").split("\n"):
         if line.strip().startswith("#") or "=" not in line:
             continue
-        name = line.split("=", 1)[1].split("|")[0].strip()
-        if name:
-            out.add(name_key(name))
-    return out
+        parts = [p.strip() for p in line.split("=", 1)[1].split("|")]
+        if not parts[0]:
+            continue
+        why = (parts[1] if len(parts) > 1 else "").casefold()
+        found = re.match(r"position\s+([a-z]{1,4})\b", why)
+        if found and found.group(1).upper() in FA_ORDER:
+            positions[name_key(parts[0])] = found.group(1).upper()
+        elif why.startswith("free"):
+            free.add(name_key(parts[0]))
+        else:
+            never.add(name_key(parts[0]))
+    return never, free, positions
+
+
+def read_fa_settlements(text: str) -> set:
+    """name keys of the men free_agent_settlements.txt says are never free agents."""
+    return read_fa_rules(text)[0]
+
+
 FA_HEADER = """# NFL Football 4 freeagents, format 1.
 # These are the real NFL free agents a new franchise starts with: every player who was on an NFL roster this season or last season, has not retired,
-# and is on no team when the list was made.
+# and is on no team's roster, practice squad or reserve list when the list was made.
 # Each line is an ID, an equals sign, the position, the age and the name. The age is a number, or a minus sign when it is not known.
-# The positions are QB, RB, FB, WR, TE, OL, DL, LB, CB, S, K, P and LS. In the first season of a new franchise these players are
-# the free agents of F9, Franchise, free agents; the game makes up players only for a position this list has too few of.
-# The game gives them no real ratings: a free agent's rating is made by the game.
+# The positions are the 22 of a real roster: QB, HB, FB, WR, TE, LT, LG, C, RG, RT, LEDG and REDG (the left and right edge), DT, SAM, MIKE and WILL
+# (the strong-side, middle and weak-side linebacker), CB, FS, SS, K, P and LS. The words RB, OL, DL, LB and S of older files are read too.
+# In the first season of a new franchise these players are the free agents of F9, Franchise, free agents, and the ones a practice squad may sign;
+# the game makes up players only for a position this list has too few of. The game gives them no real ratings: a free agent's rating is made by the game.
 # A new season: replace the lines, change the VERSION line, save the file, then choose Reload in the Customize item of the F9 menu.
 # Write an ID = off to leave a player out. A name has 1 to 30 characters, with no comma and no semicolon.
 # Delete the whole file to get the original list back. The names are facts, used descriptively.
 # They are not endorsed by the teams or the league.
-# Sources: nflverse's players table (CC BY 4.0, github.com/nflverse), compared with Sleeper's player feed.""".split("\n")
+# Sources: nflverse's players table, weekly rosters and depth charts (CC BY 4.0, github.com/nflverse), Sleeper's player feed, the teams' own roster pages.""".split("\n")
 
 
 def players_table(out: Path, offline: bool):
@@ -862,15 +904,184 @@ def players_table(out: Path, offline: bool):
     return data
 
 
-def free_agent_pool(nv_players: bytes | None, on_team, sl_free, today: str) -> list:
-    """[(position word, age, name)] of D-169's rule, sorted by position then name; [] without the players table."""
+def week_teams(data: bytes | None) -> dict:
+    """D-185: {gsis_id: (team, status)} of nflverse's weekly roster file, its newest week, for the men a team keeps on a list (FA_ON_TEAM)."""
+    if not data:
+        return {}
+    rows = list(csv.DictReader(io.StringIO(data.decode("utf-8-sig", "replace"))))
+    weeks = [int(r.get("week") or 0) for r in rows if (r.get("week") or "").isdigit()]
+    newest = max(weeks) if weeks else 0
+    return {r["gsis_id"]: (r.get("team") or "", r.get("status") or "") for r in rows
+            if r.get("gsis_id") and (r.get("status") or "") in FA_ON_TEAM and int(r.get("week") or 0) == newest}
+
+
+def chart_codes(sources) -> dict:
+    """D-185: {gsis_id: Madden code (or an open code)} of each man's newest depth chart row in nflverse's charts: the newer layout (dt, pos_abb, pos_grp;
+    2026 and 2025) and the older one (week, depth_position; 2024). `sources` are the files' bytes, newest season first; a season's row wins over an
+    older season's. Return rows (KR, PR) and the holder say nothing of a position."""
+    out: dict = {}
+    for data in sources:
+        if not data:
+            continue
+        text = gzip.decompress(data).decode("utf-8", "replace") if data[:2] == b"\x1f\x8b" else data.decode("utf-8-sig", "replace")
+        best: dict = {}
+        for r in csv.DictReader(io.StringIO(text)):
+            gid = r.get("gsis_id") or ""
+            if not gid or gid in out:
+                continue
+            if "pos_abb" in r:
+                abb, when, group = (r.get("pos_abb") or "").upper(), r.get("dt") or "", r.get("pos_grp") or ""
+            else:
+                abb, when, group = (r.get("depth_position") or "").upper(), "%03d" % int(r.get("week") or 0), ""
+            if abb in ("KR", "PR", "H", ""):
+                continue
+            code = map_chart(abb, group)
+            if code is not None and (gid not in best or when > best[gid][0]):
+                best[gid] = (when, code)
+        for gid, (_when, code) in best.items():
+            out[gid] = code
+    return out
+
+
+def _settle_open(code: str, name: str) -> str:
+    """An open code (T?, EDGE?, S?, ...) with nothing to settle it: one of its positions by a hash of the name (the same on every run, no draw)."""
+    import hashlib
+    options = OPEN.get(code)
+    if not options:
+        return code
+    return options[int.from_bytes(hashlib.sha256(name_key(name).encode("utf-8")).digest()[:4], "big") % len(options)]
+
+
+def fa_position(nv_word: str, sl_word: str, chart: str | None, name: str):
+    """D-185: (Madden position, how) of a free agent: the league's word (nflverse's GSIS position; Sleeper's when nflverse says only DB or nothing),
+    its side or role from his newest chart row of the same family (a corner stays a corner and a safety a safety, a back stays a halfback or a
+    fullback), else a hash of the name among the word's positions. None when no source names a position."""
+    word = (nv_word or "").upper()
+    if not word or word == "DB" or map_word(word, False) is None:
+        word = (sl_word or "").upper() or word
+    code = map_word(word, False)
+    if code is None and chart is None:
+        return None
+    if code is None:
+        code = chart
+    fam = family(code)
+    if chart is not None and family(chart) == fam:
+        if fam == "DB" and word in _CB_WORDS and chart != "CB":
+            chart = "CB"                                  # a corner on a safety's row stays a corner (NX-D1's rule, D-157)
+        if fam == "DB" and word in _SAFETY_WORDS and chart == "CB":
+            chart = None                                  # a safety on a nickel or a corner's row stays a safety
+        if fam == "BACK" and code == "FB" and chart != "FB":
+            chart = None                                  # a fullback charted as a halfback is still a fullback (a back charted FB is one)
+    if chart is not None and family(chart) == fam:
+        how = "chart"
+        if chart not in OPEN:
+            code = chart                                  # the row names the side or the role
+        elif code in OPEN:
+            both = [p for p in OPEN[code] if p in OPEN[chart]]
+            code = both[0] if len(both) == 1 else (chart if set(OPEN[chart]) <= set(OPEN[code]) else code)
+        # an open row (S, OLB, DE) never makes a specific word (FS, an edge) less exact
+    else:
+        how = "word"
+    if code in OPEN:
+        return _settle_open(code, name), how + ", side or role by hash"
+    return code, how
+
+
+def _sleeper_links(sl_all) -> tuple:
+    """({gsis_id: record}, {name key: [records]}) of Sleeper's feed (every man, with or without a team, active or not)."""
+    by_id, by_name = {}, {"#born": {}}
+    for p in sl_all:
+        gid = (p.get("gsis_id") or "").strip()
+        if gid:
+            by_id[gid] = p
+        by_name.setdefault(name_key(p.get("full_name") or ""), []).append(p)
+        if p.get("birth_date"):
+            by_name["#born"].setdefault(p["birth_date"], []).append(p)        # "#born" is no name key (a key has no "#")
+    return by_id, by_name
+
+
+def same_man(matcher, name: str):
+    """D-185: the name of `matcher` that is this man: the exact key, or the loose key only when one first name starts with the other (Matt and Matthew
+    Judon, Dax and Daxton Hill), never another man of the same initial (a teamless D. Hill is not Daxton Hill)."""
+    hit = matcher.find(name)
+    if hit is None or name_key(hit) == name_key(name):
+        return hit
+    a, b = name_key(name).split()[0], name_key(hit).split()[0]
+    return hit if a.startswith(b) or b.startswith(a) else None
+
+
+def sleeper_ids(data: bytes | None) -> dict:
+    """D-185: {gsis_id: Sleeper player ID} of nflverse's roster file (every row of the season, the cut men too)."""
+    if not data:
+        return {}
+    return {r["gsis_id"]: r["sleeper_id"] for r in csv.DictReader(io.StringIO(data.decode("utf-8-sig", "replace")))
+            if r.get("gsis_id") and r.get("sleeper_id")}
+
+
+def _names_of(r: dict) -> list:
+    """The names a man of nflverse's players table goes by: his display name, and his first names (common, football) with his last name."""
+    last = (r.get("last_name") or "").strip()
+    names = [(r.get("display_name") or "").strip()]
+    for first in (r.get("football_name"), r.get("common_first_name"), r.get("first_name")):
+        if first and last:
+            names.append("%s %s" % (first.strip(), last))
+    return [n for n in dict.fromkeys(names) if n]
+
+
+def _sleeper_of(r: dict, by_id: dict, by_name: dict, sleeper_ids: dict, by_player: dict):
+    """The Sleeper record of a man of nflverse's table: by his gsis_id, by the Sleeper ID nflverse's roster gives him, else by one exact name with
+    the same birth date (or the only man of that name); None when nothing links him (never the loose key, D-185)."""
+    gid = r.get("gsis_id") or ""
+    if gid in by_id:
+        return by_id[gid]
+    if sleeper_ids.get(gid) in by_player:
+        return by_player[sleeper_ids[gid]]
+    for name in _names_of(r):
+        rows = [p for p in by_name.get(name_key(name), []) if not (p.get("gsis_id") or "").strip() or p["gsis_id"].strip() == gid]
+        born = [p for p in rows if p.get("birth_date") and p.get("birth_date") == r.get("birth_date")]
+        if len(born) == 1:
+            return born[0]
+        near = [p for p in rows if _years_apart(p.get("birth_date"), r.get("birth_date")) <= 1]
+        if len(near) == 1:
+            return near[0]                                # the sources' birth dates differ a little (Gabe Davis 1999-03-01 and 1999-04-01;
+        if len(rows) == 1 and (word_family(rows[0].get("position") or "") in (None, word_family(r.get("position") or ""))   # 1999-01-01 is
+                               or (r.get("position") or "").upper() == "DB") and _years_apart(rows[0].get("birth_date"), r.get("birth_date")) < 9:
+            return rows[0]                                # nflverse's "not known"); the only man of the name, of the same family
+    born_on = r.get("birth_date") or ""
+    last = name_key(r.get("last_name") or "")
+    if born_on and not born_on.endswith("-01-01") and last:
+        same = [p for p in by_name.get("#born", {}).get(born_on, []) if name_key(p.get("last_name") or "") == last]
+        if len(same) == 1:
+            return same[0]                                # a nickname the tables do not share (Carlos and Boogie Basham, born 1997-12-16)
+    return None
+
+
+def _years_apart(a, b) -> float:
+    """Years between two birth dates; 0 when one is missing or is nflverse's January 1st that means not known."""
+    try:
+        if not a or not b or b.endswith("-01-01") or a.endswith("-01-01"):
+            return 0.0
+        return abs((_dt.date.fromisoformat(a) - _dt.date.fromisoformat(b)).days) / 365.25
+    except ValueError:
+        return 0.0
+
+
+def free_agent_pool(nv_players: bytes | None, on_team, sl_free, today: str, sl_all=None, nv_week=None, charts=None, notes=None,
+                    sleeper_ids=None, read_pages=None) -> list:
+    """[(Madden position, age, name)] of D-185's rule, sorted by position then name; [] without the players table. `on_team` is a Matcher of the names on
+    the teams' pages and in Sleeper's teams; `sl_all` every Sleeper record (default `sl_free`); `nv_week` week_teams(); `charts` chart_codes();
+    `notes` a list for the men whose position a hash settled."""
     if not nv_players:
         return []
     from nfl4.extras.real_names import name_problem
-    free_match = Matcher([p["full_name"] for p in sl_free])
-    free_by = {p["full_name"]: p for p in sl_free}
-    settled = read_fa_settlements(FA_SETTLEMENTS.read_bytes().decode("utf-8")) if FA_SETTLEMENTS.exists() else set()
+    sl_all = list(sl_all) if sl_all is not None else list(sl_free)
+    by_id, by_name = _sleeper_links(sl_all)
+    by_player = {str(p.get("player_id")): p for p in sl_all if p.get("player_id")}
+    nv_week = nv_week or {}
+    charts = charts or {}
+    settled, free_anyway, placed = (read_fa_rules(FA_SETTLEMENTS.read_bytes().decode("utf-8")) if FA_SETTLEMENTS.exists() else (set(), set(), {}))
     news_since = (_dt.datetime.fromisoformat(today) - _dt.timedelta(days=FA_NEWS_DAYS)).timestamp() * 1000
+    read_pages = set(read_pages or ())
     out, seen = [], set()
     for r in csv.DictReader(io.StringIO(nv_players.decode("utf-8-sig"))):
         try:
@@ -880,79 +1091,138 @@ def free_agent_pool(nv_players: bytes | None, on_team, sl_free, today: str) -> l
         name = (r.get("display_name") or "").strip()
         if last < SEASON - FA_OLDER_SEASONS + 1 or (r.get("status") or "") in FA_GONE or not name or name_problem(name):
             continue
-        if on_team.find(name) or name_key(name) in seen or name_key(name) in settled:
+        week = nv_week.get(r.get("gsis_id") or "")
+        if week is not None and name_key(name) not in free_anyway and (week[1] in FA_RESERVE or NV_TEAM.get(week[0]) not in read_pages):
+            continue                                  # D-185: on a team's list in nflverse's newest week
+        if any(same_man(on_team, n) for n in _names_of(r)) or name_key(name) in seen or name_key(name) in settled:
             continue
-        hit = free_match.find(name)
-        if not hit:
-            continue                                  # Sleeper has him on a team, or not as an active man
-        sl = free_by[hit]
+        sl = _sleeper_of(r, by_id, by_name, sleeper_ids or {}, by_player)
+        if sl is None or sl.get("team") or not sl.get("active"):
+            continue                                  # Sleeper has him on a team, retired, or does not know him: the second source must agree
+        if same_man(on_team, sl.get("full_name") or ""):
+            continue                                  # (the name the teams' pages use: Dax Hill for Daxton Hill)
         if last < SEASON - FA_SEASONS + 1 and float(sl.get("news_updated") or 0) < news_since:
             continue                                  # out a whole season and no news for a year (D-172)
-        word = FA_POSITION.get((r.get("position") or "").upper())
-        if (r.get("position") or "").upper() == "DB":
-            word = FA_POSITION.get((sl.get("position") or "").upper(), "CB")
-        if word is None:
+        found = fa_position(r.get("position") or "", sl.get("position") or "", charts.get(r.get("gsis_id") or ""), name)
+        if found is None:
             continue
-        age = age_on(sl, today)
-        if age == "-":
+        code, how = found
+        if name_key(name) in placed:
+            code, how = placed[name_key(name)], "settled"     # the maintainer's web search (free_agent_settlements.txt)
+        if notes is not None and "hash" in how:
+            notes.append("%s: %s, %s (no depth chart row settles it)" % (name, code, r.get("position")))
+        age = age_on(sl, today)                           # Sleeper's birth date first (D-169), nflverse's when it has none
+        if age == "-" and not (r.get("birth_date") or "").endswith("-01-01"):
             age = age_on({"birth_date": r.get("birth_date")}, today)
+        if week is not None and notes is not None:
+            notes.append("%s: on the %s list of %s in nflverse's week, not on that team's page today: free" % (name, week[1], week[0]))
         seen.add(name_key(name))
-        out.append((word, age, name))
-    out.sort(key=lambda row: (list(FA_POSITION.values()).index(row[0]), name_key(row[2])))
+        out.append((code, age, name))
+    out.sort(key=lambda row: (FA_ORDER.index(row[0]), name_key(row[2])))
     return out
 
 
-def refresh_free_agents(old_text, previous, teams, sl_free, sl_teams, today, nv_players=None):
-    """free_agents.txt again: the old list without the men now on a team, plus the men of the previous rosters who are on no team now and
-    whom Sleeper has without a team, plus (D-169) every man of the real free-agent pool (`free_agent_pool`); ages from Sleeper. The IDs stay (a
-    player's "off" lines name them); new men get new IDs."""
-    on_team = set()
+def refresh_free_agents(old_text, previous, teams, sl_free, sl_teams, today, nv_players=None, nv_week=None, charts=None, sl_all=None, reasons=None,
+                        notes=None, sl_ids=None, read_pages=None):
+    """free_agents.txt again. With nflverse's players table (D-185): exactly the men of `free_agent_pool`; a man of the old list keeps his ID and is
+    written with the pool's position, age and spelling; a man of the old list who is not in the pool any more is left out (`reasons` gets why);
+    a man of the previous rosters or of the old list whom nflverse's table does not know at all stays only when Sleeper has exactly one active,
+    teamless man of his name with news within FA_NEWS_DAYS. New men get new IDs after the old ones. Without the table (a failed read) the old list
+    stays, less the men now on a team."""
     on_names = []
     for team in teams.values():
         for m in team.men:
-            on_team.add(name_key(m.name))
             on_names.append(m.name)
     for rows in sl_teams.values():
         for p in rows:
-            on_team.add(name_key(p["full_name"]))
             on_names.append(p["full_name"])
-    free_match = Matcher([p["full_name"] for p in sl_free])
-    free_by = {p["full_name"]: p for p in sl_free}
+    on_team = Matcher(on_names)
+    on_exact = {name_key(n) for n in on_names}
+    reasons = {} if reasons is None else reasons
     header, kept, removed, top = list(FA_HEADER), [], [], 0
+    old = []
     for line in old_text.replace("\r\n", "\n").split("\n"):
         m = FA_LINE.match(line)
-        if not m:
+        if m:
+            top = max(top, int(m.group(1)))
+            old.append((int(m.group(1)), m.group(2), m.group(3), m.group(4)))
+    if not nv_players:
+        free_match = Matcher([p["full_name"] for p in sl_free])
+        free_by = {p["full_name"]: p for p in sl_free}
+        for ident, pos, age, name in old:
+            if name_key(name) in on_exact:
+                removed.append(name)
+                reasons[name] = "on a team"
+                continue
+            hit = free_match.find(name)
+            if hit and age_on(free_by[hit], today) != "-":
+                age = age_on(free_by[hit], today)
+            kept.append((ident, pos, age, name))
+        body = header + ["", "VERSION = season %d, as of %s" % (SEASON, today)]
+        body += ["F%03d = %s %s %s" % row for row in kept]
+        return "\n".join(body) + "\n", removed, []
+    sl_all = list(sl_all) if sl_all is not None else list(sl_free) + [p for rows in sl_teams.values() for p in rows]
+    pool = free_agent_pool(nv_players, on_team, sl_free, today, sl_all, nv_week, charts, notes, sl_ids, read_pages)
+    pool_by = {name_key(n): (pos, age, n) for pos, age, n in pool}
+    pool_match = Matcher([n for _p, _a, n in pool])
+    known_nv = Matcher([n for r in csv.DictReader(io.StringIO(nv_players.decode("utf-8-sig"))) for n in _names_of(r)])
+    _by_id, by_name = _sleeper_links(sl_all)
+    news_since = (_dt.datetime.fromisoformat(today) - _dt.timedelta(days=FA_NEWS_DAYS)).timestamp() * 1000
+    settled = read_fa_settlements(FA_SETTLEMENTS.read_bytes().decode("utf-8")) if FA_SETTLEMENTS.exists() else set()
+
+    def sleeper_only(name: str):
+        """(position, age) of a man nflverse does not know, when Sleeper has exactly one active, teamless man of the name in the news; else None."""
+        if same_man(known_nv, name) or name_key(name) in on_exact or same_man(on_team, name) or name_key(name) in settled:
+            return None
+        rows = by_name.get(name_key(name), [])
+        if len(rows) != 1 or rows[0].get("team") or not rows[0].get("active") or float(rows[0].get("news_updated") or 0) < news_since:
+            return None
+        found = fa_position("", rows[0].get("position") or "", None, name)
+        return (found[0], age_on(rows[0], today)) if found else None
+
+    used, id_of = set(), {}
+    for ident, pos, age, name in old:
+        hit = same_man(pool_match, name)
+        k = name_key(hit) if hit else None
+        if k in pool_by and k not in used:
+            p, a, spelled = pool_by[k]
+            kept.append((ident, p, a, spelled))
+            used.add(k)
+            id_of[k] = ident
             continue
-        top = max(top, int(m.group(1)))
-        pos, age, name = m.group(2), m.group(3), m.group(4)
-        if name_key(name) in on_team:
+        if k in used:
             removed.append(name)
+            reasons[name] = "the same man as F%03d %s (one man written twice)" % (id_of[k], pool_by[k][2])
             continue
-        hit = free_match.find(name)
-        if hit and age_on(free_by[hit], today) != "-":
-            age = age_on(free_by[hit], today)
-        kept.append((int(m.group(1)), pos, age, name))
-    known = {name_key(n) for _, _, _, n in kept}
+        alone = sleeper_only(name)
+        if alone is not None and name_key(name) not in used:
+            kept.append((ident, alone[0], alone[1], name))
+            used.add(name_key(name))
+            continue
+        removed.append(name)
+        reasons[name] = ("on a team" if name_key(name) in on_exact or same_man(on_team, name) else
+                         "not a free agent in the sources (signed, retired, out of the league, or not linked to a real record)")
     added = []
-    for k, (pt, ps, pg, name) in sorted(previous.items(), key=lambda r: (r[1][0], r[1][3])):
-        if k in on_team or k in known or pg not in ("QB", "RB", "FB", "WR", "TE", "DL", "LB", "CB", "S", "K", "P", "OL", "LS"):
+    for k, (_pt, _ps, pg, name) in sorted(previous.items(), key=lambda r: (r[1][0], r[1][3])):
+        if k in used or pg not in RF.SPOKEN and pg not in FA_POSITION:
             continue
-        hit = free_match.find(name)
-        if not hit:
-            continue                                  # not in Sleeper as a free man: perhaps retired or on a list Sleeper shows otherwise
+        if same_man(pool_match, name) and name_key(same_man(pool_match, name)) in used:
+            continue
+        alone = sleeper_only(name)
+        if alone is None:
+            continue
         top += 1
-        age = age_on(free_by[hit], today)
-        kept.append((top, pg, age, name))
+        kept.append((top, alone[0], alone[1], name))
         added.append(name)
-        known.add(k)
-    for pos, age, name in free_agent_pool(nv_players, Matcher(on_names), sl_free, today):      # D-169
-        if name_key(name) in known:
+        used.add(k)
+    for pos, age, name in pool:
+        if name_key(name) in used:
             continue
         top += 1
         kept.append((top, pos, age, name))
         added.append(name)
-        known.add(name_key(name))
-    body = [l for l in header] + ["", "VERSION = season %d, as of %s" % (SEASON, today)]
+        used.add(name_key(name))
+    body = header + ["", "VERSION = season %d, as of %s" % (SEASON, today)]
     body += ["F%03d = %s %s %s" % (i, pos, age, name) for i, pos, age, name in kept]
     return "\n".join(body) + "\n", removed, added
 
@@ -1097,14 +1367,23 @@ def run(out: Path, offline: bool, official: bool, pause: float, today: str, prev
         warnings.append("nflverse's players table could not be read (%s): the free agents are the previous list's" % exc)
     if nv_players is None:
         warnings.append("no nflverse players table: the free agents are the previous list's (D-169)")
+    # D-185: the third source (nflverse's newest weekly roster), the free agents' last depth chart rows (2026, 2025, 2024) and every Sleeper record
+    older_charts = [nv_asset(fetch, "depth_charts", "depth_charts_%d.csv" % season, "nflverse_depth_charts_%d.csv" % season)
+                    for season in (SEASON - 1, SEASON - 2)] if nv_players is not None else []
+    sl_all = [p for p in json.loads(sl).values() if p.get("sport") in (None, "nfl") and p.get("full_name")] if sl else None
+    fa_reasons, fa_notes = {}, []
     fa_text, fa_removed, fa_added = refresh_free_agents((previous_dir / "free_agents.txt").read_bytes().decode("utf-8"), previous, teams, sl_free, sl_teams,
-                                                        today, nv_players)
+                                                        today, nv_players, nv_week=week_teams(nv_ros), charts=chart_codes([nv_dep] + older_charts),
+                                                        sl_all=sl_all, reasons=fa_reasons, notes=fa_notes, sl_ids=sleeper_ids(nv_ros),
+                                                        read_pages={t for t in built if built[t].source == "official"})
+    if nv_players is not None and not nv_ros:
+        warnings.append("nflverse's weekly roster could not be read: the free agents are checked against the teams' pages and Sleeper only (D-185)")
     fa_counts = {}
     for line in fa_text.split("\n"):
         m = FA_LINE.match(line)
         if m:
             fa_counts[m.group(2)] = fa_counts.get(m.group(2), 0) + 1
-    for word, least in (("K", 3), ("P", 3), ("LS", 2), ("QB", 5)):
+    for word, least in (("K", 3), ("P", 3), ("LS", 2), ("QB", 5), ("CB", 20), ("WR", 20)):
         if nv_players is not None and fa_counts.get(word, 0) < least:
             failures.append("free agents: only %d %s (a broken read of the players table?)" % (fa_counts.get(word, 0), word))
     (out / "rosters.txt").write_bytes(text.encode("utf-8"))
@@ -1117,10 +1396,11 @@ def run(out: Path, offline: bool, official: bool, pause: float, today: str, prev
     rep += ["", "TEAMS"] + counts + ["", "SETTLEMENTS AND GAME-DAY ELEVATIONS (%d)" % len(settle_notes)] + settle_notes
     rep += ["", "THE SOURCES COMPARED"] + report
     rep += ["", "CHANGES SINCE THE PREVIOUS FILE (%d)" % len(change_lines)] + change_lines
-    rep += ["", "FREE AGENTS: %d left out (now on a team): %s" % (len(fa_removed), ", ".join(fa_removed)),
+    rep += ["", "FREE AGENTS: %d left out: %s" % (len(fa_removed), "; ".join("%s (%s)" % (n, fa_reasons.get(n, "on a team")) for n in fa_removed)),
             "FREE AGENTS: %d added (on the previous rosters or in the real pool of D-169, on no team now, without a team in Sleeper): %s" % (
                 len(fa_added), ", ".join(fa_added)),
             "FREE AGENTS BY POSITION: %s" % ", ".join("%s %d" % kv for kv in sorted(fa_counts.items())),
+            "FREE AGENTS WHOSE SIDE OR ROLE A HASH SETTLED, AND MEN FREE BY TODAY'S TEAM PAGES (%d; D-185, check them): %s" % (len(fa_notes), "; ".join(fa_notes)),
             "", "FETCH LOG"] + fetch.log
     (out / "report.txt").write_bytes(("\n".join(rep) + "\n").encode("utf-8"))
     return failures, warnings, text, fa_text

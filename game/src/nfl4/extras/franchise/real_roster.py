@@ -497,6 +497,32 @@ def choose_starter(league, position: str, pid: int, slot: int = 0) -> list:
     return list(league.chart[team - 1][position])
 
 
+def move_in_chart(league, position: str, pid: int, index: int) -> list:
+    """The tester's report of 2026-10-27 (D-186): the player moves `pid` to place `index` (0 the first) of the depth chart of `position` (or a return role)
+    of his own team; the men between move one place to make room ("the person in position 4 moved to position 3"). He must already be on that chart.
+    Every man from the top down to the lower of his old and new places is kept in the player's order (`depth["order"]`), so the staff's order never
+    undoes the move; the places follow at once. Returns the position's new order (IDs). No draw."""
+    from .league import LeagueError
+    team = league.team
+    chart = clean_chart(league, team)
+    if position not in RM.MADDEN and position not in RM.ROLES:
+        raise LeagueError("no depth chart %r" % (position,))
+    order = list(chart.get(position, ()))
+    if pid not in order:
+        raise LeagueError("player %r is not on the %s chart of the player's team" % (pid, position))
+    old = order.index(pid)
+    index = max(0, min(index, len(order) - 1))
+    order.insert(index, order.pop(old))
+    chart[position] = order
+    orders = league.depth.setdefault("order", {})
+    kept = len([i for i in orders.get(position, ()) if i in order])
+    orders[position] = list(order[:max(old + 1, index + 1, kept)])
+    refresh_view(league, team)
+    update_sum(league, team)
+    debuglog.event("franchise", "depth_moved", team=team, position=position, player=pid, old=old + 1, new=index + 1, mode="franchise")   # rule 0.15
+    return list(league.chart[team - 1][position])
+
+
 # ----- the men of the file -----
 
 def _mix(*parts) -> int:

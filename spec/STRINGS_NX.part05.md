@@ -476,3 +476,10 @@
 - NXI-61 (sentence, say2): " <get> starts in place of <give>. ". the who-starts item or F9 chose a player (NX-B1)
 - NXI-62 (sentence, say5): " who starts for <player>: <get>. ". F9 injury report: the row after a player who does not play; Enter chooses who starts (NX-B1)
 - NXI-63 (sentence, say5): " who starts in place of <player>? the staff's choice is first. ". F9 injury report: the title of the list of who may start (NX-B1)
+- NXI-64 (sentence, say5): " nobody else of your team can play his place this week. ". F9 injury report: no other choice (NX-B1)
+- NXE-19 (piece, piece): "the staff". the name of stage 9 (SX.8l), right after the season in review
+- NXV-01 (sentence, say2): " the owner's goal was to <goal>. you met it. ". stage 1, the verdict (SX.8l): the goal met
+- NXV-02 (sentence, say2): " the owner's goal was to <goal>. you missed it. ". stage 1, the verdict: the goal missed
+- NXV-03 (sentence, say2): " your job rating is <a> of 100, up <d>. ". stage 1, the verdict: the job rating rose
+- NXV-04 (sentence, say2): " your job rating is <a> of 100, down <d>. ". stage 1, the verdict: the job rating fell
+- NXV-05 (sentence, say2): " your job rating stays at <a> of 100. ". stage 1, the verdict: the job rating did not move

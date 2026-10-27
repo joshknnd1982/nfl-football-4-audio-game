@@ -209,6 +209,7 @@ OLD_SHIPPED_FREE_AGENTS = {
     "48b1300b1a6c8b3b08134af599c73e3adc53d2a9025d9aa4b272d86225ca9304",     # 0.16.2 to 0.16.4: as of 2026-10-25, 170 men (D-169 adds the whole pool)
     "d44f6dd5f1c63fa74819cd551ceb5a1f8f68574dbbbb970b13875f75567f68fa",     # 0.16.5: 771 men (D-172 adds the men out a season who are still in the news)
     "94aae97409bbf27e44177d4b82714b5a4dc53b316a06d555f681383f9d42ec0a",     # 0.16.6: 836 men as of 2026-10-25 (D-177: the file of 2026-10-26)
+    "d72a360eaf7a1ede935eb46703b8a5834debeb3c160a93557d0eae1cf52077d4",     # 0.16.7 (not released): 834 men as of 2026-10-26 (D-185: the audit's file)
 }
 
 

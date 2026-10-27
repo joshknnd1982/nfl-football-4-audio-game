@@ -142,8 +142,13 @@ def free_agents_menu(g, speech, keys, store, words) -> None:
         store.save()                                              # made and written, then told (B-X53)
         return X.text("NXJ-S10", player=names[0], contract=contract) if release is None else X.text("NXJ-S11", give=names[1], get=names[0], contract=contract)
 
+    def to_squad():
+        from .practice_flow import add_flow                       # D-187: the practice squad's add, reached where a player looks for free agents
+        return add_flow(g, speech, keys, store, words)
+
     items = [Item(lambda: X.text("NXJ-S01"), enter=sign_one),
-             Item(lambda: X.text("NXJ-S02"), enter=hear_all)]
+             Item(lambda: X.text("NXJ-S02"), enter=hear_all),
+             Item(lambda: X.text("NXJ-P28"), enter=to_squad)]
     SpokenMenu(speech, keys, X.text("NXJ-S03", room=words.amount(max(0, cap_room(league)))), items, space_enters=True, digits_jump=True).run()
 
 

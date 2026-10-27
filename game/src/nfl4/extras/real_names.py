@@ -68,7 +68,11 @@ _ROLE_ID = re.compile(r"T(\d{1,2})(KR|PR)(\d)", re.IGNORECASE)
 _RESPELL_ID = re.compile(r"R(\d{1,4})", re.IGNORECASE)
 _FREE_ID = re.compile(r"F(\d{1,4})", re.IGNORECASE)
 _SURNAME_ID = re.compile(r"S(\d{1,5})", re.IGNORECASE)
-_FREE_VALUE = re.compile(r"^(%s)\s+(\d{1,2}|-)\s+(.+)$" % "|".join(p for p in POSITIONS if p != "RET"), re.IGNORECASE)
+# D-185: a free agent's position is one of the 22 of a real roster (HB, LT, LEDG, MIKE, FS, ...) or an older family word (RB, OL, DL, LB, S); the longer
+# words first so that C does not take the start of CB
+FREE_POSITIONS = tuple(sorted({p for p in POSITIONS if p != "RET"} | {"HB", "LT", "LG", "C", "RG", "RT", "LEDG", "REDG", "DT", "SAM", "MIKE", "WILL",
+                                                                     "FS", "SS"}, key=lambda p: (-len(p), p)))
+_FREE_VALUE = re.compile(r"^(%s)\s+(\d{1,2}|-)\s+(.+)$" % "|".join(FREE_POSITIONS), re.IGNORECASE)
 _ARROW = "=>"
 
 

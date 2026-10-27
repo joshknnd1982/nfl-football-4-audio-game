@@ -37,13 +37,14 @@ def test_the_shipped_list_is_the_real_free_agents_of_2026_10_24_and_none_of_them
     real = R.defaults()
     agents = [agent for _ident, agent in real.free_agents]
     assert len(agents) >= 100
-    assert "VERSION = season 2026, as of 2026-10-26" in R.shipped_text(R.FREE_AGENTS)     # SR.2: refreshed; D-177: 2026-10-26
+    assert "VERSION = season 2026, as of 2026-10-27" in R.shipped_text(R.FREE_AGENTS)     # SR.2: refreshed; D-177: 2026-10-26; D-185: 2026-10-27
     on_teams = {p.name.casefold() for team in range(1, 33) for p in real.rosters[team - 1]}
     assert not [a.name for a in agents if a.name.casefold() in on_teams]
-    assert all(R.name_problem(a.name) is None and a.pos in R.POSITIONS and a.pos != "RET" for a in agents)
+    from nfl4.extras import roster_model as RM
+    assert all(R.name_problem(a.name) is None and a.pos in RM.MADDEN for a in agents)          # D-185: the 22 positions of a real roster
     assert any(a.name == "Tyreek Hill" and a.pos == "WR" and a.age == 32 for a in agents)
-    groups = {S.REAL_GROUP[a.pos] for a in agents if a.pos in S.REAL_GROUP}
-    assert {"QB", "RB", "WR", "DL", "LB", "CB", "S", "K"} <= groups
+    groups = {RM.GROUP[a.pos] for a in agents}
+    assert {"QB", "RB", "WR", "OL", "DL", "LB", "CB", "S", "K", "P", "LS"} <= groups
 
 
 def test_in_the_first_season_the_real_free_agents_join_the_pool_once_and_made_up_ones_fill_only_short_groups():
@@ -51,7 +52,8 @@ def test_in_the_first_season_the_real_free_agents_join_the_pool_once_and_made_up
     record = league()
     made = S.ensure_pool(record, SURNAMES, real)
     pool = S.pool(record)
-    real_names = {real.spoken(a.name) for _i, a in real.free_agents if a.pos in S.REAL_GROUP}
+    from nfl4.extras import roster_model as RM
+    real_names = {real.spoken(a.name) for _i, a in real.free_agents if a.pos in S.REAL_GROUP or a.pos in RM.GROUP}     # D-185: the 22 positions
     assert real_names <= {p.name for p in pool}
     for position in D.ROSTER_ORDER:                                                   # SR.5: the 11 families (no RET; the line and the snapper)
         group = S.pool_of(record, position)
@@ -64,6 +66,10 @@ def test_in_the_first_season_the_real_free_agents_join_the_pool_once_and_made_up
     assert hill.pos == "WR" and hill.age == 32 and base <= hill.rating < base + span and hill.status == "free" and hill.team == 0
     assert made == len(pool)
     assert [p for p in pool if p.pos == "OL"] and [p for p in pool if p.pos == "LS"]  # SR.5: the line and the snapper are families of the Franchise now
+    decker = next(p for p in pool if p.name == "Taylor Decker")                         # D-185: a free agent keeps his real field position
+    assert (decker.pos, decker.position) == ("OL", "LT")
+    assert {p.position for p in pool if p.pos == "OL"} >= {"LT", "LG", "C", "RG", "RT"}
+    assert {p.position for p in pool if p.pos == "DL"} >= {"LEDG", "REDG", "DT"} and {p.position for p in pool if p.pos == "S"} == {"FS", "SS"}
 
 
 def test_a_later_season_and_a_league_without_real_names_get_no_real_free_agents():

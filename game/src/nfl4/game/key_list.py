@@ -144,6 +144,11 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("describe_position", "D in a depth chart", "In F9, Rules, Depth charts, in the starting lineup and in the positions' items",
            "says a plain description of the position the list is on, for a person who knows nothing of football", "nfl", False, "",
            " D in a depth chart. says what the position does. "),
+    KeyRow("depth_move", "U, N and the digits 1 to 9", "In F9, Rules, Depth charts, in a position's list of players",
+           "U moves the player up one place on the depth chart and N moves him down one place; a digit puts him at that place and the others "
+           "move down one; the order is kept until you change it, and the next game uses it", "nfl", False, "",
+           " In a position's list of the depth chart. U moves the player up, N moves him down, and a digit puts him at that place. ",
+           letters="un"),
     KeyRow("penalty", "A and D", "At a penalty question", "A accepts the penalty and D declines it; Up and Down change the answer and "
            "Enter takes it", "nfl", False, "A. accepts it and D. declines it", letters="ad", feature="penalties"),
     KeyRow("qb_items", "8, 9 and 0", "In the offense menu with quarterback runs", "8 is the quarterback sneak, 9 the keeper and 0 the "

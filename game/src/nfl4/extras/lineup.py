@@ -151,15 +151,80 @@ def choose_flow(speech, keys, backend, key: str, slot: int = 0) -> str | None:
         title = X.text("NXM-L38", position=word(key), n=slot + 1)
     else:
         title = X.text("NXM-L37", position=word(key))
-    picked = ListPicker(speech, keys, title, len(lines), lambda i: lines[i], start=start).run()
+    state = {"candidates": candidates, "lines": lines}
+    picker = None
+
+    def on_key(char: str, i: int):
+        """D-186: U and N move the man up and down his position's chart, a digit puts him at that place; the list then says the new order."""
+        target = move_target(backend, key, state["candidates"][i], char)
+        if target is None:
+            return None
+        text, new_index = target
+        if new_index is not None:
+            state["candidates"] = backend.candidates(key)
+            starters = backend.starters(key)
+            now_key = starters[slot].key if slot < len(starters) else None
+            state["lines"] = [man_line(m, m.key == now_key) for m in state["candidates"]]
+            picker.index = new_index
+        return text
+
+    picker = ListPicker(speech, keys, title + X.text("NXM-R01"), len(lines), lambda i: state["lines"][i], start=start, on_key=on_key,
+                        help_text=X.text("NXM-R02"))
+    picked = picker.run()
     if picked is None:
         return None
+    candidates = state["candidates"]
     man = candidates[picked]
     try:
         text = backend.choose(key, man, slot)
     except LineupError as exc:
         return exc.text
     return text
+
+
+# D-186: U and N move a man up and down his position's chart, a digit 1 to 9 puts him at that place (key_list row depth_move)
+
+def move_target(backend, key: str, man: Man, char: str):
+    """D-186: (the sentence, the man's new index in the list or None) for a move key on `man`, or None when `char` is not a move key."""
+    chart = backend.chart_men(key)
+    if char not in ("u", "n") and not (char.isdigit() and char != "0"):
+        return None
+    keys_ = [m.key for m in chart]
+    if man.key not in keys_:
+        return X.text("NXM-R03", player=man.name, position=word(key)), None
+    old = keys_.index(man.key)
+    if char == "u":
+        new = old - 1
+    elif char == "n":
+        new = old + 1
+    else:
+        new = int(char) - 1
+        if new >= len(chart):
+            return X.text("NXM-R04", position=word(key), n=len(chart)), None
+    if new < 0 or new == old:
+        return X.text("NXM-R05", player=man.name, position=word(key), n=old + 1), None
+    if new >= len(chart):
+        return X.text("NXM-R06", player=man.name, position=word(key), n=old + 1), None
+    busy = backend.busy()
+    if busy:
+        return busy, None
+    try:
+        after = backend.move(key, man, new)
+    except LineupError as exc:
+        return exc.text, None
+    keys_after = [m.key for m in after]
+    place = keys_after.index(man.key) if man.key in keys_after else new
+    if place < old:
+        text = X.text("NXM-R07", player=man.name, n=place + 1, position=word(key), other=after[place + 1].name)
+    else:
+        text = X.text("NXM-R08", player=man.name, n=place + 1, position=word(key), other=after[place - 1].name)
+    starts = starters_of(key)
+    if place < starts <= old:
+        text += X.text("NXM-R09", player=man.name)
+    elif old < starts <= place:
+        text += X.text("NXM-R10", player=man.name, other=after[starts - 1].name)
+    listed = [m.key for m in backend.candidates(key)]
+    return text, (listed.index(man.key) if man.key in listed else None)
 
 
 # ----- the menus -----
@@ -228,6 +293,14 @@ class Backend:
 
     def notices(self) -> list:
         return []
+
+    def chart_men(self, key: str) -> list:
+        """D-186: the men of the position's (or the return role's) depth chart, in order: the ones a move key may move."""
+        return self.men_at(key)
+
+    def move(self, key: str, man: Man, index: int) -> list:
+        """D-186: move the man to place `index` of the chart, keep it, and return the chart's men after the move."""
+        raise LineupError(X.text("NXM-R03", player=man.name, position=word(key)))
 
 
 class QuickBackend(Backend):
@@ -306,6 +379,26 @@ class QuickBackend(Backend):
 
     def squad_text(self, man: Man, key: str) -> str:
         return X.text("NXM-L73", player=man.name, position=label(key))
+
+    def chart_men(self, key: str) -> list:
+        if key in RM.ROLES:
+            _chart, roles, _squad = self._chart()
+            return [self._man(n) for n in roles.get(key, ())]
+        return self.men_at(key)
+
+    def move(self, key: str, man: Man, index: int) -> list:
+        from . import quarterbacks
+        settings = self.game.options.settings.game
+        old = [m.key for m in self.chart_men(key)].index(man.key)
+        try:
+            depth = DC.move_in_order(DC.parse_depth(settings.nx_depth), self.real, self.team, key, man.key, index)
+        except ValueError:
+            raise LineupError(X.text("NXM-R03", player=man.name, position=word(key))) from None
+        settings.nx_depth = DC.render_depth(depth)
+        self.game.options.save()
+        quarterbacks.apply(self.game)                      # the next game uses the new order
+        debuglog.event("extras", "depth_moved", team=self.team, position=key, player=man.key, old=old + 1, new=index + 1, mode="quick")   # rule 0.15
+        return self.chart_men(key)
 
     def notices(self) -> list:
         """A starter the player chose who is no longer on the team's active roster (a new rosters.txt): one sentence each; the entry is dropped."""
@@ -412,6 +505,20 @@ class FranchiseBackend(Backend):
         self.store.save()                                  # written, then told (B-X53)
         return signed + result_text(self, key, Man(man.key, man.name, man.position, man.number, man.rating, man.age, False), slot, old_position,
                                     before if not man.squad else None)
+
+    def chart_men(self, key: str) -> list:
+        league = self.league
+        return [self._man(league.players[pid]) for pid in league.chart[league.team - 1].get(key, ()) if pid in league.players]
+
+    def move(self, key: str, man: Man, index: int) -> list:
+        from .franchise import real_roster
+        from .franchise.league import LeagueError
+        try:
+            real_roster.move_in_chart(self.league, key, man.key, index)
+        except LeagueError:
+            raise LineupError(X.text("NXM-R03", player=man.name, position=word(key))) from None
+        self.store.save()                                  # written, then told (B-X53)
+        return self.chart_men(key)
 
     def notices(self) -> list:
         from .franchise import real_roster

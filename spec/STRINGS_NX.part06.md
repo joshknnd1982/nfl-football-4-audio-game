@@ -1,10 +1,3 @@
-- NXI-64 (sentence, say5): " nobody else of your team can play his place this week. ". F9 injury report: no other choice (NX-B1)
-- NXE-19 (piece, piece): "the staff". the name of stage 9 (SX.8l), right after the season in review
-- NXV-01 (sentence, say2): " the owner's goal was to <goal>. you met it. ". stage 1, the verdict (SX.8l): the goal met
-- NXV-02 (sentence, say2): " the owner's goal was to <goal>. you missed it. ". stage 1, the verdict: the goal missed
-- NXV-03 (sentence, say2): " your job rating is <a> of 100, up <d>. ". stage 1, the verdict: the job rating rose
-- NXV-04 (sentence, say2): " your job rating is <a> of 100, down <d>. ". stage 1, the verdict: the job rating fell
-- NXV-05 (sentence, say2): " your job rating stays at <a> of 100. ". stage 1, the verdict: the job rating did not move
 - NXV-06 (sentence, say2): " the owner is not happy. your job is in danger. ". stage 1, after the job rating when it is under FR_FIRE_BELOW + FR_DANGER
 - NXV-07 (sentence, say2): " the owner's goal for season <n>: <goal>. ". stage 6 and a new franchise, after the team's rating
 - NXV-G01 (piece, piece): "win at least <n> games". a goal of the owner (FR_GOALS: wins)
@@ -249,6 +242,18 @@
 - NXL-58 (sentence, say5): " <player> starts now, and <other> moves down one place. ". the Quarterbacks list: a backup made the starter (D-149, Q-069; SR.6)
 - NXL-59 (sentence, say5): " the other quarterbacks: <list>. ". the Quarterbacks list: another team's other quarterbacks (D-149; SR.6)
 - NXH-82 (help, say5): " Every team keeps its real 53 players at their real positions. Your roster lists them by position, and Depth charts chooses who starts. ". F6, after NXH-78, while the franchise is in use (D-149, NX-B2b; SR.6: by positions)
+- NXJ-P24 (sentence, say5): " your practice squad is full: <n> players, and the N. F. L. allows 16, plus one international player. choose a squad player to release to make room for <player>. ". F9 practice squad: the squad is full, the release list's title (D-187)
+- NXJ-P25 (sentence, say5): " your practice squad already has 6 veterans, players with more than two seasons, the most the N. F. L. allows. choose a veteran to release to make room for <player>. ". F9 practice squad: the veterans' limit, the release list's title (D-187)
+- NXJ-P26 (sentence, say5): " release <give> from your practice squad and add <get>, <contract>? press enter to do it, or escape to say no. ". F9 practice squad: the question with a release (D-187)
+- NXJ-P27 (sentence, say5): " you released <give> from your practice squad, and <get> joins it. ". F9 practice squad: done with a release (D-187)
+- NXJ-P28 (menu, say5): "add to the practice squad". F9 free agents item: the practice squad's add (D-187)
+- NXJ-P29 (sentence, say5): " which position? the free agents who may join your practice squad follow, the best first. ". F9 practice squad: the positions' menu title (D-187)
+- NXJ-P30 (sentence, say5): " <player>, <position>, age <a>, rating <r>, a veteran. ". F9 practice squad: a free agent with more than two seasons (D-187)
+- NXJ-P31 (sentence, say5): " <player>, <position>, age <a>, rating <r>. ". F9 practice squad: a free agent of two seasons or fewer (D-187)
+- NXJ-P32 (menu, say5): "the practice squad rules". F9 practice squad item (D-187)
+- NXJ-P33 (help, say5): " the N. F. L. practice squad: up to 16 players, and a 17th place for an international player of the league's pathway program. ". F9 practice squad: the rules item, then NXJ-P34 and P35 (D-187; spec/NFL_EXTRA_FEATURES section 22)
+- NXJ-P34 (help, say5): " at most 6 of them may be veterans, players with more than two seasons; the others have two seasons or fewer. any free agent of any position may join it. ". F9 practice squad: the rules item, after NXJ-P33 (D-187)
+- NXJ-P35 (help, say5): " a squad player may be brought up for a game 3 times in the regular season and any number of times in the play-offs, at most 2 a game, and you may sign him to your roster. ". F9 practice squad: the rules item, after NXJ-P34 (D-187)
 
 ## The real coaches and players (NX-N, SX.11)
 
@@ -332,6 +337,3 @@
 - BN68 (remark, say): " The players' breath is showing in the huddle. It is that kind of day. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN69 (remark, say): " <commentator> is taking notes over there, and I would not want to see the exam. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
 - BN70 (remark, say): " <commentator> never misses a replay, and I never miss a chance to ask for one. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN71 (remark, say): " If you hear a pen clicking, that is <commentator> working on something to tell you next. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN72 (remark, say): " <commentator> and I have a bet going on the next play. I will not say who is winning. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)
-- BN73 (remark, say): " The booth is quiet for a moment while <commentator> and I watch the formation. ". pool BN default: radio banter, the announcer's aside (rule 0.27, replaces the original's jokes in the N. F. L. rules; customizable)

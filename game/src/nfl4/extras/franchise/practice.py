@@ -35,11 +35,18 @@ from . import data as D
 from . import injuries
 
 STATUS = "practice"
-SIZE = 16                     # UNVERIFIED (SRC-SECONDARY): 16, or 17 with an International Pathway player (not modelled)
-VETERANS = 6                  # UNVERIFIED (SRC-SECONDARY): at most six players with more than two accrued seasons
-VETERAN_SEASONS = 3           # a veteran has three or more seasons (more than two)
-ELEVATIONS = 3                # UNVERIFIED (SRC-SECONDARY, the 2022 rule): three elevations a player in a regular season; the play-offs have no limit
-PER_GAME = 2                  # UNVERIFIED (SRC-SECONDARY): two elevations a team in one game
+# D-187 (a tester 2026-10-27: "Add the ability to sign players to the practice squad"; the rules settled from the 2026 sources, spec/NFL_EXTRA_FEATURES
+# section 22): SRC-OFFICIAL the league's own update of 2024 (operations.nfl.com, as the Giants' site quotes it): "the practice squad will expand to 17
+# players for all 32 clubs, if one player is a qualifying international player"; SRC-SECONDARY NBC Sports' 2026 cut-down guide ("each club can carry up
+# to 17 players on its regular season practice squad", "Up to six players per team with no limit to their number of seasons played (veterans)") and
+# the 2026 elevation reports (AtoZ Sports, Fantasy Nerds: two a game, three a player in the regular season, no limit in the play-offs).
+SIZE = 16                     # SRC-OFFICIAL: 16 players, and a 17th place only for an international player (INTERNATIONAL)
+INTERNATIONAL = 1             # SRC-OFFICIAL: the place of a qualifying international player (a real squad of the file may hold him; the game cannot
+#                               tell which free agent qualifies, so a signing never takes it: UNVERIFIED which of a real squad's 17 is the international)
+VETERANS = 6                  # SRC-SECONDARY (NBC Sports 2026): at most six players with no limit on their seasons
+VETERAN_SEASONS = 3           # a veteran has three or more seasons (more than two); the others have two seasons or fewer (SRC-SECONDARY)
+ELEVATIONS = 3                # SRC-SECONDARY (2026 reports): three elevations a player in a regular season; the play-offs have no limit
+PER_GAME = 2                  # SRC-SECONDARY (2026 reports): two elevations a team in one game
 PRACTICE_SALARY = 2           # tenths of a million: 13,750 dollars x 18 weeks = 0.25 million (2026, SRC-SECONDARY)
 PRACTICE_SALARY_VETERAN = 4   # 18,350 to 22,850 dollars x 18 weeks = 0.33 to 0.41 million
 RETURN_COVER = ("RB", "WR", "CB")     # a returner's place is stood in for by a squad back, then a receiver, then a cornerback
@@ -367,21 +374,44 @@ def promote(league, player, release) -> tuple:
     return salary, dead
 
 
-def sign_problem(league, player) -> str | None:
-    """Why a free agent of the season cannot join the player's squad, or None."""
+def sign_problem(league, player, release=None) -> str | None:
+    """Why a free agent of the season cannot join the player's squad (with `release`, a man of the squad who leaves it first), or None. The NFL has no age
+    limit and no position limit (D-187): any free agent of the 22 positions may join while the squad has room and, for a veteran, a veteran's place."""
     from . import signings as S
     if player is None or player not in S.pool(league):
         return "not a free agent"
     if player.pos not in D.GROUPS:
         return "not a position of the squad"
-    if not can_take(league, league.team, player):
-        return "the practice squad is full" if len(squad(league, league.team)) >= SIZE else "too many veterans"
-    if CT.cap_used(league, league.team) + salary_of(player) > CT.cap_of(league):
+    members = [p for p in squad(league, league.team) if release is None or p.id != release.id]
+    if release is not None and (release.status != STATUS or release.team != league.team):
+        return "a release who is not on the squad"
+    # a squad of 17 (a real squad of the file with its international man) keeps the 17th place as long as it has 17: a swap keeps it, a release alone
+    # gives it up (the game cannot tell which man is the international, so it never lets a signing make 17 from 16)
+    limit = SIZE + (INTERNATIONAL if len(squad(league, league.team)) > SIZE else 0)
+    if len(members) >= limit:
+        return "the practice squad is full"
+    if veteran(player) and sum(1 for p in members if veteran(p)) >= VETERANS:
+        return "too many veterans"
+    freed = release.salary if release is not None else 0
+    if CT.cap_used(league, league.team) - freed + salary_of(player) > CT.cap_of(league):
         return "over the cap"
     return None
 
 
-def sign_to_squad(league, player) -> None:
+def release_choices(league, player) -> list:
+    """D-187: the squad men whose release would make room for `player` (the squad is full, or it has its six veterans and he is one), the weakest first;
+    [] when the squad has room or no release helps."""
+    members = squad(league, league.team)
+    if sign_problem(league, player) not in ("the practice squad is full", "too many veterans"):
+        return []
+    out = [p for p in members if sign_problem(league, player, release=p) is None]
+    return sorted(out, key=lambda p: (p.rating, -p.id))
+
+
+def sign_to_squad(league, player, release=None) -> None:
+    """The free agent joins the player's squad; `release`, when given, leaves it first (a free agent of this season)."""
+    if release is not None:
+        release_from_squad(league, release)
     _join(league, league.team, player)
 
 

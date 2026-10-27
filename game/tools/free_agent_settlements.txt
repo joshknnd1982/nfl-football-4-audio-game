@@ -1,6 +1,16 @@
 # free_agent_settlements.txt: men update_rosters.py must never list as free agents (nfl4, D-172). This is inspired by Jim Kitchen.
 # nflverse and Sleeper do not mark every retirement, and a retired man can stay in the news. Each line: an ID, an equals sign, the name as nflverse
 # writes it, then " | " and why, then " | " and the source with its date. Remove a line when the man comes back (signs with a team or a report says so).
+# D-185 (2026-10-27): a why that starts with "free" makes a man a free agent although a source still has him on a list (a release it has not caught up
+# with); a why "position XX" gives a free agent's field position (one of the 22 of D-152) where no depth chart row settles it. Every other why means
+# the man is never a free agent. Each line comes from a web search (rule 0.8) and names its source.
 
 X001 = Derek Carr | retired; the Saints hold his rights (reserve/retired) | Fox News and NBC Sports, 2026-07-10: still retired, open to a comeback only for a contender
 X002 = Tom Brady | retired (2023), a broadcaster | widely reported; Sleeper still lists him active
+X003 = Bryce Baringer | free: the Patriots released him from their injured reserve list | patriots.com news, 2026-10 (nflverse's week 7 still RES)
+X004 = Malik Verdon | on the Falcons' injured reserve since he reverted to it unclaimed in 2026-08 | RotoWire and ESPN, 2026-08; no source's list shows him
+X005 = Tyus Bowser | position LEDG: an edge rusher (outside linebacker of the Ravens' 3-4) | ESPN, Wikipedia, Yardbarker 2026-08 workouts as an edge
+X006 = Marquis Haynes | position REDG: an edge rusher (EDGE) | PlayerProfiler, Wikipedia (linebacker who rushes the passer)
+X007 = Ja'Whaun Bentley | position MIKE: an inside linebacker who called the defense | Patriots and Steelers coverage, Wikipedia
+X008 = Vonn Bell | position SS: a strong safety who plays near the line | Bengals and Panthers coverage, Wikipedia
+X009 = Nash Hutmacher | position LG: a defensive tackle the Buccaneers moved to guard in 2026 | buccaneers.com camp preview 2026, Fox Sports (Greg Auman)
