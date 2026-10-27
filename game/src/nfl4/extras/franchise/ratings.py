@@ -5,7 +5,8 @@ players in the play, which the Franchise's rosters carry (`Roster.ratings`, H7).
 and the two tacklers BEFORE it reads a row (`pag_scrimmage.snap_draws`), so at the moment a row is read the state names the players:
 
     a run                        the offense's rating is the carrier's (running back `carrier`)
-    a pass (a completion, an incompletion, a sack)    (2 x the quarterback + receiver `carrier` + 1) // 3
+    a pass (a completion, an incompletion, a sack)    (2 x the quarterback + receiver `carrier` + 1) // 3; S-E1 (Q-048, D-194): a running back
+                                 the player chose as the target (`carrier` 7 or 8) counts with his own rating as a back (data.target_key)
     a designed quarterback run   the quarterback's rating (a scramble gets no ratings Mod: it does not pass `qb_run`)
     the defense's rating         (the two tacklers' ratings + 1) // 2
 
@@ -92,7 +93,7 @@ class FranchiseModifiers(PlaybookModifiers):
             offense = self._rating(offense_side, QUARTERBACK, 1)
         else:
             quarterback = self._rating(offense_side, QUARTERBACK, 1)
-            receiver = self._rating(offense_side, RECEIVERS, s.carrier)
+            receiver = self._rating(offense_side, *D.target_key(s.carrier))        # S-E1: a back the player threw to (7, 8) is rated as a back
             offense = None if quarterback is None else (2 * quarterback + receiver + 1) // 3
         first = self._rating(defense_side, DEFENSE, s.defender1)
         second = self._rating(defense_side, DEFENSE, s.defender2)

@@ -10,6 +10,20 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.10 (2026-10-27, test build)
+
+Not built yet: the next test installer carries it. A running back can be your pass target in a franchise game too, and a fix for the R key on the run pass options. Everything of 0.16.9 and 0.16.8 below is still to be tested too.
+
+### Passes to running backs in a franchise game
+With the N. F. L. rules, R in the offense menu chooses who your next pass goes to. In a quick game the list has always ended with your first two running backs when the play has a route for a back (a screen, a swing, an angle, a drag, a wheel), but a franchise game offered only the receivers. Now a franchise game offers the backs too. A pass to a back counts with his own rating as a running back, and a back who catches it can be hurt on the play, as a receiver can; a catch does not count as one of his carries (the carries that make a busy back likelier to be hurt are his runs). The receivers in a franchise game's list are now said by each man's real position, wide receiver or tight end, as in a quick game; before, every one was "receiver". A game where you choose nothing plays exactly as before.
+- How to test: in a franchise game with the N. F. L. rules, in the offense menu, go to a screen pass or another pass with a back's route (press D on a play to hear what it does), press R, then End: the last two items are your first two running backs, each said with "running back". Press Enter on one, then Enter on the play: if the pass is caught, the catch names him. Then press R on a deep pass (a go route or a post): the list has only the receivers.
+- Tell us: whether the two backs are the right men (the first two running backs of your depth chart), whether the receivers' positions are right, and whether passes to a good back gain more than passes to a weak one over a few games.
+
+### R on a run pass option no longer stops the game
+The eight run pass options (More Plays, Run Pass Options: the quarterback hands off or throws, by what the defense does) failed when you pressed R on one, and a running back chosen with R followed by a run pass option failed at the snap: the program stopped. Now R works on them: the list has the receivers, and the two running backs on the three whose throw has a back's route (Bubble Option, Tight End Option, Jet Option). When the quarterback hands off on one of those, the back you chose carries the ball.
+- How to test: in the offense menu of the N. F. L. rules (a quick game or a franchise game), press M for More Plays, open Run Pass Options, move to Bubble Option and press R: you hear the list. Press End and Enter to choose the second running back, then Enter to call the play: the game goes on; if the quarterback hands off, that back carries the ball. Try R on Stick Option too: only the receivers.
+- Tell us: any play where R, or a target you chose, does something you did not expect.
+
 ## 0.16.9 (2026-10-27, test build)
 
 The seventeenth test installer. The owner played 0.16.8 and found that the radio crew hardly spoke: in eight plays Gus said one line after the sign-on. The crew now talks about twice as much, and a new menu item lets you choose how much. Everything of 0.16.8 is still to be tested too (its section below).

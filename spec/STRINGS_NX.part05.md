@@ -1,3 +1,4 @@
+- NXX-27 (sentence, say5): " a player traded this season cannot be traded again until the next season. ". F9 trades
 - NXK-14 (sentence, say2): " the draft has 7 rounds. your picks: <list>. ". stage 4 when a trade moved a pick of the player's team (SX.8j)
 - NXK-15 (piece, piece): "round <round> pick <pick>". stage 4: one of the player's picks
 - NXH-41 (help, say5): " Trades: from free agency to the deadline, players of one position, with picks both ways, none from the draft to week 1. F9, trades: choose a team, a position, a player, then the picks. ". F6 while the franchise is in use (SX.8j; D-130: the window from free agency to the deadline)

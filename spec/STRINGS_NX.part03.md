@@ -287,7 +287,7 @@
 - NXB-T06 (piece, piece): "wide receiver". a position word (SY.4)
 - NXB-T07 (piece, piece): "tight end". a position word (SY.4)
 - NXB-T08 (piece, piece): "running back". a position word (SY.4)
-- NXB-T09 (piece, piece): "receiver". the word where the position is not known: no real names, or a Franchise game (SY.4)
+- NXB-T09 (piece, piece): "receiver". the word where the position is not known: no real names, or a stand-in of a Franchise game (SY.4; S-E1, D-194: a Franchise game says each man's real position)
 - NXB-T11 (prompt, say5): " <coach> choose the player who blitzes ". L in the defense menu: the list's prompt (SY.5)
 - NXB-T12 (menu, say5): "A player picked by chance". the list's first item: no choice, as it was before (SY.5)
 - NXB-T13 (sentence, say5): " <player> will blitz when you call a blitz. ". said after a blitzer was chosen (SY.5)
@@ -367,4 +367,3 @@
 - NXM-L17 (piece, piece): "eighth". F9's roster: his place on his position's depth chart (SR.6)
 - NXM-L18 (piece, piece): "ninth". F9's roster: his place on his position's depth chart (SR.6)
 - NXM-L19 (piece, piece): "tenth". F9's roster: his place on his position's depth chart (SR.6)
-- NXM-L20 (piece, piece): "number <n> on the depth chart". F9's roster: a place beyond the tenth (SR.6)

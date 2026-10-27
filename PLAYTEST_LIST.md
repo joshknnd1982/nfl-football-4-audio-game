@@ -298,3 +298,6 @@ If you want to hear a league that is already many seasons old without playing th
 140. Added 2026-10-27 (D-193): during a game, F9, Rules, How much the crew talks, Enter to "the most", Escape twice, play on: does the crew talk after nearly every play at once, in the same game? Then "a little": as quiet as 0.16.8?
 141. Added 2026-10-27 (D-193): Gus's new lines after ordinary plays (a run that gains, a run stopped, a pass caught or incomplete, a punt, a kick off): does each fit the play it follows? Any line you hear too often?
 142. Added 2026-10-27 (D-193): which level do you like best, and should a different one be the default?
+143. Added 2026-10-27 (D-194, 0.16.10): in a franchise game, R in the offense menu on a screen pass, then End: are the last two items your first two running backs, and do the receivers say wide receiver or tight end rightly? Throw to a back: does the catch name him?
+144. Added 2026-10-27 (D-194): over a few franchise games, do passes to a good back gain more than passes to a weak one, and does a back who catches a lot ever get hurt on a catch (as a receiver can)?
+145. Added 2026-10-27 (D-194): More Plays, Run Pass Options, R on Bubble Option, choose a running back, call it: does the game go on (it used to stop), and when the quarterback hands off, does your back carry the ball?

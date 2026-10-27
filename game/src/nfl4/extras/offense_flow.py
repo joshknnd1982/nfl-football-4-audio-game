@@ -456,6 +456,7 @@ class OffenseFlow:
         if result.gap == "qb" and result.branch != "keep":
             result = result._replace(branch=qb_key(concept))
         state.offense_play = narration_family(concept, result)
+        self.rules.choices.handed_off(state, result)              # S-E1 (D-194): an RPO given to the back the player chose: he carries it
         self.result = result
         self.played = concept.id
         self.events.append((concept.id, call_id, result.kind, result.yards, result.branch))

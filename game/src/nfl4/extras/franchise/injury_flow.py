@@ -7,7 +7,8 @@ engine reaches it only through `Game.game_injuries` (None in every other game: C
 
 * `GameInjuries`: the two teams of the player's game. Its rosters are the lineups of the week (the hurt players are not in them, so the place draws skip
   them; a hurt player who plays plays below his best). In a game of weeks 1 to FR_INJ_LAST_WEEK every play that can hurt a player (INJ-3: a rush, a catch,
-  a sack, a quarterback's run, a kick-off return) draws `below(10000)` against FR_INJ_PLAY; a hit hurts the tackler (`below(100)` against FR_INJ_TACKLER;
+  a sack, a quarterback's run, a kick-off return) draws `below(10000)` against FR_INJ_PLAY (S-E1, D-194: a catch by a running back the player threw to
+  exposes the back's place; a catch is not a carry of the workload rule); a hit hurts the tackler (`below(100)` against FR_INJ_TACKLER;
   the first defender named) or the ball carrier, the announcer says so (a line of IJX of injuries.txt) and his place goes to the next man up at once (the
   rosters of the game are rewritten; a quarterback's place goes to the stand-in, made then with a name draw when the team has none). The game's injuries
   are kept in the game's extras record (`ExtrasRecord.injuries`), so Save Game keeps them, and join the league with the game's result (`commit`, from
@@ -158,6 +159,16 @@ class GameInjuries:
         self.state.quarterbacks[side] = table[QB_PLACE][1]
         self.identity[side] = [entry[0] for entry in table]
 
+    def target_position(self, side: int, target: int) -> str:
+        """S-E1 (Q-048, D-194): the real position (roster_model.MADDEN; his group word for a man of an older league) of the man who plays the place of
+        a pass target `target` of `side` (1 to 6 a receiver, 7 and 8 the first two running backs) in the game in progress; "" for a stand-in, an empty
+        place, or before the kick-off."""
+        ids = self.identity.get(side) or []
+        place = D.target_place(target)
+        identity = ids[place] if 0 <= place < len(ids) else None
+        player = self.league.players.get(identity) if isinstance(identity, int) else None
+        return (player.position or player.pos) if player is not None else ""
+
     def make_stand_in(self, team: int, position: str) -> list:
         """A place of the game in progress has nobody to play it: the team's stand-in is signed now (a name draw), kept in the game's record."""
         row = I.make_stand_in(self.league, team, position, self.rnd, self.surnames, self.record["stand_ins"])
@@ -224,7 +235,7 @@ class GameInjuries:
         if outcome.kind == O.RUN:
             return side, (QB_PLACE if outcome.qb_run else RB_FIRST + outcome.carrier - 1), True
         if outcome.kind == O.PASS_COMPLETE:
-            return side, WR_FIRST + outcome.carrier - 1, True
+            return side, D.target_place(outcome.carrier), True          # S-E1 (Q-048): a catch by a back the player threw to (7, 8) is the back's
         if outcome.kind == O.SACK:
             return side, QB_PLACE, True
         if outcome.kind == O.KICKOFF_RETURN:

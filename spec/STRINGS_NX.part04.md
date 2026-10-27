@@ -1,3 +1,4 @@
+- NXM-L20 (piece, piece): "number <n> on the depth chart". F9's roster: a place beyond the tenth (SR.6)
 - NXM-L21 (piece, piece): ", kick returner". F9's roster: after his depth, the man who returns kickoffs (SR.6)
 - NXM-L22 (piece, piece): ", punt returner". F9's roster: after his depth, the man who returns punts (SR.6)
 - NXM-L23 (piece, piece): "<position>, on <list>". F9's roster: a man on a reserve list, after his position (SR.6)
@@ -460,4 +461,3 @@
 - NXX-23 (sentence, say5): " the <team> say no to that trade. ". F9 trades: the other team does not gain enough, even with the player's picks
 - NXX-24 (sentence, say5): " you have no picks of the coming draft to trade. ". F9 trades: no picks (or the draft has begun)
 - NXX-25 (sentence, say5): " week <n>: the <team> traded <give> to the <other> for <get>. <picks> ". F9 trades: a trade of the season
-- NXX-27 (sentence, say5): " a player traded this season cannot be traded again until the next season. ". F9 trades

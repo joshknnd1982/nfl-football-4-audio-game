@@ -379,3 +379,5 @@ THE CONVERSION of a league of format 17 or older, once, when it is opened (NX-L7
   format 16 and 17 tests, "the store keeps the older file and converts"); format 18 and 19 round trips (sr4, sr5); the offer and the update with the
   player's team untouched and the download with a fake server (test_rosters_update_sr6); the cap measurement (sr5 "the cap is the measured cap");
   the soaks (work\sr6, work\sr7, 0 problems); Classic's golden transcript (test_pag_golden and the Classic tests in the full suites).
+
+S-E1 (2026-10-27, D-194, Q-048): a running back as the target of the player's pass in a Franchise game, as in a quick game. The pass's offense rating is (2 x the quarterback + the back's own rating + 1) // 3 (data.target_key: the target codes 7 and 8 are the first two back places); a catch exposes the back's own place to the injuries (data.target_place); a catch is not a carry of INJ-3's workload rule; the R list says each receiver by his real position in the league (GameInjuries.target_position). A game where the player chooses no target draws exactly as before (work\se1_1027\fingerprint_*.json).

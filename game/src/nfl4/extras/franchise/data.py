@@ -106,6 +106,20 @@ PLACES_OF = {position: tuple(i for i, p in enumerate(POSITION_OF_PLACE) if p == 
 # add up to two men to the 53 (the NFL's game-day elevations: a team with no active kicker plays its practice squad's)
 BACK_PLACES = PLACES_OF["RB"]
 GAME_DAY_EXTRA = 2
+# S-E1 (Q-048, D-162, D-194): the target of a pass the player chose (extras/choices.py, SY.4): 1 to 6 the receivers' places, 7 and 8 the first two
+# running backs' places (choices.BACK_CODES). A Franchise game rates and hurts the man of that place.
+BACK_TARGETS = (7, 8)
+
+
+def target_key(target: int) -> tuple[str, int]:
+    """The key of Roster.ratings of a pass's target: a back the player threw to is his back place, any other number a receiver's place."""
+    return ("Running Backs:", target - BACK_TARGETS[0] + 1) if target in BACK_TARGETS else ("Receivers:", target)
+
+
+def target_place(target: int) -> int:
+    """The index of the 34 places of a pass's target (the same rule as `target_key`)."""
+    return PLACES_OF["RB"][0] + target - BACK_TARGETS[0] if target in BACK_TARGETS else PLACES_OF["WR"][0] + target - 1
+
 # the families a place of the view may hold besides its own group (design 21.4 (4) and (5)): a 3-4 team's edge men at linebacker, a safety at corner, a
 # corner at safety, a backer on the line; a returner is a man of any group that returns kicks
 PLACE_COVERS = {"LB": ("DL",), "DL": ("LB",), "CB": ("S",), "S": ("CB",), "RET": ("RB", "WR", "CB", "S", "LB", "DL")}

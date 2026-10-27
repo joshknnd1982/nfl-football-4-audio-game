@@ -5,15 +5,17 @@ works as it always did.
 
 * R in the offense menu (a player whose plays are the catalog's) opens a short list: the play picks the receiver (the first item, which Enter
   keeps), the six receivers by name and position, and the first two running backs when the play can throw to one (a screen, a swing, an angle, a
-  drag) and the game is not a Franchise game. The choice is for the next snap only. At the snap the engine still draws its random receiver (the
+  drag), in a Franchise game too (S-E1, D-194). The choice is for the next snap only. At the snap the engine still draws its random receiver (the
   draws of the game do not move) and the chosen one takes its place; the model throws the pass to a route that suits the kind of player (a back
   runs a swing, a screen, an angle or a drag, a tight end the short and middle routes, a wide receiver the rest).
 * L in the defense menu opens the list of the seventeen defenders (the first item, kept by Enter, is a player picked by chance, as it was before).
   When the player's next call is a blitz, the chosen player is the one named on a sack, and the sack is a little likelier when a linebacker or a
   defensive back is the blitzer (8 and 12 percent): the pick of a player who rushes anyway changes nothing.
 
-A Franchise game has no back as a target (its ratings and its injuries know the six receivers only). Without real names there are no positions to
-say (the surnames of the original have none): a receiver is a receiver and a defender a defender.
+A Franchise game (S-E1, Q-048, D-162, D-194) offers the backs as a quick game does: the pass to a back counts with the back's rating, and a catch
+can hurt the back (franchise/data.target_key and target_place); its receivers are said by each man's real position in the league (a team that lost a
+tight end may have a wide receiver in a tight end's place). Without real names there are no positions to say (the surnames of the original have
+none): a receiver is a receiver and a defender a defender.
 """
 from __future__ import annotations
 
@@ -35,6 +37,7 @@ RECEIVER_SLOTS = 6
 RECEIVER_KINDS = ("WR", "WR", "WR", "TE", "WR", "TE")                  # the receivers of the real names (extras/real_names.py)
 BACK_CODES = (7, 8)                                                     # the target codes of the first two running backs
 KIND_WORDS = {"WR": "NXB-T06", "TE": "NXB-T07", "RB": "NXB-T08", "": "NXB-T09"}
+KIND_OF_POSITION = {"WR": "WR", "TE": "TE", "HB": "RB", "FB": "RB", "RB": "RB"}   # S-E1: a Franchise man's real position (or group) as a target kind
 DEFENDER_KINDS = ("DL",) * 6 + ("LB",) * 5 + ("DB",) * 4 + ("DB",) * 2
 DEFENDER_WORDS = ("NXB-T15",) * 6 + ("NXB-T16",) * 5 + ("NXB-T17",) * 4 + ("NXB-T18",) * 2
 
@@ -78,17 +81,50 @@ class Choices:
         if target in BACK_CODES and not self.has_back_route(concept):
             debuglog.event("extras", "target_ignored", play=concept.id, target=target, why="no route for a back")
             return drawn
-        kind = "RB" if target in BACK_CODES else self.receiver_kind(target)
+        if target in BACK_CODES and self.empty_back(getattr(state, "rosters", None), state.wisoff, target):
+            debuglog.event("extras", "target_ignored", play=concept.id, target=target, why="nobody in that back's place")
+            return drawn
+        kind = self.receiver_kind(target, state.wisoff)
         self.used_kind = kind
-        debuglog.event("extras", "target_used", play=concept.id, target=target, kind=kind or None)
+        debuglog.event("extras", "target_used", play=concept.id, target=target, kind=kind or None, franchise=self.franchise())
         return target
 
-    def receiver_kind(self, target: int) -> str:
-        return RECEIVER_KINDS[target - 1] if self.real() and not self.franchise() else ""
+    def receiver_kind(self, target: int, side: int = 1) -> str:
+        """The kind of a target for the model and the list: "RB" for the two backs; in a Franchise game (S-E1, D-194) a receiver's own real position in
+        the league; with real names the layout of the real names (WR WR WR TE WR TE, the view's order: every team of today's rosters has it); "" when
+        nothing is known (no real names, a stand-in)."""
+        if target in BACK_CODES:
+            return "RB"
+        injuries = self.rules.game_injuries()
+        if injuries is not None:
+            return KIND_OF_POSITION.get(injuries.target_position(side, target), "")
+        return RECEIVER_KINDS[target - 1] if self.real() else ""
+
+    @staticmethod
+    def empty_back(rosters, side: int, target: int) -> bool:
+        """The back's place of `target` (7, 8) is an empty place of the real roster (a team with one back has no second): nobody to throw to."""
+        roster = rosters.get(side) if isinstance(rosters, dict) else None
+        return roster is not None and ("Running Backs:", target - RECEIVER_SLOTS) in getattr(roster, "empty", ())
+
+    @staticmethod
+    def routes_of(concept: C.Concept) -> tuple:
+        """The (route, weight) pairs of a pass concept: an RPO's are its second parameter (its first is the gap of the give: S-E1 found R on an RPO
+        failing on that), every other pass's its first; a play with no routes (the Hail Mary) has none."""
+        if not concept.params:
+            return ()
+        return concept.params[1] if concept.kind == "rpo" else concept.params[0]
 
     @staticmethod
     def has_back_route(concept: C.Concept) -> bool:
-        return bool(concept.params and any(name in M.ROUTE_TARGETS["RB"] for name, _w in concept.params[0]))
+        return any(name in M.ROUTE_TARGETS["RB"] for name, _w in Choices.routes_of(concept))
+
+    def handed_off(self, state, result) -> None:
+        """S-E1 (D-194): the player's play went to a back he chose as the target (7, 8) and ended as a handoff (an RPO's give): that back carries
+        the run, from his own place (1 or 2), so the run's sentences, the Franchise's rating and its injuries are his."""
+        if state.wisoff != 1 or state.carrier not in BACK_CODES or not result.gap or result.gap == "qb":
+            return
+        state.carrier -= RECEIVER_SLOTS
+        debuglog.event("extras", "target_carries", play=self.rules.offense.called, carrier=state.carrier, gap=result.gap)
 
     def blitz_active(self, state) -> bool:
         """The player's defense called a blitz and chose who blitzes."""
@@ -138,9 +174,9 @@ class Choices:
                 continue
             listed.add(name.casefold())
             rows.append((slot, X.text("NXB-T05", player=name, position=X.text(KIND_WORDS[self.receiver_kind(slot)]))))
-        if not self.franchise() and (concept is None or self.has_back_route(concept)):
+        if concept is None or self.has_back_route(concept):                # S-E1 (D-194): in a Franchise game too
             for code, name in zip(BACK_CODES, roster.running_backs):
-                if name.casefold() in listed:
+                if name.casefold() in listed or self.empty_back(state.rosters, 1, code):
                     continue
                 listed.add(name.casefold())
                 rows.append((code, X.text("NXB-T05", player=name, position=X.text(KIND_WORDS["RB"]))))
