@@ -11,7 +11,7 @@ Read these in full, in this order, before you do anything else. If your tool alr
 1. `AGENTS.part01.md`: the file map and the core rules 0.1 to 0.32.
 2. `AGENTS.part02.md`: rules 0.33 onward, the owner and working style (section 1, 1.1), phases and sessions (section 3), folder layout (section 4), legal notes (section 10).
 
-Then read what the phase needs (the file map in `AGENTS.part01.md` names it): `playbook-1-spec-reverse-engineering.md`, `playbook-2-clone.partNN.md` (all parts), `playbook-3-release-platforms.md`, `fixesforgames.partNN.md` (section A first). In a game folder also read `PROJECT_STATE.md` and `spec/OPEN_QUESTIONS.md` (when they are split, every part), and for nfl4 the files its rules name.
+Then read what the phase needs (the file map in `AGENTS.part01.md` names it): `playbook-1-spec-reverse-engineering.md`, `playbook-2-clone.partNN.md` (all parts), `playbook-3-release-platforms.md`, `fixesforgames.partNN.md` (section A first). In a game folder read `NEXT_PROMPT.txt` first (where the last session stopped and what to do next; it is written for any agent, so work can move between agents at a session boundary), then `PROJECT_STATE.md` and `spec/OPEN_QUESTIONS.md` (when they are split, every part), and for nfl4 the files its rules name.
 
 A markdown file is a whole file `NAME.md` or parts `NAME.part01.md`, `NAME.part02.md` and so on (no file over 60 KB). Read all parts, in order. Append new text to the LAST part and never enlarge a part past 55 KB.
 
