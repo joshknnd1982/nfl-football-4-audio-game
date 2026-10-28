@@ -118,7 +118,7 @@ After the game (S3.6, CODE (lifted); GAME_SPEC 5.14 to 5.17):
 
 ## 6. Listening rounds: what each file sounds like (Q-009 ANSWERED 2026-10-14, P4 S4.1)
 
-Sections 2 to 5 settle HOW and WHEN every file is played (CODE). What a file SOUNDS like Claude cannot hear, so the 26 files went to the owner in three listening rounds with `games\tools\sound_review` (README there: keyboard only, spoken through NVDA, JAWS or SAPI 5, every mark saved at once). The round files are in `observations\`, the answers in `observations\listening_round_N_answers.txt` (one line per sound: file, kind, label, typed words, time) with the session logs beside them.
+Sections 2 to 5 settle HOW and WHEN every file is played (CODE). What a file SOUNDS like the agent cannot hear, so the 26 files went to the owner in three listening rounds with `games\tools\sound_review` (README there: keyboard only, spoken through NVDA, JAWS or SAPI 5, every mark saved at once). The round files are in `observations\`, the answers in `observations\listening_round_N_answers.txt` (one line per sound: file, kind, label, typed words, time) with the session logs beside them.
 
 RESULT (read in on 2026-10-14, the same day): the owner listened to all 26 files and marked EVERY one "the game's name is right" (kind guess: no word of the list, no typed words, no "cannot tell"). The session logs show that every file was played and that the owner read the context sentence (key C) of nearly every sound before marking. So every name in section 2 is OWNER-CONFIRMED (round 1: foot8, foot9, foot10, foot0, foot14, foot12, foot4, foot5, foot6, foot11; round 2: foot25, foot3, foot7, foot13, foot1, foot2; round 3: foot15 to foot24). Nothing was corrected, no event name changes, no GUESS is left.
 

@@ -1,7 +1,7 @@
 # NFL_ROSTERS_53_RESEARCH (nfl4 only): the 53-man rosters, practice squads and free agents of 2026-10-24 (NX-B2, NX-B3; D-144, D-145)
 
 Written by hand in the NX-B session (2026-10-24). The first research of the names (coaches and the rosters of 2026-10-22) is spec/NFL_NAMES_RESEARCH.md;
-this file records the second one. CLAUDE.md rule 0.19, playbook 7.14; facts only (names, positions, numbers, ages).
+this file records the second one. AGENTS.md rule 0.19, playbook 7.14; facts only (names, positions, numbers, ages).
 
 ## 1. What was researched and how
 
@@ -39,7 +39,7 @@ this file records the second one. CLAUDE.md rule 0.19, playbook 7.14; facts only
 
 The team sites are NFL-network sites; spec/NFL_NAMES_RESEARCH.md section 2 records the NFL's terms (personal, non-commercial use; no systematic
 retrieval to build a database without consent). No terms text was seen on the pages fetched this time. The files keep facts only. Whether they are
-published in the public repository is the owner's decision (Q-040, owner-needed); the shipped files follow D-098 as before. Claude is not a lawyer.
+published in the public repository is the owner's decision (Q-040, owner-needed); the shipped files follow D-098 as before. The agent is not a lawyer.
 
 ## 4. The files
 

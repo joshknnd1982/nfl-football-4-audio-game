@@ -1,6 +1,6 @@
 # NFL_PLAYS_RESEARCH (nfl4 only): every real NFL play and every Madden NFL playbook concept, for SX.10b
 
-Status: RESEARCH, version 1.0 (2026-10-20, PX session SX.10a). nfl4 only (CLAUDE.md rules 0.13 and 0.20; requirements NX-P1 to NX-P7 and NX-R7 in `spec\NFL_EXTRA_FEATURES.md` section 18; decisions D-082, D-083, D-085). No game code was written. Plain headings and lists, no tables.
+Status: RESEARCH, version 1.0 (2026-10-20, PX session SX.10a). nfl4 only (AGENTS.md rules 0.13 and 0.20; requirements NX-P1 to NX-P7 and NX-R7 in `spec\NFL_EXTRA_FEATURES.md` section 18; decisions D-082, D-083, D-085). No game code was written. Plain headings and lists, no tables.
 
 What this file is for: SX.10b designs the menus (NX-P7) and the outcome models (NX-P3) of every real NFL play and every Madden NFL playbook concept; SX.10c to SX.10e build them. This file gives SX.10b the complete list, what each play needs on the field, the published numbers to calibrate against, the rules that bound the list, the places where the game does not yet follow the 2026 rules (section 7) and the questions SX.10b must decide (section 10).
 

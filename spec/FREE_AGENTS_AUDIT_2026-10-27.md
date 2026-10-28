@@ -1,8 +1,8 @@
 # The free agents audit of 2026-10-27 (D-185)
 
-nfl4 only (rule 0.13; CLAUDE.md 0.32 and 0.34, playbook 7.23). This is inspired by Jim Kitchen.
+nfl4 only (rule 0.13; AGENTS.md 0.32 and 0.34, playbook 7.23). This is inspired by Jim Kitchen.
 
-A remote tester: "Make sure all free agents are completely accurate. Do a full audit and correct any inaccuracies." The owner: "Claude must address all of these", and during the audit: "claude should search the internet to do the audit if needed to ensure player and field position accuracy during the audit."
+A remote tester: "Make sure all free agents are completely accurate. Do a full audit and correct any inaccuracies." The owner: "[the agent] must address all of these", and during the audit: "[the agent] should search the internet to do the audit if needed to ensure player and field position accuracy during the audit."
 
 ## Result in one paragraph
 

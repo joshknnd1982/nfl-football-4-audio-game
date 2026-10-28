@@ -2,7 +2,7 @@
 
 Status: RESEARCH, version 1.0 (2026-10-14, session SX.0). Research only: no code was written and no other file was changed. This file settles the rule lines of `spec\NFL_EXTRA_FEATURES.md` (sections 3 C2, 6, 7, 8, 9, 12) that were tagged UNVERIFIED or SRC-SECONDARY. Session SX.1 turns the answers into the `nfl_rules_2026` data table and changes the tags in the requirements file; SX.0 did not edit that file.
 
-Who reads this: Claude at SX.1 to SX.7 and SX.9, and the owner. Plain headings and lists, no tables. Part 1 is the summary and is enough to design from. Parts 2 to 9 are the detailed notes of each topic, kept so that a build session can look up the exact article, page and number; each starts with its own short list of answers.
+Who reads this: the agent at SX.1 to SX.7 and SX.9, and the owner. Plain headings and lists, no tables. Part 1 is the summary and is enough to design from. Parts 2 to 9 are the detailed notes of each topic, kept so that a build session can look up the exact article, page and number; each starts with its own short list of answers.
 
 ## Part 1. Summary for SX.1
 

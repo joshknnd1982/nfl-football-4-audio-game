@@ -1,6 +1,6 @@
 # MADDEN_FRANCHISE_RESEARCH (nfl4 only): Madden NFL 27 Franchise mode features with a verdict for this game
 
-Status: RESEARCH, version 1.0 (2026-10-14, session SX.0), for `spec\NFL_EXTRA_FEATURES.md` section 11 (NX6, Franchise mode). nfl4 only (CLAUDE.md rule 0.13). Research only: no code, no other file changed. Plain headings and lists, no tables. Verdicts: ADOPT (built, adapted), LATER (a later add-on), SKIP (never). The last section lists what SX.1 and SX.8 should take from it.
+Status: RESEARCH, version 1.0 (2026-10-14, session SX.0), for `spec\NFL_EXTRA_FEATURES.md` section 11 (NX6, Franchise mode). nfl4 only (AGENTS.md rule 0.13). Research only: no code, no other file changed. Plain headings and lists, no tables. Verdicts: ADOPT (built, adapted), LATER (a later add-on), SKIP (never). The last section lists what SX.1 and SX.8 should take from it.
 
 Retrieved 2026-10-14 (today). Research only. Nothing in the project folder was changed. All Madden facts are from EA's own pages unless a line says SRC-SECONDARY. In this file SRC-OFFICIAL means an EA page (ea.com, help.ea.com) for Madden facts, and a league page (operations.nfl.com, nfl.com, media.nfl.com) for NFL facts.
 

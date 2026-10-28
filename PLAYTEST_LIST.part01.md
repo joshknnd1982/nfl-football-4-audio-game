@@ -1,7 +1,7 @@
 # NFL Football 4: the owner's playtest list (N. F. L. rules and Franchise)
 
 Written in session SX.9 (2026-10-19). Everything here can only be judged by ear: the tests and simulations already check the rules, the
-numbers and the files. Each point says what to listen for, how to get there, what the default is and what can be changed. Tell Claude
+numbers and the files. Each point says what to listen for, how to get there, what the default is and what can be changed. Tell the agent
 in words what you heard ("the flag prompt is too long", "too many news lines"); nothing has to be written down in a special way.
 
 Sources: every session's "left open on purpose" list (work\review_sx*_findings.md), NFL_FRANCHISE_DESIGN sections 18 and 19, and
@@ -102,14 +102,14 @@ Defaults: "offseason: every stage", staff off, "draft picks told: first and your
    places and 16 weeks; seven draft rounds; your team starts from footplay.txt's names; the to-do list asked by default; every stage
    told; the game plan item only with playbooks.
 
-If you want to hear a league that is already many seasons old without playing them, ask Claude to prepare one from the simulation.
+If you want to hear a league that is already many seasons old without playing them, ask the agent to prepare one from the simulation.
 
 6. Added by S8.1 (D-080): two small changes to listen for.
    a. Press F1 at the main menu (and F5 to F8 or F9 and back): the week line ("This is week 3 of Jim's N. F. L. football", or "This is the division play off week ...") is now said again before today's game; the original said it only in the play-offs and without "This is the". Is that welcome, or noise?
    b. In an overtime game, press F4 at the very start of the overtime period: it says 15 minutes (the original said no time).
 
 7. Added by S8.3 (D-081): three things to listen for.
-   a. With NVDA, and with JAWS if you use it (F9, Speech settings, the speech output), listen to the sentences whose written form the original tuned for its SAPI voices: the yard words ("7 yards", "30 yard line"), the names that are spelled to be said ("Zoo lynn ski", "reed", "rea play", "quarter back") and "N. F. L.". If one sounds wrong, say which and with which screen reader: a respelling for that engine is then a small change. SAPI voices were checked by Claude: no sentence of the game is silent on any of the 27 engines that could be tested.
+   a. With NVDA, and with JAWS if you use it (F9, Speech settings, the speech output), listen to the sentences whose written form the original tuned for its SAPI voices: the yard words ("7 yards", "30 yard line"), the names that are spelled to be said ("Zoo lynn ski", "reed", "rea play", "quarter back") and "N. F. L.". If one sounds wrong, say which and with which screen reader: a respelling for that engine is then a small change. SAPI voices were checked by the agent: no sentence of the game is silent on any of the 27 engines that could be tested.
    b. The old emulated voices SAM and Votrax used to end the program on some of the game's own sentences (a list title followed by a count, a name that is empty). They are fixed. If you like, choose one of them for a speaker (F9, Speech settings, Voices) and play a little, to see that the game goes on talking. The built program is tested for this again at S9.2.
    c. F9, Speech settings, Save a problem report: the sentence that tells you where the file is, and whether the file is on your Desktop. This is what a player will send you.
 
@@ -121,9 +121,9 @@ If you want to hear a league that is already many seasons old without playing th
    e. Still to come (not in this build): every real NFL play (SX.10) and the real coaches and players with no typing (SX.11).
 
 9. Added by SX.10b2 (D-092): the plain descriptions and the key help, by ear.
-   a. N. F. L. rules, any play menu: press D on an item. You hear a description of one or two sentences for a person who has never watched football, then the item again; the menu stays where it was. Try a play, a group (Inside Runs), Field Goal, Time Out and Save Game, on offense and on defense. Tell Claude any description that is unclear or wrong, with the play's name.
+   a. N. F. L. rules, any play menu: press D on an item. You hear a description of one or two sentences for a person who has never watched football, then the item again; the menu stays where it was. Try a play, a group (Inside Runs), Field Goal, Time Out and Save Game, on offense and on defense. Tell the agent any description that is unclear or wrong, with the play's name.
    b. Classic: D does nothing new (the key echo as before). F7 now ends with the original's plays described: first the offense plays, then the defense plays.
-   c. F5 now lists every key, in Classic too (Alt and F10, Up and Down, the digits, Enter, Y and N, the coin toss, typing a name, the F9 menus, the saved game questions). With the N. F. L. rules it also lists S and D. F6 ends with a Keys part that says, for every key, where it works and what it does. Tell Claude if that is too long or in the wrong order.
+   c. F5 now lists every key, in Classic too (Alt and F10, Up and Down, the digits, Enter, Y and N, the coin toss, typing a name, the F9 menus, the saved game questions). With the N. F. L. rules it also lists S and D. F6 ends with a Keys part that says, for every key, where it works and what it does. Tell the agent if that is too long or in the wrong order.
    d. Still to come: the new play menus (Right, F, A, M, K, P, O, N) are not in the game yet (SX.10c), so their keys are not in these lists yet.
 
 10. Added by SX.10c (D-093): the new offense menus, by ear (N. F. L. rules; F9, Rules: choose an offense playbook, for example the team's, since a new player starts with Classic).

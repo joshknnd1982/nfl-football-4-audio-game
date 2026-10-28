@@ -561,7 +561,7 @@ Tests:
 
 ### C8
 
-Requirement: Tests (CLAUDE.md 1: run before saying it works). Each feature has: rule tests against `nfl_rules_<year>` (the numbers), scripted-random flow tests with the exact spoke...
+Requirement: Tests (AGENTS.md 1: run before saying it works). Each feature has: rule tests against `nfl_rules_<year>` (the numbers), scripted-random flow tests with the exact spoke...
 
 Tests:
 - test_nx_games.py: test_the_sample_falls_in_the_calibration_bands

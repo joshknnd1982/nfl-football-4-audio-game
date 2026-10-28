@@ -1,6 +1,6 @@
 # NFL_ROSTERS_LIVE_RESEARCH (nfl4 only): SR.1, the audit and the research plan for the real rosters (phase PR, rule 0.32, NX-L1 to NX-L10; D-152 to D-155)
 
-Written in session SR.1 (2026-10-25). Facts only (names, teams, positions, numbers). Claude is not a lawyer. Everything below was read as RAW data by scripts in `work\pr\` (not tracked: `audit_rosters.py`, `fetch_raw.py`, `parse_team_pages.py`; the saved pages and feeds are in `work\pr\raw\`, the reports are `work\pr\audit_rosters_report.txt` and `work\pr\team_pages_report.txt`). No roster row below came from a page summary.
+Written in session SR.1 (2026-10-25). Facts only (names, teams, positions, numbers). The agent is not a lawyer. Everything below was read as RAW data by scripts in `work\pr\` (not tracked: `audit_rosters.py`, `fetch_raw.py`, `parse_team_pages.py`; the saved pages and feeds are in `work\pr\raw\`, the reports are `work\pr\audit_rosters_report.txt` and `work\pr\team_pages_report.txt`). No roster row below came from a page summary.
 
 ## 1. The audit of what the game has (work\pr\audit_rosters.py)
 

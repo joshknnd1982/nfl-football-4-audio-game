@@ -2,12 +2,12 @@
 
 RETIRED 2026-10-27 (BC.2, D-178, D-180): the owner had the original's commentary and its commenters removed ("get rid of all of Jim Kitchen's commentary and commenting code for Gip and other commenters"). Neither Ghip nor any name below is offered or said any more; the analyst is the made-up Gus Delgado, and an older settings.txt that holds one of these names reads as him (the program keeps only SHA-256 digests of the names to recognize them). This file stays as the record of D-106.
 
-The owner asked on 2026-10-22: "The user should be able to change Ghip's name or pick from among popular sports podcaster names that Claude
+The owner asked on 2026-10-22: "The user should be able to change Ghip's name or pick from among popular sports podcaster names that [the agent]
 researches and puts into the game." The game offers the default (Ghip), the names below and the player's own typed name (F9, Rules, Commentator).
 The list is in `game/src/nfl4/extras/commentators.py` (`NAMES`, alphabetical, 28 names). Facts only: a name is the host of a sports podcast or
 show that a source below lists. Nothing is a recording or a quotation: the game's commentator is a computer voice that says the game's own lines, and
 the README, the About text and CUSTOMIZE.md say that the names are used descriptively and that nobody named has anything to do with the game.
-Claude is not a lawyer; the owner can empty the list or ask for a name to be removed at any time (one line of `commentators.py`).
+The agent is not a lawyer; the owner can empty the list or ask for a name to be removed at any time (one line of `commentators.py`).
 
 Researched 2026-10-22 by web search. Evidence tags: SRC-SECONDARY for every row (published rankings and show listings; the shows' own pages were
 not needed for a name). Popularity is not one number: Edison counts weekly reach, Spotify its own listeners, CastFox and Leaderboarded

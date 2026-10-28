@@ -1,6 +1,6 @@
 # NFL_NAMES_RESEARCH (nfl4 only): the real head coaches and rosters of the 32 teams (SX.11, NX-N2, NX-N3, D-098)
 
-Written by `work\sx11\make_names_doc.py` from the research files of session SX.11 (2026-10-22); never edit by hand. CLAUDE.md rule 0.19, playbook 7.14.
+Written by `work\sx11\make_names_doc.py` from the research files of session SX.11 (2026-10-22); never edit by hand. AGENTS.md rule 0.19, playbook 7.14.
 
 ## 1. What was researched and how
 
@@ -18,7 +18,7 @@ Written by `work\sx11\make_names_doc.py` from the research files of session SX.1
   Myles Garrett (95) and Davante Adams (17) on Reserve/Injured; the Browns' page lists Jared Verse; Jaxson Dart, Jalen Hurts and Brian Burns
   are injured (not in the active table). The data takes the pages as they are.
 
-## 2. Terms of use (NX-N3; Claude is not a lawyer)
+## 2. Terms of use (NX-N3; the agent is not a lawyer)
 
 - All 32 team sites are NFL-network sites. The NFL's terms of use (https://www.nfl.com/legal/terms/, section 1) allow "your own individual
   non-commercial and informational purposes", bar copying or redistributing the site's content without express permission, and bar (section

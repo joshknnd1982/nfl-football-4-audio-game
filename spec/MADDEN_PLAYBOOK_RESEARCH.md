@@ -1,6 +1,6 @@
 # MADDEN_PLAYBOOK_RESEARCH (nfl4 only): Madden NFL 27 playbooks as a model for the game's optional playbooks
 
-Status: RESEARCH, version 1.0 (2026-10-14, session SX.0), for `spec\NFL_EXTRA_FEATURES.md` section 10 (NX5, playbooks). nfl4 only (CLAUDE.md rule 0.13). Research only: no code, no other file changed. Plain headings and lists, no tables. The last section lists what SX.1 should take from it.
+Status: RESEARCH, version 1.0 (2026-10-14, session SX.0), for `spec\NFL_EXTRA_FEATURES.md` section 10 (NX5, playbooks). nfl4 only (AGENTS.md rule 0.13). Research only: no code, no other file changed. Plain headings and lists, no tables. The last section lists what SX.1 should take from it.
 
 Retrieved 2026-10-14. Research only, nothing in the project folder was changed. Tags: SRC-OFFICIAL means an EA page (help.ea.com or ea.com/games/madden-nfl/madden-nfl-27) or, for the original game's own table, GAME_SPEC.md. SRC-SECONDARY means a community or news site. UNVERIFIED means not found. Where I paraphrase I say so; no EA text is copied. NX-R6 applies: only football concepts and the structure of the feature are used.
 

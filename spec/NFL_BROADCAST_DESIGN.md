@@ -8,8 +8,8 @@ nfl4 only (rule 0.13), and the model for every sports game of the owner's (rule 
   throw all that away... next: incorporate all new broadcast code in a new style radio broadcast format with new announcer names, etcetera."
 - Asked: should Classic (the exact original, F9, Rules) keep the original's commentary? Answer: "Every mode": the original's commentary goes from
   Classic too; Classic keeps the original's plays and rules, and with comments on it uses the new radio broadcast.
-- Asked: a rule for every sports game? Answer: "Yes, every sports game": CLAUDE.md 0.27, playbook 7.19 and fixesforgames A87 are amended.
-- Reading of "commentary" (Claude's, recorded in D-178, the owner may correct it): the commentary is what is said ABOUT the game around the plays:
+- Asked: a rule for every sports game? Answer: "Yes, every sports game": AGENTS.md 0.27, playbook 7.19 and fixesforgames A87 are amended.
+- Reading of "commentary" (the agent's, recorded in D-178, the owner may correct it): the commentary is what is said ABOUT the game around the plays:
   the original's 142 jokes and asides of the announcer ("Ghip" and the 58 names they tease), their timing and their draws, and the color
   commentator "Ghip" with the list of 28 real podcasters' names the player could give him (D-106, "other commenters"). The play-by-play of a
   play (the original's sentences that say what happened: the snap, the run, the tackle, the gain, the score) is not commentary: it is how the
@@ -202,7 +202,7 @@ Sign-off, Walt (pool SGO, once at the end of every game):
 
 ## 11. Review against real radio broadcasts (RS.1, D-179, 2026-10-26; the owner's instruction of the same day)
 
-The owner asked for real NFL radio broadcasts to be fetched, transcribed with Whisper and used as the template (CLAUDE.md 0.33, playbook 7.24). Two whole games were transcribed (a modern national network call and a classic one); the result is `spec\RADIO_NFL_STYLE.md`. Its findings change this design as follows; where this section and sections 4 or 10 differ, this section wins.
+The owner asked for real NFL radio broadcasts to be fetched, transcribed with Whisper and used as the template (AGENTS.md 0.33, playbook 7.24). Two whole games were transcribed (a modern national network call and a classic one); the result is `spec\RADIO_NFL_STYLE.md`. Its findings change this design as follows; where this section and sections 4 or 10 differ, this section wins.
 
 Confirmed by the real calls (nothing to change): the sign-on with the identification of the network and the crew by role (SGN, CRW), the sideline note before the kick-off (SON), the score recap after every score (UPD), the quarter recap (QUP), the station break at the two-minute warning (STA: the real call says it aloud, "pause ten seconds for stations to identify themselves"), the reporter at injuries and at half time (SIN, SHT), the analyst's reason after a play (the C pools) and the sign-off (SGO).
 

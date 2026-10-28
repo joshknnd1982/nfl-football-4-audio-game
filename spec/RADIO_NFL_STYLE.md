@@ -1,6 +1,6 @@
 # NFL radio broadcast style guide (RS.1, D-179, written 2026-10-26)
 
-nfl4 only for the facts, and the model for every sports game (CLAUDE.md 0.33, playbook 7.24, template `games\shared\broadcast-style\STYLE_GUIDE_TEMPLATE.md`). This is inspired by Jim Kitchen.
+nfl4 only for the facts, and the model for every sports game (AGENTS.md 0.33, playbook 7.24, template `games\shared\broadcast-style\STYLE_GUIDE_TEMPLATE.md`). This is inspired by Jim Kitchen.
 
 The owner's instruction: find real NFL radio broadcasts, transcribe them with Whisper into markdown, and use that as the template for the game's radio broadcast style. This guide is the result. It holds numbers, patterns and lines written NEW for the game. The audio and the full transcripts are the broadcasters' property and stay in the gitignored `work\radio\` folder (never committed, shipped or quoted); only the Sources table below names the broadcasts. No sentence of a transcript is copied: a line check run on 2026-10-26, before the study scripts were deleted, found no run of eight words that a transcript also holds in any of the 312 new lines.
 
