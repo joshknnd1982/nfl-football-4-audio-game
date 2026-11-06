@@ -412,11 +412,24 @@ class Game(Speakers):
         self.say(scorespeech.score_sentence(self.own_team(), self.opponent_team(), own_score, opponent_score))
         self.ptf = 0
 
+    def division_orders(self) -> dict | None:
+        """S-E3 (D-202): on the real calendar with the franchise's results, each division's places first to last by the N. F. L.'s tie-breakers;
+        else None (the original's loss order)."""
+        if self.season.calendar is None:
+            return None
+        data = self.season_hooks.tiebreak_games()
+        if data is None:
+            return None
+        from .playoffs import tiebreak_table
+        from .tiebreak import division_order
+        table = tiebreak_table(self.season.records, data[0], data[1])
+        return {d: [team.place for team in division_order(table, d)] for d in range(1, 9)}
+
     def say_stand(self) -> bool:
         """SayStand (GAME_SPEC 5.2): the standings after the week just played, nothing when gtp is 0 or above 17. The
         original clears the key twice (clk) on the way, the second time only when it will speak. True when it spoke."""
         self.keys.clk()
-        speech = standings_speech(self.league, self.season.records, self.season.gtp, self.season.regular_weeks)
+        speech = standings_speech(self.league, self.season.records, self.season.gtp, self.season.regular_weeks, self.division_orders())
         if speech is None:
             return False
         self.keys.clk()

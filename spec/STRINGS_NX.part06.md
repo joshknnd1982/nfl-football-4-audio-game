@@ -1,19 +1,3 @@
-- NXU-40 (prompt, say5): " type the new name of <player>, then press enter. ". F9 roster, Enter on a player: the original's typed prompt (SX.8m)
-- NXU-41 (prompt, say5): " is <name> correct? ". F9 roster: the original's yes or no question (SX.8m)
-- NXU-42 (sentence, say5): " <player> keeps his name. ". F9 roster: no name typed, or the answer no (SX.8m)
-- NXU-43 (sentence, say5): " that is his name already. <player> keeps it. ". F9 roster: the same name (SX.8m)
-- NXU-44 (sentence, say5): " another player has that name. <player> keeps his name. ". F9 roster: names stay unique among the active (SX.8m)
-- NXU-45 (sentence, say5): " <player> waits for the roster cut and can be renamed after it. ". F9 roster: a drafted rookie before the cut (SX.8m)
-- NXU-46 (sentence, say5): " <player> is now <name>. ". F9 roster: renamed (SX.8m)
-- NXU-A10 (answer, say2): "use the non-exclusive tag, <contract>". stage 7, a talk: other teams may make him an offer (SX.8m)
-- NXU-57 (sentence, say2): " <player> gets the non-exclusive franchise tag, <contract>. other teams may make him an offer in free agency. ". stage 7: the non-exclusive tag (SX.8m)
-- NXU-50 (prompt, say2): " the <team> make an offer for <player>, your <position> under the non-exclusive tag: <contract>. ". stage 8: the offer sheet (SX.8m)
-- NXU-51 (sentence, say2): " you may keep him at that contract, or let him go for their first round picks of this draft and the next. ". stage 8: the offer sheet (SX.8m)
-- NXU-52 (sentence, say2): " your cap has no room to match it, so he goes for their first round picks of this draft and the next. ". stage 8: the offer sheet, no room (SX.8m)
-- NXU-A08 (answer, say2): "keep him at their offer". stage 8: match the offer sheet (SX.8m)
-- NXU-A09 (answer, say2): "let him go for the picks". stage 8: take the two first-round picks (SX.8m)
-- NXU-53 (sentence, say2): " <player> stays, <contract>. ". stage 8: the offer is matched (SX.8m)
-- NXU-54 (sentence, say2): " <player> joins the <team>. you get their first round picks of this draft and the next. ". stage 8: the picks are taken (SX.8m)
 - NXU-55 (sentence, say2): " no team made an offer for <player>. he stays on the tag. ". stage 8: no offer sheet (SX.8m)
 - NXU-56 (sentence, say2): " the staff answered the offer for <player>. ". stage 8: the staff handles the to-do list (SX.8m)
 - NXH-44 (help, say5): " Camp focus before the progression, undrafted free agents at the cut, compensatory picks for free agents lost, the non-exclusive tag. F9 roster: Enter renames your player. ". F6, after NXH-43 (SX.8m)
@@ -84,10 +68,29 @@
 - NXC-23 (sentence, say2): " Your team has a bye this week. There is no game today. ". 'Today's game is ...' in the bye week (SZ.8)
 - NXC-24 (sentence, say2): " your team has a bye this week. ". the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
 - NXC-25 (sentence, say4): " the top seeds, the <team> and the <other>, have the only byes of the wild card round. ". the end of a regular season on the real calendar (D-129, the N. F. L.'s 14-team play-offs), after the N. F. C. wild card teams: the A. F. C.'s seed 1, then the N. F. C.'s
+- NXC-26 (sentence, say4): " Your team won the division title over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the player's division title and his team won it
+- NXC-27 (sentence, say4): " The <other> won the division title over your team on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the player's division title and another team won it
+- NXC-28 (sentence, say4): " Your team won the last wild card place over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and the player's team won it
+- NXC-29 (sentence, say4): " The <other> won the last wild card place over your team on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and another team won it
+- NXC-30 (piece, say4): "the games between the teams". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'head-to-head'
+- NXC-31 (piece, say4): "it beat each of the other teams". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'head-to-head sweep'
+- NXC-32 (piece, say4): "the record in division games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'division record'
+- NXC-33 (piece, say4): "the record against common opponents". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'common games'
+- NXC-34 (piece, say4): "the record in conference games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'conference record'
+- NXC-35 (piece, say4): "strength of victory, the records of the teams it beat". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'strength of victory'
+- NXC-36 (piece, say4): "strength of schedule, the records of the teams it played". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'strength of schedule'
+- NXC-37 (piece, say4): "points scored and allowed, ranked in the conference". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'conference points ranking'
+- NXC-38 (piece, say4): "points scored and allowed, ranked in the league". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'league points ranking'
+- NXC-39 (piece, say4): "net points against common opponents". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points in common games'
+- NXC-40 (piece, say4): "net points in conference games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points in conference games'
+- NXC-41 (piece, say4): "net points in all games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points'
+- NXC-42 (piece, say4): "a coin toss". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'coin toss'
+- NXC-43 (piece, say4): "the order of its division". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'division order'
 - NXH-72 (help, say5): " Practice squad: up to 16 players, at most 6 veterans, formed at the roster cut. A squad player is elevated when an injury leaves his position with nobody, up to 3 times a season. ". F6 while the franchise is in use (D-136)
 - NXH-73 (help, say5): " Practice squad: the players a team keeps to practice with it but who do not play unless they are elevated for a game or signed. Elevated: moved up from the practice squad for one game. ". F7 glossary while the franchise is in use (D-136)
 - NXH-74 (help, say5): " F9, Franchise, practice squad: sign a squad player to your roster, add a free agent to the squad, release a squad player, protect squad players, or sign a player from another team's practice squad. ". F6 while the franchise is in use (D-136)
 - NXH-76 (help, say5): " The play-offs of a franchise on the real calendar are the N. F. L.'s: 7 teams in each conference, and only the top seed rests in the wild card round. The division round is reseeded. ". F6 while the franchise is in use (D-129)
+- NXH-87 (help, say5): " Equal records are settled by the N. F. L.'s tie-breakers, the games between the teams first, and the standings follow them. ". F6 while the franchise is in use, after NXH-76 (S-E3, D-202)
 - NXH-77 (help, say5): " F9, Franchise, get the latest N. F. L. calendar asks the game's page on GitHub for the newest schedule, only when you choose it. ". F6 while the franchise is in use (D-128)
 - NXH-78 (help, say5): " In a franchise, F9, Rules, Quarterbacks lists every team's starter and its practice squad quarterbacks; on your team a practice squad quarterback can become the starter. ". F6 while the franchise is in use (D-132)
 - NXJ-Q01 (sentence, say5): " the quarterbacks of every team. Up and Down move through the teams, letters find one, and Enter lists a team's quarterbacks so you can choose who starts. ". F9, Rules, Quarterbacks: the title of the teams' list outside a franchise (D-132)
@@ -295,8 +298,3 @@
 - BN71 (remark, say): " If you hear a pen clicking, that is <commentator> working on something to tell you next. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN72 (remark, say): " <commentator> and I have a bet going on the next play. I will not say who is winning. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN73 (remark, say): " The booth is quiet for a moment while <commentator> and I watch the formation. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN74 (remark, say): " <commentator> is nodding at that, which on the radio means I have to say it out loud. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN75 (remark, say): " There is a lot of coffee in this booth, and <commentator> is doing most of the drinking. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN76 (remark, say): " I am told <commentator> has an opinion on that, and I am told it is a strong one. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN77 (remark, say): " It takes a lot of preparation to sit next to <commentator>. Mostly patience. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN78 (remark, say): " <commentator> has been studying the film all week, and it shows. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)

@@ -64,9 +64,12 @@ the file again.
 **The play-offs.** A franchise on the real calendar has the NFL's play-offs: 7 teams in each conference, the four division winners seeded 1 to 4
 by their record and three wild cards seeded 5 to 7. Only seed 1 rests in the wild card round, where 2 hosts 7, 3 hosts 6 and 4 hosts 5. In the
 division round seed 1 hosts the lowest seed left and the other two winners meet at the better seed, and the better seed hosts the conference
-championship. At the end of the regular season the game names the division winners, the wild cards and the two teams with a bye. The order of
-the teams follows the game's own rule (the most wins, a tie counting half a win), not the NFL's long list of tie-breakers. Classic and a
-franchise on the original's 16 weeks keep the original's 12 teams.
+championship. At the end of the regular season the game names the division winners, the wild cards and the two teams with a bye. Teams are
+ordered by their winning percentage (a tie game counts half a win and half a loss), and equal teams by the NFL's tie-breaking procedures: the
+games between the teams, the division or conference record, common opponents, strength of victory and of schedule, points, net points and a
+coin toss (fixed for each season; the NFL's net touchdowns step is skipped, because the game keeps no touchdowns of the other games). The
+standings after each week follow the same order. When a tie-breaker decides your division title or your conference's last wild card place,
+the game says so and why. Classic and a franchise on the original's 16 weeks keep the original's 12 teams and order.
 
 **The real roster.** Every franchise team is its real roster of up to 53 players, each at his real position (quarterback, halfback, fullback,
 wide receiver, tight end, left and right tackle, left and right guard, center, left and right edge, defensive tackle, strong-side, middle and

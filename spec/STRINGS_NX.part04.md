@@ -1,10 +1,3 @@
-- NXB-F08 (help, say5): " Passes of medium length, usually over the middle or toward the sideline. ". description of the list og08 Intermediate Passes (NX-P8)
-- NXB-F09 (help, say5): " Long passes down the field, with big gains and bigger risks. ". description of the list og09 Deep Passes (NX-P8)
-- NXB-F10 (help, say5): " Plays where two or three receivers run different long patterns. ". description of the list og10 Deep Combinations (NX-P8)
-- NXB-F11 (help, say5): " Pass plays that begin with a fake handoff. ". description of the list og11 Play Action (NX-P8)
-- NXB-F12 (help, say5): " Pass plays where the quarterback runs to the side before he throws. ". description of the list og12 Moving Pocket (NX-P8)
-- NXB-F13 (help, say5): " Plays where the quarterback runs with the ball. ". description of the list og13 Quarterback Runs (NX-P8)
-- NXB-F14 (help, say5): " Runs where the quarterback chooses at the last moment to keep the ball or give it away. ". description of the list og14 Option Runs (NX-P8)
 - NXB-F15 (help, say5): " Plays that are a run and a quick pass at once. The quarterback chooses after the snap. ". description of the list og15 Run Pass Options (NX-P8)
 - NXB-F16 (help, say5): " Unusual plays meant to fool the defense. They are rare and risky. ". description of the list og16 Trick Plays (NX-P8)
 - NXB-F17 (help, say5): " Plays for when only a few yards are needed or the goal line is close. ". description of the list og17 Goal Line and Short Yardage (NX-P8)
@@ -443,3 +436,18 @@
 - NXE-41 (sentence, say2): " most improved: <player>, <position>, up <d> to <r>. ". stage 3
 - NXE-42 (sentence, say2): " the biggest drop: <player>, <position>, down <d> to <r>. ". stage 3, none when nobody went down
 - NXE-43 (sentence, say2): " your whole roster is in the franchise menu on F9. ". stage 3
+- NXE-71 (sentence, say2): " retiring: <n> in the league, <m> from your team. ". stage 2 in the short offseason
+- NXE-72 (sentence, say2): " your players: improved <n>, declined <m>. ". stage 3 in the short offseason
+- NXK-01 (sentence, say2): " the draft has 7 rounds. you have pick number <n> in every round. ". stage 4, after the stage's name
+- NXK-02 (sentence, say2): " round <n>. ". stage 4, before the first spoken line of a round
+- NXK-03 (sentence, say2): " pick <n>: the <team> take <player>, <position>. ". stage 4, a told pick of a computer team (n: the pick in the round)
+- NXK-04 (prompt, say2): " <coach> it is your pick, round <round>, pick <pick>. your open places: <list>. ". stage 4, the player's pick
+- NXK-05 (sentence, say2): " the staff's list. ". stage 4, before the staff's five
+- NXK-06 (sentence, say2): " <player>, <position>, about <lo> to <hi>, age <a>, <potential> potential ". a prospect or a rookie before the cut in a list
+- NXK-07 (menu, say2): "hear more prospects". stage 4, item 6 of the player's pick
+- NXK-08 (menu, say2): "let the staff pick". stage 4, item 7
+- NXK-09 (menu, say2): "staff makes your other picks". stage 4, item 8
+- NXK-10 (sentence, say2): " you take <player>, <position>. ". stage 4, after the player chose a prospect
+- NXK-11 (sentence, say2): " the draft is over. your rookies: ". stage 4, before the player's rookies
+- NXK-12 (sentence, say2): " the staff took <player>, <position>. ". stage 4, the staff made the player's pick
+- NXK-13 (piece, piece): "none". the open places when there are none

@@ -248,8 +248,9 @@ def end_of_regular_season(records: Records, own: TeamRef) -> RegularSeasonEnd:
 # A franchise that plays the real calendar has the N. F. L.'s play-offs (NFL Rule Book, the playoff format since 2020, SRC-OFFICIAL): 7 teams a
 # conference, the four division winners seeded 1 to 4 and three wild cards 5 to 7; only seed 1 has a bye; in the wild card round 2 hosts 7, 3 hosts 6
 # and 4 hosts 5; the division round is reseeded (seed 1 hosts the lowest seed left, the other two winners meet at the better seed), and the better
-# seed hosts the conference championship. The order of the teams is the original's own rule (wins, a tie half a win; equal teams keep the division
-# order; the losses for the wild cards; Q43's place for the player's team): the N. F. L.'s long list of tie-breakers is not modelled. Classic and a
+# seed hosts the conference championship. With the season's results (a franchise, always) the N. F. L.'s tie-breakers order the teams
+# (game/tiebreak.py, S-E3, D-202); without them the original's own rule (wins, a tie half a win; equal teams keep the division
+# order; the losses for the wild cards; Q43's place for the player's team). Classic and a
 # franchise on the original's 16 weeks keep the original's 12 teams exactly (the golden transcript).
 
 REAL_WILD_CARDS = 3                       # a conference's wild cards: seeds 5, 6 and 7
@@ -269,14 +270,39 @@ def _real_games(seeds_: Sequence[Qualifier], cards: Sequence[Qualifier]) -> list
     return [(cards[2].team, seeds_[1].team), (cards[1].team, seeds_[2].team), (cards[0].team, seeds_[3].team)]
 
 
-def real_end_of_regular_season(records: Records, own: TeamRef) -> RegularSeasonEnd:
-    """The end of a regular season on the real calendar: the eight division winners (the original's rule), the seeds, three wild cards a
-    conference, the six wild card games (A. F. C. first) and the two teams with a bye (the A. F. C.'s seed 1, then the N. F. C.'s)."""
-    winners, in_playoffs = division_winners(records, own)
-    afc_seeds = real_seeds(winners, AFC_DIVISIONS)
-    nfc_seeds = real_seeds(winners, NFC_DIVISIONS)
-    afc_cards, in_playoffs = wild_cards(records, AFC_DIVISIONS, winners, own, in_playoffs, REAL_WILD_CARDS)
-    nfc_cards, in_playoffs = wild_cards(records, NFC_DIVISIONS, winners, own, in_playoffs, REAL_WILD_CARDS)
+def tiebreak_table(records: Records, games, coin_key: str = ""):
+    """The season's games as the N. F. L.'s tie-breakers read them (game/tiebreak.py, S-E3, D-202)."""
+    from . import tiebreak
+    return tiebreak.Table.build(lambda team: records.record(team[0], team[1]) + (records.ties_of(team[0], team[1]),),
+                                (tiebreak.Game(*g) for g in games), coin_key)
+
+
+def _qualifier(records: Records, team) -> Qualifier:
+    wins, losses = records.record(team[0], team[1])
+    return Qualifier(TeamRef(team[0], team[1]), wins, losses, records.ties_of(team[0], team[1]))
+
+
+def real_end_of_regular_season(records: Records, own: TeamRef, games=None, coin_key: str = "", notes: list | None = None) -> RegularSeasonEnd:
+    """The end of a regular season on the real calendar: the eight division winners, the seeds, three wild cards a conference, the six wild card
+    games (A. F. C. first) and the two teams with a bye (the A. F. C.'s seed 1, then the N. F. C.'s). With the season's `games` (a franchise's
+    results: (team, team, score, score) rows of the regular season) the N. F. L.'s tie-breakers decide every equal record (S-E3, D-202) and the
+    original's favour for the player's team (Q43) is gone; without them (no results known) the original's order, as D-138 built it."""
+    if games is not None:
+        from . import tiebreak
+        table = tiebreak_table(records, games, coin_key)
+        seeded = tiebreak.seeding(table, REAL_WILD_CARDS)
+        if notes is not None:
+            notes.extend(table.notes)
+        winners = [_qualifier(records, team) for team in seeded.winners]
+        afc, nfc = [_qualifier(records, t) for t in seeded.seeds[0]], [_qualifier(records, t) for t in seeded.seeds[1]]
+        afc_seeds, afc_cards, nfc_seeds, nfc_cards = afc[:4], afc[4:], nfc[:4], nfc[4:]
+        in_playoffs = any(q.team == own for q in afc + nfc)
+    else:
+        winners, in_playoffs = division_winners(records, own)
+        afc_seeds = real_seeds(winners, AFC_DIVISIONS)
+        nfc_seeds = real_seeds(winners, NFC_DIVISIONS)
+        afc_cards, in_playoffs = wild_cards(records, AFC_DIVISIONS, winners, own, in_playoffs, REAL_WILD_CARDS)
+        nfc_cards, in_playoffs = wild_cards(records, NFC_DIVISIONS, winners, own, in_playoffs, REAL_WILD_CARDS)
     pairings = _real_games(afc_seeds, afc_cards) + _real_games(nfc_seeds, nfc_cards)
     byes = [afc_seeds[0].team, nfc_seeds[0].team]
     seed_of: dict = {}

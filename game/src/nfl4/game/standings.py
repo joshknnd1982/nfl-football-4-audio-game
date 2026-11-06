@@ -143,16 +143,22 @@ class StandingsSpeech:
     divisions: list[tuple[str, list[str]]]       # (the division text with its spaces, its four team sentences)
 
 
-def standings_speech(league: League, records: Records, gtp: int, regular_weeks: int = 16) -> StandingsSpeech | None:
+def standings_speech(league: League, records: Records, gtp: int, regular_weeks: int = 16, orders: dict | None = None) -> StandingsSpeech | None:
     """What SayStand says, in order, or None when it says nothing (gtp 0 or less, or above 17: after the regular season's last week the wild card
-    week is the first that is silent; `regular_weeks` is 16, or 18 in a Franchise that plays the real calendar)."""
+    week is the first that is silent; `regular_weeks` is 16, or 18 in a Franchise that plays the real calendar). `orders` (S-E3, D-202: a
+    franchise on the real calendar) gives each division's places first to last by the N. F. L.'s percentage and tie-breakers; without it the
+    original's loss order."""
     if gtp > regular_weeks + 1 or gtp < 1:
         return None
     week = min(gtp - 1, regular_weeks)
     divisions = []
     for division in range(1, DIVISIONS + 1):
-        ties = standings_ties(division, league, records)
+        if orders is not None and division in orders:
+            rows = [(league.team(division, p),) + records.record(division, p) for p in orders[division]]
+            ties = [records.ties_of(division, p) for p in orders[division]]
+        else:
+            rows, ties = standings_order(division, league, records), standings_ties(division, league, records)
         lines = [" " + name + " " + trim(str_(wins)) + AND + trim(str_(losses)) + (", " + ties_words(tied) if tied else "") + END
-                 for (name, wins, losses), tied in zip(standings_order(division, league, records), ties)]
+                 for (name, wins, losses), tied in zip(rows, ties)]
         divisions.append((league.division_text(division), lines))
     return StandingsSpeech(HEADING + trim(str_(week)), divisions)

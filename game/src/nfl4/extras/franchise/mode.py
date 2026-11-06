@@ -48,6 +48,14 @@ class FranchiseHooks(ClassicSeasonHooks):
             game.commit()
             self.store.game_injuries = None
 
+    def tiebreak_games(self):
+        """S-E3 (D-202): the regular season's results for the N. F. L.'s tie-breakers, and the coin toss's key (the league and the season)."""
+        league = self.store.league
+        if league is None:
+            return None
+        games = [(team_ref(row[2]), team_ref(row[3]), row[4], row[5]) for row in league.results if row[0] == D.STAGE_CODE["regular"]]
+        return games, "%s:%d" % (league.league_id, league.season)
+
     def place(self) -> LeaguePlace | None:
         """The league's 32 sums of this season (kept at the start of the season), or None when there are none: no shift. SX.8k: the teams play the
         week's games with the players who are fit (injuries.effective_sums), in the league's frame of the season's sums."""

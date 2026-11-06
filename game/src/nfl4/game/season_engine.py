@@ -104,6 +104,11 @@ class ClassicSeasonHooks:
         the visitor, wins). The Franchise leans it by strength with one draw (design 5.2). Classic: exactly the original's draw."""
         return rnd(2) == 1
 
+    def tiebreak_games(self):
+        """S-E3 (D-202): the regular season's games for the N. F. L.'s tie-breakers, as (games, coin key), each game (team, team, score, score)
+        with TeamRef-shaped teams; None when the season keeps no results (Classic): the original's order."""
+        return None
+
 
 CLASSIC_SEASON_HOOKS = ClassicSeasonHooks()
 
@@ -259,8 +264,16 @@ class SeasonEngine:
     def _seed_of(self) -> dict:
         """The seeds of the N. F. L. bracket, worked out again from the regular season's records (they do not change in the play-offs), so a
         round resumed from the files is reseeded as the round that was played."""
+        return self._real_end().seed_of
+
+    def _real_end(self, notes: list | None = None):
+        """The N. F. L. bracket's end of the regular season: with the franchise's results the real tie-breakers (S-E3, D-202), else D-138's order."""
         season = self.g.season
-        return real_end_of_regular_season(season.records, season.own_team).seed_of
+        data = self.hooks.tiebreak_games()
+        if data is None:
+            return real_end_of_regular_season(season.records, season.own_team)
+        games, coin_key = data
+        return real_end_of_regular_season(season.records, season.own_team, games, coin_key, notes)
 
     def _division_round(self, winners: list[TeamRef], byes: list[TeamRef]) -> list[Pairing]:
         """The division round's games after the wild card round: the original's winners at the four bye teams in order, or the N. F. L.'s
@@ -459,7 +472,10 @@ class SeasonEngine:
         g, season, league = self.g, self.g.season, self.g.league
         own = season.own_team
         real = season.calendar is not None                        # D-129: the N. F. L.'s 14 teams on the real calendar
-        result = real_end_of_regular_season(season.records, own) if real else end_of_regular_season(season.records, own)
+        notes: list = []
+        result = self._real_end(notes) if real else end_of_regular_season(season.records, own)
+        for note in notes:
+            log.info("play-offs: tie-breaker (S-E3): %s", note)
         log.info("play-offs: %s bracket, wild card games %s, byes %s", "the N. F. L.'s 14-team" if real else "the original's 12-team",
                  result.pairings, result.byes)
         g.empty_replay()                                          # 0x4698e9
@@ -478,6 +494,8 @@ class SeasonEngine:
         if real:                                                  # D-129: only the two top seeds rest in the wild card round
             from ..extras import nx_texts as X
             g.say4(X.text("NXC-25", team=self.name(result.byes[0]), other=self.name(result.byes[1])))
+            for line in self._tiebreak_lines(notes, own):     # S-E3 (D-202): a tie-breaker that decided the player's title or last place
+                g.say4(line)
         g.log_print("")
         season.playoffs.pairings = list(result.pairings)          # k4, footbal4.dat; footbal5.dat
         season.playoffs.byes = list(result.byes)
@@ -496,6 +514,26 @@ class SeasonEngine:
             g.log_print("")
             self._round_wait()                                    # 0x46fa4b, no clk first
             self.finplay17()                                      # gtp is 0 afterwards; football.gtp is not written
+
+    STEP_TEXT = {"head-to-head": "NXC-30", "head-to-head sweep": "NXC-31", "division record": "NXC-32", "common games": "NXC-33",
+                 "conference record": "NXC-34", "strength of victory": "NXC-35", "strength of schedule": "NXC-36",
+                 "conference points ranking": "NXC-37", "league points ranking": "NXC-38", "net points in common games": "NXC-39",
+                 "net points in conference games": "NXC-40", "net points": "NXC-41", "coin toss": "NXC-42", "division order": "NXC-43"}
+    TIE_TEXT = {"title won": "NXC-26", "title lost": "NXC-27", "wild won": "NXC-28", "wild lost": "NXC-29"}
+
+    def _tiebreak_lines(self, notes: list, own: TeamRef) -> list[str]:
+        """The sentences of the ties that decided the player's division title or his conference's last wild card place (tiebreak.deciding_notes):
+        who won it, over whom, and the step that settled it."""
+        from ..extras import nx_texts as X
+        from .tiebreak import deciding_notes
+        lines = []
+        for kind, note in deciding_notes(notes, own, 3):
+            if kind.endswith("won"):
+                other, step = note.set_aside[-1]
+            else:
+                other, step = note.winner, note.step_against(own)
+            lines.append(X.text(self.TIE_TEXT[kind], other=self.name(TeamRef(*other)), step=X.text(self.STEP_TEXT[step]).strip()))
+        return lines
 
     def _wild_card_games_without_the_player(self) -> None:
         """The player's team has a bye: the four wild card games are played and spoken (0x46fec8 to 0x4734fd), the

@@ -1,18 +1,3 @@
-- NXE-71 (sentence, say2): " retiring: <n> in the league, <m> from your team. ". stage 2 in the short offseason
-- NXE-72 (sentence, say2): " your players: improved <n>, declined <m>. ". stage 3 in the short offseason
-- NXK-01 (sentence, say2): " the draft has 7 rounds. you have pick number <n> in every round. ". stage 4, after the stage's name
-- NXK-02 (sentence, say2): " round <n>. ". stage 4, before the first spoken line of a round
-- NXK-03 (sentence, say2): " pick <n>: the <team> take <player>, <position>. ". stage 4, a told pick of a computer team (n: the pick in the round)
-- NXK-04 (prompt, say2): " <coach> it is your pick, round <round>, pick <pick>. your open places: <list>. ". stage 4, the player's pick
-- NXK-05 (sentence, say2): " the staff's list. ". stage 4, before the staff's five
-- NXK-06 (sentence, say2): " <player>, <position>, about <lo> to <hi>, age <a>, <potential> potential ". a prospect or a rookie before the cut in a list
-- NXK-07 (menu, say2): "hear more prospects". stage 4, item 6 of the player's pick
-- NXK-08 (menu, say2): "let the staff pick". stage 4, item 7
-- NXK-09 (menu, say2): "staff makes your other picks". stage 4, item 8
-- NXK-10 (sentence, say2): " you take <player>, <position>. ". stage 4, after the player chose a prospect
-- NXK-11 (sentence, say2): " the draft is over. your rookies: ". stage 4, before the player's rookies
-- NXK-12 (sentence, say2): " the staff took <player>, <position>. ". stage 4, the staff made the player's pick
-- NXK-13 (piece, piece): "none". the open places when there are none
 - NXE-50 (sentence, say2): " the roster cut. the staff would release: ". stage 5, before the staff's releases of the player's team
 - NXE-51 (sentence, say2): " <player>, <position>, age <a>, rating <r>. ". stage 5, a player the staff would release
 - NXE-52 (menu, say2): "release them". stage 5, the staff's cuts
@@ -446,3 +431,19 @@
 - NXU-A06 (answer, say2): "offer nobody". stage 5, undrafted free agents (SX.8m)
 - NXU-A07 (answer, say2): "done". stage 5, choose yourself: the offers are made (SX.8m)
 - NXU-C01 (piece, piece): "offered". after a prospect the player offers a place (SX.8m)
+- NXU-40 (prompt, say5): " type the new name of <player>, then press enter. ". F9 roster, Enter on a player: the original's typed prompt (SX.8m)
+- NXU-41 (prompt, say5): " is <name> correct? ". F9 roster: the original's yes or no question (SX.8m)
+- NXU-42 (sentence, say5): " <player> keeps his name. ". F9 roster: no name typed, or the answer no (SX.8m)
+- NXU-43 (sentence, say5): " that is his name already. <player> keeps it. ". F9 roster: the same name (SX.8m)
+- NXU-44 (sentence, say5): " another player has that name. <player> keeps his name. ". F9 roster: names stay unique among the active (SX.8m)
+- NXU-45 (sentence, say5): " <player> waits for the roster cut and can be renamed after it. ". F9 roster: a drafted rookie before the cut (SX.8m)
+- NXU-46 (sentence, say5): " <player> is now <name>. ". F9 roster: renamed (SX.8m)
+- NXU-A10 (answer, say2): "use the non-exclusive tag, <contract>". stage 7, a talk: other teams may make him an offer (SX.8m)
+- NXU-57 (sentence, say2): " <player> gets the non-exclusive franchise tag, <contract>. other teams may make him an offer in free agency. ". stage 7: the non-exclusive tag (SX.8m)
+- NXU-50 (prompt, say2): " the <team> make an offer for <player>, your <position> under the non-exclusive tag: <contract>. ". stage 8: the offer sheet (SX.8m)
+- NXU-51 (sentence, say2): " you may keep him at that contract, or let him go for their first round picks of this draft and the next. ". stage 8: the offer sheet (SX.8m)
+- NXU-52 (sentence, say2): " your cap has no room to match it, so he goes for their first round picks of this draft and the next. ". stage 8: the offer sheet, no room (SX.8m)
+- NXU-A08 (answer, say2): "keep him at their offer". stage 8: match the offer sheet (SX.8m)
+- NXU-A09 (answer, say2): "let him go for the picks". stage 8: take the two first-round picks (SX.8m)
+- NXU-53 (sentence, say2): " <player> stays, <contract>. ". stage 8: the offer is matched (SX.8m)
+- NXU-54 (sentence, say2): " <player> joins the <team>. you get their first round picks of this draft and the next. ". stage 8: the picks are taken (SX.8m)

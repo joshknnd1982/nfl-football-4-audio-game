@@ -459,3 +459,6 @@
 - NXY-R26 (help, say5): " A receiver runs shallow across the field. Beats a blitz because the ball comes out fast; defenders who drop back can cover it. ". description of O026 Drag (NX-P8; heard with D)
 - NXY-R27 (help, say5): " Two receivers cross close to each other so the defenders get in each other's way. Good against man for man defense; weak when defenders drop back. ". description of O027 Mesh Crossers (NX-P8; heard with D)
 - NXY-R28 (help, say5): " Receivers cross the field close to the line. Beats a blitz; weak when defenders drop back. ". description of O028 Shallow Cross (NX-P8; heard with D)
+- NXY-R82 (help, say5): " One receiver crosses the field close to the line and another crosses deeper. Good against one deep defender; weak against two. ". description of O082 Drive (NX-P8; heard with D)
+- NXY-R83 (help, say5): " A running back runs forward, then cuts back toward the middle. Good against man for man defense; defenders guarding areas can cover it. ". description of O083 Angle Route (NX-P8; heard with D)
+- NXY-R84 (help, say5): " A running back runs toward the sideline and catches a short throw. Beats a blitz; defenders guarding areas can stop it. ". description of O084 Swing Pass (NX-P8; heard with D)

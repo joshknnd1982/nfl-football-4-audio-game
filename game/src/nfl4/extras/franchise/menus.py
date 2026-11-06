@@ -22,7 +22,7 @@ from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
 HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45", "NXH-46", "NXH-72", "NXH-74",
-                "NXH-76", "NXH-77", "NXH-78", "NXH-82"),
+                "NXH-76", "NXH-87", "NXH-77", "NXH-78", "NXH-82"),
               "118": ("NXH-36", "NXH-38", "NXH-73")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
 PICKS_TOLD_TEXT = {"first": "NXF-22", "mine": "NXF-25", "all": "NXF-26"}
