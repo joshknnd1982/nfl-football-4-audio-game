@@ -104,6 +104,9 @@ class SpokenMenu(_Speaker):
             elif code in (KEY_HOME, KEY_END):
                 self.index = 0 if code == KEY_HOME else len(self.items) - 1
                 self.say(self.items[self.index].label())
+            elif code in (KEY_PAGE_UP, KEY_PAGE_DOWN):     # D-211 (B-W46): ten items, stopping at the ends, as the lists move
+                self.index = max(0, min(len(self.items) - 1, self.index + (10 if code == KEY_PAGE_DOWN else -10)))
+                self.say(self.items[self.index].label())
             elif code in (KEY_LEFT, KEY_RIGHT) and item.change is not None:
                 item.change(-1 if code == KEY_LEFT else 1)
                 self.say(item.label())
@@ -228,6 +231,9 @@ class TextPages(_Speaker):
                 self.say(self.lines[self.index])
             elif code in (KEY_HOME, KEY_END):
                 self.index = 0 if code == KEY_HOME else len(self.lines) - 1
+                self.say(self.lines[self.index])
+            elif code in (KEY_PAGE_UP, KEY_PAGE_DOWN):     # D-211 (B-W46): ten lines, stopping at the ends
+                self.index = max(0, min(len(self.lines) - 1, self.index + (10 if code == KEY_PAGE_DOWN else -10)))
                 self.say(self.lines[self.index])
             else:
                 self.say(words.PAGES_HELP if code == KEY_F1 else self.lines[self.index])

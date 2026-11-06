@@ -10,6 +10,17 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.17 (2026-11-06, test build)
+
+Not built yet: the next test installer will have it. Page Up and Page Down now work in the F9 menus. Everything of 0.16.16 and earlier below is still to be tested too.
+
+### Page Up and Page Down in the F9 menus
+The help (F5 and F6) always said that Page Up and Page Down move ten items in the F9 menus, but in menus such as Speech settings they only said the current item again; so did the brackets that stand in for them since 0.16.15. Now they move ten items and stop at the first or the last, in every F9 menu and in the pages of text, as they already did in the long lists. F1 in these menus now names Page Up, Page Down, Home and End.
+
+**How to test:** press F9, choose Speech settings. Press Page Down or the close bracket: you should hear the eleventh item. Press it again: the last item, "Save a problem report". Page Up or the open bracket goes back ten, and stops at the first item. Press F1: the help should name Page Up, Page Down, Home and End.
+
+**Tell us:** if any F9 menu or list still ignores one of these keys.
+
 ## 0.16.16 (2026-11-06, test build)
 
 Renaming a player now keeps what you type. Everything of 0.16.15 and earlier below is still to be tested too.

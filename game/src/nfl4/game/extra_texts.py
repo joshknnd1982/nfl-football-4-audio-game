@@ -11,13 +11,15 @@ import os
 from .. import VERSION
 
 # ----- menus in general -----
-MENU_HELP = ("Up and Down move through the items. Left and Right change a value. "
+MENU_HELP = ("Up and Down move through the items, Page Up and Page Down move ten, Home and End jump to the ends. "
+             "Left and Right change a value. "
              "Enter does the item's action or restores a value to its original. Escape goes back.")
 LIST_HELP = ("Up and Down move one item, Page Up and Page Down move ten, Home and End jump to the ends. "
              "Typing letters jumps to a name that begins with them. Enter chooses. Escape goes back.")
 PREVIEW_HELP = ("Up and Down move through the sounds, Page Up and Page Down move ten, Home and End jump "
                 "to the ends. Enter plays the sound. Escape goes back.")
-PAGES_HELP = "Up and Down read the lines one by one. Escape goes back."
+PAGES_HELP = ("Up and Down read the lines one by one, Page Up and Page Down move ten, Home and End jump to the ends. "
+              "Escape goes back.")
 GOING_BACK = "Back."
 ORIGINAL = "original"
 
