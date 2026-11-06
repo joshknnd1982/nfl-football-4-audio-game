@@ -42,7 +42,10 @@ def disk(tmp_path, monkeypatch):
             output.close()
             state["closed"] = True
         samples = array.array("h")
-        samples.frombytes(raw.read_bytes())
+        data = raw.read_bytes()
+        # SDL's disk driver can leave part of a frame at the end of its file (one run in about 20 here,
+        # P9 S-F); keep whole stereo frames (4 bytes) so frombytes never fails on the tail.
+        samples.frombytes(data[:len(data) - len(data) % 4])
         return samples[0::2], samples[1::2]
     yield output, finish
     if not state["closed"]:
