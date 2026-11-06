@@ -12,7 +12,7 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 
 ## 0.16.14 (2026-11-06, test build)
 
-Not built yet: the next test installer will have it. The keyboard's volume, mute and media keys no longer interrupt the game. Everything of 0.16.13 and earlier below is still to be tested too.
+The keyboard's volume, mute and media keys no longer interrupt the game. Everything of 0.16.13 and earlier below is still to be tested too.
 
 ### The volume keys leave the game alone
 Before, pressing your keyboard's volume up or volume down key while the game spoke stopped the speech, the game said a stray symbol (NVDA read it as "macron" or "registered"), and the menu started again from its first item. Windows still changed the volume. Now the volume, mute, media (play, pause, next, previous) and browser keys belong to Windows only: the volume changes as always and the game goes on with what it was saying. This is the same in Classic and in the N. F. L. rules. F5 and F6 now say so.
