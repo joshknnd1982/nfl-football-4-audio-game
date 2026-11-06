@@ -10,6 +10,17 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.14 (2026-11-06, test build)
+
+Not built yet: the next test installer will have it. The keyboard's volume, mute and media keys no longer interrupt the game. Everything of 0.16.13 and earlier below is still to be tested too.
+
+### The volume keys leave the game alone
+Before, pressing your keyboard's volume up or volume down key while the game spoke stopped the speech, the game said a stray symbol (NVDA read it as "macron" or "registered"), and the menu started again from its first item. Windows still changed the volume. Now the volume, mute, media (play, pause, next, previous) and browser keys belong to Windows only: the volume changes as always and the game goes on with what it was saying. This is the same in Classic and in the N. F. L. rules. F5 and F6 now say so.
+
+**How to test:** start a game and wait for a play menu. While the announcer is speaking, press volume up and volume down a few times. The volume should change, the sentence should go on to its end, and you should hear no symbol and no repeated menu. Then press Down: the menu should move to the next item as usual.
+
+**Tell us:** if any other key of your keyboard makes the game say a symbol.
+
 ## 0.16.13 (2026-11-06, test build)
 
 In a franchise on the real calendar, teams with the same record are now put in order by the NFL's own tie-breakers, for the standings, the division titles, the wild cards and the play-off seeds. Everything of 0.16.12 and earlier below is still to be tested too.

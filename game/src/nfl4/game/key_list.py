@@ -59,6 +59,9 @@ ROWS: tuple[KeyRow, ...] = (
            "lists it goes back", "all", True, "escape key, exit game.", consts=("KEY_ESCAPE",)),
     KeyRow("alt", "Alt, or F10", "Anywhere", "does what Escape does", "all", True, "",
            " Alt, or F10. the same as the escape key. ", consts=("KEY_ALT", "KEY_F10")),
+    KeyRow("windows_keys", "The volume, mute and media keys", "Anywhere", "belong to Windows: they change your computer's volume or "
+           "control its music as always, and the game does not answer them, so what it is saying goes on", "all", False, "",
+           " The volume, mute and media keys. Windows keeps them: they change your computer's volume, and the game's speech goes on. "),
     KeyRow("updown", "Up and Down", "In every menu", "move to the previous or the next item; they go around from the last item to "
            "the first", "all", True, "", " Up and Down. in a menu, move to the previous or the next item. ", consts=("KEY_UP", "KEY_DOWN")),
     KeyRow("digits", "Digits 1 to 9 and 0", "In the play menus and the kick off menu", "make the item with that number the current "

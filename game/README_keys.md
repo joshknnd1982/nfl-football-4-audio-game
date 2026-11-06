@@ -16,6 +16,7 @@ Every key the game handles, where it works and what it does. This list is made f
 - **Control**: Anywhere. Adjusts the rate of speech: Up and Down, Enter to keep it. (original game)
 - **Escape**: Anywhere. Exits the game; in a play menu it asks whether you concede the game; in the F9 menus and lists it goes back. (original game)
 - **Alt, or F10**: Anywhere. Does what Escape does. (original game)
+- **The volume, mute and media keys**: Anywhere. Belong to Windows: they change your computer's volume or control its music as always, and the game does not answer them, so what it is saying goes on. (added)
 - **Up and Down**: In every menu. Move to the previous or the next item; they go around from the last item to the first. (original game)
 - **Digits 1 to 9 and 0**: In the play menus and the kick off menu. Make the item with that number the current item; 0 is the tenth. (original game)
 - **Enter**: In every menu and question. Takes the current item or the answer. (original game)

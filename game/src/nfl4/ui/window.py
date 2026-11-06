@@ -3,8 +3,11 @@
 A plain Win32 window made through ctypes (no GUI toolkit: the toolkit alone was 22 MB of Brain's first 92 MB install).
 It has no child controls, so it keeps the keyboard focus itself and gets WM_KEYDOWN and WM_SYSKEYDOWN for every key,
 like the original's Form1 (GAME_SPEC 8.1). The message's wParam is the virtual-key code VB's Form_KeyDown received.
-Keys are not passed on, so no default handler acts on them, with two exceptions:
+Keys are not passed on, so no default handler acts on them, with three exceptions:
 - Alt+F4 is passed on, so Windows still closes the window.
+- The keys Windows keeps (game/keys.py WINDOWS_KEYS: the volume, mute, media, browser and launch keys, D-205) are passed on and
+  never reach the game. Windows acts on them itself in any case (MEASURED 2026-11-06 with real input, B-W43); before 0.16.14 the
+  game also took them as its own keys, cut its speech, said "¯" for volume up and began the menu again.
 - Releasing Alt or F10 is swallowed, so Windows does not enter system-menu mode and later arrow keys still reach the
   game (GAME_SPEC 8.1: Alt and F10 are keys of the game). Alt+letter beeps are swallowed too.
 Typed characters (nfl4 S7.1, fixesforgames B-W3, GAP_REGISTER G-K5): the message loop calls TranslateMessage, so a
@@ -25,6 +28,7 @@ import logging
 from ctypes import wintypes
 
 from ..data import debuglog
+from ..game.keys import WINDOWS_KEYS
 from ..game.texts import CAPTION
 
 log = logging.getLogger(__name__)
@@ -39,7 +43,12 @@ KEY_NAMES = {8: "Backspace", 9: "Tab", 13: "Enter", 16: "Shift", 17: "Ctrl", 18:
              32: "Space", 33: "PageUp", 34: "PageDown", 35: "End", 36: "Home", 37: "Left", 38: "Up", 39: "Right", 40: "Down",
              44: "PrintScreen", 45: "Insert", 46: "Delete", 91: "LeftWindows", 92: "RightWindows", 93: "Menu", 144: "NumLock",
              145: "ScrollLock", 186: "Semicolon", 187: "Equals", 188: "Comma", 189: "Minus", 190: "Period", 191: "Slash",
-             192: "Backquote", 219: "OpenBracket", 220: "Backslash", 221: "CloseBracket", 222: "Quote"}
+             192: "Backquote", 219: "OpenBracket", 220: "Backslash", 221: "CloseBracket", 222: "Quote",
+             # the keys Windows keeps (WINDOWS_KEYS, D-205): named, so a log says "VolumeUp", not "vk175" (B-W43)
+             166: "BrowserBack", 167: "BrowserForward", 168: "BrowserRefresh", 169: "BrowserStop", 170: "BrowserSearch",
+             171: "BrowserFavorites", 172: "BrowserHome", 173: "VolumeMute", 174: "VolumeDown", 175: "VolumeUp", 176: "MediaNext",
+             177: "MediaPrevious", 178: "MediaStop", 179: "MediaPlayPause", 180: "LaunchMail", 181: "LaunchMedia", 182: "LaunchApp1",
+             183: "LaunchApp2"}
 
 
 def key_name(vk: int) -> str:
@@ -54,14 +63,16 @@ def key_name(vk: int) -> str:
 
 def log_key(vk: int, lparam: int) -> None:
     """One key down in the debug log: its code and name, the modifiers held, whether it is an auto-repeat and the screen it
-    reaches. While the player types text (a coach's name) only `typed` is written, never the key (playbook 7.11, privacy)."""
+    reaches. While the player types text (a coach's name) only `typed` is written, never the key (playbook 7.11, privacy).
+    A key Windows keeps (D-205) says `to=windows`: the game never got it."""
     if debuglog.typing_now():
         debuglog.event("key", "down", typed=True, ctx=debuglog.current_context())
         return
     held = "".join(name for name, code in (("Ctrl+", 0x11), ("Shift+", 0x10), ("Alt+", 0x12))
                    if user32.GetKeyState(code) & 0x8000 and vk != code)
+    extra = {"to": "windows"} if vk in WINDOWS_KEYS else {}
     debuglog.event("key", "down", vk=vk, name=held + key_name(vk), repeat=bool(lparam & 0x40000000),
-                   ctx=debuglog.current_context())
+                   ctx=debuglog.current_context(), **extra)
 
 
 WS_OVERLAPPEDWINDOW = 0x00CF0000
@@ -180,6 +191,8 @@ class GameWindow:
                 if wparam == VK_F4 and msg == WM_SYSKEYDOWN:
                     return user32.DefWindowProcW(hwnd, msg, wparam, lparam)   # Alt+F4: Windows closes the window
                 log_key(int(wparam), int(lparam))
+                if int(wparam) in WINDOWS_KEYS:                               # volume, media, browser: Windows' own (D-205)
+                    return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
                 self._on_key(int(wparam))
                 return 0
             if msg == WM_CHAR:                     # one the loop did not pair with its key (not expected)

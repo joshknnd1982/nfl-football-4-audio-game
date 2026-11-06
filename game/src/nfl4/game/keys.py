@@ -37,6 +37,12 @@ KEY_LEFT, KEY_RIGHT = 37, 39
 MODIFIER_KEYS = frozenset({16, 17, 18, 20, 91, 92, 144, 145})
 KEY_ALT, KEY_F10 = 18, 121           # Form_KeyDown makes both the Escape code "27" with g2 = "" (GAME_SPEC 8.1)
 KEY_T = 84                           # the T key (owner rule 0.22, playbook 7.16): the code, never the character (F5 is "t" too, B-W6)
+# The keys Windows keeps (S-D, D-205, fixesforgames B-W43): the browser, volume, mute, media and launch keys, virtual-key codes 0xA6 to
+# 0xB7 (Microsoft's "Virtual-Key Codes" page). Windows acts on them itself whatever the game's window does (MEASURED 2026-11-06 with
+# real input: the mute key muted and unmuted the PC while the window swallowed it). Up to 0.16.13 they reached the game as keys: the
+# owner's volume up in a play menu cut the speech, the key echo said "¯" (chr 175) and the menu began again. They are never a key of
+# the game, in any mode: post() drops them, and the window hands them back to Windows.
+WINDOWS_KEYS = frozenset(range(0xA6, 0xB8))
 SPEAKING = 2                         # SpVoice.Status.RunningState while the voice speaks
 
 
@@ -135,6 +141,9 @@ class KeyInput:
     # called by the window thread
     def post(self, key_code: int) -> None:
         code = int(key_code)
+        if code in WINDOWS_KEYS:                    # D-205: a key of Windows (volume, media, browser) is never the game's
+            debuglog.event("key", "ignored", vk=code, why="a key of Windows", ctx=debuglog.current_context())
+            return
         if code == KEY_T and self.timeout_eager is not None:
             # counted and queued BEFORE the speech is cut, so a game thread that wakes from the cut finds the key waiting
             self.timeout_posts += 1
