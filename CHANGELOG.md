@@ -12,7 +12,7 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 
 ## 0.16.12 (2026-11-06, test build)
 
-Not built yet: this is the next test build's list. In a franchise, other teams now sign players from practice squads, yours too, and you choose the four squad players they cannot take. You can also sign another team's squad player yourself. Everything of 0.16.11 and earlier below is still to be tested too.
+In a franchise, other teams now sign players from practice squads, yours too, and you choose the four squad players they cannot take. You can also sign another team's squad player yourself. Everything of 0.16.11 and earlier below is still to be tested too.
 
 ### Other teams sign practice squad players, and you protect four
 As in the NFL, any team may sign another team's practice squad player to its own roster (never to its own practice squad), except the four players that team protects that week and the players of the team it plays that week. Each week of the regular season, after the games, a computer team that injuries have left short at a position for the coming weeks signs one squad player of that position: its own, or another team's when he is clearly better. A computer team that loses a squad player signs a free agent to its squad. Your team never signs anyone by itself.
