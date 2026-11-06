@@ -12,7 +12,7 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 
 ## 0.16.17 (2026-11-06, test build)
 
-Not built yet: the next test installer will have it. Page Up and Page Down now work in the F9 menus. Everything of 0.16.16 and earlier below is still to be tested too.
+Page Up and Page Down now work in the F9 menus. Everything of 0.16.16 and earlier below is still to be tested too.
 
 ### Page Up and Page Down in the F9 menus
 The help (F5 and F6) always said that Page Up and Page Down move ten items in the F9 menus, but in menus such as Speech settings they only said the current item again; so did the brackets that stand in for them since 0.16.15. Now they move ten items and stop at the first or the last, in every F9 menu and in the pages of text, as they already did in the long lists. F1 in these menus now names Page Up, Page Down, Home and End.
