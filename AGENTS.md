@@ -21,6 +21,6 @@ A markdown file is a whole file `NAME.md` or parts `NAME.part01.md`, `NAME.part0
 - Do the work yourself in this order: read, run, search the web, install a free tool, pick a sensible default and record it in `DECISIONS.md`. Ask the owner only what nobody else can answer (rule 0.8).
 - Never claim work you did not do or run. Run the tests and the build before you say it works, and say what was and was not run.
 - `original/` is read-only. Never commit original programs, `work/`, tokens or anything private.
-- Commit locally after each working step and push the commit to the game's own repository on `joshknnd1982` in the same session (rule 0.35). Never force a push. Releases, tags and new repositories wait for the owner.
+- Commit locally after each working step and push the commit to the game's own repository on `joshknnd1982` in the same session (rule 0.35). Never force a push. A test installer you build goes to the game's GitHub releases as a pre-release in the same session (rule 0.37); full releases, other tags and new repositories wait for the owner.
 - Edit the rule files only in the master folder `C:\Users\joshk\OneDrive\dev`, then run `python games/tools/sync_playbooks.py` (rule 0.9). A lesson that exists only in a state file is lost: add it to `fixesforgames`.
 - End every session with `PROJECT_STATE.md`, `SESSION_LOG.md` and a whole new `NEXT_PROMPT.txt` (section 3.3).
