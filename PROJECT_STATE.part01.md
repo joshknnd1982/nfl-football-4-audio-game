@@ -1,5 +1,7 @@
 # PROJECT_STATE: nfl4 (NFL Football 4, clone of Jim Kitchen's "NFL football version 4")
 
+S-I OWNER CHECK (b) 2026-11-06: the owner ran 0.16.16 (nfl4-20261106-160342.log, 16:03 to 16:09, no warning or error). PLAYTEST_LIST 163 heard: a player renamed, 11 characters typed and 11 kept, saved. 162 in part: the apostrophe (End) and the semicolon (Home) worked in F9, Speech settings, 15 times each; the brackets only repeated the current item there because SpokenMenu (the F9 menus) has no Page Up or Page Down at all, though F5, F6 and README_keys say "Page Up and Page Down move ten items" in the F9 menus (a gap older than rule 0.38). 159 and 160 (the tie-breakers) not reached: his runs stay in week 1.
+
 S-I OWNER CHECK 2026-11-06: the owner confirmed the volume keys (D-205, PLAYTEST_LIST 161): "yes my volume keys in the game work great. no issues." His log nfl4-20261106-125733.log (0.16.14) agrees: 77 volume key presses, each logged to=windows, no symbol said, no warning or error. fixesforgames B-W43 marked verified by the owner.
 
 S-I PUBLISHED 2026-11-06 (D-210): the pre-release https://github.com/joshknnd1982/nfl-football-4-audio-game/releases/tag/v0.16.16 (tag v0.16.16 on e8dbec4, pushed): gh release view says a pre-release, not a draft, with nfl4-setup-0.16.16.exe (19,672,854 bytes) and checksums_test_0.16.16.txt (89 bytes); a download into an empty folder (work\si_1106\download_check) has the same SHA-256.

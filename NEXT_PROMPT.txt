@@ -22,9 +22,9 @@ Decisions made automatically:
   - 0.16.16 built and published at your word (D-210).
   - F9's rename takes the character you typed and keeps letters, digits, spaces, apostrophes, hyphens and periods; the original's own name prompts of the Classic setup are unchanged (D-209).
 Owner-needed (one at a time; the recommended answer first):
-  1. Install 0.16.16 from the GitHub pre-release (https://github.com/joshknnd1982/nfl-football-4-audio-game/releases/tag/v0.16.16) and listen: PLAYTEST_LIST 163 (rename a player to a name such as O'Neil-Smith), PLAYTEST_LIST 162 (the stand-in keys in a long F9 list and a long question), 159 and 160 (the tie-breakers), and the earlier items 80 to 158. For any problem, save a problem report right then (F9, Speech settings, "Save a problem report"; it lands on your Desktop) and bring it with your report.
+  1. Install 0.16.16 from the GitHub pre-release (https://github.com/joshknnd1982/nfl-football-4-audio-game/releases/tag/v0.16.16) and listen: PLAYTEST_LIST 162 (the brackets in a long list: your roster or the voices), 159 and 160 (the tie-breakers), and the earlier items 80 to 158. For any problem, save a problem report right then (F9, Speech settings, "Save a problem report"; it lands on your Desktop) and bring it with your report.
   2. Later, not now: when you want the first full release 1.0.0 (P11, S11.3). Recommended: after your listening rounds find nothing more to fix.
-Heard by you: PLAYTEST_LIST 161, the volume keys, fine on 0.16.14 ("no issues"; your log agrees).
+Heard by you: PLAYTEST_LIST 161, the volume keys, fine on 0.16.14 ("no issues"; your log agrees); 163, the rename, fine on 0.16.16 (your log: 11 characters typed, 11 kept); 162 in part: the apostrophe and the semicolon worked in F9, Speech settings; the brackets there only repeated the item, because the F9 menus have no Page Up or Page Down at all (F5 and F6 promise ten items).
 Open questions: all 77 answered or closed (work\sr4\list_questions.py); S-D, S-B and S-H opened none.
 
 THE SESSIONS THAT FOLLOW (one at a time; one writer in the folder; each ends with the next block):
