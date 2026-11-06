@@ -10,6 +10,25 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 0.16.12 (2026-11-06, test build)
+
+Not built yet: this is the next test build's list. In a franchise, other teams now sign players from practice squads, yours too, and you choose the four squad players they cannot take. You can also sign another team's squad player yourself. Everything of 0.16.11 and earlier below is still to be tested too.
+
+### Other teams sign practice squad players, and you protect four
+As in the NFL, any team may sign another team's practice squad player to its own roster (never to its own practice squad), except the four players that team protects that week and the players of the team it plays that week. Each week of the regular season, after the games, a computer team that injuries have left short at a position for the coming weeks signs one squad player of that position: its own, or another team's when he is clearly better. A computer team that loses a squad player signs a free agent to its squad. Your team never signs anyone by itself.
+
+**How to protect your squad players:** press F9, choose Franchise, then practice squad, then "protect squad players" (the fifth item). Each player is said with "protected" or "not protected"; Enter protects him or ends his protection, at most four at a time. Until you change one, your staff protects your four best each week; after that your choice is kept from week to week until you change it.
+- How to test: in a franchise season, open the item, end the protection of one player and protect another, leave with Escape and open it again: is your choice kept? Try to protect a fifth player: you should hear that four are protected already. Play a few weeks: when a team signs one of your squad players, the week's report should tell you which team, which player and how many are left on your squad.
+- Tell us: whether a protected player was ever taken (he never should be), and whether teams take your squad players too often or too rarely.
+
+**How to sign another team's squad player:** F9, Franchise, practice squad, "sign from another team's squad" (the sixth item). Choose the position, then the player (each is said with his team); with a full roster you choose a player of the same position to release, then press Enter to confirm. He signs for the minimum salary for one season.
+- How to test: sign one, then hear your roster (F9, Franchise, your roster): is he there at his position? The other team's four protected players and the players of the team you play this week should not be in the list.
+- Tell us: anything said wrong in the lists or the question.
+
+**Practice squad signings around the league** (the seventh item) lists every squad player signed to a roster this season, the newest first, and the practice squad rules item now says these rules too.
+- How to test: after a few weeks, open the list: does each line say the week, the team that signed him, the player, his position and the squad he came from?
+- Tell us: whether the list is useful or too long.
+
 ## 0.16.11 (2026-10-27, test build)
 
 The announcer's voice now rises with the play, every kind of play result has at least ten wordings, and a new item turns the excited voice off or on. Everything of 0.16.10 and earlier below is still to be tested too.

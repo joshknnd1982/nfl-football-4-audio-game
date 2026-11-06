@@ -1,117 +1,3 @@
-## Franchise (design section 11)
-
-- NXF-01 (prompt, say2): " <coach> which kind of season do you wish to play ". new season, N. F. L. rules only (design 11.2)
-- NXF-A01 (answer, say2): " classic season ". answer
-- NXF-A02 (answer, say2): " franchise ". answer
-- NXF-A03 (answer, say2): " your franchise with the <team> ". the question, when a franchise exists
-- NXF-A04 (answer, say2): " a new franchise ". the question, when a franchise exists
-- NXF-02 (prompt, say2): " your franchise with the <team> will be kept as a copy. do you wish to start a new franchise? ". a yes or no question whose answer starts at no (design 3.2)
-- NXF-04 (sentence, say5): " your franchise waits until the rules are the N. F. L. rules again. ". F9 Rules, after NXM-23
-- NXF-05 (sentence, say2): " back to your franchise with the <team>. ". a switch to the franchise (design 3.1)
-- NXF-06 (sentence, say2): " your franchise waits. the classic season goes on. ". a switch to the classic season (design 3.1)
-- NXF-07 (sentence, say2): " your new league is ready. 32 teams and their players. ". a new league (design 3.2)
-- NXF-08 (sentence, say2): " this is season <n> of your franchise. ". week 1 of a franchise season (design 3.4)
-- NXF-09 (sentence, say2): " your team's rating is <r>, number <k> of 32. ". a new league and stage 6 (SX.8b speaks it)
-- NXF-10 (menu, say5): "Franchise". F9 item, only with the N. F. L. rules
-- NXF-11 (menu, say5): "to do list". F9 Franchise item (SX.8e)
-- NXF-12 (menu, say5): "news". F9 Franchise item (SX.8e)
-- NXF-13 (menu, say5): "your roster". F9 Franchise item
-- NXF-14 (menu, say5): "league history". F9 Franchise item
-- NXF-15 (menu, say5): "team ratings". F9 Franchise item (SX.8b)
-- NXF-16 (menu, say5): "franchise settings". F9 Franchise item
-- NXF-17 (menu, say5): "play classic seasons". F9 Franchise item while the franchise is in use
-- NXF-18 (menu, say5): "back to your franchise". F9 Franchise item while a classic season is in use and a franchise exists
-- NXF-19 (menu, say5): "start a franchise now". F9 Franchise item while a classic season is in use and no franchise exists
-- NXF-20 (menu, say5): "staff handles the to do list". franchise setting, followed by NXM-20 or NXM-21 (SX.8e)
-- NXF-21 (menu, say5): "offseason: every stage". franchise setting
-- NXF-22 (menu, say5): "draft picks told: first and yours". franchise setting (SX.8d)
-- NXF-23 (sentence, say5): " your franchise will wait. press enter to play classic seasons now, or escape to stay. ". confirming question of NXF-17
-- NXF-24 (menu, say5): "offseason: short". franchise setting
-- NXF-25 (menu, say5): "draft picks told: only yours". franchise setting (SX.8d)
-- NXF-26 (menu, say5): "draft picks told: every pick". franchise setting (SX.8d)
-- NXF-27 (sentence, say5): " your classic season will wait. press enter to start a franchise now, or escape to stay. ". confirming question of NXF-19
-- NXF-30 (sentence, say): " the franchise file was damaged. the copy from before the last save is used, and a copy of the damaged file was kept. ". start-up notice (design 10.1)
-- NXF-31 (sentence, say): " your franchise could not be read and was set aside. a classic season begins. ". start-up notice
-- NXF-32 (sentence, say): " the franchise could not be saved, so this season's changes will not be kept. ". start-up notice
-- NXF-33 (sentence, say): " the saved game belongs to another week of your franchise and was set aside. ". start-up notice
-- NXF-34 (sentence, say): " this franchise was saved by a newer version of the game and cannot be played here. a classic season begins. ". start-up notice
-- NXF-35 (sentence, say): " the franchise file is in use by another program. a classic season is played this time. ". start-up notice
-- NXF-36 (sentence, say): " the franchise file was missing. the copy from before the last save is used. ". start-up notice
-- NXF-37 (sentence, say): " your franchise could not be found. a classic season begins. ". start-up notice
-- NXF-46 (sentence, say): " the real N. F. L. calendar could not be read, so this season plays the original game's 16 weeks. ". notice when schedule_<year>.txt is missing or not whole at the start of a franchise season (S8.3 round 2)
-- NXF-47 (menu, say5): "practice squad". F9 Franchise item (D-136)
-- NXF-40 (menu, say2): "more". paging of a long list in a franchise question (the back item is NXB-10)
-- NXF-42 (sentence, say2): " page <n> of <m>. ". each page of a paged franchise question
-- NXE-01 (sentence, say2): " the season is over. the offseason begins. ". design 3.3
-- NXE-02 (sentence, say2): " stage <n> of <m>. <stage>. ". the start of every stage
-- NXE-03 (sentence, say2): " press enter to go on. F1 says it again. ". the wait at the end of a stage
-- NXE-11 (piece, piece): "the season in review". stage 1 name
-- NXE-12 (piece, piece): "retirements". stage 2 name (SX.8c)
-- NXE-13 (piece, piece): "player development". stage 3 name (SX.8c)
-- NXE-14 (piece, piece): "the draft". stage 4 name (SX.8d)
-- NXE-15 (piece, piece): "the roster cut". stage 5 name (SX.8d)
-- NXE-16 (piece, piece): "the new season". stage 6 name
-- NXE-20 (sentence, say2): " the <champion> won the Super Bowl of season <n>. ". stage 1
-- NXE-21 (sentence, say2): " your team finished <w> and <l>, <finish>. ". stage 1
-- NXE-22 (piece, piece): "and missed the play offs". the finish piece
-- NXE-23 (piece, piece): "and lost in the wild card round". the finish piece
-- NXE-24 (piece, piece): "and lost in the division round". the finish piece
-- NXE-25 (piece, piece): "and lost in the conference championship". the finish piece
-- NXE-26 (piece, piece): "and lost the Super Bowl". the finish piece
-- NXE-27 (piece, piece): "and won the Super Bowl". the finish piece
-- NXE-28 (sentence, say2): " the best record: the <best>, <best_w> and <best_l>. the worst: the <worst>, <worst_w> and <worst_l>. ". stage 1
-- NXE-29 (sentence, say2): " as a head coach: seasons <n>, wins <w>, losses <l>. ". stage 1
-- NXE-60 (sentence, say2): " season <n> begins. ". stage 6, followed by NXF-09 once SX.8b speaks the ratings
-- NXE-61 (sentence, say2): " the new schedule is made. ". stage 6
-- NXL-01 (piece, piece): "running back". position
-- NXL-02 (piece, piece): "receiver". position
-- NXL-03 (piece, piece): "quarterback". position
-- NXL-04 (piece, piece): "defensive lineman". position
-- NXL-05 (piece, piece): "linebacker". position
-- NXL-06 (piece, piece): "cornerback". position
-- NXL-07 (piece, piece): "safety". position
-- NXL-08 (piece, piece): "returner". position
-- NXL-09 (piece, piece): "kicker". position
-- NXL-10 (piece, piece): "punter". position
-- NXL-11 (piece, piece): "running backs". group of more than one place
-- NXL-12 (piece, piece): "receivers". group
-- NXL-14 (piece, piece): "defensive linemen". group
-- NXL-15 (piece, piece): "linebackers". group
-- NXL-16 (piece, piece): "cornerbacks". group
-- NXL-17 (piece, piece): "safeties". group
-- NXL-18 (piece, piece): "returners". group
-- NXL-21 (piece, piece): "<position> <n>". an open place count (SX.8d)
-- NXL-30 (sentence, say5): " <group>: <n> ". a roster group in F9
-- NXL-31 (sentence, say5): " <player>, <position>, rating <r>, age <a>, <potential> potential ". a player in a list (SX.8b speaks the rating)
-- NXL-32 (sentence, say5): " <player>, <position>, age <a> ". a player in a list until SX.8b speaks the ratings (added by SX.8a)
-- NXL-40 (sentence, say5): " <k>. the <team>, <r>. ". a team in the ratings list (SX.8b)
-- NXL-41 (sentence, say5): " your team is number <k> of 32. ". the ratings list (SX.8b)
-- NXG-01 (menu, say5): "champions by season". history menu
-- NXG-02 (menu, say5): "your record". history menu
-- NXG-03 (menu, say5): "season by season". history menu
-- NXG-04 (menu, say5): "league records". history menu
-- NXG-05 (menu, say5): "retired stars". history menu
-- NXG-10 (sentence, say5): " season <n>: the <champion> over the <runner_up>. ". history line
-- NXG-11 (sentence, say5): " seasons: <n>. wins: <w>. losses: <l>. play off seasons: <p>. Super Bowls won: <s>. ". history line
-- NXG-12 (sentence, say5): " season <n>: you were <w> and <l>, <finish>. champion: the <champion>. the best record: the <best>. the worst: the <worst>. ". history line
-- NXG-13 (sentence, say5): " most wins in a season: the <team>, <w>, season <n>. ". history line
-- NXG-14 (sentence, say5): " most points in a game: the <team>, <p> against the <other>, season <n>. ". history line
-- NXG-15 (sentence, say5): " the biggest win: the <team> over the <other>, <score>, season <n>. ". history line
-- NXG-16 (sentence, say5): " the longest winning streak: the <team>, <k> games, season <n>. ". history line
-- NXG-17 (sentence, say5): " <player>, <position>, the <team>. seasons played: <n>. best rating <r>. retired after season <s>. ". history line
-- NXG-18 (sentence, say5): " nothing yet. ". an empty history list
-- NXK-20 (piece, piece): "high". the potential words (the roster in SX.8b, the draft in SX.8d)
-- NXK-21 (piece, piece): "average". the potential words
-- NXK-22 (piece, piece): "low". the potential words
-- NXE-30 (sentence, say2): " from your team: ". stage 2, before the player's team's retiring players
-- NXE-31 (sentence, say2): " <player>, <position>, age <a>, rating <r>, retires. seasons played: <n>. ". stage 2, a retiring player of the player's team
-- NXE-32 (sentence, say2): " nobody from your team retires. ". stage 2
-- NXE-33 (sentence, say2): " players retiring in the whole league: <n>. ". stage 2
-- NXE-35 (sentence, say2): " <player> of the <team>, <position>, retires. seasons played: <n>. ". stage 2, a star of another team
-- NXE-40 (sentence, say2): " your players: improved <n>, declined <m>, the same <k>. ". stage 3
-- NXE-41 (sentence, say2): " most improved: <player>, <position>, up <d> to <r>. ". stage 3
-- NXE-42 (sentence, say2): " the biggest drop: <player>, <position>, down <d> to <r>. ". stage 3, none when nobody went down
-- NXE-43 (sentence, say2): " your whole roster is in the franchise menu on F9. ". stage 3
 - NXE-71 (sentence, say2): " retiring: <n> in the league, <m> from your team. ". stage 2 in the short offseason
 - NXE-72 (sentence, say2): " your players: improved <n>, declined <m>. ". stage 3 in the short offseason
 - NXK-01 (sentence, say2): " the draft has 7 rounds. you have pick number <n> in every round. ". stage 4, after the stage's name
@@ -492,3 +378,71 @@
 - NXV-G02 (piece, piece): "reach the play offs". a goal of the owner (FR_GOALS: playoffs)
 - NXV-G03 (piece, piece): "reach the conference championship game". a goal of the owner (FR_GOALS: title_game)
 - NXV-10 (sentence, say2): " the owner has fired you. your job rating was <a>, after <w> wins and <l> losses. ". stage 9: the player is fired (never after a winning season)
+- NXV-11 (prompt, say2): " <coach> these teams want you as their head coach. choose your new team. ". stage 9: the offers (never the team that fired him)
+- NXV-A01 (answer, say2): "the <team>, rating <r>, number <k> of 32". stage 9: an offer, the best ranked first (the staff's recommendation)
+- NXV-12 (sentence, say2): " you are the new head coach of the <team>. ". stage 9: the job the player took
+- NXV-13 (sentence, say2): " head coaches fired in the league: <n>. ". stage 9: the league's firings
+- NXV-14 (sentence, say2): " no head coach was fired in the league. ". stage 9: no firing
+- NXV-15 (sentence, say2): " the <team> hired <name>, the offensive coordinator of the <other>, as head coach. ". stage 9: a head coach hired (at most three told)
+- NXV-16 (sentence, say2): " the <team> hired <name>, the defensive coordinator of the <other>, as head coach. ". stage 9: a head coach hired
+- NXV-17 (sentence, say2): " your offensive coordinator <name> left to be head coach of the <team>. ". stage 9: the player's coordinator was hired away
+- NXV-18 (sentence, say2): " your defensive coordinator <name> left to be head coach of the <team>. ". stage 9: the player's coordinator was hired away
+- NXV-20 (sentence, say2): " your offensive coordinator: <name>, <style>, rating <r>. ". stage 9's question and end, F9's job and staff
+- NXV-21 (sentence, say2): " your defensive coordinator: <name>, <style>, rating <r>. ". stage 9's question and end, F9's job and staff
+- NXV-22 (prompt, say2): " <coach> do you keep your coordinators? ". stage 9: the player's question (staff setting off)
+- NXV-A02 (answer, say2): "keep them". stage 9: keep both coordinators (the do-nothing answer)
+- NXV-A03 (answer, say2): "replace the offensive coordinator". stage 9
+- NXV-A04 (answer, say2): "replace the defensive coordinator". stage 9
+- NXV-A05 (answer, say2): "replace both". stage 9
+- NXV-A06 (answer, say2): "keep him". stage 9: one coordinator in place (the do-nothing answer)
+- NXV-A07 (answer, say2): "replace him". stage 9: one coordinator in place
+- NXV-23 (prompt, say2): " choose your new offensive coordinator. ". stage 9: the candidates follow, the best rated first
+- NXV-24 (prompt, say2): " choose your new defensive coordinator. ". stage 9: the candidates follow, the best rated first
+- NXV-A08 (answer, say2): "<name>, <style>, rating <r>". stage 9: a coordinator candidate
+- NXV-25 (sentence, say2): " <name> is your new offensive coordinator. ". stage 9: the coordinator hired
+- NXV-26 (sentence, say2): " <name> is your new defensive coordinator. ". stage 9: the coordinator hired
+- NXV-28 (sentence, say2): " the <team> let their head coach go to make room for you. ". stage 9: the team the player joined had a coach still in place
+- NXV-30 (sentence, say5): " the owner's goal this season: <goal>. ". F9, franchise, your job and staff
+- NXV-31 (sentence, say5): " your job rating: <a> of 100. ". F9, franchise, your job and staff
+- NXF-45 (menu, say5): "your job and staff". F9 Franchise item (SX.8l)
+- NXF-48 (menu, say5): "get the latest calendar". F9, Franchise, the last item (D-128): download the newest N. F. L. schedule_<year>.txt from the game's GitHub repository, only when chosen
+- NXF-49 (sentence, say5): " asking the game's page on GitHub for the newest N. F. L. calendar. this takes a few seconds. Escape stops it. ". F9, Franchise, get the latest N. F. L. calendar, while the request runs (D-128)
+- NXF-50 (sentence, say5): " the <year> calendar is saved in your customize folder. your franchise plays it in its <year> season. ". the download's result (D-128): a newer calendar, for a season the franchise has not begun
+- NXF-51 (sentence, say5): " you have the newest calendar already, the one of <year>. the N. F. L. releases each season's schedule in the spring. ". the download's result (D-128): nothing newer is published
+- NXF-52 (sentence, say5): " the game could not reach GitHub. check the internet connection and try again later. nothing was changed. ". the download's result (D-128): no connection, no answer in time
+- NXF-53 (sentence, say5): " the calendar on GitHub is not a whole N. F. L. calendar, so it was not saved. ". the download's result (D-128): the parser refused the file (the log has the reason)
+- NXF-54 (sentence, say5): " you stopped the download. ". the download's result (D-128): Escape during the request
+- NXF-55 (sentence, say5): " the calendar could not be saved in your customize folder. nothing was changed. ". the download's result (D-128): the folder cannot be written
+- NXF-56 (sentence, say5): " the <year> calendar is saved in your customize folder. a franchise plays it in its <year> season. ". the download's result (D-128): saved, and no franchise, or a franchise past that season
+- NXH-43 (help, say5): " Your job: the owner sets a goal each season and rates you from 0 to 100; a low rating costs your job unless you won more than you lost. Your coordinators' styles are your team playbook. ". F6, after NXH-42 (SX.8l)
+- NXV-09 (sentence, say2): " the owner has fired you. your job rating was <a>, after 1 win and <l> losses. ". stage 9: NXV-10 for a season of one win
+- NXV-32 (sentence, say5): " the owner has fired you. choose your new team at the question. ". F9, franchise, your job and staff, while the job question waits
+- NXU-01 (prompt, say2): " the camp. choose its focus. the staff recommends <focus>. ". stage 3, before the progression: the camp's focus (SX.8m)
+- NXU-02 (sentence, say2): " camp focus: <focus>. extra work for: <list>. ". stage 3: the focus and the players who got a point (SX.8m)
+- NXU-03 (sentence, say2): " camp focus: <focus>. no player could take the extra work. ". stage 3: the focus found nobody (SX.8m)
+- NXU-A01 (answer, say2): "offense". a camp focus: the quarterback, the running backs and the receivers (SX.8m)
+- NXU-A02 (answer, say2): "defense". a camp focus: the defensive players (SX.8m)
+- NXU-A03 (answer, say2): "young players". a camp focus: the players aged 24 or less (SX.8m)
+- NXU-10 (sentence, say2): " this draft has <n> compensatory picks, at the end of rounds 3 to 7. ". stage 4: the draft's compensatory picks (SX.8m)
+- NXU-11 (sentence, say2): " this draft has 1 compensatory pick. ". stage 4: one compensatory pick (SX.8m)
+- NXU-12 (sentence, say2): " your compensatory picks: <list>. ". stage 4: the player's compensatory picks, NXK-15 each (SX.8m)
+- NXU-60 (sentence, say2): " compensatory picks for next year's draft: <n> in the league. ". the end of free agency (SX.8m)
+- NXU-64 (sentence, say2): " compensatory picks for next year's draft: 1 in the league. ". the end of free agency, one pick (SX.8m)
+- NXU-61 (sentence, say2): " your team gets <n> of them: <list>. ". the end of free agency: the player's, NXU-62 each (SX.8m)
+- NXU-63 (sentence, say2): " your team gets one: <list>. ". the end of free agency: the player's one pick (SX.8m)
+- NXU-62 (piece, piece): "round <round>". a compensatory pick in NXU-61 and NXU-63 (SX.8m)
+- NXU-20 (sentence, say2): " undrafted free agents who signed with you for camp: ". stage 4, then NXK-06 for each (SX.8m)
+- NXU-22 (sentence, say2): " <player> signed with the <team>. ". stage 5: an undrafted free agent the player offered went elsewhere (SX.8m)
+- NXU-23 (sentence, say2): " undrafted free agents signed for camp in the league: <n>. ". stage 4, a full offseason (SX.8m)
+- NXU-24 (prompt, say2): " undrafted free agents. <n> prospects were not drafted; you may sign up to <m> for camp. ". stage 4, after the last pick: the undrafted market's question (SX.8m)
+- NXU-25 (sentence, say2): " the staff would offer: <list>. ". stage 5: the staff's offers by name (SX.8m)
+- NXU-26 (sentence, say2): " the staff would offer nobody. ". stage 5: no prospect is worth more than the fill (SX.8m)
+- NXU-27 (prompt, say2): " choose the undrafted free agents you offer a place in camp. ". stage 4, choose yourself: Enter offers or withdraws (SX.8m)
+- NXU-28 (sentence, say2): " you offer <player> a place. ". stage 5, choose yourself (SX.8m)
+- NXU-29 (sentence, say2): " your offer to <player> is withdrawn. ". stage 5, choose yourself (SX.8m)
+- NXU-30 (sentence, say2): " you have offered as many players as you may. ". stage 4, choose yourself: FR_UDFA_CHASE offers (SX.8m)
+- NXU-A04 (answer, say2): "make the staff's offers". stage 5, undrafted free agents (SX.8m)
+- NXU-A05 (answer, say2): "choose yourself". stage 5, undrafted free agents (SX.8m)
+- NXU-A06 (answer, say2): "offer nobody". stage 5, undrafted free agents (SX.8m)
+- NXU-A07 (answer, say2): "done". stage 5, choose yourself: the offers are made (SX.8m)
+- NXU-C01 (piece, piece): "offered". after a prospect the player offers a place (SX.8m)

@@ -32,7 +32,7 @@ from .. import playbook_data as PD
 from .. import playbooks as PB
 from ..nfl_rules import is_nfl
 from . import data as D
-from . import injuries, injury_flow, news, people, people_flow, staff, todo, trade_flow, trades, workload
+from . import injuries, injury_flow, news, people, people_flow, squad_moves, squad_moves_flow, staff, todo, trade_flow, trades, workload
 from .league import SEASON, team_index
 from .news_pools import DEFAULT_POOLS
 from .question import FranchiseQuestion
@@ -61,6 +61,7 @@ def prepare(p, league, week: int) -> None:
         back = injuries.after_games(league, week - 1, g.rnd, surnames_of(g), played_teams(league, week - 1)).back
     made, offers = trades.week(league, week, league.records)
     demanded, own_demands, filed = people.demands_week(league, week, league.records)       # SX.8n: after the week's own trades
+    squad_rows = squad_moves.week_signings(league, week, surnames_of(g), getattr(g, "real_names", None))     # S-E2 (D-200): the computer teams sign squad men, other teams' too (no draw)
     if week > 1:                                             # (SX.8j: the trades of the computer teams share the week's lines; SX.8k: so does another team's injury)
         hurt = injury_flow.headline(league, week)
         extra = news.trade_events(league, made + demanded) + news.demand_events(league, filed) + ([hurt] if hurt is not None else [])
@@ -71,6 +72,7 @@ def prepare(p, league, week: int) -> None:
                                      bool(getattr(g.options.settings.game, "nx_fr_auto", False)))
     from . import practice
     lines += practice.report_lines(league, store.words)          # D-136: the player's squad players elevated this week
+    lines += squad_moves_flow.taken_lines(league, squad_rows, store.words)    # S-E2 (D-200): a man of his squad another team signed
     league.injuries["report"] = {"season": league.season, "week": week, "lines": lines, "told": 0} if lines else None
     items = []
     extra = todo.extra_work_item(league, week)

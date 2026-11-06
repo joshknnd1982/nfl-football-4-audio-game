@@ -75,7 +75,7 @@ def test_league_sav_19_keeps_the_charts_and_no_places_and_reads_back_the_same_pl
     league, _ = real_league()
     text = league.to_json()
     data = json.loads(text)
-    assert data["format"] == D.FORMAT == 19 and "rosters" not in data and all(row[13] == -1 for row in data["players"])
+    assert data["format"] == D.FORMAT == 20 and "rosters" not in data and all(row[13] == -1 for row in data["players"])
     again = LeagueRecord.from_json(text)
     assert again.to_json() == text and again.rosters == league.rosters
     assert [p.place for p in sorted(again.players.values(), key=lambda p: p.id)] == [p.place for p in sorted(league.players.values(), key=lambda p: p.id)]

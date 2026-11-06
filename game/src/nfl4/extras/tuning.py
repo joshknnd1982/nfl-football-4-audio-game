@@ -560,6 +560,11 @@ FR_FA_RESERVE = 0                 # tenths of a million left under the cap for t
 # and the span: 58 to 69, below most starters), aged FR_FA_SEASON_AGE (27 to 33), plus the players the player released this season. They ask the price of stage 7 (`resign.asking`);
 # a signing needs an empty place or a release of a player of the group who is not hurt (the dead money counts against the cap), and the cap.
 FR_PRACTICE_RATING = (44, 11)     # D-136: the made-up young players of a practice squad: 44 to 54 (the fill's rookies are 45 to 55)
+# S-E2 (D-200, NX-T4): the computer teams' weekly squad signings (franchise/squad_moves.py). UNVERIFIED (no count of the real league's was found):
+# a team signs a squad man when a family is under FR_FAMILY_MIN for the coming weeks, counting a man out FR_SQUAD_SIGN_OUT games or more as gone,
+# and takes another team's man over its own only when he is FR_SQUAD_POACH_EDGE rating points better (teams know their own men; measured in the soaks)
+FR_SQUAD_SIGN_OUT = 3
+FR_SQUAD_POACH_EDGE = 5
 FR_PRACTICE_MAX_AGE = 32          # D-136: the oldest player a practice squad signs (the NFL has no age limit; its veterans' limit is practice.VETERANS)
 FR_FA_SEASON_PER_GROUP = 3
 FR_FA_SEASON_RATING = (58, 12)

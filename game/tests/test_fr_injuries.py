@@ -532,7 +532,7 @@ def test_format_6_round_trips_with_injuries_and_stand_ins():
     I.settle(league, 2, FakeRnd(), SURNAMES)
     league.injuries["report"] = {"season": 1, "week": 2, "lines": [" the line. "], "told": 0}
     text = league.to_json()
-    assert json.loads(text)["format"] == 19 == D.FORMAT     # (12 since SZ.8: the injuries are format 6's; SR.5: 19, no places stored)
+    assert json.loads(text)["format"] == 20 == D.FORMAT     # (12 since SZ.8: the injuries are format 6's; SR.5: 19, no places stored)
     again = LeagueRecord.from_json(text)
     assert again.injuries == league.injuries and again.to_json() == text
 

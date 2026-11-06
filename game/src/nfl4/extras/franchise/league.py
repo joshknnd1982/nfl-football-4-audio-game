@@ -123,7 +123,7 @@ class LeagueRecord:
     people: dict = field(default_factory=lambda: {"morale": {}, "begun": 0, "holdouts": [], "pending": [], "demands": [], "goal": None, "verdict": None})   # SX.8n, format 9: see people.py
     honors: dict = field(default_factory=lambda: {"awards": [], "hall": []})   # SX.8o, format 10: the awards and the hall of fame (honors.py)
     usage: dict = field(default_factory=lambda: {"season": 0, "games": {}, "carries": {}})   # SX.8o, format 10: the season's games and carries (workload.py)
-    practice: dict = field(default_factory=lambda: {"season": 0, "elevations": {}})   # D-136, format 14: practice.py
+    practice: dict = field(default_factory=lambda: {"season": 0, "elevations": {}, "protected": None, "signings": []})   # D-136, format 14: practice.py; D-200, format 20: squad_moves.py
     depth: dict = field(default_factory=lambda: {"order": {}, "key": {}})   # NX-D3, NX-D4, format 16: the player's depth chart and key players (depth.py)
     calendar: dict | None = None                       # SZ.8, format 12: {"label": str, "weeks": [[[visitor, home], ...], ...]} the real calendar of this season; None: the original's 16 weeks
     cut_deciding: bool = field(default=False, repr=False, compare=False)   # D-130: the roster cut's plans are made and not yet applied (never saved)
@@ -384,6 +384,9 @@ class LeagueRecord:
                 record.calendar = data["calendar"]                  # SZ.8; a file of format 11 or older: the original's 16 weeks (the default)
             if version >= 14:
                 record.practice = data["practice"]                  # D-136; a file of format 13 or older: no squads yet (formed below in its season)
+                if version < 20 and isinstance(record.practice, dict):
+                    record.practice.setdefault("protected", None)   # D-200: a file of format 19 or older: the staff protects (no choice yet), no signings
+                    record.practice.setdefault("signings", [])
             if version >= 16:
                 record.depth = data["depth"]                        # NX-D3; a file of format 15 or older: the staff's order and the starters (the default)
             if version >= 18:

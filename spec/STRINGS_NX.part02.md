@@ -456,3 +456,6 @@
 - NXY-R80 (help, say5): " A receiver runs down the sideline and the quarterback throws a high ball. Good against one deep defender; two deep defenders can cover it. ". description of O080 Fade (NX-P8; heard with D)
 - NXY-R81 (help, say5): " The quarterback throws the ball behind the receiver so only he can catch it. Good against defenders who bump the receivers; two deep defenders can cover it. ". description of O081 Back Shoulder Fade (NX-P8; heard with D)
 - NXY-R24 (help, say5): " One receiver runs and turns back while another runs to the sideline, so the quarterback has two choices. Good against one deep defender; weak against two. ". description of O024 Curl and Flat (NX-P8; heard with D)
+- NXY-R26 (help, say5): " A receiver runs shallow across the field. Beats a blitz because the ball comes out fast; defenders who drop back can cover it. ". description of O026 Drag (NX-P8; heard with D)
+- NXY-R27 (help, say5): " Two receivers cross close to each other so the defenders get in each other's way. Good against man for man defense; weak when defenders drop back. ". description of O027 Mesh Crossers (NX-P8; heard with D)
+- NXY-R28 (help, say5): " Receivers cross the field close to the line. Beats a blitz; weak when defenders drop back. ". description of O028 Shallow Cross (NX-P8; heard with D)

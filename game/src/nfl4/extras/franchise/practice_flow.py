@@ -12,7 +12,8 @@ signed then too):
   a veteran; when the squad is full (16, or 17 with a real squad's international man) or has its six veterans and he is one, the squad men whose release
   makes room, the weakest first; one confirmation. The same flow is the item "add to the practice squad" of F9, Franchise, free agents;
 * release a squad player: he becomes a free agent of the season;
-* the practice squad rules (D-187): the NFL's rules in three sentences.
+* protect squad players, sign from another team's squad, practice squad signings around the league (S-E2, D-200; squad_moves_flow.py);
+* the practice squad rules (D-187): the NFL's rules in four sentences.
 Every change is made and written, then told (B-X53), and logged (rule 0.15).
 """
 from __future__ import annotations
@@ -161,12 +162,17 @@ def practice_menu(g, speech, keys, store, words) -> None:
         return X.text("NXJ-P17", player=name)
 
     def rules():
-        return X.text("NXJ-P33") + X.text("NXJ-P34") + X.text("NXJ-P35")
+        return X.text("NXJ-P33") + X.text("NXJ-P34") + X.text("NXJ-P35") + X.text("NXJ-P58")
+
+    from . import squad_moves_flow as MF                            # S-E2 (D-200): protections and the other squads
 
     items = [Item(lambda: X.text("NXJ-P20"), enter=hear),
              Item(lambda: X.text("NXJ-P21"), enter=promote),
              Item(lambda: X.text("NXJ-P22"), enter=add),
              Item(lambda: X.text("NXJ-P23"), enter=release),
+             Item(lambda: X.text("NXJ-P37"), enter=lambda: MF.protect_flow(g, speech, keys, store, words)),
+             Item(lambda: X.text("NXJ-P45"), enter=lambda: MF.sign_other_flow(g, speech, keys, store, words)),
+             Item(lambda: X.text("NXJ-P53"), enter=lambda: MF.league_signings(g, speech, keys, store, words)),
              Item(lambda: X.text("NXJ-P32"), enter=rules)]
     title = X.text("NXJ-P02", n=len(P.squad(league, league.team)))
     SpokenMenu(speech, keys, title, items, space_enters=True, digits_jump=True).run()

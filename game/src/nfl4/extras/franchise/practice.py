@@ -25,6 +25,8 @@ How the game models it (rules only: no speech, no files, no draw, so the program
 
     league.practice = {"season": s, "elevations": {"<player id>": n}}     (league.sav format 14; an older file gets it empty, and a league in its
                                                                           season gets its squads at once from the players cut this offseason)
+    and since format 20 (S-E2, D-200, squad_moves.py) "protected": None (the staff's four) or the player's list of squad men he protects,
+    "signings": [[week, from team, to team, player id], ...] the season's squad men signed to a roster by the computer teams.
 """
 from __future__ import annotations
 
@@ -54,7 +56,7 @@ PLACE_FAMILIES = {"LB": ("LB", "DL"), "DL": ("DL", "LB"), "CB": ("CB", "S"), "S"
 
 
 def empty() -> dict:
-    return {"season": 0, "elevations": {}}
+    return {"season": 0, "elevations": {}, "protected": None, "signings": []}
 
 
 def veteran(player) -> bool:
@@ -431,7 +433,7 @@ def check(league, whole) -> None:
     """LeagueError unless the practice record and the squads are whole."""
     from .league import LeagueError
     record = league.practice
-    if not isinstance(record, dict) or set(record) != {"season", "elevations"}:
+    if not isinstance(record, dict) or set(record) != {"season", "elevations", "protected", "signings"}:
         raise LeagueError("the practice squads are %r" % (record,))
     whole(record["season"], 0, 10000, "the practice squads' season")
     if not isinstance(record["elevations"], dict):
@@ -440,6 +442,8 @@ def check(league, whole) -> None:
         if not (isinstance(key, str) and key.isdigit() and int(key) in league.players):
             raise LeagueError("an elevation of %r" % (key,))
         whole(value, 0, 100, "an elevation count")
+    from . import squad_moves
+    squad_moves.check(league, whole)                   # S-E2 (D-200): the protections and the season's squad signings
     counts, vets = [0] * D.TEAMS, [0] * D.TEAMS
     for p in league.players.values():
         if p.status != STATUS:
