@@ -12,7 +12,7 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 
 ## 0.16.16 (2026-11-06, test build)
 
-Not built yet: the next test installer will have it. Renaming a player now keeps what you type. Everything of 0.16.15 and earlier below is still to be tested too.
+Renaming a player now keeps what you type. Everything of 0.16.15 and earlier below is still to be tested too.
 
 ### Renaming a player keeps capitals, apostrophes, hyphens and periods
 Before, a new name you typed in F9, Franchise, your roster (a player, change his name) came out all in lower case, an apostrophe was said as a strange letter ("thorn") and then left out, and hyphens and periods were dropped too: "Ja'Marr" became "jamarr". Now the name keeps what you typed: capital letters with Shift, apostrophes, hyphens and periods, as in the real names the game already uses (Ja'Marr, Amon-Ra St. Brown). Other characters are still left out, and a name needs at least two letters or digits. The names you type at the start of a Classic season are unchanged.
