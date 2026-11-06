@@ -1,4 +1,4 @@
-NEXT SESSION BLOCK (rewritten WHOLE 2026-11-06 at the end of S-I)
+NEXT SESSION BLOCK (rewritten WHOLE 2026-11-06 at the end of S-I, after your check of the volume keys)
 
 How to read this block: it is written for any AI coding agent (Claude Code, OpenAI Codex or another); "the agent" is whichever one runs the session. Models are named by tier (AGENTS.part02.md 3.4): Tier 1 cheapest and fastest, Tier 2 everyday, Tier 3 strong, Tier 4 top. Claude Code today: Tier 1 Haiku 5.5, Tier 2 Sonnet 5.5, Tier 3 Opus 5.5, Tier 4 Fable 5.1. Codex: the Codex section of C:\Users\joshk\OneDrive\dev\games\tools\MODEL_GUIDE.md (documentation only, untested: the first session that runs under Codex writes its tier table). Notes marked "Claude Code" below are quirks of that agent's tools on this PC; check them the first time under another agent.
 
@@ -22,8 +22,9 @@ Decisions made automatically:
   - 0.16.16 built and published at your word (D-210).
   - F9's rename takes the character you typed and keeps letters, digits, spaces, apostrophes, hyphens and periods; the original's own name prompts of the Classic setup are unchanged (D-209).
 Owner-needed (one at a time; the recommended answer first):
-  1. Install 0.16.16 from the GitHub pre-release (https://github.com/joshknnd1982/nfl-football-4-audio-game/releases/tag/v0.16.16) and listen: PLAYTEST_LIST 163 (rename a player to a name such as O'Neil-Smith), PLAYTEST_LIST 162 (the stand-in keys in a long F9 list and a long question), 161 (the volume keys while the announcer speaks), 159 and 160 (the tie-breakers), and the earlier items 80 to 158. For any problem, save a problem report right then (F9, Speech settings, "Save a problem report"; it lands on your Desktop) and bring it with your report.
+  1. Install 0.16.16 from the GitHub pre-release (https://github.com/joshknnd1982/nfl-football-4-audio-game/releases/tag/v0.16.16) and listen: PLAYTEST_LIST 163 (rename a player to a name such as O'Neil-Smith), PLAYTEST_LIST 162 (the stand-in keys in a long F9 list and a long question), 159 and 160 (the tie-breakers), and the earlier items 80 to 158. For any problem, save a problem report right then (F9, Speech settings, "Save a problem report"; it lands on your Desktop) and bring it with your report.
   2. Later, not now: when you want the first full release 1.0.0 (P11, S11.3). Recommended: after your listening rounds find nothing more to fix.
+Heard by you: PLAYTEST_LIST 161, the volume keys, fine on 0.16.14 ("no issues"; your log agrees).
 Open questions: all 77 answered or closed (work\sr4\list_questions.py); S-D, S-B and S-H opened none.
 
 THE SESSIONS THAT FOLLOW (one at a time; one writer in the folder; each ends with the next block):
