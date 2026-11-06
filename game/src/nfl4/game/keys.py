@@ -43,6 +43,15 @@ KEY_T = 84                           # the T key (owner rule 0.22, playbook 7.16
 # owner's volume up in a play menu cut the speech, the key echo said "¯" (chr 175) and the menu began again. They are never a key of
 # the game, in any mode: post() drops them, and the window hands them back to Windows.
 WINDOWS_KEYS = frozenset(range(0xA6, 0xB8))
+# Owner rule 0.38 (2026-11-06, D-207, fixesforgames B-W44): "some keyboards like acer laptops do not have home, end, pageup and
+# pagedown. You must implement alternative keys". Each missing key has a plain key that every keyboard has, with no modifier (Ctrl
+# alone is the original's speech rate key, Alt is Escape, Shift alone ends a wait): the open bracket is Page Up, the close bracket
+# Page Down, the semicolon Home and the apostrophe End (US layout: the keys right of P and right of L; Windows gives them these
+# virtual-key codes on every layout). post() turns them into the key they stand for, so every menu, list and question that reads
+# Page Up, Page Down, Home or End takes them too, in every mode; none of the four was a key of the game before. While the player
+# types text (a "typing" context, game/prompts.py) they stay themselves, so typing is not disturbed (nfl4's names keep only letters, digits and spaces, as the original's did).
+KEY_OPEN_BRACKET, KEY_CLOSE_BRACKET, KEY_SEMICOLON, KEY_APOSTROPHE = 219, 221, 186, 222
+ALTERNATIVE_KEYS = {KEY_OPEN_BRACKET: KEY_PAGE_UP, KEY_CLOSE_BRACKET: KEY_PAGE_DOWN, KEY_SEMICOLON: KEY_HOME, KEY_APOSTROPHE: KEY_END}
 SPEAKING = 2                         # SpVoice.Status.RunningState while the voice speaks
 
 
@@ -144,6 +153,9 @@ class KeyInput:
         if code in WINDOWS_KEYS:                    # D-205: a key of Windows (volume, media, browser) is never the game's
             debuglog.event("key", "ignored", vk=code, why="a key of Windows", ctx=debuglog.current_context())
             return
+        if code in ALTERNATIVE_KEYS and not debuglog.typing_now():     # rule 0.38 (D-207): the laptop's stand-in key
+            debuglog.event("key", "alternative", vk=code, as_code=ALTERNATIVE_KEYS[code], ctx=debuglog.current_context())
+            code = ALTERNATIVE_KEYS[code]
         if code == KEY_T and self.timeout_eager is not None:
             # counted and queued BEFORE the speech is cut, so a game thread that wakes from the cut finds the key waiting
             self.timeout_posts += 1

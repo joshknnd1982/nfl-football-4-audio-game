@@ -86,6 +86,13 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("pages", "Page Up and Page Down", "In the saved game, franchise and season questions", "turn to the previous or the next "
            "page of a long list; F1 says the question again and F2 plays the replay", "all", False, "",
            " In the saved game and franchise questions. Page Up and Page Down turn the page. "),
+    KeyRow("laptop_keys", "Open bracket, close bracket, semicolon, apostrophe", "Everywhere Page Up, Page Down, Home and End work, "
+           "except while you type a name", "stand in for keys that many laptop keyboards lack: the open bracket is Page Up, the close "
+           "bracket Page Down, the semicolon Home and the apostrophe End (on a US keyboard the brackets are right of P and the "
+           "semicolon and the apostrophe right of L)", "all", False, "",
+           " For a keyboard without Page Up, Page Down, Home and End. the open bracket is Page Up, the close bracket Page Down, "
+           "the semicolon Home, and the apostrophe End. ",
+           consts=("KEY_OPEN_BRACKET", "KEY_CLOSE_BRACKET", "KEY_SEMICOLON", "KEY_APOSTROPHE")),
     KeyRow("timeout", "T", "Anywhere in a game being played, until the play is run", "calls your time out at once; a call during a "
            "running play is granted when the play ends", "nfl", False, " T. calls a time out", consts=("KEY_T",), feature="timeouts"),
     KeyRow("back", "Backspace or Left, B", "In a list of plays or a playbook group", "go back one level, from a list of plays to the "
