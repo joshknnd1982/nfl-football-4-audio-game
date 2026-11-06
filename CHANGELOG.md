@@ -12,7 +12,7 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 
 ## 0.16.13 (2026-11-06, test build)
 
-Not built yet: the next test installer will have it. In a franchise on the real calendar, teams with the same record are now put in order by the NFL's own tie-breakers, for the standings, the division titles, the wild cards and the play-off seeds. Everything of 0.16.12 and earlier below is still to be tested too.
+In a franchise on the real calendar, teams with the same record are now put in order by the NFL's own tie-breakers, for the standings, the division titles, the wild cards and the play-off seeds. Everything of 0.16.12 and earlier below is still to be tested too.
 
 ### The NFL's tie-breakers in the standings and the play-offs
 When two or more teams finish with the same record, the game now follows the NFL's tie-breaking procedures: first the games between the teams, then the record in division games (inside a division) or in conference games (for a wild card), the record against common opponents, the strength of victory and of schedule, points scored and allowed, net points, and last a coin toss. Before, equal teams kept the league's order, and your team won every tie for the last place; now it must win the tie-breaker like everyone else. The coin toss is fixed for each season, so the seeds never change between rounds. The game cannot count touchdowns of the other games, so the NFL's net touchdowns step is skipped. Classic and a franchise on the original's 16 weeks are unchanged.
