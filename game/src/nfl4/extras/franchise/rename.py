@@ -8,6 +8,9 @@ name is cleaned (`cqn`: fewer than two letters or digits give no name); then the
 the answer, y and n answer). Inside F9 the keys are read as F9 reads them (`KeyInput.read_key`, which runs no global key, design 3.7), so F9 is never opened
 inside itself; the spoken words go with `say_async` outside the replay list, as every F9 menu speaks. F9's key reading skips Shift on its own and hands the
 character the window typed, so a capital letter is typed with Shift as anywhere else (the original's own Shift step reads key codes, which have no case).
+S-H (2026-11-06, D-209, B-W45): the rename used the original's key character g2 all the same (lower case, "\u00fe" for the apostrophe key) and
+cleaned with cqn, so "Ja'Marr" became "jamarr". It now keeps the character the window typed and cleans with `clean_name`, which keeps the
+letters, digits, spaces, apostrophes, hyphens and periods of real names (rosters.txt has all of them). The original's own prompts are unchanged.
 
     check_name(league, player, name)   None when the name may be used, else the ID of the sentence that says why not
     rename(league, player, name)        the change (the caller writes league.sav)
@@ -23,6 +26,22 @@ from .. import nx_texts as X
 from . import real_roster
 
 KEY_F1, KEY_BACKSPACE, KEY_UP, KEY_DOWN, KEY_ESCAPE = 112, 8, 38, 40, 27
+NAME_MARKS = "'-."     # D-209: besides letters, digits and spaces, a real name has these (Ja'Marr, Amon-Ra, St. Brown)
+
+
+def clean_name(typed: str) -> str:
+    """D-209: the renamed player's name: the letters (accented ones too), digits, spaces and NAME_MARKS as typed, in order; "" (no name)
+    when fewer than two letters or digits are left, as the original's cqn gives no name."""
+    kept = "".join(c for c in typed if c.isalpha() or c.isdigit() or c == " " or c in NAME_MARKS)
+    return kept if sum(c.isalnum() for c in kept) >= 2 else ""
+
+
+def _typed_character(keys, code: int):
+    """D-209: the character the key typed, as the window typed it (its case, an apostrophe as an apostrophe); a keypad key gives its digit
+    (D-022 item 2); None for a key that types nothing."""
+    if 96 <= code <= 105:
+        return str(code - 96)
+    return keys.take_typed() or None
 
 
 def check_name(league, player, name: str):
@@ -72,7 +91,7 @@ def _typed(g, speech, keys, prompt: str) -> str:
                 return ""                                    # F9's way back: nothing typed (the original's prompts have no Escape)
             char = None
             if code not in (KEY_BACKSPACE, KEY_ENTER):
-                char = g.prompts.typed_character(str(code))
+                char = _typed_character(keys, code)
             if code == KEY_BACKSPACE:
                 if text:
                     speech.stop()
@@ -119,7 +138,9 @@ def ask(g, speech, keys, store, player) -> str:
     league = store.league
     if player.id in real_roster.waiting_ids(league):
         return X.text("NXU-45", player=player.name)
-    name = P.cqn(typed(g, speech, keys, X.text("NXU-40", player=player.name)))
+    raw = typed(g, speech, keys, X.text("NXU-40", player=player.name))
+    name = clean_name(raw)
+    debuglog.event("input", "rename_cleaned", typed_chars=len(raw), kept_chars=len(name))   # B-W45: shows characters a name lost
     why = check_name(league, player, name)
     if why is not None:
         return X.text(why, player=player.name)

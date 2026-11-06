@@ -39,7 +39,12 @@ def key_of(char: str) -> int:
         return ord(char)
     if char == " ":
         return 32
+    if char in PUNCTUATION_KEYS:              # S-H (D-209): the apostrophe, hyphen and period of real names
+        return PUNCTUATION_KEYS[char]
     raise ValueError(f"no key types {char!r} in the rig")
+
+
+PUNCTUATION_KEYS = {"'": 222, "-": 189, ".": 190}
 
 
 class ScriptedKeys(KeyInput):
