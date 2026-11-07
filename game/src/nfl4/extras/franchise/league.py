@@ -115,7 +115,7 @@ class LeagueRecord:
     resign: dict | None = None                         # the stage of the expiring contracts in progress (SX.8h, format 3): see resign.py
     market: dict | None = None                         # the stage of free agency in progress (SX.8i, format 4): see market.py
     trades: dict = field(default_factory=lambda: {"picks": [], "log": []})   # the season's trades and the traded picks of the coming draft (SX.8j, format 5): see trades.py
-    injuries: dict = field(default_factory=lambda: {"hurt": [], "stand_ins": [], "report": None, "chosen": []})   # the season's injuries (SX.8k, format 6; "chosen" D-143, format 15): see injuries.py
+    injuries: dict = field(default_factory=lambda: {"hurt": [], "stand_ins": [], "report": None, "chosen": [], "reserve": {"placed": [], "returns": []}})   # the season's injuries (SX.8k, format 6; "chosen" D-143, format 15; "reserve" D-216, format 21): see injuries.py, reserve.py
     staff: dict | None = None                          # the head coaches, the coordinators and the stage "the staff" in progress (SX.8l, format 7): see staff.py
     comp: list = field(default_factory=list)           # the compensatory picks awarded for a coming draft (SX.8m, format 8): see comp.py
     future_picks: list = field(default_factory=list)   # the first-round picks owed for the draft after the coming one (SX.8m, format 8): see tags.py
@@ -369,6 +369,8 @@ class LeagueRecord:
                 record.injuries = data["injuries"]
                 if version < 15 and isinstance(record.injuries, dict) and "chosen" not in record.injuries:
                     record.injuries["chosen"] = []                  # D-143: a file of format 14 or older has no choice of who starts (the staff's rule)
+                if version < 21 and isinstance(record.injuries, dict) and "reserve" not in record.injuries:
+                    record.injuries["reserve"] = {"placed": [], "returns": []}     # D-216: a file of format 20 or older: nobody placed by the player yet
             if version >= 7:
                 record.staff = data["staff"]
             if version >= 8:

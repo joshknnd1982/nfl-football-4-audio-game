@@ -130,13 +130,12 @@ def stadium_with(on=True, seed=3, rules=True):
     return st, game
 
 
-def test_the_whistle_is_chosen_by_what_happened_and_is_a_file_of_the_pea_whistles():
-    st, game = stadium_with()
-    for context, name in ST.CONTEXT_WHISTLES.items():
-        assert os.path.basename(st.whistle(context)) == name + ".wav"
-    seen = {st.whistle(None) for _ in range(60)}
-    assert None not in seen and {os.path.basename(p) for p in seen} == {"whistle_short.wav", "whistle_double.wav"}    # never foot11 (2026-10-23)
-    assert st.whistle("nonesuch") is None
+def test_every_whistle_is_the_one_made_whistle_whatever_happened():
+    st, game = stadium_with()                                       # D-215 (a tester 2026-11-06: "It uses two different whistles")
+    for context in ("final", "quarter", "twominute", "timeout", "penalty", "review", None, "nonesuch"):
+        assert os.path.basename(st.whistle(context)) == "whistle.wav"
+    assert ST.WHISTLES == () and not any(n.startswith("whistle_") for n in ST.ALL_NAMES)
+    assert not any(os.path.exists(os.path.join(ST.shipped_folder(), n + ".wav")) for n in ST.RETIRED_WHISTLES)
 
 
 def test_a_classic_game_after_an_nfl_game_hears_the_original_whistle():
@@ -160,7 +159,7 @@ def test_play_tackle_8_plays_the_named_pea_whistle_waits_as_ever_and_forgets_the
     rig = Rig([], sounds_dir=tmp_path)
     sounds = rig.game.sounds
     asked = []
-    path = os.path.join(ST.shipped_folder(), "whistle_short.wav")
+    path = os.path.join(ST.shipped_folder(), "whistle.wav")
     sounds.whistle_hook = lambda context: asked.append(context) or path
     sounds.whistle_context = "timeout"
     before = len(rig.slot_log)
@@ -217,7 +216,7 @@ def test_the_referee_and_the_whistles_do_not_move_a_draw_and_the_flags_are_the_r
     assert any("time out called by" in t for t in said_on) or any("review" in t for t in said_on) or len(said_on) > 10
     assert rig_on.rnd.trace == rig_off.rnd.trace and rig_on.rnd.draws == rig_off.rnd.draws and result_on.scores == result_off.scores
     whistles = [e.sound_id for e in rig_on.slot_log if e.action == "play" and e.slot == SLOT_TACKLE]
-    assert {"file whistle_short.wav", "file whistle_long.wav", "file whistle_double.wav"} <= set(whistles)        # by what happened
+    assert {w for w in whistles if w.startswith("file ")} == {"file whistle.wav"}      # D-215: one whistle, whatever happened (foot4 to foot6 are tackles)
     assert "snd_foot11" not in whistles                       # a tester, 2026-10-23: every whistle of these rules is the official's
     rig_classic = sim_game(tmp_path / "classic", 21, rules=RecordingRules(penalties_on=True, qb_on=True, playbooks_on=True))[0]
     assert not [e for e in rig_classic.slot_log if e.action == "play" and "whistle_" in str(e.sound_id)]    # the original's rules hear no pea whistle

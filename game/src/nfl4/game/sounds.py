@@ -91,6 +91,20 @@ class GameSounds:
             log.debug("the %s slot could not be read: %s", name, exc)
             return []
 
+    def own_whistle(self) -> str | None:
+        """D-215 (a tester 2026-11-06: "It uses two different whistles ... it should only use the whistle that claude made or a custom whistle sound file
+        provided by the user"): the player's whistle.wav (sounds folder) when the sound layer can use it, else the game's own made whistle (sounds_nx),
+        never the original's foot11 in the owner's mode. No draw."""
+        files = self.slot_files("whistle")
+        library = getattr(self.audio, "library", None)
+        for path in files:
+            try:
+                if library is None or library.pick_file(path).sound is not None:
+                    return path
+            except Exception as exc:                  # a damaged file is skipped for the next one
+                log.debug("the whistle file %s cannot be used: %s", path, exc)
+        return files[-1] if files else None
+
     def music_file(self) -> str | None:
         files = self.slot_files("music")
         return files[0] if files else None
@@ -247,7 +261,10 @@ class GameSounds:
                 alternative = self.whistle_hook(self.whistle_context)
             except Exception as exc:
                 log.warning("the whistle could not be chosen: %s", exc)
+        if n == 8:
             self.whistle_context = None
+            if not alternative and self._own():
+                alternative = self.own_whistle()             # D-215: the owner's mode has ONE whistle, with the stadium sounds off too
         if alternative:
             self.audio.play_file(SLOT_TACKLE, alternative, -1500 + self.wavol)
         else:

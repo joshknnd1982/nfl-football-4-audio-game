@@ -49,15 +49,16 @@ LEVELS = {"crowd_cheer": -800, "crowd_roar": -900, "crowd_groan": -1000, "crowd_
           "goal_post_hit": -1900}
 LEVELS.update({"mic_on": -2000, "mic_off": -2200})
 NAMES = tuple(LEVELS)
-WHISTLES = ("whistle_short", "whistle_long", "whistle_double", "whistle_triple")      # SY.3: the official's whistles, in the whistle hook of GameSounds
+# SY.3's four kinds of whistle (whistle_short, whistle_long, whistle_double, whistle_triple) are gone (D-215, a tester 2026-11-06: "It uses two different
+# whistles ... it should only use the whistle that claude made or a custom whistle sound file provided by the user"): every whistle is `whistle`
+RETIRED_WHISTLES = ("whistle_short", "whistle_long", "whistle_double", "whistle_triple")
+WHISTLES = ()
 ADDED = ("crowd_big_play", "crowd_flag_cheer", "whistle")         # 2026-10-23: a big play of the player's team, a flag on the other team, every whistle
 LEVELS.update({"crowd_big_play": -700, "crowd_flag_cheer": -900})
-ALL_NAMES = NAMES + WHISTLES + ADDED                              # the twenty-two sounds a player can replace (SZ.2): the list in F9, Sounds
-LABEL_IDS = {name: "NXB-S%02d" % (n + 1) for n, name in enumerate(ALL_NAMES)}     # their plain-word names (strings_nx.tsv)
+ALL_NAMES = NAMES + WHISTLES + ADDED                              # the eighteen sounds a player can replace (SZ.2): the list in F9, Sounds
+# their plain-word names (strings_nx.tsv): the IDs keep the numbers of the list of SZ.2, so NXB-S16 to NXB-S19 (the retired whistles) are not said
+LABEL_IDS = {name: "NXB-S%02d" % (n + 1) for n, name in enumerate(NAMES + RETIRED_WHISTLES + ADDED) if name in ALL_NAMES}
 WHISTLE_LEVEL = -1500                                             # the whistle's level in the game: the tackle's (GameSounds.play_tackle)
-CONTEXT_WHISTLES = {"final": "whistle_long", "quarter": "whistle_long", "twominute": "whistle_double", "timeout": "whistle_short",
-                    "penalty": "whistle_long", "review": "whistle_double"}
-DEFAULT_WHISTLES = ("whistle_short",) * 7 + ("whistle_double",) * 3        # no context (2026-10-23: never the original's foot11 in these rules)
 CROWD_NAMES = frozenset(name for name in ALL_NAMES if name.startswith("crowd_"))
 BIG_GAIN, HIT_GAIN = 20, 8
 POST_CHANCE = 25                                         # percent of the missed field goals that hit the post
@@ -120,7 +121,7 @@ def put_back(player_dir: str | None = None):
         return result
     for entry in entries:
         match = _FAMILY.match(entry)
-        if match and match.group("name").lower() in ALL_NAMES and os.path.isfile(os.path.join(folder, entry)):
+        if match and match.group("name").lower() in ALL_NAMES + RETIRED_WHISTLES and os.path.isfile(os.path.join(folder, entry)):   # D-215: old whistles too
             names.append(entry)
     restore._move_aside(folder, names, result)
     log.info("stadium: the player's sounds were put back: %s", result)
@@ -213,19 +214,21 @@ class Stadium:
         self.played += 1
 
     def whistle(self, context) -> str | None:
-        """The pea whistle for a whistle of the game (the path of a file of its family), or None for the original's foot11."""
+        """The whistle of every whistle of the game (the path of a file), or None when this stadium is not playing. D-215 (a tester 2026-11-06: "It uses
+        two different whistles ... it should only use the whistle that claude made or a custom whistle sound file provided by the user"): ONE whistle in
+        every context, the player's own whistle files when he has any (drawn among them), else the game's made whistle.wav; the four kinds of SY.3 (short,
+        long, double, triple) are gone. `context` is kept for the log."""
         if not self.active():
             return None
-        name = CONTEXT_WHISTLES.get(context) if context else DEFAULT_WHISTLES[self.rnd(len(DEFAULT_WHISTLES)) - 1]
-        if name is None:
-            return None
+        name = "whistle"
         own = mine(family("whistle", (self.folders[0],)), self.folders[0])      # the player's whistle.wav: every whistle (2026-10-23)
         if own:
             path = own[self.rnd(len(own)) - 1] if len(own) > 1 else own[0]
             library = getattr(getattr(getattr(self.game, "sounds", None), "audio", None), "library", None)
             if library is None or library.pick_file(path).sound is not None:
                 return path
-        return self.pick(name)
+        shipped = family(name, (self.folders[-1],))
+        return shipped[0] if shipped else None
 
     def mic(self, opening: bool) -> None:
         """The click of the referee's microphone: when it opens (not twice within three seconds) and when it closes."""

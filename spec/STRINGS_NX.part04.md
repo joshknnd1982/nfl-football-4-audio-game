@@ -1,16 +1,3 @@
-- NXB-F15 (help, say5): " Plays that are a run and a quick pass at once. The quarterback chooses after the snap. ". description of the list og15 Run Pass Options (NX-P8)
-- NXB-F16 (help, say5): " Unusual plays meant to fool the defense. They are rare and risky. ". description of the list og16 Trick Plays (NX-P8)
-- NXB-F17 (help, say5): " Plays for when only a few yards are needed or the goal line is close. ". description of the list og17 Goal Line and Short Yardage (NX-P8)
-- NXB-F18 (help, say5): " Plays that stop or run the clock, and last chance throws. ". description of the list og18 Clock Plays (NX-P8)
-- NXB-F19 (help, say5): " Plays from old fashioned lineups, which are now rare. ". description of the list og19 Old Formations (NX-P8)
-- NXB-F20 (help, say5): " More short and medium passes. ". description of the list og20 More Routes (NX-P8)
-- NXB-F21 (help, say5): " Defenses that crowd the line to stop runs close to the goal line. ". description of the list dg01 Goal Line Defenses (NX-P8)
-- NXB-F22 (help, say5): " Defenses set to stop runs, with different numbers of players near the line. ". description of the list dg02 Run Fronts (NX-P8)
-- NXB-F23 (help, say5): " Defenses where the linemen move at the snap to stop a run. ". description of the list dg03 Run Stunts (NX-P8)
-- NXB-F24 (help, say5): " Defenses that keep the ball carrier or quarterback from getting around the end. ". description of the list dg04 Edge and Contain (NX-P8)
-- NXB-F25 (help, say5): " Defenses where extra players rush the quarterback. ". description of the list dg05 Blitzes (NX-P8)
-- NXB-F26 (help, say5): " Defenses that look like a blitz or confuse the blockers. ". description of the list dg06 Pressure Looks (NX-P8)
-- NXB-F27 (help, say5): " Defenses where the defenders guard areas of the field. ". description of the list dg07 Zone Coverages (NX-P8)
 - NXB-F28 (help, say5): " Defenses where each defender covers one receiver. ". description of the list dg08 Man Coverages (NX-P8)
 - NXB-F29 (help, say5): " Defenses with two or four defenders guarding the far field. ". description of the list dg09 Two Deep Coverages (NX-P8)
 - NXB-F30 (help, say5): " Defenses with extra help against long passes. ". description of the list dg10 Deep Help (NX-P8)
@@ -451,3 +438,33 @@
 - NXK-11 (sentence, say2): " the draft is over. your rookies: ". stage 4, before the player's rookies
 - NXK-12 (sentence, say2): " the staff took <player>, <position>. ". stage 4, the staff made the player's pick
 - NXK-13 (piece, piece): "none". the open places when there are none
+- NXE-50 (sentence, say2): " the roster cut. the staff would release: ". stage 5, before the staff's releases of the player's team
+- NXE-51 (sentence, say2): " <player>, <position>, age <a>, rating <r>. ". stage 5, a player the staff would release
+- NXE-52 (menu, say2): "release them". stage 5, the staff's cuts
+- NXE-53 (menu, say2): "choose yourself". stage 5, the player chooses
+- NXE-54 (prompt, say2): " <position>: players <n>, places <m>. choose who is released. ". stage 5, a group with too many players
+- NXE-55 (sentence, say2): " <player> is released. ". stage 5, the player released him
+- NXE-56 (sentence, say2): " players released by the staff: <n>. ". stage 5, with the setting that the staff handles the roster cut
+- NXE-57 (sentence, say2): " empty places filled with undrafted rookies: <n>. ". stage 5, the fill of the player's team
+- NXE-58 (sentence, say2): " nobody on your team has to be released. ". stage 5, the player's team has no surplus (added by SX.8d)
+- NXD-01 (sentence, say2): " <coach> your to do list has <n> items. ". the to-do list, before its items (design 8.1)
+- NXD-02 (sentence, say2): " <coach> your to do list has 1 item. ". the to-do list, one item
+- NXD-03 (sentence, say2): " the staff took care of <n> items. ". with the setting that the staff handles the to do list
+- NXD-04 (sentence, say2): " the staff took care of 1 item. ". the same, one item
+- NXD-05 (sentence, say2): " item <n>. ". before each item
+- NXD-06 (sentence, say2): " items still on your to do list: <n>. ". choosing play game with items waiting
+- NXD-07 (sentence, say5): " nothing is waiting. ". F9 to do list with no waiting item
+- NXD-10 (prompt, say2): " extra work this week for one young player. ". T1, the question
+- NXD-11 (sentence, say2): " <player> gets extra work this week. ". T1, the point is given
+- NXD-20 (prompt, say2): " the game plan against the <team>. they play <their_offense> on offense and <their_defense> on defense. the staff recommends <our_offense> and <our_defense>. ". T2, the question
+- NXD-21 (answer, say2): "use the staff's game plan". T2, the staff's answer
+- NXD-22 (answer, say2): "keep your playbooks". T2, the do-nothing answer
+- NXD-23 (sentence, say2): " the game plan is set for this game. ". T2, the plan is taken
+- NXD-30 (sentence, say2): " the items you left for later were not done. ". the kick-off came with items still waiting
+- NXD-A01 (answer, say2): "later". every item
+- NXD-A02 (answer, say2): "<player>, <position>, rating <r>, <potential> potential". T1, a candidate
+- NXD-A03 (answer, say2): "nobody this week". T1, the do-nothing answer
+- NXN-01 (sentence, say2): " this week's news. ". before the news of a week
+- NXN-02 (sentence, say5): " no news this week. ". F9 news with no news
+- NXN-03 (sentence, say2): " the news of the offseason. ". F9 news, the offseason's lines
+- NXN-04 (menu, say5): "earlier". F9 news, the earlier lines

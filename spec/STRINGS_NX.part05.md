@@ -1,33 +1,3 @@
-- NXE-50 (sentence, say2): " the roster cut. the staff would release: ". stage 5, before the staff's releases of the player's team
-- NXE-51 (sentence, say2): " <player>, <position>, age <a>, rating <r>. ". stage 5, a player the staff would release
-- NXE-52 (menu, say2): "release them". stage 5, the staff's cuts
-- NXE-53 (menu, say2): "choose yourself". stage 5, the player chooses
-- NXE-54 (prompt, say2): " <position>: players <n>, places <m>. choose who is released. ". stage 5, a group with too many players
-- NXE-55 (sentence, say2): " <player> is released. ". stage 5, the player released him
-- NXE-56 (sentence, say2): " players released by the staff: <n>. ". stage 5, with the setting that the staff handles the roster cut
-- NXE-57 (sentence, say2): " empty places filled with undrafted rookies: <n>. ". stage 5, the fill of the player's team
-- NXE-58 (sentence, say2): " nobody on your team has to be released. ". stage 5, the player's team has no surplus (added by SX.8d)
-- NXD-01 (sentence, say2): " <coach> your to do list has <n> items. ". the to-do list, before its items (design 8.1)
-- NXD-02 (sentence, say2): " <coach> your to do list has 1 item. ". the to-do list, one item
-- NXD-03 (sentence, say2): " the staff took care of <n> items. ". with the setting that the staff handles the to do list
-- NXD-04 (sentence, say2): " the staff took care of 1 item. ". the same, one item
-- NXD-05 (sentence, say2): " item <n>. ". before each item
-- NXD-06 (sentence, say2): " items still on your to do list: <n>. ". choosing play game with items waiting
-- NXD-07 (sentence, say5): " nothing is waiting. ". F9 to do list with no waiting item
-- NXD-10 (prompt, say2): " extra work this week for one young player. ". T1, the question
-- NXD-11 (sentence, say2): " <player> gets extra work this week. ". T1, the point is given
-- NXD-20 (prompt, say2): " the game plan against the <team>. they play <their_offense> on offense and <their_defense> on defense. the staff recommends <our_offense> and <our_defense>. ". T2, the question
-- NXD-21 (answer, say2): "use the staff's game plan". T2, the staff's answer
-- NXD-22 (answer, say2): "keep your playbooks". T2, the do-nothing answer
-- NXD-23 (sentence, say2): " the game plan is set for this game. ". T2, the plan is taken
-- NXD-30 (sentence, say2): " the items you left for later were not done. ". the kick-off came with items still waiting
-- NXD-A01 (answer, say2): "later". every item
-- NXD-A02 (answer, say2): "<player>, <position>, rating <r>, <potential> potential". T1, a candidate
-- NXD-A03 (answer, say2): "nobody this week". T1, the do-nothing answer
-- NXN-01 (sentence, say2): " this week's news. ". before the news of a week
-- NXN-02 (sentence, say5): " no news this week. ". F9 news with no news
-- NXN-03 (sentence, say2): " the news of the offseason. ". F9 news, the offseason's lines
-- NXN-04 (menu, say5): "earlier". F9 news, the earlier lines
 - NXH-34 (help, say5): " With a franchise. F9. the franchise menu: the to do list, the news, your roster, the league history, the team ratings, free agents and trades. ". F5 addition (H12, C6), while the franchise is in use
 - NXH-35 (help, say5): " A franchise is a league that lasts from season to season. Your players have ratings, grow older, improve and decline, and retire. ". F6 addition (H12, C6), while the franchise is in use
 - NXH-37 (help, say5): " After the play offs comes the offseason with the draft and the roster cut. Before a game you hear the news and your to do list. Extra work you leave undone puts you behind the other teams. ". F6 addition (H12, C6), after NXH-35
@@ -447,3 +417,39 @@
 - NXU-A09 (answer, say2): "let him go for the picks". stage 8: take the two first-round picks (SX.8m)
 - NXU-53 (sentence, say2): " <player> stays, <contract>. ". stage 8: the offer is matched (SX.8m)
 - NXU-54 (sentence, say2): " <player> joins the <team>. you get their first round picks of this draft and the next. ". stage 8: the picks are taken (SX.8m)
+- NXU-55 (sentence, say2): " no team made an offer for <player>. he stays on the tag. ". stage 8: no offer sheet (SX.8m)
+- NXU-56 (sentence, say2): " the staff answered the offer for <player>. ". stage 8: the staff handles the to-do list (SX.8m)
+- NXH-44 (help, say5): " Camp focus before the progression, undrafted free agents at the cut, compensatory picks for free agents lost, the non-exclusive tag. F9 roster: Enter renames your player. ". F6, after NXH-43 (SX.8m)
+- NXU-31 (sentence, say2): " <player> did not sign with you. ". stage 4: an offer of the player that signed nobody (the review of SX.8m)
+- NXU-P01 (sentence, say2): " he cares most about <trait>. ". stage 7, a talk: his personality, after NXW-03 (SX.8n)
+- NXU-P10 (piece, piece): "money". a personality (SX.8n)
+- NXU-P11 (piece, piece): "winning". a personality (SX.8n)
+- NXU-P12 (piece, piece): "loyalty". a personality (SX.8n)
+- NXU-P13 (piece, piece): "playing time". a personality (SX.8n)
+- NXU-P14 (piece, piece): "the game". a personality (SX.8n)
+- NXU-M01 (piece, piece): "high". a morale of 3 or more (SX.8n)
+- NXU-M02 (piece, piece): "good". a morale of -2 to 2 (SX.8n)
+- NXU-M03 (piece, piece): "low". a morale of -3 or less (SX.8n)
+- NXU-T01 (piece, piece): "a top player". a player tag: rated 85 or more (SX.8n; not "a star", the name of an EA development trait, the review)
+- NXU-T02 (piece, piece): "a rising player". a player tag: 24 or younger with high potential (SX.8n)
+- NXU-T03 (piece, piece): "a veteran". a player tag: 31 or older (SX.8n)
+- NXU-T05 (sentence, say5): " <tag>. morale <morale>. he cares most about <trait>. ". F9's roster, after NXL-33: the tag, the morale, the personality (SX.8n)
+- NXU-T06 (sentence, say5): " morale <morale>. he cares most about <trait>. ". F9's roster, after NXL-33, a player without a tag (SX.8n)
+- NXU-H01 (prompt, say2): " <player>, <position>, rating <r>, holds out at camp. he is paid <contract> and asks <ask>. ". stage 3: the player's holdout (SX.8n)
+- NXU-H02 (sentence, say2): " there is no room under the cap to pay him. ". stage 3: the raise does not fit (SX.8n)
+- NXU-H06 (sentence, say2): " players holding out in the league: <n>. ". stage 3: the other teams' holdouts (SX.8n)
+- NXU-H10 (answer, say2): "pay him". stage 3, a holdout (SX.8n)
+- NXU-H11 (answer, say2): "let him wait". stage 3, a holdout (SX.8n)
+- NXU-H12 (answer, say2): "trade him". stage 3, a holdout: he asks to be traded at once (SX.8n)
+- NXU-H20 (sentence, say2): " <player> signs a new contract, <contract>. ". stage 3: paid (SX.8n)
+- NXU-H21 (sentence, say2): " <player> stays away from camp. he is unhappy and may ask to be traded. ". stage 3: let him wait (SX.8n)
+- NXU-H22 (sentence, say2): " <player> goes on the trade block. the other teams make their offers when the season begins. ". stage 3: trade him (SX.8n)
+- NXU-H23 (sentence, say2): " the staff paid <player>, who held out: <contract>. ". stage 3, the staff setting on (SX.8n)
+- NXU-H24 (sentence, say2): " <player> held out, and the staff let him wait. ". stage 3, the staff setting on (SX.8n)
+- NXU-D01 (prompt, say2): " <player>, <position>, asks to be traded. offers from <n> teams. ". the to-do item of a trade demand (SX.8n)
+- NXU-D10 (answer, say2): "keep him". a trade demand: no trade this week (SX.8n)
+- NXU-D11 (answer, say2): "the <team>: <get>, rating <r>. <picks>". a trade demand: an offer (SX.8n)
+- NXU-D12 (sentence, say2): " <player> stays with your team for now. ". a trade demand: kept (SX.8n)
+- NXU-G01 (sentence, say2): " the goal of this game: win by <n> points or more. ". before the kick-off, the stronger team (SX.8n)
+- NXU-G02 (sentence, say2): " the goal of this game: win it. ". before the kick-off, two teams of about one strength (SX.8n)
+- NXU-G03 (sentence, say2): " the goal of this game: lose by no more than <n> points, or win. ". before the kick-off, the weaker team (SX.8n)

@@ -72,20 +72,9 @@ def free_agents_menu(g, speech, keys, store, words) -> None:
         return keys.read_key() == KEY_ENTER
 
     def choose_group(title: str):
-        chosen: list = []
-
-        class _Chosen(Exception):
-            pass
-
-        def take(position):
-            chosen.append(position)
-            raise _Chosen()
-        items = [Item(lambda position=position: words.group(position), enter=lambda position=position: take(position)) for position in D.ROSTER_ORDER]
-        try:
-            SpokenMenu(speech, keys, title, items, space_enters=True, digits_jump=True).run()
-        except _Chosen:
-            pass
-        return chosen[0] if chosen else None
+        """D-214: a real position of the 22 (free safeties apart from strong safeties, each linebacker apart), never one group for a family."""
+        from . import positions as PS
+        return PS.choose(speech, keys, title, PS.ALL)
 
     def pick_from(title: str, lines: list):
         return ListPicker(speech, keys, title, len(lines), lambda i: lines[i]).run()
@@ -102,10 +91,12 @@ def free_agents_menu(g, speech, keys, store, words) -> None:
         reason = closed_reason(g, league)
         if reason is not None:
             return reason
-        position = choose_group(X.text("NXJ-S05"))
-        if position is None:
+        from . import positions as PS
+        code = choose_group(X.text("NXJ-S05"))
+        if code is None:
             return None
-        agents = S.pool_of(league, position)
+        position = PS.family_word(code)                           # the family: the signing's rules (the open place, the release) work on it
+        agents = [p for p in S.pool_of(league, position) if PS.position_of(p) == code]
         if not agents:
             return X.text("NXJ-S14")
         index = pick_from(X.text("NXJ-S05"), [free_agent_line(words, p) for p in agents])

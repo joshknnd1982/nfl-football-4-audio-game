@@ -52,7 +52,7 @@ def test_while_the_franchise_is_in_use_its_menu_has_the_to_do_list_the_news_the_
     seen = menus_seen(monkeypatch)
     in_a_franchise(tmp_path, INTO_FRANCHISE)
     assert ("Franchise", ["to do list", "news", "your roster", "league history", "team ratings", "salary cap",
-                          "free agents", "trades", "injury report", "practice squad", "your job and staff", "franchise settings", "play classic seasons",
+                          "free agents", "trades", "injury report", "injured reserve", "practice squad", "your job and staff", "franchise settings", "play classic seasons",
                           "get the latest calendar", "get the latest rosters"]) in seen      # SR.6: the latest rosters, after the calendar. D-128: the latest calendar, the last item       # injury report since SX.8k, your job and staff since SX.8l
     assert [labels for title, labels in seen if title == "Added functions"][0][3:] == ["Rules.", "Franchise", "About NFL Football 4."]
 
@@ -104,11 +104,11 @@ def test_the_history_menu_after_a_season_lists_the_champion_the_record_and_the_s
 
 
 def test_the_franchise_settings_change_the_offseason_with_left_right_and_enter_and_are_kept(tmp_path):
-    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [DOWN] * 9 + [ENTER, DOWN, ENTER])          # settings (the 11th item since SX.8l), the offseason: short
+    rig = in_a_franchise(tmp_path, INTO_FRANCHISE + TWO + [DOWN] * 10 + [ENTER, DOWN, ENTER])          # settings (the 11th item since SX.8l), the offseason: short   # D-216: injured reserve after the injury report
     assert rig.game.options.settings.game.nx_fr_offseason == "short"
     text = spoken(rig)
     assert any(X.text("NXF-24") in t for t in text)
-    rig = in_a_franchise(tmp_path / "b", INTO_FRANCHISE + TWO + [DOWN] * 9 + [ENTER, DOWN, RIGHT, LEFT, ENTER])
+    rig = in_a_franchise(tmp_path / "b", INTO_FRANCHISE + TWO + [DOWN] * 10 + [ENTER, DOWN, RIGHT, LEFT, ENTER])   # D-216: injured reserve after the injury report
     assert rig.game.options.settings.game.nx_fr_offseason == "short"                           # Right, Left and Enter: short, full, short
     assert "nx_fr_offseason = short" in settingsfile.render(rig.game.options.settings)
 

@@ -62,13 +62,13 @@ def test_no_whistle_of_these_rules_is_the_originals_and_the_players_whistle_wav_
     st, calls = stadium_with()
     for _ in range(40):
         assert st.whistle(None) is not None
-    for context in ST.CONTEXT_WHISTLES:
-        assert os.path.basename(st.whistle(context)).startswith("whistle_")
+    for context in ("final", "quarter", "twominute", "timeout", "penalty", "review"):
+        assert os.path.basename(st.whistle(context)) == "whistle.wav"         # D-215: the one made whistle
     mine = tmp_path / "mine"
     mine.mkdir()
     (mine / "whistle.wav").write_bytes(b"x")
     st.folders = (str(mine), ST.shipped_folder())
-    for context in list(ST.CONTEXT_WHISTLES) + [None]:
+    for context in ("final", "quarter", "twominute", "timeout", "penalty", "review", None):
         assert st.whistle(context) == str(mine / "whistle.wav")
 
 

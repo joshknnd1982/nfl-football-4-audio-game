@@ -337,7 +337,7 @@ def test_format_20_round_trips_and_a_format_19_file_gets_the_staffs_protections(
     M.week_signings(league, WEEK)
     M.set_protected(league, P.squad(league, BEARS)[0], False)
     data = json.loads(league.to_json())
-    assert data["format"] == D.FORMAT == 20 and data["practice"]["signings"] and data["practice"]["protected"] is not None
+    assert data["format"] == D.FORMAT == 21 and data["practice"]["signings"] and data["practice"]["protected"] is not None
     again = LeagueRecord.from_json(league.to_json())
     assert again.to_json() == league.to_json()
     data["format"] = 19

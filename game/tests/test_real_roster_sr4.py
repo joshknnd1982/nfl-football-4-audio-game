@@ -167,7 +167,7 @@ def test_a_new_franchise_round_trips_in_format_18_and_its_lineup_plays_the_empty
     league, _ = real_league()
     text = league.to_json()
     data = json.loads(text)
-    assert data["format"] == D.FORMAT == 20 and len(data["players"][0]) == 19 and len(data["chart"]) == 32 and "rosters" not in data   # SR.5
+    assert data["format"] == D.FORMAT == 21 and len(data["players"][0]) == 19 and len(data["chart"]) == 32 and "rosters" not in data   # SR.5
     again = LeagueRecord.from_json(text)
     again.reserves_on = True
     assert again.to_json() == text
@@ -208,7 +208,7 @@ def test_a_format_16_league_gets_its_teams_missing_real_men_and_every_real_quart
     assert bears["Tyson Bagent"].status == "active" and bears["Tyson Bagent"].position == "QB" and bears["Tyson Bagent"].number == "17"   # SR.5
     assert all(p.position for p in league.players.values())
     again = LeagueRecord.from_json(league.to_json())
-    assert again.loaded_format == D.FORMAT == 20 and again.converted is None          # (S-E2: format 20)
+    assert again.loaded_format == D.FORMAT == 21 and again.converted is None          # (S-E2: format 20)
 
 
 def test_a_format_17_league_keeps_its_bench_and_gets_the_positions_by_name():
@@ -234,7 +234,7 @@ def test_the_store_keeps_the_older_file_and_converts_the_league_when_it_opens_it
     store.open(True)
     assert store.league is not None and store.league.converted["from"] == 16
     assert files.data["league.sav.before-format-18"] == downgraded(old, 16).encode("utf-8")
-    assert store.save() and json.loads(files.data["league.sav"])["format"] == D.FORMAT == 20      # (S-E2: format 20)
+    assert store.save() and json.loads(files.data["league.sav"])["format"] == D.FORMAT == 21      # (S-E2: format 20)
 
 
 # ----- who starts (NX-L11 data) -----

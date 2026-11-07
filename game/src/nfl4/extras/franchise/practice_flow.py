@@ -207,17 +207,19 @@ def add_flow(g, speech, keys, store, words) -> str | None:
     def take(position):
         chosen.append(position)
         raise _Chosen()
-    groups = [position for position in D.ROSTER_ORDER if S.pool_of(league, position)]
+    from . import positions as PS                                 # D-214: the real positions, never one group for a family
+    pool = S.pool(league)
+    groups = [code for code in PS.ALL if any(PS.position_of(p) == code for p in pool)]
     if not groups:
         return X.text("NXJ-S14")
     try:
-        SpokenMenu(speech, keys, X.text("NXJ-P29"), [Item(lambda position=position: words.group(position), enter=lambda position=position: take(position))
+        SpokenMenu(speech, keys, X.text("NXJ-P29"), [Item(lambda position=position: PS.word(position), enter=lambda position=position: take(position))
                                                     for position in groups], space_enters=True, digits_jump=True).run()
     except _Chosen:
         pass
     if not chosen:
         return None
-    agents = S.pool_of(league, chosen[0])
+    agents = [p for p in pool if PS.position_of(p) == chosen[0]]
     index = pick_from(X.text("NXJ-P12"), [agent_line(words, p) for p in agents])
     if index is None:
         return None

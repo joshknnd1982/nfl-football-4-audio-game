@@ -6,7 +6,7 @@ to the game, the speech or the files.
 """
 from __future__ import annotations
 
-FORMAT = 20                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
+FORMAT = 21                                  # league.sav's format; a higher one is "a newer version" (design 10.1). 2 adds the contracts,
 #                                              3 (SX.8h) the stage of the expiring contracts in progress (`LeagueRecord.resign`),
 #                                              4 (SX.8i) the market of free agency in progress (`LeagueRecord.market`),
 #                                              5 (SX.8j) the trades of the season and the picks of the coming draft (`LeagueRecord.trades`),
@@ -48,6 +48,9 @@ FORMAT = 20                                  # league.sav's format; a higher one
 #                                              20 (2026-11-06, S-E2, D-200, NX-T4) the practice squads' protections and the season's squad signings: `practice`
 #                                                gains "protected" (None: the staff protects the four best; else the player's list) and "signings" (rows
 #                                                [week, from team, to team, player id]). A file of format 19 or older gets None and [] (no draw)
+#                                              21 (2026-11-06, D-216) the player's injured reserve: `injuries["reserve"]` = {"placed": [[player id, week placed,
+#                                                week designated, ended]], "returns": [[player id, week]]} (reserve.py). A file of format 20 or older gets the empty
+#                                                record (no draw); its men on the real rosters' injured reserve count as placed before week 1
 COMP_FIRST_ROUND, COMP_LAST_ROUND = 3, 7     # the compensatory picks sit at the end of rounds 3 to 7 (NFL, SRC-OFFICIAL)
 OLDEST_FORMAT = 1                            # SX.8g: a format-1 file is read by a migration that gives every player a contract
 GAME_MARKER = "NFL Football 4 franchise"

@@ -44,8 +44,23 @@ Start a new season with the N. F. L. rules and answer "franchise" when the game 
 league is kept in the folder `franchise` inside `%APPDATA%\Kitchensinc Revival\NFL Football 4`: `league.sav` and a copy of the save
 before it, `league.previous.sav`, and `history.txt`, which you can read in Notepad. If league.sav is ever damaged, the game uses the copy
 and tells you. F9, Franchise has your to-do list, the news, your roster, the league history, team ratings, the salary cap, free agents,
-trades, the injury report, your job and staff, the franchise settings, and the way back to a classic season. Injuries happen only in a
-franchise, never in a quick game or a classic season.
+trades, the injury report, injured reserve, the practice squad, your job and staff, the franchise settings, and the way back to a classic season. Injuries
+happen only in a franchise, never in a quick game or a classic season.
+
+**Injured reserve (since 0.16.18).** F9, Franchise, injured reserve (the item after the injury report) follows the NFL's rules. "Put a hurt player on
+reserve" lists the hurt men of your 53; the one you choose goes on injured reserve after one Enter, his place on the 53 is free for a free agent, and he
+must miss at least 4 games. "Your players on the reserve lists" says each man, his list, since which week, the games he has missed and his practice
+window; Enter on a man does the next step: once he has missed 2 games it designates him to return (one Enter), which opens his practice window for 3
+weeks; once he has missed 4 games and is healthy it activates him back to your 53 (one Enter; when the 53 is full you first choose who is released,
+the lowest rated first, and hear his dead money). A man not activated within his window stays on injured reserve for the season, and the week's injury
+report says so. You have 8 returns in the regular season and 2 more in the play-offs, and one man can return twice a season. Men on the physically
+unable to perform or non-football injury lists are activated after 4 games with no designation. "The rules of injured reserve" says all of this.
+The computer teams keep the reserve lists of their real rosters, and everyone on a list comes back to his roster at the roster cut.
+
+**Positions in the Franchise menus (since 0.16.18).** The trades, the free agents and the practice squad ask for a real position, not a group: free
+safeties and strong safeties apart, the strong-side, middle and weak-side linebackers apart, the left and right edge, and so on, the 22 positions of
+the roster. The trades add "kick and punt returners", so a returner can be traded, offered or asked for, and a player may give a man of another
+position than the one he asks for.
 
 **The schedule.** A franchise plays the league's real calendar. The first season is the real 2026 NFL season: 18 weeks, 17 games for
 every team and one bye week, with the real opponents and the real home and away games (the file `schedule_2026.txt` in the program's
@@ -277,4 +292,4 @@ Every line of the crew is in remarks.txt in your customize folder (F9, Customize
 
 ## The stadium sounds and the referee
 
-The crowd cheers, groans and boos at what happens (it roars for your big plays, cheers a flag on the other team and boos one on yours, as the flag is thrown), hits and catches sound, the first down chain clanks, a flag is thrown, the referee announces the flags, then the result after the penalty is accepted or declined (the yards and the next down), the time outs and the reviews over a microphone in a voice of their own, and the whistles are an NFL official's whistles. A game of the N. F. L. rules starts, or a saved one goes on, without the intro jingle and without the crowd surge of the original, and the program plays none of the original's music and none of its touchdown celebration sounds: put your own music.wav and celebration1.wav, celebration2.wav ... in the sounds folder and they play in those places (CUSTOMIZE.md, "Your own music and celebrations"). The sounds are generated (not recordings); you can replace any of them with your own wav, ogg, flac or mp3 file, and one file named whistle.wav replaces every whistle: F9, Sounds, Stadium and referee sounds lists the twenty-two sounds with the file name each one takes, plays them, and says whether you have replaced them; F9, Sounds, Put the stadium sounds back moves your files aside (CUSTOMIZE.md). F9, Rules, Stadium sounds and Broadcast switch them off.
+The crowd cheers, groans and boos at what happens (it roars for your big plays, cheers a flag on the other team and boos one on yours, as the flag is thrown), hits and catches sound, the first down chain clanks, a flag is thrown, the referee announces the flags, then the result after the penalty is accepted or declined (the yards and the next down), the time outs and the reviews over a microphone in a voice of their own, and every whistle is one official's whistle, the one the game made (since 0.16.18; with the stadium sounds off too). A game of the N. F. L. rules starts, or a saved one goes on, without the intro jingle and without the crowd surge of the original, and the program plays none of the original's music and none of its touchdown celebration sounds: put your own music.wav and celebration1.wav, celebration2.wav ... in the sounds folder and they play in those places (CUSTOMIZE.md, "Your own music and celebrations"). The sounds are generated (not recordings); you can replace any of them with your own wav, ogg, flac or mp3 file, and one file named whistle.wav replaces every whistle: F9, Sounds, Stadium and referee sounds lists the eighteen sounds with the file name each one takes, plays them, and says whether you have replaced them; F9, Sounds, Put the stadium sounds back moves your files aside (CUSTOMIZE.md). F9, Rules, Stadium sounds and Broadcast switch them off.

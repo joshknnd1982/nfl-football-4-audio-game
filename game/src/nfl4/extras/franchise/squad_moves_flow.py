@@ -104,7 +104,8 @@ def sign_other_flow(g, speech, keys, store, words) -> str | None:
         return reason
     week = league.gtp
     everyone = M.signable(league, league.team, week)
-    groups = [family for family in D.ROSTER_ORDER if any(p.pos == family for p in everyone)]
+    from . import positions as PS                                     # D-214: the real positions, never one group for a family
+    groups = [code for code in PS.ALL if any(PS.position_of(p) == code for p in everyone)]
     if not groups:
         return X.text("NXJ-P48")
     chosen: list = []
@@ -116,13 +117,13 @@ def sign_other_flow(g, speech, keys, store, words) -> str | None:
         chosen.append(family)
         raise _Chosen()
     try:
-        SpokenMenu(speech, keys, X.text("NXJ-P46"), [Item(lambda family=family: words.group(family), enter=lambda family=family: take(family))
+        SpokenMenu(speech, keys, X.text("NXJ-P46"), [Item(lambda family=family: PS.word(family), enter=lambda family=family: take(family))
                                                     for family in groups], space_enters=True, digits_jump=True).run()
     except _Chosen:
         pass
     if not chosen:
         return None
-    men = [p for p in everyone if p.pos == chosen[0]]
+    men = [p for p in everyone if PS.position_of(p) == chosen[0]]
     index = pick_from(X.text("NXJ-P59"), [other_line(words, p) for p in men])
     if index is None:
         return None

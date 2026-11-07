@@ -73,6 +73,8 @@ def prepare(p, league, week: int) -> None:
     from . import practice
     lines += practice.report_lines(league, store.words)          # D-136: the player's squad players elevated this week
     lines += squad_moves_flow.taken_lines(league, squad_rows, store.words)    # S-E2 (D-200): a man of his squad another team signed
+    from . import reserve_flow
+    lines += reserve_flow.report_lines(league, week)              # D-216: a practice window of his injured reserve that closed (no draw)
     league.injuries["report"] = {"season": league.season, "week": week, "lines": lines, "told": 0} if lines else None
     items = []
     extra = todo.extra_work_item(league, week)

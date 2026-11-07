@@ -256,6 +256,12 @@ def franchise_menu(g, speech, keys) -> None:
     def trades_menu() -> None:
         trade_flow.trades_menu(g, speech, keys, store, _words(g), ask_in_menu)
 
+    # ----- injured reserve (D-216, NXI-R01) -----
+
+    def reserve_menu() -> None:
+        from .reserve_flow import reserve_menu as run
+        run(g, speech, keys, store, store.words)
+
     # ----- the practice squad (D-136, NXF-47) -----
 
     def practice_menu() -> None:
@@ -365,6 +371,7 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(lambda: X.text("NXF-29"), enter=market_menu),
                  Item(lambda: X.text("NXF-43"), enter=trades_menu),
                  Item(lambda: X.text("NXF-44"), enter=injury_menu),
+                 Item(lambda: X.text("NXI-R01"), enter=reserve_menu),             # D-216: injured reserve, designations and activations
                  Item(lambda: X.text("NXF-47"), enter=practice_menu),
                  Item(lambda: X.text("NXF-45"), enter=job_menu),
                  Item(lambda: X.text("NXF-16"), enter=settings_menu),

@@ -691,6 +691,17 @@ FR_INJ_WORSE = {"doubtful": 300, "questionable": 100}         # per mille: hurt 
 FR_INJ_RANGE_MAX = 3               # the spoken time away is a range at most this wide when it is first told (out 2 to 5 weeks); it narrows by one a week
 FR_INJ_STAND_IN = {"QB": 55, "K": 60, "P": 60}                # the rating of a stand-in (a group with nobody to play: the backup quarterback, a kicker signed for the weeks)
 FR_INJ_STAND_IN_OTHER = 50
+# D-216 (a tester 2026-11-06: "Add injured reserved to franchise mode. Include the ability to bring people off injured reserve including activations."): the
+# player's injured reserve, by the N. F. L.'s rules (SRC-SECONDARY: foxsports.com "IR, PUP, NFI" and nbcsports.com/profootballtalk on the 2024 change, read
+# 2026-11-06; the NFL's own transaction memo is not public): a man placed on the list misses at least four of his team's games; a club designates at most
+# eight men a regular season to return, two more in the play-offs (ten in all); one man returns at most twice a season; a designation opens a practice window
+# of 21 days (three weeks of the game), in which he must be activated or he stays on the list for the season; the window opens once two games are missed
+FR_IR_MIN_GAMES = 4
+FR_IR_DESIGNATE_AFTER = 2
+FR_IR_RETURNS = 8
+FR_IR_PLAYOFF_RETURNS = 2
+FR_IR_MAN_RETURNS = 2
+FR_IR_WINDOW_WEEKS = 3
 FR_INJ_TEAM_MAX = 12               # no team has more than this many of its 34 players hurt at once (INJ-6: no team starved); a further injury is not drawn on it
 FR_INJ_SD_MAX = (1, 2)             # (numerator, denominator): the injuries move a team's place in the computer's games at most this many standard deviations
 #                                    of the league from its season's place (INJ-2: bounded like every rating effect, C-F1 holds). SWEPT (work/sweep_injuries_sx8k_64x20.txt, 64

@@ -385,9 +385,13 @@ def build(league, a: int, b: int, give_a, give_b, how: dict) -> Trade | None:
 
 def group(league, team: int, position: str, bench: bool = False) -> list:
     """The team's men of the position in its places; with `bench` (the player's own trades, D-149) then the men of its bench. The computer's own search
-    looks at the places only, as before."""
+    looks at the places only, as before. With `bench` the men of the family who play a return place come too (D-214, a tester 2026-11-06: "kick returners
+    aren't tradable": a man in one of the view's two return places was in no group's list)."""
     out = [p for p in league.group_of(team, position) if p is not None]
-    return out + league.bench(team, position) if bench else out
+    if not bench:
+        return out
+    back = [p for p in league.group_of(team, "RET") if p is not None and p.pos == position and p not in out]
+    return out + back + league.bench(team, position)
 
 
 def rotation(season: int, week: int) -> list:
@@ -518,7 +522,7 @@ def propose(league, team: int, give, get, offered: tuple, asked: tuple, records:
     of the player's picks (`cover`, valued in its situation, never more than FR_TRADE_PICKS_MAX of his picks in all). Returns (the trade it agrees to, or None
     when it says no; the picks it added to the player's side, () when it took the proposal as it was)."""
     offered, asked = tuple(sorted(tuple(p) for p in offered)), tuple(sorted(tuple(p) for p in asked))
-    if give.pos != get.pos or give.team != team or get.team == team:
+    if give.team != team or get.team == team:          # D-214: any man for any man (D-164 (5)); `problems` keeps the families' minimums
         return None, ()
     how = situations(records)
     other = get.team

@@ -462,3 +462,7 @@
 - NXY-R82 (help, say5): " One receiver crosses the field close to the line and another crosses deeper. Good against one deep defender; weak against two. ". description of O082 Drive (NX-P8; heard with D)
 - NXY-R83 (help, say5): " A running back runs forward, then cuts back toward the middle. Good against man for man defense; defenders guarding areas can cover it. ". description of O083 Angle Route (NX-P8; heard with D)
 - NXY-R84 (help, say5): " A running back runs toward the sideline and catches a short throw. Beats a blitz; defenders guarding areas can stop it. ". description of O084 Swing Pass (NX-P8; heard with D)
+- NXY-R85 (help, say5): " When nobody is open, the quarterback throws short to a running back. Safe against two deep defenders; man for man defense can cover it. ". description of O085 Check Down (NX-P8; heard with D)
+- NXY-R86 (help, say5): " A receiver runs a short path to the sideline. Good against one deep defender; weak against two deep defenders. ". description of O086 Flat Route (NX-P8; heard with D)
+- NXY-S65 (help, say5): " A receiver fakes toward the sideline and cuts back inside. Good against man for man defense; defenders guarding areas can cover it. ". description of O165 Whip Route (NX-P8; heard with D)
+- NXY-R88 (help, say5): " A receiver runs deep, then cuts across the middle. Good against one deep defender, but the quarterback needs time and two deep defenders can cover it. ". description of O088 Dig (NX-P8; heard with D)

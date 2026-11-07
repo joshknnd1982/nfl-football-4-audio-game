@@ -122,7 +122,7 @@ def test_with_the_staff_setting_on_every_item_takes_the_recommendation_with_one_
 
 
 def test_an_item_left_for_later_is_taken_by_the_staff_at_the_kick_off_when_the_setting_was_turned_on_meanwhile(tmp_path):
-    turn_on = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 11 + [ENTER, ENTER, ESC, ESC, ESC]       # F9, Franchise, settings (11th since SX.8l), the staff item: on   # D-136: practice squad is the 10th item
+    turn_on = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 12 + [ENTER, ENTER, ESC, ESC, ESC]       # F9, Franchise, settings (11th since SX.8l), the staff item: on   # D-136: practice squad is the 10th item   # D-216: injured reserve after the injury report
     rig = run(tmp_path, GAME + ANSWER_LATER + turn_on + [ENTER])
     text = spoken(rig)
     assert rig.game.options.settings.game.nx_fr_auto is True
@@ -301,7 +301,7 @@ def test_f9_news_says_there_is_none_before_the_first_week_has_been_played(tmp_pa
 
 def test_the_staff_setting_is_in_the_franchise_settings_and_kept(tmp_path):
     from nfl4.data import settingsfile
-    rig = run(tmp_path, TO_FRANCHISE_MENU + [DOWN] * 11 + [ENTER, ENTER, ESC, ESC, ESC])      # settings: the 11th item since SX.8l   # D-136: practice squad is the 10th item
+    rig = run(tmp_path, TO_FRANCHISE_MENU + [DOWN] * 12 + [ENTER, ENTER, ESC, ESC, ESC])      # settings: the 11th item since SX.8l   # D-136: practice squad is the 10th item   # D-216: injured reserve after the injury report
     assert rig.game.options.settings.game.nx_fr_auto is True and "nx_fr_auto = on" in settingsfile.render(rig.game.options.settings)
     assert any(X.text("NXF-20") + "," + X.text("NXM-20") in t for t in spoken(rig))
 

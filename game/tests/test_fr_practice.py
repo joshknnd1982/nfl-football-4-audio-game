@@ -188,7 +188,7 @@ def test_an_older_league_in_its_season_gets_its_squads_when_it_is_opened():
     del data["practice"]
     loaded = LeagueRecord.from_json(json.dumps(data))
     assert any(p.status == P.STATUS for p in loaded.players.values())
-    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 20                 # SR.5: format 19
+    assert json.loads(loaded.to_json())["format"] == D.FORMAT == 21                 # SR.5: format 19
 
 
 @pytest.mark.parametrize("bad", [None, [], {"season": 1}, {"season": -1, "elevations": {}}, {"season": 1, "elevations": {"x": 1}},
@@ -203,7 +203,7 @@ def test_a_damaged_practice_record_is_damage(bad):
 
 # ----- F9 on the program rig -----
 
-PRACTICE = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 9 + [ENTER]          # F9, Franchise, practice squad (the 10th item)
+PRACTICE = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 10 + [ENTER]          # F9, Franchise, practice squad (the 10th item)   # D-216: injured reserve after the injury report
 
 
 def test_f9_practice_squad_in_a_new_franchise_opens_and_hears_the_squad(tmp_path):

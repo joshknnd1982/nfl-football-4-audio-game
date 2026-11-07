@@ -20,6 +20,7 @@ from ...game.spoken_menu import Item, ListPicker, SpokenMenu
 from .. import nx_texts as X
 from .. import tuning as T
 from . import data as D
+from . import positions as PS
 from . import trades as TR
 
 
@@ -145,20 +146,11 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         return None
 
     def choose_group(title: str):
-        chosen: list = []
+        """D-214: a real position of the 22, or the kick and punt returners (no more one group for all safeties or all linebackers)."""
+        return PS.choose(speech, keys, title, PS.WITH_RETURNERS)
 
-        class _Chosen(Exception):
-            pass
-
-        def take(position):
-            chosen.append(position)
-            raise _Chosen()
-        items = [Item(lambda position=position: words.group(position), enter=lambda position=position: take(position)) for position in D.ROSTER_ORDER]
-        try:
-            SpokenMenu(speech, keys, title, items, space_enters=True, digits_jump=True).run()
-        except _Chosen:
-            pass
-        return chosen[0] if chosen else None
+    def men_of(team: int, position: str) -> list:
+        return PS.men(store.league, team, position, lambda family: TR.group(store.league, team, family, bench=True))
 
     def offer_a_player():
         league = store.league
@@ -168,8 +160,10 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         position = choose_group(X.text("NXX-11"))
         if position is None:
             return None
-        own = TR.group(league, league.team, position, bench=True)
-        index = pick_from(words.group(position), [words.player(pl) for pl in own])
+        own = men_of(league.team, position)
+        if not own:
+            return X.text("NXL-87", group=PS.word(position))
+        index = pick_from(PS.word(position), [words.player(pl) for pl in own])
         if index is None:
             return None
         player = own[index]
@@ -257,19 +251,19 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         by the value rule, to confirm."""
         league = store.league
         traded = TR.traded_this_season(league)
-        own = [pl for pl in TR.group(league, league.team, position, bench=True) if pl.id not in traded]
+        own = [pl for pl in men_of(league.team, position) if pl.id not in traded]
         lines = [words.player(pl) for pl in own] + [X.text("NXM-L84")]          # SR.6: any man for any man (D-164 (5)), so the last line goes to another position
-        index = pick_from(X.text("NXX-19", group=words.group(position), get=words.named(get)), lines)
+        index = pick_from(X.text("NXX-19", group=PS.word(position), get=words.named(get)), lines)
         if index is None:
             return None
         if index == len(own):
             other = choose_group(X.text("NXM-L85"))
             if other is None:
                 return None
-            own = [pl for pl in TR.group(league, league.team, other, bench=True) if pl.id not in traded]
+            own = [pl for pl in men_of(league.team, other) if pl.id not in traded]
             if not own:
                 return X.text("NXX-27")
-            index = pick_from(X.text("NXX-19", group=words.group(other), get=words.named(get)), [words.player(pl) for pl in own])
+            index = pick_from(X.text("NXX-19", group=PS.word(other), get=words.named(get)), [words.player(pl) for pl in own])
             if index is None:
                 return None
         give = own[index]
@@ -315,10 +309,10 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         if position is None:
             return None
         traded = TR.traded_this_season(league)
-        theirs = [pl for pl in TR.group(league, other, position, bench=True) if pl.id not in traded]
+        theirs = [pl for pl in men_of(other, position) if pl.id not in traded]
         if not theirs:
-            return X.text("NXX-43", team=words.team_name(other), group=words.group(position))
-        target = pick_from(X.text("NXX-41", group=words.group(position), team=words.team_name(other)),
+            return X.text("NXX-43", team=words.team_name(other), group=PS.word(position))
+        target = pick_from(X.text("NXX-41", group=PS.word(position), team=words.team_name(other)),
                            [X.text("NXX-42", player=words.named(pl), r=pl.rating, a=pl.age, contract=words.contract(pl)) for pl in theirs])
         if target is None:
             return None
@@ -335,9 +329,11 @@ def trades_menu(g, speech, keys, store, words, ask_in_menu) -> None:
         if position is None:
             return None
         traded = TR.traded_this_season(league)
-        others = sorted((pl for team in range(1, D.TEAMS + 1) if team != league.team for pl in TR.group(league, team, position, bench=True)
+        others = sorted((pl for team in range(1, D.TEAMS + 1) if team != league.team for pl in men_of(team, position)
                          if pl.id not in traded), key=lambda pl: (-pl.rating, pl.id))
-        target = pick_from(X.text("NXX-20", group=words.group(position)),
+        if not others:
+            return X.text("NXG-18")
+        target = pick_from(X.text("NXX-20", group=PS.word(position)),
                            [X.text("NXX-21", player=words.named(pl), team=words.team_name(pl.team), r=pl.rating, a=pl.age, contract=words.contract(pl))
                             for pl in others])
         if target is None:

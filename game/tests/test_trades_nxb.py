@@ -144,7 +144,8 @@ def test_the_team_then_the_position_then_the_player_then_whom_you_give_then_send
     team = rig.game.league.team(1, OTHER)
     assert any(X.text("NXX-39").strip() in t for t in text)                          # which team
     assert any(X.text("NXX-40", team=team).strip() in t for t in text)               # which position of the team
-    assert any(X.text("NXX-41", group=rig.fstore.words.group("QB"), team=team).strip() in t for t in text)
+    from nfl4.extras.franchise import positions as PS
+    assert any(X.text("NXX-41", group=PS.word("QB"), team=team).strip() in t for t in text)       # D-214: the real position
     assert any(X.text("NXX-45", give=league.players[call["give"]].name, get=league.players[call["get"]].name).strip() in t for t in text)
 
 

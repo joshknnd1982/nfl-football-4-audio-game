@@ -57,7 +57,7 @@ KIND_IDS = tuple(kind[0] for kind in T.FR_INJ_KINDS)
 
 
 def empty() -> dict:
-    return {"hurt": [], "stand_ins": [], "report": None, "chosen": []}
+    return {"hurt": [], "stand_ins": [], "report": None, "chosen": [], "reserve": {"placed": [], "returns": []}}     # "reserve": D-216, format 21
 
 
 # ----- the statuses -----
@@ -626,7 +626,10 @@ def to_ask(league: LeagueRecord, week: int) -> list:
 
 def check_injuries(league: LeagueRecord, whole) -> None:
     record = league.injuries
-    if not isinstance(record, dict) or set(record) != {"hurt", "stand_ins", "report", "chosen"}:
+    from . import reserve
+    if isinstance(record, dict):
+        reserve.check(league, whole)                              # D-216: the player's injured reserve (format 21)
+    if not isinstance(record, dict) or set(record) != {"hurt", "stand_ins", "report", "chosen", "reserve"}:
         raise LeagueError("the injuries are %r" % (type(record).__name__,))
     hurt, standing, report = record["hurt"], record["stand_ins"], record["report"]
     if not isinstance(hurt, list) or len(hurt) > D.MAX_HURT or not isinstance(standing, list) or len(standing) > D.TEAMS * len(D.POSITIONS):
@@ -651,7 +654,8 @@ def check_injuries(league: LeagueRecord, whole) -> None:
             raise LeagueError("an injury is %r" % (row,))
         whole(row[0], 1, 10 ** 9, "an injured player")
         player = league.players.get(row[0])
-        if player is None or player.status not in ("active", "reserve") or row[0] in seen:
+        on_ir = player is not None and player.status == "list" and player.roster_list in ("IR", "IRD")      # D-216: his injury runs on there
+        if player is None or (player.status not in ("active", "reserve") and not on_ir) or row[0] in seen:
             raise LeagueError("the injured player %r is not an active player, or is there twice" % (row[0],))
         seen.add(row[0])
         if row[1] not in KIND_IDS:
