@@ -180,3 +180,4 @@
 166. Added 2026-11-06 (D-214, 0.16.18): F9, Franchise, free agents, trades and practice squad: free safeties, strong safeties and the three linebackers are separate items, each listing only its own men. Right?
 167. Added 2026-11-06 (D-214, 0.16.18): F9, Franchise, trades, ask a team for a player: "kick and punt returners" lists that team's returners; offer a man for one. Right?
 168. Added 2026-11-06 (D-215, 0.16.18): a game of the N. F. L. rules: every whistle is the same sound, with F9, Rules, Stadium sounds on and off; your own whistle.wav replaces it. Right?
+169. Added 2026-11-07 (D-218, 0.16.19, GitHub issue 5): the Start menu's "NFL Football 4 changelog, what is new" opens the changelog in Notepad with 0.16.19 at the top, and the release page lists CHANGELOG-0.16.19.md beside the installer. Right?
