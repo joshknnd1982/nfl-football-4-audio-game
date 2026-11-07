@@ -2,7 +2,9 @@
 
 An audio-only American football game for blind players, by Josh Kennedy, inspired by Jim Kitchen. It is Josh Kennedy's own game, loosely based on Jim Kitchen's games; it is not a clone or a copy of them. You play with the keyboard. The game tells you everything in speech and sound, through your screen reader or the Windows voices. There are no pictures.
 
-**Status: a work in progress.** There is no full release yet. A test installer (a pre-release, version 0.16.2) can be downloaded from the Releases page; it is for testers, and CHANGELOG.md says what to try. The game can also be run and built from the source in this repository.
+**Status: a work in progress.** There is no full release yet. Test installers (pre-releases, for testers) can be downloaded from the [Releases page](https://github.com/joshknnd1982/nfl-football-4-audio-game/releases); the newest is at the top. The game can also be run and built from the source in this repository.
+
+**What has changed:** [CHANGELOG.md](CHANGELOG.md) lists every change, newest version first, with how to test each one; the older versions are linked at its end. Each release on GitHub carries its own version's part of it as its notes.
 
 ## Inspired by Jim Kitchen
 
