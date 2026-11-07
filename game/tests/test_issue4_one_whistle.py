@@ -28,6 +28,8 @@ def test_every_whistle_of_whole_nfl_rules_games_is_the_one_made_whistle(tmp_path
             before = len(count)
             rig, _said, _result = T.whole_game(tmp_path / ("%d_%s" % (seed, on)), seed, on)
             played = [e.sound_id for e in rig.slot_log if e.action == "play" and e.slot == SLOT_TACKLE]
-            whistles = {p for p in played if p not in ("snd_foot4", "snd_foot5", "snd_foot6")}     # the three tackle sounds are not whistles
+            # the three tackle sounds are the hits: they DO end in the original's own whistle, which the owner's mode cuts off (GitHub issue 6,
+            # D-219; tests/test_issue6_tackle_whistle.py checks the cut and the whistle after each); here only the whistles proper are counted
+            whistles = {p for p in played if p not in ("snd_foot4", "snd_foot5", "snd_foot6")}
             assert len(count) - before > 20, (seed, on)
             assert whistles == {"file whistle.wav"}, (seed, on, whistles)

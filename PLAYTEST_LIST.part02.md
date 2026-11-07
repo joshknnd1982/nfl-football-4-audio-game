@@ -181,3 +181,4 @@
 167. Added 2026-11-06 (D-214, 0.16.18): F9, Franchise, trades, ask a team for a player: "kick and punt returners" lists that team's returners; offer a man for one. Right?
 168. Added 2026-11-06 (D-215, 0.16.18): a game of the N. F. L. rules: every whistle is the same sound, with F9, Rules, Stadium sounds on and off; your own whistle.wav replaces it. Right?
 169. Added 2026-11-07 (D-218, 0.16.19, GitHub issue 5): the Start menu's "NFL Football 4 changelog, what is new" opens the changelog in Notepad with 0.16.19 at the top, and the release page lists CHANGELOG-0.16.19.md beside the installer. Right?
+170. Added 2026-11-07 (D-219, 0.16.20, GitHub issue 6): a game of the N. F. L. rules: after a tackled run, a completed pass and a sack you hear the hit and then the same whistle as after an incomplete pass, a kick off and a quarter's end, with no second, different whistle; the hit does not sound cut short; with F9, Rules, Stadium sounds on and off. Right?

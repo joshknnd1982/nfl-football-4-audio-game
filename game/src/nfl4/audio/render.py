@@ -82,6 +82,29 @@ def render_stereo(sound: Sampled, freq: int, pan: int, volume: float) -> bytes:
     return audioop.add(left, right, 2)
 
 
+FADE_SECONDS = 0.04       # the fade at a cut: 40 ms in FADE_STEPS steps, short enough to keep the sound, long enough for no click
+FADE_STEPS = 32
+
+
+def cut_with_fade(pcm: bytes, seconds: float, fade: float = FADE_SECONDS) -> bytes:
+    """Rendered sound ending after `seconds`, its last `fade` seconds faded to silence (GitHub issue 6, D-219: the original's tackle
+    sounds are played up to the moment their own whistle begins). A cut at or past the end returns the sound unchanged."""
+    keep = max(0, int(seconds * MIX_RATE)) * STEREO_FRAME
+    if keep >= len(pcm):
+        return pcm
+    head = pcm[:keep]
+    fade_bytes = min(len(head), int(fade * MIX_RATE) * STEREO_FRAME)
+    if fade_bytes <= 0:
+        return head
+    body, tail = head[:-fade_bytes], head[-fade_bytes:]
+    step = max(STEREO_FRAME, (len(tail) // FADE_STEPS) // STEREO_FRAME * STEREO_FRAME)
+    pieces = []
+    for n, start in enumerate(range(0, len(tail), step)):
+        factor = max(0.0, 1.0 - (n + 1) * step / len(tail))
+        pieces.append(audioop.mul(tail[start:start + step], 2, factor))
+    return body + b"".join(pieces)
+
+
 def channel_peak(pcm: bytes, channel: int) -> int:
     """Largest absolute sample of one channel (0 left, 1 right) of rendered stereo sound."""
     mono = audioop.tomono(pcm, 2, 1, 0) if channel == 0 else audioop.tomono(pcm, 2, 0, 1)

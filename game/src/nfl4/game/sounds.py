@@ -22,6 +22,7 @@ from ..audio.ids import foot_id
 from ..audio.pools import POOLS, Member
 from ..audio.output import (EXTRA_SLOT, SLOT_AMBIENT, SLOT_CROWD1, SLOT_CROWD2, SLOT_HIKE, SLOT_NOISE, SLOT_ONESHOT,
                             SLOT_TACKLE)
+from ..data import debuglog
 from ..data.settings import AudioSettings
 from . import extra_texts as words
 from .keys import KeyInput
@@ -32,6 +33,11 @@ log = logging.getLogger("nfl4.game")
 RAMP_STEP = 100          # hundredths of a decibel per step of the crowd 2 ramps
 RAMP_PAUSE = 0.1         # dy(0.1) after every step
 TACKLE_WAIT = 2.5        # PlayTackle's dy(2.5)
+# GitHub issue 6 (D-219): the original's three tackle sounds end in a referee whistle of their own (measured 2026-11-07, work\i6_1107: a steady
+# tone of 3.4 to 3.9 kHz, about a second long and as loud as the hit; its first chirps at 2.78 s in foot4, 1.74 s in foot5, 1.38 s in foot6).
+# In the owner's mode the hit is played up to these seconds of PlayTackle(1), (2) and (3), then the one whistle (rule 0.40 (4)); Classic plays
+# the files whole. foot4's whistle starts after the 2.5 s wait, so its hit ends with the wait.
+HIT_ENDS = {1: 2.74, 2: 1.70, 3: 1.36}
 CELEBRATION_PAUSE = 0.4  # playcel's dy(0.4) before its foot12
 MIN_CELEBRATION_FREQ = 8000
 AMBIENT_FIRST = 5.0      # getkey2: st4 = Timer + 5
@@ -254,23 +260,72 @@ class GameSounds:
 
     def play_tackle(self, n: int) -> None:
         """PlayTackle(n), n = 1, 2, 3 or 8: foot(n + 3) once at -1500 + wavol (a second tackle within the first one's
-        length cuts it), the play noise stops, then 2.5 s pass whatever the sound's length (keys do not shorten it)."""
+        length cuts it), the play noise stops, then 2.5 s pass whatever the sound's length (keys do not shorten it).
+        The owner's mode: the whistle (8) is the ONE whistle (D-215), and a tackle (1, 2, 3) is the hit without the
+        original's own whistle, then the one whistle (issue 6, D-219: _own_tackle)."""
+        if n != 8 and self._own():
+            self._own_tackle(int(n))
+            return
         alternative = None
-        if n == 8 and self.whistle_hook is not None:
-            try:
-                alternative = self.whistle_hook(self.whistle_context)
-            except Exception as exc:
-                log.warning("the whistle could not be chosen: %s", exc)
         if n == 8:
-            self.whistle_context = None
-            if not alternative and self._own():
-                alternative = self.own_whistle()             # D-215: the owner's mode has ONE whistle, with the stadium sounds off too
+            context, self.whistle_context = self.whistle_context, None
+            alternative = self.one_whistle(context)          # D-215: the owner's mode has ONE whistle, with the stadium sounds off too
         if alternative:
             self.audio.play_file(SLOT_TACKLE, alternative, -1500 + self.wavol)
         else:
             self.audio.play(SLOT_TACKLE, foot_id(int(n) + 3), -1500 + self.wavol)
         self.audio.stop(SLOT_NOISE)
         self.keys.dy(TACKLE_WAIT)
+
+    def one_whistle(self, context=None) -> str | None:
+        """The file of the one whistle (rule 0.40 (4), D-215): the stadium's answer while it plays (the player's whistle files, else the made
+        whistle.wav), else in the owner's mode the player's whistle.wav or the made one; None in Classic (the original's foot11 plays)."""
+        alternative = None
+        if self.whistle_hook is not None:
+            try:
+                alternative = self.whistle_hook(context)
+            except Exception as exc:
+                log.warning("the whistle could not be chosen: %s", exc)
+        if not alternative and self._own():
+            alternative = self.own_whistle()
+        return alternative or None
+
+    def _own_tackle(self, n: int) -> None:
+        """PlayTackle(1, 2 or 3) in the owner's mode (GitHub issue 6, D-219, a tester 2026-11-07: "two whistles still appear to be used"). The
+        original's foot4, foot5 and foot6 end in a referee whistle of their own, so the shipped file is played only up to HIT_ENDS (at most to the
+        end of the wait, its last 40 ms faded) and the one whistle follows at that moment; a player's own tackle file plays whole up to the
+        whistle. The play noise stops at the hit as before and the whole takes the same 2.5 s; no random number is drawn. With no whistle file at
+        all (a damaged install) the original's tackle plays whole, its own whistle included, rather than none."""
+        sound_id = foot_id(n + 3)
+        level = -1500 + self.wavol
+        whistle = self.one_whistle(None)
+        if whistle is None:
+            self.audio.play(SLOT_TACKLE, sound_id, level)
+            self.audio.stop(SLOT_NOISE)
+            debuglog.event("sound", "tackle", n=n, hit=sound_id, hit_whistle="kept: no whistle file", whistle=None)
+            self.keys.dy(TACKLE_WAIT)
+            return
+        shipped = self._shipped(sound_id)
+        cut = min(HIT_ENDS.get(n, TACKLE_WAIT), TACKLE_WAIT) if shipped else None
+        seconds = self.audio.play(SLOT_TACKLE, sound_id, level, cut=cut)
+        self.audio.stop(SLOT_NOISE)
+        at = min(max(0.0, float(seconds or 0.0)), TACKLE_WAIT)
+        debuglog.event("sound", "tackle", n=n, hit=sound_id, hit_whistle="cut at %.2f s" % cut if cut is not None else "the player's file, whole",
+                       whistle=os.path.basename(whistle), whistle_at=round(at, 3))
+        if at > 0:
+            self.keys.dy(at)
+        self.audio.play_file(SLOT_TACKLE, whistle, level)
+        if TACKLE_WAIT - at > 0:
+            self.keys.dy(TACKLE_WAIT - at)
+
+    def _shipped(self, sound_id: str) -> bool:
+        """True when the sound plays the original's wav that ships with the game (not a file of the player's, not silence)."""
+        library = getattr(self.audio, "library", None)
+        try:
+            return library is not None and library.pick(sound_id).source == "original"
+        except Exception as exc:
+            log.debug("the source of %s could not be read: %s", sound_id, exc)
+            return False
 
     # ----- the one-shot slot: play, play2, the celebration -----
 

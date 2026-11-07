@@ -23,7 +23,7 @@ from ..data.settings import AudioSettings
 from .ids import BEEP_EXIT
 from .library import Pick, SoundLibrary
 from .output import CHANNELS, EXTRA_SLOT, SLOT_COUNT, SLOT_NAMES, Output, OutputError, PygameOutput, TimedOutput
-from .render import MIX_RATE, frames_of, level_gain, render_stereo, usable_frequency
+from .render import MIX_RATE, cut_with_fade, frames_of, level_gain, render_stereo, usable_frequency
 from .tonegen import generated
 
 log = logging.getLogger("nfl4.audio")
@@ -66,6 +66,7 @@ class SlotEvent:
     pan: int = 0
     loop: bool = False
     source: str = ""        # the Pick's source: "player", "original", "generated", "off", "none"
+    cut: float = 0.0        # seconds the sound was cut to (0: played whole); issue 6, D-219: the tackles' own whistle is cut off
 
 
 class Audio:
@@ -126,11 +127,12 @@ class Audio:
     # ----- the original's DirectSound calls -----
 
     def play(self, slot: int, sound_id: str, volume: int = 0, pan: int = 0, freq: int | None = None,
-             loop: bool = False) -> float:
+             loop: bool = False, cut: float | None = None) -> float:
         """Stop the slot, then start the sound at volume (hundredths of a dB, 0 = full), pan and freq (Hz), once or
-        looping. freq None, or outside DirectSound's 100 to 200,000 Hz, plays the file at its own rate.
+        looping. freq None, or outside DirectSound's 100 to 200,000 Hz, plays the file at its own rate. `cut`: play only
+        the first that many seconds, the last 40 ms faded (render.cut_with_fade; issue 6, D-219).
         Returns the seconds one pass of the sound takes (0 when nothing plays)."""
-        return self._start(slot, self.library.pick(sound_id), volume, pan, freq, loop, "id")
+        return self._start(slot, self.library.pick(sound_id), volume, pan, freq, loop, "id", cut)
 
     def play_member(self, slot: int, member, volume: int = 0, pan: int = 0, freq: int | None = None) -> float:
         """A numbered pool's member (audio/pools.py): an original by its ID, exactly the call the original's draw made, an
@@ -150,10 +152,13 @@ class Audio:
         notice)."""
         return self._start(slot, self.library.pick_file(path), volume, pan, None, loop, "file named in a line")
 
-    def _start(self, slot: int, pick: Pick, volume: int, pan: int, freq: int | None, loop: bool, via: str = "id") -> float:
+    def _start(self, slot: int, pick: Pick, volume: int, pan: int, freq: int | None, loop: bool, via: str = "id",
+               cut: float | None = None) -> float:
         self.stop(slot, log_it=False)
         sound = pick.sound
         self._volumes[slot] = int(volume)
+        if cut is not None and (loop or cut <= 0):
+            cut = None                                  # a loop or a cut of nothing plays whole: only the tackles are cut (D-219)
         if sound is None:
             self._log(slot, "play", pick, volume, 0, pan, loop)
             debuglog.event("sound", "play", slot=SLOT_NAMES[slot], id=pick.sound_id, chain=pick.source, via=via, file=None,
@@ -167,11 +172,11 @@ class Audio:
             freq = sound.rate
         began = time.perf_counter()
         try:
-            pcm = self._render(pick, freq, pan)
+            pcm = self._render(pick, freq, pan, cut)
         except Exception:
             log.exception("could not prepare %s", pick.sound_id)
             return 0.0
-        self._log(slot, "play", pick, volume, freq, pan, loop)
+        self._log(slot, "play", pick, volume, freq, pan, loop, cut)
         try:
             self.output.play(slot, pcm, level_gain(volume), loop)
             self._refused_plays = 0
@@ -184,9 +189,10 @@ class Audio:
                 log.exception("the silent output could not play %s", pick.sound_id)
                 return 0.0
         seconds = frames_of(pcm) / MIX_RATE
+        extra = {"cut": round(cut, 3)} if cut is not None else {}      # issue 6 (D-219): a tackle played without its own whistle says so
         debuglog.event("sound", "play", slot=SLOT_NAMES[slot], id=pick.sound_id, chain=pick.source, via=via,
                        file=os.path.basename(pick.path) if pick.path else None, volume=int(volume), pan=int(pan), freq=int(freq),
-                       loop=loop or None, seconds=round(seconds, 3), result="ok", prepare_ms=round((time.perf_counter() - began) * 1000, 2))
+                       loop=loop or None, seconds=round(seconds, 3), result="ok", prepare_ms=round((time.perf_counter() - began) * 1000, 2), **extra)
         return seconds
 
     def _mixer_refused(self, sound_id: str, exc: Exception) -> bool:
@@ -308,14 +314,16 @@ class Audio:
 
     # ----- inside -----
 
-    def _render(self, pick: Pick, freq: int, pan: int) -> bytes:
-        """The sound at freq and pan with the player's trim, 16-bit stereo; kept for the next start of the same sound
-        (the crowd beds, the tackles and the hike come back often)."""
-        key = (id(pick), int(freq), int(pan))
+    def _render(self, pick: Pick, freq: int, pan: int, cut: float | None = None) -> bytes:
+        """The sound at freq and pan with the player's trim, 16-bit stereo, cut to `cut` seconds when given; kept for the
+        next start of the same sound (the crowd beds, the tackles and the hike come back often)."""
+        key = (id(pick), int(freq), int(pan), cut)
         cached = self._renders.get(key)
         if cached is not None and cached[0] is pick:
             return cached[1]
         pcm = render_stereo(pick.sound, freq, pan, pick.volume)
+        if cut is not None:
+            pcm = cut_with_fade(pcm, cut)
         if self._render_bytes + len(pcm) > _RENDER_BUDGET:
             self._renders.clear()
             self._render_bytes = 0
@@ -323,10 +331,10 @@ class Audio:
         self._render_bytes += len(pcm)
         return pcm
 
-    def _log(self, slot, action, pick: Pick, volume, freq, pan, loop) -> None:
+    def _log(self, slot, action, pick: Pick, volume, freq, pan, loop, cut: float | None = None) -> None:
         if self.slot_log is not None:
             self.slot_log.append(SlotEvent(self.clock(), slot, action, pick.sound_id, int(volume), int(freq),
-                                           int(pan), bool(loop), pick.source))
+                                           int(pan), bool(loop), pick.source, float(cut or 0.0)))
 
 
 def wait_until(predicate: Callable[[], bool], timeout: float, step: float = 0.001) -> bool:
