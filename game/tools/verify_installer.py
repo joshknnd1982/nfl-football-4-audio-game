@@ -160,6 +160,10 @@ def main():
         check("this 64-bit Windows got the 64-bit build", bits == "64-bit", bits)
         start_menu = os.path.join(os.environ["APPDATA"], "Microsoft", "Windows", "Start Menu", "Programs", "NFL Football 4")
         check("Start menu entries made", os.path.exists(os.path.join(start_menu, "NFL Football 4.lnk")) and os.path.exists(os.path.join(start_menu, "Uninstall NFL Football 4.lnk")))
+        check("the changelog is installed and has its Start menu entry (issue 5)",
+              os.path.exists(os.path.join(APP, "CHANGELOG.md"))
+              and f"## {VERSION} (" in open(os.path.join(APP, "CHANGELOG.md"), encoding="utf-8").read()
+              and os.path.exists(os.path.join(start_menu, "NFL Football 4 changelog, what is new.lnk")))
 
         # 3. the installed exe runs, with a fresh empty data folder: files are created
         fresh = os.path.join(SCRATCH, "fresh-data")

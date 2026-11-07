@@ -4,7 +4,7 @@ An audio-only American football game for blind players, by Josh Kennedy, inspire
 
 **Status: a work in progress.** There is no full release yet. Test installers (pre-releases, for testers) can be downloaded from the [Releases page](https://github.com/joshknnd1982/nfl-football-4-audio-game/releases); the newest is at the top. The game can also be run and built from the source in this repository.
 
-**What has changed:** [CHANGELOG.md](CHANGELOG.md) lists every change, newest version first, with how to test each one; the older versions are linked at its end. Each release on GitHub carries its own version's part of it as its notes.
+**What has changed:** [CHANGELOG.md](CHANGELOG.md) lists every change, newest version first, with how to test each one; the older versions are linked at its end. Each release on GitHub carries its own version's part of it as its notes, and the whole changelog of that version as a file you can download beside the installer. Once installed, the Start menu's "NFL Football 4 changelog, what is new" opens it.
 
 ## Inspired by Jim Kitchen
 

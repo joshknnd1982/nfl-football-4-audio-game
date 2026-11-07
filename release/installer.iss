@@ -76,6 +76,9 @@ Source: "{#Build32}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 ; that folder locked ("folder in use") even when nothing shows in Task Manager (fixesforgames.md B-U1).
 Name: "{group}\NFL Football 4"; Filename: "{app}\nfl4.exe"; WorkingDir: "{userdocs}"
 Name: "{group}\NFL Football 4 read me"; Filename: "{app}\README.txt"
+; Issue 5 (a tester, 2026-11-07: "A change log needs to be included with every release so we know what to test for"): what is new
+; and how to test it, one Enter from the Start menu. Notepad opens it, because a .md file may have no program to open it.
+Name: "{group}\NFL Football 4 changelog, what is new"; Filename: "{win}\notepad.exe"; Parameters: """{app}\CHANGELOG.md"""; WorkingDir: "{userdocs}"
 Name: "{group}\Uninstall NFL Football 4"; Filename: "{uninstallexe}"; WorkingDir: "{userdocs}"
 Name: "{autodesktop}\NFL Football 4"; Filename: "{app}\nfl4.exe"; WorkingDir: "{userdocs}"; Tasks: desktopicon
 

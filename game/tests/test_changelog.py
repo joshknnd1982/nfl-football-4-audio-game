@@ -117,3 +117,46 @@ def test_the_archive_moves_only_whole_sections_and_keeps_every_word(tmp_path):
         after += notes_tool.split_sections(path.read_text(encoding="utf-8"))[1]
     assert sorted((n, b.rstrip("\n")) for n, b in after) == sorted((n, b.rstrip("\n")) for n, b in before)
     assert notes_tool.archive(tmp_path, "a/b", "master") == []          # under the limit now: nothing moves
+
+
+# Issue 5 (a tester, 2026-11-07: "A change log needs to be included with every release so we know what to test for and what has been
+# changed."): every release carries its section in its notes and the whole changelog of that version as the asset CHANGELOG-<version>.md,
+# and the installed game has a Start menu entry that opens the file.
+
+def test_the_full_changelog_of_a_version_has_it_and_every_older_version_word_for_word():
+    prefix, every = notes_tool.every_section(GAME)
+    names = [name for name, _b in every]
+    assert names[0] == VERSION and "0.9.0" in names and len(names) == len(set(names))
+    full = notes_tool.full_changelog(VERSION, GAME)
+    assert "Save a problem report" in full and "%APPDATA%" in full
+    for name, block in every:
+        assert block.rstrip("\n") in full, name
+    older = notes_tool.full_changelog("0.16.2", GAME)
+    assert "\n## 0.16.2 (" in older and "\n## 0.9.0 (" in older and "\n## 0.16.3 (" not in older
+    with pytest.raises(SystemExit):
+        notes_tool.full_changelog("0.16.7", GAME)                       # never built: no section, refused
+    assert notes_tool.asset_name("0.16.19") == "CHANGELOG-0.16.19.md"
+
+
+def test_a_release_without_its_section_or_its_changelog_file_is_caught_and_mended():
+    block = notes_tool.section(TEXT, VERSION)
+    good = "Intro.\n\n" + block.replace("\n", "\r\n") + "\nInstall: run it."
+    asset = notes_tool.asset_name(VERSION)
+    assert notes_tool.release_body_problems(VERSION, good, ["setup.exe", asset], False, block) == []
+    old = "**Title**\n\nAbout the game.\n\nWhat is new in this build (short):\n- a thing\n\nInstall: run it.\n\nLicense."
+    found = notes_tool.release_body_problems(VERSION, old, ["setup.exe"], True, block)
+    assert len(found) == 3
+    mended = notes_tool.mended_body(old, VERSION, block, "URL")
+    assert mended.startswith("**Title**\n\nAbout the game.\n\nWhat is new in this build, word for word")
+    assert block.rstrip("\n") in mended and "- a thing" not in mended and mended.endswith("Install: run it.\n\nLicense.")
+    assert notes_tool.release_body_problems(VERSION, mended, [asset], False, block) == []
+    assert notes_tool.mended_body(mended, VERSION, block, "URL") == mended            # mending twice changes nothing
+    plain = notes_tool.mended_body("**Title**\n\nAbout.\n\nLicense.", VERSION, block, "URL")
+    assert plain.startswith("**Title**\n\nAbout.\n\nWhat is new") and plain.endswith("License.")
+
+
+def test_the_installer_has_a_start_menu_entry_that_opens_the_changelog():
+    script = (GAME / "release" / "installer.iss").read_text(encoding="utf-8")
+    assert r'Name: "{group}\NFL Football 4 changelog, what is new"; Filename: "{win}\notepad.exe"; Parameters: """{app}\CHANGELOG.md"""' in script
+    check = (GAME / "game" / "tools" / "verify_installer.py").read_text(encoding="utf-8")
+    assert "NFL Football 4 changelog, what is new.lnk" in check

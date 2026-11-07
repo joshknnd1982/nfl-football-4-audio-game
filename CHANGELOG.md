@@ -10,6 +10,15 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## Unreleased (since 0.16.18)
+
+### The changelog in every release, and in the Start menu
+From a tester's report (GitHub issue 5): "A change log needs to be included with every release so we know what to test for and what has been changed." Every release on GitHub now has, beside the installer, a file CHANGELOG-<version>.md: the whole changelog as it stood at that version, every item with how to test it. The release's notes carry that version's own part too. Once the game is installed, the Start menu has a new entry, "NFL Football 4 changelog, what is new", which opens this file in Notepad.
+
+**How to test:** open the newest release on the Releases page: below its notes, the assets should list CHANGELOG-<version>.md beside the installer; download it and read it. Install the game, open the Start menu, type "NFL Football 4 changelog" and press Enter: Notepad should open this changelog, with the installed version's section at the top.
+
+**Tell us:** if a release has no changelog file, or the Start menu entry opens nothing.
+
 ## 0.16.18 (2026-11-06, test build)
 
 Injured reserve in the Franchise, every position on its own in the Franchise menus, returners you can trade, and one whistle. From a tester's e-mail. Everything of 0.16.17 and earlier below is still to be tested too.

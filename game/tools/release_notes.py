@@ -21,10 +21,25 @@ CHANGELOG.md sits at the root of the game's folder (the repository's root). This
       the notes are the section and a link to the whole file. It refuses a version with no section or a top item with no
       "How to test:".
 
+  release_notes.py <version> --full FILE
+      Writes the whole changelog as it stood at that version (the version's section and every older one, from CHANGELOG.md and the
+      changelog\\ folder, word for word, newest first, with the "Before you start" part) for the release's asset
+      CHANGELOG-<version>.md: a tester who downloads the installer can download what changed beside it (issue 5, 2026-11-07).
+
+  release_notes.py <version> --verify-release
+      Asks GitHub (gh) about the published release v<version>: its notes must carry the version's whole section word for word, the
+      asset CHANGELOG-<version>.md must be there, and it must not be a draft. Exit code 1 when anything is wrong.
+
+  release_notes.py --backfill [--dry-run]
+      Mends every published release that fails --verify-release: notes with no section get it (in place of their short list of
+      what is new), a missing CHANGELOG-<version>.md is uploaded. Nothing else of a release changes; a version with no section in
+      the changelog is reported and left alone.
+
 --repo owner/name and --branch name override what git's origin says. Plain Python, no package of the game is imported.
 """
 import argparse
 import hashlib
+import json
 import re
 import subprocess
 import sys
@@ -224,6 +239,142 @@ def notes(version, game=GAME, template=None, installer=None, repo=None, branch=N
     return body.rstrip("\n") + "\n"
 
 
+# ----- The changelog in every release (issue 5, a tester 2026-11-07: "A change log needs to be included with every release so we
+# know what to test for and what has been changed."). The notes carry the version's section; the asset carries every version.
+
+def asset_name(version):
+    return "CHANGELOG-%s.md" % version
+
+
+def every_section(game=GAME):
+    """(prefix, sections) of CHANGELOG.md and every file of the changelog folder, newest first, each version once."""
+    text = (game / "CHANGELOG.md").read_bytes().decode("utf-8")
+    prefix, sections, _older = split_sections(text)
+    folder = game / ARCHIVE_DIR
+    for path in sorted(folder.glob("CHANGELOG-*.md")) if folder.is_dir() else []:
+        sections = sections + split_sections(path.read_bytes().decode("utf-8"))[1]
+    seen, out = set(), []
+    for name, block in sections:
+        if name != "Unreleased" and name not in seen:
+            seen.add(name)
+            out.append((name, block))
+    out.sort(key=lambda item: as_tuple(item[0]), reverse=True)
+    return prefix, out
+
+
+def full_changelog(version, game=GAME):
+    """The whole changelog as it stood at <version>: its section and every older one, word for word."""
+    prefix, sections = every_section(game)
+    kept = [(name, block) for name, block in sections if as_tuple(name) <= as_tuple(version)]
+    if not kept or kept[0][0] != version:
+        raise SystemExit("the changelog has no section for %s" % version)
+    head = (prefix.rstrip("\n") + "\n\nThis file is the changelog as it stood at version %s, attached to that version's release on "
+            "GitHub.\n\n" % version)
+    return (head + "".join(block.rstrip("\n") + "\n\n" for _n, block in kept)).rstrip("\n") + "\n"
+
+
+def gh(*args):
+    result = subprocess.run(["gh"] + list(args), capture_output=True, text=True, encoding="utf-8")
+    if result.returncode != 0:
+        raise SystemExit("gh %s failed: %s" % (" ".join(args[:3]), result.stderr.strip()))
+    return result.stdout
+
+
+def _plain(text):
+    return text.replace("\r\n", "\n").strip()
+
+
+def release_body_problems(version, body, assets, draft, block):
+    """What is wrong with one published release (its notes, asset names and draft flag) against its changelog section."""
+    if block is None:
+        return ["the changelog has no section for %s" % version]
+    found = []
+    if _plain(block) not in _plain(body):
+        found.append("the notes of v%s do not carry its changelog section word for word" % version)
+    if asset_name(version) not in assets:
+        found.append("the release v%s has no asset %s" % (version, asset_name(version)))
+    if draft:
+        found.append("the release v%s is a draft" % version)
+    return found
+
+
+def _release(version, repo):
+    data = json.loads(gh("release", "view", "v" + version, "--repo", repo, "--json", "body,assets,isDraft"))
+    return data["body"] or "", [a["name"] for a in data["assets"]], data["isDraft"]
+
+
+def _repo_branch(game, repo, branch):
+    if repo is None or branch is None:
+        found_repo, found_branch = origin(game)
+        repo, branch = repo or found_repo, branch or found_branch
+    if not repo:
+        raise SystemExit("no GitHub repository in git's origin: give --repo owner/name")
+    return repo, branch
+
+
+def release_problems(version, game=GAME, repo=None, branch=None):
+    repo, branch = _repo_branch(game, repo, branch)
+    blocks = dict(every_section(game)[1])
+    body, assets, draft = _release(version, repo)
+    return release_body_problems(version, body, assets, draft, blocks.get(version))
+
+
+def mended_body(body, version, block, changelog_url):
+    """Old notes with the version's section put in place of their short "What is new" list (or after the opening lines)."""
+    body = body.replace("\r\n", "\n")
+    if _plain(block) in _plain(body):
+        return body
+    added = ("What is new in this build, word for word from CHANGELOG.md (the file is also beside the program, and attached below "
+             "as %s with every older version):\n\n%s\n\nEvery version, with how to test each item: %s\n\n"
+             % (asset_name(version), block.rstrip("\n"), changelog_url))
+    match = re.search(r"^What is new in this build.*?(?=^Install:)", body, re.MULTILINE | re.DOTALL)
+    if match:
+        return body[:match.start()] + added + body[match.end():]
+    paragraphs = body.split("\n\n")
+    keep = min(2, len(paragraphs))
+    return "\n\n".join(paragraphs[:keep]) + "\n\n" + added + "\n\n".join(paragraphs[keep:])
+
+
+def backfill(game=GAME, repo=None, branch=None, dry_run=False):
+    """Mend every published release that lacks its section or its asset. Returns the versions still failing."""
+    import tempfile
+    repo, branch = _repo_branch(game, repo, branch)
+    blocks = dict(every_section(game)[1])
+    url = "https://github.com/%s/blob/%s/CHANGELOG.md" % (repo, branch)
+    tags = [r["tagName"] for r in json.loads(gh("release", "list", "--repo", repo, "--limit", "200", "--json", "tagName"))]
+    failed = []
+    for tag in tags:
+        version = tag.lstrip("v")
+        if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+            continue
+        body, assets, draft = _release(version, repo)
+        found = release_body_problems(version, body, assets, draft, blocks.get(version))
+        if not found:
+            print("v%s: PASS" % version)
+            continue
+        if blocks.get(version) is None:
+            print("v%s: LEFT ALONE, %s" % (version, found[0]))
+            failed.append(version)
+            continue
+        print("v%s: mending (%s)" % (version, "; ".join(found)))
+        if dry_run:
+            continue
+        with tempfile.TemporaryDirectory() as folder:
+            if _plain(blocks[version]) not in _plain(body):
+                notes_file = Path(folder) / "notes.md"
+                notes_file.write_bytes(mended_body(body, version, blocks[version], url).encode("utf-8"))
+                gh("release", "edit", tag, "--repo", repo, "--notes-file", str(notes_file))
+            if asset_name(version) not in assets:
+                full = Path(folder) / asset_name(version)
+                full.write_bytes(full_changelog(version, game).encode("utf-8"))
+                gh("release", "upload", tag, str(full), "--repo", repo)
+        again = release_problems(version, game, repo, branch)
+        print("v%s: %s" % (version, "PASS" if not again else "FAIL, " + "; ".join(again)))
+        if again:
+            failed.append(version)
+    return failed
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("version", nargs="?")
@@ -234,6 +385,10 @@ def main(argv=None):
     parser.add_argument("--out")
     parser.add_argument("--repo")
     parser.add_argument("--branch")
+    parser.add_argument("--full")
+    parser.add_argument("--verify-release", action="store_true")
+    parser.add_argument("--backfill", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--game", default=str(GAME))
     args = parser.parse_args(argv)
     game = Path(args.game)
@@ -247,8 +402,22 @@ def main(argv=None):
             print("PROBLEM:", line)
         print("changelog check:", "FAIL" if found else "PASS")
         return 1 if found else 0
+    if args.backfill:
+        failed = backfill(game, args.repo, args.branch, args.dry_run)
+        return 1 if failed else 0
     if not args.version:
-        parser.error("give a version, --check or --archive")
+        parser.error("give a version, --check, --archive or --backfill")
+    if args.full:
+        data = full_changelog(args.version, game)
+        Path(args.full).write_bytes(data.encode("utf-8"))
+        print("wrote", args.full, len(data.encode("utf-8")), "bytes")
+        return 0
+    if args.verify_release:
+        found = release_problems(args.version, game, args.repo, args.branch)
+        for line in found:
+            print("PROBLEM:", line)
+        print("release v%s:" % args.version, "FAIL" if found else "PASS")
+        return 1 if found else 0
     body = notes(args.version, game, args.template, args.installer, args.repo, args.branch)
     if args.out:
         Path(args.out).write_bytes(body.encode("utf-8"))
