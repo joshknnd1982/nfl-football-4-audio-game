@@ -10,7 +10,7 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
-## Unreleased (since 0.16.19)
+## 0.16.20 (2026-11-07, test build)
 
 One whistle, now really. From a tester's report on 0.16.19. Everything of 0.16.19 and earlier below is still to be tested too.
 
