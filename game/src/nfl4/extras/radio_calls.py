@@ -44,8 +44,10 @@ import logging
 import random
 import re
 
+from ..game.gamestate import own_half
 from ..game.rnd import side_seed
 from ..speech.lift import BIG_PLAY, GAIN, ROUTINE, TOUCHDOWN, TURNOVER
+from . import tuning as T
 
 log = logging.getLogger("nfl4.extras")
 
@@ -300,7 +302,13 @@ CALLS = {
                    "{x} will fair catch it.", "Fair catch by {x}.", "{x} takes the fair catch."),
     "bounces_out": ("It bounces out of bounds.",),
     # field goals and tries ({t} the kicking team)
-    "fg_in": ("{k} comes on for the field goal try.", "Here comes {k} for the field goal attempt."),
+    # S-O (GitHub issue 7, D-220): the set-up names the kick's length, as a radio call does ({d} the yards, {an} "a" or "an" before it)
+    "fg_in": ("{k} comes on for {an} {d}-yard field goal try.", "Here comes {k} for {an} {d}-yard field goal attempt.",
+              "{k} will try it from {d} yards.", "{k} lines up {an} {d}-yard field goal attempt.", "It's {an} {d}-yard try for {k}.",
+              "{k} is on for {an} {d}-yarder."),
+    "fg_in_long": ("{k} comes on for {an} {d}-yard try! That's a long one!", "{k} will try it from {d} yards! A long field goal attempt!",
+                   "{an} {d}-yard attempt for {k}! He'll need all of his leg!", "Here comes {k}, and it's from {d} yards! A long way out!"),
+    "fck_in": ("{k} lines up for a fair catch kick, {an} {d}-yard try with no rush!", "A fair catch kick! {k} will try it from {d} yards!"),
     "xp_in": ("{k} is on for the extra point.", "Here's {k} for the extra point."),
     "holder": ("{x} will hold.", "{x} is the holder."),
     "snap_good": ("The snap is good,", "Good snap,"),
@@ -308,13 +316,15 @@ CALLS = {
     "kick_up": ("The kick is up, and it",),
     "fg_good": ("is good! It's good!", "is good! Right down the middle!", "is good! Right through the uprights!", "is good! Three points for the {t}!",
                 "is good! Split the uprights!", "is good! The kick is good!", "is good! Plenty of leg on that one!", "is good! Right between the pipes!",
-                "is good! Never a doubt!", "is good! The {t} put three on the board!", "is good! Dead center!", "is good! The {t} add three!"),
+                "is good! Never a doubt!", "is good! The {t} put three on the board!", "is good! Dead center!", "is good! The {t} add three!",
+                "is good! From {d} yards, right through!", "is good! {d} yards, and it splits the uprights!", "is good! From {d} yards out! Three for the {t}!"),
     "xp_good": ("is good! The extra point is good!", "is good! And that's the extra point!", "is good! The point after is good!",
                 "is good! Tack on the extra point!", "is good! Right through!", "is good! No trouble there!", "is good! The {t} add the point!",
                 "is good! Automatic!", "is good! That one splits the uprights!", "is good! The point after is in!"),
     "fg_miss": ("{m}! No good!", "{m}! The kick is no good!", "{m}! It's no good!", "{m}! Oh, no good!", "{m}! And that one is no good!",
                 "{m}! No good! The {t} come away empty!", "{m}! No good! What a miss!", "{m}! And it's no good! Oh, my!",
-                "{m}! No good! That one will sting!", "{m}! No good, and the {t} get nothing!", "{m}! The kick is no good! A big miss!"),
+                "{m}! No good! That one will sting!", "{m}! No good, and the {t} get nothing!", "{m}! The kick is no good! A big miss!",
+                "{m}! The {d}-yard try is no good!", "{m}! No good from {d} yards!"),
     "fg_way_short": ("is way too short! No good!",),
     "two_good": ("The two-point conversion is good!", "They get it! The two-point try is good!", "Two points! The conversion is good!",
                  "It's good! The {t} get the two points!", "They're in! The two-point try is good!", "The conversion is good! Two more for the {t}!",
@@ -339,7 +349,8 @@ CALLS = {
 LEVELS = {
     GAIN: ("catch", "catch_hit", "catch_back", "catch_run", "first_gained", "first_gained_n", "first_goal_gained", "gain_good", "return",
            "loss", "loss_sack", "xp_good", "third", "third_short", "third_long", "third_goal", "fourth", "fourth_goal", "flushed",
-           "scramble_left", "scramble_right", "avoids_blitz", "kickoff_up", "punt_booming", "no_huddle", "ret_at_5", "dropped", "batted"),
+           "scramble_left", "scramble_right", "avoids_blitz", "kickoff_up", "punt_booming", "no_huddle", "ret_at_5", "dropped", "batted",
+           "fg_in_long", "fck_in"),
     BIG_PLAY: ("gain_big", "gain_huge", "return_big", "one_man", "he_is_at", "hole_free", "secondary", "around_up", "around_past",
                "td_catch_break", "td_catch_run", "catch_one_hand", "catch_leap", "catch_shoulder", "fg_good", "two_good", "fg_miss", "onside",
                "fg_way_short"),
@@ -517,7 +528,8 @@ PATTERNS = [
     (r"(?P<x>.+?) calls for a fair catch", "fair_catch"),
     (r"the ball hits and bounces out of bounds", "bounces_out"),
     # field goals and tries
-    (r"(?P<k>.+?) is in for the field goal attempt", "fg_in"),
+    (r"(?P<k>.+?) is in for the field goal attempt", "FG_IN"),
+    (r"(?P<k>.+?) lines up for a fair catch kick", "FCK_IN"),
     (r"(?P<k>.+?) is in for the extra point attempt", "xp_in"),
     (r"(?P<x>.+?) will hold", "holder"),
     (r"the snap is good", "snap_good"),
@@ -551,10 +563,12 @@ ACTION_OF = {"catch": "catch", "catch_hit": "catch", "catch_one_hand": "catch",
              "qb_scramble": "run", "qb_fake_keep": "run", "qb_roll": "run", "qb_sneak": "run", "qb_draw": "run", "qb_keeps": "run",
              "deep_catch": "return", "ret_left_right": "return", "ret_cuts": "return", "ret_middle": "return",
              "ret_right_line": "return", "ret_left_line": "return", "ret_at_5": "return",
-             "ready_punt": "kick", "ready_kickoff": "kick", "deep_kickoff": "kick", "fg_in": "kick", "xp_in": "kick",
+             "ready_punt": "kick", "ready_kickoff": "kick", "deep_kickoff": "kick", "xp_in": "kick",
              "deep_punt": "kick"}
 # a new play begins: what the last one did is forgotten
-STARTS = frozenset(("huddle", "no_huddle", "deep_kickoff", "ready_kickoff", "deep_punt", "ready_punt", "fg_in", "xp_in"))
+STARTS = frozenset(("huddle", "no_huddle", "deep_kickoff", "ready_kickoff", "deep_punt", "ready_punt", "FG_IN", "FCK_IN", "xp_in"))
+LONG_FIELD_GOAL = 50              # S-O (D-220): a try of this many yards or more is called as a long one, a little excited
+END_ZONE = 10                     # the goal posts stand at the back of the end zone: a field goal is to_goal + 7 + 10 yards (RB26 11-4-2)
 ORDINAL = {"first": 1, "second": 2, "third": 3, "fourth": 4}
 
 
@@ -577,6 +591,7 @@ class RadioCalls:
         self.marks = None                     # a return's yard markers called (None: not in a return)
         self.last: dict[str, int] = {}        # the variant said last for each call
         self.calls = 0                        # the calls said this game (the log says it at the end of the game)
+        self.kick_distance = None             # S-O (D-220): the length of the field goal being tried, from its set-up to its result
 
     def attach(self, game) -> None:
         """A new game: its own generator, seeded from the program's seed and the game's draws so far (as the broadcast's)."""
@@ -646,6 +661,7 @@ class RadioCalls:
         values = {k: v.strip() for k, v in m.groupdict().items() if v is not None}
         if rule in STARTS:
             self.action, self.countdown, self.marks = None, None, None
+            self.kick_distance = None
         handler = getattr(self, "_r_" + rule.lower(), None) if rule.isupper() else None
         if handler is not None:
             return handler(values)
@@ -657,6 +673,8 @@ class RadioCalls:
             self.countdown, self.marks = 0, None
         elif rule in ("touchdown", "safety", "touch_back", "downs_end_zone"):
             self.countdown, self.marks = None, None
+        if rule in ("fg_good", "fg_miss") and self.kick_distance:
+            values["d"] = str(self.kick_distance)       # S-O (D-220): some of the result calls repeat the length
         if rule in TEAM_CALLS:
             values["t"] = values.get("t") or self.team(self.side_with_ball())
         return rule, self.pick(rule, values)
@@ -686,6 +704,30 @@ class RadioCalls:
         n = int(v["n"])
         key = "loss_sack" if self.action == "sack" else "loss_1" if n == 1 else "loss"
         return key, self.pick(key, {"n": str(n), "t": self.team(self.side_with_ball())})
+
+    def _r_fg_in(self, v):
+        """S-O (GitHub issue 7, D-220; a tester: "It should be just like in a radio broadcast. It will tell you the distance of the field
+        goal being attempted."): the set-up says how long the kick is, from the line of scrimmage, the hold 7 yards back and the end zone's
+        10 (the original's own help: "add seventeen yards"; RB26 11-4-2), the same number the N. F. L. rules' kick uses (kick_flow.plan)."""
+        return self._kick_in(v, T.FG_KICK_SPOT + END_ZONE, "fg_in_long" if self._yards(T.FG_KICK_SPOT + END_ZONE) >= LONG_FIELD_GOAL
+                             else "fg_in")
+
+    def _r_fck_in(self, v):
+        """S-O (D-220): the fair catch kick is kicked from the spot of the catch, so it is to_goal + 10 yards (kick_flow.plan)."""
+        return self._kick_in(v, END_ZONE, "fck_in")
+
+    def _yards(self, extra: int) -> int:
+        state = getattr(self.b, "state", None)
+        side, line, half = (getattr(state, name, 0) for name in ("wisoff", "yard_line", "half"))
+        to_goal = 100 - line if half == own_half(side) else line
+        return to_goal + extra
+
+    def _kick_in(self, v, extra: int, key: str):
+        self.action = "kick"
+        self.kick_distance = d = self._yards(extra)
+        log.info("radio calls: a %d-yard %s", d, "fair catch kick" if key == "fck_in" else "field goal try")
+        an = "an" if d in (8, 11, 18) or 80 <= d <= 89 else "a"
+        return key, self.pick(key, {"k": v["k"], "d": str(d), "an": an})
 
     def _r_smother(self, v):
         """Two tacklers smother the quarterback: the sack pool, its lines said with both names (XV: every sack line fits two names)."""
@@ -775,6 +817,8 @@ class RadioCalls:
     def pick(self, key: str, values: dict[str, str]) -> str:
         """One variant of the call, never the one said last for it while it has others, with the values filled in."""
         variants = CALLS[key]
+        if "d" not in values and any("{d}" in text for text in variants):       # S-O: no length known, only the variants without it
+            variants = tuple(text for text in variants if "{d}" not in text)
         index = self.rnd.randrange(len(variants))
         if len(variants) > 1 and index == self.last.get(key):
             index = (index + 1 + self.rnd.randrange(len(variants) - 1)) % len(variants)

@@ -56,7 +56,8 @@ def test_every_call_is_short_plain_ascii_with_known_names_and_every_rule_has_its
         assert variants and len(set(variants)) == len(variants), key
         for text in variants:
             assert text.isascii() and 0 < len(text) <= 150, text
-            assert set(re.findall(r"\{(\w+)\}", text)) <= {"t", "q", "h", "r", "y", "z", "x", "w", "n", "a", "b", "k", "p", "m", "spot"}, text
+            assert set(re.findall(r"\{(\w+)\}", text)) <= {"t", "q", "h", "r", "y", "z", "x", "w", "n", "a", "b", "k", "p", "m", "spot",
+                                                                  "d", "an"}, text           # S-O (D-220): a kick's length
             assert "Jim" not in text and "Kitchen" not in text
     for _pattern, rule in RC.PATTERNS:
         assert rule.isupper() or rule in RC.CALLS, rule
