@@ -41,7 +41,7 @@ def guide_text() -> str:
             out += ["", "### " + group.name, "", D.text(D.LIST_ROWS[group.key]), ""]
             out += ["- **%s**: %s" % (c.name, D.text(D.play_row(c.id))) for c in C.CATALOG if c.group == group.key]
     from .. import lineup as L
-    out += ["", "## The positions", "", "In F9, Rules, Depth charts (and in the starting lineup), press D on a position to hear what it does. These are the "
+    out += ["", "## The positions", "", "In F9, Franchise, the depth chart (and in the starting lineup), press D on a position to hear what it does. These are the "
             "22 positions of a real team and the two returners.", ""]
     out += ["- **%s**: %s" % (L.word(key).capitalize(), L.describe(key)) for key in L.KEYS]
     out += ["", "## Settings", ""]

@@ -96,9 +96,9 @@ HEADER = f"""# {GAME_NAME} settings, format {FORMAT_VERSION}. Lines starting wit
 # nx_announcer_own, nx_analyst_own, nx_sideline_own, nx_network_own   the last name you typed for each, so you can go back to it
 # nx_qb_starters      the quarterbacks you chose to start for a team (F9, Rules, Quarterbacks), like T05=Tyler Huntley; T12=Kenny Pickett.
 #                     Empty (default): every team's first quarterback of rosters.txt starts. Used with the N. F. L. rules' real names
-# nx_depth            the depth charts you set for a team (F9, Rules, Depth charts), like T05 RB=Ray Davis; T05 WR=Khalil Shakir,DJ Moore:
+# nx_depth            the depth charts you set for a team (F9, Franchise, Depth charts), like T05 RB=Ray Davis; T05 WR=Khalil Shakir,DJ Moore:
 #                     the named players play first, in that order. Empty (default): the real order of rosters.txt
-# nx_key_players      your players for the key downs and moments (F9, Rules, Depth charts, key downs and moments), like
+# nx_key_players      your players for the key downs and moments (F9, Franchise, Depth charts, key downs and moments), like
 #                     T05 redzone receiver=Dalton Kincaid; T05 down back=James Cook III (down: third and fourth down, redzone: inside the
 #                     20, twominute: the last two minutes of a half). Empty (default): the starters
 # nx_onside_question  always = you are asked about an onside kick at every kick off and safety kick (default, the 2026 rule),

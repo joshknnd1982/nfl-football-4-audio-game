@@ -376,7 +376,7 @@ def test_f9_with_the_staff_setting_on_says_the_staff_decides_and_changes_nothing
 
     def staff_on(rig):
         rig.game.options.settings.game.nx_fr_auto = True
-    to_report = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 8 + [ENTER]
+    to_report = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 9 + [ENTER]
     rig = run(tmp_path, GAME + to_report + [ENTER, ESC, ESC, ESC], setup=staff_on)
     qb = own_qb(rig)
     assert X.text("NXI-55") in spoken(rig) and X.text("NXD-04", n=1) in spoken(rig)
@@ -515,7 +515,7 @@ def test_with_the_staff_setting_on_nothing_is_asked_and_the_staffs_rule_plays_at
 
 def test_f9_injury_report_lists_him_and_enter_changes_whether_he_plays(tmp_path, monkeypatch):
     hurt_own_quarterback(monkeypatch)
-    to_report = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 8 + [ENTER]      # F9, Franchise, injury report (the 9th item)
+    to_report = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 9 + [ENTER]      # F9, Franchise, injury report (the 9th item)
     rig = run(tmp_path, GAME + [DOWN, DOWN, ENTER] + to_report + [ENTER, ESC, ESC, ESC])          # the question: later; F9: Enter plays him
     qb = own_qb(rig)
     text = spoken(rig)

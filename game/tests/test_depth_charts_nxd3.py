@@ -1,5 +1,5 @@
 """NX-D3 and NX-D4 (the owner's second report of 2026-10-24, D-147, CLAUDE.md 0.30): set your starters, and your players for the key downs and moments
-(nfl4 only, rule 0.13). F9, Rules, Depth charts: any team outside a franchise (the settings nx_depth and nx_key_players), the player's own team in a
+(nfl4 only, rule 0.13). F9, Franchise, Depth charts (F9, Rules until issue 10): any team outside a franchise (the settings nx_depth and nx_key_players), the player's own team in a
 franchise (league.sav format 16). The named man of a key situation takes CHOSEN_PLAYER_SHARE of his group's draw there.
 """
 import json
@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import pytest
 from drrig import SURNAMES
 from programrig import DOWN, ENTER, ESC, said
+from nfl4.game.keys import KEY_END as END
 from test_functions import rig_for
 
 from nfl4.data import settingsfile
@@ -25,8 +26,9 @@ from nfl4.extras.franchise.league import LeagueError, new_league
 from nfl4.game.rnd import GameRandom
 from nfl4.game.setup import Roster
 
-RULES = [DOWN, DOWN, DOWN, ENTER]                        # F9's fourth item
-DEPTH = [DOWN] * 16 + [ENTER]                            # the Rules menu's seventeenth item, after Quarterbacks (S-D: How much the crew talks is 11, RC: Play calls 12, XV: Excited voice 13)
+FRANCHISE = [DOWN] * 4 + [ENTER]                         # F9's fifth item with the N. F. L. rules (issue 10, D-223: the depth chart left F9, Rules)
+DEPTH = [END, ENTER]                                     # outside a franchise: Depth charts, the Franchise menu's last item
+YOUR_DEPTH = [DOWN] * 3 + [ENTER]                        # in a franchise: your depth chart, right after your roster
 BENGALS, BILLS = 1, 5
 
 
@@ -110,13 +112,14 @@ def test_the_player_named_for_a_key_situation_gets_his_share():
     assert DC.key_place_for(game, state(down=3, wisoff=2), PASS) is None        # the other team's offense
 
 
-# ----- F9, Rules, Depth charts outside a franchise -----
+# ----- F9, Franchise, Depth charts outside a franchise -----
 
 def nfl_rig(tmp_path, keys):
     rig = rig_for(tmp_path, [])
     rig.game.options.settings.game.rules = "nfl"
+    rig.game.apply_rules_setting()                       # issue 10: the game plays the N. F. L. rules, so F9 shows the Franchise item
     rig.game.real_names = real()
-    rig.keys.answers = RULES + DEPTH + keys + [ESC, ESC, ESC, ESC]
+    rig.keys.answers = FRANCHISE + DEPTH + keys + [ESC, ESC, ESC, ESC]
     rig.game.functions.run()
     return rig
 
@@ -143,11 +146,12 @@ def test_key_downs_and_moments_set_and_clear(tmp_path):
 def test_the_real_order_again(tmp_path):
     rig = rig_for(tmp_path, [])
     rig.game.options.settings.game.rules = "nfl"
+    rig.game.apply_rules_setting()                       # issue 10: the game plays the N. F. L. rules, so F9 shows the Franchise item
     rig.game.options.settings.game.nx_depth = "T01 HB=Samaje Perine"                    # SR.6: keyed by position
     rig.game.options.settings.game.nx_key_players = "T01 down back=Samaje Perine"
     Q.apply(rig.game) if rig.game.real_names is not None else None
     rig.game.real_names = DC.with_depth(real(), DC.parse_depth("T01 HB=Samaje Perine"))
-    rig.keys.answers = RULES + DEPTH + [ENTER] + [DOWN] * 26 + [ENTER, ESC, ESC, ESC, ESC]
+    rig.keys.answers = FRANCHISE + DEPTH + [ENTER] + [DOWN] * 26 + [ENTER, ESC, ESC, ESC, ESC]
     rig.game.functions.run()
     assert rig.game.options.settings.game.nx_depth == "" and rig.game.options.settings.game.nx_key_players == ""
     assert X.text("NXM-D11", team=rig.game.league.team(1, 1)) in said(rig)
@@ -205,7 +209,7 @@ def test_the_league_file_keeps_the_depth_chart_and_checks_it():
 
 def test_in_a_franchise_the_menu_orders_the_players_own_team_and_saves_it(tmp_path):
     from frrig import COACH_AND_TEAM, F9, WANT_FRANCHISE, franchise_rig, quit_policy, run_until, spoken
-    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + [F9] + RULES + DEPTH + [DOWN, DOWN, ENTER, DOWN, ENTER, ESC, ESC, ESC, ESC],
+    rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + [F9] + FRANCHISE + YOUR_DEPTH + [DOWN, DOWN, ENTER, DOWN, ENTER, ESC, ESC, ESC, ESC],
                         policy=quit_policy)
     run_until(rig)
     record = rig.fstore.league

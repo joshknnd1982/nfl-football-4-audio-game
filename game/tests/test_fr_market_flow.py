@@ -546,7 +546,7 @@ def test_the_result_of_a_round_is_written_before_it_is_told(tmp_path):
 
 # ----- F9 -----
 
-FREE_AGENTS_IN_F9 = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 6 + [ENTER]          # F9, Franchise, the free agents (the 7th item)
+FREE_AGENTS_IN_F9 = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 7 + [ENTER]          # F9, Franchise, the free agents (the 7th item)
 
 
 def test_f9_lists_the_free_agents_with_their_asking_prices_during_the_stage(tmp_path, monkeypatch):

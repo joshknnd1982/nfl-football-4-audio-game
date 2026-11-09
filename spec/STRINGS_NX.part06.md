@@ -1,3 +1,4 @@
+- NWH01 (remark, say2): " <player> of the <team> wants to be traded. ". a player asks to be traded (news, SX.8n)
 - NWH02 (remark, say2): " unhappy with the <team>, <player> asks for a trade. ". a player asks to be traded (news, SX.8n)
 - NWH03 (remark, say2): " the <team> hear a trade request from their <position>, <player>. ". a player asks to be traded (news, SX.8n)
 - NWH04 (remark, say2): " <player> tells the <team> he wants out. ". a player asks to be traded (news, SX.8n)
@@ -137,7 +138,7 @@
 - NXL-57 (piece, piece): "<player>, rating <r>, age <a>, backup". a backup quarterback in the Quarterbacks list (D-149; SR.6: no bench)
 - NXL-58 (sentence, say5): " <player> starts now, and <other> moves down one place. ". the Quarterbacks list: a backup made the starter (D-149, Q-069; SR.6)
 - NXL-59 (sentence, say5): " the other quarterbacks: <list>. ". the Quarterbacks list: another team's other quarterbacks (D-149; SR.6)
-- NXH-82 (help, say5): " Every team keeps its real 53 players at their real positions. Your roster lists them by position, and Depth charts chooses who starts. ". F6, after NXH-78, while the franchise is in use (D-149, NX-B2b; SR.6: by positions)
+- NXH-82 (help, say5): " Every team keeps its real 53 players at their real positions. Your roster lists them by position, and your depth chart, the next item, chooses who starts. ". F6, after NXH-78, while the franchise is in use (D-149, NX-B2b; SR.6: by positions)
 - NXJ-P24 (sentence, say5): " your practice squad is full: <n> players, and the N. F. L. allows 16, plus one international player. choose a squad player to release to make room for <player>. ". F9 practice squad: the squad is full, the release list's title (D-187)
 - NXJ-P25 (sentence, say5): " your practice squad already has 6 veterans, players with more than two seasons, the most the N. F. L. allows. choose a veteran to release to make room for <player>. ". F9 practice squad: the veterans' limit, the release list's title (D-187)
 - NXJ-P26 (sentence, say5): " release <give> from your practice squad and add <get>, <contract>? press enter to do it, or escape to say no. ". F9 practice squad: the question with a release (D-187)

@@ -1,4 +1,3 @@
-- NXB-F31 (help, say5): " Defenses for special situations, such as the last play of a half. ". description of the list dg11 Situation Defenses (NX-P8)
 - NXB-F32 (help, say5): " The kinds of kick that start a half or follow a score. ". description of the list kg01 Kick Offs (NX-P8)
 - NXB-F33 (help, say5): " The kinds of punt, and the fake punts. ". description of the list kg02 Punts (NX-P8)
 - NXB-F34 (help, say5): " Field goals, extra points, and the fake kicks. ". description of the list kg03 Field Goals and Tries (NX-P8)
@@ -144,10 +143,10 @@
 - NXB-T21 (sentence, say5): " that play is not a pass. ". R on a play that is not a pass (SY.4)
 - NXH-69 (help, say5): " R in the offense menu chooses who your next pass goes to, a running back too when the play can throw to one. L in the defense menu chooses who blitzes. Enter keeps the play's own pick. ". F6 addition (SY.4, SY.5)
 - NXH-75 (help, say5): " F9, Rules, Quarterbacks lists every team's quarterbacks. Enter on a team lists them, and Enter on one makes him the team's starter from the next game. ". F6 addition (D-132)
-- NXH-79 (help, say5): " F9, Rules, Depth charts: any team's order, position by position; Enter on a player makes him the first. In a franchise, your own team. ". F6 addition (NX-D3)
+- NXH-79 (help, say5): " F9, Franchise, Depth charts: any team's order, position by position. In a franchise, your depth chart, right after your roster, is your own team. ". F6 addition (NX-D3; issue 10, D-223: the item is in F9, Franchise)
 - NXH-80 (help, say5): " Depth charts, key downs and moments: who gets the ball on third and fourth down, in the red zone, and in the last two minutes of a half. ". F6 addition (NX-D4)
 - NXM-58 (menu, say5): "Quarterbacks". F9, Rules, the item before Reset (D-132): every team's quarterbacks and the starter you choose
-- NXM-D01 (menu, say5): "Depth charts". F9, Rules, after Quarterbacks: every team's depth chart and key players (NX-D3, NX-D4)
+- NXM-D01 (menu, say5): "Depth charts". F9, Franchise, after get the latest rosters, outside a franchise: every team's depth chart and key players (NX-D3, NX-D4; issue 10, D-223: was F9, Rules)
 - NXM-D02 (sentence, say5): " depth charts. which team? the letters find a team. ". F9 depth charts: the list of teams (NX-D3)
 - NXM-D03 (sentence, say5): " the depth chart of the <team>. ". F9 depth charts: a team's menu title (NX-D3)
 - NXM-D04 (menu, say5): "<group>, <player> first". F9 depth charts: a group with its first man (NX-D3)
@@ -221,7 +220,8 @@
 - NXM-L27 (menu, say5): "make him the kick returner". F9's roster: a man's item (SR.6)
 - NXM-L28 (menu, say5): "make him the punt returner". F9's roster: a man's item (SR.6)
 - NXM-L29 (menu, say5): "change his name". F9's roster: a man's item, the typed prompt of the original (SR.6, rule 0.19)
-- NXM-L30 (menu, say5): "starting lineup". F9, Rules, Depth charts: the first item of a team (SR.6, NX-L11)
+- NXM-L92 (menu, say5): "his place on the depth chart". F9's roster: a man's item (issue 10, D-223): his position's order, the list on him; U and N move him, Enter makes him the starter
+- NXM-L30 (menu, say5): "starting lineup". F9, Franchise, your depth chart or Depth charts: the first item of a team (SR.6, NX-L11)
 - NXM-L31 (sentence, say5): " the starting lineup of the <team>. Enter changes the starter of a position. ". the lineup list's title (SR.6)
 - NXM-L32 (sentence, say5): " <position>, <player>, number <number> ". the lineup: a position with its starter (SR.6)
 - NXM-L33 (sentence, say5): " <position>, <player> ". the lineup: a position with its starter, he has no number (SR.6)
@@ -276,8 +276,8 @@
 - NXM-L61 (sentence, say5): " The long snapper snaps the ball a long way back to the punter or the holder on kicks. Nobody notices him unless he makes a mistake. ". the plain description of a position or a role, heard with D in the lineup (SR.6, rule 0.25)
 - NXM-L62 (sentence, say5): " The kick returner catches kickoffs and runs them back toward the other end of the field. ". the plain description of a position or a role, heard with D in the lineup (SR.6, rule 0.25)
 - NXM-L63 (sentence, say5): " The punt returner catches punts and runs them back, or signals a fair catch to stay safe. ". the plain description of a position or a role, heard with D in the lineup (SR.6, rule 0.25)
-- NXM-L86 (sentence, say5): " <position>, <player>, number <number>, filling in from <old> ". the lineup (F9, Rules, Depth charts) when no man of the position is left: the man who plays there (S8.2, B-P189)
-- NXM-L87 (sentence, say5): " <position>, <player>, filling in from <old> ". the lineup (F9, Rules, Depth charts) when no man of the position is left: the man who plays there (S8.2, B-P189)
+- NXM-L86 (sentence, say5): " <position>, <player>, number <number>, filling in from <old> ". the lineup (F9, Franchise, the depth chart) when no man of the position is left: the man who plays there (S8.2, B-P189)
+- NXM-L87 (sentence, say5): " <position>, <player>, filling in from <old> ". the lineup (F9, Franchise, the depth chart) when no man of the position is left: the man who plays there (S8.2, B-P189)
 - NXM-L88 (sentence, say5): " <position>, <player>, number <number>, from the practice squad for game day ". the lineup: a kicker or punter only on the practice squad, brought up for game day as the game does (S8.2, B-P189)
 - NXM-L89 (sentence, say5): " <position>, <player>, from the practice squad for game day ". the lineup: as NXM-L88 without a number (S8.2, B-P189)
 - NXM-L90 (menu, say5): "<group>, <player> filling in from <old>". the depth chart menu's item of a position with no man of its own: who plays there (S8.2, B-P189)
@@ -465,5 +465,5 @@
 - NXN-02 (sentence, say5): " no news this week. ". F9 news with no news
 - NXN-03 (sentence, say2): " the news of the offseason. ". F9 news, the offseason's lines
 - NXN-04 (menu, say5): "earlier". F9 news, the earlier lines
-- NXH-34 (help, say5): " With a franchise. F9. the franchise menu: the to do list, the news, your roster, the league history, the team ratings, free agents and trades. ". F5 addition (H12, C6), while the franchise is in use
+- NXH-34 (help, say5): " With a franchise. F9. the franchise menu: the to do list, the news, your roster, your depth chart, the league history, the team ratings, free agents and trades. ". F5 addition (H12, C6), while the franchise is in use
 - NXH-35 (help, say5): " A franchise is a league that lasts from season to season. Your players have ratings, grow older, improve and decline, and retire. ". F6 addition (H12, C6), while the franchise is in use

@@ -144,17 +144,17 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("roster", "Up and Down, Left and Right, Page Up and Page Down, Home, End, letters, Enter", "In F9, Franchise, your roster",
            "Up and Down go player by player, Left and Right and Page Up and Page Down go position by position, Home and End go to the first "
            "and the last, a letter goes to the next position that starts with it (E goes to the tight ends and T is never used), and Enter "
-           "opens the player's items: make him a starter, the kick returner or the punt returner, or change his name", "nfl", False, "",
+           "opens the player's items: make him a starter, the kick returner or the punt returner, his place on the depth chart, or change his name", "nfl", False, "",
            " In your roster. Up and Down go player by player, Left and Right position by position, a letter jumps to a position, and Enter "
            "opens the player's items. "),
-    KeyRow("lineup", "Enter on a position", "In F9, Rules, Depth charts, in the starting lineup and in the positions' items",
+    KeyRow("lineup", "Enter on a position", "In F9, Franchise, the depth chart (your depth chart in a franchise, Depth charts outside one), in the starting lineup and in the positions' items",
            "opens the list of the players who may start there, the starter first, then the players of his family who can move there and "
            "the practice squad's players; Enter on a player makes him the starter, and a practice squad player is brought up for the game",
            "nfl", False, "", " In the depth charts. Enter on a position lists the players who may start there; Enter on one makes him the starter. "),
-    KeyRow("describe_position", "D in a depth chart", "In F9, Rules, Depth charts, in the starting lineup and in the positions' items",
+    KeyRow("describe_position", "D in a depth chart", "In F9, Franchise, the depth chart (your depth chart in a franchise, Depth charts outside one), in the starting lineup and in the positions' items",
            "says a plain description of the position the list is on, for a person who knows nothing of football", "nfl", False, "",
            " D in a depth chart. says what the position does. "),
-    KeyRow("depth_move", "U, N and the digits 1 to 9", "In F9, Rules, Depth charts, in a position's list of players",
+    KeyRow("depth_move", "U, N and the digits 1 to 9", "In F9, Franchise, the depth chart (your depth chart in a franchise, Depth charts outside one), and in the roster's his place on the depth chart, in a position's list of players",
            "U moves the player up one place on the depth chart and N moves him down one place; a digit puts him at that place and the others "
            "move down one; the order is kept until you change it, and the next game uses it", "nfl", False, "",
            " In a position's list of the depth chart. U moves the player up, N moves him down, and a digit puts him at that place. ",

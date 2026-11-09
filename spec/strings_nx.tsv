@@ -488,7 +488,7 @@ NXN-01	franchise	sentence	say2	 this week's news. 	before the news of a week
 NXN-02	franchise	sentence	say5	 no news this week. 	F9 news with no news
 NXN-03	franchise	sentence	say2	 the news of the offseason. 	F9 news, the offseason's lines
 NXN-04	franchise	menu	say5	earlier	F9 news, the earlier lines
-NXH-34	franchise	help	say5	 With a franchise. F9. the franchise menu: the to do list, the news, your roster, the league history, the team ratings, free agents and trades. 	F5 addition (H12, C6), while the franchise is in use
+NXH-34	franchise	help	say5	 With a franchise. F9. the franchise menu: the to do list, the news, your roster, your depth chart, the league history, the team ratings, free agents and trades. 	F5 addition (H12, C6), while the franchise is in use
 NXH-35	franchise	help	say5	 A franchise is a league that lasts from season to season. Your players have ratings, grow older, improve and decline, and retire. 	F6 addition (H12, C6), while the franchise is in use
 NXH-37	franchise	help	say5	 After the play offs comes the offseason with the draft and the roster cut. Before a game you hear the news and your to do list. Extra work you leave undone puts you behind the other teams. 	F6 addition (H12, C6), after NXH-35
 NXH-36	franchise	help	say5	 Rating: a player's skill from 40 to 99, where 70 is average. Potential: how fast a young player may still improve. 	F7 addition (H12, C6), while the franchise is in use
@@ -859,6 +859,7 @@ NXF-53	franchise	sentence	say5	 the calendar on GitHub is not a whole N. F. L. c
 NXF-54	franchise	sentence	say5	 you stopped the download. 	the download's result (D-128): Escape during the request
 NXF-55	franchise	sentence	say5	 the calendar could not be saved in your customize folder. nothing was changed. 	the download's result (D-128): the folder cannot be written
 NXF-56	franchise	sentence	say5	 the <year> calendar is saved in your customize folder. a franchise plays it in its <year> season. 	the download's result (D-128): saved, and no franchise, or a franchise past that season
+NXF-57	franchise	menu	say5	your depth chart	F9 Franchise item after your roster (issue 10, D-223): the player's own team's depth chart and key players, was F9, Rules, Depth charts
 NXH-43	franchise	help	say5	 Your job: the owner sets a goal each season and rates you from 0 to 100; a low rating costs your job unless you won more than you lost. Your coordinators' styles are your team playbook. 	F6, after NXH-42 (SX.8l)
 NXV-09	franchise	sentence	say2	 the owner has fired you. your job rating was <a>, after 1 win and <l> losses. 	stage 9: NXV-10 for a season of one win
 NXV-32	franchise	sentence	say5	 the owner has fired you. choose your new team at the question. 	F9, franchise, your job and staff, while the job question waits
@@ -2091,7 +2092,7 @@ NXH-76	franchise	help	say5	 The play-offs of a franchise on the real calendar ar
 NXH-87	franchise	help	say5	 Equal records are settled by the N. F. L.'s tie-breakers, the games between the teams first, and the standings follow them. 	F6 while the franchise is in use, after NXH-76 (S-E3, D-202)
 NXH-77	franchise	help	say5	 F9, Franchise, get the latest N. F. L. calendar asks the game's page on GitHub for the newest schedule, only when you choose it. 	F6 while the franchise is in use (D-128)
 NXH-78	franchise	help	say5	 In a franchise, F9, Rules, Quarterbacks lists every team's starter and its practice squad quarterbacks; on your team a practice squad quarterback can become the starter. 	F6 while the franchise is in use (D-132)
-NXH-79	menus	help	say5	 F9, Rules, Depth charts: any team's order, position by position; Enter on a player makes him the first. In a franchise, your own team. 	F6 addition (NX-D3)
+NXH-79	menus	help	say5	 F9, Franchise, Depth charts: any team's order, position by position. In a franchise, your depth chart, right after your roster, is your own team. 	F6 addition (NX-D3; issue 10, D-223: the item is in F9, Franchise)
 NXH-80	menus	help	say5	 Depth charts, key downs and moments: who gets the ball on third and fourth down, in the red zone, and in the last two minutes of a half. 	F6 addition (NX-D4)
 NXH-81	broadcast	help	say5	 Your own music and celebrations: put music.wav, or celebration1.wav and up, in the sounds folder. The game plays no music or celebrations of its own. 	F6 addition (NX-M1, NX-M2)
 NXM-39	broadcast	menu	say5	Broadcast crew	F9 Rules item 13 (12 before S-D): the radio crew's names, followed by them (SZ.1, D-106; BC.3, D-189)
@@ -2114,7 +2115,7 @@ NXM-55	broadcast	prompt	say5	 this moves your own stadium and referee sound file
 NXM-56	broadcast	sentence	say5	 <n> of your files were moved. The original sounds are back. 	after that item (SZ.2)
 NXM-57	broadcast	sentence	say5	 you have no stadium or referee sound files of your own. 	after that item when there is nothing to move (SZ.2)
 NXM-58	menus	menu	say5	Quarterbacks	F9, Rules, the item before Reset (D-132): every team's quarterbacks and the starter you choose
-NXM-D01	menus	menu	say5	Depth charts	F9, Rules, after Quarterbacks: every team's depth chart and key players (NX-D3, NX-D4)
+NXM-D01	menus	menu	say5	Depth charts	F9, Franchise, after get the latest rosters, outside a franchise: every team's depth chart and key players (NX-D3, NX-D4; issue 10, D-223: was F9, Rules)
 NXM-D02	menus	sentence	say5	 depth charts. which team? the letters find a team. 	F9 depth charts: the list of teams (NX-D3)
 NXM-D03	menus	sentence	say5	 the depth chart of the <team>. 	F9 depth charts: a team's menu title (NX-D3)
 NXM-D04	menus	menu	say5	<group>, <player> first	F9 depth charts: a group with its first man (NX-D3)
@@ -2304,7 +2305,8 @@ NXM-L26	menus	menu	say5	make him number <n> at <position>	F9's roster: a man's i
 NXM-L27	menus	menu	say5	make him the kick returner	F9's roster: a man's item (SR.6)
 NXM-L28	menus	menu	say5	make him the punt returner	F9's roster: a man's item (SR.6)
 NXM-L29	menus	menu	say5	change his name	F9's roster: a man's item, the typed prompt of the original (SR.6, rule 0.19)
-NXM-L30	menus	menu	say5	starting lineup	F9, Rules, Depth charts: the first item of a team (SR.6, NX-L11)
+NXM-L92	menus	menu	say5	his place on the depth chart	F9's roster: a man's item (issue 10, D-223): his position's order, the list on him; U and N move him, Enter makes him the starter
+NXM-L30	menus	menu	say5	starting lineup	F9, Franchise, your depth chart or Depth charts: the first item of a team (SR.6, NX-L11)
 NXM-L31	menus	sentence	say5	 the starting lineup of the <team>. Enter changes the starter of a position. 	the lineup list's title (SR.6)
 NXM-L32	menus	sentence	say5	 <position>, <player>, number <number> 	the lineup: a position with its starter (SR.6)
 NXM-L33	menus	sentence	say5	 <position>, <player> 	the lineup: a position with its starter, he has no number (SR.6)
@@ -2325,7 +2327,7 @@ NXL-56	franchise	sentence	say5	 your quarterbacks, the starter first, then the o
 NXL-57	franchise	piece	piece	<player>, rating <r>, age <a>, backup	a backup quarterback in the Quarterbacks list (D-149; SR.6: no bench)
 NXL-58	franchise	sentence	say5	 <player> starts now, and <other> moves down one place. 	the Quarterbacks list: a backup made the starter (D-149, Q-069; SR.6)
 NXL-59	franchise	sentence	say5	 the other quarterbacks: <list>. 	the Quarterbacks list: another team's other quarterbacks (D-149; SR.6)
-NXH-82	franchise	help	say5	 Every team keeps its real 53 players at their real positions. Your roster lists them by position, and Depth charts chooses who starts. 	F6, after NXH-78, while the franchise is in use (D-149, NX-B2b; SR.6: by positions)
+NXH-82	franchise	help	say5	 Every team keeps its real 53 players at their real positions. Your roster lists them by position, and your depth chart, the next item, chooses who starts. 	F6, after NXH-78, while the franchise is in use (D-149, NX-B2b; SR.6: by positions)
 NXM-L65	menus	piece	piece	, starts now	the choice of a starter: the man who starts now (SR.6)
 NXM-L66	menus	piece	piece	, practice squad	the choice of a starter: a man of the practice squad (SR.6)
 NXM-L67	menus	piece	piece	, plays <position> now	the choice of a returner: the man's position (SR.6)
@@ -2364,8 +2366,8 @@ NXM-L60	menus	sentence	say5	 The punter kicks the ball away, usually on fourth d
 NXM-L61	menus	sentence	say5	 The long snapper snaps the ball a long way back to the punter or the holder on kicks. Nobody notices him unless he makes a mistake. 	the plain description of a position or a role, heard with D in the lineup (SR.6, rule 0.25)
 NXM-L62	menus	sentence	say5	 The kick returner catches kickoffs and runs them back toward the other end of the field. 	the plain description of a position or a role, heard with D in the lineup (SR.6, rule 0.25)
 NXM-L63	menus	sentence	say5	 The punt returner catches punts and runs them back, or signals a fair catch to stay safe. 	the plain description of a position or a role, heard with D in the lineup (SR.6, rule 0.25)
-NXM-L86	menus	sentence	say5	 <position>, <player>, number <number>, filling in from <old> 	the lineup (F9, Rules, Depth charts) when no man of the position is left: the man who plays there (S8.2, B-P189)
-NXM-L87	menus	sentence	say5	 <position>, <player>, filling in from <old> 	the lineup (F9, Rules, Depth charts) when no man of the position is left: the man who plays there (S8.2, B-P189)
+NXM-L86	menus	sentence	say5	 <position>, <player>, number <number>, filling in from <old> 	the lineup (F9, Franchise, the depth chart) when no man of the position is left: the man who plays there (S8.2, B-P189)
+NXM-L87	menus	sentence	say5	 <position>, <player>, filling in from <old> 	the lineup (F9, Franchise, the depth chart) when no man of the position is left: the man who plays there (S8.2, B-P189)
 NXM-L88	menus	sentence	say5	 <position>, <player>, number <number>, from the practice squad for game day 	the lineup: a kicker or punter only on the practice squad, brought up for game day as the game does (S8.2, B-P189)
 NXM-L89	menus	sentence	say5	 <position>, <player>, from the practice squad for game day 	the lineup: as NXM-L88 without a number (S8.2, B-P189)
 NXM-L90	menus	menu	say5	<group>, <player> filling in from <old>	the depth chart menu's item of a position with no man of its own: who plays there (S8.2, B-P189)

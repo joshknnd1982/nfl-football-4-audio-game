@@ -16,7 +16,7 @@ from nfl4.extras.franchise.league import LeagueRecord
 from nfl4.extras.franchise.store import FranchiseStore
 
 GAME = [ENTER, ENTER, ENTER]                                  # a regular week: the menu's play game, the results, the standings
-TRADES_MENU = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 7 + [ENTER]      # F9, Franchise, trades (the 8th item)
+TRADES_MENU = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 8 + [ENTER]      # F9, Franchise, trades (the 8th item)
 PLAYER, OTHER = 1, 2                                          # the rig's player takes the first team
 
 
@@ -343,7 +343,7 @@ def test_an_offer_left_for_later_is_taken_by_the_staff_at_the_kick_off_when_the_
     mine, theirs = started_quarterbacks(tmp_path)
     offer_in_week(monkeypatch)
     later = [DOWN, DOWN, ENTER]
-    turn_on = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 12 + [ENTER, ENTER, ESC, ESC, ESC]       # F9, Franchise, settings (11th since SX.8l), the staff item: on   # D-136: practice squad is the 10th item   # D-216: injured reserve after the injury report
+    turn_on = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 13 + [ENTER, ENTER, ESC, ESC, ESC]       # F9, Franchise, settings (11th since SX.8l), the staff item: on   # D-136: practice squad is the 10th item   # D-216: injured reserve after the injury report
     rig = run(tmp_path / "run", GAME + later + turn_on + [ENTER])
     league = league_of(rig)
     assert rig.game.options.settings.game.nx_fr_auto is True and qb(league, PLAYER).id == theirs

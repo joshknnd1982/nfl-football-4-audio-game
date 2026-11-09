@@ -8,7 +8,8 @@ tight ends, the five linemen, the edge men, tackles, linebackers, cornerbacks, s
 
 Keys (rule 0.24; never T, which calls a timeout in a game, rule 0.22): Up and Down go man by man; Left and Right, Page Up and Page Down go position by position;
 Home and End go to the first and the last; a letter goes to the next position that starts with it (E: the tight ends); Enter opens the man's items (make him
-the starter, the kick or punt returner, change his name); F1 says the keys; Escape goes back. A man is always said by his own position ("T.J. Watt, left edge"),
+the starter, the kick or punt returner, his place on the depth chart (issue 10, D-223: his position's order, the list on him, U and N move him), change his
+name); F1 says the keys; Escape goes back. A man is always said by his own position ("T.J. Watt, left edge"),
 whatever place he plays in a game. Plain rules are real_roster.py and lineup.py; this module speaks.
 """
 from __future__ import annotations
@@ -259,6 +260,13 @@ def man_items(g, speech, keys, store, section: Section, player) -> str | None:
             for role, text_id in (("KR", "NXM-L27"), ("PR", "NXM-L28")):
                 if chart.get(role, [None])[:1] != [player.id]:
                     items.append(Item(lambda text_id=text_id: X.text(text_id).strip(), enter=take(role, 0)))
+
+        def his_place():
+            """Issue 10 (D-223): his position's depth chart, the list on him: U and N move him, a digit puts him at a place, Enter makes one the starter."""
+            from .practice_flow import promote_player
+            chart_backend = L.FranchiseBackend(g, store, promote=lambda man: promote_player(g, speech, keys, store, words, league.players[man.key]))
+            raise _Done(L.choose_flow(speech, keys, chart_backend, section.key, 0, start_on=player.id))
+        items.append(Item(lambda: X.text("NXM-L92").strip(), enter=his_place))
 
     def rename_him():
         raise _Done(rename.ask(g, speech, keys, store, player))

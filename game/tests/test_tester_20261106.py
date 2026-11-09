@@ -264,7 +264,7 @@ def test_madden_s_linebackers_are_one_middle_and_two_outside():
 
 def test_f9_franchise_injured_reserve_opens_after_the_injury_report_and_says_its_rules(tmp_path):
     from frrig import COACH_AND_TEAM, DOWN, ENTER, ESC, F9, WANT_FRANCHISE, franchise_rig, quit_policy, run_until, spoken
-    keys = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 9 + [ENTER, DOWN, DOWN, ENTER, ESC, ESC, ESC, ESC, ESC]   # F9, Franchise, injured reserve (10th), the rules
+    keys = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 10 + [ENTER, DOWN, DOWN, ENTER, ESC, ESC, ESC, ESC, ESC]   # F9, Franchise, injured reserve (10th), the rules
     rig = franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + keys, policy=quit_policy)
     run_until(rig)
     text = spoken(rig)

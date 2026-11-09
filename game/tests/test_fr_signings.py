@@ -24,8 +24,8 @@ from nfl4.extras.franchise.league import OFFSEASON, SEASON, LeagueRecord, new_le
 from nfl4.game.rnd import GameRandom
 
 TEAM = 5
-FREE_AGENTS = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 6 + [ENTER]          # F9, Franchise, free agents (the 7th item)
-TRADES = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 7 + [ENTER]               # and trades (the 8th)
+FREE_AGENTS = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 7 + [ENTER]          # F9, Franchise, free agents (the 7th item)
+TRADES = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 8 + [ENTER]               # and trades (the 8th)
 
 
 def fresh(seed=3, team=TEAM):

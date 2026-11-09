@@ -231,7 +231,7 @@ def test_with_the_staff_setting_on_nothing_is_asked(tmp_path, monkeypatch):
 
 def test_f9s_injury_report_has_the_row_and_enter_chooses(tmp_path, monkeypatch):
     hurt_own_lineman(monkeypatch)
-    to_report = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 8 + [ENTER]     # F9, Franchise, injury report (the 9th item)
+    to_report = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 9 + [ENTER]     # F9, Franchise, injury report (the 9th item)
     keys = GAME + to_report + [DOWN, ENTER, DOWN, DOWN, ENTER, ESC, ESC, ESC]   # the row after him, the third choice
     rig = run(tmp_path, keys)
     league = rig.fstore.league

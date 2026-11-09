@@ -513,7 +513,7 @@ How your defense plays against a punt or a field goal.
 
 ## The positions
 
-In F9, Rules, Depth charts (and in the starting lineup), press D on a position to hear what it does. These are the 22 positions of a real team and the two returners.
+In F9, Franchise, the depth chart (and in the starting lineup), press D on a position to hear what it does. These are the 22 positions of a real team and the two returners.
 
 - **Quarterback**: The quarterback takes the snap, then hands the ball off, throws it or runs with it. He runs the whole offense.
 - **Halfback**: The halfback lines up behind the quarterback, takes handoffs and runs with the ball, and also catches short passes.

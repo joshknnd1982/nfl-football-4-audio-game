@@ -19,7 +19,7 @@ from nfl4.extras.franchise import signings as S
 from nfl4.extras.franchise.league import new_league
 from nfl4.game.rnd import GameRandom
 
-FREE_AGENTS_MENU = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 6 + [ENTER]     # F9, Franchise, free agents (the 7th item)
+FREE_AGENTS_MENU = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 7 + [ENTER]     # F9, Franchise, free agents (the 7th item)
 
 
 @pytest.fixture(autouse=True)

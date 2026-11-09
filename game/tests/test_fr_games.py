@@ -199,7 +199,7 @@ def place_sum(record, team):
 
 
 def test_the_team_ratings_item_lists_the_32_teams_best_first_and_names_the_players_rank(tmp_path):
-    rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + [DOWN] * 4 + [ENTER, DOWN],
+    rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + [DOWN] * 5 + [ENTER, DOWN],
                                   policy=quit_policy))
     text, record = spoken(rig), league(rig)
     first = history.team_rating_lines(record, history.Words(lambda t: "team%d" % t))

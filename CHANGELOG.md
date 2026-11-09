@@ -10,6 +10,14 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## Unreleased (since 0.16.21)
+
+### The depth chart is in the Franchise menu now, next to your roster
+From a tester's suggestion (GitHub issue 10): "Consider moving deapth Chart to either roster or Franchise. I think this would make more sense." The depth chart was the seventeenth item of F9, Rules, among the rule switches. It is now in F9, Franchise. While you play a franchise, "your depth chart" is the item right after "your roster" (the fourth item; the items after it, from league history to play classic seasons, are each one further down). When you play single games or classic seasons with the N. F. L. rules, "Depth charts" (any of the 32 teams) is the last item of F9, Franchise. Inside, nothing changed: the starting lineup, every position, U and N to move a player, the key downs and moments, and back to the real or the staff's order. The roster is linked too: in F9, Franchise, your roster, Enter on a player now has "his place on the depth chart", which opens his position's order with the list on him, so U and N move him up and down right away. F9, Rules now has 17 items, Reset the last. What you set before is kept.
+
+**How to test:** with the N. F. L. rules and a franchise, open F9, Franchise and press Down three times: you should hear "your depth chart"; Enter opens your team's depth chart as before. Then go up one item to your roster, press Enter, Down to a backup, Enter, and choose "his place on the depth chart": you should hear his position's list starting on him; press U and he should move up one place. Outside a franchise, open F9, Franchise and press End: "Depth charts" lists the 32 teams. Open F9, Rules: the depth chart should be gone from it, Reset the seventeenth item.
+**Tell us:** whether the new places are where you would look for the depth chart, and if any help or menu still sends you to F9, Rules for it.
+
 ## 0.16.21 (2026-11-09, test build)
 
 Three changes from a tester's GitHub issues: the field goal's length on the radio, a franchise that saves again after a man comes back from a reserve list, and rosters that update for every team. Everything of 0.16.20 and earlier below is still to be tested too.

@@ -1,5 +1,6 @@
-"""F9, Rules, Depth charts: set the starters and the players for the key downs and moments (nfl4 only, rule 0.13; NX-D3, NX-D4, D-147). This is inspired
-by Jim Kitchen.
+"""F9, Franchise, the depth chart: set the starters and the players for the key downs and moments (nfl4 only, rule 0.13; NX-D3, NX-D4, D-147). This is
+inspired by Jim Kitchen. Issue 10 (D-223): reached from F9, Franchise ("your depth chart" after "your roster" in a franchise, "Depth charts" as the last
+item outside one); until 0.16.21 it was F9, Rules, Depth charts.
 
 Outside a franchise: the 32 teams (letters find one), a team's groups (each said with its first man), a group's players in order (Enter makes one the first),
 "key downs and moments" (Enter on a situation and role lists the backs or the receivers, "the starter" first), and "back to the real order". The choices

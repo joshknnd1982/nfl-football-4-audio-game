@@ -14,7 +14,7 @@ from nfl4.extras.franchise.league import LeagueRecord, new_league
 from nfl4.game.rnd import GameRandom
 
 INTO_ROSTER = [F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER]     # F9, Franchise, your roster
-QUARTERBACK = [ENTER, ENTER]                                           # the first group (quarterback) and its player
+QUARTERBACK = [ENTER, DOWN, ENTER]                                     # the first group (quarterback), its player, change his name (issue 10: after his place on the depth chart)
 BACKSPACE = 8
 
 
@@ -87,7 +87,7 @@ def test_escape_or_a_name_too_short_changes_nothing(tmp_path):
 
 def test_the_name_of_another_active_player_is_refused(tmp_path):
     karst = ["k", "a", "r", "s", "t", ENTER]
-    rig, league = renamed(tmp_path, karst, [ENTER, RIGHT, ENTER, DOWN, DOWN, DOWN, ENTER] + karst)        # the quarterback is karst; then SR.6: the next position (halfbacks), the first man, "change his name" (after the fullback and the two returner items)
+    rig, league = renamed(tmp_path, karst, [ENTER, RIGHT, ENTER, DOWN, DOWN, DOWN, DOWN, ENTER] + karst)        # the quarterback is karst; then SR.6: the next position (halfbacks), the first man, "change his name" (after the fullback and the two returner items)
     back = league.player_at(league.team, 0)
     assert back.name != "karst" and league.player_at(league.team, 33).name == "karst"
     assert X.text("NXU-44", player=back.name) in spoken(rig)

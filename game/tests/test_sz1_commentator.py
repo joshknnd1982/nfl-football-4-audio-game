@@ -201,8 +201,8 @@ def rules_menu(rig, keys, name=None):
 
 def test_the_rules_menu_has_the_crew_before_reset_and_enter_chooses_from_the_list(tmp_path):
     rig = rig_for(tmp_path, [])
-    # D-140, NX-D3: Quarterbacks and Depth charts between it and Reset; BC.3: Enter opens the crew, Down to the analyst, Enter his list
-    spoken = rules_menu(rig, [END, UP, UP, UP, ENTER, DOWN, ENTER, UP, ENTER, ESC], "Sam Smith")
+    # D-140: Quarterbacks between it and Reset (issue 10: Depth charts moved to F9, Franchise); BC.3: Enter opens the crew, Down to the analyst, Enter his list
+    spoken = rules_menu(rig, [END, UP, UP, ENTER, DOWN, ENTER, UP, ENTER, ESC], "Sam Smith")
     assert "Broadcast crew: Walt Kessler, Sam Smith, Nora Banks" in spoken
     assert any(s.startswith("Broadcast crew. 4 items.") for s in spoken)
     assert "Color analyst: Sam Smith" in spoken
@@ -217,10 +217,10 @@ def test_the_rules_menu_has_the_crew_before_reset_and_enter_chooses_from_the_lis
 
 def test_escape_in_the_list_changes_nothing_and_left_and_right_step_between_the_names(tmp_path):
     rig = rig_for(tmp_path, [])
-    spoken = rules_menu(rig, [END, UP, UP, UP, ENTER, DOWN, ENTER, UP, ESC, ESC], "Sam Smith")
+    spoken = rules_menu(rig, [END, UP, UP, ENTER, DOWN, ENTER, UP, ESC, ESC], "Sam Smith")
     assert rig.game.options.settings.game.nx_analyst == "Sam Smith" and not any(s.startswith("Color analyst: Gus") for s in spoken)
     rig = rig_for(tmp_path / "step", [])
-    spoken = rules_menu(rig, [END, UP, UP, UP, ENTER, DOWN, 39, 39, 37, ESC], "Sam Smith")
+    spoken = rules_menu(rig, [END, UP, UP, ENTER, DOWN, 39, 39, 37, ESC], "Sam Smith")
     # BC.3: the typed name stays an item when Right steps to the default (BC.2 lost it), so Right comes back to it
     assert [s for s in spoken if s.startswith("Color analyst:")] == ["Color analyst: Sam Smith", "Color analyst: Gus Delgado",
                                                                        "Color analyst: Sam Smith", "Color analyst: Gus Delgado"]

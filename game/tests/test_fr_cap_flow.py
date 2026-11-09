@@ -250,7 +250,7 @@ def test_f9_has_the_salary_cap_item_with_the_players_numbers_his_rank_and_the_32
         lists.append((title, list(lines)))
         real(speech, keys, title, lines, **kwargs)
     monkeypatch.setattr(menus, "_lines_picker", picker)
-    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 5 + [ENTER, ESC, ESC, ESC, ESC]       # F9, Franchise, the salary cap (the 6th item)
+    keys = [F9, DOWN, DOWN, DOWN, DOWN, ENTER] + [DOWN] * 6 + [ENTER, ESC, ESC, ESC, ESC]       # F9, Franchise, the salary cap (the 6th item)
     rig = offseason_rig(tmp_path, cut_league(), keys=keys, until=lambda r: bool(lists), picks_told="mine")
     words = rig.fstore.words
     league = rig.fstore.league

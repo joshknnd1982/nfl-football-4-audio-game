@@ -22,6 +22,7 @@ XV (D-198; the owner: the voice raised with the excitement, and "user should be 
 calls (13; Stadium sounds is 14, Broadcast crew 15, Quarterbacks 16, Depth charts 17, Reset 18): on (the default: the big plays are said
 higher, faster and a little louder by the game's own voices and NVDA, speech/lift.py) or off; Enter, Left and Right switch it; it applies at
 once, also in the game being played. While JAWS speaks the game the item says that JAWS says the words only.
+Issue 10 (D-223): Depth charts left this menu for F9, Franchise (extras/franchise/menus.py), so the menu has 17 items: Quarterbacks 16, Reset 17.
 Rules = N. F. L. rules also makes the program read the extras' files (remarks.txt, CUSTOMIZABLE_CONTENT 13).
 """
 from __future__ import annotations
@@ -30,7 +31,6 @@ from ..game.spoken_menu import Item, SpokenMenu
 from . import crew_menu
 from .broadcast import DEFAULT_TALK, next_talk, talk_words
 from .radio_calls import DEFAULT_CALLS, DEFAULT_EXCITED_VOICE, RADIO, calls_key, next_calls
-from . import depth_flow
 from . import nx_texts as X
 from . import quarterbacks
 from .playbook_data import CLASSIC_KEY, PLAYBOOK_CHOICES, STYLE_BY_KEY, TEAM_KEY
@@ -277,7 +277,6 @@ def rules_menu(game, speech, keys) -> None:
         Item(stadium_item, enter=lambda: (toggle_stadium(), changed(stadium_item))[1], change=toggle_stadium),
         Item(crew_item, enter=choose_crew),
         Item(lambda: quarterbacks.item_label(settings), enter=lambda: (quarterbacks.quarterbacks_menu(game, speech, keys), None)[1]),    # D-132
-        Item(lambda: depth_flow.item_label(settings), enter=lambda: (depth_flow.depth_menu(game, speech, keys), None)[1]),        # NX-D3, NX-D4
         Item(lambda: X.text("NXM-19"), enter=reset),
     ]
     SpokenMenu(speech, keys, X.text("NXM-07"), items, help_text=X.text("NXM-36"), space_enters=True,

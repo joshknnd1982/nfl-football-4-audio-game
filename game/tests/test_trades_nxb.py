@@ -20,7 +20,7 @@ from nfl4.extras.franchise import trades as TR
 from nfl4.extras.franchise.league import OFFSEASON, SEASON, new_league
 from nfl4.game.rnd import GameRandom
 
-TRADES_MENU = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 7 + [ENTER]      # F9, Franchise, trades (the 8th item)
+TRADES_MENU = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 8 + [ENTER]      # F9, Franchise, trades (the 8th item)
 ASK_A_TEAM = [DOWN, DOWN, ENTER]                                      # the 3rd item of the trades menu (NX-B5)
 PLAYER, OTHER = 1, 2                                                  # the rig's player takes the first team; the team list starts with team 2
 TEAM, THEM = 5, 9                                                     # the rules' tests

@@ -367,6 +367,7 @@
 - NXF-54 (sentence, say5): " you stopped the download. ". the download's result (D-128): Escape during the request
 - NXF-55 (sentence, say5): " the calendar could not be saved in your customize folder. nothing was changed. ". the download's result (D-128): the folder cannot be written
 - NXF-56 (sentence, say5): " the <year> calendar is saved in your customize folder. a franchise plays it in its <year> season. ". the download's result (D-128): saved, and no franchise, or a franchise past that season
+- NXF-57 (menu, say5): "your depth chart". F9 Franchise item after your roster (issue 10, D-223): the player's own team's depth chart and key players, was F9, Rules, Depth charts
 - NXH-43 (help, say5): " Your job: the owner sets a goal each season and rates you from 0 to 100; a low rating costs your job unless you won more than you lost. Your coordinators' styles are your team playbook. ". F6, after NXH-42 (SX.8l)
 - NXV-09 (sentence, say2): " the owner has fired you. your job rating was <a>, after 1 win and <l> losses. ". stage 9: NXV-10 for a season of one win
 - NXV-32 (sentence, say5): " the owner has fired you. choose your new team at the question. ". F9, franchise, your job and staff, while the job question waits
@@ -454,4 +455,3 @@
 - NXU-G04 (sentence, say2): " last week's goal was met. ". before the menu, after the news (SX.8n)
 - NXU-G05 (sentence, say2): " last week's goal was missed. ". before the menu, after the news (SX.8n)
 - NXH-45 (help, say5): " Players have a personality and a morale, which moves a rating by up to 2 points in a game. An underpaid player may hold out at camp and ask to be traded. Every game has a goal. ". F6, after NXH-44 (SX.8n)
-- NWH01 (remark, say2): " <player> of the <team> wants to be traded. ". a player asks to be traded (news, SX.8n)

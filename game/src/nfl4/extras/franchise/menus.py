@@ -7,6 +7,9 @@ built each time F9 opens (`franchise_item_shown`), so with Rules = Classic F9's 
 file is opened. SX.8a builds: the roster, league history, franchise settings (offseason only: the other settings come with their
 features), play classic seasons, back to your franchise and start a franchise now. SX.8b speaks the ratings and the potential in
 the roster and adds the team ratings; SX.8e adds the to-do list and the news; SX.8l your job and staff (the goal, the job rating, the coordinators).
+Issue 10 (D-223, a tester: "Consider moving deapth Chart to either roster or Franchise"): the depth chart is here, not in F9, Rules: "your depth chart"
+right after "your roster" while a franchise is played (the 4th item; every later item moved down one), and "Depth charts" (the 32 teams, for single games
+and classic seasons) as the last item when no franchise is played.
 """
 from __future__ import annotations
 
@@ -212,6 +215,12 @@ def franchise_menu(g, speech, keys) -> None:
         from . import roster_flow
         roster_flow.roster_list(g, speech, keys, store)         # SR.6 (design 21.8): by the 22 positions, the squad, the lists and the rookies
 
+    # ----- the depth chart (issue 10, D-223: here since 0.16.22; it was F9, Rules, Depth charts) -----
+
+    def depth_menu() -> None:
+        from .. import depth_flow
+        depth_flow.depth_menu(g, speech, keys)                   # in a franchise the player's own team; outside one, the 32 teams
+
     # ----- the history -----
 
     def history_menu() -> None:
@@ -365,6 +374,7 @@ def franchise_menu(g, speech, keys) -> None:
         items = [Item(lambda: X.text("NXF-11"), enter=todo_menu),
                  Item(lambda: X.text("NXF-12"), enter=news_menu),
                  Item(lambda: X.text("NXF-13"), enter=roster_menu),
+                 Item(lambda: X.text("NXF-57"), enter=depth_menu),                # issue 10 (D-223): right after the roster
                  Item(lambda: X.text("NXF-14"), enter=history_menu),
                  Item(lambda: X.text("NXF-15"), enter=ratings_menu),
                  Item(lambda: X.text("NXF-28"), enter=cap_menu),
@@ -387,6 +397,8 @@ def franchise_menu(g, speech, keys) -> None:
         items.append(Item(lambda: S.RESTORE_A_FRANCHISE, enter=restore_menu))
     items.append(Item(lambda: X.text("NXF-48"), enter=latest_calendar))      # D-128: the last item in every case (only when the player asks)
     items.append(Item(lambda: X.text("NXZ-U01"), enter=latest_rosters))     # SR.6 (NX-L9): the newest real rosters, only when the player asks
+    if not in_use:                                                           # issue 10 (D-223): every team's depth chart for single games and seasons
+        items.append(Item(lambda: X.text("NXM-D01"), enter=depth_menu))
     try:
         SpokenMenu(speech, keys, X.text("NXF-10"), items, space_enters=True, digits_jump=True).run()
     except _Closed:

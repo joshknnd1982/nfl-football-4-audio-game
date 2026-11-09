@@ -203,7 +203,7 @@ def test_a_damaged_practice_record_is_damage(bad):
 
 # ----- F9 on the program rig -----
 
-PRACTICE = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 10 + [ENTER]          # F9, Franchise, practice squad (the 10th item)   # D-216: injured reserve after the injury report
+PRACTICE = [F9] + [DOWN] * 4 + [ENTER] + [DOWN] * 11 + [ENTER]          # F9, Franchise, practice squad (the 10th item)   # D-216: injured reserve after the injury report
 
 
 def test_f9_practice_squad_in_a_new_franchise_opens_and_hears_the_squad(tmp_path):

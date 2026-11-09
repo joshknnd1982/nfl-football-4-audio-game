@@ -168,7 +168,7 @@ def test_a_switch_asked_in_an_offseason_that_a_switch_resumed_is_made_before_any
     first = franchise_rig(tmp_path / "one", WANT_FRANCHISE + COACH_AND_TEAM, policy=enter_until(lambda: X.text("NXE-03") in spoken(first)))
     run_until(first)
     back = FRANCHISE_MENU + [ENTER, ESC]                                    # F9, Franchise, back to your franchise, close F9
-    to_classic = FRANCHISE_MENU + [DOWN] * 13 + [ENTER, ENTER, ESC, ENTER]      # at the wait: play classic seasons (12th since SX.8l), confirm, close, go on   # D-136: practice squad is the 10th item   # D-216: injured reserve after the injury report
+    to_classic = FRANCHISE_MENU + [DOWN] * 14 + [ENTER, ENTER, ESC, ENTER]      # at the wait: play classic seasons (12th since SX.8l), confirm, close, go on   # D-136: practice squad is the 10th item   # D-216: injured reserve after the injury report
     second = franchise_rig(tmp_path / "two", back + to_classic, files=first.files, kind="classic", preset=preset_season(gtp=3),
                            policy=quit_policy)
     run_until(second)
@@ -200,7 +200,7 @@ def test_the_rules_item_says_the_franchise_uses_the_nfl_rules_only_while_they_ar
     rig = franchise_rig(tmp_path, script, policy=quit_policy)
     run_until(rig)
     text = spoken(rig)
-    opening = [t for t in text if t.startswith("Rules. 18 items")][0]     # XV: Excited voice the thirteenth     # RC: Play calls the twelfth     # S-D: How much the crew talks the eleventh     # NX-D3: Depth charts the fourteenth; D-140: Quarterbacks the thirteenth item     # SY.1: Broadcast is the tenth switch, SY.2: Stadium sounds the eleventh, SZ.1: Commentator the twelfth
+    opening = [t for t in text if t.startswith("Rules. 17 items")][0]     # issue 10 (D-223): Depth charts moved to F9, Franchise     # XV: Excited voice the thirteenth     # RC: Play calls the twelfth     # S-D: How much the crew talks the eleventh     # NX-D3: Depth charts the fourteenth; D-140: Quarterbacks the thirteenth item     # SY.1: Broadcast is the tenth switch, SY.2: Stadium sounds the eleventh, SZ.1: Commentator the twelfth
     assert "Rules: N. F. L. rules. the franchise uses the N. F. L. rules." in opening
     changed = text[text.index(opening) + 1]
     assert "Rules: Classic" in changed and "the franchise uses" not in changed and X.text("NXF-04") in changed

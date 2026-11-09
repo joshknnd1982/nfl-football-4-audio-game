@@ -130,8 +130,9 @@ def result_text(backend, key: str, man: Man, slot: int, old_position: str, befor
 
 # ----- the choice -----
 
-def choose_flow(speech, keys, backend, key: str, slot: int = 0) -> str | None:
-    """The list of the men who may start at the place; Enter makes one the starter. Returns the sentence to say, or None when the player left with Escape."""
+def choose_flow(speech, keys, backend, key: str, slot: int = 0, start_on=None) -> str | None:
+    """The list of the men who may start at the place; Enter makes one the starter. Returns the sentence to say, or None when the player left with Escape.
+    `start_on` (a man's key, issue 10: the roster's "his place on the depth chart") starts the list on that man instead of the starter."""
     busy = backend.busy()
     if busy:
         return busy
@@ -144,6 +145,8 @@ def choose_flow(speech, keys, backend, key: str, slot: int = 0) -> str | None:
         fill = backend.fill(key, slot)                 # the man who fills in is where the list starts, said as starting now
         now = fill[0].key if fill is not None else None
     start = next((i for i, man in enumerate(candidates) if man.key == now), 0)
+    if start_on is not None:
+        start = next((i for i, man in enumerate(candidates) if man.key == start_on), start)
     lines = [man_line(man, man.key == now) for man in candidates]
     if key in RM.ROLES:
         title = X.text("NXM-L39", position=word(key))
@@ -230,7 +233,7 @@ def move_target(backend, key: str, man: Man, char: str):
 # ----- the menus -----
 
 def lineup_picker(speech, keys, backend, team_name: str) -> None:
-    """F9, Rules, Depth charts, Starting lineup: one list of the lines of LINEUP; Enter opens the place's choice; D describes the place."""
+    """F9, Franchise, the depth chart, Starting lineup: one list of the lines of LINEUP; Enter opens the place's choice; D describes the place."""
     slots = backend.slots()
 
     def name(i: int) -> str:

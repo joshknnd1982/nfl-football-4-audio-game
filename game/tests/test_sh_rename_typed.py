@@ -12,7 +12,7 @@ from nfl4.extras.franchise import rename
 from nfl4.game import prompts as P
 
 INTO_ROSTER = [F9, DOWN, DOWN, DOWN, DOWN, ENTER, DOWN, DOWN, ENTER]     # F9, Franchise, your roster (as test_fr_rename.py)
-QUARTERBACK = [ENTER, ENTER]
+QUARTERBACK = [ENTER, DOWN, ENTER]                                     # issue 10: change his name after his place on the depth chart
 
 
 def renamed(tmp_path, typed, after=(ENTER,)):
