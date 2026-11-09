@@ -10,7 +10,9 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
-## Unreleased (since 0.16.21)
+## 0.16.22 (2026-11-09, test build)
+
+One change from a tester's GitHub issue: the depth chart moved to the Franchise menu, next to your roster. Everything of 0.16.21 and earlier below is still to be tested too.
 
 ### The depth chart is in the Franchise menu now, next to your roster
 From a tester's suggestion (GitHub issue 10): "Consider moving deapth Chart to either roster or Franchise. I think this would make more sense." The depth chart was the seventeenth item of F9, Rules, among the rule switches. It is now in F9, Franchise. While you play a franchise, "your depth chart" is the item right after "your roster" (the fourth item; the items after it, from league history to play classic seasons, are each one further down). When you play single games or classic seasons with the N. F. L. rules, "Depth charts" (any of the 32 teams) is the last item of F9, Franchise. Inside, nothing changed: the starting lineup, every position, U and N to move a player, the key downs and moments, and back to the real or the staff's order. The roster is linked too: in F9, Franchise, your roster, Enter on a player now has "his place on the depth chart", which opens his position's order with the list on him, so U and N move him up and down right away. F9, Rules now has 17 items, Reset the last. What you set before is kept.
