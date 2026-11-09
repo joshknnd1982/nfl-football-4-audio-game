@@ -225,8 +225,19 @@ def designate(league, player, week: int) -> None:
     player.roster_list = "IRD"
 
 
+def new_contract(player) -> tuple | None:
+    """(salary, years) of the contract he signs when he comes back, or None when his own runs on (GitHub issue 8, D-220a). A man the real rosters put on a
+    list when the franchise began has no contract (his salary is 0, his contract ran with the list), so he comes back on the market price, as the roster
+    cut brings every list man back (real_roster.return_lists); a man the player placed keeps his own."""
+    from . import contracts as CT
+    if CT.running(player) and player.salary >= T.FR_MIN_SALARY:
+        return None
+    return CT.market_contract(player)
+
+
 def activate(league, player, week: int, release=None) -> int:
-    """He comes back to the 53 (onto his position's chart by the staff's order); `release` is released first when the 53 is full. Returns the dead money."""
+    """He comes back to the 53 (onto his position's chart by the staff's order), on his own contract or on `new_contract`'s; `release` is released first
+    when the 53 is full. Returns the dead money."""
     from . import contracts as CT
     from . import real_roster
     problem = activate_problem(league, player, week, release)
@@ -239,6 +250,9 @@ def activate(league, player, week: int, release=None) -> int:
         real_roster.leave(league, release, "free", refresh=False)
         release.team = 0
         _forget(league, release.id)
+    contract = new_contract(player)
+    if contract is not None:
+        CT.sign(player, *contract)                          # issue 8: an active man always has a contract (contracts.check_contracts)
     record(league)["placed"] = [row for row in record(league)["placed"] if row[0] != player.id]
     real_roster.join(league, player.team, player)
     _sums(league, player.team)

@@ -55,6 +55,8 @@ weeks; once he has missed 4 games and is healthy it activates him back to your 5
 the lowest rated first, and hear his dead money). A man not activated within his window stays on injured reserve for the season, and the week's injury
 report says so. You have 8 returns in the regular season and 2 more in the play-offs, and one man can return twice a season. Men on the physically
 unable to perform or non-football injury lists are activated after 4 games with no designation. "The rules of injured reserve" says all of this.
+A man who was already on a list when the franchise began has no contract: he comes back on a new one at the market price for his position and
+rating, and the question before Enter says it; a man you placed yourself keeps his own contract.
 The computer teams keep the reserve lists of their real rosters, and everyone on a list comes back to his roster at the roster cut.
 
 **Positions in the Franchise menus (since 0.16.18).** The trades, the free agents and the practice squad ask for a real position, not a group: free

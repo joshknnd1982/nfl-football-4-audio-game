@@ -27,6 +27,7 @@ from ...game.season import SeasonState
 from ...game.setup import Roster
 from ...game.standings import Records
 from .. import nx_texts as X
+from .. import tuning as T
 from . import data as D
 from . import history
 from .files import TMP
@@ -182,6 +183,20 @@ class FranchiseStore:
         if changed:
             debuglog.event("franchise", "chart_mended", logging.WARNING, teams=changed, stage=league.stage, stage_no=league.stage_no)
 
+    @staticmethod
+    def _mend_contracts(league) -> None:
+        """GitHub issue 8: a man of an active roster with no contract (salary under the minimum) is signed at the market price before a write, so a path that
+        brought a man back without one can never make the whole franchise unsaveable; a mend is logged as a warning that names the men (rule 0.15: the log
+        names the path to mend). Changes no draw; a whole record is not touched."""
+        from . import contracts as CT
+        mended = []
+        for player in league.players.values():
+            if player.status == "active" and isinstance(player.salary, int) and not isinstance(player.salary, bool) and player.salary < T.FR_MIN_SALARY:
+                CT.sign(player, *CT.market_contract(player))
+                mended.append(player.id)
+        if mended:
+            debuglog.event("franchise", "contract_mended", logging.WARNING, players=sorted(mended), stage=league.stage, stage_no=league.stage_no)
+
     def _fix_backs(self) -> None:
         """SR.5 (NX-L5, NX-L7): nothing to rename any more. A real man of an older league whom the old fill put at another position gets his real position
         back by his name (real_roster.convert), never a made-up name; the renames of 2026-10-23 and NX-D1 (fix_real_backs, fix_real_positions) are gone."""
@@ -250,6 +265,7 @@ class FranchiseStore:
             return True                          # the engine is between two of its own writes: the file keeps the last whole state
         try:
             self._mend_charts(league)
+            self._mend_contracts(league)
             league.check()
             data = league.to_json().encode("utf-8")
         except Exception:

@@ -20,6 +20,12 @@ From a tester's request (GitHub issue 7): "have radio announcer tell you the dis
 **How to test:** play a game with the radio play calls on and kick a field goal from your opponent's 25 yard line (Field Goal in the play menu): the announcer should say a 42-yard try. Try one from the opponent's 35 or farther out: it should be called a long one. Listen after the kick for the length said again on some kicks.
 **Tell us:** whether the length comes at the right moment, and whether any wording sounds wrong.
 
+### A franchise saves again after a man comes back from a reserve list
+From a tester's report (GitHub issue 8): "After activating someone off injured reserve it can't save the franchise." A man who was on injured reserve, the PUP list or the NFI list when the franchise began had no contract, and activating him brought him back to the 53 without one, so from then on the franchise could not be saved and every change after it was lost when the game closed. Now he comes back on a new contract at the market price for his position and rating (the same contract the roster cut gives a man who comes back from a list), and the question before you press Enter says it, for example "Kerby Joseph comes back on a new contract of 3.3 million for 4 years." A man you placed on injured reserve yourself keeps his own contract. If a man on your roster ever has no contract again, the game now gives him one when it saves instead of refusing to save, and writes that in its log.
+
+**How to test:** in a franchise with the N. F. L. rules, from week 5 on, open F9, Franchise, injured reserve, your players on the reserve lists. Choose a man who was on a list when the franchise began (one on the PUP list can be activated at once; one on injured reserve is designated first, then activated). Before Enter you should hear his new contract. After the activation, quit the game and start it again: he should still be on your active roster, and the game should not say that the franchise could not be saved.
+**Tell us:** if any change of a franchise is gone after you start the game again, or if the game says the franchise could not be saved.
+
 ## 0.16.20 (2026-11-07, test build)
 
 One whistle, now really. From a tester's report on 0.16.19. Everything of 0.16.19 and earlier below is still to be tested too.

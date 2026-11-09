@@ -128,12 +128,16 @@ def reserve_menu(g, speech, keys, store, words) -> None:
             asked = X.text("NXI-R22", give=release.name, get=player.name, dead=words.amount(CT.dead_money(release)))
         else:
             asked = X.text("NXI-R18", player=player.name)
+        contract = R.new_contract(player)
+        if contract is not None:                                  # issue 8: a man with no contract comes back on a new one, said before Enter
+            asked = X.text("NXI-R43", player=player.name, contract=words.contract_of(*contract)) + asked
         if not confirmed(asked):
             return X.text("NXI-R40", player=player.name)
         gone = release.name if release is not None else ""
         dead = R.activate(league, player, week, release)
         debuglog.event("franchise", "reserve_activated", season=league.season, week=week, player=player.id,
-                       released=release.id if release is not None else None, dead_money=dead)                      # rule 0.15
+                       released=release.id if release is not None else None, dead_money=dead, salary=player.salary, years=player.years,
+                       new_contract=contract is not None)                                                            # rule 0.15 (issue 8)
         store.save()
         return X.text("NXI-R19", player=player.name) if release is None else X.text("NXI-R20", give=gone, get=player.name)
 
