@@ -182,7 +182,7 @@ class OnsideFlow:
         snd.c2uf()
         engine = g.play_engine
         if engine is not None:
-            engine.go_live()                                 # H18: the kick is made, a T key is only kept from here
+            engine.go_live("the onside kick")              # H18: the kick is made, a T key is only kept from here
         snd.play(7, -1200)                                   # foot7, the kick
         snd.play_noise()
         g.say4(X.text("NXO-04", kicker=kicker))

@@ -35,8 +35,11 @@ class KickSteps:
             self.say3(P.HUT + ("!" if rnd(3) == 3 else ""))
             self.rady(0x43a73c)
         self.rady(0x43a774)
-        self.go_live()                                    # H18: a T key waiting is taken; the kick is live from the snap
+        # H18 (GitHub issue 11, D-224): the punter's " hike! " is still the snap count, so a T pressed while it is said calls the timeout
+        # before the snap (it cuts the word and the kick is withdrawn: icing the kicker). The kick is live once the word has been said.
+        # A scrimmage play is live from its " Hike! " (pag_scrimmage.snap_count), because the hike sound and the play noise start with it.
         self.say3(P.KICK_HIKE)
+        self.go_live("the kick's snap")                   # a T key waiting is taken first (it may still withdraw the kick), then live
         g.qorp = 1
 
     # ----- the field goal -----
@@ -175,7 +178,7 @@ class KickSteps:
         g.say4(self.kicker(s.defense, 1) + P.READY_TO_KICK_OFF)
         snd.play_tackle(8)
         snd.c2uf()
-        self.go_live()                                       # H18: the kick is made; a T key waiting still withdraws nothing here
+        self.go_live("the kick-off")                         # H18: the kick is made; a T key waiting still withdraws nothing here
         snd.play(7, -1200)
         snd.play_noise()
         g.say4(P.KICKOFF_UP)

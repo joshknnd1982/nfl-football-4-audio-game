@@ -79,7 +79,7 @@ class ScrimmageSteps:
             self.rady(0x440b16)
             self.say3(P.HUT + ("!" if rnd(2) == 1 else ""))
         self.rady(0x440cb2)
-        self.go_live()                                                          # H18: a T key waiting is taken; the play is live from the hike
+        self.go_live("the hike")                                                # H18: a T key waiting is taken; the play is live from the hike
         g.voice_speak(P.HIKE, wait=False)                                       # `Voice.Speak " Hike! ", 1`
         snd.play_hike()
         snd.c2dh()

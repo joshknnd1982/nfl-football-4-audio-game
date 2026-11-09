@@ -164,10 +164,13 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         self.keys.hand_back(result)
         return True
 
-    def go_live(self) -> None:
-        """The snap or the kick: a T key already waiting is taken first (it may still withdraw the play), then the play is live."""
+    def go_live(self, what: str = "the snap") -> None:
+        """The snap or the kick: a T key already waiting is taken first (it may still withdraw the play), then the play is live.
+        `what` names the moment in the debug log (issue 11: the log showed the T key kept, not when the ball had become live)."""
         self.keys.service_timeout()
         self.t_live, self.t_back = True, None
+        if self.t_armed:
+            debuglog.event("extras", "ball_live", what=what, quarter=self.s.quarter, down=self.s.down)
         self.rules.ball_live(self.s)                     # H18 (SX.13): the dead-ball period ends at the snap or the kick (Classic: nothing)
 
     def dead_ball(self, back=None) -> None:

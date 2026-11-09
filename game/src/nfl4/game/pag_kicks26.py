@@ -57,7 +57,7 @@ class Kick26Steps:
         g.say4(self.kicker(s.defense, 1) + P.READY_TO_KICK_OFF)
         snd.play_tackle(8)
         snd.c2uf()
-        self.go_live()                                       # H18: the kick is made; a T key is only kept from here
+        self.go_live("the kick-off")                         # H18: the kick is made; a T key is only kept from here
         snd.play(7, -1200)
         snd.play_noise()
         if call == SAFETY_PUNT:
@@ -272,7 +272,7 @@ class Kick26Steps:
         self.setup_heard(kind)
         self.rady(0x442081)
         if fair_catch_kick:
-            self.go_live()                                   # no snap: the kick is a free kick
+            self.go_live("the fair catch kick")            # no snap: the kick is a free kick
         else:
             self.kicksnap()
             snd.play_noise()
