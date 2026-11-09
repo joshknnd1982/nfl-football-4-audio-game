@@ -10,7 +10,9 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
-## Unreleased (since 0.16.22)
+## 0.16.23 (2026-11-09, test build)
+
+One change from a tester's GitHub issue: a time out pressed while the holder or punter says "hike" is called before the kick. Everything of 0.16.22 and earlier below is still to be tested too.
 
 ### A time out while the holder says "hike" ices the kicker
 From a tester's report (GitHub issue 11): "I tried to call a timeout before the kicker kicked a Field goal. It wasn't granted." His problem report showed T pressed while the holder was still saying "hike". The game had already counted the kick as snapped at the start of that word, so it kept the time out for after the play: the field goal was good, and the time out was used up before the kick-off. Now the holder's or punter's "hike" still belongs to the snap count: T while it is said stops it at once, the time out is called, the kick is not made and the play menu comes again. This works the same for a field goal, a punt and the kick after a touchdown. Once "hike" has been said the kick is live, and a T then is kept for the end of the play, as before. A play from scrimmage is unchanged: it is live from the quarterback's "Hike!", where the snap sound starts.
