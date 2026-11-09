@@ -10,9 +10,9 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
-## Unreleased (since 0.16.20)
+## 0.16.21 (2026-11-09, test build)
 
-Changes made since the last test build. They will be in the next one.
+Three changes from a tester's GitHub issues: the field goal's length on the radio, a franchise that saves again after a man comes back from a reserve list, and rosters that update for every team. Everything of 0.16.20 and earlier below is still to be tested too.
 
 ### The announcer says how long a field goal try is
 From a tester's request (GitHub issue 7): "have radio announcer tell you the distance of the field goal being attempted. It should be just like in a radio broadcast." With the radio play calls (F9, Rules, Play calls: radio, the default), the call before every field goal now names its length, for example "Here comes Kim for a 42-yard field goal attempt." A try of 50 yards or more is called a long one, a little more excited. The fair catch kick says its length too, and some of the calls after the kick say it again ("From 42 yards, right through!"). The length is counted as on a real field: the yards to the goal line, plus 7 for the hold and 10 for the end zone, where the goal posts stand. It works with the N. F. L. rules and with Classic. With Play calls set to plain, the game keeps the original game's words, which have no length.
