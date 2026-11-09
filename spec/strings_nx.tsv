@@ -2237,7 +2237,7 @@ NXZ-U10	franchise	prompt	say5	 Your rosters.txt has your own changes. The new ro
 NXZ-U11	franchise	answer	say5	No, keep my own rosters	NXZ-U10's first answer (Enter and Escape take it)
 NXZ-U12	franchise	answer	say5	Yes, use the new rosters	NXZ-U10's second answer
 NXZ-U13	franchise	sentence	say5	 You kept your own rosters. Nothing was changed. 	the download's result after NXZ-U11
-NXZ-U14	franchise	prompt	say2	 There are newer real rosters, from <label>. Bring the other 31 teams up to them? Your own team is not changed. 	the offer of design 21.10, once for each newer rosters.txt, when a franchise made from older rosters is opened or after a download; never in a game, the draft or the cut
+NXZ-U14	franchise	prompt	say2	 There are newer real rosters, from <label>. Bring the other 31 teams up to them, or all 32 with your own team too? 	the offer of design 21.10, once for each newer rosters.txt, when a franchise made from older rosters is opened or after a download; never in a game, the draft or the cut
 NXZ-U15	franchise	answer	say2	No, keep my league as it is	NXZ-U14's first answer: Enter changes nothing (rule 0.23's spirit, Q-080)
 NXZ-U16	franchise	answer	say2	Yes, bring the other teams up	NXZ-U14's second answer
 NXZ-U17	franchise	sentence	say2	 The other 31 teams now have the rosters of <label>: <n> players moved or joined. 	after NXZ-U16 (design 21.10 (4)): <n> the men who moved between computer teams, signed from the free agents or joined the league
@@ -2249,6 +2249,9 @@ NXZ-U22	franchise	sentence	say5	 They come from the N. F. L. teams' own roster a
 NXZ-U23	franchise	sentence	say5	 The pages of <n> teams could not be read just now, so those teams stay as they were. 	after NXZ-U22 when two or more teams were kept (D-196)
 NXZ-U24	franchise	sentence	say5	 The N. F. L. teams' pages could not be read, so they come from the game's checked file on GitHub. 	after NXZ-U03 when the NFL's pages failed and GitHub's checked file was newer (D-196)
 NXZ-U25	franchise	sentence	say5	 The pages of one team could not be read just now, so that team stays as it was. 	after NXZ-U22 when one team was kept (D-196)
+NXZ-U26	franchise	answer	say2	Yes, all 32 teams, my own team too	NXZ-U14's third answer (GitHub issue 9, D-222): the player's team is brought up to the file too; the men he put first on his chart stay first
+NXZ-U27	franchise	sentence	say2	 All 32 teams, yours too, now have the rosters of <label>: <n> players moved or joined. The players you put first on your depth chart stay first. 	after NXZ-U26 (issue 9, D-222): <n> the men who moved between teams, signed from the free agents or joined the league
+NXZ-U28	franchise	sentence	say2	 The teams could not be brought up to the new rosters, so your league stays as it is. 	after NXZ-U26 when the update failed its checks (the log has the cause); the league is put back as it was (issue 9, D-222)
 NXL-60	franchise	piece	piece	quarterbacks	the heading of a position in F9's roster (SR.6, design 21.8)
 NXL-61	franchise	piece	piece	halfbacks	the heading of a position in F9's roster (SR.6, design 21.8)
 NXL-62	franchise	piece	piece	fullbacks	the heading of a position in F9's roster (SR.6, design 21.8)

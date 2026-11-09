@@ -403,7 +403,7 @@ def test_no_keeps_the_league_and_is_not_asked_again(tmp_path, monkeypatch):
     before = league.to_json()
     asked = []
     text = RF.offer(Game(real=real), None, None, store, ask=lambda q, items: asked.append((q, items)) or 0)
-    assert text == X.text("NXZ-U18") and asked == [(X.text("NXZ-U14", label=NEW_SPOKEN), [X.text("NXZ-U15"), X.text("NXZ-U16")])]
+    assert text == X.text("NXZ-U18") and asked == [(X.text("NXZ-U14", label=NEW_SPOKEN), [X.text("NXZ-U15"), X.text("NXZ-U16"), X.text("NXZ-U26")])]   # issue 9
     assert league.roster_offer == NEW and RF.offer(Game(real=real), None, None, store, ask=lambda q, items: 1) is None
     league.roster_offer = ""
     assert league.to_json() == before                                                  # nothing else of the league changed

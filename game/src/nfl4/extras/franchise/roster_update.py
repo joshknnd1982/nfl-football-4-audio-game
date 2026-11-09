@@ -9,8 +9,9 @@ from older rosters is opened (rosters_flow.offer). This module is the rules of t
   rosters it was made from.
 * `offer_due(league, real)`: the version to offer, or "": a league of the real rosters older than the game's file whose offer of that file was not
   answered (`roster_offer`). `allowed(league)`: never inside the draft, the roster cut, the market, the re-signing or an open tag (the offer waits).
-* `update(league, real, known)`: design 21.10 points 1 to 4. Only the 31 computer teams change; the player's team (`league.team`) and every man of it
-  are never touched. Each man of a computer team's lines in the file: already there -> the file's position, number and list; on another computer team ->
+* `update(league, real, known, own_too=False)`: design 21.10 points 1 to 4. Only the 31 computer teams change; the player's team (`league.team`) and
+  every man of it are never touched, unless the player chose the offer's third answer (`own_too`, GitHub issue 9, D-222): then his team follows the
+  same rules, his chart keeps the men he put first, and his records of men who left go. Each man of a computer team's lines in the file: already there -> the file's position, number and list; on another computer team ->
   he moves with his contract; on the player's team -> he stays with the player and the computer team does without him; a free agent of the league (free,
   released or retired) -> he signs at the market price; not in the league -> he joins with the bench rule's rating and hashed age
   (real_roster.bench_rating, bench_age) at the market price. A man of a computer team the file does not have on that team: a real man the file has
@@ -232,15 +233,45 @@ def _trim_squad(league, team: int, file_names: set) -> int:
         gone += 1
 
 
-def update(league, real, known=frozenset()) -> dict:
+def _clean_own_records(league, team: int, was_on: dict) -> int:
+    """GitHub issue 9 (D-222): after the player's own team was brought up too, his records name only men who are still where they were: an injured
+    reserve row whose man is no longer on injured reserve goes (reserve.check: every row's man is on the list), and a to-do item (an injury or a
+    who-starts question, a trade offer, a trade demand) that names a man who left the team goes, as after a trade. Returns the items dropped."""
+    from .reserve import ON_IR
+    gone = {pid for pid, t in was_on.items() if t == team and (league.players[pid].team != team or league.players[pid].status not in ON_TEAM)}
+    found = league.injuries.get("reserve")
+    if isinstance(found, dict) and isinstance(found.get("placed"), list):
+        found["placed"][:] = [row for row in found["placed"] if row and row[0] in league.players and league.players[row[0]].status == "list"
+                              and league.players[row[0]].roster_list in ON_IR]
+
+    def names(value) -> set:
+        if isinstance(value, bool):
+            return set()
+        if isinstance(value, int):
+            return {value}
+        if isinstance(value, (list, tuple)):
+            return set().union(*(names(v) for v in value)) if value else set()
+        return set()
+    before = len(league.todo)
+    league.todo[:] = [item for item in league.todo
+                      if not names([item.get(k) for k in ("player", "players", "trade", "demand") if k in item]) & gone]
+    return before - len(league.todo)
+
+
+def update(league, real, known=frozenset(), own_too: bool = False) -> dict:
     """Design 21.10 points 1 to 4 (see the module's text). `known`: known_real_names. Returns the counts for the log; n, the sentence's number, is the
-    men a computer team has now that it had not before (moved or joined). Raises LeagueError when `real` is not the real rosters."""
+    men a computer team has now that it had not before (moved or joined). Raises LeagueError when `real` is not the real rosters.
+    `own_too` (GitHub issue 9, D-222: the tester, who had played no game and made no trade, "My roster wasn't updated"; the player's third answer of
+    the offer): the player's own team is brought up to the file like the 31 others, with the same rules, and n counts its men too; the men he put
+    first on his chart (depth.order) stay first while they are with him and a chosen starter who left is told once (real_roster's own rules), and his
+    records that name a man who left go (_clean_own_records)."""
     from . import draft as DR
     from .league import LeagueError
     teams = RR.file_teams(real)
     if not teams:
         raise LeagueError("the rosters are not the real rosters (layout 2)")
-    own = league.team
+    mine_too = league.team if own_too else 0
+    own = 0 if own_too else league.team                      # 0: no team is left out
     computer = [t for t in range(1, D.TEAMS + 1) if t != own]
     by_name: dict = {}
     for p in sorted(league.players.values(), key=lambda p: p.id):
@@ -307,13 +338,15 @@ def update(league, real, known=frozenset()) -> dict:
         _chart(league, t, placed[t], teams[t])
         RR.refresh_view(league, t)
         RR.update_sum(league, t)
+    if mine_too:
+        counts["records_dropped"] = _clean_own_records(league, mine_too, was_on)
     version = version_of(real)
     league.roster_version = version
     league.roster_offer = version
     # the sentence's number (rule 0.28 (4): what was done): the men a computer team has now that it did not have before, so a man who signed and
     # was cut again by the same update is not counted
     counts["n"] = sum(1 for p in league.players.values() if p.status in ON_TEAM and p.team in weakest and was_on.get(p.id) != p.team)
-    debuglog.event("franchise", "league_rosters_updated", logging.INFO, version=version, **counts)        # rule 0.15 (design 21.11)
+    debuglog.event("franchise", "league_rosters_updated", logging.INFO, version=version, own_team=bool(mine_too), **counts)   # rule 0.15 (21.11)
     return counts
 
 
@@ -328,6 +361,9 @@ def _chart(league, team: int, placed: list, file_team) -> None:
         first = [pid for pid in active if players[pid].position == position]
         chart[position] = first + [pid for pid in old.get(position, ()) if pid not in first]
     by_name = {players[pid].name.casefold(): pid for pid in active}
+    order = (league.depth or {}).get("order", {}) if team == league.team else {}     # issue 9: the player's own returners stay first
+    on_team = {pid for pid, p in players.items() if p.team == team and p.status == "active"}
     for role in RM.ROLES:
-        chart[role] = [by_name[n.casefold()] for n in file_team.roles.get(role, ()) if n.casefold() in by_name]
+        chosen = [pid for pid in order.get(role, ()) if pid in on_team]
+        chart[role] = chosen + [by_name[n.casefold()] for n in file_team.roles.get(role, ()) if n.casefold() in by_name and by_name[n.casefold()] not in chosen]
     league.chart[team - 1] = chart

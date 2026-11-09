@@ -272,3 +272,4 @@
 - NXB-F27 (help, say5): " Defenses where the defenders guard areas of the field. ". description of the list dg07 Zone Coverages (NX-P8)
 - NXB-F28 (help, say5): " Defenses where each defender covers one receiver. ". description of the list dg08 Man Coverages (NX-P8)
 - NXB-F29 (help, say5): " Defenses with two or four defenders guarding the far field. ". description of the list dg09 Two Deep Coverages (NX-P8)
+- NXB-F30 (help, say5): " Defenses with extra help against long passes. ". description of the list dg10 Deep Help (NX-P8)

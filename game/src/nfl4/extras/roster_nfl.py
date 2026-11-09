@@ -449,17 +449,153 @@ def read_previous(text: str):
         out.setdefault(name_key(name), (int(m.group(1)), status, group, name))
     return out
 
-def return_elevations(teams, previous, notes):
+# ----- the team's transactions page (GitHub issue 9, D-222) -----
+# A club's /team/transactions/ page lists its moves, the newest day first, in plain sentences ("Elevated RB Cody Schrader to active roster.",
+# "The Detroit Lions sign CB Nick Whiteside to the active roster from the practice squad.", "Released LB Austin Keys."). The game reads it only for a
+# team whose roster page is over a league limit, to tell a game-day elevation from a real promotion and to see a release the roster page has not
+# caught up with. Each clause is one move; a man's newest clause that says one of these kinds decides.
+ELEVATED, PROMOTED, RELEASED, RESERVE, SIGNED_SQUAD = "elevated", "promoted", "released", "reserve", "squad"
+ELEVATIONS_MAX = 2       # NFL: at most two practice squad men elevated for one game (SRC-SECONDARY, the clubs' own transactions pages)
+_VERB = r"(?:signs?|signed|re-sign\w*|releas\w*|waiv\w*|plac\w*|elevat\w*|activat\w*|promot\w*|claim\w*|acquir\w*|trad\w*|designat\w*|terminat\w*|open\w*|return\w*|restor\w*|revert\w*|exercis\w*|agree\w*|extend\w*)"
+# a clause ends at a sentence's full stop (not the one of "Jr." or of an initial, "K.J."), a semicolon, or ", " / " and " before a new verb
+_CLAUSE = re.compile(r"(?<!\bJr)(?<!\bSr)(?<!\bSt)(?<!\b[A-Z])\.(?=\s|$)|;|,\s*(?=(?:and\s+)?" + _VERB + r"\b)|\band\s+(?=(?:the team\s+)?" + _VERB + r"\b)",
+                     re.IGNORECASE)
+
+
+def transaction_clauses(page: bytes) -> list:
+    """The page's moves as plain clauses, in page order (the newest first)."""
+    text = page.decode("utf-8", "replace")
+    text = re.sub(r"<script.*?</script>|<style.*?</style>", " ", text, flags=re.S | re.I)
+    text = _html.unescape(re.sub(r"<[^>]+>", "\n", text)).replace("\xa0", " ")
+    out = []
+    for line in text.split("\n"):
+        line = " ".join(line.split())
+        if len(line) >= 12:
+            out.extend(c.strip() for c in _CLAUSE.split(line) if c and len(c.strip()) >= 8)
+    return out
+
+
+def move_kind(clause: str) -> str:
+    """The kind of move a clause states ("" when it is none of the five, or not a move)."""
+    c = clause.casefold()
+    if "elevat" in c or re.search(r"activat\w*\b.*\bfrom (?:the )?practice squad", c):
+        return ELEVATED
+    if re.search(r"releas|waiv|terminat", c):
+        return RELEASED
+    if re.search(r"activat\w*\b.*\bfrom\b.*(?:reserve|\bir\b|injured|\bpup\b|\bnfi\b|physically|non-football)", c):
+        return PROMOTED                                   # back on the active roster from a list
+    if re.search(r"\bplac\w*\b.*(?:reserve|\bir\b|injured|\bpup\b|\bnfi\b|physically|non-football)", c):
+        return RESERVE
+    if "active roster" in c or "promot" in c or re.search(r"\bsign\w*\b.*\bfrom (?:the )?practice squad", c) or re.search(r"acquir|trad", c):
+        return PROMOTED
+    if "practice squad" in c and re.search(r"\bsign|claim|\badd", c):
+        return SIGNED_SQUAD
+    if "practice squad" not in c and re.search(r"\bsign\w*\b|\bclaim\w*\b", c):
+        return PROMOTED                                   # "The Detroit Lions sign TE Tyler Conklin.": a contract of the 53
+    return ""
+
+
+def newest_moves(page: bytes | None, names) -> dict:
+    """{name key: (kind, clause)} of each of `names` that the transactions page names in a clause of a known kind: his newest such clause."""
+    if not page:
+        return {}
+    clauses = transaction_clauses(page)
+    out = {}
+    for name in names:
+        pattern = re.compile(r"(?<![\w'])" + re.escape(name) + r"(?![\w'])", re.IGNORECASE)
+        for clause in clauses:
+            if pattern.search(clause):
+                kind = move_kind(clause)
+                if kind:
+                    out[name_key(name)] = (kind, clause[:160])
+                    break
+    return out
+
+
+def _drop_roles(team, name: str) -> None:
+    for role in RF.ROLES:
+        team.roles[role] = [n for n in team.roles.get(role, []) if n != name]
+
+
+def return_elevations(teams, previous, notes, moves=None):
     """A practice squad man elevated for a game day stays a squad man (NFL: he reverts after the game; at most 2 a game). A team page listing more
-    than 53 active men on a game day shows its elevations as active: every active man who was on that team's squad in the previous checked file
-    goes back to the squad (at most 2), and the report says so."""
+    than 53 active men on a game day shows its elevations as active, so men go back to the squad, but only as many as the team is over 53, at most
+    ELEVATIONS_MAX, and never more than its squad has room for: an elevated man is still one of its squad's men, so a page's squad plus its
+    elevations is within the league's squad limit (GitHub issue 9, D-222: the Lions' page of 2026-11-09 listed 54 active men and 16 squad men; two
+    men of the previous file's squad were sent back and the squad of 18 kept the whole team from the update, though the Lions had signed both to
+    their 53). Who goes back, in this order: a man the team's transactions page (`moves`: {team: newest_moves}) says was elevated; a man on this
+    team's squad in the previous checked file; a man who came from another team's squad, or whom the page says was signed to the squad. Never a man the page says was promoted, signed to the 53 or activated from a list, nor one of this team's lists or another team's 53 in
+    the previous file. The report says so."""
+    moves = moves or {}
     for t, team in teams.items():
         active = team.active()
-        if len(active) <= RF.ACTIVE_MAX:
+        over = len(active) - RF.ACTIVE_MAX
+        if over <= 0:
             continue
-        back = [m for m in active if previous.get(name_key(m.name), (0, ""))[:2] == (t, "PS")][:2]
-        for m in back:
+        room = RF.SQUAD_MAX - len(team.squad())
+        wanted = min(over, ELEVATIONS_MAX, max(0, room))
+        said = moves.get(t, {})
+
+        def rank(m):
+            kind = said.get(name_key(m.name), ("", ""))[0]
+            before = previous.get(name_key(m.name))
+            if kind == ELEVATED:
+                return 0
+            if kind in (PROMOTED, RESERVE, RELEASED):
+                return None
+            if before is not None and before[:2] == (t, "PS"):
+                return 1
+            if kind == SIGNED_SQUAD or (before is not None and before[1] in ("PS", "PSI", "PSX") and before[0] != t):
+                return 2                                  # a man on no team before may be a free agent signed to the 53: only the page says
+
+            return None
+        ranked = sorted((r, n, m) for n, m in enumerate(active) for r in [rank(m)] if r is not None)
+        for _r, _n, m in ranked[:wanted]:
             m.status = "PS"
-            for role in RF.ROLES:
-                team.roles[role] = [n for n in team.roles[role] if n != m.name]
-            notes.append("T%02d %s: active on the page, on the squad in the previous file: a game-day elevation, back on the practice squad" % (t, m.name))
+            _drop_roles(team, m.name)
+            why = said.get(name_key(m.name), ("", ""))[1]
+            notes.append("T%02d %s: active on the page on a game day, a game-day elevation, back on the practice squad (%s)"
+                         % (t, m.name, ("the team's transactions: " + why) if why else "on a squad in the previous file"))
+
+
+def fit_limits(t: int, team, base_team, moves: dict, notes: list) -> None:
+    """A team read from its pages that is still over a league limit after return_elevations (GitHub issue 9, D-222: a club's roster page lags its
+    moves by a day; the Commanders' page of 2026-11-09 listed 18 squad men, one of them released): each man of the list over its limit whose newest
+    move on the team's transactions page is a release leaves the team, and a man the page lists active whose newest move put him on a list goes back
+    to the list the base file has him on; then the men new to an over-full squad (not on it in the base file) wait for the next update, a man with no
+    jersey number yet first. Only as many as the list is over. The rest of the team stays as its pages have it. Notes say each step."""
+    base_lists = {name_key(m.name): m.status for m in (base_team.men if base_team is not None else [])}
+    said = moves or {}
+
+    def kind(m):
+        return said.get(name_key(m.name), ("", ""))[0]
+
+    over = len(team.active()) - RF.ACTIVE_MAX
+    for m in list(team.active()):
+        if over <= 0:
+            break
+        before = base_lists.get(name_key(m.name))
+        if kind(m) == RELEASED:
+            team.men.remove(m)
+            _drop_roles(team, m.name)
+            over -= 1
+            notes.append("T%02d %s: listed active, released by the team's transactions: left out" % (t, m.name))
+        elif kind(m) == RESERVE and before in RF.RESERVE:
+            m.status = before
+            _drop_roles(team, m.name)
+            over -= 1
+            notes.append("T%02d %s: listed active, placed on a list by the team's transactions: kept on %s" % (t, m.name, before))
+    over = len(team.squad()) - RF.SQUAD_MAX
+    squad = team.squad()
+    for m in [m for m in squad if kind(m) == RELEASED]:
+        if over <= 0:
+            break
+        team.men.remove(m)
+        over -= 1
+        notes.append("T%02d %s: on the squad page, released by the team's transactions: left out" % (t, m.name))
+    if over > 0:
+        new = [m for m in team.squad() if base_lists.get(name_key(m.name)) != RF.SQUAD]
+        new.sort(key=lambda m: (m.number not in ("", "-"), -team.men.index(m)))
+        for m in new[:over]:
+            team.men.remove(m)
+            notes.append("T%02d %s: new on a squad page over the league's limit: waits for the next update" % (t, m.name))

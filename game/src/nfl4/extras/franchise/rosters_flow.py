@@ -20,8 +20,9 @@ The request runs on a thread of its own (calendar_flow's way), so Escape stops t
 `rosters_download` with the result, the version and the size.
 
 THE OFFER (`offer`, `at_opening`): a franchise keeps its league; when a league made from older rosters is opened (or the item above is used while it is in
-use) the player is asked once, "No, keep my league as it is" first, whether the other 31 teams come up to the newer file (roster_update.py). Never in a
-game, the draft or the cut: then it waits for the next opening. Before the change league.sav is kept as league.sav.before-rosters-<date>.
+use) the player is asked once, "No, keep my league as it is" first, whether the other 31 teams come up to the newer file (roster_update.py), or, the
+third answer (GitHub issue 9, D-222), all 32 with his own team too. Never in a game, the draft or the cut: then it waits for the next opening. Before
+the change league.sav is kept as league.sav.before-rosters-<date>.
 
 THE CONVERSION'S SENTENCE (`at_opening`): a league of format 17 or older converted when the store opened it (store._convert, real_roster.convert) is told
 once what was done, where the player first opens the franchise.
@@ -462,13 +463,14 @@ def offer(g, speech, keys, store, ask=None) -> str | None:
         debuglog.event("rosters", "offer_waits", logging.INFO, version=version, stage=league.stage, stage_no=league.stage_no)
         return None
     question = X.text("NXZ-U14", label=RU.spoken_date(version))
-    answer = (ask or _menu_ask(speech, keys))(question, [X.text("NXZ-U15"), X.text("NXZ-U16")])
-    debuglog.event("rosters", "offer_answered", logging.INFO, version=version, update=answer == 1)
-    if answer != 1:
+    # GitHub issue 9 (D-222): a third answer brings the player's own team up too; "No" stays first, so Enter and Escape change nothing
+    answer = (ask or _menu_ask(speech, keys))(question, [X.text("NXZ-U15"), X.text("NXZ-U16"), X.text("NXZ-U26")])
+    debuglog.event("rosters", "offer_answered", logging.INFO, version=version, update=answer in (1, 2), own_team=answer == 2)
+    if answer not in (1, 2):
         league.roster_offer = version
         store.save()
         return X.text("NXZ-U18")
-    return apply_update(g, store, real, version)
+    return apply_update(g, store, real, version, own_too=answer == 2)
 
 
 def backup_names(folder: str) -> set:
@@ -504,9 +506,9 @@ def keep_league_copy(store, version: str) -> str | None:
     return target if files.copy(D.LEAGUE_FILE, target) else None
 
 
-def apply_update(g, store, real, version: str) -> str:
-    """Yes: the league saved and kept as a copy, the 31 teams brought up to the file (roster_update.update), the whole-file check, the league saved.
-    Anything that fails puts the league back as it was (nothing half done) and says so."""
+def apply_update(g, store, real, version: str, own_too: bool = False) -> str:
+    """Yes: the league saved and kept as a copy, the 31 teams (`own_too`: all 32, the player's too; issue 9) brought up to the file
+    (roster_update.update), the whole-file check, the league saved. Anything that fails puts the league back as it was (nothing half done) and says so."""
     from .league import LeagueRecord
     league = store.league
     store.save()
@@ -514,7 +516,7 @@ def apply_update(g, store, real, version: str) -> str:
     before = league.to_json()
     try:
         known = RU.known_real_names(real, backup_names(folder_of(g)))
-        counts = RU.update(league, real, known)
+        counts = RU.update(league, real, known, own_too=True) if own_too else RU.update(league, real, known)
         league.check()
     except Exception:
         log.exception("the league could not be brought up to the newer rosters")
@@ -523,11 +525,11 @@ def apply_update(g, store, real, version: str) -> str:
         again.roster_offer = version                      # asked and answered: not asked again at every opening (the log has the cause)
         store.league = again
         store.save()
-        debuglog.event("rosters", "league_update_failed", logging.WARNING, version=version)
-        return X.text("NXZ-U21")
+        debuglog.event("rosters", "league_update_failed", logging.WARNING, version=version, own_team=own_too)
+        return X.text("NXZ-U28" if own_too else "NXZ-U21")
     store.save()
-    debuglog.event("rosters", "league_updated", logging.INFO, version=version, copy=copy, n=counts["n"])
-    return X.text("NXZ-U17", label=RU.spoken_date(version), n=counts["n"])
+    debuglog.event("rosters", "league_updated", logging.INFO, version=version, copy=copy, n=counts["n"], own_team=own_too)
+    return X.text("NXZ-U27" if own_too else "NXZ-U17", label=RU.spoken_date(version), n=counts["n"])
 
 
 # ----- where the player opens the franchise (mode.py's hooks) -----

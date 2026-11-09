@@ -1,4 +1,3 @@
-- NXH-35 (help, say5): " A franchise is a league that lasts from season to season. Your players have ratings, grow older, improve and decline, and retire. ". F6 addition (H12, C6), while the franchise is in use
 - NXH-37 (help, say5): " After the play offs comes the offseason with the draft and the roster cut. Before a game you hear the news and your to do list. Extra work you leave undone puts you behind the other teams. ". F6 addition (H12, C6), after NXH-35
 - NXH-36 (help, say5): " Rating: a player's skill from 40 to 99, where 70 is average. Potential: how fast a young player may still improve. ". F7 addition (H12, C6), while the franchise is in use
 - NXH-38 (help, say5): " Draft: the yearly choice of new players; the weakest teams pick first. Rookie: a player in his first season. Released: let go from the team. ". F7 addition (H12, C6), after NXH-36
@@ -454,3 +453,5 @@
 - NXU-G03 (sentence, say2): " the goal of this game: lose by no more than <n> points, or win. ". before the kick-off, the weaker team (SX.8n)
 - NXU-G04 (sentence, say2): " last week's goal was met. ". before the menu, after the news (SX.8n)
 - NXU-G05 (sentence, say2): " last week's goal was missed. ". before the menu, after the news (SX.8n)
+- NXH-45 (help, say5): " Players have a personality and a morale, which moves a rating by up to 2 points in a game. An underpaid player may hold out at camp and ask to be traded. Every game has a goal. ". F6, after NXH-44 (SX.8n)
+- NWH01 (remark, say2): " <player> of the <team> wants to be traded. ". a player asks to be traded (news, SX.8n)

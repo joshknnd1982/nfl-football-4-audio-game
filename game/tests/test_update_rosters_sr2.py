@@ -126,7 +126,8 @@ def test_settlements_and_game_day_elevations():
     assert "Squad Man" not in {m.name for m in teams[9].men} and any("no longer applies" in n for n in notes)
     previous = {U.name_key("Man 3"): (9, "PS", "QB", "Man 3"), U.name_key("Man 4"): (9, "PS", "QB", "Man 4"), U.name_key("Man 5"): (9, "PS", "QB", "Man 5")}
     U.return_elevations(teams, previous, notes)
-    assert [m.name for m in teams[9].squad()] == ["Man 3", "Man 4"] and len(teams[9].active()) == 52       # at most 2 a game
+    # issue 9 (D-222): only as many as the team is over 53 (54 active: one), never more than 2 a game nor than its squad has room for
+    assert [m.name for m in teams[9].squad()] == ["Man 3"] and len(teams[9].active()) == 53
     text = "# x\nS001 = T18 | Thomas Harper | IR | nflverse RES\n# S002 = T01 | Not | PS | commented out\n"
     assert U.read_settlements(text) == [("S001", 18, "Thomas Harper", "IR", "nflverse RES")]
     assert all(s[1] in range(1, 33) for s in U.read_settlements(U.SETTLEMENTS.read_bytes().decode("utf-8")))

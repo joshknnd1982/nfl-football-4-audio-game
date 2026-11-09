@@ -14,8 +14,12 @@ the lists, the numbers, Madden's 22 positions from the team's chart and the page
     had (the maintainer's checked number);
   * a game-day elevation goes back to the practice squad (the script's return_elevations, against the player's file);
   * a man whose list or position word the conversion does not know (and the base file does not have) is left out, with a log line;
-  * a team whose pages cannot be read, are not allowed by robots.txt, list fewer than 40 active men, or fail the game's checks (54 active men on a
-    game day) stays as the base file has it (said and logged); with fewer than MIN_TEAMS teams read the NFL's pages count as not read;
+  * a team whose roster page is over a league limit (more than 53 active men on a game day, more than 17 on the squad: a club's page lags its moves
+    by a day) has its transactions page read too (GitHub issue 9, D-222): only its game-day elevations go back to the squad (never more than the
+    squad has room for, never a man the page says was promoted), a man the page says was released leaves, and the men new to an over-full squad wait
+    for the next update (roster_nfl.return_elevations, fit_limits);
+  * a team whose pages cannot be read, are not allowed by robots.txt, list fewer than 40 active men, or still fail the game's checks stays as the
+    base file has it (said and logged); with fewer than MIN_TEAMS teams read the NFL's pages count as not read;
   * the free agents follow: a man who is now on a team leaves the list, a man of the player's file who is on no team's pages now joins it with his
     position and age (released or not re-signed; the maintainer's audit of rule 0.34 stays the script's work).
 The result passes the game's own checks (roster_file.check, the list loader) before anything is written (extras/franchise/rosters_flow.py).
@@ -40,6 +44,7 @@ log = logging.getLogger("nfl4.extras")
 
 SEASON = 2026
 ROSTER_PAGE, DEPTH_PAGE, ROBOTS = "https://%s/team/players-roster/", "https://%s/team/depth-chart/", "https://%s/robots.txt"
+MOVES_PAGE = "https://%s/team/transactions/"     # GitHub issue 9 (D-222): read only for a team whose roster page is over a league limit
 ROBOTS_AGENT = "nfl4"
 MIN_ACTIVE = 40          # a roster page with fewer active men was not read whole (the script's rule)
 MIN_TEAMS = 24           # with fewer teams read from their pages the NFL's pages count as not read (a block, a new page layout)
@@ -100,8 +105,14 @@ def _with_ages(team: RF.Team, page_men, previous_ages: dict) -> None:
         m.seasons = seasons
 
 
+def _over_limit(page_men) -> bool:
+    lists = [N.SECTIONS.get(pm.section.strip().casefold()) for pm in page_men]
+    return lists.count("") > RF.ACTIVE_MAX or lists.count(RF.SQUAD) > RF.SQUAD_MAX
+
+
 def fetch_team(fetch, host: str):
-    """The pages of one team: (page_men, depth) or (None, reason). Network only, no conversion."""
+    """The pages of one team: (page_men, depth, moves page or None) or (None, reason). Network only, no conversion. The transactions page is asked
+    only when the roster page is over a league limit (issue 9); when it cannot be read the team goes on without it."""
     from ..data.web import WebError
     try:
         rp = _robots(fetch, host)
@@ -118,7 +129,13 @@ def fetch_team(fetch, host: str):
         if active < MIN_ACTIVE:
             return None, "the roster page has %d active men" % active
         depth_page = _page(fetch, urls[1])
-        return (page_men, N.parse_depth_page(depth_page) if depth_page is not None else None), ""
+        moves = None
+        if _over_limit(page_men) and rp.can_fetch(ROBOTS_AGENT, MOVES_PAGE % host):
+            try:
+                moves = _page(fetch, MOVES_PAGE % host)
+            except WebError as exc:
+                log.info("the transactions page of %s could not be read: %s", host, exc)
+        return (page_men, N.parse_depth_page(depth_page) if depth_page is not None else None, moves), ""
     except WebError as exc:
         return None, "%s (%s)" % (exc.kind, exc.detail)
 
@@ -134,7 +151,8 @@ def fetch_pages(fetch, stop: threading.Event | None = None, workers: int = WORKE
         pages, reason = fetch_team(fetch, host)
         results[t] = (pages, reason)
         debuglog.event("rosters", "nfl_pages", logging.INFO, team=nick, read=pages is not None,
-                       men=len(pages[0]) if pages is not None else 0, why=reason or None)
+                       men=len(pages[0]) if pages is not None else 0, why=reason or None,
+                       moves_page=(pages[2] is not None) if pages is not None and len(pages) > 2 else None)
 
     with ThreadPoolExecutor(max_workers=max(1, workers), thread_name_prefix="nfl4-nfl-pages") as pool:
         list(pool.map(one, N.TEAMS))
@@ -168,6 +186,7 @@ def convert(pages: dict, base_text: str) -> Live:
             counts[N.name_key(m.name)] = counts.get(N.name_key(m.name), 0) + 1
     league = {N.name_key(m.name): m for team in base_teams.values() for m in team.men if counts[N.name_key(m.name)] == 1}
     live = Live()
+    moves: dict = {}                                        # issue 9: {team: newest_moves} of the teams over a limit
     for t, nick, *_rest in N.TEAMS:
         got, reason = pages.get(t, (None, "not asked"))
         if got is None:
@@ -175,7 +194,9 @@ def convert(pages: dict, base_text: str) -> Live:
                 live.teams[t] = base_teams[t]
                 live.kept.append((t, reason))
             continue
-        page_men, depth = got
+        page_men, depth = got[0], got[1]
+        if len(got) > 2 and got[2] is not None:
+            moves[t] = N.newest_moves(got[2], [pm.name for pm in page_men])
         mine = dict(league)
         mine.update({N.name_key(m.name): m for m in (base_teams[t].men if t in base_teams else [])})
         built = N.build_team(t, page_men, depth, [], None, [], known={k: m.pos for k, m in mine.items()})
@@ -193,8 +214,14 @@ def convert(pages: dict, base_text: str) -> Live:
         live.read.append(t)
     if live.read:
         elevated: list = []
-        N.return_elevations({t: live.teams[t] for t in live.read}, N.read_previous(base_text), elevated)
+        N.return_elevations({t: live.teams[t] for t in live.read}, N.read_previous(base_text), elevated, moves)
+        for t in live.read:                                 # issue 9: a page a day behind its moves is fitted, not thrown away
+            team = live.teams[t]
+            if len(team.active()) > RF.ACTIVE_MAX or len(team.squad()) > RF.SQUAD_MAX:
+                N.fit_limits(t, team, base_teams.get(t), moves.get(t, {}), elevated)
         live.notes.extend(elevated)
+        for note in elevated:
+            debuglog.event("rosters", "nfl_fitted", logging.INFO, note=note[:200])
     # a team read from its pages that fails the game's checks (more than 53 active men on a game day, no kicker...) stays as the base has it:
     # one team's page of the moment never stops the others' update
     for _round in range(3):

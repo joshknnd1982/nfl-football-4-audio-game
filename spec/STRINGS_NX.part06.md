@@ -1,5 +1,3 @@
-- NXH-45 (help, say5): " Players have a personality and a morale, which moves a rating by up to 2 points in a game. An underpaid player may hold out at camp and ask to be traded. Every game has a goal. ". F6, after NXH-44 (SX.8n)
-- NWH01 (remark, say2): " <player> of the <team> wants to be traded. ". a player asks to be traded (news, SX.8n)
 - NWH02 (remark, say2): " unhappy with the <team>, <player> asks for a trade. ". a player asks to be traded (news, SX.8n)
 - NWH03 (remark, say2): " the <team> hear a trade request from their <position>, <player>. ". a player asks to be traded (news, SX.8n)
 - NWH04 (remark, say2): " <player> tells the <team> he wants out. ". a player asks to be traded (news, SX.8n)
@@ -94,7 +92,7 @@
 - NXZ-U11 (answer, say5): "No, keep my own rosters". NXZ-U10's first answer (Enter and Escape take it)
 - NXZ-U12 (answer, say5): "Yes, use the new rosters". NXZ-U10's second answer
 - NXZ-U13 (sentence, say5): " You kept your own rosters. Nothing was changed. ". the download's result after NXZ-U11
-- NXZ-U14 (prompt, say2): " There are newer real rosters, from <label>. Bring the other 31 teams up to them? Your own team is not changed. ". the offer of design 21.10, once for each newer rosters.txt, when a franchise made from older rosters is opened or after a download; never in a game, the draft or the cut
+- NXZ-U14 (prompt, say2): " There are newer real rosters, from <label>. Bring the other 31 teams up to them, or all 32 with your own team too? ". the offer of design 21.10, once for each newer rosters.txt, when a franchise made from older rosters is opened or after a download; never in a game, the draft or the cut
 - NXZ-U15 (answer, say2): "No, keep my league as it is". NXZ-U14's first answer: Enter changes nothing (rule 0.23's spirit, Q-080)
 - NXZ-U16 (answer, say2): "Yes, bring the other teams up". NXZ-U14's second answer
 - NXZ-U17 (sentence, say2): " The other 31 teams now have the rosters of <label>: <n> players moved or joined. ". after NXZ-U16 (design 21.10 (4)): <n> the men who moved between computer teams, signed from the free agents or joined the league
@@ -106,6 +104,9 @@
 - NXZ-U23 (sentence, say5): " The pages of <n> teams could not be read just now, so those teams stay as they were. ". after NXZ-U22 when two or more teams were kept (D-196)
 - NXZ-U24 (sentence, say5): " The N. F. L. teams' pages could not be read, so they come from the game's checked file on GitHub. ". after NXZ-U03 when the NFL's pages failed and GitHub's checked file was newer (D-196)
 - NXZ-U25 (sentence, say5): " The pages of one team could not be read just now, so that team stays as it was. ". after NXZ-U22 when one team was kept (D-196)
+- NXZ-U26 (answer, say2): "Yes, all 32 teams, my own team too". NXZ-U14's third answer (GitHub issue 9, D-222): the player's team is brought up to the file too; the men he put first on his chart stay first
+- NXZ-U27 (sentence, say2): " All 32 teams, yours too, now have the rosters of <label>: <n> players moved or joined. The players you put first on your depth chart stay first. ". after NXZ-U26 (issue 9, D-222): <n> the men who moved between teams, signed from the free agents or joined the league
+- NXZ-U28 (sentence, say2): " The teams could not be brought up to the new rosters, so your league stays as it is. ". after NXZ-U26 when the update failed its checks (the log has the cause); the league is put back as it was (issue 9, D-222)
 - NXL-60 (piece, piece): "quarterbacks". the heading of a position in F9's roster (SR.6, design 21.8)
 - NXL-61 (piece, piece): "halfbacks". the heading of a position in F9's roster (SR.6, design 21.8)
 - NXL-62 (piece, piece): "fullbacks". the heading of a position in F9's roster (SR.6, design 21.8)
@@ -295,4 +296,3 @@
 - BN63 (remark, say): " Crowd noise is the home team's extra player, and it is working overtime today. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN64 (remark, say): " A few clouds are rolling through, but nothing that should bother anyone on the field. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN65 (remark, say): " There is a hush before the snap and a roar after the whistle. That is football on the radio, too. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN66 (remark, say): " The grass is holding up well, and the footing looks good for both teams. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)

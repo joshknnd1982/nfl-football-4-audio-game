@@ -186,9 +186,14 @@ surnames and the typed coach.
 To bring the rosters up to today, choose **F9, Customize (or F9, Franchise), get the latest rosters**. Since 0.16.10 the game reads them
 straight from the NFL: every team's own roster page and depth chart page, converted into the game's rosters in a few seconds (the lists, the
 numbers, the positions, the return men, each player's age and seasons; a player the game knows keeps his checked position and depth place, new
-players come in behind). Your rosters.txt and free_agents.txt are kept as copies first, a team whose pages cannot be read right then stays as it
-was, and a franchise in use is asked whether its other 31 teams come up to the new rosters. The game's page on GitHub, with the maintainer's
-checked file, is asked at the same time and used when the NFL's pages cannot be read.
+players come in behind). Your rosters.txt and free_agents.txt are kept as copies first, and a team whose pages cannot be read right then stays as it
+was. The day after a game a team's roster page is often a day behind its moves (the players called up from the practice squad for the game still
+listed on the 53, a release not yet taken off): for such a team the game also reads the team's own transactions page, sends back to the practice
+squad only the players called up for the game, and leaves out a player the team has released, so the team still comes up to date. A franchise in
+use is then asked, "No, keep my league as it is" first, whether its other 31 teams come up to the new rosters, or all 32 teams with your own team
+too. With your own team too, your team becomes its real roster of that day; the players you put first on your depth chart stay first while they are
+with you, and a starter you chose who left is named once. The game's page on GitHub, with the maintainer's checked file, is asked at the same time
+and used when the NFL's pages cannot be read.
 
 Every player plays only his own position, as the teams' depth charts of 2026-10-24 list it: a quarterback is never a receiver, a safety
 never a cornerback; a place a team has too few real players for gets a made-up player of that position. The starters play the most, as in
