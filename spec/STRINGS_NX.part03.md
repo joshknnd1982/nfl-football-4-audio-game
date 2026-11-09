@@ -1,4 +1,3 @@
-- NXY-R89 (help, say5): " Receivers run across the field at different depths, so one defender cannot cover them all. Good against defenders guarding areas; weak against man for man defense. ". description of O089 Levels (NX-P8; heard with D)
 - NXY-R90 (help, say5): " The tight end crosses the middle while other receivers go deep or wide. Good against one deep defender; weak against two deep defenders. ". description of O090 Y Cross (NX-P8; heard with D)
 - NXY-R91 (help, say5): " One receiver runs a short stop and another runs deep toward the corner. Good against two deep defenders; weak against one deep defender. ". description of O091 Smash (NX-P8; heard with D)
 - NXY-R92 (help, say5): " A receiver runs deeper than on a short stop, then turns back to the quarterback. Good against defenders guarding areas; defenders who bump the receivers can cover it. ". description of O092 Curl (NX-P8; heard with D)
@@ -271,3 +270,5 @@
 - NXB-F25 (help, say5): " Defenses where extra players rush the quarterback. ". description of the list dg05 Blitzes (NX-P8)
 - NXB-F26 (help, say5): " Defenses that look like a blitz or confuse the blockers. ". description of the list dg06 Pressure Looks (NX-P8)
 - NXB-F27 (help, say5): " Defenses where the defenders guard areas of the field. ". description of the list dg07 Zone Coverages (NX-P8)
+- NXB-F28 (help, say5): " Defenses where each defender covers one receiver. ". description of the list dg08 Man Coverages (NX-P8)
+- NXB-F29 (help, say5): " Defenses with two or four defenders guarding the far field. ". description of the list dg09 Two Deep Coverages (NX-P8)

@@ -1,5 +1,3 @@
-- NXB-F28 (help, say5): " Defenses where each defender covers one receiver. ". description of the list dg08 Man Coverages (NX-P8)
-- NXB-F29 (help, say5): " Defenses with two or four defenders guarding the far field. ". description of the list dg09 Two Deep Coverages (NX-P8)
 - NXB-F30 (help, say5): " Defenses with extra help against long passes. ". description of the list dg10 Deep Help (NX-P8)
 - NXB-F31 (help, say5): " Defenses for special situations, such as the last play of a half. ". description of the list dg11 Situation Defenses (NX-P8)
 - NXB-F32 (help, say5): " The kinds of kick that start a half or follow a score. ". description of the list kg01 Kick Offs (NX-P8)
@@ -468,3 +466,4 @@
 - NXN-02 (sentence, say5): " no news this week. ". F9 news with no news
 - NXN-03 (sentence, say2): " the news of the offseason. ". F9 news, the offseason's lines
 - NXN-04 (menu, say5): "earlier". F9 news, the earlier lines
+- NXH-34 (help, say5): " With a franchise. F9. the franchise menu: the to do list, the news, your roster, the league history, the team ratings, free agents and trades. ". F5 addition (H12, C6), while the franchise is in use

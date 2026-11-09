@@ -2732,6 +2732,7 @@ TEXTS: dict[str, str] = {
     'NXI-R40': ' nothing was changed for <player>. ',
     'NXI-R41': ' your roster is full, and nobody on it can be released for him now. ',
     'NXI-R42': ' that cannot be done now. ',
+    'NXI-R43': ' <player> comes back on a new contract of <contract>. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -5459,6 +5460,7 @@ SPEAKERS: dict[str, str] = {
     'NXI-R40': 'say5',
     'NXI-R41': 'say5',
     'NXI-R42': 'say5',
+    'NXI-R43': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -8186,6 +8188,7 @@ KINDS: dict[str, str] = {
     'NXI-R40': 'sentence',
     'NXI-R41': 'sentence',
     'NXI-R42': 'sentence',
+    'NXI-R43': 'sentence',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {

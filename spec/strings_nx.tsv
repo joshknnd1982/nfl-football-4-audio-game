@@ -2723,3 +2723,4 @@ NXI-R39	franchise	piece	say5	, hurt for <n> more games	F9 injured reserve: after
 NXI-R40	franchise	sentence	say5	 nothing was changed for <player>. 	F9 injured reserve: a confirmation answered with another key (D-216)
 NXI-R41	franchise	sentence	say5	 your roster is full, and nobody on it can be released for him now. 	F9 injured reserve: no man to release (D-216)
 NXI-R42	franchise	sentence	say5	 that cannot be done now. 	F9 injured reserve: any other reason (the log has it) (D-216)
+NXI-R43	franchise	sentence	say5	 <player> comes back on a new contract of <contract>. 	F9 injured reserve: before the confirmation, a man the real rosters put on a list has no contract and signs one at the market price (GitHub issue 8)

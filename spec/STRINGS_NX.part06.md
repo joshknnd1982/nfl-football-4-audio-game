@@ -1,5 +1,3 @@
-- NXU-G04 (sentence, say2): " last week's goal was met. ". before the menu, after the news (SX.8n)
-- NXU-G05 (sentence, say2): " last week's goal was missed. ". before the menu, after the news (SX.8n)
 - NXH-45 (help, say5): " Players have a personality and a morale, which moves a rating by up to 2 points in a game. An underpaid player may hold out at camp and ask to be traded. Every game has a goal. ". F6, after NXH-44 (SX.8n)
 - NWH01 (remark, say2): " <player> of the <team> wants to be traded. ". a player asks to be traded (news, SX.8n)
 - NWH02 (remark, say2): " unhappy with the <team>, <player> asks for a trade. ". a player asks to be traded (news, SX.8n)
@@ -218,6 +216,7 @@
 - NXI-R40 (sentence, say5): " nothing was changed for <player>. ". F9 injured reserve: a confirmation answered with another key (D-216)
 - NXI-R41 (sentence, say5): " your roster is full, and nobody on it can be released for him now. ". F9 injured reserve: no man to release (D-216)
 - NXI-R42 (sentence, say5): " that cannot be done now. ". F9 injured reserve: any other reason (the log has it) (D-216)
+- NXI-R43 (sentence, say5): " <player> comes back on a new contract of <contract>. ". F9 injured reserve: before the confirmation, a man the real rosters put on a list has no contract and signs one at the market price (GitHub issue 8)
 
 ## The real coaches and players (NX-N, SX.11)
 
