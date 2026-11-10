@@ -22,7 +22,8 @@ class ScrimmageSteps:
         s = self.s
         capture = getattr(self.clock, "capture", None)   # H18 (the N. F. L. rules clock only): a time out called by T before the snap
         self.t_clock = capture() if capture is not None else None     # gives back the runoff that the snap takes now
-        self.t_back = self.play_menu                     # and the play is withdrawn: the menu comes again
+        self.t_back = self.try_back() or self.play_menu  # and the play is withdrawn: the menu comes again (the player's two-point
+        #                                                  try: the choice of the try, issue 12, 11-3-1)
         if self.clock.before_snap():                     # H1: a pending runoff ran the period out (N. F. L. rules only;
             self.t_back = None
             return self.period_checks                    # Classic returns None): the period ends before the snap

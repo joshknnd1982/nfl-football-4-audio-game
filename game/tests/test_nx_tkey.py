@@ -121,12 +121,17 @@ def test_t_calls_the_timeout_in_the_defense_menu(tmp_path):
 
 
 def test_t_calls_the_timeout_in_the_two_point_menu_before_the_try(tmp_path):
-    """A timeout before a try is allowed and charged (11-3-1); the try's menu comes again with its items 1 to 5."""
-    rig = scene(tmp_path, answers=["t", ENTER], two_point=True, yard_line=2, extras=dict(pending=0, running=False))
+    """A timeout before a try is allowed and charged (11-3-1); the offense may then change its choice (GitHub issue 12, D-225): the
+    choice of the try comes again on the two-point try, and Enter keeps it: the try's menu with its items 1 to 5."""
+    rig = scene(tmp_path, answers=["t", ENTER, ENTER], two_point=True, yard_line=2, extras=dict(pending=0, running=False))
     script(rig, Draws())
-    rig.engine.offense_menu()
+    engine = rig.engine
+    step, names = drive(engine, engine.offense_menu, stop=("extra_point_choice",))
+    assert names == ["offense_menu", "withdrawn"] and step() == engine.offense_menu and engine.s.two_point
+    engine.offense_menu()
     said = texts(rig)
     assert said[:2] == [" Kim" + P.SELECT_OFFENSE, " 1. Line Plunge "] and OUT in said and said[-2:] == [said[0], said[1]]
+    assert [" Kim" + P.SELECT, P.TRY_FOR_TWO] == said[said.index(OUT) + 2:said.index(OUT) + 4]
     assert called(rig) == [1, 0]
 
 
@@ -336,7 +341,8 @@ def test_t_before_a_try_at_0_00_calls_the_timeout(tmp_path):
     (SX.13, 4-5-1; the refusal at 0:00 with no down to come is test_sx13_rules_audit's)."""
     rig = scene(tmp_path, answers=["t", ENTER], two_point=True, yard_line=2, extras=dict(left=0, pending=0, running=False))
     script(rig, Draws())
-    rig.engine.offense_menu()
+    with pytest.raises(PlayWithdrawn):                               # issue 12: the timeout goes back to the choice of the try
+        rig.engine.offense_menu()
     said = texts(rig)
     assert X.text("NXT-16") not in said and any("time out called by the Bengals" in t for t in said)
 

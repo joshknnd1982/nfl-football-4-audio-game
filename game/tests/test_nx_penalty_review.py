@@ -34,7 +34,7 @@ def test_4_a_foul_before_the_snap_of_a_two_point_try_leaves_nothing_waiting(tmp_
     step = rig.engine.snap()
     check(rig, draws)
     x = rig.engine.s.extras
-    assert step == rig.engine.offense_menu and rig.engine.s.yard_line == 7 and rig.engine.s.two_point
+    assert step == rig.engine.try_again and rig.engine.s.yard_line == 7 and rig.engine.s.two_point     # issue 12: the choice again
     assert not x.no_snap and x.foul_clock == ""
 
 
@@ -123,7 +123,7 @@ def test_13_grounding_on_the_goal_line_is_not_a_safety():
     assert accepted.kind == PEN.NEW_DOWN and accepted.los == 1
 
 
-def test_the_try_again_continuation_is_the_offense_menu(tmp_path):
+def test_the_try_again_continuation_is_the_choice_of_the_try(tmp_path):
     rig = game(tmp_path)
-    assert rig.engine.continuation(TRY_AGAIN) == rig.engine.offense_menu
+    assert rig.engine.continuation(TRY_AGAIN) == rig.engine.try_again           # GitHub issue 12 (D-225, 11-3-1)
     assert isinstance(rig.rules, NflRules)

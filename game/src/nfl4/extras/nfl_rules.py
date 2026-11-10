@@ -829,6 +829,11 @@ class NflRules(ClassicRules):
         self.defense.clear()
         self.defense.reset()
 
+    def try_still_due(self, state) -> None:
+        """GitHub issue 12 (D-225, 11-3-1): the player's try is asked again after a penalty or a timeout; its down is still to come, so a
+        timeout before it is granted at 0:00 too, whichever try he chooses (SX.13)."""
+        self.try_due = True
+
     @staticmethod
     def live_timeout_sentence() -> str:
         return X.text("NXT-15")

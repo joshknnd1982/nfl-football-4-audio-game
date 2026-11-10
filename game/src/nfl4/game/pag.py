@@ -179,6 +179,18 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         self.t_live, self.t_back = False, back
         self.rules.grant_kept_timeout(self.s)
 
+    def try_back(self):
+        """GitHub issue 12 (D-225, NFL 11-3-1: after a penalty or a charged timeout the offense may change its choice of try): where a
+        timeout before the snap of the player's two-point try goes back to: the choice of the kick or the two-point try. None otherwise."""
+        s = self.s
+        return self.extra_point_choice if s.two_point and s.wisoff == 1 else None
+
+    def try_again(self):
+        """The try is played again after a penalty (TRY_AGAIN): the player's choice is asked again (11-3-1); the computer keeps its
+        two-point try and the player chooses his defense, as on the first try (before issue 12 the player's offense menu came for both)."""
+        debuglog.event("extras", "try_again", side=self.s.wisoff, half=self.s.half, yard_line=self.s.yard_line)
+        return self.extra_point_choice if self.s.wisoff == 1 else self.defense_menu
+
     def undo_snap_clock(self) -> None:
         capture, self.t_clock = self.t_clock, None
         if capture is not None:
@@ -327,7 +339,7 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         if then == SAFETY_BY_PENALTY:
             return self.penalty_safety
         if then == TRY_AGAIN:
-            return self.offense_menu
+            return self.try_again
         if then == TRY_FAILS:
             s.try_good = False
             return self.try_result
@@ -601,7 +613,10 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         current = 1
         speak_prompt = True
         say_item = True
-        self.dead_ball()                                   # H18: the ball is dead; a time out kept from the last play is granted first
+        back = self.try_back()                             # issue 12: a timeout in the two-point try's menu asks the try's choice again
+        if back is not None:
+            self.t_choice = None                           # no play of this try was chosen yet: nothing of the computer's to take back
+        self.dead_ball(back)                               # H18: the ball is dead; a time out kept from the last play is granted first
         while True:
             spoke_prompt = speak_prompt
             if speak_prompt:

@@ -5,6 +5,7 @@ CODE (lifted) kicksnap p_43a330; pag 0x441dfa (field goal), 0x442ebe (punt), 0x4
 """
 from __future__ import annotations
 
+from ..data import debuglog
 from . import outcome as O
 from . import phrases as P
 from .gamestate import other
@@ -309,23 +310,34 @@ class KickSteps:
     # ----- after the player's touchdown: the extra point or the two-point try (4.17) -----
 
     def extra_point_choice(self):
-        """L_44f6f0 (Q18: F2, F3, F4 and every other key give the prompt again with the kick)."""
+        """L_44f6f0 (Q18: F2, F3, F4 and every other key give the prompt again with the kick).
+        GitHub issue 12 (D-225, NFL 11-3-1): after a penalty on the player's two-point try or a timeout before its snap the choice is asked
+        again (`again`: the try is already a two-point try). It starts on the two-point try, so Enter keeps the choice, and the try keeps
+        the spot the penalty set; the kick may be chosen instead. Classic never gets here with a two-point try (no T, no penalties)."""
         g, s = self.g, self.s
+        again = bool(s.two_point)
+        if again:
+            self.rules.try_still_due(s)                      # the try's down is still to come: a timeout may be called at 0:00 before it
         self.dead_ball()                                     # H18: the ball is dead; T calls a time out before the try, as a coach may
         while True:
             g.say5(" " + self.coach + P.SELECT)
-            choice = 1
+            choice = 2 if again else 1
             while True:
                 g.say5(P.KICK_FOR_EXTRA_POINT if choice == 1 else P.TRY_FOR_TWO)
                 self.getkey2()
                 if self.g_code == KEY_ENTER:
                     g.empty_replay()
+                    if again:
+                        debuglog.event("extras", "try_choice_again", choice="kick" if choice == 1 else "two",
+                                       half=s.half, yard_line=s.yard_line, quarter=s.quarter)
                     if choice == 1:
+                        s.two_point = s.try_good = False             # the kick instead of the two-point try (11-3-1)
                         self.t_back = self.extra_point_choice    # H18: a time out before the kick asks the choice again
                         return self.extra_point
                     g.log_print("")
                     s.two_point = True
-                    s.yard_line = 2
+                    if not again:                                # asked again: the spot is where the penalty put the ball
+                        s.yard_line = 2
                     return self.offense_menu
                 if self.g_code in (KEY_UP, KEY_DOWN):
                     choice = 2 if choice == 1 else 1

@@ -10,6 +10,14 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## Unreleased (since 0.16.23)
+
+### After a penalty or a time out on your two-point try, you may kick instead
+From a tester's report (GitHub issue 12): "when going for 2 points if a penalty or timeout is called you don't get the choice to go for 2 or kick the extra point." His problem report showed it: he went for two, a flag for an illegal shift on his own team was accepted, the referee said the try would be played again from the 7 yard line, and the game went straight back to the play menu. A time out before the snap of the try did the same. The real rule (N. F. L. rule 11, section 3, article 1) lets the team with the ball change its choice after a penalty or a charged time out. Now, after either one, the game asks "kick for extra point" or "try for two point conversion" again. It starts on the try for two, so Enter keeps your choice, from the spot where the penalty put the ball; Up or Down gives the kick. A time out called after you chose the kick asks the choice again too, as before. When the computer's two-point try is played again after a penalty, you now get your defense menu; before, the game wrongly gave you an offense menu for the computer's try.
+
+**How to test:** with the N. F. L. rules, score a touchdown, choose "try for two point conversion" and, in the play menu, press T. You should hear the time out called, then "select" and "try for two point conversion" again; press Up to hear "kick for extra point" and Enter to kick, or Enter right away to keep the try for two. Play more tries for two until a flag is thrown on one and the try is played again: the same choice should come after the referee's words. Classic is unchanged: it has no penalties or time outs.
+**Tell us:** whether the choice comes every time a flag or a time out stops your try, and whether starting on the try for two feels right.
+
 ## 0.16.23 (2026-11-09, test build)
 
 One change from a tester's GitHub issue: a time out pressed while the holder or punter says "hike" is called before the kick. Everything of 0.16.22 and earlier below is still to be tested too.

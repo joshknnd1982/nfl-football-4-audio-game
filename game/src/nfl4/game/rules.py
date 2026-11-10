@@ -380,6 +380,10 @@ class ClassicRules:
     def withdraw_play(self, state) -> None:
         return None
 
+    def try_still_due(self, state) -> None:
+        """GitHub issue 12 (D-225): the player's try is asked again after a penalty or a timeout. Classic: nothing."""
+        return None
+
     # H22 (SX.12): the overtime. Classic answers every call with the original's sudden death (GAME_SPEC 5.6 item 6, 5.12): a tie at the
     # end of the fourth quarter or of an overtime period begins another period, received by the side that had the ball, and every score
     # ends the game (a touchdown after its try).
