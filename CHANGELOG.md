@@ -10,7 +10,9 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
-## Unreleased (since 0.16.23)
+## 0.16.24 (2026-11-10, test build)
+
+One change from a tester's GitHub issue: after a penalty or a time out on your two-point try, you may kick instead. Everything of 0.16.23 and earlier below is still to be tested too.
 
 ### After a penalty or a time out on your two-point try, you may kick instead
 From a tester's report (GitHub issue 12): "when going for 2 points if a penalty or timeout is called you don't get the choice to go for 2 or kick the extra point." His problem report showed it: he went for two, a flag for an illegal shift on his own team was accepted, the referee said the try would be played again from the 7 yard line, and the game went straight back to the play menu. A time out before the snap of the try did the same. The real rule (N. F. L. rule 11, section 3, article 1) lets the team with the ball change its choice after a penalty or a charged time out. Now, after either one, the game asks "kick for extra point" or "try for two point conversion" again. It starts on the try for two, so Enter keeps your choice, from the spot where the penalty put the ball; Up or Down gives the kick. A time out called after you chose the kick asks the choice again too, as before. When the computer's two-point try is played again after a penalty, you now get your defense menu; before, the game wrongly gave you an offense menu for the computer's try.
