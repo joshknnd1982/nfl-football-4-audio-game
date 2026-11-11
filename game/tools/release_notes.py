@@ -17,9 +17,11 @@ CHANGELOG.md sits at the root of the game's folder (the repository's root). This
   release_notes.py <version> [--template FILE] [--installer FILE] [--out FILE]
       Writes a GitHub release's notes: the version's whole changelog section, word for word, as an NVDA add-on's release has it.
       A template (kept in the session's work folder, never committed) holds the release's own lines around it, with the places
-      {version}, {changelog}, {changelog_url}, {releases_url} and {sha256} (the installer's SHA-256 in capitals). With no template
-      the notes are the section and a link to the whole file. It refuses a version with no section or a top item with no
-      "How to test:".
+      {version}, {changelog}, {changelog_url}, {releases_url}, {sha256} (the installer's SHA-256 in capitals) and {installer_url}
+      (the installer's direct download link). With no template the notes are the section and a link to the whole file. With
+      --installer the notes always give the direct link: a template that has no {installer_url} gets a "Download the installer:"
+      line before its "Install:" line (nfl4 issue 8, a tester 2026-11-09: "You should always give the installer link"). It
+      refuses a version with no section or a top item with no "How to test:".
 
   release_notes.py <version> --full FILE
       Writes the whole changelog as it stood at that version (the version's section and every older one, from CHANGELOG.md and the
@@ -28,12 +30,13 @@ CHANGELOG.md sits at the root of the game's folder (the repository's root). This
 
   release_notes.py <version> --verify-release
       Asks GitHub (gh) about the published release v<version>: its notes must carry the version's whole section word for word, the
-      asset CHANGELOG-<version>.md must be there, and it must not be a draft. Exit code 1 when anything is wrong.
+      asset CHANGELOG-<version>.md must be there, the notes must give the direct download link of every installer (.exe) asset, and
+      it must not be a draft. Exit code 1 when anything is wrong.
 
   release_notes.py --backfill [--dry-run]
       Mends every published release that fails --verify-release: notes with no section get it (in place of their short list of
-      what is new), a missing CHANGELOG-<version>.md is uploaded. Nothing else of a release changes; a version with no section in
-      the changelog is reported and left alone.
+      what is new), notes with no direct installer link get it, a missing CHANGELOG-<version>.md is uploaded. Nothing else of a
+      release changes; a version with no section in the changelog is reported and left alone.
 
 --repo owner/name and --branch name override what git's origin says. Plain Python, no package of the game is imported.
 """
@@ -224,19 +227,47 @@ def notes(version, game=GAME, template=None, installer=None, repo=None, branch=N
     values = {"version": version, "changelog": block.rstrip("\n"),
               "changelog_url": "%s/blob/%s/CHANGELOG.md" % (base, branch) if base else "CHANGELOG.md",
               "releases_url": "%s/releases" % base if base else "",
-              "sha256": hashlib.sha256(Path(installer).read_bytes()).hexdigest().upper() if installer else ""}
+              "sha256": hashlib.sha256(Path(installer).read_bytes()).hexdigest().upper() if installer else "",
+              "installer_url": installer_url(repo, version, Path(installer).name) if installer and repo else ""}
     if template:
         body = Path(template).read_bytes().decode("utf-8")
-        if "{sha256}" in body and not installer:
-            raise SystemExit("the template has {sha256}: give --installer")
+        for place in ("{sha256}", "{installer_url}"):
+            if place in body and not values[place.strip("{}")]:
+                raise SystemExit("the template has %s: give --installer (and a repository for {installer_url})" % place)
         for key, value in values.items():
             body = body.replace("{%s}" % key, value)
     else:
         body = "%s\n\nThe whole changelog, every version with how to test it: %s\n" % (values["changelog"], values["changelog_url"])
-    left = re.findall(r"\{(?:version|changelog|changelog_url|releases_url|sha256)\}", body)
+    left = re.findall(r"\{(?:version|changelog|changelog_url|releases_url|sha256|installer_url)\}", body)
     if left:
         raise SystemExit("the template's places were not all filled: %s (give --installer for {sha256})" % ", ".join(left))
+    if values["installer_url"]:
+        body = with_installer_links(body, [values["installer_url"]])
     return body.rstrip("\n") + "\n"
+
+
+# ----- The direct installer link in every release's notes (nfl4 issue 8, a tester 2026-11-09, on a note that gave it: "You should
+# always give the installer link that was a very good thing."). The release page alone makes a screen reader user find the asset.
+
+DOWNLOAD_LINE = "Download the installer: "
+
+
+def installer_url(repo, version, name):
+    return "https://github.com/%s/releases/download/v%s/%s" % (repo, version, name)
+
+
+def with_installer_links(body, urls):
+    """The notes with a "Download the installer:" line for every link they do not already give: before the "Install:" line, else
+    at the end (never inside the changelog section). Notes that give every link come back unchanged."""
+    body = body.replace("\r\n", "\n")
+    missing = [url for url in urls if url not in body]
+    if not missing:
+        return body
+    added = "".join("%s%s\n\n" % (DOWNLOAD_LINE, url) for url in missing)
+    match = re.search(r"^Install:", body, re.MULTILINE)
+    if match:
+        return body[:match.start()] + added + body[match.start():]
+    return body.rstrip("\n") + "\n\n" + added.rstrip("\n") + "\n"
 
 
 # ----- The changelog in every release (issue 5, a tester 2026-11-07: "A change log needs to be included with every release so we
@@ -293,9 +324,16 @@ def release_body_problems(version, body, assets, draft, block):
         found.append("the notes of v%s do not carry its changelog section word for word" % version)
     if asset_name(version) not in assets:
         found.append("the release v%s has no asset %s" % (version, asset_name(version)))
+    for name in installers(assets):
+        if "/releases/download/v%s/%s" % (version, name) not in body:
+            found.append("the notes of v%s do not give the direct download link of %s" % (version, name))
     if draft:
         found.append("the release v%s is a draft" % version)
     return found
+
+
+def installers(assets):
+    return [name for name in assets if name.lower().endswith(".exe")]
 
 
 def _release(version, repo):
@@ -360,9 +398,11 @@ def backfill(game=GAME, repo=None, branch=None, dry_run=False):
         if dry_run:
             continue
         with tempfile.TemporaryDirectory() as folder:
-            if _plain(blocks[version]) not in _plain(body):
+            new_body = mended_body(body, version, blocks[version], url)
+            new_body = with_installer_links(new_body, [installer_url(repo, version, name) for name in installers(assets)])
+            if _plain(new_body) != _plain(body):
                 notes_file = Path(folder) / "notes.md"
-                notes_file.write_bytes(mended_body(body, version, blocks[version], url).encode("utf-8"))
+                notes_file.write_bytes(new_body.encode("utf-8"))
                 gh("release", "edit", tag, "--repo", repo, "--notes-file", str(notes_file))
             if asset_name(version) not in assets:
                 full = Path(folder) / asset_name(version)

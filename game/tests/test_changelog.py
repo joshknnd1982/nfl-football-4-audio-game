@@ -140,12 +140,13 @@ def test_the_full_changelog_of_a_version_has_it_and_every_older_version_word_for
 
 def test_a_release_without_its_section_or_its_changelog_file_is_caught_and_mended():
     block = notes_tool.section(TEXT, VERSION)
-    good = "Intro.\n\n" + block.replace("\n", "\r\n") + "\nInstall: run it."
+    good = ("Intro.\n\n" + block.replace("\n", "\r\n") + "\nDownload the installer: https://github.com/a/b/releases/download/v%s/setup.exe"
+            "\n\nInstall: run it." % VERSION)
     asset = notes_tool.asset_name(VERSION)
     assert notes_tool.release_body_problems(VERSION, good, ["setup.exe", asset], False, block) == []
     old = "**Title**\n\nAbout the game.\n\nWhat is new in this build (short):\n- a thing\n\nInstall: run it.\n\nLicense."
     found = notes_tool.release_body_problems(VERSION, old, ["setup.exe"], True, block)
-    assert len(found) == 3
+    assert len(found) == 4                                  # no section, no CHANGELOG asset, no installer link, a draft
     mended = notes_tool.mended_body(old, VERSION, block, "URL")
     assert mended.startswith("**Title**\n\nAbout the game.\n\nWhat is new in this build, word for word")
     assert block.rstrip("\n") in mended and "- a thing" not in mended and mended.endswith("Install: run it.\n\nLicense.")
@@ -153,6 +154,43 @@ def test_a_release_without_its_section_or_its_changelog_file_is_caught_and_mende
     assert notes_tool.mended_body(mended, VERSION, block, "URL") == mended            # mending twice changes nothing
     plain = notes_tool.mended_body("**Title**\n\nAbout.\n\nLicense.", VERSION, block, "URL")
     assert plain.startswith("**Title**\n\nAbout.\n\nWhat is new") and plain.endswith("License.")
+
+
+# Issue 8 (a tester, 2026-11-09, on the note that gave the installer's own address: "You should always give the installer link that was a
+# very good thing."): every release's notes give the direct download link of the installer, not only the release page.
+
+def test_the_release_notes_always_give_the_direct_installer_link(tmp_path):
+    repo = "joshknnd1982/nfl-football-4-audio-game"
+    installer = tmp_path / ("nfl4-setup-%s.exe" % VERSION)
+    installer.write_bytes(b"abc")
+    url = "https://github.com/%s/releases/download/v%s/nfl4-setup-%s.exe" % (repo, VERSION, VERSION)
+    assert notes_tool.installer_url(repo, VERSION, installer.name) == url
+    block = notes_tool.section(TEXT, VERSION)
+    old_template = tmp_path / "old.md"                      # a template written before the rule: no {installer_url}
+    old_template.write_bytes("Intro {version}.\n\n{changelog}\n\nInstall: run it. SHA-256 {sha256}.\n\nLicense.\n".encode("utf-8"))
+    filled = notes_tool.notes(VERSION, GAME, str(old_template), str(installer), repo, "master")
+    assert "\n\nDownload the installer: %s\n\nInstall: run it." % url in filled
+    assert filled.count(url) == 1 and block.rstrip("\n") in filled          # the section stays whole, the link is given once
+    new_template = tmp_path / "new.md"
+    new_template.write_bytes("Intro.\n\n{changelog}\n\nGet it: {installer_url}\n\nInstall: run it.\n".encode("utf-8"))
+    filled = notes_tool.notes(VERSION, GAME, str(new_template), str(installer), repo, "master")
+    assert filled.count(url) == 1 and "Download the installer:" not in filled
+    with pytest.raises(SystemExit):                         # an {installer_url} with no installer is refused
+        notes_tool.notes(VERSION, GAME, str(new_template), None, repo, "master")
+    plain = notes_tool.notes(VERSION, GAME, None, str(installer), repo, "master")
+    assert plain.startswith(block.rstrip("\n")) and plain.rstrip("\n").endswith(url)
+    assert url not in notes_tool.notes(VERSION, GAME, repo=repo, branch="master")   # no installer given: no link
+    asset = notes_tool.asset_name(VERSION)
+    assets = [installer.name, "checksums_test_%s.txt" % VERSION, asset]
+    no_link = notes_tool.notes(VERSION, GAME, str(old_template), str(installer), repo, "master").replace(
+        "Download the installer: %s\n\n" % url, "")
+    found = notes_tool.release_body_problems(VERSION, no_link, assets, False, block)
+    assert found == ["the notes of v%s do not give the direct download link of %s" % (VERSION, installer.name)]
+    mended = notes_tool.with_installer_links(no_link, [url])
+    assert notes_tool.release_body_problems(VERSION, mended, assets, False, block) == []
+    assert notes_tool.with_installer_links(mended, [url]) == mended.replace("\r\n", "\n")   # mending twice changes nothing
+    bare = notes_tool.with_installer_links("**Title**\n\n" + block, [url])               # no "Install:" line: the link goes last
+    assert bare.startswith("**Title**\n\n" + block.rstrip("\n")) and bare.rstrip("\n").endswith(url)
 
 
 def test_the_installer_has_a_start_menu_entry_that_opens_the_changelog():
