@@ -100,6 +100,23 @@ def promote_player(g, speech, keys, store, words, player) -> tuple:
     return X.text("NXJ-P08", player=names[0]) if release is None else X.text("NXJ-P09", give=names[1], get=names[0]), True
 
 
+def release_squad_player(g, speech, keys, store, player) -> str:
+    """A squad man released: one confirmation, made and written, then told. The practice squad menu's release and, issue 13 (D-226), the roster's item."""
+    league = store.league
+    reason = closed_reason(g, league)
+    if reason is not None:
+        return reason
+    speech.stop()
+    speech.say_async(X.text("NXJ-P16", player=player.name))
+    if keys.read_key() != KEY_ENTER:
+        return X.text("NXJ-S24", player=player.name)              # issue 13: "you did not release", no more "you did not sign"
+    name = player.name
+    P.release_from_squad(league, player)
+    debuglog.event("franchise", "practice_released", week=league.gtp, season=league.season, player=player.id)
+    store.save()
+    return X.text("NXJ-P17", player=name)
+
+
 def practice_menu(g, speech, keys, store, words) -> None:
     league = store.league
     reason = closed_reason(g, league)
@@ -152,14 +169,7 @@ def practice_menu(g, speech, keys, store, words) -> None:
         index = pick_from(X.text("NXJ-P03", n=len(members)), [squad_line(words, league, p) for p in members])
         if index is None:
             return None
-        player = members[index]
-        if not confirmed(X.text("NXJ-P16", player=player.name)):
-            return X.text("NXJ-S17", player=player.name)
-        name = player.name
-        P.release_from_squad(league, player)
-        debuglog.event("franchise", "practice_released", week=league.gtp, season=league.season, player=player.id)
-        store.save()
-        return X.text("NXJ-P17", player=name)
+        return release_squad_player(g, speech, keys, store, members[index])
 
     def rules():
         return X.text("NXJ-P33") + X.text("NXJ-P34") + X.text("NXJ-P35") + X.text("NXJ-P58")

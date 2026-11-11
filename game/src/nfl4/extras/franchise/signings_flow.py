@@ -8,6 +8,9 @@ does for the trades:
 * sign a free agent: the position, the free agents of it (best first, with what each asks), and, when the team has no open place at the position, the player of the group to release
   (his dead money is said with him); then ONE confirmation with everything the signing does (the contract, the release and its dead money), Enter to do it, Escape to say no.
   The signing is made and written, then told (B-X53).
+* release a player (GitHub issue 13, D-226): the position, the team's men of it, then `release_player`, the same as the item "release him" of F9, Franchise,
+  your roster: the reason he cannot be released, or ONE confirmation with his contract, his dead money and the cap room after. Open in the season (the
+  regular weeks and the play-offs) before the kick-off; the offseason's roster cut releases men there.
 """
 from __future__ import annotations
 
@@ -137,10 +140,90 @@ def free_agents_menu(g, speech, keys, store, words) -> None:
         from .practice_flow import add_flow                       # D-187: the practice squad's add, reached where a player looks for free agents
         return add_flow(g, speech, keys, store, words)
 
+    def release_one():
+        return release_flow(g, speech, keys, store, words)
+
     items = [Item(lambda: X.text("NXJ-S01"), enter=sign_one),
              Item(lambda: X.text("NXJ-S02"), enter=hear_all),
-             Item(lambda: X.text("NXJ-P28"), enter=to_squad)]
+             Item(lambda: X.text("NXJ-P28"), enter=to_squad),
+             Item(lambda: X.text("NXJ-S20"), enter=release_one)]  # issue 13 (D-226): a release with no signing
     SpokenMenu(speech, keys, X.text("NXJ-S03", room=words.amount(max(0, cap_room(league)))), items, space_enters=True, digits_jump=True).run()
+
+
+# ----- a release on its own (GitHub issue 13, D-226) -----
+
+def release_closed(g, league) -> str | None:
+    """Why no man of the 53 can be released now (a sentence), or None when one can."""
+    if g.play_engine is not None:
+        return X.text("NXJ-S27")
+    if not S.open_for_release(league, league.gtp):
+        return X.text("NXJ-S28")                                  # the offseason: its roster cut releases men
+    if league.prepared != [league.season, league.gtp]:
+        return X.text("NXJ-S29")
+    return None
+
+
+def group_word(family: str) -> str:
+    """The family's word for "at least <n> <group>": quarterbacks is the roster's heading (the group of one place says quarterback)."""
+    return X.text("NXL-60").strip() if family == "QB" else X.text(D.GROUP_TEXT[family]).strip()
+
+
+def release_player(g, speech, keys, store, words, player) -> str:
+    """Release one man of the 53: the reason he cannot be, or ONE confirmation with his contract, the dead money and the cap room after, Enter to do it,
+    Escape to say no; made and written, then told (B-X53), with a starter the player had chosen at his place said once. Returns the sentence."""
+    league = store.league
+    week = league.gtp
+    reason = release_closed(g, league)
+    problem = S.release_problem(league, player, week)
+    if reason is None and problem is not None:
+        if problem == "a player who is hurt":
+            reason = X.text("NXJ-S25", player=player.name)
+        elif problem == "a team would be short of a position":
+            reason = X.text("NXJ-S26", player=player.name, n=T.FR_FAMILY_MIN.get(player.pos, 0), group=group_word(player.pos))
+        elif problem == "over the cap":
+            reason = X.text("NXJ-S16", room=words.amount(max(0, cap_room(league))))
+        else:
+            reason = X.text("NXJ-S33")
+    if reason is not None:
+        debuglog.event("franchise", "release_refused", week=week, season=league.season, player=player.id, reason=problem or "closed")   # rule 0.15
+        return reason
+    room_after = CT.cap_of(league) - S.cap_after_release(league, league.team, player)
+    speech.stop()
+    speech.say_async(X.text("NXJ-S22", player=player.name, contract=words.contract(player), dead=words.amount(CT.dead_money(player)),
+                            room=words.amount(max(0, room_after))))
+    if keys.read_key() != KEY_ENTER:
+        return X.text("NXJ-S24", player=player.name)
+    name, salary, years = player.name, player.salary, player.years
+    dead = S.release_alone(league, player)
+    from . import real_roster
+    debuglog.event("franchise", "player_released", week=week, season=league.season, player=player.id, position=player.position or player.pos,
+                   rating=player.rating, salary=salary, years=years, dead_money=dead, roster=real_roster.roster_count(league, league.team))   # rule 0.15
+    from .. import lineup as L
+    told = " ".join(t.strip() for t in L.FranchiseBackend(g, store).notices())     # a starter he had chosen there: who starts now, said here once
+    store.save()
+    text = X.text("NXJ-S23", player=name, n=real_roster.roster_count(league, league.team), m=D.ROSTER_MAX)
+    return text + (" " + told + " " if told else "")
+
+
+def release_flow(g, speech, keys, store, words) -> str | None:
+    """F9, Franchise, free agents, release a player: the position (D-214: each real position on its own), the team's men of it in the chart's order with
+    each one's contract and dead money, then `release_player`."""
+    league = store.league
+    reason = release_closed(g, league)
+    if reason is not None:
+        return reason
+    from . import positions as PS
+    code = PS.choose(speech, keys, X.text("NXJ-S30"), PS.ALL)
+    if code is None:
+        return None
+    chart = league.chart[league.team - 1]
+    men = [league.players[pid] for pid in chart.get(code, ()) if pid in league.players and league.players[pid].status == "active"]
+    if not men:
+        return X.text("NXJ-S32")
+    index = ListPicker(speech, keys, X.text("NXJ-S31"), len(men), lambda i: release_line(words, men[i])).run()
+    if index is None:
+        return None
+    return release_player(g, speech, keys, store, words, men[index])
 
 
 def _surnames(g) -> list:

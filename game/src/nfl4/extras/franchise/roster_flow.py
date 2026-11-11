@@ -9,7 +9,7 @@ tight ends, the five linemen, the edge men, tackles, linebackers, cornerbacks, s
 Keys (rule 0.24; never T, which calls a timeout in a game, rule 0.22): Up and Down go man by man; Left and Right, Page Up and Page Down go position by position;
 Home and End go to the first and the last; a letter goes to the next position that starts with it (E: the tight ends); Enter opens the man's items (make him
 the starter, the kick or punt returner, his place on the depth chart (issue 10, D-223: his position's order, the list on him, U and N move him), change his
-name); F1 says the keys; Escape goes back. A man is always said by his own position ("T.J. Watt, left edge"),
+name, release him (issue 13, D-226: signings_flow.release_player; a practice squad man by the squad's own release)); F1 says the keys; Escape goes back. A man is always said by his own position ("T.J. Watt, left edge"),
 whatever place he plays in a game. Plain rules are real_roster.py and lineup.py; this module speaks.
 """
 from __future__ import annotations
@@ -271,6 +271,18 @@ def man_items(g, speech, keys, store, section: Section, player) -> str | None:
     def rename_him():
         raise _Done(rename.ask(g, speech, keys, store, player))
     items.append(Item(lambda: X.text("NXM-L29").strip(), enter=rename_him))
+
+    # GitHub issue 13 (D-226): release him with no signing. The last item, so the items above keep their numbers.
+    if section.key in RM.MADDEN:
+        def release_him():
+            from .signings_flow import release_player
+            raise _Done(release_player(g, speech, keys, store, words, player))
+        items.append(Item(lambda: X.text("NXM-L93").strip(), enter=release_him))
+    elif section.key == "squad":
+        def release_from_squad():
+            from .practice_flow import release_squad_player
+            raise _Done(release_squad_player(g, speech, keys, store, player))
+        items.append(Item(lambda: X.text("NXM-L93").strip(), enter=release_from_squad))
     title = X.text("NXM-L24", player=name_in_team(league, player), position=words.position_for(player))
     try:
         SpokenMenu(speech, keys, title, items, space_enters=True, digits_jump=True).run()

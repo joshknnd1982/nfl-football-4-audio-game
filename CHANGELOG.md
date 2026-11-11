@@ -10,6 +10,14 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## Unreleased (since 0.16.24)
+
+### Release a player without signing anyone (Franchise)
+From a tester's report (GitHub issue 13): "Currently in franchise mode there is currently no way to release someone unless you are planning to sign someone this needs updated." Until now a player of your team could only be released as part of signing a free agent. Now you can release any player of your 53 on his own, in two places: in F9, Franchise, your roster, press Enter on a player and choose "release him" (the last item); or in F9, Franchise, free agents, choose "release a player", then the position, then the player. Before anything is done you hear one question with his contract, the dead money releasing him costs (it counts against the salary cap) and the cap room you will have left; Enter releases him, Escape keeps him. He becomes a free agent, so you or another team may sign him again. A release is refused, with the reason said, when the player is hurt, when your team would have fewer than the players it must keep of his group (for example two quarterbacks, one kicker), when his dead money would put you over the cap, during a game, and in the offseason (the roster cut releases players there). Releases work in the regular season and the play-offs, before the kick-off of the week. If you had chosen him as a starter, you hear who starts in his place. A practice squad player in your roster can be released the same way, and saying no to a practice squad release now says "you did not release", not "you did not sign".
+
+**How to test:** with the N. F. L. rules and a franchise, in the regular season at the main menu before a game, open F9, Franchise, your roster. Go to a backup (for example a defensive lineman), press Enter, then End: you should hear "release him". Press Enter: you should hear his contract, his dead money and your cap room after. Press Escape: "you did not release" him and he stays. Do it again and press Enter: "is released and is a free agent now", and the roster's count is one lower. Then open F9, Franchise, free agents: its fourth item is "release a player". Try to release your only kicker: you should hear that a team must keep at least 1 kicker. Save, quit and open the franchise again: the player is still gone and is in the free agents' list.
+**Tell us:** whether releasing a player now does what you wanted, and whether the question before the release tells you enough.
+
 ## 0.16.24 (2026-11-10, test build)
 
 One change from a tester's GitHub issue: after a penalty or a time out on your two-point try, you may kick instead. Everything of 0.16.23 and earlier below is still to be tested too.
@@ -251,23 +259,11 @@ The eight run pass options (More Plays, Run Pass Options: the quarterback hands 
 - How to test: in the offense menu of the N. F. L. rules (a quick game or a franchise game), press M for More Plays, open Run Pass Options, move to Bubble Option and press R: you hear the list. Press End and Enter to choose the second running back, then Enter to call the play: the game goes on; if the quarterback hands off, that back carries the ball. Try R on Stick Option too: only the receivers.
 - Tell us: any play where R, or a target you chose, does something you did not expect.
 
-## 0.16.9 (2026-10-27, test build)
-
-The seventeenth test installer. The owner played 0.16.8 and found that the radio crew hardly spoke: in eight plays Gus said one line after the sign-on. The crew now talks about twice as much, and a new menu item lets you choose how much. Everything of 0.16.8 is still to be tested too (its section below).
-
-### The radio crew talks more, and you choose how much
-In 0.16.8 Gus spoke only after special plays and moments (a touchdown, a sack, a turnover, a big gain, a third down, the red zone), and only now and then, so most plays had nothing after them: the analyst spoke after about one play in eight, and three or four plays in a row often went by in silence. Now Gus also has lines after ordinary plays: a run that gains well, a run that is stopped, a pass caught, a pass that falls incomplete, a punt and a kick off (104 new lines, written in the manner of the real radio broadcasts the crew is modelled on: a reason and what to watch next). Walt fills more of the breaks Gus leaves with an aside, the network's name or the score. With the default level, a whole game has about 140 lines of the crew instead of about 64, and Gus speaks after about one play in two. The play-by-play, the scores and the clock are unchanged, and the crew still never changes how a game goes.
-
-The new item F9, Rules, How much the crew talks (right after Broadcast, in both rule sets) has four levels: a little (exactly as 0.16.8), some (Gus after about one play in three or four, as on a real radio call), a lot (the default) and the most (a line after nearly every play). Enter goes to the next level and says it; Left and Right go down and up. The change is saved at once and used at once, also in the game you are playing: you do not have to wait for the next game. F9, Rules, Reset brings back "a lot". F6 names the item.
-- How to test: play a game with comments on (F8) and listen between plays: after most runs and passes you should now hear Gus, and sometimes Walt first ("walk us through that play"). Then, during the same game, press F9, choose Rules, press Down until you hear "How much the crew talks: a lot", press Enter to hear "the most", press Escape twice and play on: Gus now speaks after nearly every play. Go back and choose "a little": the crew is as quiet as in 0.16.8. Try it in Classic too.
-- The first key you press still cuts the line being said, so if you choose your play quickly you hear only the start of Gus's line. Wait a moment before you press a key to hear it all.
-- The new lines are in remarks.txt (the pools CRG, CRS, CPC, CPI, CPT and CKR, at the end of the file), and you can change or switch off any of them (CUSTOMIZE.md).
-- Tell us: which level you like best, whether "a lot" is right as the default, any line that does not fit the play it follows (a "nice run" after a short gain, say), and any line you hear too often.
-
 ## Older versions
 
-The versions before 0.16.9 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
+The versions before 0.16.10 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
 
+- [0.16.9 to 0.16.9](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.9-to-0.16.9.md)
 - [0.16.8 to 0.16.8](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.8-to-0.16.8.md)
 - [0.13.0 to 0.16.6](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.13.0-to-0.16.6.md)
 - [0.9.0 to 0.12.1](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.9.0-to-0.12.1.md)

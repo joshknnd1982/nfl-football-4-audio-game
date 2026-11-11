@@ -13,6 +13,8 @@ Plain rules over the league record, no speech, no files and NO DRAW, so the menu
   money is charged to the cap year: `contracts.release`); the new contract is the price of stage 7 (`resign.asking`); the cap (`FR_CAP`) must hold after both. The places are put in
   rating order and the team's strength for the computer's games is brought up to date, as a trade does. Inside a game, in the play-offs and in the offseason nothing is signed
   here (the offseason has its market).
+* A RELEASE ON ITS OWN (`release_problem`, `release_alone`; GitHub issue 13, D-226): a man of the 53, in the season before the kick-off, not hurt, the family
+  minimums kept, the cap holding after his dead money; he becomes a free agent of this season, as a signing's release does.
 """
 from __future__ import annotations
 
@@ -185,6 +187,56 @@ def sign(league, player, release, week: int) -> tuple:
     if len(league.sums) == D.TEAMS:
         league.sums[team - 1] = league.strength_sum(team)
     return salary, years, dead
+
+
+# ----- a release on its own (GitHub issue 13, D-226) -----
+# A tester: "in franchise mode there is currently no way to release someone unless you are planning to sign someone". The NFL's clubs release a player at
+# any time; here the player releases a man of his 53 in the season (the regular season and the play-offs, as the practice squad's moves), before the kick-off
+# of a prepared week, with the rules a signing's release has: the man is not hurt, the team keeps its family minimums, the cap holds after his dead money.
+
+def open_for_release(league, week: int) -> bool:
+    """A man of the 53 is released in the season (regular weeks and play-offs), never in the offseason (its roster cut releases men)."""
+    from .league import SEASON
+    return league.stage == SEASON and week >= 1
+
+
+def cap_after_release(league, team: int, player) -> int:
+    """The cap year's use once the man is released: his salary leaves, his dead money comes."""
+    return CT.cap_used(league, team) - (player.salary if CT.running(player) else 0) + CT.dead_money(player)
+
+
+def release_problem(league, player, week: int) -> str | None:
+    """Why the man cannot be released now (a short reason for the menus, the log and the tests), or None when he can."""
+    from . import real_roster
+    team = league.team
+    if not open_for_release(league, week):
+        return "outside the season"
+    if player is None or player.team != team or player.status != "active" or player.id in real_roster.waiting_ids(league):
+        return "a player who is not on the roster"
+    if not injuries.healthy(league, player.id, week):
+        return "a player who is hurt"
+    if real_roster.breaks_minimum(league, team, [player]):
+        return "a team would be short of a position"
+    if cap_after_release(league, team, player) > CT.cap_of(league):
+        return "over the cap"
+    return None
+
+
+def release_alone(league, player) -> int:
+    """The man is released (the caller has checked `release_problem` and writes league.sav): his contract ends and his dead money is charged, he is a free
+    agent of this season (he may be signed again, and he is a free agent of the coming offseason), the chart and the places are made again, and the team's
+    strength for the computer's games follows. Returns the dead money."""
+    from . import real_roster
+    team = league.team
+    dead = CT.release(league, player)
+    player.left, player.points = league.season, 0
+    real_roster.leave(league, player, "free", refresh=False)
+    player.team = 0                                          # (team 0: nobody lost him, so no compensatory pick)
+    _forget(league, player.id)
+    real_roster.refresh_view(league, team)
+    if len(league.sums) == D.TEAMS:
+        league.sums[team - 1] = league.strength_sum(team)
+    return dead
 
 
 def _forget(league, pid: int) -> None:

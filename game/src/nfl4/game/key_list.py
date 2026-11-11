@@ -145,7 +145,7 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("roster", "Up and Down, Left and Right, Page Up and Page Down, Home, End, letters, Enter", "In F9, Franchise, your roster",
            "Up and Down go player by player, Left and Right and Page Up and Page Down go position by position, Home and End go to the first "
            "and the last, a letter goes to the next position that starts with it (E goes to the tight ends and T is never used), and Enter "
-           "opens the player's items: make him a starter, the kick returner or the punt returner, his place on the depth chart, or change his name", "nfl", False, "",
+           "opens the player's items: make him a starter, the kick returner or the punt returner, his place on the depth chart, change his name, or release him (a player of your 53 or of your practice squad, with one confirmation)", "nfl", False, "",
            " In your roster. Up and Down go player by player, Left and Right position by position, a letter jumps to a position, and Enter "
            "opens the player's items. "),
     KeyRow("lineup", "Enter on a position", "In F9, Franchise, the depth chart (your depth chart in a franchise, Depth charts outside one), in the starting lineup and in the positions' items",

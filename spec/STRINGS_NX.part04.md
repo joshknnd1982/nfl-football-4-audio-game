@@ -1,89 +1,3 @@
-- NXB-F32 (help, say5): " The kinds of kick that start a half or follow a score. ". description of the list kg01 Kick Offs (NX-P8)
-- NXB-F33 (help, say5): " The kinds of punt, and the fake punts. ". description of the list kg02 Punts (NX-P8)
-- NXB-F34 (help, say5): " Field goals, extra points, and the fake kicks. ". description of the list kg03 Field Goals and Tries (NX-P8)
-- NXB-F35 (help, say5): " How your defense plays against a punt or a field goal. ". description of the list kg04 Kick Defense (NX-P8)
-- NXB-G01 (help, say5): " Chooses how the quarterback and running backs line up before the snap. ". description of the setting formation (NX-P8)
-- NXB-G02 (help, say5): " Chooses how many running backs, tight ends and receivers are on the field. ". description of the setting personnel (NX-P8)
-- NXB-G03 (help, say5): " Chooses whether a player runs across the field before the snap. ". description of the setting motion (NX-P8)
-- NXB-G04 (help, say5): " Chooses whether the play goes to the left or to the right. ". description of the setting side (NX-P8)
-- NXB-G05 (help, say5): " Chooses how fast the offense gets ready: normal, no huddle, or hurry up, which saves time. ". description of the setting tempo (NX-P8)
-- NXB-G06 (help, say5): " Chooses how many players stay in to block on a pass. ". description of the setting protection (NX-P8)
-- NXB-G07 (help, say5): " Chooses how many defensive backs, linebackers and linemen are on the field. ". description of the setting defense_personnel (NX-P8)
-- NXB-G08 (help, say5): " Chooses whether the defenders stand close to the receivers or farther back. ". description of the setting coverage_shade (NX-P8)
-- NXH-48 (help, say5): " Deep defenders: players who stay far from the line to stop long passes. Guarding areas: each defender covers a part of the field instead of one player. ". F7 addition (H12, NX-P8): the football words the play descriptions use
-- NXH-49 (help, say5): " Run blitz: extra defenders rushing the runner. Slant: a quick cut across the field, or a lineman moving sideways at the snap. Counter: a run that starts one way, then goes the other. ". F7 addition (H12, NX-P8): the football words the play descriptions use
-- NXH-50 (help, say5): " Draw: a run that looks like a pass first. Option: the quarterback chooses at the last moment to keep the ball or give it away. Pitch: a short toss backward to a runner. ". F7 addition (H12, NX-P8): the football words the play descriptions use
-- NXH-51 (help, say5): " Touchback: a kick that goes into the end zone and is not run out, so the other team starts at its twenty, or at its thirty five after a kick off.". F7 addition (H12, NX-P8): the football words the play descriptions use
-- NXB-H01 (sentence, say4): " <quarterback> takes a knee ". the kneel's tackle sentence (O152, SX.10c)
-- NXB-H02 (sentence, say2): " <quarterback> spikes the ball to stop the clock ". the spike's sentence (O153, SX.10c)
-- NXB-H03 (sentence, say2): " <quarterback> throws the ball away ". a legal throw-away (RB26 8-2-1 Item 1, SX.10c)
-- NXB-H04 (sentence, say4): " <quarterback> pitches it to <player> ". an option's pitch, in place of the hand-off (SX.10c)
-- NXB-H05 (sentence, say4): " <quarterback> keeps it ". an option's keep, before the quarterback's run (SX.10c)
-- NXB-H06 (sentence, say4): " the ball is thrown back and forth across the field ". the last play's laterals (O156, SX.10c)
-- NXB-H07 (sentence, say4): " and the <team> fall on it ". a fumble the offense keeps (G26-9, SX.10c)
-- NXB-H08 (sentence, say4): " <player> runs it back <n> yards ". an interception's return (G26-8, SX.10c)
-- NXB-H09 (sentence, say4): " <player> runs it all the way back ". a return for a touchdown (G26-8, SX.10c)
-- NXB-H10 (sentence, say4): " the defense scores two points ". a try returned by the defense (RB26 11-3-2, G26-10, SX.10c)
-- NXB-H11 (sentence, say4): " <player> goes down in the end zone for a touch back ". an interception in the end zone (SX.10c)
-- NXB-H12 (sentence, say4): " <player> runs it back one yard ". an interception's return of one yard (SX.10c)
-- NXB-H13 (sentence, say5): " <list>, list <n> of <m>. ". the heading of a family's list (design 2.3, SX.10c)
-- NXB-H14 (sentence, say5): " <list>. ". the heading of a list under More Plays, Favourites or a search (SX.10c)
-- NXB-H15 (sentence, say5): " the call is <name>. ". Enter on a family: the playbook's pick, said before the snap (SX.10c)
-- NXH-52 (help, say5): " Shotgun: the quarterback stands a few steps behind the center. Under center: he stands right behind him. Pistol: in between. Empty backfield: no running back behind him. ". F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
-- NXH-53 (help, say5): " Personnel: which players are on the field. One back, two tight ends means one running back and two tight ends; the rest are receivers. ". F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
-- NXH-54 (help, say5): " Motion: a receiver moves sideways before the snap. No huddle and hurry up: the offense lines up quickly to save time. Max protect: extra blockers stay back. ". F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
-- NXH-55 (help, say5): " Kneel down: the quarterback kneels to let the clock run. Spike: he throws the ball at the ground to stop the clock. ". F7 addition (H12, SX.10c): the words of the offense's settings and clock plays
-- NXB-J01 (prompt, say5): " <coach> choose your kick off. ". the 2026 kick-off menu (design 2.6, G26-1, SX.10d)
-- NXB-J02 (sentence, say4): " the kick goes out of bounds, and the ball is placed at the 40 ". a free kick out of bounds (RB26 6-2-1)
-- NXB-J03 (sentence, say4): " the squib kick lands short of the landing zone, and the ball is placed at the 40 ". a squib kick short of the landing zone (RB26 6-2-4)
-- NXB-J04 (sentence, say4): " the kick sails through the end zone for a touch back at the 35 ". a 2026 kick-off touch back (RB26 6-2)
-- NXB-J05 (sentence, say4): " <returner> catches the ball at the <n> ". a kick-off caught in the field of play (SX.10d)
-- NXB-J06 (sentence, say4): " <kicker> kicks it short into the landing zone ". the short kick (K002, SX.10d)
-- NXB-J07 (sentence, say4): " <kicker> squibs it along the ground ". the squib kick (K003, SX.10d)
-- NXB-J08 (sentence, say4): " the punt is blocked ". a blocked punt (G26-5, SX.10d)
-- NXB-J09 (sentence, say4): " <returner> fields the punt and runs it back <n> yards ". a punt return (G26-5, SX.10d)
-- NXB-J10 (sentence, say4): " <returner> fields the punt and is hit at once ". a punt return of no gain (SX.10d)
-- NXB-J11 (sentence, say4): " the ball rolls dead ". a punt nobody touches (SX.10d)
-- NXB-J12 (sentence, say4): " <returner> muffs the punt and the <team> fall on it ". a muffed punt the kicking team keeps (SX.10d)
-- NXB-J13 (sentence, say4): " the kick is blocked ". a blocked field goal or extra point (G26-4, G26-6, SX.10d)
-- NXB-J14 (sentence, say4): " <player> picks it up and runs it all the way back ". a blocked kick returned for a score (SX.10d)
-- NXB-J15 (sentence, say4): " the extra point is no good ". a missed extra point (G26-4, SX.10d)
-- NXB-J16 (sentence, say4): " <player> runs the blocked kick back for two points ". a blocked try returned by the defense (RB26 11-3-2, SX.10d)
-- NXB-J17 (sentence, say4): " it's a fake ". a fake punt or field goal (K015, K016, K022, K023, SX.10d)
-- NXB-J18 (sentence, say4): " <player> takes the ball and runs ". a fake kick's run (SX.10d)
-- NXB-J19 (sentence, say4): " <player> throws the ball ". a fake kick's pass (SX.10d)
-- NXB-J20 (prompt, say5): " <coach> do you wish to try a fair catch kick ". the fair catch kick's question (Q-P18, G26-13, SX.10d)
-- NXB-J21 (sentence, say4): " <kicker> lines up for a fair catch kick ". the fair catch kick (RB26 10-2-4, SX.10d)
-- NXB-J22 (sentence, say5): " your kick defense is <name>. ". the kick defense the player chose (design 2.6, SX.10d)
-- NXB-J23 (sentence, say4): " <kicker> punts it from the 20 ". the safety punt (K027, RB26 11-5-2, SX.10d)
-- NXB-J24 (sentence, say4): " <player> brings him down ". the tackle of a punt return or a fake kick (SX.10d)
-- NXH-56 (help, say5): " With a playbook, your kick off is a menu: the deep kick, a short kick into the landing zone, a squib kick, an onside kick, and after a safety a punt. Enter takes the deep kick. ". F6 addition (H12, SX.10d): the 2026 kick-off menu
-- NXH-57 (help, say5): " Your defense menu starts with the original's six calls. Right on a call opens its lists, and M opens every list. On fourth down P. opens the kick defense: return, fair catch, block or safe. ". F6 addition (H12, SX.10d): the defense menu and the kick defense
-- NXH-58 (help, say5): " With a playbook, Right on Punt opens the kinds of punts and the fake punts, and Right on Field Goal the fake field goals. A field goal may be tried from anywhere, and the extra point can miss. ". F6 addition (H12, SX.10d): the kicks of 2026
-- NXH-59 (help, say5): " Landing zone: the part of the field between the receivers' 20 and their goal line where a kick off must come down. Squib kick: a low kick that bounces along the ground. ". F7 addition (H12, SX.10d): the words of the 2026 kick-off
-- NXH-60 (help, say5): " Pin punt: a short high punt meant to stop near the goal line. Rugby punt: the punter runs sideways before he kicks. Fair catch kick: after a fair catch, a free try at a field goal with no rush. ". F7 addition (H12, SX.10d): the words of the punts and the fair catch kick
-- NXH-61 (help, say5): " Nickel: five defensive backs on the field. Dime: six. The defense brings them on to match the offense's receivers. ". F7 addition (H12, SX.10d): the defense's personnel
-- NXB-H16 (sentence, say4): " the <team> will try for two points ". the computer goes for two after its touchdown (G26-10, SX.10e)
-- NXH-62 (help, say5): " The computer's teams call every play of the game by their playbook, and after a touch down they may try for two points. ". F6 addition (H12, SX.10e): the computer's calling and its two-point tries
-- NXB-J25 (sentence, say4): " the kick goes out of bounds, and the ball is placed at the <n> ". a free kick out of bounds that was not made from the 35: 25 yards from the kick, 30 after a safety (RB26 6-2-4; SX.13)
-- NXB-J26 (sentence, say4): " the kick lands short of the landing zone, and the ball is placed at the <n> ". a free kick short of the landing zone that was not made from the 35 (RB26 6-1-4 (d)(3), 6-2-4; SX.13)
-- NXB-J27 (sentence, say4): " <player> falls on it in the end zone ". a punt blocked behind the kicking team's goal line, recovered there by the receivers: a touchdown (RB26 11-2; SX.13)
-- NXB-J28 (sentence, say4): " the ball rolls out of the end zone ". a punt blocked behind the kicking team's goal line that leaves the end zone, before ' SAFETY' (RB26 11-5-1; SX.13)
-- NXB-H17 (help, say5): " Right opens more plays: the lists of the play you are on. M opens More Plays, D describes a play, and W says which play the playbook most likely picks. Enter on a play type lets the playbook pick. ". once in a program run, three runs at most, after the first item of the offense menu (SZ.5, D-110; W added in SZ.7, D-112)
-- NXB-H18 (help, say5): " Right opens the lists of the call you are on, such as blitzes. M opens More Plays, D describes a call, and W says which call the playbook most likely picks. Enter on a call lets the playbook pick. ". once in a program run, three runs at most, after the first item of the defense menu (SZ.5, D-110; W added in SZ.7, D-112)
-- NXB-H19 (help, say5): " Each setting starts as the playbook's choice, which means the play you call sets it. The game recommends nothing here. Enter changes a setting, and it stays for the plays that follow. ". once in a program run, three runs at most, after the first item of Formation and Tempo (SZ.5, D-110)
-- NXB-G09 (help, say5): " Opens every list of defensive calls, such as blitzes and zone coverages, and the situation defenses. ". description of the defense's More Plays item (SZ.5)
-- NXB-W01 (sentence, say5): " <list>. The playbook would most likely pick <name>, about <n> percent of the time. ". W on a play type or in a list: the one play with the most weight and its chance (SZ.7, D-112)
-- NXB-W02 (sentence, say5): " <list>. The playbook would pick <name> or <other> about equally often, each about <n> percent of the time. ". W: two plays share the most weight (SZ.7, D-112)
-- NXB-W03 (sentence, say5): " <list>. The playbook would pick <name>, <other> or <third> about equally often, each about <n> percent of the time. ". W: three plays share the most weight (SZ.7, D-112)
-- NXB-W04 (sentence, say5): " <list>. The playbook would pick any of <count> plays about equally often, such as <name>, each about <n> percent of the time. ". W: four or more plays share the most weight (SZ.7, D-112)
-- NXB-W05 (sentence, say5): " <list>. The playbook picks <name> every time. ". W: one play has all the weight (SZ.7, D-112)
-- NXB-W06 (sentence, say5): " <list>. The playbook has no favourite, and Enter takes <name>. ". W on a play type whose plays the playbook never weighs: Enter takes the first play (SZ.7, D-112)
-- NXB-W07 (sentence, say5): " <list>. The playbook has no favourite play here. ". W in a list the playbook never calls from, such as the kinds of kicks and the kick defense (SZ.7, D-112)
-- NXB-W08 (sentence, say5): " <name> is one play, and Enter calls it. ". W on a single play: a quarterback run, a kneel, a spike, Field Goal, Punt, a favourite (SZ.7, D-112)
-- NXB-W09 (sentence, say5): " W says which play the playbook would most likely pick. Press it on a play type, such as Short Pass, or in a list of plays. ". W on an item that is neither (Save Game, Time Out, Challenge, Formation and Tempo) (SZ.7, D-112)
-- NXB-W10 (sentence, say5): " W needs a playbook. Choose one in the F9 menu, under Rules. ". W in a menu with the original's items only (SZ.7, D-112)
-
 ## Menus and settings (design 10.4, 12)
 
 - NXM-01 (menu, say5): "Quarterback Sneak". offense item (Classic playbook in N. F. L. rules mode)
@@ -221,6 +135,7 @@
 - NXM-L28 (menu, say5): "make him the punt returner". F9's roster: a man's item (SR.6)
 - NXM-L29 (menu, say5): "change his name". F9's roster: a man's item, the typed prompt of the original (SR.6, rule 0.19)
 - NXM-L92 (menu, say5): "his place on the depth chart". F9's roster: a man's item (issue 10, D-223): his position's order, the list on him; U and N move him, Enter makes him the starter
+- NXM-L93 (menu, say5): "release him". F9's roster: a man's item, the last (issue 13, D-226): a man of the 53 or of the practice squad released with one confirmation
 - NXM-L30 (menu, say5): "starting lineup". F9, Franchise, your depth chart or Depth charts: the first item of a team (SR.6, NX-L11)
 - NXM-L31 (sentence, say5): " the starting lineup of the <team>. Enter changes the starter of a position. ". the lineup list's title (SR.6)
 - NXM-L32 (sentence, say5): " <position>, <player>, number <number> ". the lineup: a position with its starter (SR.6)
@@ -467,3 +382,104 @@
 - NXN-04 (menu, say5): "earlier". F9 news, the earlier lines
 - NXH-34 (help, say5): " With a franchise. F9. the franchise menu: the to do list, the news, your roster, your depth chart, the league history, the team ratings, free agents and trades. ". F5 addition (H12, C6), while the franchise is in use
 - NXH-35 (help, say5): " A franchise is a league that lasts from season to season. Your players have ratings, grow older, improve and decline, and retire. ". F6 addition (H12, C6), while the franchise is in use
+- NXH-37 (help, say5): " After the play offs comes the offseason with the draft and the roster cut. Before a game you hear the news and your to do list. Extra work you leave undone puts you behind the other teams. ". F6 addition (H12, C6), after NXH-35
+- NXH-36 (help, say5): " Rating: a player's skill from 40 to 99, where 70 is average. Potential: how fast a young player may still improve. ". F7 addition (H12, C6), while the franchise is in use
+- NXH-38 (help, say5): " Draft: the yearly choice of new players; the weakest teams pick first. Rookie: a player in his first season. Released: let go from the team. ". F7 addition (H12, C6), after NXH-36
+- NWB01 (remark, say2): " the <team> beat the <other> by <n> points. ". the biggest win of the week
+- NWB02 (remark, say2): " a big win for the <team>, <score> over the <other>. ". the biggest win of the week
+- NWB03 (remark, say2): " the <team> ran over the <other>, <score>. ". the biggest win of the week
+- NWB04 (remark, say2): " the <other> had no answer for the <team>, <score>. ". the biggest win of the week
+- NWU01 (remark, say2): " an upset: the <team> beat the <other>, <score>. ". an upset
+- NWU02 (remark, say2): " nobody expected it: the <team> over the <other>, <score>. ". an upset
+- NWU03 (remark, say2): " the <other> stumbled against the <team>, <score>. ". an upset
+- NWU04 (remark, say2): " a surprise result: the <team> got past the <other>, <score>. ". an upset
+- NWC01 (remark, say2): " the closest game of the week: the <team> over the <other>, <score>. ". the closest game
+- NWC02 (remark, say2): " the <team> just held off the <other>, <score>. ". the closest game
+- NWC03 (remark, say2): " a nail biter: the <team> beat the <other>, <score>. ". the closest game
+- NWC04 (remark, say2): " the <other> came up just short against the <team>, <score>. ". the closest game
+- NWS01 (remark, say2): " the <team> have won <n> in a row. ". another team's winning streak
+- NWS02 (remark, say2): " nobody can stop the <team>: <n> wins in a row. ". another team's winning streak
+- NWS03 (remark, say2): " the <team> keep rolling, <n> straight wins. ". another team's winning streak
+- NWS04 (remark, say2): " <n> wins in a row for the <team>. ". another team's winning streak
+- NWL01 (remark, say2): " the <team> have lost <n> in a row. ". another team's losing streak
+- NWL02 (remark, say2): " a hard time for the <team>: <n> losses in a row. ". another team's losing streak
+- NWL03 (remark, say2): " the <team> are looking for a win after <n> straight losses. ". another team's losing streak
+- NWL04 (remark, say2): " <n> losses in a row for the <team>. ". another team's losing streak
+- NWY01 (remark, say2): " <coach>, your team has won <n> in a row. ". your winning streak
+- NWY02 (remark, say2): " <n> straight wins for coach <coach>. ". your winning streak
+- NWY03 (remark, say2): " the fans are happy, coach <coach>: <n> wins in a row. ". your winning streak
+- NWY04 (remark, say2): " your team is on a roll, <n> wins in a row. ". your winning streak
+- NWZ01 (remark, say2): " <coach>, your team has lost <n> in a row. ". your losing streak
+- NWZ02 (remark, say2): " <n> straight losses for coach <coach>. ". your losing streak
+- NWZ03 (remark, say2): " the fans want a win, coach <coach>: <n> losses in a row. ". your losing streak
+- NWZ04 (remark, say2): " a hard stretch for your team, <n> losses in a row. ". your losing streak
+- NWM01 (remark, say2): " <coach> won game number <n> as a head coach. ". the coach's milestone
+- NWM02 (remark, say2): " win number <n> for coach <coach>. ". the coach's milestone
+- NWM03 (remark, say2): " coach <coach> has <n> wins now. ". the coach's milestone
+- NWM04 (remark, say2): " another milestone: <n> wins for coach <coach>. ". the coach's milestone
+- NWT01 (remark, say2): " the <team> are the champions of season <n>. ". the champion (offseason)
+- NWT02 (remark, say2): " season <n> belongs to the <team>. ". the champion (offseason)
+- NWT03 (remark, say2): " the <team> won it all in season <n>. ". the champion (offseason)
+- NWT04 (remark, say2): " the title of season <n> goes to the <team>. ". the champion (offseason)
+- NWR01 (remark, say2): " <player>, <position> of the <team>, retires. ". a star retires (offseason)
+- NWR02 (remark, say2): " a great career ends: <player> of the <team> retires. ". a star retires (offseason)
+- NWR03 (remark, say2): " the <team> lose <player>, who retires. ". a star retires (offseason)
+- NWR04 (remark, say2): " <player> of the <team> says goodbye to football. ". a star retires (offseason)
+- NWD01 (remark, say2): " with the first pick the <team> took <player>, <position>. ". the first pick of the draft (offseason)
+- NWD02 (remark, say2): " the first pick of the draft: <player>, <position>, to the <team>. ". the first pick of the draft (offseason)
+- NWD03 (remark, say2): " the <team> opened the draft with <player>, <position>. ". the first pick of the draft (offseason)
+- NWD04 (remark, say2): " <player>, <position>, went first, to the <team>. ". the first pick of the draft (offseason)
+- NWP01 (remark, say2): " <player> has worked hard and improved to <r>. ". your big improver (offseason)
+- NWP02 (remark, say2): " a big step for <player>: rating <r>. ". your big improver (offseason)
+- NWP03 (remark, say2): " <player> is better than ever, rating <r>. ". your big improver (offseason)
+- NWP04 (remark, say2): " the extra work paid off for <player>: rating <r>. ". your big improver (offseason)
+- NXN-05 (sentence, say5): " week <n>. ". F9 news, before the lines of an earlier week (added by SX.8e; the offseason's lines use NXN-03)
+- NXF-28 (menu, say5): "salary cap". F9 Franchise item (SX.8g)
+- NXL-33 (sentence, say5): " <player>, <position>, rating <r>, age <a>, <potential> potential, <contract> ". a player in F9's roster with his contract (SX.8g)
+- NXA-01 (sentence, say5): " the salary cap is <cap>. your payroll is <payroll>, dead money <dead>, cap space <space>. ". F9 salary cap, the first line (SX.8g)
+- NXA-02 (sentence, say5): " your cap space is number <k> of 32. ". F9 salary cap, the second line
+- NXA-03 (sentence, say5): " <k>. the <team>, <space>. ". F9 salary cap, a team by cap space
+- NXA-10 (piece, piece): "<salary> for <y> years". a contract
+- NXA-11 (piece, piece): "<salary> for one year". a contract with one year left
+- NXA-12 (sentence, say2): " <player>, <position>, age <a>, rating <r>, <contract>. ". stage 5, a player released for the cap
+- NXA-13 (prompt, say2): " you would be over the salary cap by <over>. choose who is released. ". stage 5, choose yourself
+- NXA-14 (sentence, say2): " your cap space is <space>. ". stage 5, after the fill
+- NXA-20 (piece, piece): "<money> million". an amount of money
+- NXE-59 (sentence, say2): " your team would be over the salary cap by <over>. the staff would also release: ". stage 5, before the players released for the cap, after the cut's own list
+- NWK01 (remark, say2): " the <team> have the most cap space in the league, <cap>. ". the team with the most cap space (offseason)
+- NWK02 (remark, say2): " <cap> of cap space: the <team> have the most room under the cap. ". the team with the most cap space (offseason)
+- NWK03 (remark, say2): " the <team> go into the season with <cap> in cap space, more than anybody. ". the team with the most cap space (offseason)
+- NWK04 (remark, say2): " no team has more room under the cap than the <team>: <cap>. ". the team with the most cap space (offseason)
+- NXA-15 (sentence, say2): " your team would be over the salary cap by <over>. the staff would release: ". stage 5, the cap list when the cut has no list of its own (review of SX.8g)
+- NXA-16 (sentence, say2): " your team is over the salary cap by <over>. nobody can be released to fix it. ". stage 5, the player's team could not get under the cap (review of SX.8g)
+- NXA-21 (piece, piece): "minus <money> million". an amount of money below zero (cap space of a team over the cap)
+- NXE-17 (piece, piece): "expiring contracts". the name of stage 7 (SX.8h), between the development and the draft
+- NXW-01 (sentence, say2): " <coach> <n> of your players have contracts that end. you will be asked about each one. ". stage 7, the player's players to be asked
+- NXW-02 (sentence, say2): " none of your players has a contract that ends. ". stage 7, nobody to ask
+- NXW-03 (prompt, say2): " <player>, <position>, age <a>, rating <r>, <potential> potential. he is <mood> with the team. he asks <contract>. ". stage 7, one player's talk, the first round
+- NXW-04 (sentence, say2): " you can pay him up to <room>. ". stage 7, the room under the salary cap for him
+- NXW-05 (sentence, say2): " you cannot afford his price. you can pay up to <room>. ". stage 7, no room for his price
+- NXW-10 (sentence, say2): " <player> signs, <contract>. ". stage 7, signed
+- NXW-11 (sentence, say2): " <player> wants more. he asks <contract>. round <round> of <m>. ". stage 7, a counter after an offer for less
+- NXW-12 (sentence, say2): " <player> ends the talks and leaves. ". stage 7, the last round failed
+- NXW-13 (sentence, say2): " <player> is let go. ". stage 7, let go
+- NXW-14 (sentence, say2): " <player> signs the franchise tag, <contract>. ". stage 7, the franchise tag
+- NXW-20 (piece, piece): "happy". a player's mood
+- NXW-21 (piece, piece): "content". a player's mood
+- NXW-22 (piece, piece): "unhappy". a player's mood
+- NXW-30 (sentence, say2): " the staff signed <n> of your players again and let <m> go. ". stage 7, the staff handles the player's team
+- NXW-31 (sentence, say2): " signed: <n>. let go: <m>. ". stage 7, the end of the player's talks
+- NXW-40 (sentence, say2): " <player> of the <team>, <position>, rating <r>, is not signed again and is a free agent. ". stage 7, a star of another team who is let go (at most three)
+- NXW-41 (sentence, say2): " the other teams did not sign <n> of their players again. ". stage 7, the count of the other teams
+- NXW-60 (piece, piece): "contract ended". a contract that ran out and is not settled yet (the roster between stages 2 and 7)
+- NXW-A01 (answer, say2): "sign him". stage 7, the answers
+- NXW-A02 (answer, say2): "offer less". stage 7, the answers
+- NXW-A03 (answer, say2): "let him go". stage 7, the answers
+- NXW-A04 (answer, say2): "use the franchise tag, <contract>". stage 7, the answers
+- NXH-39 (help, say5): " Contracts: before the draft you are asked about each player whose contract ends: sign him, offer less, use the franchise tag once a year, or let him go. ". F6, after NXH-37 (SX.8h)
+- NXW-06 (sentence, say2): " <coach> one of your players has a contract that ends. you will be asked about him. ". stage 7, one player to ask (review of SX.8h)
+- NXW-07 (sentence, say2): " you cannot afford his price. your team is over the salary cap. ". stage 7, no room at all (review of SX.8h)
+- NXE-18 (piece, piece): "free agency". the name of stage 8 (SX.8i), between the expiring contracts and the draft
+- NXJ-01 (sentence, say2): " <n> free agents are on the market. ". stage 8, the market at its start
+- NXJ-02 (prompt, say2): " round <round> of <m>. your open places: <list>. you can pay a new player up to <room>. ". stage 8, the situation of a round's question
+- NXJ-04 (prompt, say2): " <player>, <position>, age <a>, rating <r>, <potential> potential. he asks <contract>. <interest>. ". stage 8, one free agent in the list of a round and in F9

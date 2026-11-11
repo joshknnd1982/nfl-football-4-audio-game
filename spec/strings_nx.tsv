@@ -638,6 +638,19 @@ NXJ-S16	franchise	sentence	say5	 that would put you over the salary cap. you hav
 NXJ-S17	franchise	sentence	say5	 you did not sign <player>. 	F9 free agents: the player said no (SZ.8)
 NXJ-S18	franchise	sentence	say5	 that signing cannot be made now. 	F9 free agents: any other reason (SZ.8)
 NXJ-S19	franchise	sentence	say5	 free agents can be signed at the main menu, before the game, once the week's news and lists are told. 	F9 free agents while the results of the week before are still being told (SZ.8)
+NXJ-S20	franchise	menu	say5	release a player	F9 free agents item: a release with no signing (issue 13, D-226)
+NXJ-S22	franchise	sentence	say5	 release <player>, <contract>? it costs <dead> in dead money, which counts against the cap, and leaves you <room> of cap room. press enter to release him, or escape to say no. 	F9 release a player (issue 13, D-226): the one confirmation
+NXJ-S23	franchise	sentence	say5	 <player> is released and is a free agent now. you have <n> players of <m>. 	F9 release a player (issue 13, D-226): done, made and written
+NXJ-S24	franchise	sentence	say5	 you did not release <player>. 	F9 release a player (issue 13, D-226): the player said no (the practice squad's release too)
+NXJ-S25	franchise	sentence	say5	 <player> is hurt, so he cannot be released until he is fit. 	F9 release a player (issue 13, D-226): a hurt man (as a signing's release)
+NXJ-S26	franchise	sentence	say5	 you cannot release <player>. a team must keep at least <n> <group>. 	F9 release a player (issue 13, D-226): the family minimum (FR_FAMILY_MIN)
+NXJ-S27	franchise	sentence	say5	 players cannot be released during a game. 	F9 release a player (issue 13, D-226): inside a game
+NXJ-S28	franchise	sentence	say5	 players are released in F9 during the season, before the kick-off of a week. in the offseason, the roster cut releases the players a team cannot keep. 	F9 release a player (issue 13, D-226): the offseason
+NXJ-S29	franchise	sentence	say5	 players can be released at the main menu, before the game, once the week's news and lists are told. 	F9 release a player (issue 13, D-226): the week is not prepared yet
+NXJ-S30	franchise	sentence	say5	 release a player. choose the position. 	F9 release a player (issue 13, D-226): the title of the positions
+NXJ-S31	franchise	sentence	say5	 who do you release? 	F9 release a player (issue 13, D-226): the title of the team's men of the position
+NXJ-S32	franchise	sentence	say5	 you have no player at that position. 	F9 release a player (issue 13, D-226): nobody at the position
+NXJ-S33	franchise	sentence	say5	 that release cannot be made now. 	F9 release a player (issue 13, D-226): any other reason
 NXJ-P01	franchise	sentence	say5	 <player>, <position>, age <a>, rating <r>. 	F9 practice squad: a squad player in the play-offs (D-136)
 NXJ-P02	franchise	sentence	say5	 practice squad, <n> of 16 players. 	F9 practice squad: the menu's title (D-136)
 NXJ-P03	franchise	sentence	say5	 your practice squad, <n> players, the best first. 	F9 practice squad: the list's title (D-136)
@@ -2306,6 +2319,7 @@ NXM-L27	menus	menu	say5	make him the kick returner	F9's roster: a man's item (SR
 NXM-L28	menus	menu	say5	make him the punt returner	F9's roster: a man's item (SR.6)
 NXM-L29	menus	menu	say5	change his name	F9's roster: a man's item, the typed prompt of the original (SR.6, rule 0.19)
 NXM-L92	menus	menu	say5	his place on the depth chart	F9's roster: a man's item (issue 10, D-223): his position's order, the list on him; U and N move him, Enter makes him the starter
+NXM-L93	menus	menu	say5	release him	F9's roster: a man's item, the last (issue 13, D-226): a man of the 53 or of the practice squad released with one confirmation
 NXM-L30	menus	menu	say5	starting lineup	F9, Franchise, your depth chart or Depth charts: the first item of a team (SR.6, NX-L11)
 NXM-L31	menus	sentence	say5	 the starting lineup of the <team>. Enter changes the starter of a position. 	the lineup list's title (SR.6)
 NXM-L32	menus	sentence	say5	 <position>, <player>, number <number> 	the lineup: a position with its starter (SR.6)

@@ -1,48 +1,3 @@
-- NWH01 (remark, say2): " <player> of the <team> wants to be traded. ". a player asks to be traded (news, SX.8n)
-- NWH02 (remark, say2): " unhappy with the <team>, <player> asks for a trade. ". a player asks to be traded (news, SX.8n)
-- NWH03 (remark, say2): " the <team> hear a trade request from their <position>, <player>. ". a player asks to be traded (news, SX.8n)
-- NWH04 (remark, say2): " <player> tells the <team> he wants out. ". a player asks to be traded (news, SX.8n)
-- NXU-D13 (sentence, say2): " that trade can no longer be made. <player> stays with your team for now. ". a trade demand: the chosen offer can no longer be made (the review of SX.8n)
-- NXG-06 (menu, say5): "awards by season". history menu (SX.8o)
-- NXG-07 (menu, say5): "hall of fame". history menu (SX.8o)
-- NXG-A01 (piece, piece): "most valuable player". an award (SX.8o; the NFL's AP award, a plain sports word)
-- NXG-A02 (piece, piece): "offensive player of the year". an award (SX.8o)
-- NXG-A03 (piece, piece): "defensive player of the year". an award (SX.8o)
-- NXG-A04 (piece, piece): "rookie of the year". an award (SX.8o)
-- NXG-A05 (piece, piece): "coach of the year". an award (SX.8o)
-- NXG-B01 (sentence, say2): " the awards of the season. ". stage 1, before the awards (SX.8o)
-- NXG-B02 (sentence, say2): " <award>: <player>, <position> of the <team>. ". stage 1, an award of another team's player (SX.8o)
-- NXG-B03 (sentence, say2): " <award>: <player>, your <position>. ". stage 1, an award of the player's own player (SX.8o)
-- NXG-B04 (sentence, say2): " <award>: <name> of the <team>. ". stage 1, the coach of the year of another team (SX.8o)
-- NXG-B05 (sentence, say2): " <award>: you, coach <coach>. ". stage 1, the player is the coach of the year (SX.8o)
-- NXG-B06 (sentence, say2): " the hall of fame's new class: ". stage 1, before the players who enter the hall (SX.8o)
-- NXG-B07 (sentence, say2): " <player>, <position>, the <team>, <n> seasons, best rating <r>. ". stage 1, a player who enters the hall (SX.8o)
-- NXG-B08 (sentence, say2): " the hall of fame takes <n> new members. ". stage 1 with the offseason short: the class's size (SX.8o)
-- NXG-20 (sentence, say5): " season <n>, <award>: <player>, <position>, the <team>. ". history line: an award (SX.8o)
-- NXG-21 (sentence, say5): " season <n>, <award>: <name>, the <team>. ". history line: the coach of the year (SX.8o)
-- NXG-22 (sentence, say5): " <player>, <position>, the <team>, <n> seasons, best rating <r>, entered in season <s>. ". history line: a member of the hall (SX.8o)
-- NXH-46 (help, say5): " Season awards, and the best players enter the hall of fame five seasons after they leave. Ratings decide who carries the ball; a back who carries a lot is hurt more often. ". F6, after NXH-45 (SX.8o)
-- NXG-B09 (sentence, say2): " the hall of fame takes one new member. ". stage 1 with the offseason short: a class of one (the review of SX.8o)
-- NXC-20 (sentence, say2): " week <n> ". the real calendar's schedule (SZ.8), before each week's game in the place of the original's 'game number <n>': the weeks run 1 to 18 and a bye is a week too
-- NXC-21 (sentence, say2): " bye week. ". the real calendar's schedule (SZ.8): the week in which the player's team does not play
-- NXC-22 (menu, say5): " 1. see this week's games ". the main menu's first choice in the bye week (SZ.8), in the place of ' 1. play game '
-- NXC-23 (sentence, say2): " Your team has a bye this week. There is no game today. ". 'Today's game is ...' in the bye week (SZ.8)
-- NXC-24 (sentence, say2): " your team has a bye this week. ". the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
-- NXC-25 (sentence, say4): " the top seeds, the <team> and the <other>, have the only byes of the wild card round. ". the end of a regular season on the real calendar (D-129, the N. F. L.'s 14-team play-offs), after the N. F. C. wild card teams: the A. F. C.'s seed 1, then the N. F. C.'s
-- NXC-26 (sentence, say4): " Your team won the division title over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the player's division title and his team won it
-- NXC-27 (sentence, say4): " The <other> won the division title over your team on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the player's division title and another team won it
-- NXC-28 (sentence, say4): " Your team won the last wild card place over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and the player's team won it
-- NXC-29 (sentence, say4): " The <other> won the last wild card place over your team on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and another team won it
-- NXC-30 (piece, say4): "the games between the teams". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'head-to-head'
-- NXC-31 (piece, say4): "it beat each of the other teams". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'head-to-head sweep'
-- NXC-32 (piece, say4): "the record in division games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'division record'
-- NXC-33 (piece, say4): "the record against common opponents". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'common games'
-- NXC-34 (piece, say4): "the record in conference games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'conference record'
-- NXC-35 (piece, say4): "strength of victory, the records of the teams it beat". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'strength of victory'
-- NXC-36 (piece, say4): "strength of schedule, the records of the teams it played". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'strength of schedule'
-- NXC-37 (piece, say4): "points scored and allowed, ranked in the conference". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'conference points ranking'
-- NXC-38 (piece, say4): "points scored and allowed, ranked in the league". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'league points ranking'
-- NXC-39 (piece, say4): "net points against common opponents". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points in common games'
 - NXC-40 (piece, say4): "net points in conference games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points in conference games'
 - NXC-41 (piece, say4): "net points in all games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points'
 - NXC-42 (piece, say4): "a coin toss". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'coin toss'
@@ -297,3 +252,20 @@
 - BN63 (remark, say): " Crowd noise is the home team's extra player, and it is working overtime today. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN64 (remark, say): " A few clouds are rolling through, but nothing that should bother anyone on the field. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN65 (remark, say): " There is a hush before the snap and a roar after the whistle. That is football on the radio, too. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN66 (remark, say): " The grass is holding up well, and the footing looks good for both teams. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN67 (remark, say): " You can tell the fans are into it from the way they stand for every third down. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN68 (remark, say): " The players' breath is showing in the huddle. It is that kind of day. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN69 (remark, say): " <commentator> is taking notes over there, and I would not want to see the exam. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN70 (remark, say): " <commentator> never misses a replay, and I never miss a chance to ask for one. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN71 (remark, say): " If you hear a pen clicking, that is <commentator> working on something to tell you next. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN72 (remark, say): " <commentator> and I have a bet going on the next play. I will not say who is winning. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN73 (remark, say): " The booth is quiet for a moment while <commentator> and I watch the formation. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN74 (remark, say): " <commentator> is nodding at that, which on the radio means I have to say it out loud. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN75 (remark, say): " There is a lot of coffee in this booth, and <commentator> is doing most of the drinking. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN76 (remark, say): " I am told <commentator> has an opinion on that, and I am told it is a strong one. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN77 (remark, say): " It takes a lot of preparation to sit next to <commentator>. Mostly patience. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN78 (remark, say): " <commentator> has been studying the film all week, and it shows. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN79 (remark, say): " We have a good view from up here, and <commentator> has the headset to prove it. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN80 (remark, say): " The view from the booth is wonderful, and <commentator> has already pointed out three things I missed. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN81 (remark, say): " If I get a play wrong, <commentator> will tell you. Politely, of course. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
+- BN82 (remark, say): " Stay with us. <commentator> and I have plenty more to say, and a few things to get right. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
