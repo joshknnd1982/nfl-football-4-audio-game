@@ -10,7 +10,9 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
-## Unreleased (since 0.16.24)
+## 0.16.25 (2026-11-11, test build)
+
+One change from a tester's GitHub issue: you can release a player in the Franchise without signing anyone. Everything of 0.16.24 and earlier below is still to be tested too.
 
 ### Release a player without signing anyone (Franchise)
 From a tester's report (GitHub issue 13): "Currently in franchise mode there is currently no way to release someone unless you are planning to sign someone this needs updated." Until now a player of your team could only be released as part of signing a free agent. Now you can release any player of your 53 on his own, in two places: in F9, Franchise, your roster, press Enter on a player and choose "release him" (the last item); or in F9, Franchise, free agents, choose "release a player", then the position, then the player. Before anything is done you hear one question with his contract, the dead money releasing him costs (it counts against the salary cap) and the cap room you will have left; Enter releases him, Escape keeps him. He becomes a free agent, so you or another team may sign him again. A release is refused, with the reason said, when the player is hurt, when your team would have fewer than the players it must keep of his group (for example two quarterbacks, one kicker), when his dead money would put you over the cap, during a game, and in the offseason (the roster cut releases players there). Releases work in the regular season and the play-offs, before the kick-off of the week. If you had chosen him as a starter, you hear who starts in his place. A practice squad player in your roster can be released the same way, and saying no to a practice squad release now says "you did not release", not "you did not sign".
