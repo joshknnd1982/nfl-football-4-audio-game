@@ -44,7 +44,7 @@ Since S-D (D-225): a play replayed or withdrawn on the player's two-point try go
 
 Since S-D (D-226): F9, Franchise, free agents has 4 items (sign, hear, add to the practice squad, release a player); a man's items in F9, Franchise, your roster end with "release him" (a man of the 53 or of the practice squad); a test that walks those menus by Down counts sees one more item at their ends only. The newest text IDs: NXJ-S33 (S21 unused) and NXM-L93. Version 0.16.25 is the newest test build (S-B, 2026-11-11); issue 13 is answered and open until the tester tries it. CHANGELOG.md's top section is 0.16.25: the next change that a player can notice opens "## Unreleased (since 0.16.25)" above it. The newest fixesforgames entry is B-P225 (part17, 20.7 KB); the newest decision D-226 (part15); the newest playtest item 177 (part02 is full; PLAYTEST_LIST.part03.md, started in S-D5, holds the next item, 178).
 
-Since S-D (D-227): release_notes.py gives the installer's direct link (above); the newest fixesforgames entry is B-T157 (part17, 23.1 KB); the newest decision D-227 (part15). CHANGELOG.md's top section is still 0.16.25.
+Since S-D (D-227): release_notes.py gives the installer's direct link (above); the newest fixesforgames entry is B-T158 (S-D5: commit from a message file in PowerShell too; part17, 24.1 KB); the newest decision D-227 (part15). CHANGELOG.md's top section is still 0.16.25.
 
 Prompt for the next session (S-D; paste it with what you want built next, a report or a tester's issue under it; it works in any agent):
 
