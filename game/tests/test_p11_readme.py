@@ -74,14 +74,15 @@ def test_no_text_a_reader_meets_calls_the_game_a_clone_or_a_new_version_of_jim_k
 
 
 def test_the_changelog_calls_the_versions_before_1_0_0_test_builds_and_has_the_version_of_the_code():
-    """D-228 (2026-11-12): 1.0.0 is the first full release; every version before it is a test build, never a release."""
+    """D-228 (2026-11-12): 1.0.0 is the first full release; every version before it is a test build, never a release; later versions
+    may be either (a test build of fixes before 1.0.1, for example)."""
     from nfl4 import VERSION
     text = (GAME / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "published on GitHub as pre-releases" in text and "## %s " % VERSION in text
     headings = re.findall(r"^## (\d+)\.(\d+)\.(\d+) \(\d{4}-\d{2}-\d{2}, (test build|release)\)$", text, re.MULTILINE)
     assert headings
-    for major, _minor, _patch, kind in headings:
-        assert kind == ("release" if int(major) >= 1 else "test build"), (major, _minor, _patch, kind)
+    for major, _minor, _patch, kind in headings:                       # after 1.0.0 a version may be a test build or a release
+        assert int(major) >= 1 or kind == "test build", (major, _minor, _patch, kind)
     assert "## 1.0.0 (2026-11-12, release)" in text
 
 
