@@ -25,7 +25,7 @@ def test_the_readme_exists_with_lf_line_ends_and_the_attribution_and_the_notes()
     assert "\r" not in text and text.endswith("\n") and text.startswith("# NFL Football 4")
     for needed in ("This is inspired by Jim Kitchen", "blind from birth", "died in 2015", "MIT License", "If something goes wrong",
                    "Madden NFL is a trademark of Electronic Arts", "If a rights holder asks for them to be removed, they will be removed",
-                   "https://github.com/joshknnd1982", "no full release yet"):      # 2026-10-26: test installers are pre-releases
+                   "https://github.com/joshknnd1982", "Status: released"):      # 2026-11-12 (D-228): 1.0.0 is the first full release
         assert needed.lower() in text.lower(), needed
 
 
@@ -73,14 +73,19 @@ def test_no_text_a_reader_meets_calls_the_game_a_clone_or_a_new_version_of_jim_k
         assert not re.search(r"new version of|remake|re-creation|recreation", text, re.IGNORECASE), name
 
 
-def test_the_changelog_names_no_release_and_the_version_of_the_code_is_in_it():
+def test_the_changelog_calls_the_versions_before_1_0_0_test_builds_and_has_the_version_of_the_code():
+    """D-228 (2026-11-12): 1.0.0 is the first full release; every version before it is a test build, never a release."""
     from nfl4 import VERSION
     text = (GAME / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "published on GitHub as pre-releases" in text and "## %s " % VERSION in text
-    assert "1.0.0 (" not in text
+    headings = re.findall(r"^## (\d+)\.(\d+)\.(\d+) \(\d{4}-\d{2}-\d{2}, (test build|release)\)$", text, re.MULTILINE)
+    assert headings
+    for major, _minor, _patch, kind in headings:
+        assert kind == ("release" if int(major) >= 1 else "test build"), (major, _minor, _patch, kind)
+    assert "## 1.0.0 (2026-11-12, release)" in text
 
 
 def test_no_installer_or_archive_or_checksum_of_a_test_build_is_tracked_by_the_ignore_file():
     ignore = (GAME / ".gitignore").read_text(encoding="utf-8")
-    for pattern in ("/release/*.exe", "/release/*.zip", "/release/checksums_test_*.txt", "/original/"):
+    for pattern in ("/release/*.exe", "/release/*.zip", "/release/checksums_test_*.txt", "/release/checksums_*.txt", "/original/"):
         assert pattern in ignore, pattern

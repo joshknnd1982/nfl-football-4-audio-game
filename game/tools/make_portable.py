@@ -3,7 +3,8 @@
 Usage: python game/tools/make_portable.py [version]      (any Python 3; default version from nfl4.VERSION)
 Reads the builds in %USERPROFILE%\\.kitchensinc-builds\\nfl4\\{64,32}\\dist\\nfl4 (run build.ps1 first).
 Writes release/nfl4-portable-<version>.zip (folders 64-bit and 32-bit, plus PORTABLE.txt) and
-release/checksums.txt (SHA-256 of the setup file and the zip, whichever exist).
+release/checksums_<version>.txt ("<SHA-256 in capitals>  <file name>" for the setup file and the zip, whichever exist; the
+release's checksums asset, D-228).
 """
 import hashlib
 import os
@@ -15,18 +16,19 @@ GAME = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 RELEASE = os.path.join(GAME, "release")
 BUILDS = os.path.join(os.path.expanduser("~"), ".kitchensinc-builds", "nfl4")
 
-PORTABLE_TXT = """My Brain by Josh Kennedy, inspired by Jim Kitchen
+PORTABLE_TXT = """NFL Football 4 by Josh Kennedy, inspired by Jim Kitchen
 Portable version {version}
 
 Unpack this zip anywhere (a folder you can write to, such as Documents or a USB stick).
 Open the folder 64-bit if your Windows is 64-bit (almost all are) or 32-bit otherwise, and start nfl4.exe.
 Nothing is installed and nothing is written to the registry.
 
-Your settings, your own sounds and the log go to your AppData Roaming folder, in Kitchensinc Revival, then Brain,
+Your settings, saved games, franchises, your own sounds and the logs go to your AppData Roaming folder, in Kitchensinc Revival,
+then NFL Football 4 (%APPDATA%\\Kitchensinc Revival\\NFL Football 4),
 the same place the installed version uses. Delete that folder by hand to remove them.
 
 The zip is not code-signed. If Windows SmartScreen warns, choose More info, then Run anyway.
-Read README.txt in the program folder for keys, speech settings and replacing sounds.
+Read README.txt in the program folder for keys, speech settings and replacing sounds, and CHANGELOG.md for what is new.
 
 This is inspired by Jim Kitchen, who was blind from birth, made free games for the blind community and died in 2015.
 Source and updates: https://github.com/joshknnd1982
@@ -67,8 +69,8 @@ def main():
     for name in (f"nfl4-setup-{version}.exe", f"nfl4-portable-{version}.zip"):
         path = os.path.join(RELEASE, name)
         if os.path.exists(path):
-            lines.append(f"{sha(path)}  {name}  ({os.path.getsize(path)} bytes)")
-    with open(os.path.join(RELEASE, "checksums.txt"), "w", encoding="utf-8") as out:
+            lines.append(f"{sha(path).upper()}  {name}")
+    with open(os.path.join(RELEASE, f"checksums_{version}.txt"), "w", encoding="utf-8", newline="\n") as out:
         out.write("\n".join(lines) + "\n")
     print("\n".join(lines))
 
