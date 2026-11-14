@@ -1,6 +1,3 @@
-- NXZ-61 (menu, say5): "Delayed Blitz". defense call D061 of the catalog (call, list dg06, UNVERIFIED)
-- NXZ-62 (menu, say5): "Cross Blitz". defense call D062 of the catalog (call, list dg06, UNVERIFIED)
-- NXZ-63 (menu, say5): "Free Fire". defense call D063 of the catalog (call, list dg06, SRC-SECONDARY)
 - NXZ-64 (menu, say5): "Twist Stunt". defense call D064 of the catalog (call, list dg06, SRC-SECONDARY)
 - NXZ-65 (menu, say5): "Loop Stunt". defense call D065 of the catalog (call, list dg06, SRC-SECONDARY)
 - NXZ-66 (menu, say5): "Edge Blitz". defense call D066 of the catalog (call, list dg06, SRC-SECONDARY)
@@ -316,3 +313,6 @@
 - NXY-S61 (help, say5): " Three running backs line up behind the quarterback and one runs straight ahead. Works against two deep defenders; rarely used. ". description of O161 Full House Dive (NX-P8; heard with D)
 - NXY-S62 (help, say5): " A running back takes the snap and runs, with the quarterback lined up wide. Works against man for man defense; weak when the line is crowded; rarely used. ". description of O162 Wildcat Run (NX-P8; heard with D)
 - NXY-S63 (help, say5): " A running back takes the snap and throws a pass. Works when defenders crowd the line; rarely used and risky. ". description of O163 Wildcat Pass (NX-P8; heard with D)
+- NXY-S64 (help, say5): " An old play where the quarterback hands off, keeps the ball or pitches it. Beats a blitz; weak against a defender who covers the pitch. ". description of O164 Split T Option (NX-P8; heard with D)
+- NXY-S66 (help, say5): " A receiver runs out, then comes back to the quarterback. A short, safe catch against man for man defense; defenders guarding areas can cover it. ". description of O166 Return Route (NX-P8; heard with D)
+- NXY-S67 (help, say5): " A receiver runs a medium distance toward the sideline. Good against defenders guarding areas; weak against defenders who bump the receivers. ". description of O167 Bench Route (NX-P8; heard with D)

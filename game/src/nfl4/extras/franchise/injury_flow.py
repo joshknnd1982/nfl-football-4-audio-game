@@ -124,6 +124,7 @@ class GameInjuries:
         self.exposed = 1 <= week <= league.last_prepared_week
         self.state = None
         self.identity = {1: [], 2: []}
+        self.sub_lineup = None                         # issue 14 (D-229): (base, bench, empty) of the player's side for the substitutions
         I.lineup_decided(league, own, week, staff)     # the kick-off: who of the player's hurt players plays is written into the rows
 
     def swap_sides(self) -> None:
@@ -155,6 +156,9 @@ class GameInjuries:
         if people.has_morale(self.league):                # the morale moves the ratings the H8 door and the carrier's weights read (SX.8n; the
             table = people.with_morale(self.league, team, table)     # review of SX.8o: the refresh at the kick-off and after an injury had dropped it)
         table = with_returners(table, game_returners(self.league, team, self.week, self.staff_of(side), self.out(side)))      # SR.6: Q-082
+        if side == 1 and team == self.league.team:        # issue 14 (D-229): the player's substitutions (none: the table unchanged)
+            from ..subs_flow import franchise_apply
+            table = franchise_apply(self, table)
         write_roster(self.state.rosters[side], table)
         self.state.quarterbacks[side] = table[QB_PLACE][1]
         self.identity[side] = [entry[0] for entry in table]

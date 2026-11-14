@@ -125,6 +125,9 @@ class ExtrasRecord:
     # SX.9 (C10): the accept-or-decline choice a Save Game at the prompt kept (penalty_flow.PenaltyFlow.suspend); None (and left out of the
     # saved text) in every other game, so a record without it loads as before
     pending_choice: dict | None = None
+    # issue 14 (D-229): the player's substitutions (extras/subs.py: {"backups", "game", "play", "at"}); None (and left out of the saved
+    # text) while he made none, so a record without it loads as before
+    subs: dict | None = None
 
     # ----- per side -----
 
@@ -179,6 +182,8 @@ class ExtrasRecord:
             del data["injuries"]
         if data["pending_choice"] is None:
             del data["pending_choice"]
+        if data["subs"] is None:
+            del data["subs"]
         return json.dumps(data, sort_keys=True, separators=(",", ":"))
 
     @classmethod
@@ -277,6 +282,9 @@ class ExtrasRecord:
             whole(self.franchise["week"], 0, 20, "the franchise week")
         if self.injuries is not None:
             check_game_injuries(self.injuries, whole)
+        if self.subs is not None:
+            from .subs import check_record
+            check_record(self.subs)
         if self.pending_choice is not None:
             if not self.penalties_on:
                 raise ValueError("a penalty choice is kept in a game without penalties")

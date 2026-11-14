@@ -123,6 +123,7 @@ from .kick_flow import KickFlow
 from .offense_flow import W_FOR, W_NO_BOOK, OffenseFlow, text_for
 from .broadcast import DEFAULT_TALK, Broadcast, talk_key
 from .choices import Choices
+from .subs_flow import SubsFlow
 from .stadium import Stadium
 from .onside import OnsideFlow
 from .penalty_flow import PenaltyFlow, clock_after_foul
@@ -184,6 +185,7 @@ class NflRules(ClassicRules):
             self.broadcast.talk_level = talk_key(crew_talk) or DEFAULT_TALK     # S-D (D-193); a game reads the player's setting live
         self.stadium = Stadium(self, on=stadium_on)      # SY.2: the crowd, the hits and the chain; a hand-made object has none
         self.choices = Choices(self)                     # SY.4, SY.5: the player's target and blitzer (nothing until he chooses)
+        self.subs = SubsFlow(self)                       # issue 14 (D-229): the player's substitutions (nothing until he makes one)
         self.game = None
         self.state = None
         self.clock: NflPeriodClock | None = None
@@ -457,6 +459,7 @@ class NflRules(ClassicRules):
     # ----- H3 -----
 
     def offense_menu(self, state, two_point_try: bool) -> list[menus.MenuItem]:
+        self.subs.ensure(state, "offense menu")              # issue 14: the lineup with the player's substitutions (none: nothing)
         if two_point_try:
             if self.penalty.try_from_the_one:                  # a personal foul on the touchdown, enforced on the try
                 self.penalty.try_from_the_one = False          # (14-2-3): half the distance from the 2
@@ -479,6 +482,7 @@ class NflRules(ClassicRules):
         return self._tail(state, items)
 
     def defense_menu(self, state) -> list[menus.MenuItem]:
+        self.subs.ensure(state, "defense menu")              # issue 14
         self.books.defense_id = ""
         self.defense.clear()                       # SX.10d: nothing is called yet
         if self.defense.active(state):             # SX.10d: the catalog's defense menus (design 2.2)
@@ -597,6 +601,8 @@ class NflRules(ClassicRules):
             return self.choices.receiver_menu(state, item)               # SY.4: who the next pass goes to
         if letter == "l" and item is not None and state.wisoff == 2 and self.defense.owns(item.action):
             return self.choices.blitzer_menu(state)                      # SY.5: who blitzes
+        if letter == "u":
+            return self.subs.menu(state)                                 # issue 14 (D-229): the substitutions
         if item is not None and self.offense.owns(item.action):     # SX.10c: plus, minus and a lone Shift in the catalog's menus
             return self.offense.key(state, code, item)
         if item is not None and self.defense.owns(item.action):     # SX.10d: the same in the defense's
@@ -637,6 +643,7 @@ class NflRules(ClassicRules):
 
     def before_kickoff(self, state, kicking_side: int) -> str:
         x = state.extras
+        self.subs.ensure(state, "kick-off")          # issue 14: the returners and the coverage the player put in
         self.broadcast.kickoff(state)              # SY.1, BC.3: a new possession; the sign-on before the opening kick-off
         x.out_of_bounds = False
         self.after_play = False
@@ -689,6 +696,7 @@ class NflRules(ClassicRules):
             return None
         x.handled = x.plays
         self.after_play = False
+        self.subs.ensure(state, "after a play")      # issue 14: a next-play substitution ends
         if self.possession_ends_game(state):      # SX.12: the overtime decided between two plays (the kickers kept their kick
             return OVERTIME_OVER                  # after their score, 16-1-5 (c)); the possession step catches the other changes
         self._overtime_news(state)

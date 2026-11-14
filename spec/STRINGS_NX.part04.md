@@ -55,6 +55,25 @@
 - NXB-T18 (piece, piece): "safety". a position word (SY.5)
 - NXB-T19 (piece, piece): "defender". the word where the position is not known (SY.5)
 - NXB-T21 (sentence, say5): " that play is not a pass. ". R on a play that is not a pass (SY.4)
+- NXB-U01 (prompt, say5): " <coach> substitutions. Who plays for your team? ". U in a play menu, the substitutions (issue 14, D-229): the list's prompt
+- NXB-U02 (menu, say5): "All backups in for the game". U in a play menu, the substitutions (issue 14, D-229): while the starters play
+- NXB-U03 (menu, say5): "Starters back in, undo every substitution". U in a play menu, the substitutions (issue 14, D-229): while anything is changed
+- NXB-U04 (menu, say5): "<group>: <list>". U in a play menu, the substitutions (issue 14, D-229): a group of places and who plays there now
+- NXB-U05 (prompt, say5): " which place? Enter lists who can come in. ". U in a play menu, the substitutions (issue 14, D-229): the places of a group
+- NXB-U06 (menu, say5): "<label>: <player>". U in a play menu, the substitutions (issue 14, D-229): a place and its man (a game without real names)
+- NXB-U07 (menu, say5): "<label>: <player>, <position>". U in a play menu, the substitutions (issue 14, D-229): a place, its man and his real position
+- NXB-U08 (piece, say5): ", for the next play only". U in a play menu, the substitutions (issue 14, D-229): after a place whose man is in for the next play
+- NXB-U09 (prompt, say5): " who comes in at <label> for <player>? Enter chooses him. ". U in a play menu, the substitutions (issue 14, D-229): who may come in at a place
+- NXB-U10 (piece, say5): ", now <label>". U in a play menu, the substitutions (issue 14, D-229): a man who plays another place now
+- NXB-U11 (piece, say5): ", on the bench". U in a play menu, the substitutions (issue 14, D-229): a man who plays no place now
+- NXB-U12 (prompt, say5): " <player> comes in for <old>. For how long? ". U in a play menu, the substitutions (issue 14, D-229): the question after a man was chosen
+- NXB-U13 (menu, say5): "For the next play only". U in a play menu, the substitutions (issue 14, D-229): the first answer
+- NXB-U14 (menu, say5): "For the rest of the game". U in a play menu, the substitutions (issue 14, D-229): the second answer
+- NXB-U15 (sentence, say5): " <player> comes in for <old> for the next play. ". U in a play menu, the substitutions (issue 14, D-229): said after a next-play substitution
+- NXB-U16 (sentence, say5): " <player> comes in for <old> for the rest of the game. ". U in a play menu, the substitutions (issue 14, D-229): said after a substitution for the game
+- NXB-U17 (sentence, say5): " your backups are in for the rest of the game. ". U in a play menu, the substitutions (issue 14, D-229): said after the backups went in
+- NXB-U18 (sentence, say5): " your starters are back in. ". U in a play menu, the substitutions (issue 14, D-229): said after every substitution was taken back
+- NXB-U19 (sentence, say5): " nobody else on your team can play there. ". U in a play menu, the substitutions (issue 14, D-229): a place nobody can come in at
 - NXH-69 (help, say5): " R in the offense menu chooses who your next pass goes to, a running back too when the play can throw to one. L in the defense menu chooses who blitzes. Enter keeps the play's own pick. ". F6 addition (SY.4, SY.5)
 - NXH-75 (help, say5): " F9, Rules, Quarterbacks lists every team's quarterbacks. Enter on a team lists them, and Enter on one makes him the team's starter from the next game. ". F6 addition (D-132)
 - NXH-79 (help, say5): " F9, Franchise, Depth charts: any team's order, position by position. In a franchise, your depth chart, right after your roster, is your own team. ". F6 addition (NX-D3; issue 10, D-223: the item is in F9, Franchise)
@@ -463,23 +482,3 @@
 - NXW-11 (sentence, say2): " <player> wants more. he asks <contract>. round <round> of <m>. ". stage 7, a counter after an offer for less
 - NXW-12 (sentence, say2): " <player> ends the talks and leaves. ". stage 7, the last round failed
 - NXW-13 (sentence, say2): " <player> is let go. ". stage 7, let go
-- NXW-14 (sentence, say2): " <player> signs the franchise tag, <contract>. ". stage 7, the franchise tag
-- NXW-20 (piece, piece): "happy". a player's mood
-- NXW-21 (piece, piece): "content". a player's mood
-- NXW-22 (piece, piece): "unhappy". a player's mood
-- NXW-30 (sentence, say2): " the staff signed <n> of your players again and let <m> go. ". stage 7, the staff handles the player's team
-- NXW-31 (sentence, say2): " signed: <n>. let go: <m>. ". stage 7, the end of the player's talks
-- NXW-40 (sentence, say2): " <player> of the <team>, <position>, rating <r>, is not signed again and is a free agent. ". stage 7, a star of another team who is let go (at most three)
-- NXW-41 (sentence, say2): " the other teams did not sign <n> of their players again. ". stage 7, the count of the other teams
-- NXW-60 (piece, piece): "contract ended". a contract that ran out and is not settled yet (the roster between stages 2 and 7)
-- NXW-A01 (answer, say2): "sign him". stage 7, the answers
-- NXW-A02 (answer, say2): "offer less". stage 7, the answers
-- NXW-A03 (answer, say2): "let him go". stage 7, the answers
-- NXW-A04 (answer, say2): "use the franchise tag, <contract>". stage 7, the answers
-- NXH-39 (help, say5): " Contracts: before the draft you are asked about each player whose contract ends: sign him, offer less, use the franchise tag once a year, or let him go. ". F6, after NXH-37 (SX.8h)
-- NXW-06 (sentence, say2): " <coach> one of your players has a contract that ends. you will be asked about him. ". stage 7, one player to ask (review of SX.8h)
-- NXW-07 (sentence, say2): " you cannot afford his price. your team is over the salary cap. ". stage 7, no room at all (review of SX.8h)
-- NXE-18 (piece, piece): "free agency". the name of stage 8 (SX.8i), between the expiring contracts and the draft
-- NXJ-01 (sentence, say2): " <n> free agents are on the market. ". stage 8, the market at its start
-- NXJ-02 (prompt, say2): " round <round> of <m>. your open places: <list>. you can pay a new player up to <room>. ". stage 8, the situation of a round's question
-- NXJ-04 (prompt, say2): " <player>, <position>, age <a>, rating <r>, <potential> potential. he asks <contract>. <interest>. ". stage 8, one free agent in the list of a round and in F9

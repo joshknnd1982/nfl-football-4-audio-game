@@ -1,6 +1,3 @@
-- NXY-S64 (help, say5): " An old play where the quarterback hands off, keeps the ball or pitches it. Beats a blitz; weak against a defender who covers the pitch. ". description of O164 Split T Option (NX-P8; heard with D)
-- NXY-S66 (help, say5): " A receiver runs out, then comes back to the quarterback. A short, safe catch against man for man defense; defenders guarding areas can cover it. ". description of O166 Return Route (NX-P8; heard with D)
-- NXY-S67 (help, say5): " A receiver runs a medium distance toward the sideline. Good against defenders guarding areas; weak against defenders who bump the receivers. ". description of O167 Bench Route (NX-P8; heard with D)
 - NXY-S10 (help, say5): " A receiver fakes toward the sideline, then cuts the other way. Good against man for man defense; defenders guarding areas can cover it. ". description of O110 Zig Route (NX-P8; heard with D)
 - NXY-R87 (help, say5): " Two receivers cut sharply across the field for a fast throw. Beats a blitz; defenders who drop back can cover it. ". description of O087 Double Slants (NX-P8; heard with D)
 - NXZ-R01 (help, say5): " Eight defenders crowd the line and the rest cover man for man with no deep help. Strong against runs near the goal line; a pass over their heads can score. ". description of D001 Goal Line Eight Up (NX-P8; heard with D)

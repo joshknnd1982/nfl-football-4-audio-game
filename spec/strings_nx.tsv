@@ -2094,6 +2094,25 @@ NXB-T17	menus	piece	piece	cornerback	a position word (SY.5)
 NXB-T18	menus	piece	piece	safety	a position word (SY.5)
 NXB-T19	menus	piece	piece	defender	the word where the position is not known (SY.5)
 NXB-T21	menus	sentence	say5	 that play is not a pass. 	R on a play that is not a pass (SY.4)
+NXB-U01	menus	prompt	say5	 <coach> substitutions. Who plays for your team? 	U in a play menu, the substitutions (issue 14, D-229): the list's prompt
+NXB-U02	menus	menu	say5	All backups in for the game	U in a play menu, the substitutions (issue 14, D-229): while the starters play
+NXB-U03	menus	menu	say5	Starters back in, undo every substitution	U in a play menu, the substitutions (issue 14, D-229): while anything is changed
+NXB-U04	menus	menu	say5	<group>: <list>	U in a play menu, the substitutions (issue 14, D-229): a group of places and who plays there now
+NXB-U05	menus	prompt	say5	 which place? Enter lists who can come in. 	U in a play menu, the substitutions (issue 14, D-229): the places of a group
+NXB-U06	menus	menu	say5	<label>: <player>	U in a play menu, the substitutions (issue 14, D-229): a place and its man (a game without real names)
+NXB-U07	menus	menu	say5	<label>: <player>, <position>	U in a play menu, the substitutions (issue 14, D-229): a place, its man and his real position
+NXB-U08	menus	piece	say5	, for the next play only	U in a play menu, the substitutions (issue 14, D-229): after a place whose man is in for the next play
+NXB-U09	menus	prompt	say5	 who comes in at <label> for <player>? Enter chooses him. 	U in a play menu, the substitutions (issue 14, D-229): who may come in at a place
+NXB-U10	menus	piece	say5	, now <label>	U in a play menu, the substitutions (issue 14, D-229): a man who plays another place now
+NXB-U11	menus	piece	say5	, on the bench	U in a play menu, the substitutions (issue 14, D-229): a man who plays no place now
+NXB-U12	menus	prompt	say5	 <player> comes in for <old>. For how long? 	U in a play menu, the substitutions (issue 14, D-229): the question after a man was chosen
+NXB-U13	menus	menu	say5	For the next play only	U in a play menu, the substitutions (issue 14, D-229): the first answer
+NXB-U14	menus	menu	say5	For the rest of the game	U in a play menu, the substitutions (issue 14, D-229): the second answer
+NXB-U15	menus	sentence	say5	 <player> comes in for <old> for the next play. 	U in a play menu, the substitutions (issue 14, D-229): said after a next-play substitution
+NXB-U16	menus	sentence	say5	 <player> comes in for <old> for the rest of the game. 	U in a play menu, the substitutions (issue 14, D-229): said after a substitution for the game
+NXB-U17	menus	sentence	say5	 your backups are in for the rest of the game. 	U in a play menu, the substitutions (issue 14, D-229): said after the backups went in
+NXB-U18	menus	sentence	say5	 your starters are back in. 	U in a play menu, the substitutions (issue 14, D-229): said after every substitution was taken back
+NXB-U19	menus	sentence	say5	 nobody else on your team can play there. 	U in a play menu, the substitutions (issue 14, D-229): a place nobody can come in at
 NXH-69	menus	help	say5	 R in the offense menu chooses who your next pass goes to, a running back too when the play can throw to one. L in the defense menu chooses who blitzes. Enter keeps the play's own pick. 	F6 addition (SY.4, SY.5)
 NXH-70	broadcast	help	say5	 The crew are Walt Kessler, Gus Delgado and Nora Banks of the Gridiron Radio Network until you choose names of your own in F9, Rules, Broadcast crew. 	F6 addition, both modes (SZ.1, BC.3)
 NXH-71	broadcast	help	say5	 The stadium and referee sounds can be replaced with your own sound files: F9, Sounds, Stadium and referee sounds lists them with the file name each one takes. 	F6 addition (SZ.2)

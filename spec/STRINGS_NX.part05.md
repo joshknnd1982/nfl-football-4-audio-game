@@ -1,3 +1,23 @@
+- NXW-14 (sentence, say2): " <player> signs the franchise tag, <contract>. ". stage 7, the franchise tag
+- NXW-20 (piece, piece): "happy". a player's mood
+- NXW-21 (piece, piece): "content". a player's mood
+- NXW-22 (piece, piece): "unhappy". a player's mood
+- NXW-30 (sentence, say2): " the staff signed <n> of your players again and let <m> go. ". stage 7, the staff handles the player's team
+- NXW-31 (sentence, say2): " signed: <n>. let go: <m>. ". stage 7, the end of the player's talks
+- NXW-40 (sentence, say2): " <player> of the <team>, <position>, rating <r>, is not signed again and is a free agent. ". stage 7, a star of another team who is let go (at most three)
+- NXW-41 (sentence, say2): " the other teams did not sign <n> of their players again. ". stage 7, the count of the other teams
+- NXW-60 (piece, piece): "contract ended". a contract that ran out and is not settled yet (the roster between stages 2 and 7)
+- NXW-A01 (answer, say2): "sign him". stage 7, the answers
+- NXW-A02 (answer, say2): "offer less". stage 7, the answers
+- NXW-A03 (answer, say2): "let him go". stage 7, the answers
+- NXW-A04 (answer, say2): "use the franchise tag, <contract>". stage 7, the answers
+- NXH-39 (help, say5): " Contracts: before the draft you are asked about each player whose contract ends: sign him, offer less, use the franchise tag once a year, or let him go. ". F6, after NXH-37 (SX.8h)
+- NXW-06 (sentence, say2): " <coach> one of your players has a contract that ends. you will be asked about him. ". stage 7, one player to ask (review of SX.8h)
+- NXW-07 (sentence, say2): " you cannot afford his price. your team is over the salary cap. ". stage 7, no room at all (review of SX.8h)
+- NXE-18 (piece, piece): "free agency". the name of stage 8 (SX.8i), between the expiring contracts and the draft
+- NXJ-01 (sentence, say2): " <n> free agents are on the market. ". stage 8, the market at its start
+- NXJ-02 (prompt, say2): " round <round> of <m>. your open places: <list>. you can pay a new player up to <room>. ". stage 8, the situation of a round's question
+- NXJ-04 (prompt, say2): " <player>, <position>, age <a>, rating <r>, <potential> potential. he asks <contract>. <interest>. ". stage 8, one free agent in the list of a round and in F9
 - NXJ-A01 (piece, piece): "no other team is interested". stage 8, the interest in a free agent
 - NXJ-A02 (piece, piece): "one other team is interested". stage 8, the interest in a free agent
 - NXJ-A03 (piece, piece): "<k> other teams are interested". stage 8, the interest in a free agent
@@ -403,12 +423,3 @@
 - NXC-28 (sentence, say4): " Your team won the last wild card place over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and the player's team won it
 - NXC-29 (sentence, say4): " The <other> won the last wild card place over your team on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and another team won it
 - NXC-30 (piece, say4): "the games between the teams". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'head-to-head'
-- NXC-31 (piece, say4): "it beat each of the other teams". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'head-to-head sweep'
-- NXC-32 (piece, say4): "the record in division games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'division record'
-- NXC-33 (piece, say4): "the record against common opponents". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'common games'
-- NXC-34 (piece, say4): "the record in conference games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'conference record'
-- NXC-35 (piece, say4): "strength of victory, the records of the teams it beat". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'strength of victory'
-- NXC-36 (piece, say4): "strength of schedule, the records of the teams it played". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'strength of schedule'
-- NXC-37 (piece, say4): "points scored and allowed, ranked in the conference". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'conference points ranking'
-- NXC-38 (piece, say4): "points scored and allowed, ranked in the league". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'league points ranking'
-- NXC-39 (piece, say4): "net points against common opponents". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points in common games'

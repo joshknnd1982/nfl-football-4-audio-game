@@ -36,6 +36,17 @@ default for a new player, the game adds seven features that follow the rules of 
   one period of 10 minutes, and a game still tied at its end is a tie: the standings and the season files count ties, and the Franchise
   too. Play-off overtime has periods of 15 minutes until there is a winner. Coaches cannot challenge in overtime. With Classic rules the
   original's sudden death stays.
+- U in a play menu (offense or defense) opens the substitutions, for your own team. The first item puts all your backups in for the rest of
+  the game: at every position the starters sit and the players behind them on the depth chart play (the backup quarterback too); the
+  returners, the kicker and the punter stay. When anything is changed, the next item puts your starters back in and takes back every
+  substitution. Then come the groups (quarterback, running backs, receivers, defensive linemen, linebackers, cornerbacks, safeties, the kick
+  and punt returners, kicker, punter), each said with who plays there now. Enter on a group lists its places; Enter on a place lists who can
+  come in there: the players of that position (and of the other side or role of it, a fullback for a halfback, any linebacker for a
+  linebacker), each said with his position and where he plays now or "on the bench"; Enter on a player asks for how long: for the next play
+  only, or for the rest of the game. A player who already plays another place changes places with the man he replaces. D says what a
+  position does, Escape goes back one list, T still calls a time out. A substitution changes who plays, never the luck of the game: with
+  nothing changed the game is exactly as before. Save Game keeps your substitutions. In the Franchise a player you put in plays with his own
+  rating, his carries count, and he can be hurt; a hurt player leaves at once and his place goes back to your depth chart.
 - F5, F6 and F7 have added lines that explain the new keys, the rules and the words.
 
 ### The Franchise

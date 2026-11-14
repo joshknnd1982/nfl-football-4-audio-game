@@ -132,6 +132,12 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("blitzer", "L", "In the defense menu of the N. F. L. rules with a playbook", "chooses who blitzes on your next blitz call: the "
            "first item picks a player by chance", "nfl", False, "", " L. in the defense menu, chooses the player who blitzes. ", letters="l",
            feature="playbooks"),
+    KeyRow("subs", "U", "In a play menu, on offense and on defense", "opens the substitutions: put all your backups in for the rest of the "
+           "game, put your starters back in, or choose a place (the running backs, the receivers, the linebackers and every other) and the "
+           "player who comes in there, for the next play only or for the rest of the game; in its lists D says what a position does and "
+           "Escape goes back", "nfl", False, "",
+           " U. in a play menu, opens the substitutions: your backups in, or any player in for the next play or for the rest of the game. ",
+           letters="u"),
     KeyRow("find", "Letters, Backspace, Enter", "In Find a Play by Name", "type the first letters of a word of the play's name, here "
            "T is a letter too; Backspace deletes the last one and Enter finds the plays", "nfl", False, "",
            " Find a Play by Name. type the first letters of the name, then Enter. ", feature="playbooks"),

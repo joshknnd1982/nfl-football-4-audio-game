@@ -1,3 +1,12 @@
+- NXC-31 (piece, say4): "it beat each of the other teams". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'head-to-head sweep'
+- NXC-32 (piece, say4): "the record in division games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'division record'
+- NXC-33 (piece, say4): "the record against common opponents". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'common games'
+- NXC-34 (piece, say4): "the record in conference games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'conference record'
+- NXC-35 (piece, say4): "strength of victory, the records of the teams it beat". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'strength of victory'
+- NXC-36 (piece, say4): "strength of schedule, the records of the teams it played". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'strength of schedule'
+- NXC-37 (piece, say4): "points scored and allowed, ranked in the conference". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'conference points ranking'
+- NXC-38 (piece, say4): "points scored and allowed, ranked in the league". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'league points ranking'
+- NXC-39 (piece, say4): "net points against common opponents". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points in common games'
 - NXC-40 (piece, say4): "net points in conference games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points in conference games'
 - NXC-41 (piece, say4): "net points in all games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points'
 - NXC-42 (piece, say4): "a coin toss". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'coin toss'
@@ -265,7 +274,3 @@
 - BN76 (remark, say): " I am told <commentator> has an opinion on that, and I am told it is a strong one. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN77 (remark, say): " It takes a lot of preparation to sit next to <commentator>. Mostly patience. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN78 (remark, say): " <commentator> has been studying the film all week, and it shows. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN79 (remark, say): " We have a good view from up here, and <commentator> has the headset to prove it. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN80 (remark, say): " The view from the booth is wonderful, and <commentator> has already pointed out three things I missed. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN81 (remark, say): " If I get a play wrong, <commentator> will tell you. Politely, of course. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN82 (remark, say): " Stay with us. <commentator> and I have plenty more to say, and a few things to get right. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
