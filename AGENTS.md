@@ -9,7 +9,8 @@ These instructions are for ANY AI coding agent: OpenAI Codex, Claude Code or ano
 Read these in full, in this order, before you do anything else. If your tool already loaded them (Claude Code does, through `CLAUDE.md`), do not read them again. If it did not, read them with your file tool, in several reads when one read is cut short. Do not work from memory or from this summary.
 
 1. `AGENTS.part01.md`: the file map and the core rules 0.1 to 0.32.
-2. `AGENTS.part02.md`: rules 0.33 onward, the owner and working style (section 1, 1.1), phases and sessions (section 3), folder layout (section 4), legal notes (section 10).
+2. `AGENTS.part02.md`: rules 0.33 to 0.40, the owner and working style (section 1, 1.1), phases and sessions (section 3), folder layout (section 4), legal notes (section 10).
+3. `AGENTS.part03.md`: rules 0.41 onward.
 
 Then read what the phase needs (the file map in `AGENTS.part01.md` names it): `playbook-1-spec-reverse-engineering.md`, `playbook-2-clone.partNN.md` (all parts), `playbook-3-release-platforms.md`, `fixesforgames.partNN.md` (section A first). In a game folder read `NEXT_PROMPT.txt` first (where the last session stopped and what to do next; it is written for any agent, so work can move between agents at a session boundary), then `PROJECT_STATE.md` and `spec/OPEN_QUESTIONS.md` (when they are split, every part), and for nfl4 the files its rules name.
 
@@ -22,6 +23,7 @@ A markdown file is a whole file `NAME.md` or parts `NAME.part01.md`, `NAME.part0
 - Never claim work you did not do or run. Run the tests and the build before you say it works, and say what was and was not run.
 - `original/` is read-only. Never commit original programs, `work/`, tokens or anything private.
 - Commit locally after each working step and push the commit to the game's own repository on `joshknnd1982` in the same session (rule 0.35). Never force a push. A test installer you build goes to the game's GitHub releases as a pre-release in the same session (rule 0.37); full releases, other tags and new repositories wait for the owner.
+- A question a player or tester can answer (what he meant, how a feature should behave, which design he prefers) is asked in a comment on the game's GitHub issue, recorded in `OPEN_QUESTIONS.md` with the comment's address, and the answers are read at the start of every session (rule 0.41).
 - Every game keeps `CHANGELOG.md` on GitHub: a change a player can notice gets its item in the same commit, and every release's notes carry that version's whole section, made by `game/tools/release_notes.py` (rule 0.39).
 - Edit the rule files only in the master folder `C:\Users\joshk\OneDrive\dev`, then run `python games/tools/sync_playbooks.py` (rule 0.9). A lesson that exists only in a state file is lost: add it to `fixesforgames`.
 - End every session with `PROJECT_STATE.md`, `SESSION_LOG.md` and a whole new `NEXT_PROMPT.txt` (section 3.3).
