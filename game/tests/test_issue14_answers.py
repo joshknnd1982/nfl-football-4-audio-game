@@ -233,14 +233,16 @@ def test_every_package_has_a_spoken_name():
 # ----- Q-085 (D-236): the computer rests its starters -----
 
 @pytest.mark.parametrize("resting,quarter,overtime,lead,left,due", [
-    (False, 4, False, 21, 600, True), (False, 4, False, 21, 601, False), (False, 4, False, 28, 900, True), (False, 3, False, 35, 100, False),
+    # Q-096 (D-240, the tester's "b"): 21 or more with 5:00 or less; D-236's "28 at any time of the quarter" is gone
+    (False, 4, False, 21, 300, True), (False, 4, False, 21, 301, False), (False, 4, False, 28, 900, False), (False, 4, False, 35, 301, False),
+    (False, 4, False, 21, 600, False), (False, 3, False, 35, 100, False),
     (False, 4, True, 30, 100, False), (False, 4, False, 20, 100, False), (True, 4, False, 14, 100, True), (True, 4, False, 13, 100, False),
     (False, 4, False, -30, 100, False)])
 def test_when_the_computer_rests(resting, quarter, overtime, lead, left, due):
     assert S.rest_due(resting, quarter, overtime, lead, left) is due
 
 
-def lead_by(rig, points, quarter=4, left=500):
+def lead_by(rig, points, quarter=4, left=250):
     s = rig.engine.s
     s.quarter = quarter
     s.extras.left = left

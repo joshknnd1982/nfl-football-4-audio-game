@@ -139,6 +139,7 @@ log = logging.getLogger("nfl4.extras")
 TIMEOUT = "timeout"
 TIMEOUT_ACTION = (TIMEOUT, 0)
 NAME = "N. F. L. rules"
+LATE_T_SECONDS = 120                    # Q-095 (D-242): the last two minutes of a half, where a T during a play is kept for its end
 KEY_F5, KEY_F6, KEY_F7 = "116", "117", "118"
 # SX.10d: the help of the defense menus and the kicks of 2026 (F6), for a player who uses a playbook (their words are F7's,
 # descriptions.F7_WORD_ROWS)
@@ -651,6 +652,7 @@ class NflRules(ClassicRules):
         x = state.extras
         self.subs.ensure(state, "kick-off")          # issue 14: the returners and the coverage the player put in
         self.subs.rest(state, "kick-off")            # issue 14 (Q-085, D-236)
+        self.subs.kick_package(state, "K:kickoff" if kicking_side == 1 else "K:kick_return")     # Q-097 (D-241): the kick's team's package
         self.broadcast.kickoff(state)              # SY.1, BC.3: a new possession; the sign-on before the opening kick-off
         x.out_of_bounds = False
         self.after_play = False
@@ -820,11 +822,14 @@ class NflRules(ClassicRules):
         count, so the play is not run); `called` is then what the snap took of the dead-ball period."""
         if live:
             self.timeout_kept = True
-            if where == "live play":              # issue 11 (Q-089, D-233, the tester's "a, with an exception"): the ball is snapped, so the
-                self.timeout_late = True          # key is not kept for after the play; one sentence says so when the play ends
+            if where == "live play" and not self.late_in_half(state):
+                # issue 11 (Q-089, D-233, the tester's "a, with an exception"): the ball is snapped, so the key is not kept for after the play;
+                # one sentence says so when the play ends. Q-095 (D-242, the tester's "b"): in the last two minutes of the second and the fourth
+                # quarter it is still kept and the time out is called as soon as the play ends (as before D-233), to save the seconds.
+                self.timeout_late = True
                 self._log_timeout_key(state, where, TIMEOUT_LATE)
                 return TIMEOUT_KEPT
-            self._log_timeout_key(state, where, TIMEOUT_KEPT)
+            self._log_timeout_key(state, where, TIMEOUT_KEPT, "the last two minutes of a half" if where == "live play" else "")
             return TIMEOUT_KEPT
         self.game.stopspeech()
         return self._call_timeout(state, "before the snap" if undo is not None else "dead ball", undo, called)
@@ -908,9 +913,17 @@ class NflRules(ClassicRules):
     def try_replayed(self, state) -> bool:
         return self.penalty.try_replayed
 
+    def live_timeout_sentence(self) -> str:
+        """The T key in a question during a live play (the run-out question): no time out (D-233), or, in the last two minutes of a half, the
+        time out when the play ends (Q-095, D-242)."""
+        return X.text("NXT-15" if self.timeout_late else "NXT-18")
+
     @staticmethod
-    def live_timeout_sentence() -> str:
-        return X.text("NXT-15")
+    def late_in_half(state) -> bool:
+        """Q-095 (D-242): the last two minutes of the second or the fourth quarter (the two-minute warning's time, 4-1-3), where a T pressed
+        during a play is kept for the end of the play. Never in overtime (the tester was asked about "each half")."""
+        x = state.extras
+        return x is not None and state.quarter in (2, 4) and 0 <= x.left <= LATE_T_SECONDS
 
     def grant(self, state, side: int) -> None:
         """A timeout: charged, the clock stopped after u seconds, the whistle (foot11), the announcer, a remark 1 in 3."""
@@ -1057,6 +1070,8 @@ class NflRules(ClassicRules):
     # ----- H20 (SX.10d): the kicks of 2026 -----
 
     def special_kick(self, state, what: str):
+        if what in ("extra point", "fair catch kick") and state.wisoff == 1:
+            self.subs.kick_package(state, "K:field_goal")      # Q-097 (D-241): the field goal team kicks the try and a fair catch kick too
         return self.kicks.plan(state, what)
 
     def kickoff_call(self, state) -> str:

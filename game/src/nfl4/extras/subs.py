@@ -55,11 +55,15 @@ LIST_MAX = 34                                           # a record's lists (a sa
 OFFENSE_FORMATIONS = ("under_center", "shotgun", "pistol", "singleback", "i_form", "split_backs", "empty", "heavy", "other")
 DEFENSE_PACKAGES = ("heavy", "base", "nickel", "dime", "quarter")
 PACKAGE_OF_BACKS = {3: "heavy", 4: "base", 5: "nickel", 6: "dime", 7: "quarter"}
-PACKAGES = tuple("O:" + f for f in OFFENSE_FORMATIONS) + tuple("D:" + p for p in DEFENSE_PACKAGES)
-# Q-085 (D-236): the computer rests its starters in the fourth quarter (never in overtime) when it leads by REST_LEAD with REST_LEFT seconds or less
-# left, or by REST_LEAD_ANY at any time of the quarter; its starters come back when the lead falls under BACK_LEAD (UNVERIFIED: a common
-# reading of NFL coaching, "three scores late"; measured by the calibration soak of D-236).
-REST_QUARTER, REST_LEAD, REST_LEFT, REST_LEAD_ANY, BACK_LEAD = 4, 21, 600, 28, 14
+# Q-097 (D-241, the tester's answer "b"): the kicks' teams have packages too: the kick-off team and the kick return team (NflRules.before_kickoff,
+# by the side that kicks), the punt team and the punt return team (the snap of a punt, by the side that punts), the field goal team (the player's
+# field goal and his kicked try). The computer's field goal and try have no package of the player's (no block team was asked for).
+KICK_TEAMS = ("kickoff", "kick_return", "punt", "punt_return", "field_goal")
+PACKAGES = tuple("O:" + f for f in OFFENSE_FORMATIONS) + tuple("D:" + p for p in DEFENSE_PACKAGES) + tuple("K:" + k for k in KICK_TEAMS)
+# Q-085 (D-236), Q-096 (D-240, the tester's answer "b": later and less often): the computer rests its starters in the fourth quarter (never in
+# overtime) when it leads by REST_LEAD or more with REST_LEFT seconds or less left; its starters come back when the lead falls under BACK_LEAD
+# (UNVERIFIED: a common reading of NFL coaching, "three scores late", with the tester's numbers). D-236's "28 at any time of the quarter" is gone.
+REST_QUARTER, REST_LEAD, REST_LEFT, BACK_LEAD = 4, 21, 300, 14
 # Q-087 (D-234): the men a backup returner is found among when the team's own returners are used up: backs, receivers and defensive backs (the
 # coverage men a real team returns kicks with; roster_model.make_view's order), never a lineman or a linebacker
 RETURN_GROUPS = frozenset(("RB", "WR", "CB", "S"))
@@ -100,12 +104,12 @@ def package_rows(record, formation) -> list:
 
 
 def rest_due(resting: bool, quarter: int, overtime: bool, lead: int, left: int) -> bool:
-    """Q-085 (D-236): whether the computer's side rests its starters now (`resting`: it does already). No draw."""
+    """Q-085 (D-236), Q-096 (D-240): whether the computer's side rests its starters now (`resting`: it does already). No draw."""
     if overtime or quarter != REST_QUARTER:
         return False
     if resting:
         return lead >= BACK_LEAD
-    return lead >= REST_LEAD_ANY or (lead >= REST_LEAD and left <= REST_LEFT)
+    return lead >= REST_LEAD and left <= REST_LEFT
 
 
 def group_of(position: str) -> str:
@@ -237,7 +241,7 @@ def put(table: list, place: int, man: Man) -> list:
 def effective(base: list, bench: list, record, empty=(), formation=None, spares=()) -> tuple[list, list]:
     """(the 34 men as they play now, the substitutions that were left out: [(list name, place, key)]). `empty`: the places that have nobody (the real
     roster's empty back places, franchise injuries.EMPTY): never moved, their names are the nearest filled place's of the section again.
-    `formation`: the formation of the play called now (PACKAGES; None between plays and at a kick): its package plays after the substitutions for
+    `formation`: the formation of the play called now, or the kick's team (PACKAGES; None between plays): its package plays after the substitutions for
     the rest of the game. `spares`: the team's returners in their order (keys), for "backups in"."""
     table = list(base)
     dropped: list = []

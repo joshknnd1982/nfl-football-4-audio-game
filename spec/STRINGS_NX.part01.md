@@ -6,15 +6,15 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2782.
+- Texts: 2788.
 - The clock (design section 5): 21.
-- Timeouts (design 6.3): 25.
+- Timeouts (design 6.3): 26.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 89.
 - Playbooks (design section 10): 830.
-- Menus and settings (design 10.4, 12): 243.
+- Menus and settings (design 10.4, 12): 248.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 850.
 - The real coaches and players (NX-N, SX.11): 7.
@@ -71,6 +71,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXT-14 (sentence, say4): " each team has <n> time outs for these two periods. ". start of a pair of play-off overtime periods that share their time outs (design 4)
 - NXT-15 (sentence, say5): " the ball is live, so no time out is taken. ". the T key during a live play, said only where a question waits (the run-out question, SX.2b, D-084; issue 11, D-233: no longer kept)
 - NXT-17 (sentence, say5): " your time out came after the snap, so none was taken. ". the end of a play during which the player pressed T (issue 11, Q-089, D-233: a T after the snap is not kept for after the play)
+- NXT-18 (sentence, say5): " the ball is live. you will have the time out when the play ends. ". the T key during a live play in the last two minutes of the second or the fourth quarter, said only where a question waits (the run-out question; issue 11, Q-095, D-242: kept for the end of the play)
 - NXT-16 (sentence, say5): " there is no time left for a time out. ". the T key when the period has no time left (SX.2b)
 
 ## Challenges and reviews (design 6.1, 6.2, 6.4)
@@ -504,4 +505,3 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXZ-62 (menu, say5): "Cross Blitz". defense call D062 of the catalog (call, list dg06, UNVERIFIED)
 - NXZ-63 (menu, say5): "Free Fire". defense call D063 of the catalog (call, list dg06, SRC-SECONDARY)
 - NXZ-64 (menu, say5): "Twist Stunt". defense call D064 of the catalog (call, list dg06, SRC-SECONDARY)
-- NXZ-65 (menu, say5): "Loop Stunt". defense call D065 of the catalog (call, list dg06, SRC-SECONDARY)

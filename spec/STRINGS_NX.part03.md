@@ -1,4 +1,3 @@
-- NXZ-R02 (help, say5): " A packed line with five rushers. Strong against runs near the goal line; weak against play action passes. ". description of D002 Goal Line Stack (NX-P8; heard with D)
 - NXZ-R03 (help, say5): " Eight defenders close to the line, with extra rushers coming. Strong against runs; weak against screens. ". description of D003 Bear Front (NX-P8; heard with D)
 - NXZ-R31 (help, say5): " Six linemen and two linebackers fill the line. Strong against runs near the goal line; weak against passes. ". description of D031 Goal Line Six Two (NX-P8; heard with D)
 - NXZ-R32 (help, say5): " Five linemen and three linebackers fill the line. Strong against runs near the goal line; weak against passes. ". description of D032 Goal Line Five Three (NX-P8; heard with D)

@@ -19,7 +19,9 @@ The rules are `subs.py`. Here:
 The tester's answers on issue 14 (2026-11-15, rule 0.41; D-234 to D-236):
 * "All backups in" also puts the backup returners in (Q-087): `spares` gives the team's returners in their order (the real roles KR1, PR1, KR2,
   PR2 ...; a franchise game's fit men only).
-* Packages by formation (Q-086): the top list's last item, "Packages by formation", lists the offense's formations and the defense's packages, each
+* Packages by formation (Q-086) and for the kicks (Q-097, D-241: the kick-off, kick return, punt, punt return and field goal teams;
+  `kick_package` at the kick-off and the kicked try, `before_snap` at a punt and a field goal): the top list's last item, "Formation and kick
+  packages", lists the offense's formations, the defense's packages and the kicks' teams, each
   with how many men are set; Enter on one lists the groups as they play in it, then the places and the men as for a substitution, with no question
   of how long: the man comes in for every play called in that formation. "Clear this package" ends it. `before_snap` (NflRules.before_snap, the
   play called) lays the package of the called play's formation over the lineup; `ensure` takes it off again between plays and at a kick.
@@ -57,7 +59,10 @@ SECTION_ATTRIBUTES = (("running_backs", 6), ("receivers", 6), ("defense", 17), (
 EMPTY_HEADINGS = {"Running Backs:": 0, "Receivers:": 6}
 # Q-086 (D-235): the spoken name of each package (the offense's formations are the Formation setting's own words)
 PACKAGE_WORDS = {"O:other": "NXB-U21", "D:heavy": "NXB-U22", "D:base": "NXB-U23", "D:nickel": "NXB-U24", "D:dime": "NXB-U25",
-                 "D:quarter": "NXB-U26"}
+                 "D:quarter": "NXB-U26",
+                 # Q-097 (D-241): the kicks' teams
+                 "K:kickoff": "NXB-U36", "K:kick_return": "NXB-U37", "K:punt": "NXB-U38", "K:punt_return": "NXB-U39", "K:field_goal": "NXB-U40"}
+FIELD_GOAL_PLAY, PUNT_PLAY = 6, 7                 # the original's offense plays of the field goal and the punt (pag_scrimmage.snap)
 
 
 class SubsFlow:
@@ -286,9 +291,16 @@ class SubsFlow:
 
     def formation_of(self, state) -> str | None:
         """The package key (subs.PACKAGES) of the player's play called now: on offense the formation it lines up in, on defense its package of
-        defensive backs as played; None for a play of the original's menus (no catalog call). No draw."""
+        defensive backs as played; None for a play of the original's menus (no catalog call). A punt is the punt team's (the player punts) or
+        the punt return team's (the computer punts), the player's field goal the field goal team's (Q-097, D-241); the computer's field goal has
+        none. No draw."""
         rules = self.rules
         extras = state.extras
+        kick = getattr(state, "offense_play", 0)
+        if kick == PUNT_PLAY:
+            return "K:punt" if state.wisoff == 1 else "K:punt_return"
+        if kick == FIELD_GOAL_PLAY:
+            return "K:field_goal" if state.wisoff == 1 else None
         settings = getattr(extras, "play_settings", None) or {}
         if state.wisoff == 1:
             concept = C.BY_ID.get(getattr(rules.offense, "called", ""))
@@ -314,6 +326,18 @@ class SubsFlow:
         if S.package_rows(record, self.formation) or (self.applied is not None and S.package_rows(record, self.applied)):
             self.apply(state, "package")
             debuglog.event("subs", "package", formation=self.formation, men=len(S.package_rows(record, self.formation)))
+
+    def kick_package(self, state, key: str | None) -> None:
+        """Q-097 (D-241): a kick that is not a snapped play from the menus: the kick-off (the kick-off team or the kick return team, by the side
+        that kicks) and the player's kicked try (the field goal team). Its package comes in now; `ensure` takes it off after the play. A punt
+        and a field goal come through `before_snap`. Nothing when no package is set."""
+        record = self.record(state)
+        if record is None or key == self.formation:
+            return
+        self.formation = key
+        if S.package_rows(record, key) or (self.applied is not None and S.package_rows(record, self.applied)):
+            self.apply(state, "kick package")
+            debuglog.event("subs", "package", formation=key, men=len(S.package_rows(record, key)))
 
     # ----- Q-085 (D-236): the computer rests its starters -----
 

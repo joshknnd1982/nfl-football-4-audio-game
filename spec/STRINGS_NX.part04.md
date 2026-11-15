@@ -74,7 +74,7 @@
 - NXB-U17 (sentence, say5): " your backups and backup returners are in for the rest of the game. ". U in a play menu, the substitutions (issue 14, D-229): said after the backups went in
 - NXB-U18 (sentence, say5): " your starters are back in. ". U in a play menu, the substitutions (issue 14, D-229): said after every substitution was taken back
 - NXB-U19 (sentence, say5): " nobody else on your team can play there. ". U in a play menu, the substitutions (issue 14, D-229): a place nobody can come in at
-- NXB-U20 (menu, say5): "Packages by formation, <n> set". U in a play menu, the substitutions (issue 14, Q-086, D-235): the top list's last item, how many formations have a package
+- NXB-U20 (menu, say5): "Formation and kick packages, <n> set". U in a play menu, the substitutions (issue 14, Q-086, D-235): the top list's last item, how many formations have a package
 - NXB-U21 (menu, say5): "Other formations". U in a play menu, the substitutions (issue 14, Q-086, D-235): the package of the old and trick formations (wildcat, wishbone, victory and the like)
 - NXB-U22 (menu, say5): "Goal line defense, three defensive backs". U in a play menu, the substitutions (issue 14, Q-086, D-235): the defense's heavy package
 - NXB-U23 (menu, say5): "Base defense, four defensive backs". U in a play menu, the substitutions (issue 14, Q-086, D-235): the defense's base package
@@ -85,11 +85,16 @@
 - NXB-U28 (menu, say5): "<formation>: none set". U in a play menu, the substitutions (issue 14, Q-086, D-235): a formation with no package
 - NXB-U29 (sentence, say4): " the <team> are resting their starters. ". the computer's team puts its backups in with a big lead late in the game (issue 14, Q-085, D-236)
 - NXB-U30 (sentence, say4): " the <team> send their starters back in. ". the computer's rested starters come back when its lead shrinks (issue 14, Q-085, D-236)
-- NXB-U31 (prompt, say5): " packages by formation. The players you set come in for every play called in that formation. Which formation? ". U in a play menu, the substitutions (issue 14, Q-086, D-235): the list of formations
+- NXB-U31 (prompt, say5): " packages by formation and for the kicks. The players you set come in for every play in that formation or kick. Which one? ". U in a play menu, the substitutions (issue 14, Q-086, D-235): the list of formations
 - NXB-U32 (menu, say5): "Clear this package". U in a play menu, the substitutions (issue 14, Q-086, D-235): a formation's first item while men are set
 - NXB-U33 (prompt, say5): " <formation> package. Who plays in it? ". U in a play menu, the substitutions (issue 14, Q-086, D-235): one formation's groups
 - NXB-U34 (sentence, say5): " the <formation> package is cleared. ". U in a play menu, the substitutions (issue 14, Q-086, D-235): after Clear this package
 - NXB-U35 (sentence, say5): " <player> comes in for <old> in every <formation> play. ". U in a play menu, the substitutions (issue 14, Q-086, D-235): after a man was set in a package
+- NXB-U36 (menu, say5): "Kick-off team". U in a play menu, the substitutions (issue 14, Q-097, D-241): the package of a kick's team
+- NXB-U37 (menu, say5): "Kick return team". U in a play menu, the substitutions (issue 14, Q-097, D-241): the package of a kick's team
+- NXB-U38 (menu, say5): "Punt team". U in a play menu, the substitutions (issue 14, Q-097, D-241): the package of a kick's team
+- NXB-U39 (menu, say5): "Punt return team". U in a play menu, the substitutions (issue 14, Q-097, D-241): the package of a kick's team
+- NXB-U40 (menu, say5): "Field goal and extra point team". U in a play menu, the substitutions (issue 14, Q-097, D-241): the package of a kick's team
 - NXH-69 (help, say5): " R in the offense menu chooses who your next pass goes to, a running back too when the play can throw to one. L in the defense menu chooses who blitzes. Enter keeps the play's own pick. ". F6 addition (SY.4, SY.5)
 - NXH-75 (help, say5): " Quarterbacks, in F9, Rules and in F9, Franchise after Depth charts, lists every team's quarterbacks. Enter on a team lists them; Enter on one makes him the starter from the next game. ". F6 addition (D-132; Q-088, D-239: in both menus)
 - NXH-79 (help, say5): " F9, Franchise, Depth charts: any team's order, position by position. In a franchise, your depth chart, right after your roster, is your own team. ". F6 addition (NX-D3; issue 10, D-223: the item is in F9, Franchise)
@@ -476,8 +481,3 @@
 - NXA-03 (sentence, say5): " <k>. the <team>, <space>. ". F9 salary cap, a team by cap space
 - NXA-10 (piece, piece): "<salary> for <y> years". a contract
 - NXA-11 (piece, piece): "<salary> for one year". a contract with one year left
-- NXA-12 (sentence, say2): " <player>, <position>, age <a>, rating <r>, <contract>. ". stage 5, a player released for the cap
-- NXA-13 (prompt, say2): " you would be over the salary cap by <over>. choose who is released. ". stage 5, choose yourself
-- NXA-14 (sentence, say2): " your cap space is <space>. ". stage 5, after the fill
-- NXA-20 (piece, piece): "<money> million". an amount of money
-- NXE-59 (sentence, say2): " your team would be over the salary cap by <over>. the staff would also release: ". stage 5, before the players released for the cap, after the cut's own list

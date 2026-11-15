@@ -1,3 +1,4 @@
+- NXZ-65 (menu, say5): "Loop Stunt". defense call D065 of the catalog (call, list dg06, SRC-SECONDARY)
 - NXZ-66 (menu, say5): "Edge Blitz". defense call D066 of the catalog (call, list dg06, SRC-SECONDARY)
 - NXZ-67 (menu, say5): "Cover Three Sky". defense call D067 of the catalog (call, list dg07, SRC-SECONDARY)
 - NXZ-68 (menu, say5): "Cover Three Cloud". defense call D068 of the catalog (call, list dg07, SRC-SECONDARY)
@@ -317,3 +318,4 @@
 - NXY-S10 (help, say5): " A receiver fakes toward the sideline, then cuts the other way. Good against man for man defense; defenders guarding areas can cover it. ". description of O110 Zig Route (NX-P8; heard with D)
 - NXY-R87 (help, say5): " Two receivers cut sharply across the field for a fast throw. Beats a blitz; defenders who drop back can cover it. ". description of O087 Double Slants (NX-P8; heard with D)
 - NXZ-R01 (help, say5): " Eight defenders crowd the line and the rest cover man for man with no deep help. Strong against runs near the goal line; a pass over their heads can score. ". description of D001 Goal Line Eight Up (NX-P8; heard with D)
+- NXZ-R02 (help, say5): " A packed line with five rushers. Strong against runs near the goal line; weak against play action passes. ". description of D002 Goal Line Stack (NX-P8; heard with D)

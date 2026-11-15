@@ -1,3 +1,6 @@
+- NXC-21 (sentence, say2): " bye week. ". the real calendar's schedule (SZ.8): the week in which the player's team does not play
+- NXC-22 (menu, say5): " 1. see this week's games ". the main menu's first choice in the bye week (SZ.8), in the place of ' 1. play game '
+- NXC-23 (sentence, say2): " Your team has a bye this week. There is no game today. ". 'Today's game is ...' in the bye week (SZ.8)
 - NXC-24 (sentence, say2): " your team has a bye this week. ". the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
 - NXC-25 (sentence, say4): " the top seeds, the <team> and the <other>, have the only byes of the wild card round. ". the end of a regular season on the real calendar (D-129, the N. F. L.'s 14-team play-offs), after the N. F. C. wild card teams: the A. F. C.'s seed 1, then the N. F. C.'s
 - NXC-26 (sentence, say4): " Your team won the division title over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the player's division title and his team won it
@@ -276,4 +279,3 @@
 - BN71 (remark, say): " If you hear a pen clicking, that is <commentator> working on something to tell you next. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN72 (remark, say): " <commentator> and I have a bet going on the next play. I will not say who is winning. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN73 (remark, say): " The booth is quiet for a moment while <commentator> and I watch the formation. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN74 (remark, say): " <commentator> is nodding at that, which on the radio means I have to say it out loud. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)

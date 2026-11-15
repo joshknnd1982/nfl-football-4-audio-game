@@ -1,3 +1,4 @@
+- NXB-S01 (menu, say5): "The crowd cheers". crowd_cheer (SZ.2)
 - NXB-S02 (menu, say5): "The crowd roars". crowd_roar (SZ.2)
 - NXB-S03 (menu, say5): "The crowd groans". crowd_groan (SZ.2)
 - NXB-S04 (menu, say5): "The crowd boos". crowd_boo (SZ.2)
