@@ -18,6 +18,29 @@ From a tester's answer on GitHub issue 12. Since 0.16.24, after a penalty on you
 **How to test:** with the N. F. L. rules, Penalties on and a playbook, score a touchdown and choose "try for two point conversion". Play tries for two until a flag is accepted on one (a false start or illegal shift by your team is the most common). After the referee's words you should hear "after the penalty, the kick for extra point would be from the 20 yard line, a 38 yard kick", then "select" and "try for two point conversion". Press Up for the kick and Enter: the kick is made from there. After a foul by the defense the sentence should give a shorter kick.
 **Tell us:** whether the sentence before the choice is clear, and whether the longer kicks are missed about as often as you expect.
 
+### A time out pressed after the snap is no longer saved for after the play
+From a tester's answer on GitHub issue 11. Asked whether T at the quarterback's "Hike!" should stop the play like the kicks, he chose to keep the snap as it is, "with an exception: you wouldn't want a timeout most likely after the play is over." Until now, with the N. F. L. rules, T pressed once the ball was snapped or kicked was kept and your time out was charged the moment the play ended. Now such a T calls no time out: nothing is charged, the clock runs after the play exactly as it would without the key, and when the play ends you hear once "your time out came after the snap, so none was taken." Pressed while the run-out question of a kick-off waits, you hear "the ball is live, so no time out is taken" at once, and nothing more after the play. T before the snap, during the snap count, and while the holder or the punter says "hike" works as before (the play is not run). F5 and F6 say it in the line for T.
+
+**How to test:** with the N. F. L. rules and time outs on, choose a play; after the quarterback says "Hike!", while the play is told, press T. After the play you should hear "your time out came after the snap, so none was taken", and F1 in the next menu still gives three time outs. Press T in that menu: the time out is called as always.
+**Tell us:** whether this is what you wanted, and whether in the last two minutes of a half you would still like a T during the play to stop the clock when it ends (asked on issue 11).
+
+### "All backups in" also puts the backup returners in
+From a tester's answer on GitHub issue 14. "All backups in" (U in a play menu) kept your kick and punt returners in; now the backup returners come in too: your team's next kick and punt returners (with the real rosters, the second returners of each kind), else backs, receivers or defensive backs of your backups. The kicker and the punter stay. "Starters back in" brings the returners back too.
+
+**How to test:** with the N. F. L. rules, press U in a play menu, then Enter on "All backups in for the game". Press U again and go down to the kick and punt returners: other men are named than before. At the next kick-off or punt to you, the new returner is named.
+
+### Packages by formation
+From a tester's answer on GitHub issue 14, as Madden's formation substitutions. The substitutions (U in a play menu) have a new last item, "Packages by formation". It lists the offense's formations (under center, shotgun, pistol, singleback, I formation, split backs, empty backfield, heavy goal line, and the other formations) and the defense's packages (goal line with three defensive backs, base with four, nickel with five, dime with six, quarter with seven), each with how many players you set. Enter on one lists the groups as they play in it, then the places and the players, as for a substitution, but with no question of how long: the player comes in for every play you call in that formation, and goes back out after it. "Clear this package" ends one. The offense's formation is the one the play lines up in (or the Formation setting of Formation and Tempo when you set one); the defense's is the number of defensive backs your call has against that offense. Plays of the Classic playbook have no formation, so no package plays there. "Starters back in" keeps your packages. Save Game keeps them. Nothing about the plays or the luck of the game changes; only who plays.
+
+**How to test:** with the N. F. L. rules and a playbook (the default), press U in a play menu, press End for "Packages by formation", Enter. Down to "Shotgun", Enter; choose the running backs, place 1, and another back, Enter: you hear that he comes in for every Shotgun play. Escape back to the play menu and call a shotgun play: the back you set carries or catches the ball by his name. Call a play from under center: your usual starter is back.
+**Tell us:** whether packages for kick-offs, punts and field goals would help too (asked on issue 14).
+
+### The computer rests its starters when it leads by a lot late in the game
+From a tester's answer on GitHub issue 14. With the N. F. L. rules, when the computer's team leads by 21 points or more with 10 minutes or less left in the fourth quarter, or by 28 or more at any time of the fourth quarter, it puts its backups in, and the announcer says "the" team "are resting their starters." If your team comes back to within 13 points, its starters return ("send their starters back in"). It never happens in overtime or before the fourth quarter. Its kicker and punter stay. In a franchise its backups play with their own ratings, so a big comeback is a little easier, as in a real game; in a single game only the names change. Save Game keeps it.
+
+**How to test:** with the N. F. L. rules, let the computer lead by three scores in the fourth quarter (a franchise game against a strong team is quickest). Between plays you should hear that it is resting its starters, and its backup quarterback is named on its plays. Score twice to get within 13: its starters come back.
+**Tell us:** whether the lead and time are right for when a real team rests its starters (asked on issue 14).
+
 ### After your time out, the whole kick-off set-up is said again
 From a tester's answer on GitHub issue 16 (question 1, choice b). Since 1.0.2 a time out before your own kick-off brings "choose your kick off" back, but after your new choice the announcer did not say again who is back deep to receive. Now he says the whole set-up again: who is back deep, then that your kicker is set to kick it off. Classic, which has no time outs, is not changed.
 
@@ -250,47 +273,11 @@ When two or more teams finish with the same record, the game now follows the NFL
 
 **Tell us:** when your team was in a tie, did the sentence make clear why it got in or stayed out?
 
-## 0.16.12 (2026-11-06, test build)
-
-In a franchise, other teams now sign players from practice squads, yours too, and you choose the four squad players they cannot take. You can also sign another team's squad player yourself. Everything of 0.16.11 and earlier below is still to be tested too.
-
-### Other teams sign practice squad players, and you protect four
-As in the NFL, any team may sign another team's practice squad player to its own roster (never to its own practice squad), except the four players that team protects that week and the players of the team it plays that week. Each week of the regular season, after the games, a computer team that injuries have left short at a position for the coming weeks signs one squad player of that position: its own, or another team's when he is clearly better. A computer team that loses a squad player signs a free agent to its squad. Your team never signs anyone by itself.
-
-**How to protect your squad players:** press F9, choose Franchise, then practice squad, then "protect squad players" (the fifth item). Each player is said with "protected" or "not protected"; Enter protects him or ends his protection, at most four at a time. Until you change one, your staff protects your four best each week; after that your choice is kept from week to week until you change it.
-- How to test: in a franchise season, open the item, end the protection of one player and protect another, leave with Escape and open it again: is your choice kept? Try to protect a fifth player: you should hear that four are protected already. Play a few weeks: when a team signs one of your squad players, the week's report should tell you which team, which player and how many are left on your squad.
-- Tell us: whether a protected player was ever taken (he never should be), and whether teams take your squad players too often or too rarely.
-
-**How to sign another team's squad player:** F9, Franchise, practice squad, "sign from another team's squad" (the sixth item). Choose the position, then the player (each is said with his team); with a full roster you choose a player of the same position to release, then press Enter to confirm. He signs for the minimum salary for one season.
-- How to test: sign one, then hear your roster (F9, Franchise, your roster): is he there at his position? The other team's four protected players and the players of the team you play this week should not be in the list.
-- Tell us: anything said wrong in the lists or the question.
-
-**Practice squad signings around the league** (the seventh item) lists every squad player signed to a roster this season, the newest first, and the practice squad rules item now says these rules too.
-- How to test: after a few weeks, open the list: does each line say the week, the team that signed him, the player, his position and the squad he came from?
-- Tell us: whether the list is useful or too long.
-
-## 0.16.11 (2026-10-27, test build)
-
-The announcer's voice now rises with the play, every kind of play result has at least ten wordings, and a new item turns the excited voice off or on. Everything of 0.16.10 and earlier below is still to be tested too.
-
-### The excited voice
-The owner asked for an enthusiastic radio play-by-play announcer whose voice gets faster and louder on the big plays, and that the player can turn this off or on. Every play call now has a level of excitement: a routine run or an incomplete pass is said in the voice as it is; a first down, a catch or a gain of ten yards or more a little higher; a big play of 20 yards or more, a long return, a field goal or the countdown of a long run higher, faster and a little louder; an interception, a fumble, a sack, a turnover on downs or a safety higher and faster again; and a touchdown the most. It works with the game's own Windows voices and with NVDA 2024.1 or newer. It was measured on the maintainer's PC: with NVDA's IBM ECI voice a touchdown is about 20 % higher and 25 % faster, and with the Windows voices the pitch rises from 5 % (Microsoft David) to 30 % or more (DECtalk and others; a few voices, such as FlexVoice and Lucent, do not change their pitch). JAWS cannot change its voice for a program, so with JAWS you hear the words and the exclamation marks only, and the menu item says so. Only the voice changes: the words, the plays, the score and the clock are exactly the same with the excited voice on or off.
-
-Why not capital letters: the request was to write the big calls in capitals so the voice would raise its pitch. That was measured on 14 voices first. No voice said a word in capitals any higher, and many spelled it or stretched it out: Microsoft Zira says "GOT IT" as "got I T", and BeSTspeech takes four times as long to say "WOW". So the calls are written in normal case, and the game raises the pitch itself, through the voice's own pitch setting.
-
-**How to turn it off or on:** press F9, choose Rules, press Down until you hear "Excited voice" (the thirteenth item, right after Play calls) and press Enter. Left and Right switch it too. You hear "Excited voice: on, the big plays are said higher, faster and a little louder" or "Excited voice: off, every call in the voice as it is". It is on by default, saved at once and used at once, also in the game you are playing. F9, Rules, Reset turns it on again. F6 names the item. In settings.txt it is `nx_excited_voice = on` or `off`. The items after it moved down one place: Stadium sounds is now the 14th item, Broadcast crew the 15th, Quarterbacks the 16th, Depth charts the 17th and Reset the 18th.
-- How to test: play a few drives in the N. F. L. rules with NVDA or with the game's own voices (F9, Speech settings). Listen to a short run, a first down, a long gain, a sack or an interception and a touchdown: the voice should rise step by step. Then turn the excited voice off (F9, Rules, Excited voice, Enter, Escape twice) and play on: every call should be in the plain voice, with the same words. Turn it back on.
-- Tell us: whether the steps are too small, too big or just right with your voice (name the voice), whether any call sounds too fast to follow, and, with JAWS, whether the item tells you that JAWS says the words only.
-
-### Ten or more wordings for every kind of play result
-Every kind of play result now has at least ten ways to be said, drawn at random and never the same one twice in a row: a gain of 1, a short gain, a gain of 4 to 9, of 10 to 19, of 20 to 39 and of 40 or more, a return and a big return, a loss and a loss on a sack, no gain on a run, an incomplete pass, a first down (also with a number and with goal to go), a touchdown, a safety, an interception, a fumble, a sack, a change of possession, a turnover on downs, a field goal made and missed, an extra point, a two-point conversion, a touchback, a fair catch and a catch. The big plays are short and punchy ("Big play! He rips off 25 yards!", "Off to the races! A gain of 31!", "Interception! Lewis jumps the route!", "Sacked! Brady never had a chance against Smith and Jones!"). The original game's six different sack sentences, its two interception sentences and its three plain catch sentences now share one list each, so the variety is that list's. Gus, the color analyst, still chimes in after the call with a short reason, as before.
-- How to test: play a whole game in the N. F. L. rules and listen to the end of each play. With F2 you can hear the last play's calls again.
-- Tell us: any call that does not fit what happened (a "big play" for a short gain, a team named wrong, a sack call on a play that was not a sack), and any wording you hear too often.
-
 ## Older versions
 
-The versions before 0.16.11 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
+The versions before 0.16.13 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
 
+- [0.16.11 to 0.16.12](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.11-to-0.16.12.md)
 - [0.16.10 to 0.16.10](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.10-to-0.16.10.md)
 - [0.16.9 to 0.16.9](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.9-to-0.16.9.md)
 - [0.16.8 to 0.16.8](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.8-to-0.16.8.md)

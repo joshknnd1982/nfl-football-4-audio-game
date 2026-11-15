@@ -108,7 +108,7 @@ from ..game import outcome as O
 from ..game.gamestate import other, own_half
 from ..game.playtables import QB_DRAW, QB_KEEPER, QB_SNEAK
 from ..game.rules import (FAIR_CATCH_KICK, FOUL_BEFORE_SNAP, GO_ON, NORMAL_KICKOFF, OT_COIN_TOSS, OT_KICK_OFF, OT_SAME_BALL, OVERTIME_OVER,
-                          PERIOD_OVER, SCRAMBLE, TIMEOUT_GRANTED, TIMEOUT_KEPT, TIMEOUT_REFUSED, ClassicRules)
+                          PERIOD_OVER, SCRAMBLE, TIMEOUT_GRANTED, TIMEOUT_KEPT, TIMEOUT_LATE, TIMEOUT_REFUSED, ClassicRules)
 from ..game.setup import DEFENSE_ITEMS, OFFENSE_ITEMS
 from . import kick_flow
 from . import nx_texts as X
@@ -169,7 +169,10 @@ class NflRules(ClassicRules):
         self.qb_on = bool(qb_on)                  # the quarterback's sneak, keeper, draw and scramble (SX.5, off unless given)
         self.challenges_on = bool(challenges_on)  # the ruling model, booth reviews and challenges (SX.6, off unless given)
         self.auto_sides = tuple(auto_sides)       # the sides whose timeouts, penalty choices and onside kicks the computer decides
-        self.timeout_kept = False                 # H18: the T key was pressed while a play was live: granted at the next dead-ball moment
+        self.timeout_kept = False                 # H18: the T key was pressed while the ball was not yet in play (a pause between periods): granted
+                                                  # at the next dead-ball moment; or while a play was live (timeout_late): never granted (Q-089)
+        self.timeout_late = False                 # issue 11 (Q-089, D-233): T came after the snap: no time out, one sentence when the play ends
+        self.timeout_told = False                 # the run-out question already said so (NXT-15): nothing more at the end of the play
         self.kickoff_safety = False               # issue 16: the kick-off being made is a safety kick (its menu, asked again, has the safety punt)
         self.kickoff_rekick = False               # Q-094 (D-238): the kick-off being made is a kick made again after a foul
         self.try_due = False                      # SX.13: a touchdown's try is still to be played (a timeout may come before it at 0:00)
@@ -238,6 +241,7 @@ class NflRules(ClassicRules):
     def before_snap(self, state, offense_play: int, defense_play: int) -> str:
         """Step 2: a foul before or at the snap (design 9.1)."""
         self.after_play = False
+        self.subs.before_snap(state)               # issue 14 (Q-086, D-235): the package of the formation called (none set: nothing)
         self.offense.result = None                 # SX.10c: a new play: no catalog result of an earlier play is read again
         self.review.replaying = self.review.clock_held = False    # SX.6: a new play: no corrected end point is still waited for
         if state.extras.penalties_on:
@@ -646,6 +650,7 @@ class NflRules(ClassicRules):
     def before_kickoff(self, state, kicking_side: int) -> str:
         x = state.extras
         self.subs.ensure(state, "kick-off")          # issue 14: the returners and the coverage the player put in
+        self.subs.rest(state, "kick-off")            # issue 14 (Q-085, D-236)
         self.broadcast.kickoff(state)              # SY.1, BC.3: a new possession; the sign-on before the opening kick-off
         x.out_of_bounds = False
         self.after_play = False
@@ -730,6 +735,7 @@ class NflRules(ClassicRules):
         x.handled = x.plays
         self.after_play = False
         self.subs.ensure(state, "after a play")      # issue 14: a next-play substitution ends
+        self.subs.rest(state, "after a play")        # issue 14 (Q-085, D-236): the computer rests its starters with a big lead late
         if self.possession_ends_game(state):      # SX.12: the overtime decided between two plays (the kickers kept their kick
             return OVERTIME_OVER                  # after their score, 16-1-5 (c)); the possession step catches the other changes
         self._overtime_news(state)
@@ -814,6 +820,10 @@ class NflRules(ClassicRules):
         count, so the play is not run); `called` is then what the snap took of the dead-ball period."""
         if live:
             self.timeout_kept = True
+            if where == "live play":              # issue 11 (Q-089, D-233, the tester's "a, with an exception"): the ball is snapped, so the
+                self.timeout_late = True          # key is not kept for after the play; one sentence says so when the play ends
+                self._log_timeout_key(state, where, TIMEOUT_LATE)
+                return TIMEOUT_KEPT
             self._log_timeout_key(state, where, TIMEOUT_KEPT)
             return TIMEOUT_KEPT
         self.game.stopspeech()
@@ -824,9 +834,21 @@ class NflRules(ClassicRules):
         if not self.timeout_kept:
             return None
         self.timeout_kept = False
+        late, self.timeout_late = self.timeout_late, False
         if state.extras is None or not state.extras.timeouts_on:
             return None
+        if late:                                  # issue 11 (Q-089, D-233): pressed after the snap: no time out, the clock goes on as it would
+            if not self.timeout_told:
+                self.game.say5(X.text("NXT-17"))
+            self.timeout_told = False
+            self._log_timeout_key(state, "after the play", TIMEOUT_LATE, "pressed after the snap")
+            return TIMEOUT_LATE
         return self._call_timeout(state, "after the play", None)
+
+    def late_timeout_told(self, state) -> None:
+        """The run-out question said NXT-15 (the ball is live, no time out) at once: the end of the play says nothing more."""
+        if self.timeout_late:
+            self.timeout_told = True
 
     def ball_live(self, state) -> None:
         """SX.13 (4-5-1 Item 3, 3-8-1): a snap or a kick ends the dead-ball period, so a timeout called before a kick-off, a punt, a

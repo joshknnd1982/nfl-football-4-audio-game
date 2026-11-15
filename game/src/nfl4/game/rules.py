@@ -208,6 +208,8 @@ FAIR_CATCH_KICK = "fair catch kick"
 # What the T key (H18, SX.2b) did: the request is kept for the end of the live play, a timeout was called, or it was refused (none left,
 # one already called in this dead-ball period, the period over)
 TIMEOUT_KEPT, TIMEOUT_GRANTED, TIMEOUT_REFUSED = "kept", "granted", "refused"
+# GitHub issue 11 (Q-089, D-233): T pressed after the snap is not kept for after the play; the play's end says so (never granted)
+TIMEOUT_LATE = "late"
 # What a play menu does after an added key or item (N. F. L. rules mode only, SX.10c): the items are made again and the menu stays at its
 # place (a setting changed, a favourite was added or taken off), or nothing is said and the next key is waited for (a lone Shift)
 MENU_REFRESH, MENU_QUIET = "menu refresh", "menu quiet"
@@ -372,6 +374,9 @@ class ClassicRules:
         raise RuntimeError("Classic has no timeouts: the T key is never handled")
 
     def grant_kept_timeout(self, state) -> None:
+        return None
+
+    def late_timeout_told(self, state) -> None:
         return None
 
     def ball_live(self, state) -> None:

@@ -1,3 +1,20 @@
+- NWK01 (remark, say2): " the <team> have the most cap space in the league, <cap>. ". the team with the most cap space (offseason)
+- NWK02 (remark, say2): " <cap> of cap space: the <team> have the most room under the cap. ". the team with the most cap space (offseason)
+- NWK03 (remark, say2): " the <team> go into the season with <cap> in cap space, more than anybody. ". the team with the most cap space (offseason)
+- NWK04 (remark, say2): " no team has more room under the cap than the <team>: <cap>. ". the team with the most cap space (offseason)
+- NXA-15 (sentence, say2): " your team would be over the salary cap by <over>. the staff would release: ". stage 5, the cap list when the cut has no list of its own (review of SX.8g)
+- NXA-16 (sentence, say2): " your team is over the salary cap by <over>. nobody can be released to fix it. ". stage 5, the player's team could not get under the cap (review of SX.8g)
+- NXA-21 (piece, piece): "minus <money> million". an amount of money below zero (cap space of a team over the cap)
+- NXE-17 (piece, piece): "expiring contracts". the name of stage 7 (SX.8h), between the development and the draft
+- NXW-01 (sentence, say2): " <coach> <n> of your players have contracts that end. you will be asked about each one. ". stage 7, the player's players to be asked
+- NXW-02 (sentence, say2): " none of your players has a contract that ends. ". stage 7, nobody to ask
+- NXW-03 (prompt, say2): " <player>, <position>, age <a>, rating <r>, <potential> potential. he is <mood> with the team. he asks <contract>. ". stage 7, one player's talk, the first round
+- NXW-04 (sentence, say2): " you can pay him up to <room>. ". stage 7, the room under the salary cap for him
+- NXW-05 (sentence, say2): " you cannot afford his price. you can pay up to <room>. ". stage 7, no room for his price
+- NXW-10 (sentence, say2): " <player> signs, <contract>. ". stage 7, signed
+- NXW-11 (sentence, say2): " <player> wants more. he asks <contract>. round <round> of <m>. ". stage 7, a counter after an offer for less
+- NXW-12 (sentence, say2): " <player> ends the talks and leaves. ". stage 7, the last round failed
+- NXW-13 (sentence, say2): " <player> is let go. ". stage 7, let go
 - NXW-14 (sentence, say2): " <player> signs the franchise tag, <contract>. ". stage 7, the franchise tag
 - NXW-20 (piece, piece): "happy". a player's mood
 - NXW-21 (piece, piece): "content". a player's mood
@@ -416,10 +433,3 @@
 - NXC-21 (sentence, say2): " bye week. ". the real calendar's schedule (SZ.8): the week in which the player's team does not play
 - NXC-22 (menu, say5): " 1. see this week's games ". the main menu's first choice in the bye week (SZ.8), in the place of ' 1. play game '
 - NXC-23 (sentence, say2): " Your team has a bye this week. There is no game today. ". 'Today's game is ...' in the bye week (SZ.8)
-- NXC-24 (sentence, say2): " your team has a bye this week. ". the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
-- NXC-25 (sentence, say4): " the top seeds, the <team> and the <other>, have the only byes of the wild card round. ". the end of a regular season on the real calendar (D-129, the N. F. L.'s 14-team play-offs), after the N. F. C. wild card teams: the A. F. C.'s seed 1, then the N. F. C.'s
-- NXC-26 (sentence, say4): " Your team won the division title over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the player's division title and his team won it
-- NXC-27 (sentence, say4): " The <other> won the division title over your team on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the player's division title and another team won it
-- NXC-28 (sentence, say4): " Your team won the last wild card place over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and the player's team won it
-- NXC-29 (sentence, say4): " The <other> won the last wild card place over your team on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and another team won it
-- NXC-30 (piece, say4): "the games between the teams". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'head-to-head'

@@ -90,7 +90,9 @@ def test_backups_in_rests_every_positions_starters_and_brings_in_the_bench():
     assert [keys[p] for p in (13, 14, 16)] == ["DT3", "DT4", "DT1"]              # two tackles start
     assert keys[12] == "LE2" and keys[17] == "LE1" and keys[15] == "RE1"
     assert keys[33] == "QB2"                                                     # the backup quarterback
-    assert keys[29:33] == ["W3", "C9", "K1", "P1"]                               # the returners, the kicker and the punter stay
+    # Q-087 (D-234, the tester's answer b): the backup returners come in too (no roles known here: the lineup's men who may return, the
+    # receiver place's first and then the backs'); the kicker and the punter stay
+    assert keys[29:33] == ["W4", "HB2", "K1", "P1"]
 
 
 def test_one_man_in_changes_places_with_the_man_there_or_comes_from_the_bench():
@@ -138,10 +140,15 @@ def test_the_saved_record_keeps_the_substitutions_and_refuses_a_damaged_one():
     assert "subs" not in record.to_json()                                        # a game with none saves as before
     record.subs = {"backups": True, "game": [[0, "Joe Mixon"], [33, 4512]], "play": [[29, "Ray"]], "at": 12}
     again = ExtrasRecord.from_json(record.to_json())
-    assert again.subs == record.subs
+    assert again.subs == dict(record.subs, packages={})                         # a record of 1.0.2 (no packages) loads with none (D-235)
+    record.subs = {"backups": False, "game": [], "play": [], "at": 0, "packages": {"O:shotgun": [[9, "Ray"]], "D:dime": [[25, 4512]]}}
+    assert ExtrasRecord.from_json(record.to_json()).subs == record.subs
     for bad in ({"backups": 1, "game": [], "play": [], "at": 0}, {"backups": False, "game": [[34, "x"]], "play": [], "at": 0},
                 {"backups": False, "game": [[0, ""]], "play": [], "at": 0}, {"backups": False, "game": [[0, True]], "play": [], "at": 0},
-                {"backups": False, "game": [], "play": [], "at": -1}, {"backups": False, "game": []}):
+                {"backups": False, "game": [], "play": [], "at": -1}, {"backups": False, "game": []},
+                {"backups": False, "game": [], "play": [], "at": 0, "packages": {"O:nowhere": []}},
+                {"backups": False, "game": [], "play": [], "at": 0, "packages": {"O:shotgun": [[40, "x"]]}},
+                {"backups": False, "game": [], "play": [], "at": 0, "packages": []}):
         record.subs = bad
         with pytest.raises(ValueError):
             ExtrasRecord.from_json(record.to_json())
@@ -175,7 +182,9 @@ def test_all_backups_in_then_the_starters_back(tmp_path):
     assert X.text("NXB-U17") in texts(rig, mark) and rig.engine.s.extras.subs["backups"] is True
     assert after[0:6] == before[1:6] + before[0:1]                              # Back2 starts, Back1 last
     assert after[6:12] == before[10:12] + before[6:10]                          # four receivers start: Rec5 and Rec6 come in
-    assert after[29:33] == before[29:33] and after[33] == before[33]            # returners, kickers stay; no backup quarterback known
+    assert after[31:33] == before[31:33] and after[33] == before[33]            # the kickers stay; no backup quarterback known
+    assert after[29] != before[29] and after[30] != before[30]                  # Q-087 (D-234): the backup returners come in
+    assert set(after[29:31]) <= set(after[0:12]) and after[29] != after[30]      # men of the lineup as it plays with the backups in
     rig.keys.answers[:] = ["u", ENTER, ESCAPE, ESCAPE]                         # the first item is now "Starters back in"
     mark = len(rig.said)
     the_offense_menu(rig)

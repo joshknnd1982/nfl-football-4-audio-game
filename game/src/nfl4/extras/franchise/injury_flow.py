@@ -57,11 +57,12 @@ def write_roster(roster: Roster, table: list) -> None:
     roster.empty = [(heading, number) for index, (heading, number, _position) in enumerate(D.PLACES) if table[index][0] == I.EMPTY]   # SR.4
 
 
-def game_returners(league: LeagueRecord, team: int, week: int, staff: bool, out=frozenset()) -> list:
+def game_returners(league: LeagueRecord, team: int, week: int, staff: bool, out=frozenset(), count: int = len(RET_PLACES)) -> list:
     """Q-082 (D-164 (8), SR.6): the two men who return kicks and punts in a game, from the team's roles KR1, PR1, KR2, PR2 ...: the first two different men
     who are fit (not hurt for the week, not hurt in the game in progress), of any position but the quarterback, the kickers and the snapper. A returner is
     a role on top of his own place, as in a quick game: the Franchise's stored view gives one man one place, so the game day lays the roles over its two
-    return places. Returns [(player id, name, rating)], at most two (the roles' men first, then the stored view's return places')."""
+    return places. Returns [(player id, name, rating)], at most two (the roles' men first, then the stored view's return places'); `count`: more
+    of them in their order (issue 14, Q-087: "All backups in" puts the next ones in)."""
     chart = league.chart[team - 1]
     turns = []
     for i in range(max((len(chart.get(role, ())) for role in ("KR", "PR")), default=0)):
@@ -79,7 +80,7 @@ def game_returners(league: LeagueRecord, team: int, week: int, staff: bool, out=
             continue
         rating = max(D.RATING_MIN, p.rating - (0 if pid in out else I.penalty(league, pid, week)))
         found.append((pid, p.name, rating))
-        if len(found) == len(RET_PLACES):
+        if len(found) == count:
             break
     return found
 
@@ -125,6 +126,7 @@ class GameInjuries:
         self.state = None
         self.identity = {1: [], 2: []}
         self.sub_lineup = None                         # issue 14 (D-229): (base, bench, empty) of the player's side for the substitutions
+        self.sub_formation = None                      # issue 14 (Q-086, D-235): the formation of the player's play called now (its package)
         I.lineup_decided(league, own, week, staff)     # the kick-off: who of the player's hurt players plays is written into the rows
 
     def swap_sides(self) -> None:
@@ -159,6 +161,9 @@ class GameInjuries:
         if side == 1 and team == self.league.team:        # issue 14 (D-229): the player's substitutions (none: the table unchanged)
             from ..subs_flow import franchise_apply
             table = franchise_apply(self, table)
+        elif side == 2 and getattr(self.state.extras, "computer_rest", None):     # issue 14 (Q-085, D-236): the computer rests its starters
+            from ..subs_flow import franchise_apply
+            table = franchise_apply(self, table, 2)
         write_roster(self.state.rosters[side], table)
         self.state.quarterbacks[side] = table[QB_PLACE][1]
         self.identity[side] = [entry[0] for entry in table]

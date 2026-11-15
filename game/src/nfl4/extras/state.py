@@ -128,6 +128,9 @@ class ExtrasRecord:
     # issue 14 (D-229): the player's substitutions (extras/subs.py: {"backups", "game", "play", "at"}); None (and left out of the saved
     # text) while he made none, so a record without it loads as before
     subs: dict | None = None
+    # issue 14 (Q-085, D-236): True while the computer's side rests its starters (a big lead late in the game); None (and left out of the saved
+    # text) otherwise, so a record without it loads as before
+    computer_rest: bool | None = None
 
     # ----- per side -----
 
@@ -184,6 +187,8 @@ class ExtrasRecord:
             del data["pending_choice"]
         if data["subs"] is None:
             del data["subs"]
+        if data["computer_rest"] is None:
+            del data["computer_rest"]
         return json.dumps(data, sort_keys=True, separators=(",", ":"))
 
     @classmethod
@@ -285,6 +290,8 @@ class ExtrasRecord:
         if self.subs is not None:
             from .subs import check_record
             check_record(self.subs)
+        if self.computer_rest not in (None, True):
+            raise ValueError("the computer's rest is %r" % (self.computer_rest,))
         if self.pending_choice is not None:
             if not self.penalties_on:
                 raise ValueError("a penalty choice is kept in a game without penalties")

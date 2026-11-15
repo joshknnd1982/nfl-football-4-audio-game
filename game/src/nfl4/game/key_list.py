@@ -94,8 +94,8 @@ ROWS: tuple[KeyRow, ...] = (
            "the semicolon Home, and the apostrophe End. ",
            consts=("KEY_OPEN_BRACKET", "KEY_CLOSE_BRACKET", "KEY_SEMICOLON", "KEY_APOSTROPHE")),
     KeyRow("timeout", "T", "Anywhere in a game being played, until the play is run", "calls your time out at once; before a field "
-           "goal, a punt or a kicked try that is until the holder or punter has said hike, so you can ice the kicker; a call during a "
-           "running play is granted when the play ends; before a two-point try it asks again whether to kick or go for two; after you "
+           "goal, a punt or a kicked try that is until the holder or punter has said hike, so you can ice the kicker; T pressed "
+           "after the snap or the kick is not kept for after the play: no time out is taken and the play's end says so; before a two-point try it asks again whether to kick or go for two; after you "
            "chose your kick off and before the kick it asks your kick off again", "nfl", False, " T. calls a time out", consts=("KEY_T",), feature="timeouts"),
     KeyRow("back", "Backspace or Left, B", "In a list of plays or a playbook group", "go back one level, from a list of plays to the "
            "menu it came from; B chooses the Back item", "nfl", False, "Backspace, Left or B. goes back", letters="b", feature="playbooks"),
@@ -134,10 +134,11 @@ ROWS: tuple[KeyRow, ...] = (
            "first item picks a player by chance", "nfl", False, "", " L. in the defense menu, chooses the player who blitzes. ", letters="l",
            feature="playbooks"),
     KeyRow("subs", "U", "In a play menu, on offense and on defense", "opens the substitutions: put all your backups in for the rest of the "
-           "game, put your starters back in, or choose a place (the running backs, the receivers, the linebackers and every other) and the "
-           "player who comes in there, for the next play only or for the rest of the game; in its lists D says what a position does and "
-           "Escape goes back", "nfl", False, "",
-           " U. in a play menu, opens the substitutions: your backups in, or any player in for the next play or for the rest of the game. ",
+           "game (the backup kick and punt returners too), put your starters back in, or choose a place (the running backs, the receivers, "
+           "the linebackers and every other) and the player who comes in there, for the next play only or for the rest of the game; its last "
+           "item, Packages by formation, sets the players who come in for every play called in a formation (shotgun, goal line, nickel, "
+           "dime and the others); in its lists D says what a position does and Escape goes back", "nfl", False, "",
+           " U. in a play menu, opens the substitutions: your backups in, any player in for the next play or for the rest of the game, or packages by formation. ",
            letters="u"),
     KeyRow("find", "Letters, Backspace, Enter", "In Find a Play by Name", "type the first letters of a word of the play's name, here "
            "T is a letter too; Backspace deletes the last one and Enter finds the plays", "nfl", False, "",

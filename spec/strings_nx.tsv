@@ -993,7 +993,8 @@ NXP-26	penalties	sentence	say4	 <yards> yards, <situation>. 	the referee after N
 NXP-27	penalties	sentence	say4	 <situation>. 	the referee after NXP-07 or NXP-06 with no yards (tester 2026-10-23)
 NXP-28	penalties	sentence	say4	 the penalty is accepted, <situation>. 	the referee after the player accepts a penalty of no yards (tester 2026-10-23)
 NXH-47	penalties	help	say5	 At the question about a penalty, S. saves the game with the question kept, when it can be kept. The loaded game asks it again. 	F5 addition (H12, C6), when penalties are on (SX.9)
-NXT-15	timeouts	sentence	say5	 the ball is live. you will have the time out when the play ends. 	the T key during a live play, said only where a question waits (the run-out question, SX.2b, D-084)
+NXT-15	timeouts	sentence	say5	 the ball is live, so no time out is taken. 	the T key during a live play, said only where a question waits (the run-out question, SX.2b, D-084; issue 11, D-233: no longer kept)
+NXT-17	timeouts	sentence	say5	 your time out came after the snap, so none was taken. 	the end of a play during which the player pressed T (issue 11, Q-089, D-233: a T after the snap is not kept for after the play)
 NXT-16	timeouts	sentence	say5	 there is no time left for a time out. 	the T key when the period has no time left (SX.2b)
 NXY-53	playbooks	menu	say5	Split Zone	offense play O053 of the catalog (run, list og01, SRC-SECONDARY)
 NXY-54	playbooks	menu	say5	Mid Zone	offense play O054 of the catalog (run, list og01, SRC-SECONDARY)
@@ -2098,7 +2099,7 @@ NXB-T19	menus	piece	piece	defender	the word where the position is not known (SY.
 NXB-T21	menus	sentence	say5	 that play is not a pass. 	R on a play that is not a pass (SY.4)
 NXB-U01	menus	prompt	say5	 <coach> substitutions. Who plays for your team? 	U in a play menu, the substitutions (issue 14, D-229): the list's prompt
 NXB-U02	menus	menu	say5	All backups in for the game	U in a play menu, the substitutions (issue 14, D-229): while the starters play
-NXB-U03	menus	menu	say5	Starters back in, undo every substitution	U in a play menu, the substitutions (issue 14, D-229): while anything is changed
+NXB-U03	menus	menu	say5	Starters back in, packages stay	U in a play menu, the substitutions (issue 14, D-229): while anything is changed
 NXB-U04	menus	menu	say5	<group>: <list>	U in a play menu, the substitutions (issue 14, D-229): a group of places and who plays there now
 NXB-U05	menus	prompt	say5	 which place? Enter lists who can come in. 	U in a play menu, the substitutions (issue 14, D-229): the places of a group
 NXB-U06	menus	menu	say5	<label>: <player>	U in a play menu, the substitutions (issue 14, D-229): a place and its man (a game without real names)
@@ -2112,20 +2113,36 @@ NXB-U13	menus	menu	say5	For the next play only	U in a play menu, the substitutio
 NXB-U14	menus	menu	say5	For the rest of the game	U in a play menu, the substitutions (issue 14, D-229): the second answer
 NXB-U15	menus	sentence	say5	 <player> comes in for <old> for the next play. 	U in a play menu, the substitutions (issue 14, D-229): said after a next-play substitution
 NXB-U16	menus	sentence	say5	 <player> comes in for <old> for the rest of the game. 	U in a play menu, the substitutions (issue 14, D-229): said after a substitution for the game
-NXB-U17	menus	sentence	say5	 your backups are in for the rest of the game. 	U in a play menu, the substitutions (issue 14, D-229): said after the backups went in
+NXB-U17	menus	sentence	say5	 your backups and backup returners are in for the rest of the game. 	U in a play menu, the substitutions (issue 14, D-229): said after the backups went in
 NXB-U18	menus	sentence	say5	 your starters are back in. 	U in a play menu, the substitutions (issue 14, D-229): said after every substitution was taken back
 NXB-U19	menus	sentence	say5	 nobody else on your team can play there. 	U in a play menu, the substitutions (issue 14, D-229): a place nobody can come in at
+NXB-U20	menus	menu	say5	Packages by formation, <n> set	U in a play menu, the substitutions (issue 14, Q-086, D-235): the top list's last item, how many formations have a package
+NXB-U21	menus	menu	say5	Other formations	U in a play menu, the substitutions (issue 14, Q-086, D-235): the package of the old and trick formations (wildcat, wishbone, victory and the like)
+NXB-U22	menus	menu	say5	Goal line defense, three defensive backs	U in a play menu, the substitutions (issue 14, Q-086, D-235): the defense's heavy package
+NXB-U23	menus	menu	say5	Base defense, four defensive backs	U in a play menu, the substitutions (issue 14, Q-086, D-235): the defense's base package
+NXB-U24	menus	menu	say5	Nickel, five defensive backs	U in a play menu, the substitutions (issue 14, Q-086, D-235): the defense's nickel package
+NXB-U25	menus	menu	say5	Dime, six defensive backs	U in a play menu, the substitutions (issue 14, Q-086, D-235): the defense's dime package
+NXB-U26	menus	menu	say5	Quarter, seven defensive backs	U in a play menu, the substitutions (issue 14, Q-086, D-235): the defense's quarter package
+NXB-U27	menus	menu	say5	<formation>: <n> set	U in a play menu, the substitutions (issue 14, Q-086, D-235): a formation and how many places its package sets
+NXB-U28	menus	menu	say5	<formation>: none set	U in a play menu, the substitutions (issue 14, Q-086, D-235): a formation with no package
+NXB-U29	menus	sentence	say4	 the <team> are resting their starters. 	the computer's team puts its backups in with a big lead late in the game (issue 14, Q-085, D-236)
+NXB-U30	menus	sentence	say4	 the <team> send their starters back in. 	the computer's rested starters come back when its lead shrinks (issue 14, Q-085, D-236)
+NXB-U31	menus	prompt	say5	 packages by formation. The players you set come in for every play called in that formation. Which formation? 	U in a play menu, the substitutions (issue 14, Q-086, D-235): the list of formations
+NXB-U32	menus	menu	say5	Clear this package	U in a play menu, the substitutions (issue 14, Q-086, D-235): a formation's first item while men are set
+NXB-U33	menus	prompt	say5	 <formation> package. Who plays in it? 	U in a play menu, the substitutions (issue 14, Q-086, D-235): one formation's groups
+NXB-U34	menus	sentence	say5	 the <formation> package is cleared. 	U in a play menu, the substitutions (issue 14, Q-086, D-235): after Clear this package
+NXB-U35	menus	sentence	say5	 <player> comes in for <old> in every <formation> play. 	U in a play menu, the substitutions (issue 14, Q-086, D-235): after a man was set in a package
 NXH-69	menus	help	say5	 R in the offense menu chooses who your next pass goes to, a running back too when the play can throw to one. L in the defense menu chooses who blitzes. Enter keeps the play's own pick. 	F6 addition (SY.4, SY.5)
 NXH-70	broadcast	help	say5	 The crew are Walt Kessler, Gus Delgado and Nora Banks of the Gridiron Radio Network until you choose names of your own in F9, Rules, Broadcast crew. 	F6 addition, both modes (SZ.1, BC.3)
 NXH-71	broadcast	help	say5	 The stadium and referee sounds can be replaced with your own sound files: F9, Sounds, Stadium and referee sounds lists them with the file name each one takes. 	F6 addition (SZ.2)
 NXH-72	franchise	help	say5	 Practice squad: up to 16 players, at most 6 veterans, formed at the roster cut. A squad player is elevated when an injury leaves his position with nobody, up to 3 times a season. 	F6 while the franchise is in use (D-136)
 NXH-73	franchise	help	say5	 Practice squad: the players a team keeps to practice with it but who do not play unless they are elevated for a game or signed. Elevated: moved up from the practice squad for one game. 	F7 glossary while the franchise is in use (D-136)
 NXH-74	franchise	help	say5	 F9, Franchise, practice squad: sign a squad player to your roster, add a free agent to the squad, release a squad player, protect squad players, or sign a player from another team's practice squad. 	F6 while the franchise is in use (D-136)
-NXH-75	menus	help	say5	 F9, Rules, Quarterbacks lists every team's quarterbacks. Enter on a team lists them, and Enter on one makes him the team's starter from the next game. 	F6 addition (D-132)
+NXH-75	menus	help	say5	 Quarterbacks, in F9, Rules and in F9, Franchise after Depth charts, lists every team's quarterbacks. Enter on a team lists them; Enter on one makes him the starter from the next game. 	F6 addition (D-132; Q-088, D-239: in both menus)
 NXH-76	franchise	help	say5	 The play-offs of a franchise on the real calendar are the N. F. L.'s: 7 teams in each conference, and only the top seed rests in the wild card round. The division round is reseeded. 	F6 while the franchise is in use (D-129)
 NXH-87	franchise	help	say5	 Equal records are settled by the N. F. L.'s tie-breakers, the games between the teams first, and the standings follow them. 	F6 while the franchise is in use, after NXH-76 (S-E3, D-202)
 NXH-77	franchise	help	say5	 F9, Franchise, get the latest N. F. L. calendar asks the game's page on GitHub for the newest schedule, only when you choose it. 	F6 while the franchise is in use (D-128)
-NXH-78	franchise	help	say5	 In a franchise, F9, Rules, Quarterbacks lists every team's starter and its practice squad quarterbacks; on your team a practice squad quarterback can become the starter. 	F6 while the franchise is in use (D-132)
+NXH-78	franchise	help	say5	 In a franchise, Quarterbacks, in F9, Rules and in F9, Franchise, lists every team's starter and practice squad quarterbacks; on your team a practice squad quarterback can become the starter. 	F6 while the franchise is in use (D-132; Q-088, D-239: in both menus)
 NXH-79	menus	help	say5	 F9, Franchise, Depth charts: any team's order, position by position. In a franchise, your depth chart, right after your roster, is your own team. 	F6 addition (NX-D3; issue 10, D-223: the item is in F9, Franchise)
 NXH-80	menus	help	say5	 Depth charts, key downs and moments: who gets the ball on third and fourth down, in the red zone, and in the last two minutes of a half. 	F6 addition (NX-D4)
 NXH-81	broadcast	help	say5	 Your own music and celebrations: put music.wav, or celebration1.wav and up, in the sounds folder. The game plays no music or celebrations of its own. 	F6 addition (NX-M1, NX-M2)
@@ -2148,7 +2165,7 @@ NXM-54	broadcast	menu	say5	Put the stadium sounds back	F9 Sounds item: the playe
 NXM-55	broadcast	prompt	say5	 this moves your own stadium and referee sound files to the removed sounds folder. Press Enter to do it, or any other key to cancel. 	the confirmation of that item (SZ.2)
 NXM-56	broadcast	sentence	say5	 <n> of your files were moved. The original sounds are back. 	after that item (SZ.2)
 NXM-57	broadcast	sentence	say5	 you have no stadium or referee sound files of your own. 	after that item when there is nothing to move (SZ.2)
-NXM-58	menus	menu	say5	Quarterbacks	F9, Rules, the item before Reset (D-132): every team's quarterbacks and the starter you choose
+NXM-58	menus	menu	say5	Quarterbacks	F9, Rules, the item before Reset (D-132): every team's quarterbacks and the starter you choose; also F9, Franchise, after the depth chart (Q-088, D-239)
 NXM-D01	menus	menu	say5	Depth charts	F9, Franchise, after get the latest rosters, outside a franchise: every team's depth chart and key players (NX-D3, NX-D4; issue 10, D-223: was F9, Rules)
 NXM-D02	menus	sentence	say5	 depth charts. which team? the letters find a team. 	F9 depth charts: the list of teams (NX-D3)
 NXM-D03	menus	sentence	say5	 the depth chart of the <team>. 	F9 depth charts: a team's menu title (NX-D3)

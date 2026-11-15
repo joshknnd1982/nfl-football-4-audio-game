@@ -39,7 +39,9 @@ def every_field(tmp_path):
         injuries={"hurt": [[1012, "IJE", 3, 1]], "stand_ins": [[4, "QB", "Smith", 55]], "carries": {"1013": 77}},
         pending_choice=pending, ot_phase="second", ot_first=2, ot_base=17, ot_kicked=True, ot_told=True, ot_receiver=2,   # SX.12
         ot_toss=True, free_after_safety=True, ot_toss_loser=2,          # SX.13
-        subs={"backups": True, "game": [[0, "Back4"], [33, 1012]], "play": [[29, "Ret2"]], "at": 149})     # issue 14 (D-229)
+        subs={"backups": True, "game": [[0, "Back4"], [33, 1012]], "play": [[29, "Ret2"]], "at": 149,      # issue 14 (D-229)
+              "packages": {"O:shotgun": [[9, "Rec5"]], "D:nickel": [[24, 1013]]}},                    # issue 14 (Q-086, D-235)
+        computer_rest=True)                                                                           # issue 14 (Q-085, D-236)
 
 
 def test_a_record_with_every_field_away_from_its_start_goes_through_the_file_and_into_a_game(tmp_path):

@@ -249,6 +249,7 @@ class KickSteps:
         while True:                                          # L_4452a1
             if self.keys.take_resumed() == "kept":           # H18: T in this question, the ball is live: said once, then asked again
                 g.say5(self.rules.live_timeout_sentence())
+                self.rules.late_timeout_told(s)              # issue 11 (D-233): said now, nothing more when the play ends
             g.say5(" " + self.coach + P.RUN_IT_OUT_1 + self.returner(s.wisoff, s.returner) + P.RUN_IT_OUT_2)
             answer = 1
             while True:                                      # L_445429

@@ -18,8 +18,14 @@ nobody is the very same game.
   a man of the bench takes the place and the man there goes to the bench. A returner's place takes any man who may return kicks, and he keeps his
   own place too, as the game day's returners always have. A man who can no longer play (hurt in a franchise game) leaves the list: his place goes
   back to the lineup's man.
-* the record, `ExtrasRecord.subs` (Save Game keeps it): {"backups": bool, "game": [[place, man], ...], "play": [[place, man], ...], "at": n}; a man
-  is a franchise player's id or, in a quick game or a season, his spoken name; "play" holds for the play that starts after `at` plays of the game.
+* the record, `ExtrasRecord.subs` (Save Game keeps it): {"backups": bool, "game": [[place, man], ...], "play": [[place, man], ...], "at": n,
+  "packages": {formation: [[place, man], ...]}}; a man is a franchise player's id or, in a quick game or a season, his spoken name; "play" holds for
+  the play that starts after `at` plays of the game. A record saved before the packages (1.0.2) has no "packages": it loads as none.
+* the tester's answers on issue 14 (2026-11-15, rule 0.41): Q-087 b (D-234), "All backups in" puts the backup returners in too (the kicker and the
+  punter stay): the team's next kick and punt returners (`spares`, the roles KR2, PR2 ... in turn), else the men who may return kicks in the lineup
+  as it is with the backups in; Q-086 b (D-235), packages by formation: the men the player set for a formation come in for every play called in it
+  (`effective(..., formation=...)`), after the substitutions for the rest of the game and before those for the next play; Q-085 b (D-236): the
+  computer's side rests its starters (`backups_in` on its lineup) when it leads by a lot late in the game (`rest_due`).
 """
 from __future__ import annotations
 
@@ -42,6 +48,21 @@ GROUP_STARTERS = {"QB": 1, "RB": 1, "WR": 4, "DL": 4, "LB": 3, "CB": 2, "S": 2}
 NOT_RESTED = frozenset(("K", "P", "LS"))
 GROUP_MARK = "*"                                        # a position known only as a group: "*WR"
 LIST_MAX = 34                                           # a record's lists (a saved game edited by hand is refused, never half used)
+# Q-086 (D-235): the formations a package is set for. The offense's: the formation the play is lined up in (the Formation setting of Formation and
+# Tempo, else the play's own; catalog.SETTINGS["formation"] without "book"; "other" is the old and trick formations: wildcat, wishbone, victory
+# and the like); the defense's: its package of defensive backs as played (personnel.adjust: 3 heavy at the goal line, 4 base, 5 nickel, 6 dime,
+# 7 quarter). A play of the original's menus (no catalog call) has no formation: no package plays.
+OFFENSE_FORMATIONS = ("under_center", "shotgun", "pistol", "singleback", "i_form", "split_backs", "empty", "heavy", "other")
+DEFENSE_PACKAGES = ("heavy", "base", "nickel", "dime", "quarter")
+PACKAGE_OF_BACKS = {3: "heavy", 4: "base", 5: "nickel", 6: "dime", 7: "quarter"}
+PACKAGES = tuple("O:" + f for f in OFFENSE_FORMATIONS) + tuple("D:" + p for p in DEFENSE_PACKAGES)
+# Q-085 (D-236): the computer rests its starters in the fourth quarter (never in overtime) when it leads by REST_LEAD with REST_LEFT seconds or less
+# left, or by REST_LEAD_ANY at any time of the quarter; its starters come back when the lead falls under BACK_LEAD (UNVERIFIED: a common
+# reading of NFL coaching, "three scores late"; measured by the calibration soak of D-236).
+REST_QUARTER, REST_LEAD, REST_LEFT, REST_LEAD_ANY, BACK_LEAD = 4, 21, 600, 28, 14
+# Q-087 (D-234): the men a backup returner is found among when the team's own returners are used up: backs, receivers and defensive backs (the
+# coverage men a real team returns kicks with; roster_model.make_view's order), never a lineman or a linebacker
+RETURN_GROUPS = frozenset(("RB", "WR", "CB", "S"))
 
 
 @dataclass(frozen=True)
@@ -58,12 +79,33 @@ class Man:
 
 
 def new_record() -> dict:
-    return {"backups": False, "game": [], "play": [], "at": 0}
+    return {"backups": False, "game": [], "play": [], "at": 0, "packages": {}}
 
 
 def is_empty(record) -> bool:
-    """Nothing is changed: the base lineup plays."""
-    return not record or (not record.get("backups") and not record.get("game") and not record.get("play"))
+    """Nothing is changed and no package is set: the base lineup plays."""
+    return not record or (not changed_now(record) and not any(record.get("packages", {}).values()))
+
+
+def changed_now(record) -> bool:
+    """Backups in, or a substitution for the rest of the game or the next play (the packages are standing choices, not changes: "Starters back
+    in" keeps them)."""
+    return bool(record) and bool(record.get("backups") or record.get("game") or record.get("play"))
+
+
+def package_rows(record, formation) -> list:
+    if not record or not formation:
+        return []
+    return list(record.get("packages", {}).get(formation, ()))
+
+
+def rest_due(resting: bool, quarter: int, overtime: bool, lead: int, left: int) -> bool:
+    """Q-085 (D-236): whether the computer's side rests its starters now (`resting`: it does already). No draw."""
+    if overtime or quarter != REST_QUARTER:
+        return False
+    if resting:
+        return lead >= BACK_LEAD
+    return lead >= REST_LEAD_ANY or (lead >= REST_LEAD and left <= REST_LEFT)
 
 
 def group_of(position: str) -> str:
@@ -129,8 +171,9 @@ def pool_of(base: list, bench: list) -> dict:
     return pool
 
 
-def backups_in(table: list, bench: list) -> list:
-    """Every position's starters to the end of its order, the men behind them (the bench's too) in their places (see the module's text)."""
+def backups_in(table: list, bench: list, spares=()) -> list:
+    """Every position's starters to the end of its order, the men behind them (the bench's too) in their places, and the backup returners in the
+    two return places (see the module's text; `spares`: the team's returners in their order, as Men)."""
     out = list(table)
     in_table = {man.key for man in table if man is not None and man.movable}
     positions: list = []
@@ -150,6 +193,25 @@ def backups_in(table: list, bench: list) -> list:
         order = men[count:] + men[:count]
         for place, man in zip(places, order):
             out[place] = man
+    return backup_returners(out, bench, spares)
+
+
+def backup_returners(table: list, bench: list, spares=()) -> list:
+    """Q-087 (D-234): the two return places get men who are not the returners now: the team's next returners (`spares`, in their order), then
+    the backs, receivers and defensive backs of the lineup as it plays now (the backups who came in first, in place order), then the bench's. A place keeps
+    its man when nobody else may return there."""
+    out = list(table)
+    now = {out[p].key for p in RETURNERS if out[p] is not None and out[p].movable}
+    taken: set = set()
+    for place in RETURNERS:
+        position = place_position(out, place)
+        order = [m for m in spares if m is not None] + [m for m, _where in candidates(out, bench, place)
+                                                         if group_of(m.position) in RETURN_GROUPS]
+        for man in order:
+            if man.movable and man.key not in now and man.key not in taken and may_play(place, position, man):
+                out[place] = man
+                taken.add(man.key)
+                break
     return out
 
 
@@ -172,19 +234,22 @@ def put(table: list, place: int, man: Man) -> list:
     return out
 
 
-def effective(base: list, bench: list, record, empty=()) -> tuple[list, list]:
+def effective(base: list, bench: list, record, empty=(), formation=None, spares=()) -> tuple[list, list]:
     """(the 34 men as they play now, the substitutions that were left out: [(list name, place, key)]). `empty`: the places that have nobody (the real
-    roster's empty back places, franchise injuries.EMPTY): never moved, their names are the nearest filled place's of the section again."""
+    roster's empty back places, franchise injuries.EMPTY): never moved, their names are the nearest filled place's of the section again.
+    `formation`: the formation of the play called now (PACKAGES; None between plays and at a kick): its package plays after the substitutions for
+    the rest of the game. `spares`: the team's returners in their order (keys), for "backups in"."""
     table = list(base)
     dropped: list = []
-    if is_empty(record):
+    if is_empty(record) or (not changed_now(record) and not package_rows(record, formation)):
         return table, dropped
     pool = pool_of(base, bench)
     empty = set(empty)
     if record.get("backups"):
-        table = backups_in(table, [m for m in bench if m.movable])
-    for kind in ("game", "play"):
-        for place, key in record.get(kind, ()):
+        table = backups_in(table, [m for m in bench if m.movable], [pool[k] for k in spares if k in pool])
+    lists = (("game", record.get("game", ())), ("package", package_rows(record, formation)), ("play", record.get("play", ())))
+    for kind, rows in lists:
+        for place, key in rows:
             man = pool.get(key)
             if man is None or not 0 <= place < PLACE_COUNT or place in empty:
                 dropped.append((kind, place, key))
@@ -236,27 +301,38 @@ def candidates(table: list, bench: list, place: int, empty=()) -> list:
 # ----- the record -----
 
 def check_record(record) -> None:
-    """A saved record's shape and ranges (ExtrasRecord.check): ValueError when it is not a whole, sensible record."""
-    if not isinstance(record, dict) or set(record) != {"backups", "game", "play", "at"}:
+    """A saved record's shape and ranges (ExtrasRecord.check): ValueError when it is not a whole, sensible record. A record without "packages"
+    (saved by 1.0.2) is mended: none."""
+    if isinstance(record, dict) and set(record) == {"backups", "game", "play", "at"}:
+        record["packages"] = {}
+    if not isinstance(record, dict) or set(record) != {"backups", "game", "play", "at", "packages"}:
         raise ValueError("the substitutions are %r" % (record,))
+    packages = record["packages"]
+    if not isinstance(packages, dict) or any(key not in PACKAGES for key in packages):
+        raise ValueError("the packages are %r" % (packages,))
+    for rows in packages.values():
+        check_rows(rows)
     if not isinstance(record["backups"], bool):
         raise ValueError("the backups switch is %r" % (record["backups"],))
     at = record["at"]
     if isinstance(at, bool) or not isinstance(at, int) or not 0 <= at <= 100000:
         raise ValueError("the play of the substitutions is %r" % (at,))
     for kind in ("game", "play"):
-        rows = record[kind]
-        if not isinstance(rows, list) or len(rows) > LIST_MAX:
-            raise ValueError("the substitutions are %r" % (rows,))
-        for row in rows:
-            if not isinstance(row, list) or len(row) != 2:
-                raise ValueError("a substitution is %r" % (row,))
-            place, key = row
-            if isinstance(place, bool) or not isinstance(place, int) or not 0 <= place < PLACE_COUNT:
-                raise ValueError("a substitution's place is %r" % (place,))
-            if isinstance(key, bool) or not (isinstance(key, int) and 1 <= key <= 10 ** 9 or isinstance(key, str) and 1 <= len(key) <= 40
-                                             and not any(ord(c) < 32 for c in key)):
-                raise ValueError("a substitution's player is %r" % (key,))
+        check_rows(record[kind])
+
+
+def check_rows(rows) -> None:
+    if not isinstance(rows, list) or len(rows) > LIST_MAX:
+        raise ValueError("the substitutions are %r" % (rows,))
+    for row in rows:
+        if not isinstance(row, list) or len(row) != 2:
+            raise ValueError("a substitution is %r" % (row,))
+        place, key = row
+        if isinstance(place, bool) or not isinstance(place, int) or not 0 <= place < PLACE_COUNT:
+            raise ValueError("a substitution's place is %r" % (place,))
+        if isinstance(key, bool) or not (isinstance(key, int) and 1 <= key <= 10 ** 9 or isinstance(key, str) and 1 <= len(key) <= 40
+                                         and not any(ord(c) < 32 for c in key)):
+            raise ValueError("a substitution's player is %r" % (key,))
 
 
 def add(record: dict, kind: str, place: int, key) -> None:
@@ -267,3 +343,15 @@ def add(record: dict, kind: str, place: int, key) -> None:
     record[kind] = rows[-LIST_MAX:]
     if kind == "game":
         record["play"] = [row for row in record["play"] if row[0] != place]
+
+
+def add_package(record: dict, formation: str, place: int, key) -> None:
+    """Q-086 (D-235): `key` comes in at `place` for every play called in `formation`; a later one for the same place replaces it."""
+    packages = record.setdefault("packages", {})
+    rows = [row for row in packages.get(formation, []) if row[0] != place]
+    rows.append([place, key])
+    packages[formation] = rows[-LIST_MAX:]
+
+
+def clear_package(record: dict, formation: str) -> None:
+    record.setdefault("packages", {}).pop(formation, None)

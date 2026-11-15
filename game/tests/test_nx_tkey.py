@@ -2,7 +2,7 @@
 PX SX.2b, requirement NX-T). This is inspired by Jim Kitchen.
 
 The tests of playbook 7.16, in this order: T in every play menu and every question, in the snap count and the set-up of a kick (the play
-is withdrawn and the menu comes again), during a live play (kept, granted when it ends), the three limits and their sentences, no menu
+is withdrawn and the menu comes again), during a live play (not kept: told when it ends, issue 11, D-233), the three limits and their sentences, no menu
 item on the letter T, F5 (which is "t" in this key model, B-W6) never calling one, T in a typed box, the speech cut at once, the global
 and F9 menus that close on T, the log line, Classic unchanged. Every draw is planned on a strict scripted source; the speech is the fake
 SAPI's list of (text, speaker, rate step).
@@ -284,7 +284,9 @@ def test_t_in_the_set_up_of_a_kick_off_calls_the_timeout_and_the_kick_off_goes_o
 
 # ----- NX-T3: the live play, the limits, the keys that are not T -----
 
-def test_t_during_a_live_play_is_kept_and_granted_when_the_play_ends_not_before(tmp_path):
+def test_t_during_a_live_play_is_not_kept_for_after_the_play(tmp_path):
+    """GitHub issue 11 (Q-089, D-233, the tester's "a, with an exception"): T after the snap no longer calls the time out when the play ends;
+    the play's end says so in one sentence and the clock goes on as it would (before D-233 it was granted here)."""
     rig = scene(tmp_path, extras=dict(pending=0, running=False, plays=1, handled=0, last_offense=1), quarter=2)
     engine, rules = rig.engine, rig.rules
     before = stops(rig)
@@ -294,12 +296,12 @@ def test_t_during_a_live_play_is_kept_and_granted_when_the_play_ends_not_before(
     rig.keys.pump()
     assert rules.timeout_kept and called(rig) == [0, 0] and texts(rig) == []
     rules.after_play = True
-    rules.between_plays(engine.s)                                    # the play ended: H10 grants it before the next prompt
-    assert not rules.timeout_kept and called(rig) == [1, 0] and OUT in texts(rig)
-    assert rig.engine.s.extras.timeouts == [2, 3]
+    rules.between_plays(engine.s)                                    # the play ended: H10 says it was too late, nothing is charged
+    assert not rules.timeout_kept and called(rig) == [0, 0] and OUT not in texts(rig)
+    assert X.text("NXT-17") in texts(rig) and rig.engine.s.extras.timeouts == [3, 3]
 
 
-def test_a_request_kept_during_a_play_is_granted_at_the_start_of_the_next_menu(tmp_path):
+def test_a_t_during_a_play_is_told_at_the_start_of_the_next_menu_and_not_granted(tmp_path):
     rig = scene(tmp_path, answers=[ENTER], extras=dict(pending=0, running=False))
     script(rig, Draws())
     engine = rig.engine
@@ -308,7 +310,7 @@ def test_a_request_kept_during_a_play_is_granted_at_the_start_of_the_next_menu(t
     rig.keys.pump()
     engine.t_live = False                                            # the end point of the play
     engine.offense_menu()
-    assert texts(rig)[:3] == [OUT, " you have 2 time outs left. ", " Kim" + P.SELECT_OFFENSE]
+    assert texts(rig)[:2] == [X.text("NXT-17"), " Kim" + P.SELECT_OFFENSE] and called(rig) == [0, 0]     # issue 11 (D-233)
 
 
 def test_a_timeout_between_the_end_of_a_play_and_the_next_menu_stops_the_whole_runoff(tmp_path):

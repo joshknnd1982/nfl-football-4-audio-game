@@ -16,6 +16,17 @@ The rules are `subs.py`. Here:
   A franchise game: `franchise_apply` is called by the injuries' `refresh` of the player's side (franchise/injury_flow.GameInjuries), so a man who is
   hurt leaves the lineup at once and every place keeps the identity, the rating and the injury draws of the man who really plays it.
 
+The tester's answers on issue 14 (2026-11-15, rule 0.41; D-234 to D-236):
+* "All backups in" also puts the backup returners in (Q-087): `spares` gives the team's returners in their order (the real roles KR1, PR1, KR2,
+  PR2 ...; a franchise game's fit men only).
+* Packages by formation (Q-086): the top list's last item, "Packages by formation", lists the offense's formations and the defense's packages, each
+  with how many men are set; Enter on one lists the groups as they play in it, then the places and the men as for a substitution, with no question
+  of how long: the man comes in for every play called in that formation. "Clear this package" ends it. `before_snap` (NflRules.before_snap, the
+  play called) lays the package of the called play's formation over the lineup; `ensure` takes it off again between plays and at a kick.
+* The computer rests its starters (Q-085): `rest` (NflRules.between_plays and the kick-off) puts the computer side's backups in when it leads by a
+  lot late in the game and its starters back when the lead shrinks (subs.rest_due), with one sentence each; the record is
+  ExtrasRecord.computer_rest (Save Game keeps it).
+
 Nothing here draws: a game where the player substitutes nobody is the very same game (its record stays None).
 """
 from __future__ import annotations
@@ -27,6 +38,10 @@ from ..game.rules import MENU_QUIET, MENU_REFRESH, TIMEOUT_GRANTED
 from . import nx_texts as X
 from . import roster_model as RM
 from . import subs as S
+from .plays import catalog as C
+from .plays import personnel
+from .plays.play_menus import SETTING_VALUE_TEXT
+from .qb_runs import to_goal
 
 log = logging.getLogger("nfl4.extras")
 
@@ -40,14 +55,27 @@ PLACE_WORDS = {"QB": "NXL-03", "RB": "NXL-01", "WR": "NXL-02", "DL": "NXL-04", "
 DESCRIBE_GROUP = {"QB": "QB", "RB": "HB", "WR": "WR", "DL": "DT", "LB": "MIKE", "CB": "CB", "S": "FS", "K": "K", "P": "P"}
 SECTION_ATTRIBUTES = (("running_backs", 6), ("receivers", 6), ("defense", 17), ("special_teams", 2), ("kickers", 2))
 EMPTY_HEADINGS = {"Running Backs:": 0, "Receivers:": 6}
+# Q-086 (D-235): the spoken name of each package (the offense's formations are the Formation setting's own words)
+PACKAGE_WORDS = {"O:other": "NXB-U21", "D:heavy": "NXB-U22", "D:base": "NXB-U23", "D:nickel": "NXB-U24", "D:dime": "NXB-U25",
+                 "D:quarter": "NXB-U26"}
 
 
 class SubsFlow:
     def __init__(self, rules):
         self.rules = rules
-        self.state_id = None          # the game state the quick game's snapshot belongs to
-        self.base_names = None        # the quick game's 34 names as the game made them
-        self.written = None           # the 34 names this flow wrote last (a roster with other names was made again by the game)
+        # a quick game's snapshot of each side: [the game state it belongs to, the 34 names as the game made them, the 34 names this flow wrote
+        # last (a roster with other names was made again by the game)]
+        self.snap = {1: [None, None, None], 2: [None, None, None]}
+        self.formation = None         # Q-086: the formation of the play called now (subs.PACKAGES), None between plays
+        self.applied = None           # the formation whose package is in the lineup now
+
+    @property
+    def base_names(self):
+        return self.snap[1][1]
+
+    @property
+    def written(self):
+        return self.snap[1][2]
 
     @property
     def game(self):
@@ -67,9 +95,9 @@ class SubsFlow:
     # ----- the lineup: a quick game -----
 
     @staticmethod
-    def read_names(state) -> list | None:
-        """The player's side's 34 names in the places' order, or None when its roster is not whole."""
-        roster = state.rosters.get(1) if isinstance(getattr(state, "rosters", None), dict) else None
+    def read_names(state, side: int = 1) -> list | None:
+        """A side's 34 names in the places' order, or None when its roster is not whole."""
+        roster = state.rosters.get(side) if isinstance(getattr(state, "rosters", None), dict) else None
         if roster is None:
             return None
         names = []
@@ -79,32 +107,36 @@ class SubsFlow:
                 return None
             names += list(values)
         quarterbacks = state.quarterbacks if isinstance(getattr(state, "quarterbacks", None), dict) else {}
-        names.append(quarterbacks.get(1, ""))
+        names.append(quarterbacks.get(side, ""))
         return names
 
     @staticmethod
-    def write_names(state, names: list) -> None:
-        roster = state.rosters[1]
+    def write_names(state, names: list, side: int = 1) -> None:
+        roster = state.rosters[side]
         at = 0
         for attribute, count in SECTION_ATTRIBUTES:
             getattr(roster, attribute)[:] = names[at:at + count]
             at += count
-        state.quarterbacks[1] = names[S.QUARTERBACK]
+        state.quarterbacks[side] = names[S.QUARTERBACK]
 
-    def real_chart(self) -> tuple[dict, dict] | None:
-        """({spoken name: position}, {position: [spoken names in depth order]}) of the player's team in the real rosters (the player's depth
-        charts and starting quarterback laid over them), or None (no real names, or a team that is not one of the 32)."""
+    def real_chart(self, side: int = 1) -> tuple[dict, dict, list] | None:
+        """({spoken name: position}, {position: [spoken names in depth order]}, [the returners in turn: KR1, PR1, KR2, PR2 ...]) of a side's team in
+        the real rosters (the player's depth charts and starting quarterback laid over his), or None (no real names, or a team that is not one of
+        the 32)."""
         g = self.game
         real = getattr(g, "real_names", None)
         season = getattr(g, "season", None)
-        if real is None or season is None or not (1 <= season.tn1 <= 8 and 1 <= season.tn2 <= 4):
+        if real is None or season is None:
+            return None
+        division, place = (season.tn1, season.tn2) if side == 1 else (season.tn3, season.tn4)
+        if not (1 <= division <= 8 and 1 <= place <= 4):
             return None
         from .franchise.league import team_index
-        team = team_index(season.tn1, season.tn2)
+        team = team_index(division, place)
         try:
             if not real.has_players(team):
                 return None
-            chart, _roles, _squad = real.chart(team)
+            chart, roles, _squad = real.chart(team)
         except Exception as exc:                    # a damaged rosters file: substitutions by place only
             log.warning("substitutions: the real chart of team %d cannot be read: %s", team, exc)
             return None
@@ -114,17 +146,29 @@ class SubsFlow:
             order[position] = spoken
             for name in spoken:
                 positions.setdefault(name.casefold(), position)
-        return positions, order
+        turns = []
+        roles = roles or {}
+        for i in range(max((len(roles.get(r, ())) for r in RM.ROLES), default=0)):
+            for role in RM.ROLES:
+                if i < len(roles.get(role, ())):
+                    turns.append(real.spoken(roles[role][i]))
+        return positions, order, turns
 
-    def quick_lineup(self, state):
-        """(base, bench, empty) of a quick game or a season; None when the player's roster is not whole."""
-        names = self.read_names(state)
+    def quick_lineup(self, state, side: int = 1):
+        """(base, bench, empty) of a side in a quick game or a season; None when its roster is not whole."""
+        found = self.quick_lineup_and_spares(state, side)
+        return found[:3] if found is not None else None
+
+    def quick_lineup_and_spares(self, state, side: int = 1):
+        """(base, bench, empty, the returners' keys in turn) of a side in a quick game or a season; None when its roster is not whole."""
+        names = self.read_names(state, side)
         if names is None:
             return None
-        if self.state_id != id(state) or self.written is None or names != self.written:
-            self.state_id, self.base_names = id(state), list(names)       # the game's own names (a loaded game, a new set-up)
-        names = self.base_names
-        roster = state.rosters[1]
+        snap = self.snap[side]
+        if snap[0] != id(state) or snap[2] is None or names != snap[2]:
+            snap[0], snap[1] = id(state), list(names)       # the game's own names (a loaded game, a new set-up)
+        names = snap[1]
+        roster = state.rosters[side]
         empty = set()
         for heading, number in getattr(roster, "empty", ()) or ():
             if heading in EMPTY_HEADINGS and 1 <= number <= 6:
@@ -135,11 +179,11 @@ class SubsFlow:
             if not names[place] or key in seen:
                 empty.add(place)
             seen.add(key)
-        chart = self.real_chart()
-        positions, order = chart if chart is not None else ({}, {})
+        chart = self.real_chart(side)
+        positions, order, turns = chart if chart is not None else ({}, {}, [])
         real_men = sum(1 for p in S.FIELD if p not in empty and names[p].casefold() in positions)
         if real_men * 2 < len([p for p in S.FIELD if p not in empty]):
-            positions, order = {}, {}               # the side's names are not the real roster's (the original's names, a season file's own)
+            positions, order, turns = {}, {}, []    # the side's names are not the real roster's (the original's names, a season file's own)
         base = []
         for place, name in enumerate(names):
             if place in empty:
@@ -158,7 +202,9 @@ class SubsFlow:
                     continue
                 listed.add(name.casefold())
                 bench.append(S.Man(name, name, position))
-        return base, bench, empty
+        keys = {man.key.casefold(): man.key for man in list(base) + bench if man.movable}
+        spares = [keys[name.casefold()] for name in turns if name.casefold() in keys]
+        return base, bench, empty, spares
 
     # ----- the lineup: a franchise game -----
 
@@ -172,25 +218,42 @@ class SubsFlow:
 
     # ----- the engine's lineup -----
 
-    def apply(self, state, why: str) -> None:
-        """Make the engine's lineup of the player's side again from the record (a franchise game through its injuries' refresh)."""
-        record = self.record(state)
+    def apply(self, state, why: str, side: int = 1) -> None:
+        """Make the engine's lineup of a side again from the record (the player's side) or the rest (the computer's side, Q-085); a franchise game
+        through its injuries' refresh."""
+        record = self.record(state) if side == 1 else self.rest_record(state)
+        formation = self.formation if side == 1 else None
+        if side == 1:
+            self.applied = self.formation
         injuries = self.rules.game_injuries()
         if injuries is not None:
+            if side == 1:
+                injuries.sub_formation = formation
             if injuries.state is not None:
-                injuries.refresh(1)
+                injuries.refresh(side)
             return
-        found = self.quick_lineup(state)
+        found = self.quick_lineup_and_spares(state, side)
         if found is None:
             return
-        base, bench, empty = found
-        table, dropped = S.effective(base, bench, record, empty)
+        base, bench, empty, spares = found
+        table, dropped = S.effective(base, bench, record, empty, formation, spares)
         names = [man.name if man is not None else "" for man in table]
-        self.write_names(state, names)
-        self.written = list(names)
-        debuglog.event("subs", "lineup", why=why, backups=bool(record and record["backups"]), game=len(record["game"]) if record else 0,
-                       play=len(record["play"]) if record else 0, dropped=dropped or None,
-                       changed=[(p, self.base_names[p], names[p]) for p in range(S.PLACE_COUNT) if names[p] != self.base_names[p]] or None)
+        self.write_names(state, names, side)
+        snap = self.snap[side]
+        snap[2] = list(names)
+        debuglog.event("subs", "lineup", side=side, why=why, backups=bool(record and record["backups"]),
+                       game=len(record["game"]) if record else 0, play=len(record["play"]) if record else 0, formation=formation,
+                       package=len(S.package_rows(record, formation)) or None, dropped=dropped or None,
+                       changed=[(p, snap[1][p], names[p]) for p in range(S.PLACE_COUNT) if names[p] != snap[1][p]] or None)
+
+    @staticmethod
+    def rest_record(state) -> dict | None:
+        """Q-085 (D-236): the computer side's record: all its backups in while it rests its starters, else nothing."""
+        if not getattr(getattr(state, "extras", None), "computer_rest", None):
+            return None
+        record = S.new_record()
+        record["backups"] = True
+        return record
 
     def ensure(self, state, why: str) -> None:
         """The play menus, the kick-off and the end of a play: a next-play substitution whose play was run ends; the lineup is made again when the
@@ -200,6 +263,9 @@ class SubsFlow:
             return
         changed = False
         extras = state.extras
+        self.formation = None                        # Q-086: between plays and at a kick no package plays
+        if self.applied is not None and S.package_rows(record, self.applied):
+            changed = True
         if record["play"] and extras.plays > record["at"]:
             if getattr(extras, "no_snap", False):
                 record["at"] = extras.plays          # a foul before the snap: the down is played again with the same men
@@ -214,6 +280,63 @@ class SubsFlow:
         names = self.read_names(state)
         if changed or (names is not None and names != self.written and not S.is_empty(record)):
             self.apply(state, why)
+        self.applied = None
+
+    # ----- Q-086 (D-235): the package of the play called -----
+
+    def formation_of(self, state) -> str | None:
+        """The package key (subs.PACKAGES) of the player's play called now: on offense the formation it lines up in, on defense its package of
+        defensive backs as played; None for a play of the original's menus (no catalog call). No draw."""
+        rules = self.rules
+        extras = state.extras
+        settings = getattr(extras, "play_settings", None) or {}
+        if state.wisoff == 1:
+            concept = C.BY_ID.get(getattr(rules.offense, "called", ""))
+            if concept is None or concept.side != "O":
+                return None
+            chosen = settings.get("formation", "book")
+            formation = concept.formation if chosen in ("book", "", None) else chosen
+            return "O:" + (formation if formation in S.OFFENSE_FORMATIONS else "other")
+        call = C.BY_ID.get(getattr(rules.defense, "called", ""))
+        if call is None or call.side != "D":
+            return None
+        offense = rules.defense.offense_concept(state)
+        played = personnel.adjust(call.params, offense.personnel, to_goal(state), settings.get("defense_personnel", personnel.MATCH),
+                                  settings.get("coverage_shade", personnel.BOOK))
+        return "D:" + S.PACKAGE_OF_BACKS.get(played.backs, "base")
+
+    def before_snap(self, state) -> None:
+        """NflRules.before_snap: the plays are called; the package of the player's formation comes in (nothing when he set none)."""
+        record = self.record(state)
+        if record is None:
+            return
+        self.formation = self.formation_of(state)
+        if S.package_rows(record, self.formation) or (self.applied is not None and S.package_rows(record, self.applied)):
+            self.apply(state, "package")
+            debuglog.event("subs", "package", formation=self.formation, men=len(S.package_rows(record, self.formation)))
+
+    # ----- Q-085 (D-236): the computer rests its starters -----
+
+    def rest(self, state, why: str) -> None:
+        """Between plays and at a kick-off: the computer's side (2) rests its starters when it leads by a lot late in the game, and sends them back
+        when the lead shrinks; one sentence each. No draw."""
+        extras = getattr(state, "extras", None)
+        if extras is None or 2 not in getattr(self.rules, "auto_sides", (2,)):
+            return
+        resting = bool(getattr(extras, "computer_rest", None))
+        lead = state.score(2) - state.score(1)
+        due = S.rest_due(resting, state.quarter, getattr(extras, "period", state.quarter) > 4, lead, extras.left)
+        if due == resting:
+            if resting and self.rules.game_injuries() is None:
+                names = self.read_names(state, 2)
+                if names is not None and names != self.snap[2][2]:
+                    self.apply(state, why, side=2)      # the game gave the roster its own names again
+            return
+        extras.computer_rest = True if due else None
+        self.apply(state, why, side=2)
+        team = state.teams.get(2, "") if isinstance(getattr(state, "teams", None), dict) else ""
+        self.game.say4(X.text("NXB-U29" if due else "NXB-U30", team=team))
+        debuglog.event("subs", "computer_rest" if due else "computer_starters_back", quarter=state.quarter, lead=lead, left=extras.left)
 
     # ----- the words -----
 
@@ -268,7 +391,7 @@ class SubsFlow:
             items = []
             if not (record and record["backups"]):
                 items.append((("backups", None), X.text("NXB-U02"), ""))
-            if not S.is_empty(record):
+            if S.changed_now(record):
                 items.append((("starters", None), X.text("NXB-U03"), ""))
             for group, places in S.GROUPS:
                 names = []
@@ -278,6 +401,8 @@ class SubsFlow:
                         names.append(man.name)
                 if names:
                     items.append((("group", group), X.text("NXB-U04", group=X.text(GROUP_WORDS[group]), list=", ".join(names)), group))
+            sets = sum(1 for rows in (record or {}).get("packages", {}).values() if rows)
+            items.append((("packages", None), X.text("NXB-U20", n=sets), ""))
             chosen = self.pick(state, X.text("NXB-U01", coach=self.coach()), items, current)
             if chosen is None:
                 return MENU_REFRESH
@@ -291,24 +416,90 @@ class SubsFlow:
                 current = 0
             elif kind == "starters":
                 record = self.record(state, make=True)
-                record.update(S.new_record())
+                record.update(backups=False, game=[], play=[], at=0)       # the packages stay (D-235): they are standing choices
                 self.apply(state, "starters back in")
                 debuglog.event("subs", "starters_back")
                 self.game.say5(X.text("NXB-U18"))
                 current = 0
+            elif kind == "packages":
+                self.packages_menu(state)
             else:
                 self.group_menu(state, value)
+
+    def package_word(self, key: str) -> str:
+        if key in PACKAGE_WORDS:
+            return X.text(PACKAGE_WORDS[key])
+        return X.text(SETTING_VALUE_TEXT[("formation", key[2:])])
+
+    def packages_menu(self, state) -> None:
+        """Q-086 (D-235): the offense's formations, then the defense's packages, each with how many men are set."""
+        current = 0
+        while True:
+            record = self.record(state)
+            packages = (record or {}).get("packages", {})
+            items = []
+            for key in S.PACKAGES:
+                n = len(packages.get(key, ()))
+                items.append((key, X.text("NXB-U27", formation=self.package_word(key), n=n) if n else
+                              X.text("NXB-U28", formation=self.package_word(key)), ""))
+            chosen = self.pick(state, X.text("NXB-U31"), items, current)
+            if chosen is None:
+                return
+            current, key = chosen
+            self.package_menu(state, key)
+
+    def package_menu(self, state, key: str) -> None:
+        """One formation's package: the groups as they play in it, and "Clear this package" when men are set."""
+        current = 0
+        word = self.package_word(key)
+        while True:
+            base, bench, empty = self.lineup(state)
+            record = self.record(state)
+            table, _dropped = S.effective(base, bench, self.package_only(record), empty, key)
+            items = []
+            if S.package_rows(record, key):
+                items.append((("clear", None), X.text("NXB-U32"), ""))
+            for group, places in S.GROUPS:
+                names = []
+                for place in places:
+                    man = table[place]
+                    if place not in empty and man is not None and man.name and man.name not in names:
+                        names.append(man.name)
+                if names:
+                    items.append((("group", group), X.text("NXB-U04", group=X.text(GROUP_WORDS[group]), list=", ".join(names)), group))
+            chosen = self.pick(state, X.text("NXB-U33", formation=word), items, min(current, len(items) - 1))
+            if chosen is None:
+                return
+            current, (kind, value) = chosen
+            if kind == "clear":
+                S.clear_package(self.record(state, make=True), key)
+                self.apply(state, "package cleared")
+                debuglog.event("subs", "package_cleared", formation=key)
+                self.game.say5(X.text("NXB-U34", formation=word))
+                current = 0
+            else:
+                self.group_menu(state, value, package=key)
+
+    @staticmethod
+    def package_only(record):
+        """The record as a package is edited: the base lineup and the package (the substitutions of now are not part of it)."""
+        if not record:
+            return record
+        return {"backups": False, "game": [], "play": [], "at": 0, "packages": record.get("packages", {})}
 
     def coach(self) -> str:
         season = getattr(self.game, "season", None)
         return getattr(season, "coach", "") or ""
 
-    def group_menu(self, state, group: str) -> None:
+    def group_menu(self, state, group: str, package=None) -> None:
         current = 0
         while True:
             base, bench, empty = self.lineup(state)
             record = self.record(state)
-            table, _dropped = S.effective(base, bench, record, empty)
+            if package is None:
+                table, _dropped = S.effective(base, bench, record, empty)
+            else:
+                table, _dropped = S.effective(base, bench, self.package_only(record), empty, package)
             places = [p for p in dict(S.GROUPS)[group] if p not in empty and table[p] is not None]
             if not places:
                 return
@@ -317,12 +508,15 @@ class SubsFlow:
             if chosen is None:
                 return
             current, place = chosen
-            self.place_menu(state, place)
+            self.place_menu(state, place, package)
 
-    def place_menu(self, state, place: int) -> None:
+    def place_menu(self, state, place: int, package=None) -> None:
         base, bench, empty = self.lineup(state)
         record = self.record(state)
-        table, _dropped = S.effective(base, bench, record, empty)
+        if package is None:
+            table, _dropped = S.effective(base, bench, record, empty)
+        else:
+            table, _dropped = S.effective(base, bench, self.package_only(record), empty, package)
         old = table[place]
         found = S.candidates(table, bench, place, empty)
         if not found:
@@ -336,6 +530,13 @@ class SubsFlow:
         if chosen is None:
             return
         man = chosen[1]
+        if package is not None:                          # Q-086: a package has no "how long": every play of the formation
+            S.add_package(self.record(state, make=True), package, place, man.key)
+            self.apply(state, "package")
+            debuglog.event("subs", "package_set", formation=package, place=place, player=man.name, out=old.name if old is not None else "",
+                           position=man.position)
+            self.game.say5(X.text("NXB-U35", player=man.name, old=old.name if old is not None else "", formation=self.package_word(package)))
+            return
         how = self.pick(state, X.text("NXB-U12", player=man.name, old=old.name if old is not None else ""),
                         [("play", X.text("NXB-U13"), ""), ("game", X.text("NXB-U14"), "")], 0)
         if how is None:
@@ -417,14 +618,15 @@ class SubsFlow:
 
 # ----- a franchise game (called by franchise/injury_flow.GameInjuries.refresh for the player's side) -----
 
-def franchise_apply(injuries, table: list) -> list:
-    """The lineup rows (identity, name, rating) of the player's side with the record's substitutions. Keeps (base, bench, empty) on `injuries` for the
-    menu. With no record the rows come back unchanged."""
+def franchise_apply(injuries, table: list, side: int = 1) -> list:
+    """The lineup rows (identity, name, rating) of a side with its substitutions: the player's record (side 1) or the computer's rest (side 2,
+    Q-085). Keeps (base, bench, empty) of the player's side on `injuries` for the menu. With no record the rows come back unchanged."""
     from .franchise import injuries as I
     from .franchise import data as D
+    from .franchise.injury_flow import game_returners
     league = injuries.league
-    team = injuries.teams[0]
-    out_now = injuries.out(1)
+    team = injuries.teams[side - 1]
+    out_now = injuries.out(side)
     base, empty, seen = [], set(), set()
     for place, row in enumerate(table):
         identity, name, rating = row
@@ -443,15 +645,23 @@ def franchise_apply(injuries, table: list) -> list:
     for player in league.bench(team):
         if player.id in in_table or player.id in out_now or player.team != team or player.status != "active":
             continue
-        if not I.plays(league, player, injuries.week, injuries.staff_of(1), out_now):
+        if not I.plays(league, player, injuries.week, injuries.staff_of(side), out_now):
             continue
         rating = max(D.RATING_MIN, player.rating - I.penalty(league, player.id, injuries.week))
         bench.append(S.Man(player.id, player.name, player.position or S.group_position(player.pos), rating))
-    injuries.sub_lineup = (base, bench, empty)
-    record = getattr(injuries.state.extras, "subs", None) if injuries.state is not None else None
+    if side == 1:
+        injuries.sub_lineup = (base, bench, empty)
+        record = getattr(injuries.state.extras, "subs", None) if injuries.state is not None else None
+        formation = getattr(injuries, "sub_formation", None)
+    else:
+        record = SubsFlow.rest_record(injuries.state) if injuries.state is not None else None
+        formation = None
     if S.is_empty(record):
         return table
-    lineup, dropped = S.effective(base, bench, record, empty)
+    spares = []
+    if record.get("backups"):                           # Q-087: the team's next returners, fit for this game (the first two return now)
+        spares = [row[0] for row in game_returners(league, team, injuries.week, injuries.staff_of(side), out_now, count=8)]
+    lineup, dropped = S.effective(base, bench, record, empty, formation, spares)
     rows = []
     for place, man in enumerate(lineup):
         if man is not None and man.movable and place not in empty:
@@ -462,6 +672,6 @@ def franchise_apply(injuries, table: list) -> list:
             rows.append((key, man.name, table[place][2]))
         else:
             rows.append(man.row if man is not None and man.row is not None else table[place])
-    debuglog.event("subs", "franchise_lineup", backups=record["backups"], game=len(record["game"]), play=len(record["play"]), dropped=dropped or None,
+    debuglog.event("subs", "franchise_lineup", side=side, formation=formation, backups=record["backups"], game=len(record["game"]), play=len(record["play"]), dropped=dropped or None,
                    changed=[(p, table[p][1], rows[p][1]) for p in range(S.PLACE_COUNT) if rows[p][0] != table[p][0]] or None)
     return rows

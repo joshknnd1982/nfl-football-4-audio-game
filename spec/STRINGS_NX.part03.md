@@ -1,5 +1,3 @@
-- NXY-R87 (help, say5): " Two receivers cut sharply across the field for a fast throw. Beats a blitz; defenders who drop back can cover it. ". description of O087 Double Slants (NX-P8; heard with D)
-- NXZ-R01 (help, say5): " Eight defenders crowd the line and the rest cover man for man with no deep help. Strong against runs near the goal line; a pass over their heads can score. ". description of D001 Goal Line Eight Up (NX-P8; heard with D)
 - NXZ-R02 (help, say5): " A packed line with five rushers. Strong against runs near the goal line; weak against play action passes. ". description of D002 Goal Line Stack (NX-P8; heard with D)
 - NXZ-R03 (help, say5): " Eight defenders close to the line, with extra rushers coming. Strong against runs; weak against screens. ". description of D003 Bear Front (NX-P8; heard with D)
 - NXZ-R31 (help, say5): " Six linemen and two linebackers fill the line. Strong against runs near the goal line; weak against passes. ". description of D031 Goal Line Six Two (NX-P8; heard with D)
