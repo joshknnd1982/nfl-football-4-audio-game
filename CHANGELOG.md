@@ -10,7 +10,9 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
-## Unreleased (since 1.0.2)
+## 1.0.3 (2026-11-15, test build)
+
+Built from a tester's answers to the open questions on GitHub (issues 6, 10, 11, 12, 14 and 16): a penalty on the try moves the extra point, a time out pressed after the snap is no longer saved for after the play, more substitution features (the backup returners, packages by formation, the computer resting its starters), the kick-off set-up said again and a re-kick asked again after a time out, and Quarterbacks also in F9, Franchise. Everything of 1.0.2 and earlier below is in it.
 
 ### A penalty on the try moves the extra point kick by its yards
 From a tester's answer on GitHub issue 12. Since 0.16.24, after a penalty on your try for two points you choose again between the kick and the try for two, but a kick chosen then was always the usual extra point. Asked "should a penalty make the extra point longer or shorter?", the tester chose "move the kick by the penalty's yards". So now, with the N. F. L. rules and a playbook (the default), a penalty on the try moves the kick too, as the real rules do: from the kick's own spot, the 15 yard line, a foul by your team makes the kick longer (5 yards: from the 20, a 38 yard kick instead of 33) and a foul by the defense makes it shorter (5 yards: from the 10, a 28 yard kick), never more than half the way to the goal line; pass interference by the defense moves it half the way. Two penalties on one try add up. A longer kick is missed more often and a shorter one less often, as a field goal of that length would be. Before "select", one sentence says where the kick would be from and how long it is, so you know before you choose. A personal foul by the defense on your touchdown moves your kick the same way, and when the computer kicks a moved extra point the announcer says how long it is before the kick. The try for two keeps the spot the penalty gave it, also when you chose the kick and then called a time out. With no penalty, the extra point and the luck of the game are exactly as before. Classic, the original's exact game, has no penalties and its extra point never fails.
@@ -262,21 +264,11 @@ Before, pressing your keyboard's volume up or volume down key while the game spo
 
 **Tell us:** if any other key of your keyboard makes the game say a symbol.
 
-## 0.16.13 (2026-11-06, test build)
-
-In a franchise on the real calendar, teams with the same record are now put in order by the NFL's own tie-breakers, for the standings, the division titles, the wild cards and the play-off seeds. Everything of 0.16.12 and earlier below is still to be tested too.
-
-### The NFL's tie-breakers in the standings and the play-offs
-When two or more teams finish with the same record, the game now follows the NFL's tie-breaking procedures: first the games between the teams, then the record in division games (inside a division) or in conference games (for a wild card), the record against common opponents, the strength of victory and of schedule, points scored and allowed, net points, and last a coin toss. Before, equal teams kept the league's order, and your team won every tie for the last place; now it must win the tie-breaker like everyone else. The coin toss is fixed for each season, so the seeds never change between rounds. The game cannot count touchdowns of the other games, so the NFL's net touchdowns step is skipped. Classic and a franchise on the original's 16 weeks are unchanged.
-
-**How to test:** play a franchise on the real calendar to the end of a regular season (week 18). Listen to the standings after each week: inside a division, a team with a better winning percentage now comes first even with as many losses, and equal teams are in tie-breaker order. At the end of the regular season the game names the division winners, the wild cards and the two teams with a bye; when a tie-breaker decided your division title or your conference's last wild card place, one more sentence says who won it, over whom, and why (for example "the games between the teams"). F6 in a franchise now says that equal records are settled by the NFL's tie-breakers.
-
-**Tell us:** when your team was in a tie, did the sentence make clear why it got in or stayed out?
-
 ## Older versions
 
-The versions before 0.16.13 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
+The versions before 0.16.14 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
 
+- [0.16.13 to 0.16.13](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.13-to-0.16.13.md)
 - [0.16.11 to 0.16.12](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.11-to-0.16.12.md)
 - [0.16.10 to 0.16.10](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.10-to-0.16.10.md)
 - [0.16.9 to 0.16.9](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.9-to-0.16.9.md)
