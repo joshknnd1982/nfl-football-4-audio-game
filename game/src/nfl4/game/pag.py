@@ -438,6 +438,12 @@ class PlayEngine(ScrimmageSteps, KeeperSteps, CatalogSteps, KickSteps, Kick26Ste
         from ..extras.nfl_rules import is_nfl
         return is_nfl(self.rules)
 
+    def nfl_names(self) -> bool:
+        """nfl4 only (GitHub issue 15, D-231): True when the game is played by the N. F. L. rules, where every man named in a play is of the side
+        that really does it (the original's Q56 names the offense's own defender); False in Classic, the exact original."""
+        from ..extras.nfl_rules import is_nfl
+        return is_nfl(self.rules)
+
     def real_quarterbacks(self) -> tuple[str, str]:
         """The real starting quarterbacks of the two teams, the defaults of Getqbs ("" for a side that has none, or the Franchise's)."""
         if not self.real_names_in_use():

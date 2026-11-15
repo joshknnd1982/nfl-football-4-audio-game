@@ -10,6 +10,16 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 1.0.2 (2026-11-15, test build)
+
+One fix from a tester's GitHub issue: the computer team's own defenders are no longer named in its plays. Everything of 1.0.1 and earlier below is in it.
+
+### A pass batted back names a defender of the defense, not of the team with the ball
+From a tester's report (GitHub issue 15): "It is still putting defensive players in on offense for computer teams." His game log showed it: while the Bears had the ball, the announcer said "Tyrique Stevenson Senior bats it right back at Caleb Williams!", and Tyrique Stevenson is a Bears cornerback. Of the nine ways a pass falls incomplete, the original game named, in "bats it right back at the quarterback", a defender of the team that threw the pass, for either team. With the N. F. L. rules it is now always a defender of the team on defense: when the computer has the ball, one of your defenders bats it back; when you have the ball, one of the computer's. Nothing else changes: the same plays, the same results, the same luck. Every other name in a play (the tackles, the passes knocked down, the interceptions, the fouls) was already the right team's, and the tester's franchise files show every computer team's backs, receivers and quarterback at their real positions. Classic, the original's exact game, keeps the original's sentence.
+
+**How to test:** with the N. F. L. rules, play a game (a franchise or a single game) and let the computer throw a good number of passes; listen for "bats it right back at" followed by the computer's quarterback. The player named before it must be one of YOUR defenders (F9, Franchise, your roster, or the starting lineup in your depth chart, tells you who they are). On offense, when your own pass is batted back, the man named must be one of the computer team's defenders. It is one sentence of nine, so it may take a few games to hear it.
+**Tell us:** if you hear any player of the team with the ball named as a defender in a play, or any defender carrying or catching the ball for the computer team, save a problem report right after it, so we see the exact play.
+
 ## 1.0.1 (2026-11-14, test build)
 
 One new feature from a tester's GitHub issue: substitutions during a game. Everything of 1.0.0 and earlier below is in it.

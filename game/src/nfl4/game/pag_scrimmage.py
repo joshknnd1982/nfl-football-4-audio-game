@@ -6,6 +6,7 @@ structure; the steps return the next step.
 """
 from __future__ import annotations
 
+from ..data import debuglog
 from . import outcome as O
 from . import phrases as P
 from .playtables import (FUMBLE_NUMBER, INTERCEPTION_FLOOR, INTERCEPTION_NUMBER, PASSES, QB_SNEAK, RUNS, SACK,
@@ -273,13 +274,20 @@ class ScrimmageSteps:
         s = self.s
         number = s.incomplete_history.draw(self.rnd, 9, "incompletion")
         rec = self.receiver(s.wisoff, s.carrier)
+        # Q56: the original names the defender of the side ON OFFENSE, Me.m370(wisoff, L578) (0x44cc09), so the passer's own team's
+        # defender bats the ball back. Classic keeps it (the exact original); the N. F. L. rules name the defense's man (GitHub issue 15,
+        # D-231: "still putting defensive players in on offense for computer teams"). The same draw, only the side differs.
+        batter_side = s.defense if self.nfl_names() else s.wisoff
         texts = {1: " " + rec + P.DROPS_THE_BALL, 2: " " + rec + P.OUT_OF_BOUNDS, 3: P.OVER_THE_HEAD_OF + rec + " ",
                  4: P.FALLS_SHORT_OF + rec + " ", 5: P.BATTED_DOWN_BY + self.defender(s.defense, s.defender1) + " ",
-                 # Q56 (kept): the defender of the side ON OFFENSE, Me.m370(wisoff, L578) (0x44cc09)
-                 6: " " + self.defender(s.wisoff, s.defender1) + P.BATS_IT_BACK_AT + self.qb(s.wisoff) + " ",
+                 6: " " + self.defender(batter_side, s.defender1) + P.BATS_IT_BACK_AT + self.qb(s.wisoff) + " ",
                  7: P.THROUGH_THE_HANDS_OF + rec + " ", 8: P.OFF_THE_CHEST_OF + rec + " ",
                  9: P.OFF_THE_BACK_OF + rec + " "}
         s.tackle_sentence = texts[number]
+        if number in (5, 6):                                  # rule 0.15: who is named, and his side (the line that would have shown issue 15)
+            debuglog.event("play", "incomplete_defender", kind="bats_back" if number == 6 else "batted_down", offense=s.wisoff,
+                           named_side=batter_side if number == 6 else s.defense, slot=s.defender1, name=self.defender(
+                               batter_side if number == 6 else s.defense, s.defender1))
         s.tackle_sound = 8
         # L128 = Int(Rnd * L1d4) + L1d4: L1d4 is an Integer, a Single or (a menu digit, Val) a Double Variant, so the
         # original rounds the product only sometimes; a pause of 1/9 s more or less on a set below 1e-5: kept in Double
