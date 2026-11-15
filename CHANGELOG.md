@@ -18,6 +18,26 @@ From a tester's answer on GitHub issue 12. Since 0.16.24, after a penalty on you
 **How to test:** with the N. F. L. rules, Penalties on and a playbook, score a touchdown and choose "try for two point conversion". Play tries for two until a flag is accepted on one (a false start or illegal shift by your team is the most common). After the referee's words you should hear "after the penalty, the kick for extra point would be from the 20 yard line, a 38 yard kick", then "select" and "try for two point conversion". Press Up for the kick and Enter: the kick is made from there. After a foul by the defense the sentence should give a shorter kick.
 **Tell us:** whether the sentence before the choice is clear, and whether the longer kicks are missed about as often as you expect.
 
+### After your time out, the whole kick-off set-up is said again
+From a tester's answer on GitHub issue 16 (question 1, choice b). Since 1.0.2 a time out before your own kick-off brings "choose your kick off" back, but after your new choice the announcer did not say again who is back deep to receive. Now he says the whole set-up again: who is back deep, then that your kicker is set to kick it off. Classic, which has no time outs, is not changed.
+
+**How to test:** with the N. F. L. rules and time outs on, at your kick-off choose Deep Kick and press T while the announcer gives the set-up. After the time out, choose again (for example 2 and Enter): you should hear who is back deep, then your kicker, then the short kick.
+
+### A time out before a kick-off made again after a penalty asks your kick again
+From a tester's answer on GitHub issue 16 (question 2, choice b: "that is how it is in nfl rules"). When a penalty makes your kick-off be kicked again, the game still uses the kick you chose and asks nothing. But a time out by T before that kick now takes it back and brings "choose your kick off" (or, without a playbook, the onside question when it is asked) back, from the spot the penalty moved the kick to, as a first kick-off does since 1.0.2. An onside kick made again and chosen again counts as the same onside try. The computer's kick made again is never asked.
+
+**How to test:** with the N. F. L. rules, Penalties on and time outs on, kick off until a flag makes your kick-off be kicked again (offside by your kicking team is the usual one). In the set-up of the kick made again press T: after the time out you hear "choose your kick off" again; your new kick is made from 5 yards farther back.
+
+### Quarterbacks is also in F9, Franchise
+From a tester's answer on GitHub issue 10 (choice c, both places). F9, Rules, Quarterbacks, where you choose any team's starting quarterback, stays in Rules and is now also in F9, Franchise, next to the depth charts: in a franchise right after "your depth chart" (every later item there is one further down), and outside a franchise as the last item, after "Depth charts". It is the same list in both places.
+
+**How to test:** with the N. F. L. rules, press F9, Down to Franchise, Enter. Outside a franchise press Up once: "Quarterbacks"; in a franchise it is the 5th item, after "your depth chart". Enter lists the teams as F9, Rules, Quarterbacks does.
+
+### Two whistles on a play with a flag stay
+From a tester's answer on GitHub issue 6 (choice a). A play with a flag keeps both whistles, the play's and then the referee's before he gives the penalty, as a real referee blows the play dead and then signals the foul. Nothing changes; this item only records the answer.
+
+**How to test:** with the N. F. L. rules and Penalties on, play until a flag: you hear the play's whistle, then the referee's whistle and the penalty.
+
 ## 1.0.2 (2026-11-15, test build)
 
 Two fixes from testers' GitHub issues: the computer team's own defenders are no longer named in its plays, and a time out after you chose your kick off lets you choose it again. Everything of 1.0.1 and earlier below is in it.

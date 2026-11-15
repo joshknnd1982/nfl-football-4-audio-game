@@ -140,7 +140,8 @@ your first season (2026) the coming draft is the 2027 draft and the one after it
 coming draft (about three quarters), and when its season begins it simply becomes a pick of the coming draft, owned by whoever got it. The computer
 teams trade them too.
 
-**Quarterbacks.** F9, Rules, Quarterbacks (the item before Reset) lists every team's quarterbacks. Outside a franchise they are the real
+**Quarterbacks.** F9, Rules, Quarterbacks (the item before Reset) lists every team's quarterbacks. The same item is also in F9, Franchise,
+right after your depth chart in a franchise and after Depth charts outside one (a tester's choice, GitHub issue 10). Outside a franchise they are the real
 players of the rosters, the starter first; Enter on a team lists its quarterbacks, and Enter on one makes him that team's starter from the next
 game (the choice is kept in settings.txt, and a new franchise starts with him as the team's quarterback). In a franchise the list has every
 team's starter, its backup quarterbacks on the bench and its practice squad quarterbacks. On your own team, Enter on a backup of the bench

@@ -71,6 +71,7 @@ class OnsideFlow:
     def __init__(self, rules):
         self.rules = rules
         self.asked = False          # issue 16: the player was asked the onside question for this kick-off (a time out asks it again)
+        self.rekick_own = False     # Q-094 (D-238): the player's own kick made again after a foul, of a time when the question is due
 
     @property
     def game(self):
@@ -82,17 +83,22 @@ class OnsideFlow:
 
     # ----- H4: the kind of the coming kick-off -----
 
-    def decide(self, state, kicking_side: int, again: bool) -> str:
+    def decide(self, state, kicking_side: int, again: bool, choose: bool = False) -> str:
         """NORMAL_KICKOFF or ONSIDE_KICKOFF (the extras' record keeps the kind: a kick made again after a foul is of the
-        same kind and is not tried or asked again)."""
+        same kind and is not tried or asked again; `choose`, issue 16, Q-094, D-238: the player's time out before his kick made
+        again asks the question for it, when the question is due)."""
         x = state.extras
         self.asked = False
-        if again:
+        self.rekick_own = False
+        lead = state.score(kicking_side) - state.score(other(kicking_side))
+        if again and not choose:
             kind = x.kick_kind or NORMAL_KICKOFF
             x.rekick = kind == ONSIDE_KICKOFF
+            self.rekick_own = (kicking_side not in self.rules.auto_sides
+                               and question_due(state.quarter, x.left, lead, x.onside_always))
             return kind
+        before = x.kick_kind if again else None    # Q-094: an onside kick made again and chosen again is not a new try
         x.rekick = False
-        lead = state.score(kicking_side) - state.score(other(kicking_side))
         if kicking_side in self.rules.auto_sides:
             trying = self.computer_declares(state, kicking_side, lead)
         elif question_due(state.quarter, x.left, lead, x.onside_always):
@@ -101,6 +107,7 @@ class OnsideFlow:
         else:
             trying = False
         x.kick_kind = ONSIDE_KICKOFF if trying else NORMAL_KICKOFF
+        x.rekick = before == ONSIDE_KICKOFF and trying
         return x.kick_kind
 
     def computer_declares(self, state, kicking_side: int, lead: int) -> bool:

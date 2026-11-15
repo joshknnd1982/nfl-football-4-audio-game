@@ -171,6 +171,7 @@ class NflRules(ClassicRules):
         self.auto_sides = tuple(auto_sides)       # the sides whose timeouts, penalty choices and onside kicks the computer decides
         self.timeout_kept = False                 # H18: the T key was pressed while a play was live: granted at the next dead-ball moment
         self.kickoff_safety = False               # issue 16: the kick-off being made is a safety kick (its menu, asked again, has the safety punt)
+        self.kickoff_rekick = False               # Q-094 (D-238): the kick-off being made is a kick made again after a foul
         self.try_due = False                      # SX.13: a touchdown's try is still to be played (a timeout may come before it at 0:00)
         self.after_play = False                   # H18: a play just ended and H10 has not run yet (a timeout then stops the whole runoff)
         # SX.7, the playbooks: the player's choice for a new game (classic, team or a style key, design 12.1: the F9 items 8 and
@@ -680,7 +681,9 @@ class NflRules(ClassicRules):
             spot = R.SAFETY_KICK_SPOT if x.safety_kick else R.KICKOFF_SPOT
         x.free_after_safety = safety or (again and x.free_after_safety)       # SX.13: a safety kick made again is still one (6-2-4)
         x.kick_from, x.kick_back, x.safety_kick = spot, 0, False
-        self.kickoff_safety = safety               # issue 16: the menu asked again after a time out offers the same kicks
+        self.kickoff_safety = x.free_after_safety  # issue 16: the menu asked again after a time out offers the same kicks (a safety kick
+                                                   # made again too, Q-094)
+        self.kickoff_rekick = again                # Q-094 (D-238): a kick made again after a foul; a time out before it asks it again
         if self.kicks.on(state):                   # SX.10d: the 2026 kick-off menu (it replaces the onside question, design 2.6)
             return self.kicks.decide(state, kicking_side, again, safety)
         if not x.onside_on:
@@ -691,25 +694,28 @@ class NflRules(ClassicRules):
     def kickoff_chosen(self, state) -> bool:
         """GitHub issue 16 (D-230): the player chose the kick-off now being made (the 2026 kick-off menu, or SX.4's onside question when it
         was asked), and the T key calls timeouts in this game: a time out before the kick asks his choice again. A kick made again after a
-        foul asked nothing (it keeps its kick), and the computer's kick-off is never asked again (its draws stay as they were)."""
+        foul asks nothing at first (it keeps its kick), but a time out before the player's own kick made again asks it too (Q-094, D-238,
+        the tester's answer: the kicking team may change its kick during a time out, 6-1-2, 4-5-1); the computer's kick-off is never asked
+        again (its draws stay as they were)."""
         x = state.extras
         if x is None or not x.timeouts_on:
             return False
         flow = self.kicks if self.kicks.on(state) else self.onside
-        return flow.asked
+        return flow.asked or flow.rekick_own
 
     def kickoff_again(self, state, kicking_side: int) -> str:
         """Issue 16: the player's kick-off was withdrawn by his time out; the same menu or question again, from the same spot (where the
         kick is made from and whether it is a safety kick stay as before_kickoff set them). Its kind, as before_kickoff answers."""
         x = state.extras
+        again = self.kickoff_rekick                # Q-094: the kick made again after a foul is asked too, from its moved spot
         if self.kicks.on(state):
-            kind = self.kicks.decide(state, kicking_side, False, self.kickoff_safety)
+            kind = self.kicks.decide(state, kicking_side, again, self.kickoff_safety, choose=True)
         elif x.onside_on:
-            kind = self.onside.decide(state, kicking_side, False)
+            kind = self.onside.decide(state, kicking_side, again, choose=True)
         else:
             kind = NORMAL_KICKOFF
         debuglog.event("extras", "kickoff_again", logging.INFO, side=kicking_side, kind=kind, call=x.kick_call or None,
-                       spot=x.kick_from, quarter=state.quarter, left=x.left)
+                       spot=x.kick_from, again=again, quarter=state.quarter, left=x.left)
         return kind
 
     def onside_kick(self, state) -> str:

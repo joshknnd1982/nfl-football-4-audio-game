@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 from drrig import SURNAMES
-from programrig import DOWN, ENTER, ESC, said
+from programrig import DOWN, ENTER, ESC, UP, said
 from nfl4.game.keys import KEY_END as END
 from test_functions import rig_for
 
@@ -27,7 +27,7 @@ from nfl4.game.rnd import GameRandom
 from nfl4.game.setup import Roster
 
 FRANCHISE = [DOWN] * 4 + [ENTER]                         # F9's fifth item with the N. F. L. rules (issue 10, D-223: the depth chart left F9, Rules)
-DEPTH = [END, ENTER]                                     # outside a franchise: Depth charts, the Franchise menu's last item
+DEPTH = [END, UP, ENTER]                                 # outside a franchise: Depth charts, before Quarterbacks (Q-088, D-239), the last item
 YOUR_DEPTH = [DOWN] * 3 + [ENTER]                        # in a franchise: your depth chart, right after your roster
 BENGALS, BILLS = 1, 5
 

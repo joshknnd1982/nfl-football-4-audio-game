@@ -89,6 +89,7 @@ class KickFlow:
         self.fair_catch_armed = False     # the player said yes to the fair catch kick: the next field goal is that kick
         self.events: list[tuple] = []     # (what, side, concept, result kind, a number): the tests and the calibration count them
         self.asked = False                # issue 16: the player chose the last kick-off in the menu (a time out before it asks again)
+        self.rekick_own = False           # Q-094 (D-238): the kick-off is the player's own kick made again after a foul (a time out asks too)
 
     @property
     def game(self):
@@ -121,15 +122,19 @@ class KickFlow:
         ids = [item.action[1] for item in PM.kickoff_items(safety)]
         return [i for i in ids if i == DEEP or (i not in self.table.disabled and (i != ONSIDE or x.onside_on))]
 
-    def decide(self, state, kicking_side: int, again: bool, safety: bool) -> str:
-        """H4: the kick-off called and the engine's kind of kick. A kick made again after a foul keeps its call and asks nothing."""
+    def decide(self, state, kicking_side: int, again: bool, safety: bool, choose: bool = False) -> str:
+        """H4: the kick-off called and the engine's kind of kick. A kick made again after a foul keeps its call and asks nothing; `choose`
+        (issue 16, Q-094, D-238: the player's time out before his kick made again) asks his menu for that kick made again."""
         x = state.extras
         self.start_kick()
         self.asked = False
-        if again and x.kick_call:
+        self.rekick_own = False                        # Q-094: the player's own kick made again (a time out before it asks the menu)
+        if again and x.kick_call and not choose:
             call = x.kick_call
             x.rekick = call == ONSIDE
+            self.rekick_own = kicking_side not in self.rules.auto_sides
         else:
+            before = x.kick_call if again else None    # Q-094: an onside kick made again and chosen again is not a new try
             x.rekick = False
             if kicking_side in self.rules.auto_sides:
                 lead = state.score(kicking_side) - state.score(3 - kicking_side)
@@ -137,6 +142,7 @@ class KickFlow:
             else:
                 call = self.kickoff_menu(state, safety)
                 self.asked = True
+            x.rekick = before == ONSIDE and call == ONSIDE
         x.kick_call = call
         x.kick_kind = ONSIDE_KICKOFF if call == ONSIDE else NORMAL_KICKOFF
         debuglog.event("extras", "kickoff_called", side=kicking_side, call=call, spot=x.kick_from, again=again)

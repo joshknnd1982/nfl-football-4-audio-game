@@ -176,7 +176,8 @@ class KickSteps:
         half, where the kick is made from) was done before the first choice and is not done twice."""
         s = self.s
         self.dead_ball()                                     # the ball is still dead: a T in the menu calls a time out as anywhere
-        return self.kick_off_kind(self.rules.kickoff_again(s, s.defense))
+        self.setup_withdrawn = None                          # Q-093 (D-238, the tester's answer): the whole set-up is said again,
+        return self.kick_off_kind(self.rules.kickoff_again(s, s.defense))      # who is back deep too
 
     def kick_off_kind(self, kind):
         """The kick-off of `kind` (the original's from here on, L_444645)."""
@@ -191,9 +192,8 @@ class KickSteps:
         if kind == KICKOFF_2026:                             # N. F. L. rules with a playbook (SX.10d): never in Classic
             return self.kickoff_2026
         snd.c2uh()
-        if not self.setup_told("kick-off"):                  # SZ.6, issue 16: a kick-off chosen again after a time out does not say again
-            g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)   # who is back deep
-        self.setup_heard("kick-off")
+        g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)   # who is back deep: said
+        self.setup_heard("kick-off")                         # again after a time out took the kick back (Q-093, D-238)
         self.dy(0.2, 0x444949)
         g.say4(self.kicker(s.defense, 1) + P.READY_TO_KICK_OFF)
         snd.play_tackle(8)

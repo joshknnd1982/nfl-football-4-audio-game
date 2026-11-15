@@ -8,7 +8,7 @@ man has "his place on the depth chart", his position's order with the list on hi
 import pytest
 
 from frrig import COACH_AND_TEAM, F9, WANT_FRANCHISE, franchise_rig, quit_policy, run_until, spoken
-from programrig import DOWN, ENTER, ESC, said
+from programrig import DOWN, ENTER, ESC, UP, said
 from test_functions import rig_for
 from test_lineup_sr6 import Keys, Speech, franchise, letter, real_league
 
@@ -19,9 +19,11 @@ from nfl4.extras.franchise import roster_flow
 from nfl4.game.keys import KEY_END as END
 
 FRANCHISE = [DOWN] * 4 + [ENTER]                 # F9's fifth item with the N. F. L. rules (Speech, Sounds, Customize, Rules, Franchise, About)
-DEPTH_OUTSIDE = [END, ENTER]                     # the Franchise menu's last item when no franchise is played
+DEPTH_OUTSIDE = [END, UP, ENTER]                 # the Franchise menu's item before Quarterbacks (Q-088, D-239) when no franchise is played
+QUARTERBACKS_OUTSIDE = [END, ENTER]              # Q-088 (D-239): the last item when no franchise is played
 INTO_FRANCHISE = [F9] + FRANCHISE
 YOUR_DEPTH_CHART = [DOWN] * 3 + [ENTER]          # to do list, news, your roster, your depth chart
+YOUR_QUARTERBACKS = [DOWN] * 4 + [ENTER]         # Q-088 (D-239): Quarterbacks, right after your depth chart
 BENGALS = 1
 
 
@@ -72,7 +74,7 @@ def test_outside_a_franchise_the_franchise_menu_ends_with_depth_charts(tmp_path,
     seen = menus_seen(monkeypatch)
     rig = nfl_rig(tmp_path, FRANCHISE + DEPTH_OUTSIDE)
     labels = next(labels for title, labels in seen if title == X.text("NXF-10"))
-    assert labels[-1] == X.text("NXM-D01") and labels[-2] == X.text("NXZ-U01")
+    assert labels[-1] == X.text("NXM-58") and labels[-2] == X.text("NXM-D01") and labels[-3] == X.text("NXZ-U01")     # Q-088 (D-239)
     assert X.text("NXM-D02") in " ".join(said(rig)) or any(X.text("NXM-D02").strip() in t for t in said(rig))
 
 
@@ -90,7 +92,7 @@ def test_in_a_franchise_your_depth_chart_is_the_item_after_your_roster(tmp_path,
     seen = menus_seen(monkeypatch)
     rig = run_until(franchise_rig(tmp_path, WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + YOUR_DEPTH_CHART, policy=quit_policy))
     labels = next(labels for title, labels in seen if title == X.text("NXF-10"))
-    assert labels[2:5] == [X.text("NXF-13"), X.text("NXF-57"), X.text("NXF-14")]
+    assert labels[2:6] == [X.text("NXF-13"), X.text("NXF-57"), X.text("NXM-58"), X.text("NXF-14")]     # Q-088 (D-239): Quarterbacks after it
     assert X.text("NXM-D01") not in labels                         # the 32 teams' item is only outside a franchise
     league = rig.fstore.league
     title = X.text("NXM-D03", team=rig.fstore.words.team_name(league.team)).strip()
@@ -161,3 +163,26 @@ def test_the_help_and_the_documents_name_f9_franchise_not_f9_rules():
     game = Path(__file__).resolve().parents[1]
     for name in ("README_keys.md", "README_nfl_rules_and_franchise.md", "CUSTOMIZE.md", "PLAYS_GUIDE.md"):
         assert "F9, Rules, Depth charts" not in (game / name).read_text(encoding="utf-8"), name
+
+
+# ----- Q-088 (D-239, the tester's answer "c" on issue 10): Quarterbacks in F9, Rules and in F9, Franchise -----
+
+def test_outside_a_franchise_quarterbacks_is_the_franchise_menus_last_item_and_opens_the_same_list(tmp_path, monkeypatch):
+    seen = menus_seen(monkeypatch)
+    rig = nfl_rig(tmp_path, FRANCHISE + QUARTERBACKS_OUTSIDE)
+    rules = next(labels for title, labels in seen if title == X.text("NXM-07")) if any(t == X.text("NXM-07") for t, _l in seen) else None
+    assert rules is None                                            # the Rules menu was not opened: the list came from F9, Franchise
+    assert any(X.text("NXJ-Q01").strip() in t for t in said(rig))   # the 32 teams' quarterbacks, as F9, Rules, Quarterbacks says
+
+
+def test_the_rules_menu_keeps_quarterbacks(tmp_path, monkeypatch):
+    seen = menus_seen(monkeypatch)
+    nfl_rig(tmp_path, [DOWN, DOWN, DOWN, ENTER])
+    labels = next(labels for title, labels in seen if title == X.text("NXM-07"))
+    assert X.text("NXM-58") in labels[-2]
+
+
+def test_in_a_franchise_quarterbacks_follows_your_depth_chart_and_opens_the_franchise_list(tmp_path):
+    keys = WANT_FRANCHISE + COACH_AND_TEAM + INTO_FRANCHISE + YOUR_QUARTERBACKS
+    rig = run_until(franchise_rig(tmp_path, keys, policy=quit_policy))
+    assert any(X.text("NXJ-Q11").strip() in t for t in spoken(rig))   # the franchise's list: every team's starter and squad quarterbacks

@@ -49,7 +49,7 @@ def given_touchback(rig):
 
 def test_the_testers_moment_deep_kick_chosen_t_in_the_set_up_and_the_menu_comes_again(tmp_path):
     """Deep Kick (Enter), T in the set-up: the time out is called, the deep kick is withdrawn, the menu comes again; 2 and Enter: the short
-    kick is made. Who is back deep is said once (SZ.6); the kicker's sentence comes again before the new kick."""
+    kick is made. The whole set-up is said again before the new kick, who is back deep too (Q-093, D-238, the tester's answer "1 b")."""
     rig = scene(tmp_path, answers=[ENTER, "2", ENTER], rules=rules_2026(), extras=dict(QUIET), **KICKING)
     engine = rig.engine
     script(rig, Draws())
@@ -74,7 +74,8 @@ def test_the_testers_moment_deep_kick_chosen_t_in_the_set_up_and_the_menu_comes_
     mark = len(rig.said)
     step()
     later = texts(rig, mark)
-    assert back_deep(rig) not in later and texts(rig).count(back_deep(rig)) == 1  # SZ.6: who is back deep is not said twice
+    assert back_deep(rig) in later and texts(rig).count(back_deep(rig)) == 2      # Q-093: who is back deep is said again
+    assert later.index(back_deep(rig)) < min(i for i, t in enumerate(later) if P.READY_TO_KICK_OFF in t)   # before the kicker's
     assert any("set to kick it off" in t or P.READY_TO_KICK_OFF in t for t in later)
     assert P.KICKOFF_UP not in later                             # the short kick's sentence, not the deep kick's
     assert called(rig) == [1, 0]                                # one time out, the kick was made
@@ -129,7 +130,7 @@ def test_the_safety_kick_asked_again_still_offers_the_safety_punt_from_the_20(tm
     check(rig, Draws())
 
 
-def test_no_choice_asked_no_choice_again_the_computers_kick_a_kick_made_again_and_classic(tmp_path):
+def test_no_choice_again_for_the_computers_kick_or_a_game_without_timeouts_but_for_the_players_kick_made_again(tmp_path):
     rig = scene(tmp_path, rules=rules_2026(), extras=dict(QUIET), **dict(KICKING, wisoff=1, defense=2))
     rig.rnd.source = __import__("random").Random(1)
     rig.rules.before_kickoff(rig.engine.s, 2)                   # the computer's kick: no menu
@@ -138,9 +139,12 @@ def test_no_choice_asked_no_choice_again_the_computers_kick_a_kick_made_again_an
     script(mine, Draws())
     mine.rules.before_kickoff(mine.engine.s, 1)
     assert mine.rules.kickoff_chosen(mine.engine.s)
-    mine.engine.s.extras.kick_again = True                      # a foul: the kick is made again with its call, nothing asked
-    mine.rules.before_kickoff(mine.engine.s, 1)
-    assert not mine.rules.kickoff_chosen(mine.engine.s)
+    mine.engine.s.extras.kick_again = True                      # a foul: the kick is made again with its call, nothing asked, but
+    mine.rules.before_kickoff(mine.engine.s, 1)                 # a time out before it asks it again (Q-094, D-238)
+    assert mine.rules.kickoff_chosen(mine.engine.s) and not mine.rules.kicks.asked
+    rig.engine.s.extras.kick_again = True                       # the computer's kick made again: never asked
+    rig.rules.before_kickoff(rig.engine.s, 2)
+    assert not rig.rules.kickoff_chosen(rig.engine.s)
     off = scene(tmp_path / "off", answers=[ENTER], rules=NflRules(timeouts_on=False, auto_sides=(2,), offense_book="west",
                                                                    defense_book="pressure"), extras=dict(QUIET), **KICKING)
     script(off, Draws())
@@ -198,3 +202,83 @@ def test_a_second_t_before_the_same_kick_is_refused_and_the_kick_goes_on(tmp_pat
     rig.rnd.source = __import__("random").Random(4)
     step()                                                     # no PlayWithdrawn: refused, the squib kick is made
     assert called(rig) == [1, 0] and X.text("NXT-05") in texts(rig)
+
+
+# ----- Q-094 (D-238, the tester's answer "B on the second question because that is how it is in nfl rules"): a kick made again after
+# a foul is asked again too when the player calls a time out before it -----
+
+def kick_made_again(rig, back: int = 5) -> None:
+    """A foul on the player's kick-off: the kick is to be made again, moved back by `back` yards (penalty_flow sets these)."""
+    x = rig.engine.s.extras
+    x.kick_again, x.kick_back = True, back
+
+
+def test_a_time_out_before_the_players_kick_made_again_asks_the_menu_again_from_the_moved_spot(tmp_path):
+    """Deep Kick (Enter); a foul makes it be kicked again from the 30; T in the set-up of the kick made again: the time out, the menu
+    again, 2 and Enter: the short kick, from the 30. The log line kickoff_again says again=True."""
+    path = debuglog.start("detailed", str(tmp_path / "logs"))
+    rig = scene(tmp_path / "rig", answers=[ENTER, "2", ENTER], rules=rules_2026(), extras=dict(QUIET), **KICKING)
+    engine, x = rig.engine, rig.engine.s.extras
+    script(rig, Draws())
+    assert rig.rules.before_kickoff(engine.s, 1) == KICKOFF_2026 and x.kick_call == "K001" and x.kick_from == 35
+    kick_made_again(rig)
+    press_t_at(rig, "dy", 1)
+    step = engine.kick_off()                                    # the kick made again: no menu, its kick kept
+    assert step == engine.kickoff_2026 and x.kick_call == "K001" and x.kick_from == 30
+    assert engine.t_back == engine.kickoff_again
+    with pytest.raises(PlayWithdrawn) as caught:
+        step()
+    assert caught.value.back == engine.kickoff_again and called(rig) == [1, 0]
+    step = engine.withdrawn(caught.value)()
+    assert step == engine.kickoff_2026 and x.kick_call == "K002" and x.kick_from == 30     # his new kick, from the moved spot
+    assert texts(rig).count(menu_prompt()) == 2
+    check(rig, Draws())
+    debuglog.flush(30)
+    lines = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()
+    again = [line for line in lines if " kickoff_again " in line]
+    assert len(again) == 1 and "again=true" in again[0] and "call=K002" in again[0] and "spot=30" in again[0]
+
+
+def test_an_onside_kick_made_again_and_chosen_again_is_not_a_new_try_a_deep_kick_instead_is_no_onside_kick(tmp_path):
+    rig = scene(tmp_path, answers=["4", ENTER, "4", ENTER], rules=rules_2026(), extras=dict(QUIET), **KICKING)
+    engine, x = rig.engine, rig.engine.s.extras
+    script(rig, Draws())
+    assert rig.rules.before_kickoff(engine.s, 1) == ONSIDE_KICKOFF and not x.rekick
+    kick_made_again(rig)
+    assert rig.rules.before_kickoff(engine.s, 1) == ONSIDE_KICKOFF and x.rekick
+    assert rig.rules.kickoff_chosen(engine.s)
+    assert rig.rules.kickoff_again(engine.s, 1) == ONSIDE_KICKOFF and x.rekick         # chosen again: still the kick made again
+    other = scene(tmp_path / "deep", answers=["4", ENTER, ENTER], rules=rules_2026(), extras=dict(QUIET), **KICKING)
+    script(other, Draws())
+    other.rules.before_kickoff(other.engine.s, 1)
+    kick_made_again(other)
+    other.rules.before_kickoff(other.engine.s, 1)
+    assert other.rules.kickoff_again(other.engine.s, 1) == KICKOFF_2026
+    assert other.engine.s.extras.kick_call == "K001" and not other.engine.s.extras.rekick
+    check(rig, Draws())
+
+
+def test_the_onside_question_is_asked_again_for_a_kick_made_again_when_it_is_due(tmp_path):
+    """SX.4's question (no 2026 kicks): "no"; a foul; the kick made again asks nothing; a time out asks the question, "y": an onside kick,
+    a new try (the first kick was not one)."""
+    rig = scene(tmp_path, answers=[ENTER, "y", ENTER], rules=rules_onside_question(), extras=dict(QUIET), **KICKING)
+    engine, x = rig.engine, rig.engine.s.extras
+    script(rig, Draws())
+    assert rig.rules.before_kickoff(engine.s, 1) == NORMAL_KICKOFF
+    kick_made_again(rig)
+    assert rig.rules.before_kickoff(engine.s, 1) == NORMAL_KICKOFF and not rig.rules.onside.asked
+    assert rig.rules.kickoff_chosen(engine.s)
+    assert rig.rules.kickoff_again(engine.s, 1) == ONSIDE_KICKOFF and not x.rekick and x.kick_from == 30
+    assert texts(rig).count(" Kim do you wish to try an onside kick ") == 2
+    check(rig, Draws())
+
+
+def test_the_computers_kick_made_again_is_not_asked_and_classic_has_no_such_choice(tmp_path):
+    rig = scene(tmp_path, rules=rules_2026(), extras=dict(QUIET), **dict(KICKING, wisoff=1, defense=2))
+    rig.rnd.source = __import__("random").Random(1)
+    rig.rules.before_kickoff(rig.engine.s, 2)
+    call = rig.engine.s.extras.kick_call
+    kick_made_again(rig)
+    rig.rules.before_kickoff(rig.engine.s, 2)
+    assert rig.engine.s.extras.kick_call == call and not rig.rules.kickoff_chosen(rig.engine.s)
+    assert not rig.rules.kicks.rekick_own and not rig.rules.onside.rekick_own

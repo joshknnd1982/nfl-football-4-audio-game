@@ -10,6 +10,8 @@ the roster and adds the team ratings; SX.8e adds the to-do list and the news; SX
 Issue 10 (D-223, a tester: "Consider moving deapth Chart to either roster or Franchise"): the depth chart is here, not in F9, Rules: "your depth chart"
 right after "your roster" while a franchise is played (the 4th item; every later item moved down one), and "Depth charts" (the 32 teams, for single games
 and classic seasons) as the last item when no franchise is played.
+Issue 10, Q-088 (D-239, the tester chose "have it in both places"): Quarterbacks, F9, Rules' item, is here too, right after the depth chart: the 5th
+item in a franchise (every later item moved down one more) and the last item, after Depth charts, when no franchise is played.
 """
 from __future__ import annotations
 
@@ -221,6 +223,11 @@ def franchise_menu(g, speech, keys) -> None:
         from .. import depth_flow
         depth_flow.depth_menu(g, speech, keys)                   # in a franchise the player's own team; outside one, the 32 teams
 
+    def quarterbacks_menu() -> None:
+        """Issue 10, Q-088 (D-239, the tester's answer "c"): F9, Rules, Quarterbacks is also here, next to the depth charts; the same menu."""
+        from .. import quarterbacks
+        quarterbacks.quarterbacks_menu(g, speech, keys)
+
     # ----- the history -----
 
     def history_menu() -> None:
@@ -375,6 +382,7 @@ def franchise_menu(g, speech, keys) -> None:
                  Item(lambda: X.text("NXF-12"), enter=news_menu),
                  Item(lambda: X.text("NXF-13"), enter=roster_menu),
                  Item(lambda: X.text("NXF-57"), enter=depth_menu),                # issue 10 (D-223): right after the roster
+                 Item(lambda: X.text("NXM-58"), enter=quarterbacks_menu),         # Q-088 (D-239): Quarterbacks, as in F9, Rules
                  Item(lambda: X.text("NXF-14"), enter=history_menu),
                  Item(lambda: X.text("NXF-15"), enter=ratings_menu),
                  Item(lambda: X.text("NXF-28"), enter=cap_menu),
@@ -399,6 +407,7 @@ def franchise_menu(g, speech, keys) -> None:
     items.append(Item(lambda: X.text("NXZ-U01"), enter=latest_rosters))     # SR.6 (NX-L9): the newest real rosters, only when the player asks
     if not in_use:                                                           # issue 10 (D-223): every team's depth chart for single games and seasons
         items.append(Item(lambda: X.text("NXM-D01"), enter=depth_menu))
+        items.append(Item(lambda: X.text("NXM-58"), enter=quarterbacks_menu))   # Q-088 (D-239): next to Depth charts, as in F9, Rules
     try:
         SpokenMenu(speech, keys, X.text("NXF-10"), items, space_enters=True, digits_jump=True).run()
     except _Closed:

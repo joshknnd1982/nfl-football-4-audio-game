@@ -19,7 +19,7 @@ This is inspired by Jim Kitchen. Jim Kitchen was blind from birth and made many 
   - penalties you may accept or decline, onside kicks, quarterback runs, replay challenges and the replay official's reviews;
   - every real NFL play, grouped into lists you reach with Right and M, each with a plain description (D) for people who do not know football, and a W key that says which play the playbook would most likely pick;
   - playbooks in seven styles, for your team and for the computer's;
-  - the real head coaches and players of the 32 teams, so you type no names, and a list of every team's quarterbacks where you choose who starts (F9, Rules, Quarterbacks);
+  - the real head coaches and players of the 32 teams, so you type no names, and a list of every team's quarterbacks where you choose who starts (Quarterbacks, in F9, Rules and in F9, Franchise);
   - stadium sounds and a referee who announces over a microphone;
   - a Franchise: a league of 32 teams that lasts from season to season, with the real 2026 schedule and bye weeks, the NFL's 14-team play-offs, ratings, aging, the draft, contracts and the salary cap, free agency, trades from free agency to the deadline, practice squads, injuries, coaches and history.
 

@@ -52,9 +52,8 @@ class Kick26Steps:
         g, s, snd, rnd = self.g, self.s, self.snd, self.rnd
         call = self.rules.kickoff_call(s)
         snd.c2uh()
-        if not self.setup_told("kick-off"):                  # SZ.6, issue 16: a kick-off chosen again after a time out does not say again
-            g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)   # who is back deep
-        self.setup_heard("kick-off")
+        g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)   # who is back deep: said
+        self.setup_heard("kick-off")                         # again after a time out took the kick back (Q-093, D-238)
         self.dy(0.2, 0x444949)
         g.say4(self.kicker(s.defense, 1) + P.READY_TO_KICK_OFF)
         snd.play_tackle(8)
