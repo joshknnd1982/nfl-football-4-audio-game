@@ -170,6 +170,7 @@ class NflRules(ClassicRules):
         self.challenges_on = bool(challenges_on)  # the ruling model, booth reviews and challenges (SX.6, off unless given)
         self.auto_sides = tuple(auto_sides)       # the sides whose timeouts, penalty choices and onside kicks the computer decides
         self.timeout_kept = False                 # H18: the T key was pressed while a play was live: granted at the next dead-ball moment
+        self.kickoff_safety = False               # issue 16: the kick-off being made is a safety kick (its menu, asked again, has the safety punt)
         self.try_due = False                      # SX.13: a touchdown's try is still to be played (a timeout may come before it at 0:00)
         self.after_play = False                   # H18: a play just ended and H10 has not run yet (a timeout then stops the whole runoff)
         # SX.7, the playbooks: the player's choice for a new game (classic, team or a style key, design 12.1: the F9 items 8 and
@@ -679,11 +680,37 @@ class NflRules(ClassicRules):
             spot = R.SAFETY_KICK_SPOT if x.safety_kick else R.KICKOFF_SPOT
         x.free_after_safety = safety or (again and x.free_after_safety)       # SX.13: a safety kick made again is still one (6-2-4)
         x.kick_from, x.kick_back, x.safety_kick = spot, 0, False
+        self.kickoff_safety = safety               # issue 16: the menu asked again after a time out offers the same kicks
         if self.kicks.on(state):                   # SX.10d: the 2026 kick-off menu (it replaces the onside question, design 2.6)
             return self.kicks.decide(state, kicking_side, again, safety)
         if not x.onside_on:
+            self.onside.asked = False
             return NORMAL_KICKOFF
         return self.onside.decide(state, kicking_side, again)
+
+    def kickoff_chosen(self, state) -> bool:
+        """GitHub issue 16 (D-230): the player chose the kick-off now being made (the 2026 kick-off menu, or SX.4's onside question when it
+        was asked), and the T key calls timeouts in this game: a time out before the kick asks his choice again. A kick made again after a
+        foul asked nothing (it keeps its kick), and the computer's kick-off is never asked again (its draws stay as they were)."""
+        x = state.extras
+        if x is None or not x.timeouts_on:
+            return False
+        flow = self.kicks if self.kicks.on(state) else self.onside
+        return flow.asked
+
+    def kickoff_again(self, state, kicking_side: int) -> str:
+        """Issue 16: the player's kick-off was withdrawn by his time out; the same menu or question again, from the same spot (where the
+        kick is made from and whether it is a safety kick stay as before_kickoff set them). Its kind, as before_kickoff answers."""
+        x = state.extras
+        if self.kicks.on(state):
+            kind = self.kicks.decide(state, kicking_side, False, self.kickoff_safety)
+        elif x.onside_on:
+            kind = self.onside.decide(state, kicking_side, False)
+        else:
+            kind = NORMAL_KICKOFF
+        debuglog.event("extras", "kickoff_again", logging.INFO, side=kicking_side, kind=kind, call=x.kick_call or None,
+                       spot=x.kick_from, quarter=state.quarter, left=x.left)
+        return kind
 
     def onside_kick(self, state) -> str:
         return self.onside.kick(state)

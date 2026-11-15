@@ -154,8 +154,8 @@ class KickSteps:
     # ----- the kick-off (L_444645) -----
 
     def kick_off(self):
-        """The receiving side is wisoff, the kicking side L504."""
-        g, s, snd, rnd = self.g, self.s, self.snd, self.rnd
+        """The receiving side is wisoff, the kicking side L504. The kick itself is kick_off_kind's (kickoff_again's too, issue 16)."""
+        s = self.s
         self.game_on = True                                  # H18: the game is in play from the first kick-off (T calls a timeout)
         self.dead_ball()                                     # the ball is dead; a time out kept from the last play is granted first
         kind = self.rules.before_kickoff(s, s.defense)       # H4: the kind (Classic: "normal", no question)
@@ -166,20 +166,39 @@ class KickSteps:
         if s.first_kickoff:                                  # L8a8 = 1: the first kick-off records its receiver
             s.opening_receiver = s.wisoff
             s.first_kickoff = False
+        self.setup_withdrawn = None                          # a new kick-off: no set-up of an earlier kick is taken as heard
+        return self.kick_off_kind(kind)
+
+    def kickoff_again(self):
+        """GitHub issue 16 (D-230): the player chose his kick-off (the 2026 kick-off menu or the onside question) and called a time out by T
+        before the kick: the kick he chose is withdrawn and he chooses again (a kick-off is a free kick that no snap starts, and the kicking
+        team may change its kick during a time out). The new choice is played; the kick-off's other work (the sign-on, the timeouts of a new
+        half, where the kick is made from) was done before the first choice and is not done twice."""
+        s = self.s
+        self.dead_ball()                                     # the ball is still dead: a T in the menu calls a time out as anywhere
+        return self.kick_off_kind(self.rules.kickoff_again(s, s.defense))
+
+    def kick_off_kind(self, kind):
+        """The kick-off of `kind` (the original's from here on, L_444645)."""
+        g, s, snd, rnd = self.g, self.s, self.snd, self.rnd
         g.empty_replay()
         s.offense_play = 0
         self.mark_spot()
+        if self.rules.kickoff_chosen(s):                     # issue 16: a time out by T before the player's own kick asks his kick again
+            self.t_back, self.t_clock = self.kickoff_again, None      # (no snap was counted: nothing of the clock is given back)
         if kind == ONSIDE_KICKOFF:                           # N. F. L. rules (SX.4): never in Classic
             return self.onside_kick
         if kind == KICKOFF_2026:                             # N. F. L. rules with a playbook (SX.10d): never in Classic
             return self.kickoff_2026
         snd.c2uh()
-        g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)
+        if not self.setup_told("kick-off"):                  # SZ.6, issue 16: a kick-off chosen again after a time out does not say again
+            g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)   # who is back deep
+        self.setup_heard("kick-off")
         self.dy(0.2, 0x444949)
         g.say4(self.kicker(s.defense, 1) + P.READY_TO_KICK_OFF)
         snd.play_tackle(8)
         snd.c2uf()
-        self.go_live("the kick-off")                         # H18: the kick is made; a T key waiting still withdraws nothing here
+        self.go_live("the kick-off")                         # H18: the kick is made; a T key waiting withdraws the player's own kick (issue 16)
         snd.play(7, -1200)
         snd.play_noise()
         g.say4(P.KICKOFF_UP)

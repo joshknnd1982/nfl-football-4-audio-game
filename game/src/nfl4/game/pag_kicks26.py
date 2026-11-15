@@ -52,12 +52,14 @@ class Kick26Steps:
         g, s, snd, rnd = self.g, self.s, self.snd, self.rnd
         call = self.rules.kickoff_call(s)
         snd.c2uh()
-        g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)
+        if not self.setup_told("kick-off"):                  # SZ.6, issue 16: a kick-off chosen again after a time out does not say again
+            g.say4(" " + self.returner(s.wisoff, 1) + P.AND + self.returner(s.wisoff, 2) + P.KICKOFF_BACK_DEEP)   # who is back deep
+        self.setup_heard("kick-off")
         self.dy(0.2, 0x444949)
         g.say4(self.kicker(s.defense, 1) + P.READY_TO_KICK_OFF)
         snd.play_tackle(8)
         snd.c2uf()
-        self.go_live("the kick-off")                         # H18: the kick is made; a T key is only kept from here
+        self.go_live("the kick-off")                         # H18: the kick is made; a T key is only kept from here (before: issue 16)
         snd.play(7, -1200)
         snd.play_noise()
         if call == SAFETY_PUNT:

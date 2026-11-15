@@ -82,6 +82,7 @@ class KickFlow:
         self.muffed = False         # the receivers muffed it and the kicking team kept it (no foul is drawn on it)
         self.fair_catch_armed = False     # the player said yes to the fair catch kick: the next field goal is that kick
         self.events: list[tuple] = []     # (what, side, concept, result kind, a number): the tests and the calibration count them
+        self.asked = False                # issue 16: the player chose the last kick-off in the menu (a time out before it asks again)
 
     @property
     def game(self):
@@ -118,6 +119,7 @@ class KickFlow:
         """H4: the kick-off called and the engine's kind of kick. A kick made again after a foul keeps its call and asks nothing."""
         x = state.extras
         self.start_kick()
+        self.asked = False
         if again and x.kick_call:
             call = x.kick_call
             x.rekick = call == ONSIDE
@@ -128,6 +130,7 @@ class KickFlow:
                 call = self.computer_kickoff(state, kicking_side, lead, safety)
             else:
                 call = self.kickoff_menu(state, safety)
+                self.asked = True
         x.kick_call = call
         x.kick_kind = ONSIDE_KICKOFF if call == ONSIDE else NORMAL_KICKOFF
         debuglog.event("extras", "kickoff_called", side=kicking_side, call=call, spot=x.kick_from, again=again)

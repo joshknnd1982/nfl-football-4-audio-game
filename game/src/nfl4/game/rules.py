@@ -380,6 +380,14 @@ class ClassicRules:
     def withdraw_play(self, state) -> None:
         return None
 
+    def kickoff_chosen(self, state) -> bool:
+        """GitHub issue 16 (D-230): the player chose the kick-off now being made (a menu or a question), so a time out by T before the kick
+        asks it again. Classic: never (no timeouts, no choice)."""
+        return False
+
+    def kickoff_again(self, state, kicking_side: int) -> str:
+        raise RuntimeError("Classic has no timeouts: kickoff_chosen is always False")
+
     def try_still_due(self, state) -> None:
         """GitHub issue 12 (D-225): the player's try is asked again after a penalty or a timeout. Classic: nothing."""
         return None

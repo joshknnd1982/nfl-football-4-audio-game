@@ -70,6 +70,7 @@ def computer_rule(quarter: int, left: int, deficit: int) -> tuple[int, int] | No
 class OnsideFlow:
     def __init__(self, rules):
         self.rules = rules
+        self.asked = False          # issue 16: the player was asked the onside question for this kick-off (a time out asks it again)
 
     @property
     def game(self):
@@ -85,6 +86,7 @@ class OnsideFlow:
         """NORMAL_KICKOFF or ONSIDE_KICKOFF (the extras' record keeps the kind: a kick made again after a foul is of the
         same kind and is not tried or asked again)."""
         x = state.extras
+        self.asked = False
         if again:
             kind = x.kick_kind or NORMAL_KICKOFF
             x.rekick = kind == ONSIDE_KICKOFF
@@ -95,6 +97,7 @@ class OnsideFlow:
             trying = self.computer_declares(state, kicking_side, lead)
         elif question_due(state.quarter, x.left, lead, x.onside_always):
             trying = self.ask(state)
+            self.asked = True
         else:
             trying = False
         x.kick_kind = ONSIDE_KICKOFF if trying else NORMAL_KICKOFF
@@ -168,8 +171,6 @@ class OnsideFlow:
         kicking, receiving = state.defense, state.wisoff
         k_team, r_team = state.teams.get(kicking, ""), state.teams.get(receiving, "")
         rekick, x.rekick = x.rekick, False
-        if not rekick:
-            x.onside_tried[kicking - 1] += 1
         kicker = state.rosters[kicking].kickers[0]
         snd.c2uh()
         # SZ.6 (D-111, a player's e-mail: "it says onside kick twice"): the computer declares (design 8.4) and that sentence IS the line-up; the
@@ -183,6 +184,8 @@ class OnsideFlow:
         engine = g.play_engine
         if engine is not None:
             engine.go_live("the onside kick")              # H18: the kick is made, a T key is only kept from here
+        if not rekick:                                       # counted once it is made: a time out before it withdraws it (issue 16)
+            x.onside_tried[kicking - 1] += 1
         snd.play(7, -1200)                                   # foot7, the kick
         snd.play_noise()
         g.say4(X.text("NXO-04", kicker=kicker))
