@@ -869,6 +869,17 @@ class NflRules(ClassicRules):
         timeout before it is granted at 0:00 too, whichever try he chooses (SX.13)."""
         self.try_due = True
 
+    def try_kick_moved(self, state):
+        """GitHub issue 12 (D-232, 11-3-3): (the yard line, the kick's yards) when a penalty moved this try's kick from the 15, while the
+        kicks of 2026 are played (the original's extra point has no length and never fails); None otherwise."""
+        spot = self.penalty.try_kick_to_goal
+        if spot == R.EXTRA_POINT_SPOT or not self.kicks.on(state):
+            return None
+        return spot, kick_flow.try_kick_distance(spot)
+
+    def try_replayed(self, state) -> bool:
+        return self.penalty.try_replayed
+
     @staticmethod
     def live_timeout_sentence() -> str:
         return X.text("NXT-15")

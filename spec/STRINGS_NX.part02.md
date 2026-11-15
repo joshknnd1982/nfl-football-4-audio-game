@@ -1,4 +1,3 @@
-- NXZ-64 (menu, say5): "Twist Stunt". defense call D064 of the catalog (call, list dg06, SRC-SECONDARY)
 - NXZ-65 (menu, say5): "Loop Stunt". defense call D065 of the catalog (call, list dg06, SRC-SECONDARY)
 - NXZ-66 (menu, say5): "Edge Blitz". defense call D066 of the catalog (call, list dg06, SRC-SECONDARY)
 - NXZ-67 (menu, say5): "Cover Three Sky". defense call D067 of the catalog (call, list dg07, SRC-SECONDARY)
@@ -316,3 +315,4 @@
 - NXY-S64 (help, say5): " An old play where the quarterback hands off, keeps the ball or pitches it. Beats a blitz; weak against a defender who covers the pitch. ". description of O164 Split T Option (NX-P8; heard with D)
 - NXY-S66 (help, say5): " A receiver runs out, then comes back to the quarterback. A short, safe catch against man for man defense; defenders guarding areas can cover it. ". description of O166 Return Route (NX-P8; heard with D)
 - NXY-S67 (help, say5): " A receiver runs a medium distance toward the sideline. Good against defenders guarding areas; weak against defenders who bump the receivers. ". description of O167 Bench Route (NX-P8; heard with D)
+- NXY-S10 (help, say5): " A receiver fakes toward the sideline, then cuts the other way. Good against man for man defense; defenders guarding areas can cover it. ". description of O110 Zig Route (NX-P8; heard with D)

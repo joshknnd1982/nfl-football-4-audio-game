@@ -392,6 +392,15 @@ class ClassicRules:
         """GitHub issue 12 (D-225): the player's try is asked again after a penalty or a timeout. Classic: nothing."""
         return None
 
+    def try_kick_moved(self, state):
+        """GitHub issue 12 (D-232): (the yard line, the kick's yards) of a try kick a penalty moved; None when it is the usual one.
+        Classic: None (no penalties, and its extra point never fails)."""
+        return None
+
+    def try_replayed(self, state) -> bool:
+        """GitHub issue 12 (D-232): a penalty made this try be played again, so its two-point spot is the penalty's. Classic: False."""
+        return False
+
     # H22 (SX.12): the overtime. Classic answers every call with the original's sudden death (GAME_SPEC 5.6 item 6, 5.12): a tie at the
     # end of the fourth quarter or of an overtime period begins another period, received by the side that had the ball, and every score
     # ends the game (a touchdown after its try).

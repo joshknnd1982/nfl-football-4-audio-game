@@ -49,7 +49,7 @@ from . import remarks
 from . import rules_2026 as R
 from . import tuning as T
 from .clock import is_warning_period, late_window
-from .kick_flow import kicks_on
+from .kick_flow import kicks_on, try_kick_distance
 from .penalty_list import DEFAULT_TABLE
 
 log = logging.getLogger("nfl4.extras")
@@ -138,6 +138,8 @@ class PenaltyFlow:
         self.forced: Flag | None = None       # intentional grounding drawn in place of a sack
         self.flags: list[Flag] = []           # the fouls of the play just ended
         self.try_from_the_one = False         # a personal foul on a touchdown, enforced on the try (14-2-3)
+        self.try_kick_to_goal = R.EXTRA_POINT_SPOT    # issue 12 (D-232, 11-3-3): where this try's kick is snapped from (yards to the goal)
+        self.try_replayed = False             # issue 12 (D-232): a penalty made this try be played again (its spots are the penalty's)
         self.kicks26 = False                  # SX.10d: the kicks of 2026 are played, so their fouls (P34 to P37) can be drawn
         self.events: list[tuple] = []         # (quarter, what, foul ID, side, yards, before the snap): the tests and the
         #                                       calibration count them (what: accepted, declined, offset, major, on the try,
@@ -244,6 +246,8 @@ class PenaltyFlow:
         self.waiting = self.dead = self.forced = self.late = None
         self.flags = []
         self.try_from_the_one = False
+        self.try_kick_to_goal = R.EXTRA_POINT_SPOT       # issue 12 (D-232): every try comes before a kick-off, so the next one starts at the 15
+        self.try_replayed = False
 
     def at_snap(self, state, offense_play: int, defense_play: int) -> bool:
         """The draw before the snap. True: a dead-ball foul, the play is not run."""
@@ -564,6 +568,9 @@ class PenaltyFlow:
             place(state, offense, result.los)
             state.two_point = True
             state.try_good = False
+            self.try_replayed = True
+            if flag is not None:                       # offsetting fouls (no flag) move neither spot
+                self.move_try_kick(flag)
             return TRY_AGAIN
         if result.kind == PEN.TRY_FAILS:
             return TRY_FAILS
@@ -572,6 +579,24 @@ class PenaltyFlow:
             x.kick_back = result.yards                           # again is made from the yards back (6-3-1)
             return KICK_AGAIN
         return None
+
+    def move_try_kick(self, flag: Flag) -> None:
+        """GitHub issue 12 (D-232; the tester chose (b): "move the kick by the penalty's yards"). NFL 11-3-3: after a foul that makes a
+        re-Try, the offense may have the penalty enforced from the other Try spot, the try kick's spot (the 15, or where an earlier penalty on
+        this try put it); 14-2-3 does the same with a personal foul on the touchdown. So the kick's spot moves by the same foul, from its own
+        spot: never more than half the distance to the goal (14-2-1), and defensive pass interference half the distance from it (11-3-3
+        Exception). The two-point spot is the penalty's own (penalties.accept). The kick is that much longer or shorter
+        (kick_flow.try_kick_distance) and its made rate follows (model.extra_point)."""
+        before, foul = self.try_kick_to_goal, flag.foul
+        by_offense = self.down is not None and flag.side == self.down.offense
+        if foul.spot == F.SPOT_OF_FOUL and foul.yards == 0:
+            after = before - before // 2
+        else:
+            new, _moved, _halved = PEN.move(100 - before, foul.yards, by_offense)
+            after = 100 - new
+        self.try_kick_to_goal = max(1, after)
+        debuglog.event("penalty", "try_kick_spot", foul=foul.id, by_offense=by_offense, before=before, after=self.try_kick_to_goal,
+                       distance=try_kick_distance(self.try_kick_to_goal))
 
     def note(self, state, what: str, flag: Flag | None, yards: int = 0, pre: bool = False) -> None:
         self.events.append((state.quarter, what, flag.foul.id if flag else "", flag.side if flag else 0, yards, pre))
@@ -651,6 +676,7 @@ class PenaltyFlow:
             self.rules.ref_says(X.text("NXP-16"))
             x.flags[flag.side - 1] += 1
             self.try_from_the_one = True
+            self.move_try_kick(flag)                   # issue 12 (D-232): the kick is moved by the same foul (14-2-3, 11-3-3)
             self.remark(state, flag)
             return None
         if self.extends(state, flag) and accepted.kind == PEN.NEW_DOWN:

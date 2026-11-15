@@ -10,6 +10,14 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## Unreleased (since 1.0.2)
+
+### A penalty on the try moves the extra point kick by its yards
+From a tester's answer on GitHub issue 12. Since 0.16.24, after a penalty on your try for two points you choose again between the kick and the try for two, but a kick chosen then was always the usual extra point. Asked "should a penalty make the extra point longer or shorter?", the tester chose "move the kick by the penalty's yards". So now, with the N. F. L. rules and a playbook (the default), a penalty on the try moves the kick too, as the real rules do: from the kick's own spot, the 15 yard line, a foul by your team makes the kick longer (5 yards: from the 20, a 38 yard kick instead of 33) and a foul by the defense makes it shorter (5 yards: from the 10, a 28 yard kick), never more than half the way to the goal line; pass interference by the defense moves it half the way. Two penalties on one try add up. A longer kick is missed more often and a shorter one less often, as a field goal of that length would be. Before "select", one sentence says where the kick would be from and how long it is, so you know before you choose. A personal foul by the defense on your touchdown moves your kick the same way, and when the computer kicks a moved extra point the announcer says how long it is before the kick. The try for two keeps the spot the penalty gave it, also when you chose the kick and then called a time out. With no penalty, the extra point and the luck of the game are exactly as before. Classic, the original's exact game, has no penalties and its extra point never fails.
+
+**How to test:** with the N. F. L. rules, Penalties on and a playbook, score a touchdown and choose "try for two point conversion". Play tries for two until a flag is accepted on one (a false start or illegal shift by your team is the most common). After the referee's words you should hear "after the penalty, the kick for extra point would be from the 20 yard line, a 38 yard kick", then "select" and "try for two point conversion". Press Up for the kick and Enter: the kick is made from there. After a foul by the defense the sentence should give a shorter kick.
+**Tell us:** whether the sentence before the choice is clear, and whether the longer kicks are missed about as often as you expect.
+
 ## 1.0.2 (2026-11-15, test build)
 
 Two fixes from testers' GitHub issues: the computer team's own defenders are no longer named in its plays, and a time out after you chose your kick off lets you choose it again. Everything of 1.0.1 and earlier below is in it.

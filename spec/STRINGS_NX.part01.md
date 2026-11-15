@@ -6,14 +6,14 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2763.
+- Texts: 2765.
 - The clock (design section 5): 21.
 - Timeouts (design 6.3): 24.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 89.
-- Playbooks (design section 10): 828.
+- Playbooks (design section 10): 830.
 - Menus and settings (design 10.4, 12): 227.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 850.
@@ -502,3 +502,4 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXZ-61 (menu, say5): "Delayed Blitz". defense call D061 of the catalog (call, list dg06, UNVERIFIED)
 - NXZ-62 (menu, say5): "Cross Blitz". defense call D062 of the catalog (call, list dg06, UNVERIFIED)
 - NXZ-63 (menu, say5): "Free Fire". defense call D063 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-64 (menu, say5): "Twist Stunt". defense call D064 of the catalog (call, list dg06, SRC-SECONDARY)

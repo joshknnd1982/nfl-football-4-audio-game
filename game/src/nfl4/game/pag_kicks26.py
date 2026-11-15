@@ -341,6 +341,9 @@ class Kick26Steps:
 
     def extra_point_2026(self, plan):
         g, s, snd = self.g, self.s, self.snd
+        moved = self.rules.try_kick_moved(s)
+        if moved is not None and s.wisoff != 1:              # D-232: the computer's kick a penalty moved (the player heard his own at
+            g.say4(self.text26("extra_point_moved", n=moved[0], d=moved[1]))    # the choice)
         g.ptf = 1
         g.say4(" " + self.kicker(s.wisoff, 1) + P.XP_IN)
         g.say4(" " + self.kicker(s.wisoff, 2) + P.WILL_HOLD)

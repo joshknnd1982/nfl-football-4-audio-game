@@ -805,11 +805,17 @@ def field_goal(distance: int, defense: str, rnd, fair_catch_kick: bool = False, 
     return KickResult("made" if chance(rnd, made * 10000 // max(1, 10000 - blocked)) else "missed")
 
 
-def extra_point(defense: str, rnd) -> KickResult:
+def extra_point(defense: str, rnd, distance: int = 0, usual: int = 0) -> KickResult:
+    """GitHub issue 12 (D-232, NFL 11-3-3): a try kick that a penalty moved (`distance` yards, not the `usual` try kick's) is good as often
+    as the measured extra point moved by the field goal model's difference between the two lengths, so a longer kick is harder and a
+    shorter one easier; the same two draws as ever, and a try kick no penalty moved is the measured extra point."""
+    good = M.EXTRA_POINT["good"]
+    if distance and usual and distance != usual:
+        good = max(0, min(9900, good + field_goal_rate(distance)[0] - field_goal_rate(usual)[0]))
     blocked = M.EXTRA_POINT["blocked"] * (2 if defense == "fg_block" else 1)
     if chance(rnd, blocked):
         return KickResult("blocked", defense_recovers=True, touchdown=chance(rnd, 300))
-    return KickResult("good" if chance(rnd, M.EXTRA_POINT["good"] * 10000 // (10000 - M.EXTRA_POINT["blocked"])) else "no_good")
+    return KickResult("good" if chance(rnd, good * 10000 // (10000 - M.EXTRA_POINT["blocked"])) else "no_good")
 
 
 def fake_kick(distance: int, defense: str, rnd) -> bool:

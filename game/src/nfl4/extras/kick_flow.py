@@ -70,6 +70,12 @@ class Plan(NamedTuple):
         return params[0] if params else ""
 
 
+def try_kick_distance(to_goal_yards: int) -> int:
+    """The try kick's length when it is snapped `to_goal_yards` from the goal line: the usual 33 from the 15 (11-3-1 (b)), a yard more or
+    less for every yard a penalty moved the snap (11-3-3, GitHub issue 12, D-232)."""
+    return R.EXTRA_POINT_DISTANCE + to_goal_yards - R.EXTRA_POINT_SPOT
+
+
 def kicks_on(x) -> bool:
     """The kicks of 2026 are played: the player uses an offense or a defense playbook (D-094)."""
     return x is not None and (x.offense_book[0] != PB.CLASSIC or x.defense_book[0] != PB.CLASSIC)
@@ -296,7 +302,7 @@ class KickFlow:
             distance = kick_spot + 10
             miss_spot = max(T.MISSED_FG_LEAST, kick_spot)
         elif what == EXTRA_POINT:
-            distance = R.EXTRA_POINT_DISTANCE
+            distance = try_kick_distance(self.rules.penalty.try_kick_to_goal)    # issue 12 (D-232): a penalty may have moved it
         plan = Plan(what, concept, defense, distance, kick_spot, miss_spot)
         debuglog.event("extras", "kick_planned", what=what, side=state.wisoff, concept=concept, defense=defense, distance=distance)
         return plan
@@ -328,7 +334,7 @@ class KickFlow:
         return result
 
     def extra_point_result(self, state, plan: Plan) -> M.KickResult:
-        result = M.extra_point(plan.defense, self.rnd)
+        result = M.extra_point(plan.defense, self.rnd, plan.distance, R.EXTRA_POINT_DISTANCE)
         self.note(EXTRA_POINT, state.wisoff, plan.concept, result.kind, plan.distance)
         return result
 
@@ -399,4 +405,4 @@ SENTENCES = {"out_of_bounds": "NXB-J02", "landed_short": "NXB-J03", "touchback_3
              "fake_run": "NXB-J18", "fake_pass": "NXB-J19", "fair_catch_kick": "NXB-J21", "safety_punt": "NXB-J23",
              "brought_down": "NXB-J24", "return_td": "NXB-H09",
              "out_of_bounds_at": "NXB-J25", "landed_short_at": "NXB-J26", "blocked_end_zone_td": "NXB-J27",
-             "blocked_out_of_end_zone": "NXB-J28"}
+             "blocked_out_of_end_zone": "NXB-J28", "try_choice_moved": "NXB-J29", "extra_point_moved": "NXB-J30"}
