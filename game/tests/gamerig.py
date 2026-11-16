@@ -236,6 +236,9 @@ class Rig:
         # sentences the engine makes and the many narration tests pin. The radio calls are tested with "radio" set by the test
         # (tests/test_rc_radio_calls.py, work\bc4_1027\listen_broadcast.py); tests/test_rc_radio_calls.py checks the program's own default
         self.game.options.settings.game.nx_play_calls = "plain"
+        # issue 17 (D-244): a new player's settings say Clock updates on; the rig's player has it off, so the many tests that pin the
+        # N. F. L. rules' sentences and clock stay exact. tests/test_issue17_clock_updates.py turns it on and checks the program's default
+        self.game.options.settings.game.nx_clock_news = False
 
     def run(self):
         self.game.run()

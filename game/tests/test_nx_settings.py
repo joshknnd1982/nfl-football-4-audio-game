@@ -23,7 +23,9 @@ from programrig import DOWN, ENTER, ESC, F1, said
 from test_functions import TOP, rig_for
 
 SPACE, LEFT = 32, 37
-OPEN = "Rules. 17 items. Press F1 for help. "    # issue 10 (D-223): Depth charts moved to F9, Franchise    # S-D: How much the crew talks; RC: Play calls; XV: Excited voice
+ON = "Clock updates: on, the clock is said after every play, and F4 says the time as it runs down"    # issue 17 (D-244)
+OFF = "Clock updates: off, F4 says the time at the end of the last play"
+OPEN = "Rules. 18 items. Press F1 for help. "    # issue 17 (D-244): Clock updates    # issue 10 (D-223): Depth charts moved to F9, Franchise    # S-D: How much the crew talks; RC: Play calls; XV: Excited voice
     # SX.7: Rules, Time outs, Replay challenges, Quarterback runs, Onside kicks,
 #                                                  Onside question, Penalties, Offense playbook, Defense playbook, ..., Quarterbacks (D-132), Reset
 NEXT_GAME = X.text("NXM-23")
@@ -103,7 +105,7 @@ def test_a_switch_says_used_with_the_nfl_rules_while_rules_is_classic(rig):
 
 def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     spoken = rules_menu(rig, [ENTER, "2", ENTER, "3", ENTER, "4", ENTER, "5", ENTER, "6", ENTER, "7", ENTER, "8", ENTER,
-                              "9", ENTER, "0", ENTER, DOWN, ENTER, DOWN, ENTER, DOWN, ENTER, DOWN, ENTER, DOWN, DOWN, DOWN, ENTER, ENTER, "1"])   # XV: Excited voice after Play calls   # RC: Play calls after it   # S-D: How much the crew talks after Broadcast     # D-132: Quarterbacks before Reset      # SY.1: "0" is Broadcast, Down is Stadium sounds, then
+                              "9", ENTER, "0", ENTER, DOWN, ENTER, DOWN, ENTER, DOWN, ENTER, DOWN, ENTER, DOWN, DOWN, DOWN, ENTER, DOWN, ENTER, ENTER, "1"])   # issue 17: Clock updates before Reset   # XV: Excited voice after Play calls   # RC: Play calls after it   # S-D: How much the crew talks after Broadcast     # D-132: Quarterbacks before Reset      # SY.1: "0" is Broadcast, Down is Stadium sounds, then
     #                                                                                                Commentator (SZ.1: not entered), then Reset
     assert spoken[2] == "Time outs on "
     assert spoken[3] == "Time outs off " + NEXT_GAME
@@ -133,14 +135,16 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert spoken[27] == "Stadium sounds off " + NEXT_GAME
     assert spoken[28] == "Broadcast crew: Walt Kessler, Gus Delgado, Nora Banks"   # SZ.1, BC.3: the fifteenth item, only passed
     assert spoken[29] == X.text("NXM-58")                                # D-132: the sixteenth item, only passed
-    assert spoken[30] == X.text("NXM-19")                                # issue 10 (D-223): Reset is the seventeenth item, Depth charts is in F9, Franchise
+    assert spoken[30] == "%s" % ON                                       # issue 17 (D-244): the seventeenth item, on by default
+    assert spoken[31] == "%s," % OFF + X.text("NXM-69")                 # applies at once
+    assert spoken[32] == X.text("NXM-19")                                # Reset is the eighteenth item (issue 10, D-223: Depth charts is in F9, Franchise)
     defaults = ("Rules: N. F. L. rules. Time outs on. Replay challenges on. Quarterback runs on. Onside kicks on."   # SX.9: the default is
                 " Onside question: always. Penalties on. Offense playbook: Team playbook. Defense playbook: Team playbook. Broadcast on."
                 " How much the crew talks: a lot. Play calls: radio style, exciting."
-                " Excited voice: on, the big plays are said higher, faster and a little louder. Stadium sounds on ")
-    assert spoken[31] == defaults + NEXT_GAME
-    assert spoken[32] == defaults                                       # nothing changed now
-    assert spoken[33] == "Rules: N. F. L. rules"
+                " Excited voice: on, the big plays are said higher, faster and a little louder. Stadium sounds on . " + ON)
+    assert spoken[33] == defaults + NEXT_GAME
+    assert spoken[34] == defaults                                       # nothing changed now
+    assert spoken[35] == "Rules: N. F. L. rules"
     game = rig.game.options.settings.game
     assert (game.rules, game.nx_timeouts, game.nx_penalties) == ("nfl", True, True) and is_nfl(rig.game.rules)
     assert (game.nx_onside, game.nx_onside_question, game.nx_qb_runs) == (True, "always", True)
@@ -149,6 +153,7 @@ def test_the_digits_jump_and_reset_brings_the_defaults_back(rig):
     assert game.nx_crew_talk == "lots"                                  # S-D: Reset brings the default level back
     assert game.nx_play_calls == "radio"                                # RC: and the radio play calls
     assert game.nx_excited_voice is True                                # XV: and the excited voice
+    assert game.nx_clock_news is True                                   # issue 17: and Clock updates
 
 
 def test_f1_says_the_help_of_the_rules_menu(rig):

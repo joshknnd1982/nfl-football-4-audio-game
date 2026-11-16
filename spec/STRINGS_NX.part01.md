@@ -6,15 +6,15 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2788.
-- The clock (design section 5): 21.
+- Texts: 2795.
+- The clock (design section 5): 25.
 - Timeouts (design 6.3): 26.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
 - Quarterback runs (design section 7): 15.
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 89.
 - Playbooks (design section 10): 830.
-- Menus and settings (design 10.4, 12): 248.
+- Menus and settings (design 10.4, 12): 251.
 - Statistics lines (C7, H11): 9.
 - Franchise (design section 11): 850.
 - The real coaches and players (NX-N, SX.11): 7.
@@ -44,6 +44,10 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXC-12 (sentence, say2): "<team> and the <other> tied at <score>. ". a regular week's result when the player's game ended tied (season engine, SX.12), in the place of '<winner> over the <loser> ...'
 - NXC-13 (piece, piece): "and <n> tie". after a team's losses in the standings, the qualifiers and the Franchise's records, when it has one tie (SX.12)
 - NXC-14 (piece, piece): "and <n> ties". the same with two or more ties (SX.12)
+- NXC-44 (sentence, say5): " the clock starts again on the referee's signal. ". Clock updates on: after a play that ended out of bounds before the last 2 minutes of the first half or the last 5 of the second (4-3-2 (a)); also after F4's time until the clock runs again (issue 17, D-244)
+- NXC-45 (sentence, say5): " the clock is stopped until the snap. ". Clock updates on: after a play that ended out of bounds in the last 2 minutes of the first half or the last 5 of the second (4-3-2 (a)) (issue 17, D-244)
+- NXH-88 (help, say5): " A run or catch out of bounds stops the clock until the snap only in the last 2 minutes of the first half and last 5 of the game. Earlier it starts again on the referee's signal, as in the N. F. L. ". F6 addition after NXH-06 (GitHub issue 17, D-244; rule 4-3-2 (a))
+- NXH-89 (help, say5): " F9, Rules, Clock updates says after every play whether the clock is running, and F4 then says the time as it runs down. On by default; Enter turns it off or on. ". F6 addition after NXH-88 (issue 17, D-244)
 
 ## Timeouts (design 6.3)
 
@@ -496,12 +500,3 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXZ-53 (menu, say5): "Double A Gap". defense call D053 of the catalog (call, list dg05, SRC-SECONDARY)
 - NXZ-54 (menu, say5): "Nickel Blitz". defense call D054 of the catalog (call, list dg05, SRC-SECONDARY)
 - NXZ-55 (menu, say5): "Dime Blitz". defense call D055 of the catalog (call, list dg05, SRC-SECONDARY)
-- NXZ-56 (menu, say5): "Defensive Back Fire". defense call D056 of the catalog (call, list dg05, SRC-SECONDARY)
-- NXZ-57 (menu, say5): "Fire Zone". defense call D057 of the catalog (call, list dg06, SRC-OFFICIAL)
-- NXZ-58 (menu, say5): "Overload Blitz". defense call D058 of the catalog (call, list dg06, UNVERIFIED)
-- NXZ-59 (menu, say5): "Simulated Pressure". defense call D059 of the catalog (call, list dg06, SRC-SECONDARY)
-- NXZ-60 (menu, say5): "Creeper". defense call D060 of the catalog (call, list dg06, SRC-SECONDARY)
-- NXZ-61 (menu, say5): "Delayed Blitz". defense call D061 of the catalog (call, list dg06, UNVERIFIED)
-- NXZ-62 (menu, say5): "Cross Blitz". defense call D062 of the catalog (call, list dg06, UNVERIFIED)
-- NXZ-63 (menu, say5): "Free Fire". defense call D063 of the catalog (call, list dg06, SRC-SECONDARY)
-- NXZ-64 (menu, say5): "Twist Stunt". defense call D064 of the catalog (call, list dg06, SRC-SECONDARY)

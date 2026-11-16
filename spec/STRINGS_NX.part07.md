@@ -1,3 +1,4 @@
+- BN73 (remark, say): " The booth is quiet for a moment while <commentator> and I watch the formation. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN74 (remark, say): " <commentator> is nodding at that, which on the radio means I have to say it out loud. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN75 (remark, say): " There is a lot of coffee in this booth, and <commentator> is doing most of the drinking. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN76 (remark, say): " I am told <commentator> has an opinion on that, and I am told it is a strong one. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
@@ -265,4 +266,3 @@
 - NXM-54 (menu, say5): "Put the stadium sounds back". F9 Sounds item: the player's stadium and referee files are moved aside (SZ.2)
 - NXM-55 (prompt, say5): " this moves your own stadium and referee sound files to the removed sounds folder. Press Enter to do it, or any other key to cancel. ". the confirmation of that item (SZ.2)
 - NXM-56 (sentence, say5): " <n> of your files were moved. The original sounds are back. ". after that item (SZ.2)
-- NXM-57 (sentence, say5): " you have no stadium or referee sound files of your own. ". after that item when there is nothing to move (SZ.2)

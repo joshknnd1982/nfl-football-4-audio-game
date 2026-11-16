@@ -59,13 +59,13 @@ def nfl_rig(tmp_path, keys):
 
 # ----- the Rules menu has no depth chart any more -----
 
-def test_the_rules_menu_has_seventeen_items_and_no_depth_charts(tmp_path, monkeypatch):
+def test_the_rules_menu_has_eighteen_items_and_no_depth_charts(tmp_path, monkeypatch):
     seen = menus_seen(monkeypatch)
     nfl_rig(tmp_path, [DOWN, DOWN, DOWN, ENTER])
     labels = next(labels for title, labels in seen if title == X.text("NXM-07"))
-    assert len(labels) == 17
+    assert len(labels) == 18                  # issue 17 (D-244): Clock updates before Reset
     assert not any(X.text("NXM-D01") in label for label in labels)
-    assert labels[-1] == X.text("NXM-19") and "uarterback" in labels[-2]
+    assert labels[-1] == X.text("NXM-19") and "Clock updates" in labels[-2] and "uarterback" in labels[-3]
 
 
 # ----- outside a franchise: Depth charts is the Franchise menu's last item -----
@@ -179,7 +179,7 @@ def test_the_rules_menu_keeps_quarterbacks(tmp_path, monkeypatch):
     seen = menus_seen(monkeypatch)
     nfl_rig(tmp_path, [DOWN, DOWN, DOWN, ENTER])
     labels = next(labels for title, labels in seen if title == X.text("NXM-07"))
-    assert X.text("NXM-58") in labels[-2]
+    assert X.text("NXM-58") in labels[-3]                 # issue 17: Clock updates is between it and Reset
 
 
 def test_in_a_franchise_quarterbacks_follows_your_depth_chart_and_opens_the_franchise_list(tmp_path):

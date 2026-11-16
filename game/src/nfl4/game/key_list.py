@@ -40,7 +40,8 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("f2", "F2", "Anywhere, and in questions and lists", "plays the instant replay of what was just said", "all", True,
            "F2. instant replay.", consts=("KEY_F2",)),
     KeyRow("f3", "F3", "Anywhere in a game", "says the score", "all", True, "F3. say score.", consts=("KEY_F3",)),
-    KeyRow("f4", "F4", "Anywhere in a game", "says the game clock; with the N. F. L. rules it also says whether the clock is running",
+    KeyRow("f4", "F4", "Anywhere in a game", "says the game clock; with the N. F. L. rules and F9, Rules, Clock updates on (the default) it says the time as it runs "
+           "down while you choose your play, and whether the clock is running, stopped, or starts again on the referee's signal",
            "all", True, "F4. announce game clock.", consts=("KEY_F4",)),
     KeyRow("f5", "F5", "Anywhere", "reads the special key instructions", "all", True, "F5. reed special key instructions.",
            consts=("KEY_F5",)),

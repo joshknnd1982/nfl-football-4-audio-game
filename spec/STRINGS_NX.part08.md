@@ -1,3 +1,4 @@
+- NXM-57 (sentence, say5): " you have no stadium or referee sound files of your own. ". after that item when there is nothing to move (SZ.2)
 - NXB-S01 (menu, say5): "The crowd cheers". crowd_cheer (SZ.2)
 - NXB-S02 (menu, say5): "The crowd roars". crowd_roar (SZ.2)
 - NXB-S03 (menu, say5): "The crowd groans". crowd_groan (SZ.2)

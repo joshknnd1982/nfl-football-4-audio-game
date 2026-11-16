@@ -48,6 +48,7 @@ class GameSettings:
     nx_crew_talk: str = "lots"   # S-D (D-193): how much the crew talks, little, some, lots (the default) or most (extras/broadcast.TALK_LEVELS)
     nx_play_calls: str = "radio"  # RC (D-195): the plays called like a radio broadcast (radio, the default) or in the original's words (plain)
     nx_excited_voice: bool = True  # XV (D-198): the radio calls said higher, faster and louder on the big plays (game voices and NVDA)
+    nx_clock_news: bool = True   # issue 17 (D-244): the clock's state said after every play, F4's time running down while the player chooses
     nx_menu_hints: int = 0       # how many program runs gave the hint of the play menus (where Right and M are); 3 or more: no more (SZ.5)
     # BC.3 (D-178, D-189): the radio crew's names (extras/crew.py), made-up defaults; *_own is the last name the player typed (kept when he
     # goes back to the default). An older file's nx_commentator is read once into nx_analyst.

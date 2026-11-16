@@ -248,6 +248,9 @@
 - NXM-R09 (sentence, say5): " <player> now starts. ". after NXM-R07: the move made him a starter (D-186)
 - NXM-R10 (sentence, say5): " <player> no longer starts; <other> does. ". after NXM-R08: the move took him out of the starters (D-186)
 - NXM-R11 (help, say5): "U moves him up one place on the depth chart, N moves him down one place, and a digit from 1 to 9 puts him at that place. Escape goes back.". F1 in a position's list of the depth chart, after NXM-R02 (D-186)
+- NXM-77 (menu, say5): "Clock updates". F9, Rules, the item before Reset: followed by its value (GitHub issue 17, D-244)
+- NXM-78 (piece, piece): "on, the clock is said after every play, and F4 says the time as it runs down". the value of NXM-77, the default (issue 17, D-244)
+- NXM-79 (piece, piece): "off, F4 says the time at the end of the last play". the value of NXM-77 (issue 17, D-244)
 
 ## Statistics lines (C7, H11)
 
@@ -478,6 +481,3 @@
 - NXL-33 (sentence, say5): " <player>, <position>, rating <r>, age <a>, <potential> potential, <contract> ". a player in F9's roster with his contract (SX.8g)
 - NXA-01 (sentence, say5): " the salary cap is <cap>. your payroll is <payroll>, dead money <dead>, cap space <space>. ". F9 salary cap, the first line (SX.8g)
 - NXA-02 (sentence, say5): " your cap space is number <k> of 32. ". F9 salary cap, the second line
-- NXA-03 (sentence, say5): " <k>. the <team>, <space>. ". F9 salary cap, a team by cap space
-- NXA-10 (piece, piece): "<salary> for <y> years". a contract
-- NXA-11 (piece, piece): "<salary> for one year". a contract with one year left

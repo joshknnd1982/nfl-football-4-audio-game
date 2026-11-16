@@ -18,14 +18,22 @@ the play, and when R would cross it the clock stops at exactly 2:00 and the warn
     start_period()  a new quarter or overtime period: the full time, the clock stopped, the timeouts of a new half
     before_snap()   the pending runoff runs; True when it ran the period out (the period ends before the snap)
 The engine reads them in the same places as the counter clock, so 5.6 and 5.7 need no change.
+
+GitHub issue 17 (D-244), F9, Rules, Clock updates (nx_clock_news, on by default; the test rig's player has it off): the pending runoff is
+still applied whole at the snap (no draw and no time changes), but while the player chooses it WINDS in real time, one second a second
+from the moment the clock starts (at once when it keeps running, after the ready signal's cut when a play ended out of bounds early in a
+half), never further than the runoff: F4 says the time now and whether the clock is running, and a time out stops the clock where F4 would
+have said (at least the u seconds of the signal). Off, F4 says the time at the end of the last play, as before.
 """
 from __future__ import annotations
 
 import math
 
+from ..data import debuglog
 from ..game import outcome as O
 from ..game.gameclock import PLURAL, QUARTER_END, REMAINING_IN_THE, SECOND, clock_sentence, quarter_word
 from ..game.vbnum import str_
+from . import nx_texts as X
 from . import rules_2026 as R
 from . import timeouts
 from . import tuning as T
@@ -156,10 +164,52 @@ class NflPeriodClock:
     def __init__(self, game, state):
         self.game = game
         self.state = state
+        self.wind_from: float | None = None      # issue 17: the real time (game.clock) at which the pending runoff starts to wind
+        self.ready_cut = 0                       # the seconds the ready signal held the clock after the last play (0: none)
 
     @property
     def x(self):
         return self.state.extras
+
+    # ----- issue 17 (D-244): Clock updates -----
+
+    def news_on(self) -> bool:
+        """F9, Rules, Clock updates (nx_clock_news), read at every use so a change applies at once. A game with no settings (the
+        simulations of the tests and the soaks) has it off."""
+        settings = getattr(getattr(getattr(self.game, "options", None), "settings", None), "game", None)
+        return bool(getattr(settings, "nx_clock_news", False))
+
+    def _now(self) -> float | None:
+        clock = getattr(self.game, "clock", None)
+        return clock() if callable(clock) else None
+
+    def wound(self) -> int:
+        """The whole seconds of the pending runoff that have run while the player chooses (0 to the runoff); 0 with Clock updates off,
+        with the clock stopped, or before the ready signal."""
+        x = self.x
+        if not self.news_on() or not x.running or x.pending <= 0 or self.wind_from is None:
+            return 0
+        now = self._now()
+        if now is None:
+            return 0
+        return max(0, min(x.pending, int(now - self.wind_from)))
+
+    def waiting_for_ready(self) -> bool:
+        """The clock will run but the ready signal has not come yet (a play out of bounds early in a half)."""
+        x = self.x
+        if not x.running or x.pending <= 0 or self.wind_from is None or self.ready_cut <= 0:
+            return False
+        now = self._now()
+        return now is not None and now < self.wind_from
+
+    def state_text(self) -> str:
+        """The clock's state in one sentence: starts again on the referee's signal, running, or stopped."""
+        if self.waiting_for_ready():
+            return X.text("NXC-44")
+        return X.text("NXC-01") if self.x.running else X.text("NXC-02")
+
+    def time_now(self) -> int:
+        return max(0, self.x.left - self.wound())
 
     # ----- what the engine reads (5.6, 5.7) -----
 
@@ -192,13 +242,19 @@ class NflPeriodClock:
     def speak(self) -> None:
         """F4: the time at the end of the last play, with the original's sentence, then clk and g = F1 (as sgc). The
         original's sentence has no form for no time at all (it says neither minutes nor seconds), so 0:00 (a try or the
-        wait after a last-second score) is said with its words as " 0 seconds"."""
-        left = self.x.left
+        wait after a last-second score) is said with its words as " 0 seconds". Issue 17: with Clock updates on, the time now (the runoff
+        wound so far) and the clock's state after it."""
+        news = self.news_on()
+        left = self.time_now() if news else self.x.left
         word = quarter_word(min(max(self.state.quarter, 1), 10))
         if left <= 0:
             text = " " + str_(0) + SECOND + PLURAL + REMAINING_IN_THE + word + QUARTER_END
         else:
             text = clock_sentence(left // 60, left % 60, word)
+        if news:
+            text += self.state_text()
+            debuglog.event("extras", "clock_f4", quarter=self.state.quarter, left=self.x.left, now=left, wound=self.wound(),
+                           pending=self.x.pending, running=self.x.running, ready_wait=self.waiting_for_ready())
         self.game.say_clock(text)
 
     def summary_left(self) -> tuple[int, int]:
@@ -287,6 +343,7 @@ class NflPeriodClock:
         """H10, once per play: R for the side that snaps next, kept pending (design 5.3). Returns R (0: the clock is
         stopped)."""
         x, s = self.x, self.state
+        self.wind_from, self.ready_cut = None, 0
         if not keeps_running or x.left <= 0 or x.warning_due:
             x.pending, x.running = 0, False
             return 0
@@ -295,7 +352,9 @@ class NflPeriodClock:
             pace = PLAYER_TEMPO.get(x.play_settings.get("tempo", ""), pace)
         seconds = draw_between(rnd, RUNOFF[pace])
         if ready_signal:
-            seconds = max(0, seconds - draw_between(rnd, T.READY_SIGNAL_CUT))
+            cut = draw_between(rnd, T.READY_SIGNAL_CUT)
+            self.ready_cut = min(cut, seconds)
+            seconds = max(0, seconds - cut)
         if cap is not None:
             seconds = min(seconds, cap)            # after a penalty the play clock is 25 (4-6-2 (e)): SX.3
         if pace == HURRY and seconds >= x.left >= T.HURRY_SNAP_MIN:
@@ -305,16 +364,26 @@ class NflPeriodClock:
             x.left = R.WARNING_SECONDS            # the clock stops at exactly 2:00 and the warning follows (3-41)
             x.pending, x.running = 0, False
             x.warning_due = True
+        if x.pending > 0:                         # issue 17: it winds from now, or after the ready signal's cut
+            now = self._now()
+            self.wind_from = None if now is None else now + self.ready_cut
         return seconds
 
     def stop_for_timeout(self, rnd) -> int:
         """A timeout stops a running clock after u seconds of the pending runoff (the time to signal the official), never
-        later than one second before the end of the period. Returns the seconds that ran (one draw when it was running)."""
+        later than one second before the end of the period. Returns the seconds that ran (one draw when it was running).
+        Issue 17: with Clock updates on, at least the seconds the clock has wound while the player chose (F4's time)."""
         x = self.x
         if x.pending <= 0:
             x.pending, x.running = 0, False
+            self.wind_from = None
             return 0
-        used = min(draw_between(rnd, T.TIMEOUT_SIGNAL), x.pending, max(0, x.left - 1))
+        signal = draw_between(rnd, T.TIMEOUT_SIGNAL)
+        wound = self.wound()
+        used = min(max(signal, wound), x.pending, max(0, x.left - 1))
+        if wound:
+            debuglog.event("extras", "clock_timeout", quarter=self.state.quarter, left=x.left, signal=signal, wound=wound, used=used)
         x.left -= used
         x.pending, x.running = 0, False
+        self.wind_from = None
         return used

@@ -23,6 +23,9 @@ calls (13; Stadium sounds is 14, Broadcast crew 15, Quarterbacks 16, Depth chart
 higher, faster and a little louder by the game's own voices and NVDA, speech/lift.py) or off; Enter, Left and Right switch it; it applies at
 once, also in the game being played. While JAWS speaks the game the item says that JAWS says the words only.
 Issue 10 (D-223): Depth charts left this menu for F9, Franchise (extras/franchise/menus.py), so the menu has 17 items: Quarterbacks 16, Reset 17.
+Issue 17 (D-244) added Clock updates before Reset (17; Reset 18): on (the default: after every play the clock's state is said, and F4 says
+the time as it runs down while the player chooses, extras/clock.py) or off; Enter, Left and Right switch it; it applies at once, also in
+the game being played; " used with the N. F. L. rules " after its value while Rules is Classic.
 Rules = N. F. L. rules also makes the program read the extras' files (remarks.txt, CUSTOMIZABLE_CONTENT 13).
 """
 from __future__ import annotations
@@ -40,10 +43,10 @@ DEFAULTS = {"rules": NFL, "nx_timeouts": True, "nx_penalties": True, "nx_onside"
             "nx_onside_question": "always", "nx_onside_question_chosen": False, "nx_qb_runs": True, "nx_challenges": True,    # design 12.1 (NQ2: the N. F. L. rules since SX.9)
             "nx_offense_playbook": TEAM_KEY, "nx_defense_playbook": TEAM_KEY,      # SX.10e (D-095, Q-035): the team's playbook is the default
             "nx_playbook_chosen": False, "nx_broadcast": True, "nx_stadium": True, "nx_crew_talk": DEFAULT_TALK,
-            "nx_play_calls": DEFAULT_CALLS, "nx_excited_voice": DEFAULT_EXCITED_VOICE}
+            "nx_play_calls": DEFAULT_CALLS, "nx_excited_voice": DEFAULT_EXCITED_VOICE, "nx_clock_news": True}
 SWITCHES = ("rules", "nx_timeouts", "nx_challenges", "nx_qb_runs", "nx_penalties", "nx_onside", "nx_onside_question", "nx_onside_question_chosen",
             "nx_offense_playbook", "nx_defense_playbook", "nx_playbook_chosen", "nx_broadcast", "nx_stadium", "nx_crew_talk",
-            "nx_play_calls", "nx_excited_voice")
+            "nx_play_calls", "nx_excited_voice", "nx_clock_news")
 
 
 def rules_label(game_settings) -> str:
@@ -79,6 +82,15 @@ def excited_label(game_settings, speech=None) -> str:
         engine = None
     if getattr(engine, "name", "") == "JAWS":
         text += "." + X.text("NXM-76")
+    return text
+
+
+def clock_news_label(game_settings) -> str:
+    """Issue 17 (D-244): F9, Rules, Clock updates and its value."""
+    on = bool(getattr(game_settings, "nx_clock_news", True))
+    text = X.text("NXM-77") + ": " + X.text("NXM-78" if on else "NXM-79")
+    if game_settings.rules != NFL:
+        text += "." + X.text("NXM-22")
     return text
 
 
@@ -176,6 +188,16 @@ def rules_menu(game, speech, keys) -> None:
     def excited_item() -> str:
         return excited_label(settings, speech)
 
+    def change_clock_news(step: int = 1) -> None:
+        """Issue 17 (D-244): on or off; saved at once. The clock reads it at every use, so it needs no new rules object."""
+        from ..data import debuglog
+        settings.nx_clock_news = not bool(getattr(settings, "nx_clock_news", True))
+        options.save()
+        debuglog.event("setting", "change", name="nx_clock_news", value="on" if settings.nx_clock_news else "off")
+
+    def clock_news_item() -> str:
+        return clock_news_label(settings)
+
     def toggle_stadium(step: int = 1) -> None:
         settings.nx_stadium = not settings.nx_stadium
         apply()
@@ -252,7 +274,8 @@ def rules_menu(game, speech, keys) -> None:
         text = (rules_item() + ". " + timeouts_item().rstrip() + ". " + challenges_item().rstrip() + ". "
                 + qb_runs_item().rstrip() + ". " + onside_item().rstrip() + ". " + question_item().rstrip() + ". "
                 + penalties_item().rstrip() + ". " + offense_playbook_item().rstrip() + ". " + defense_playbook_item().rstrip()
-                + ". " + broadcast_item().rstrip() + ". " + talk_item() + ". " + calls_item() + ". " + excited_item() + ". " + stadium_item())
+                + ". " + broadcast_item().rstrip() + ". " + talk_item() + ". " + calls_item() + ". " + excited_item() + ". " + stadium_item()
+                + ". " + clock_news_item())
         if tuple(getattr(settings, name) for name in SWITCHES) == before:
             return text
         apply()
@@ -277,6 +300,8 @@ def rules_menu(game, speech, keys) -> None:
         Item(stadium_item, enter=lambda: (toggle_stadium(), changed(stadium_item))[1], change=toggle_stadium),
         Item(crew_item, enter=choose_crew),
         Item(lambda: quarterbacks.item_label(settings), enter=lambda: (quarterbacks.quarterbacks_menu(game, speech, keys), None)[1]),    # D-132
+        Item(clock_news_item, enter=lambda: (change_clock_news(), clock_news_item() + "," + X.text("NXM-69"))[1],
+             change=change_clock_news),          # issue 17 (D-244)
         Item(lambda: X.text("NXM-19"), enter=reset),
     ]
     SpokenMenu(speech, keys, X.text("NXM-07"), items, help_text=X.text("NXM-36"), space_enters=True,

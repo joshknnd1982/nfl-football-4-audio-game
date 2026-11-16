@@ -10,6 +10,14 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## Unreleased (since 1.0.4)
+
+### Clock updates: the game says when the clock runs, and F4 gives the time as it runs down
+From a tester's report on GitHub issue 17: the clock seemed to keep running after a man was pushed out of bounds, there was no way to know when the clock started to run, and no way to hear the time as it ran down. The first is the real N. F. L. rule: out of bounds stops the clock until the next snap only in the last 2 minutes of the first half and the last 5 minutes of the game; earlier, the clock starts again when the referee signals the ball ready, a few seconds after the play. Now, with the N. F. L. rules, a new item in F9, Rules, "Clock updates" (on by default, just before Reset), makes this audible: after every play one short sentence says "the clock is running", "the clock is stopped", "the clock starts again on the referee's signal" (out of bounds early in a half) or "the clock is stopped until the snap" (out of bounds late). While you choose your play the clock runs down second by second when it is running, and F4 says the time now followed by whether the clock is running; it never runs further than the time that would run before the snap, so the game's clock is the same as before however slow or quick you are. A time out stops the clock where F4 said. F1 says the clock the same way. F6 explains the out of bounds rule and the item. With Clock updates off, everything is as in 1.0.4. The game's log now writes the clock after every play, so a report shows why it ran or stopped.
+
+**How to test:** with the N. F. L. rules, play a game. After each play you should hear whether the clock is running. In the first quarter, when a runner is pushed out of bounds, you should hear "the clock starts again on the referee's signal"; in the last 5 minutes of the game, "the clock is stopped until the snap". After a run that stays in bounds, wait in the play menu and press F4 a few times: the time should go down and end with "the clock is running". Then turn F9, Rules, Clock updates off and check that the sentences stop.
+**Tell us:** whether one sentence after every play is right, or too much (asked on issue 17), and whether F4's running time is useful.
+
 ## 1.0.4 (2026-11-15, test build)
 
 Built from a tester's answer on GitHub issue 11: in overtime's last two minutes too, a time out pressed during a play is called as soon as the play ends. Everything of 1.0.3 and earlier below is in it.
@@ -246,27 +254,11 @@ Before, a new name you typed in F9, Franchise, your roster (a player, change his
 
 **Tell us:** if a character you need in a name is still left out.
 
-## 0.16.15 (2026-11-06, test build)
-
-Keys for laptops that have no Home, End, Page Up or Page Down. Everything of 0.16.14 and earlier below is still to be tested too.
-
-### Stand-in keys for Home, End, Page Up and Page Down
-Many laptop keyboards, Acer's among them, have no Home, End, Page Up or Page Down key, and the game uses them in the F9 menus and lists, in the saved game and franchise questions, and in your franchise roster. Now four keys that every keyboard has do the same work, in Classic and in the N. F. L. rules:
-- the open bracket is Page Up (on a US keyboard, the key right of P),
-- the close bracket is Page Down (the next key to the right),
-- the semicolon is Home (the key right of L),
-- the apostrophe is End (the next key to the right).
-
-While you type a name they are not used this way, so typing is not disturbed (a name keeps only letters, digits and spaces, as in the original). F5 and F6 name the four keys.
-
-**How to test:** press F9 and open a long list, for example Speech settings and then the voices, or your franchise roster. Press the close bracket: the list should move ten items down, as Page Down does. The open bracket moves ten up, the apostrophe goes to the last item and the semicolon to the first. At a long saved game or franchise question, the brackets should turn the pages.
-
-**Tell us:** if your keyboard lacks another key the game uses.
-
 ## Older versions
 
-The versions before 0.16.15 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
+The versions before 0.16.16 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
 
+- [0.16.15 to 0.16.15](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.15-to-0.16.15.md)
 - [0.16.14 to 0.16.14](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.14-to-0.16.14.md)
 - [0.16.13 to 0.16.13](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.13-to-0.16.13.md)
 - [0.16.11 to 0.16.12](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.11-to-0.16.12.md)

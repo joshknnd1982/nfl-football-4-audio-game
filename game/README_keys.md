@@ -5,7 +5,7 @@ Every key the game handles, where it works and what it does. This list is made f
 - **F1**: Anywhere. Repeats the current prompt, then says where the help is. (original game)
 - **F2**: Anywhere, and in questions and lists. Plays the instant replay of what was just said. (original game)
 - **F3**: Anywhere in a game. Says the score. (original game)
-- **F4**: Anywhere in a game. Says the game clock; with the N. F. L. rules it also says whether the clock is running. (original game)
+- **F4**: Anywhere in a game. Says the game clock; with the N. F. L. rules and F9, Rules, Clock updates on (the default) it says the time as it runs down while you choose your play, and whether the clock is running, stopped, or starts again on the referee's signal. (original game)
 - **F5**: Anywhere. Reads the special key instructions. (original game)
 - **F6**: Anywhere. Reads the game instructions. (original game)
 - **F7**: Anywhere. Reads the football words and hints; in Classic it also describes the original's plays. (original game)

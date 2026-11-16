@@ -749,23 +749,31 @@ class NflRules(ClassicRules):
                 return then
         keeps = x.last_kind in RUNNING_KINDS and state.wisoff == x.last_offense and not x.last_two_point
         ready = False
+        held = False                              # issue 17: out of bounds late in a half: stopped until the snap
         if keeps and x.out_of_bounds:
             if late_window(state.quarter, x.left, x.period, x.postseason):
                 keeps = False                     # stopped until the snap
+                held = True
             else:
                 ready = True                      # stopped, restarted on the ready signal: a shorter runoff
+        why = ("out of bounds late, stopped until the snap" if held else "out of bounds, restarts on the ready signal" if ready
+               else "in bounds, keeps running" if keeps else "stopped by the play")
         cap = None
         if x.foul_clock:                          # SX.3: after a foul, as if it had not happened, except 4-3-2 (e), (g)
             keeps, ready = clock_after_foul(x, state.quarter, keeps,
                                             state.score(state.wisoff) > state.score(other(state.wisoff)))
             cap = R.RUNOFF_PLAY_CLOCK if x.foul_clock == "runoff" else R.PLAY_CLOCK_AFTER_PENALTY
             x.foul_clock = ""
+        if x.foul_clock == "" and cap is not None:
+            why = "after a foul"
         if self.review.clock_held:                # SX.6: a time out was called in this dead-ball period before a challenge that
             keeps = ready = False                 # changed the play: the clock stays stopped to the snap
             self.review.clock_held = False
+            why = "a time out before a challenge"
         if self.timeout_kept:                     # H18: the T key pressed during the play: granted now, before the runoff is drawn, so
             if self.grant_kept_timeout(state) == TIMEOUT_GRANTED:     # the clock stops when the play ends (SX.13: 3-36-2; it cost
                 keeps = ready = False                                 # the runoff's seconds before)
+                why = "the time out kept from the play"
         if self.review.take_runoff() and (keeps or ready):
             # SX.13 (15-5-2, 4-7-4): the reversed play began after the two-minute warning and its corrected result keeps the clock
             # running: ten seconds run off, then both clocks start on the ready signal with a play clock of 30; under ten seconds the
@@ -777,14 +785,23 @@ class NflRules(ClassicRules):
             cap = R.RUNOFF_PLAY_CLOCK
         lead = state.score(state.wisoff) - state.score(other(state.wisoff))
         self.clock.runoff(self.rnd, keeps, ready, lead, cap)
+        stopped_by = None
         if x.timeouts_on and x.left > 0:          # at 0:00 the period is over: no timeout can be granted
             for side in (state.wisoff, other(state.wisoff)):
                 if side not in self.auto_sides or timeouts.refusal(x, side) is not None:
                     continue
                 if timeouts.computer_calls(timeouts.situation(state, x, side), self.rnd):
                     self.grant(state, side)
+                    stopped_by = side
+        # issue 17 (rule 0.15): the clock after every play, so a report shows why it ran or stopped
+        debuglog.event("extras", "clock_after_play", quarter=state.quarter, left=x.left, pending=x.pending, running=x.running,
+                       ready_cut=self.clock.ready_cut, out_of_bounds=x.out_of_bounds, kind=x.last_kind or None, why=why,
+                       warning=x.warning_due, timeout_by=stopped_by, news=self.clock.news_on())
         if x.running and x.pending >= x.left > 0:
             self.game.say5(X.text("NXC-05") if x.left == 1 else X.text("NXC-03", n=x.left))
+        elif self.clock.news_on() and x.left > 0 and not state.two_point and not x.warning_due:
+            # issue 17 (D-244): the clock's state after the play, so the player knows when it is running
+            self.game.say5(X.text("NXC-45") if held and not x.running else self.clock.state_text())
         if x.fair_catch_kick and self.kicks.fair_catch_question(state):     # SX.10d (G26-13, Q-P18): the player said yes
             return FAIR_CATCH_KICK
 
@@ -1129,7 +1146,7 @@ class NflRules(ClassicRules):
 
     def extra_situation(self, state) -> list[str]:
         x = state.extras
-        lines = [X.text("NXC-01") if x.running else X.text("NXC-02")]
+        lines = [self.clock.state_text() if self.clock is not None and self.clock.news_on() else (X.text("NXC-01") if x.running else X.text("NXC-02"))]
         if x.timeouts_on:
             text_id = "NXT-13" if x.timeouts_of(1) == 1 else "NXT-08"
             lines.append(X.text(text_id, n=x.timeouts_of(1), team=state.teams.get(2, ""), m=x.timeouts_of(2)))
@@ -1137,7 +1154,7 @@ class NflRules(ClassicRules):
 
     def extra_help(self, key: str) -> list[str]:
         ids = {KEY_F5: ("NXH-02", "NXH-01", "NXH-23", "NXH-09", "NXH-47", "NXH-14", "NXH-18", "NXH-27"),
-               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-83", "NXH-84", "NXH-85", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-79", "NXH-80", "NXH-81", "NXH-05", "NXH-06", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
+               KEY_F6: ("NXH-03", "NXH-04", "NXH-63", "NXH-64", "NXH-65", "NXH-66", "NXH-83", "NXH-84", "NXH-85", "NXH-70", "NXH-67", "NXH-68", "NXH-71", "NXH-75", "NXH-79", "NXH-80", "NXH-81", "NXH-05", "NXH-06", "NXH-88", "NXH-89", "NXH-24", "NXH-25", "NXH-10", "NXH-11", "NXH-15",
                         "NXH-16", "NXH-19", "NXH-20", "NXH-22", "NXH-28", "NXH-29", "NXH-30") + MENU_HELP_F6,     # SX.12: overtime after the clock
                KEY_F7: ("NXH-07", "NXH-08", "NXH-26", "NXH-12", "NXH-13", "NXH-17", "NXH-21", "NXH-31", "NXH-32",
                         "NXH-33") + descriptions.F7_WORD_ROWS}.get(key, ())

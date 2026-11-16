@@ -2796,6 +2796,13 @@ TEXTS: dict[str, str] = {
     'NXI-R41': ' your roster is full, and nobody on it can be released for him now. ',
     'NXI-R42': ' that cannot be done now. ',
     'NXI-R43': ' <player> comes back on a new contract of <contract>. ',
+    'NXM-77': 'Clock updates',
+    'NXM-78': 'on, the clock is said after every play, and F4 says the time as it runs down',
+    'NXM-79': 'off, F4 says the time at the end of the last play',
+    'NXC-44': " the clock starts again on the referee's signal. ",
+    'NXC-45': ' the clock is stopped until the snap. ',
+    'NXH-88': " A run or catch out of bounds stops the clock until the snap only in the last 2 minutes of the first half and last 5 of the game. Earlier it starts again on the referee's signal, as in the N. F. L. ",
+    'NXH-89': ' F9, Rules, Clock updates says after every play whether the clock is running, and F4 then says the time as it runs down. On by default; Enter turns it off or on. ',
 }
 
 SPEAKERS: dict[str, str] = {
@@ -5587,6 +5594,13 @@ SPEAKERS: dict[str, str] = {
     'NXI-R41': 'say5',
     'NXI-R42': 'say5',
     'NXI-R43': 'say5',
+    'NXM-77': 'say5',
+    'NXM-78': 'piece',
+    'NXM-79': 'piece',
+    'NXC-44': 'say5',
+    'NXC-45': 'say5',
+    'NXH-88': 'say5',
+    'NXH-89': 'say5',
 }
 
 KINDS: dict[str, str] = {
@@ -8378,6 +8392,13 @@ KINDS: dict[str, str] = {
     'NXI-R41': 'sentence',
     'NXI-R42': 'sentence',
     'NXI-R43': 'sentence',
+    'NXM-77': 'menu',
+    'NXM-78': 'piece',
+    'NXM-79': 'piece',
+    'NXC-44': 'sentence',
+    'NXC-45': 'sentence',
+    'NXH-88': 'help',
+    'NXH-89': 'help',
 }
 
 REMARK_POOLS: dict[str, tuple[str, ...]] = {
