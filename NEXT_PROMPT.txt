@@ -1,4 +1,4 @@
-NEXT SESSION BLOCK (rewritten WHOLE 2026-11-15 at the end of S-D for Dennis's follow-up answers on GitHub issues 11 and 14 (D-240 to D-242), which also built and published test build 1.0.3 with the work of the three sessions before it (D-232 to D-239) and replied with its links on issues 6, 10, 11, 12, 14 and 16; the prompt still takes any request)
+NEXT SESSION BLOCK (rewritten WHOLE 2026-11-15 at the end of S-D for Dennis's follow-up answers on GitHub issues 11 and 14 (D-240 to D-242), which also built and published test build 1.0.3 with the work of the three sessions before it (D-232 to D-239) and replied with its links on issues 6, 10, 11, 12, 14 and 16; then, at the owner's answer, owner rule 0.42 for every football game; the prompt still takes any request)
 
 How to read this block: it is written for any AI coding agent (Claude Code, OpenAI Codex or another); "the agent" is whichever one runs the session. Models are named by tier (AGENTS.part02.md 3.4): Tier 1 cheapest and fastest, Tier 2 everyday, Tier 3 strong, Tier 4 top. Claude Code today: Tier 1 Haiku 5.5, Tier 2 Sonnet 5.5, Tier 3 Opus 5.5, Tier 4 Fable 5.1. Codex: the Codex section of C:\Users\joshk\OneDrive\dev\games\tools\MODEL_GUIDE.md.
 
@@ -28,9 +28,9 @@ Decisions made automatically:
   - D-241: the field goal team also kicks the player's extra point and fair catch kick; the computer's field goal gets no package (no block team was asked for); the kicks are the formations' list's last five items, so no older menu count moves.
   - D-242: "each half" read as the second and fourth quarters with 2:00 or less at the press; overtime kept as D-233 and asked (Q-098).
   - One build and one voice: the other sessions stopped and this session replied on all six issues.
+  SETTLED by the owner ("Yes, all football games", 2026-11-15): owner rule 0.42 in AGENTS.part03.md amends 0.22 for every American football game: a T pressed during a live play is not kept, except in the last two minutes of a half, where the time out is taken when the play ends; overtime is decided per game (nfl4: Q-098). Playbook 7.16, fixesforgames A76, B-W49 and B-W50 say it; sync_playbooks run, all copies identical. nfl4 already conforms (D-233, D-242): no code changed.
 Owner-needed (one at a time; the recommended answer first):
-  1. Whether owner rule 0.22's "T pressed while a play is running is kept and the timeout is taken the moment that play ends" changes for every football game as Dennis chose for nfl4: not kept, except in the last two minutes of a half (recommended: yes, write it into rule 0.22 for every American football game, B-W49, B-W50).
-  2. Listen when you like: PLAYTEST_LIST 180 to 194 (192 the computer's rest at 5:00, 193 the kick packages, 194 the late-half T).
+  1. Listen when you like: PLAYTEST_LIST 180 to 194 (192 the computer's rest at 5:00, 193 the kick packages, 194 the late-half T).
 For any problem, save a problem report right then (F9, Speech settings, "Save a problem report").
 Open questions (work\sr4\list_questions.py, which knows the status asked-on-github): Q-001 to Q-091 and Q-093 to Q-097 answered or closed; asked on GitHub and waiting for a player: Q-092 (issue 13, releases in the offseason or of a hurt man) and Q-098 (issue 11, overtime's last two minutes); Q-084 (issue 14, a menu item as well as U) is "a for now": ask it again once on issue 14 on or after 2026-11-18, as the tester wished. Nothing is blocked by them.
 
