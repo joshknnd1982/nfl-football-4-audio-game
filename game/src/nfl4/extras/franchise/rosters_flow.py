@@ -233,7 +233,7 @@ def download(fetch, folder: str, stop: threading.Event | None = None, today: str
     or the maintainer's on the game's GitHub page when that one answers within GITHUB_GRACE seconds of the pages and is newer), or why not.
     When the NFL's pages cannot be read, a newer checked file of GitHub's is the answer. Writes nothing."""
     from .. import roster_live as L
-    today = today or time.strftime("%Y-%m-%d")
+    today = today or time.strftime("%Y-%m-%d %H:%M")     # GitHub issue 18 (D-245): the time of day, so a second update on one day is newer
     local_text = _local_text(folder, ROSTERS_FILE)
     local = text_version(local_text)
     box: dict = {}

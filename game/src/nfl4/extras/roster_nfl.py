@@ -252,15 +252,16 @@ def build_team(t, page_men, depth, nv_rows, nv_chart, sl_rows, known=None):
     nv_by = {r.get("full_name", ""): r for r in nv_rows}
     sl_match = Matcher([p.get("full_name", "") for p in sl_rows])
     sl_by = {p.get("full_name", ""): p for p in sl_rows}
-    own_by_slug = {}                                   # slug -> [(tier, row index, label)]
+    own_by_slug = {}                                   # slug -> [(tier, row index, place in the cell, label)]
     roles = {"KR": [], "PR": []}
     for ri, (table, label, tiers) in enumerate(own_rows):
         for ti, cell in enumerate(tiers):
-            for slug, name in cell:
+            for ci, (slug, name) in enumerate(cell):
                 if label in KR_LABELS + PR_LABELS:
                     roles["KR" if label in KR_LABELS else "PR"].append((ti, ri, slug, name))
                 elif table != "Special Teams" or label in ("K", "PK", "P", "LS"):
-                    own_by_slug.setdefault(slug, []).append((ti, ri, label))
+                    # GitHub issue 18 (D-245): two men in one cell ("Bhayshul Tuten, Chris Rodriguez Jr.", co-starters) keep the page's order
+                    own_by_slug.setdefault(slug, []).append((ti, ri, ci, label))
 
     men, decided, open_men = [], {}, []
     for i, pm in enumerate(page_men):
@@ -274,7 +275,7 @@ def build_team(t, page_men, depth, nv_rows, nv_chart, sl_rows, known=None):
         if hit:
             rank, grp, abb = chart_by[name_key(hit)]
             candidates.append(("nflverse chart %s" % abb, map_chart(abb, grp)))
-        for ti, ri, label in sorted(own_by_slug.get(pm.slug, [])):
+        for ti, ri, _ci, label in sorted(own_by_slug.get(pm.slug, [])):
             candidates.append(("team chart %s" % label, map_label(label, three4)))
         nv = nv_match.find(pm.name)
         if nv:
@@ -304,8 +305,8 @@ def build_team(t, page_men, depth, nv_rows, nv_chart, sl_rows, known=None):
                 pm.name, pm.word, first[0], first[1], choice))
         own = sorted(own_by_slug.get(pm.slug, []))
         nv_rank = chart_by[name_key(hit)][0] if hit else 99
-        if own and family(map_label(own[0][2], three4) or choice) in (family(choice), None):
-            depth_key = (0, own[0][0], own[0][1], i)
+        if own and family(map_label(own[0][3], three4) or choice) in (family(choice), None):
+            depth_key = (0, own[0][0], own[0][1], own[0][2], i)
         elif hit:
             depth_key = (1, nv_rank, 0, i)
         else:

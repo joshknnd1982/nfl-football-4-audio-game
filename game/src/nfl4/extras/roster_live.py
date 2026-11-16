@@ -9,7 +9,10 @@ So the game reads the same official pages the maintainer's script reads first (D
 club site (https://<team site>/team/players-roster/ and /team/depth-chart/), and converts each team with the script's own code (extras/roster_nfl.py:
 the lists, the numbers, Madden's 22 positions from the team's chart and the page's word, the open sides balanced, the return roles). Then:
   * a man the base file (the player's, or a newer checked file of the game's GitHub page) has keeps its position while the page puts him in the
-    same group, and its depth order (the team's page can lag the news, D-177); a new man gets the conversion's position and goes behind them;
+    same group; a new man gets the conversion's position;
+  * the depth order of each position is the team's own depth chart page for the men it lists (GitHub issue 18, D-245: until then the base file's
+    order was kept for every man it had, so a new starter never came first); the men the page does not list follow, in the base file's order, the
+    new ones last; the log line nfl_depth_order names each position whose starters changed;
   * the age is the page's Age, the seasons before this one the page's Exp less one ("R", a rookie: 0), or the player's file's seasons for a man it
     had (the maintainer's checked number);
   * a game-day elevation goes back to the practice squad (the script's return_elevations, against the player's file);
@@ -159,19 +162,55 @@ def fetch_pages(fetch, stop: threading.Event | None = None, workers: int = WORKE
     return {} if stop is not None and stop.is_set() else results
 
 
-def keep_order(team: RF.Team, base: RF.Team | None) -> None:
-    """The base file's depth order for the active men it has at the same position (the maintainer's rule: an injured starter stays the starter,
-    only a reserve list moves him; a team's page can lag the news, D-177); the men new to a position come after them, in the chart's order."""
-    if base is None:
-        return
+def charted(page_men, depth) -> set:
+    """GitHub issue 18 (D-245): the name keys of the men the team's own depth chart page lists at a position (the rows build_team orders by: not the
+    returners' rows, not the holder's; of the special teams only K, P and LS)."""
+    if not depth:
+        return set()
+    _asof, rows = depth
+    slugs = set()
+    for table, label, tiers in rows:
+        if label in N.KR_LABELS + N.PR_LABELS or (table == "Special Teams" and label not in ("K", "PK", "P", "LS")):
+            continue
+        slugs.update(slug for cell in tiers for slug, _name in cell if slug)
+    return {N.name_key(pm.name) for pm in page_men if pm.slug and pm.slug in slugs}
+
+
+def keep_order(team: RF.Team, base: RF.Team | None, on_chart=frozenset()) -> list:
+    """The depth order of each position (GitHub issue 18, D-245, which replaces D-196's "the known men's depth order kept"): the men the team's own
+    depth chart page lists (`on_chart`, name keys) in the page's order, as build_team put them; then the men the page does not list, those the base
+    file has at that position in the base file's order, then the new ones. Until D-245 the base file's order was kept for every man it had, so the
+    order of the file the game shipped never changed: the Vikings' page of 2026-11-16 started Kirk Cousins, traded from the Raiders, and the game put
+    him fourth behind the three men of the shipped file. Returns [(position, starters before, starters now)] of the positions whose starters changed
+    against the base file, for the log."""
     rank = {}
-    for i, m in enumerate(base.active()):
+    starters_before: dict = {}
+    for i, m in enumerate(base.active() if base is not None else ()):
         rank.setdefault((N.name_key(m.name), m.pos), i)
+        starters_before.setdefault(m.pos, []).append(m.name)
     active = [m for m in team.men if m.status == ""]
     order = {p: n for n, p in enumerate(RF.MADDEN)}
-    placed = sorted(enumerate(active), key=lambda im: (order.get(im[1].pos, 99), 0 if (N.name_key(im[1].name), im[1].pos) in rank else 1,
-                                                      rank.get((N.name_key(im[1].name), im[1].pos), 0), im[0]))
+
+    def key(im):
+        n, m = im
+        k = (N.name_key(m.name), m.pos)
+        if N.name_key(m.name) in on_chart:
+            return (order.get(m.pos, 99), 0, 0, n)
+        return (order.get(m.pos, 99), 1 if k in rank else 2, rank.get(k, 0), n)
+    placed = sorted(enumerate(active), key=key)
     team.men = [m for _i, m in placed] + [m for m in team.men if m.status != ""]
+    if base is None:
+        return []
+    changed = []
+    now: dict = {}
+    for m in team.active():
+        now.setdefault(m.pos, []).append(m.name)
+    for pos in RF.MADDEN:
+        k = RF.STARTERS.get(pos, 1)
+        before, after = starters_before.get(pos, [])[:k], now.get(pos, [])[:k]
+        if before != after:
+            changed.append((pos, before, after))
+    return changed
 
 
 def convert(pages: dict, base_text: str) -> Live:
@@ -208,7 +247,13 @@ def convert(pages: dict, base_text: str) -> Live:
                 team.roles[role] = [n for n in team.roles.get(role, []) if n != m.name]
         live.notes.extend("T%02d: %s" % (t, n) for n in built.notes if not n.startswith(("UNKNOWN LIST", "NO POSITION")))
         live.notes.extend("T%02d: %s left out: his list or position on the team's page is not one the game knows" % (t, m.name) for m in unknown)
-        keep_order(team, base_teams.get(t))
+        on_chart = charted(page_men, depth)
+        changed = keep_order(team, base_teams.get(t), on_chart)
+        for pos, before, after in changed:                  # issue 18: the log line that would have shown the bug
+            live.notes.append("T%02d %s starters %s (the team's depth chart; the file before had %s)" % (
+                t, pos, "/".join(after) or "nobody", "/".join(before) or "nobody"))
+        debuglog.event("rosters", "nfl_depth_order", logging.INFO, team=nick, charted=len(on_chart), chart_date=(depth[0] if depth else "") or None,
+                       starters_changed=["%s: %s" % (pos, "/".join(after)) for pos, _b, after in changed][:30] or None)
         _with_ages(team, page_men, {k: (m.age, m.seasons) for k, m in mine.items()})
         live.teams[t] = team
         live.read.append(t)

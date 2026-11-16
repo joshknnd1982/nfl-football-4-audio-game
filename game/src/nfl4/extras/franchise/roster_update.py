@@ -61,11 +61,22 @@ def spoken_date(version: str) -> str:
     return (version or "").strip()
 
 
+_AS_OF_TIME = re.compile(r"as of\s+\d{4}-\d{2}-\d{2}[ ,]+(\d{2}:\d{2})\b", re.IGNORECASE)
+
+
+def time_of(version: str) -> str:
+    """"14:05" of "season 2026, as of 2026-11-16 14:05" (GitHub issue 18, D-245: the game's own update writes the time of day), "" without one."""
+    found = _AS_OF_TIME.search(version or "")
+    return found.group(1) if found else ""
+
+
 def newer(candidate: str, current: str) -> bool:
-    """`candidate` is newer than `current`: by their dates when both have one, else when they differ (a player's own VERSION line without a date)."""
+    """`candidate` is newer than `current`: by their dates when both have one, the time of day on the same date (a line without a time is the
+    earliest of its day; GitHub issue 18, D-245: rosters got again later on the day a franchise was made are offered to it), else when they
+    differ (a player's own VERSION line without a date)."""
     a, b = date_of(candidate), date_of(current)
     if a and b:
-        return a > b
+        return (a, time_of(candidate)) > (b, time_of(current))
     return bool((candidate or "").strip()) and (candidate or "").strip() != (current or "").strip()
 
 
