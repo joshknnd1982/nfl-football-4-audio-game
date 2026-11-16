@@ -117,7 +117,7 @@ from . import remarks
 from . import rules_2026 as R
 from . import timeouts
 from . import tuning as T
-from .clock import RUNNING_KINDS, NflPeriodClock, late_window
+from .clock import RUNNING_KINDS, NflPeriodClock, is_warning_period, late_window
 from .defense_flow import DefenseFlow
 from .kick_flow import KickFlow
 from .offense_flow import W_FOR, W_NO_BOOK, OffenseFlow, text_for
@@ -826,10 +826,11 @@ class NflRules(ClassicRules):
                 # issue 11 (Q-089, D-233, the tester's "a, with an exception"): the ball is snapped, so the key is not kept for after the play;
                 # one sentence says so when the play ends. Q-095 (D-242, the tester's "b"): in the last two minutes of the second and the fourth
                 # quarter it is still kept and the time out is called as soon as the play ends (as before D-233), to save the seconds.
+                # Q-098 (D-243, the tester's "1 b"): the last two minutes of overtime too.
                 self.timeout_late = True
                 self._log_timeout_key(state, where, TIMEOUT_LATE)
                 return TIMEOUT_KEPT
-            self._log_timeout_key(state, where, TIMEOUT_KEPT, "the last two minutes of a half" if where == "live play" else "")
+            self._log_timeout_key(state, where, TIMEOUT_KEPT, ("the last two minutes of overtime" if state.quarter >= 5 else "the last two minutes of a half") if where == "live play" else "")
             return TIMEOUT_KEPT
         self.game.stopspeech()
         return self._call_timeout(state, "before the snap" if undo is not None else "dead ball", undo, called)
@@ -921,9 +922,14 @@ class NflRules(ClassicRules):
     @staticmethod
     def late_in_half(state) -> bool:
         """Q-095 (D-242): the last two minutes of the second or the fourth quarter (the two-minute warning's time, 4-1-3), where a T pressed
-        during a play is kept for the end of the play. Never in overtime (the tester was asked about "each half")."""
+        during a play is kept for the end of the play. Q-098 (D-243, the tester's "1 b"): the last two minutes of overtime too, in every
+        overtime period that has a two-minute warning (the regular season's one period, 16-1-3 (e); every second play-off period, 16-1-4)."""
         x = state.extras
-        return x is not None and state.quarter in (2, 4) and 0 <= x.left <= LATE_T_SECONDS
+        if x is None or not 0 <= x.left <= LATE_T_SECONDS:
+            return False
+        if state.quarter in (2, 4):
+            return True
+        return state.quarter >= 5 and is_warning_period(x.period, x.postseason)
 
     def grant(self, state, side: int) -> None:
         """A timeout: charged, the clock stopped after u seconds, the whistle (foot11), the announcer, a remark 1 in 3."""

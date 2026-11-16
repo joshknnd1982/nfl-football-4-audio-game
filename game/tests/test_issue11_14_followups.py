@@ -212,7 +212,7 @@ def test_in_the_last_two_minutes_of_a_half_the_time_out_is_called_when_the_play_
     assert OUT in said and LATE not in said and list(rig.engine.s.extras.used) == [1, 0]
 
 
-@pytest.mark.parametrize("quarter,left", [(2, 121), (4, 500), (1, 60), (3, 30), (5, 60)])
+@pytest.mark.parametrize("quarter,left", [(2, 121), (4, 500), (1, 60), (3, 30)])
 def test_elsewhere_a_t_during_a_play_is_still_not_kept(tmp_path, quarter, left):
     rig = end_of_play(tmp_path, quarter, left)
     said = [t for t, _, _ in rig.said]
@@ -243,4 +243,4 @@ def test_the_sentence_and_the_key_help():
     from nfl4.game import key_list
     assert X.text("NXT-18").strip() == "the ball is live. you will have the time out when the play ends."
     row = [r for r in key_list.ROWS if r.id == "timeout"][0]
-    assert "last two minutes of the second and fourth quarters" in row.what and "is not kept for after the play" in row.what
+    assert "last two minutes of the second and fourth quarters and of overtime" in row.what and "is not kept for after the play" in row.what

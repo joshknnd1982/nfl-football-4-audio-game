@@ -96,7 +96,7 @@ ROWS: tuple[KeyRow, ...] = (
     KeyRow("timeout", "T", "Anywhere in a game being played, until the play is run", "calls your time out at once; before a field "
            "goal, a punt or a kicked try that is until the holder or punter has said hike, so you can ice the kicker; T pressed "
            "after the snap or the kick is not kept for after the play: no time out is taken and the play's end says so, except in the last two "
-           "minutes of the second and fourth quarters, where your time out is called as soon as that play ends; before a two-point try it asks again whether to kick or go for two; after you "
+           "minutes of the second and fourth quarters and of overtime, where your time out is called as soon as that play ends; before a two-point try it asks again whether to kick or go for two; after you "
            "chose your kick off and before the kick it asks your kick off again", "nfl", False, " T. calls a time out", consts=("KEY_T",), feature="timeouts"),
     KeyRow("back", "Backspace or Left, B", "In a list of plays or a playbook group", "go back one level, from a list of plays to the "
            "menu it came from; B chooses the Back item", "nfl", False, "Backspace, Left or B. goes back", letters="b", feature="playbooks"),

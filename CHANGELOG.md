@@ -10,6 +10,16 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 1.0.4 (2026-11-15, test build)
+
+Built from a tester's answer on GitHub issue 11: in overtime's last two minutes too, a time out pressed during a play is called as soon as the play ends. Everything of 1.0.3 and earlier below is in it.
+
+### In overtime's last two minutes too, a time out pressed during a play is called when the play ends
+From a tester's answer on GitHub issue 11. Since 1.0.3, a T pressed after the snap or the kick calls no time out, except in the last two minutes of the second and fourth quarters, where your time out is called as soon as the play ends. Asked whether overtime's last two minutes should work the same way, the tester chose yes. So now, with the N. F. L. rules, the same holds with 2:00 or less left in overtime: in the regular season's overtime period, and in the play-offs in the second and fourth overtime periods (the ones that have a two-minute warning, like the second and fourth quarters). Earlier in overtime, and in the first and third play-off overtime periods, a T after the snap is still not kept. The run-out question of a kick-off then says "the ball is live. you will have the time out when the play ends." F5, F6 and the README say it in the line for T.
+
+**How to test:** with the N. F. L. rules and time outs on, play a game into overtime (a close game in a season, or tie it late). With 2:00 or less left in overtime, choose a play and press T after the quarterback says "Hike!". Right after the play the referee should call your time out and the clock should stop. Earlier in overtime, the same T should give "your time out came after the snap, so none was taken" after the play.
+**Tell us:** whether the time out after the play comes when you expect it in overtime.
+
 ## 1.0.3 (2026-11-15, test build)
 
 Built from a tester's answers to the open questions on GitHub (issues 6, 10, 11, 12, 14 and 16) and his answers to the follow-up questions: a penalty on the try moves the extra point, a time out pressed after the snap is no longer saved for after the play except in the last two minutes of a half, more substitution features (the backup returners, packages by formation and for the kicks, the computer resting its starters late in a game), the kick-off set-up said again and a re-kick asked again after a time out, and Quarterbacks also in F9, Franchise. Everything of 1.0.2 and earlier below is in it.
@@ -253,21 +263,11 @@ While you type a name they are not used this way, so typing is not disturbed (a 
 
 **Tell us:** if your keyboard lacks another key the game uses.
 
-## 0.16.14 (2026-11-06, test build)
-
-The keyboard's volume, mute and media keys no longer interrupt the game. Everything of 0.16.13 and earlier below is still to be tested too.
-
-### The volume keys leave the game alone
-Before, pressing your keyboard's volume up or volume down key while the game spoke stopped the speech, the game said a stray symbol (NVDA read it as "macron" or "registered"), and the menu started again from its first item. Windows still changed the volume. Now the volume, mute, media (play, pause, next, previous) and browser keys belong to Windows only: the volume changes as always and the game goes on with what it was saying. This is the same in Classic and in the N. F. L. rules. F5 and F6 now say so.
-
-**How to test:** start a game and wait for a play menu. While the announcer is speaking, press volume up and volume down a few times. The volume should change, the sentence should go on to its end, and you should hear no symbol and no repeated menu. Then press Down: the menu should move to the next item as usual.
-
-**Tell us:** if any other key of your keyboard makes the game say a symbol.
-
 ## Older versions
 
-The versions before 0.16.14 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
+The versions before 0.16.15 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
 
+- [0.16.14 to 0.16.14](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.14-to-0.16.14.md)
 - [0.16.13 to 0.16.13](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.13-to-0.16.13.md)
 - [0.16.11 to 0.16.12](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.11-to-0.16.12.md)
 - [0.16.10 to 0.16.10](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.10-to-0.16.10.md)
