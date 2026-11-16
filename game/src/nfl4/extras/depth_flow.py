@@ -203,14 +203,31 @@ def _franchise_menu(game, speech, keys, store, say) -> None:
         store.save()
         return X.text("NXM-D12")
 
+    def real_order():
+        """GitHub issue 18, Q-100 (D-246): the real team's order of the newest rosters the game has."""
+        if game.play_engine is not None:
+            return X.text("NXI-54")
+        from .franchise import roster_update as RU
+        from .quarterbacks import base_names
+        real = base_names(game)                     # the rosters file as it is (the player's copy, else the shipped one), without nx_depth's choices
+        counts = FD.real_order(league, real) if RU.is_real(real) else None
+        if counts is None:
+            debuglog.event("franchise", "depth_real_order", done=False)                       # rule 0.15
+            return X.text("NXM-D17")
+        version = RU.version_of(real)
+        debuglog.event("franchise", "depth_real_order", done=True, rosters=version, **counts)   # rule 0.15: which starters changed
+        store.save()
+        return X.text("NXM-D16", label=RU.spoken_date(version))
+
     from .franchise.practice_flow import promote_player
     backend = L.FranchiseBackend(game, store, promote=lambda man: promote_player(game, speech, keys, store, words, league.players[man.key]))
     told = " ".join(t.strip() for t in backend.notices())                 # SR.6: a starter he chose who left the team
     title = X.text("NXM-D03", team=words.team_name(league.team)) + (" " + told + " " if told else "")
     items, order = L.position_items(speech, keys, backend, lambda key: _first_label(backend, key))
     items = [Item(lambda: X.text("NXM-L30"), enter=lambda: L.lineup_picker(speech, keys, backend, words.team_name(league.team)))] + items
-    items += [Item(lambda: X.text("NXM-K01"), enter=keys_menu), Item(lambda: X.text("NXM-D10"), enter=reset)]
-    order = [None] + order + [None, None]
+    items += [Item(lambda: X.text("NXM-K01"), enter=keys_menu), Item(lambda: X.text("NXM-D10"), enter=reset),
+              Item(lambda: X.text("NXM-D15"), enter=real_order)]                      # issue 18, Q-100 (D-246): next to the staff's order
+    order = [None] + order + [None, None, None]
     SpokenMenu(speech, keys, title, items, space_enters=True, digits_jump=True, on_key=lambda c, i: _describe(c, order[i])).run()
 
 

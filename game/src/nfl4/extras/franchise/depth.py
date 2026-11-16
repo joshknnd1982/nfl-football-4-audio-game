@@ -12,6 +12,7 @@ put first of his group is put first of his own position, and the group's list is
 from __future__ import annotations
 
 from ..depth_chart import ROLES, SITUATIONS
+from .. import roster_model as RM
 from ..roster_model import MADDEN
 from .league import LeagueError
 
@@ -75,6 +76,52 @@ def reset(league) -> None:
         chart[position] = real_roster.order_position(league, league.team, position, list(chart.get(position, ())), strict=True)
     from .aging import place_by_rating
     place_by_rating(league, league.team)
+
+
+def real_order(league, real) -> dict | None:
+    """GitHub issue 18, Q-100 (D-246; the tester and the owner chose b): the player's own team in the real team's order of the game's newest rosters
+    (`real`, the rosters.txt the game reads: the player's copy from "get the latest rosters", else the shipped one). Each position: the men of the file's
+    team in the file's order (the team's own depth chart, D-245), then the team's other men in the staff's order; the return roles in the file's order.
+    The men he put first are cleared and his key players stay. The real order is kept only where the staff's rule (D-170: a man clearly better below
+    a starter takes his place) would change it: those positions keep it as his own order, so the order heard now is the real team's; the others have
+    no order of his, so the third answer of a later roster offer brings their newer real order. Returns the counts for the log, or None when `real`
+    is not the real rosters (a franchise of the older rosters). No draw."""
+    from . import real_roster as RR
+    teams = RR.file_teams(real)
+    if not teams or not getattr(league, "roster_version", ""):
+        return None                                          # the file is not the real rosters, or the league was made of the older names
+    team = league.team
+    file_team = teams[team]
+    rank: dict = {}
+    for n, man in enumerate(file_team.men):
+        rank.setdefault(man.name.casefold(), n)
+    players = league.players
+    old_key = (league.depth or {}).get("key", {}) if isinstance(league.depth, dict) else {}
+    before = {position: list(ids) for position, ids in league.chart[team - 1].items()} if isinstance(league.chart[team - 1], dict) else {}
+    league.depth = {"order": {}, "key": {s: dict(r) for s, r in old_key.items()}}
+    chart = RR.clean_chart(league, team)
+    kept: dict = {}
+    listed_men = 0
+    for position in RM.MADDEN:
+        ids = list(chart.get(position, ()))
+        listed = sorted((pid for pid in ids if players[pid].name.casefold() in rank), key=lambda pid: (rank[players[pid].name.casefold()], pid))
+        want = listed + [pid for pid in ids if pid not in listed]
+        listed_men += len(listed)
+        if listed and RR.order_position(league, team, position, want)[:len(listed)] != listed:
+            kept[position] = listed
+        chart[position] = want
+    on_team = {players[pid].name.casefold(): pid for position in RM.MADDEN for pid in chart.get(position, ())}
+    for role in RM.ROLES:
+        listed = [on_team[n.casefold()] for n in file_team.roles.get(role, ()) if n.casefold() in on_team]
+        listed = [pid for n, pid in enumerate(listed) if pid not in listed[:n]]
+        chart[role] = listed + [pid for pid in chart.get(role, ()) if pid not in listed]
+    league.depth["order"] = kept
+    league.chart[team - 1] = chart
+    RR.refresh_view(league, team)
+    RR.update_sum(league, team)
+    after = league.chart[team - 1]
+    changed = [position for position in tuple(RM.MADDEN) + tuple(RM.ROLES) if list(before.get(position, ()))[:1] != list(after.get(position, ()))[:1]]
+    return {"listed": listed_men, "kept": sorted(kept), "starters_changed": changed}
 
 
 def set_key(league, situation: str, role: str, pid: int | None) -> None:

@@ -10,6 +10,16 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## 1.0.6 (2026-11-16, test build)
+
+Built from a tester's answer on GitHub issue 18: your depth chart in a franchise can go back to the real team's order. Everything of 1.0.5 and earlier below is in it.
+
+### Your depth chart in a franchise: "back to the real team's order"
+From a tester's answer on GitHub issue 18. Your depth chart in a franchise had "back to the staff's order", which puts the best rating first. Asked whether it should also have an item that puts your team back in the real team's order, the tester and the maintainer chose yes. So now, with the N. F. L. rules, F9, Franchise, your depth chart has a new last item, "back to the real team's order", right after "back to the staff's order". It puts every position of your team, and the kick and punt returners, in the order of the newest rosters the game has: the team's own depth chart on the day the rosters were got (F9, Franchise, get the latest rosters), or the rosters the game came with. Players the team's chart does not list (a man you signed or traded for) come after, in the staff's order. The moves you made yourself are cleared; your players for the key downs and moments stay. The game says the date of the rosters it used. The order stays until you change it: where the staff would put a clearly better backup first, the real order is kept for you. It is not offered during a game, and a franchise made before the game had the real rosters says it has no real order. The game's log says which starters it changed.
+
+**How to test:** in a franchise, open F9, Franchise, your depth chart and move a few men (U and N, or Enter on a man to make him the starter). Press End, then Enter on "back to the real team's order". You should hear "your team plays in the real team's order again, from the rosters of" and a date. Then check the starting lineup and a few positions against the team's own depth chart page of that day. To use today's charts, choose get the latest rosters first.
+**Tell us:** a position whose order is not the team's own depth chart of the rosters' day.
+
 ## 1.0.5 (2026-11-16, test build)
 
 Built from a tester's reports on GitHub issues 17 and 18: the game now says when the clock runs and F4 gives the time as it runs down, and get the latest rosters takes each team's depth chart as the team has it. Everything of 1.0.4 and earlier below is in it.
