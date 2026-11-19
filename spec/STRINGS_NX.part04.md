@@ -97,7 +97,7 @@
 - NXB-U40 (menu, say5): "Field goal and extra point team". U in a play menu, the substitutions (issue 14, Q-097, D-241): the package of a kick's team
 - NXH-69 (help, say5): " R in the offense menu chooses who your next pass goes to, a running back too when the play can throw to one. L in the defense menu chooses who blitzes. Enter keeps the play's own pick. ". F6 addition (SY.4, SY.5)
 - NXH-75 (help, say5): " Quarterbacks, in F9, Rules and in F9, Franchise after Depth charts, lists every team's quarterbacks. Enter on a team lists them; Enter on one makes him the starter from the next game. ". F6 addition (D-132; Q-088, D-239: in both menus)
-- NXH-79 (help, say5): " F9, Franchise, Depth charts: any team's order, position by position. In a franchise, your depth chart, right after your roster, is your own team; its last two items put your team back in the real team's order or in the staff's order. ". F6 addition (NX-D3; issue 10, D-223: the item is in F9, Franchise; issue 18, D-246: the last two items)
+- NXH-79 (help, say5): " F9, Franchise, Depth charts: any team's order, by position. In a franchise, your depth chart, after your roster, is your team; its last two items restore the real team's order or the staff's order. ". F6 addition (NX-D3; issue 10, D-223: the item is in F9, Franchise; issue 18, D-246: the last two items)
 - NXH-80 (help, say5): " Depth charts, key downs and moments: who gets the ball on third and fourth down, in the red zone, and in the last two minutes of a half. ". F6 addition (NX-D4)
 - NXM-58 (menu, say5): "Quarterbacks". F9, Rules, the item before Reset (D-132): every team's quarterbacks and the starter you choose; also F9, Franchise, after the depth chart (Q-088, D-239)
 - NXM-D01 (menu, say5): "Depth charts". F9, Franchise, after get the latest rosters, outside a franchise: every team's depth chart and key players (NX-D3, NX-D4; issue 10, D-223: was F9, Rules)
@@ -484,3 +484,6 @@
 - NXL-33 (sentence, say5): " <player>, <position>, rating <r>, age <a>, <potential> potential, <contract> ". a player in F9's roster with his contract (SX.8g)
 - NXA-01 (sentence, say5): " the salary cap is <cap>. your payroll is <payroll>, dead money <dead>, cap space <space>. ". F9 salary cap, the first line (SX.8g)
 - NXA-02 (sentence, say5): " your cap space is number <k> of 32. ". F9 salary cap, the second line
+- NXA-03 (sentence, say5): " <k>. the <team>, <space>. ". F9 salary cap, a team by cap space
+- NXA-10 (piece, piece): "<salary> for <y> years". a contract
+- NXA-11 (piece, piece): "<salary> for one year". a contract with one year left

@@ -6,7 +6,7 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 
 ## Counts
 
-- Texts: 2795.
+- Texts: 2817.
 - The clock (design section 5): 25.
 - Timeouts (design 6.3): 26.
 - Challenges and reviews (design 6.1, 6.2, 6.4): 46.
@@ -14,9 +14,9 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - Onside kicks (design section 8): 18.
 - Penalties (design section 9): 89.
 - Playbooks (design section 10): 830.
-- Menus and settings (design 10.4, 12): 251.
+- Menus and settings (design 10.4, 12): 254.
 - Statistics lines (C7, H11): 9.
-- Franchise (design section 11): 850.
+- Franchise (design section 11): 869.
 - The real coaches and players (NX-N, SX.11): 7.
 - The radio broadcast: the crew and its format (SY.1, BC.3, rule 0.27): 629.
 - Remark pools: TO 5, CHS 4, CHC 3, RVR 3, RVC 3, ON 3, QB 5, PN 4, BN 142, ASK 12, CKO 8, CBG 10, CSK 10, CTV 10, CTD 10, CFG 8, CFM 8, CTC 8, CTS 8, CFD 8, CRZ 8, CPN 8, CTM 8, CQE 8, CHT 8, CFN 8, CFT 6, CTT 8, CBO 8, SGN 4, CRW 3, SON 8, UPD 4, QUP 4, STA 6, ASN 4, SIN 6, SHT 8, SGO 4, NID 6, LID 6, DRV 6, CLK 4, CRG 20, CRS 20, CPC 24, CPI 18, CPT 12, CKR 10, CXR 12, STD 10, STV 8, SBG 8, SFD 6, SMW 6, SQE 6, SFN 8, SFT 4, NWB 4, NWU 4, NWC 4, NWS 4, NWL 4, NWY 4, NWZ 4, NWM 4, NWT 4, NWR 4, NWD 4, NWP 4, NWK 4, NWX 4, NWJ 4, NWH 4, IJA 3, IJB 3, IJC 3, IJD 3, IJE 3, IJF 3, IJG 3, IJH 3, IJK 3, IJL 3, IJM 3, IJX 4.
@@ -500,3 +500,10 @@ Remark pools (kind remark) are the DEFAULTS of the customizable file `remarks.tx
 - NXZ-53 (menu, say5): "Double A Gap". defense call D053 of the catalog (call, list dg05, SRC-SECONDARY)
 - NXZ-54 (menu, say5): "Nickel Blitz". defense call D054 of the catalog (call, list dg05, SRC-SECONDARY)
 - NXZ-55 (menu, say5): "Dime Blitz". defense call D055 of the catalog (call, list dg05, SRC-SECONDARY)
+- NXZ-56 (menu, say5): "Defensive Back Fire". defense call D056 of the catalog (call, list dg05, SRC-SECONDARY)
+- NXZ-57 (menu, say5): "Fire Zone". defense call D057 of the catalog (call, list dg06, SRC-OFFICIAL)
+- NXZ-58 (menu, say5): "Overload Blitz". defense call D058 of the catalog (call, list dg06, UNVERIFIED)
+- NXZ-59 (menu, say5): "Simulated Pressure". defense call D059 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-60 (menu, say5): "Creeper". defense call D060 of the catalog (call, list dg06, SRC-SECONDARY)
+- NXZ-61 (menu, say5): "Delayed Blitz". defense call D061 of the catalog (call, list dg06, UNVERIFIED)
+- NXZ-62 (menu, say5): "Cross Blitz". defense call D062 of the catalog (call, list dg06, UNVERIFIED)

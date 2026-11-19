@@ -10,6 +10,19 @@ This file lists everything new in each build of NFL Football 4, newest first, so
 - "N. F. L. rules" below means the game's default mode. "Classic" is the original game's exact mode (F9, Rules); most new things are in the N. F. L. rules only, the radio broadcast is in both.
 - Where a test says "Tell us", that is a question the maintainer wants answered.
 
+## Unreleased (since 1.0.6)
+
+### Elevate a practice squad player when one of your players is hurt
+From a tester's report on GitHub issue 19: his punter was out for three games, his team had no other punter, so the staff signed a made-up stand-in; he added a punter to his practice squad and found no way to play him. In the N. F. L. a team may bring up, or elevate, a practice squad player for one game, at most 2 a game and 3 times for one player in the regular season (any number of times in the play-offs); the player goes back to the practice squad after the game. Now, in a franchise with the N. F. L. rules, you can do that yourself. When one of your players is hurt and does not play this week, the question "who starts in his place?" (the to-do list, and F9, Franchise, injury report, the row "who starts for") lists your practice squad players of his position after your own players, each with "elevate him for this game" and the elevations he has left. When nobody of your team can play the place, the first answer is the staff's stand-in and your squad players follow, so the question now comes in that case too. And F9, Franchise, practice squad has a new second item, "elevate a player for this game": choose a squad player, then, if he could take more than one place, whose place; one Enter elevates him. Enter on a player you elevated sends him back to the squad. The elevated player starts in that place for this week's game, at his own rating but never higher than the hurt player's, and he is never hurt himself. The elevation is counted when the game is played. When a player cannot be elevated, the game says why: no elevations left, two already elevated for this game, or no hurt player of his position. With the staff handling the to-do list, the staff's rule decides as before. The sentence of F9, Franchise, injured reserve, when a player cannot go on reserve because too few players of his position would be left, now says to sign one or to elevate a squad player. F6 and the practice squad rules say all of it.
+
+**How to test:** in a franchise, wait until one of your players is out for this week (F9, Franchise, injury report). Add a free agent of his position to your practice squad if you have none (F9, Franchise, free agents, add to the practice squad). Then open F9, Franchise, practice squad, press Down once to "elevate a player for this game" and press Enter: choose the squad player, then press Enter to elevate him. You should hear that he is elevated and starts in place of the hurt player. In the injury report, the row "who starts for" now names him. Play the game: he should be named in the hurt player's place. After the game, the practice squad's list says one elevation fewer for him. Also try the injury report's row "who starts for": Enter lists your players and then your squad players.
+**Tell us:** a hurt player whose place you could not give to a squad player of his position, or a squad player who did not play after you elevated him.
+
+### The menus no longer repeat for a key code that no key has
+From the same tester's log on GitHub issue 19: while he held Alt, with JAWS running, the game received 13 key codes that no real key has (the code 252; a screen reader or another program sends such codes so that Alt alone opens no menu), and the menu said its item 13 times. The game now ignores the codes Windows lists as reserved or unassigned, in every menu and in both modes, and writes one log line for each.
+
+**How to test:** with JAWS running, in any menu of the game, hold Alt for a second and let it go. The menu should not repeat its item.
+
 ## 1.0.6 (2026-11-16, test build)
 
 Built from a tester's answer on GitHub issue 18: your depth chart in a franchise can go back to the real team's order. Everything of 1.0.5 and earlier below is in it.
@@ -196,32 +209,11 @@ From a tester's report (GitHub issue 9): "It says 4 teams can't be updated. I al
 **How to test:** start a franchise with the N. F. L. rules, then choose F9, Franchise, get the latest rosters (it needs the internet). The game should say where the rosters came from and, on most days, no team that could not be read. When it asks about your league, press Down twice and Enter: "Yes, all 32 teams, my own team too". You should hear how many players moved or joined; then look at your roster (F9, Franchise, roster) and your depth chart: your team should match its real team today.
 **Tell us:** if the game still says that some teams could not be read (and on what day), or if a player of your team is not where his real team has him.
 
-## 0.16.20 (2026-11-07, test build)
-
-One whistle, now really. From a tester's report on 0.16.19. Everything of 0.16.19 and earlier below is still to be tested too.
-
-### The tackles no longer blow the original game's whistle
-From a tester's report (GitHub issue 6): "two whistles appear to be used still." 0.16.18 made every whistle the one whistle the game made, but the original game's three tackle sounds (the pile up, two tacklers and one tackler) end in a referee whistle of their own, so every tackle still blew the original's whistle and every other dead ball the made one. With the N. F. L. rules the game now plays a tackle only up to the moment its old whistle began, then blows the one whistle at that same moment; a play takes as long as before. Your own whistle.wav replaces it there too. A tackle sound of your own (foot4, foot5 or foot6 in the sounds folder) should hold only the hit: it is played whole and the whistle follows it. The Classic rules keep the original game's sounds whole.
-
-**How to test:** play a game with the N. F. L. rules and listen to a run that is tackled, a completed pass and a sack: after the hit you should hear the same whistle as after an incomplete pass, a kick off and the end of a quarter, and no second, different whistle. Turn the stadium sounds off (F9, Rules, Stadium sounds) and listen again. A play with a flag still has two whistles of the same sound: the one that ends the play and the referee's for the flag.
-
-**Tell us:** if you still hear a whistle that is not the same as the others, and after what kind of play.
-
-## 0.16.19 (2026-11-07, test build)
-
-The changelog comes with every release now, and the Start menu opens it. From a tester's report. The four other reports of that night (injured reserve, the safeties and linebackers, the returners in trades, one whistle) were already fixed in 0.16.18; everything of 0.16.18 and earlier below is still to be tested too.
-
-### The changelog in every release, and in the Start menu
-From a tester's report (GitHub issue 5): "A change log needs to be included with every release so we know what to test for and what has been changed." Every release on GitHub now has, beside the installer, a file CHANGELOG-<version>.md: the whole changelog as it stood at that version, every item with how to test it. The release's notes carry that version's own part too. Once the game is installed, the Start menu has a new entry, "NFL Football 4 changelog, what is new", which opens this file in Notepad.
-
-**How to test:** open the newest release on the Releases page: below its notes, the assets should list CHANGELOG-<version>.md beside the installer; download it and read it. Install the game, open the Start menu, type "NFL Football 4 changelog" and press Enter: Notepad should open this changelog, with the installed version's section at the top.
-
-**Tell us:** if a release has no changelog file, or the Start menu entry opens nothing.
-
 ## Older versions
 
-The versions before 0.16.19 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
+The versions before 0.16.21 are in these files, newest first. Each is a markdown file in the `changelog` folder of this repository.
 
+- [0.16.19 to 0.16.20](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.19-to-0.16.20.md)
 - [0.16.16 to 0.16.18](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.16-to-0.16.18.md)
 - [0.16.15 to 0.16.15](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.15-to-0.16.15.md)
 - [0.16.14 to 0.16.14](https://github.com/joshknnd1982/nfl-football-4-audio-game/blob/master/changelog/CHANGELOG-0.16.14-to-0.16.14.md)

@@ -244,7 +244,9 @@ def finish_item(store, league, item: dict, answer: int, answers: int) -> tuple:
     elif item["kind"] == D.TODO_LINEUP:                      # D-143: say who starts (his choice, or the staff's)
         if chosen is not None:
             text = injury_flow.starts_text(league, item["player"], chosen)
-            debuglog.event("franchise", "lineup_chosen", week=item["week"], player=item["player"], starts=chosen.id, staff=answer == 0)   # rule 0.15
+            from . import practice
+            debuglog.event("franchise", "lineup_chosen", week=item["week"], player=item["player"], starts=chosen.id, staff=answer == 0,
+                           squad=answer > 0 and practice.is_pick(league, chosen.id))      # rule 0.15; D-247: a squad man brought up
     elif item["kind"] == D.TODO_DEMAND:
         text = people_flow.demand_result(getattr(store, "words", None), league, item, chosen, wanted=wanted)
     elif item["state"] == D.ITEM_SET:

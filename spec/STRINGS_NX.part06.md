@@ -1,10 +1,3 @@
-- NXC-20 (sentence, say2): " week <n> ". the real calendar's schedule (SZ.8), before each week's game in the place of the original's 'game number <n>': the weeks run 1 to 18 and a bye is a week too
-- NXC-21 (sentence, say2): " bye week. ". the real calendar's schedule (SZ.8): the week in which the player's team does not play
-- NXC-22 (menu, say5): " 1. see this week's games ". the main menu's first choice in the bye week (SZ.8), in the place of ' 1. play game '
-- NXC-23 (sentence, say2): " Your team has a bye this week. There is no game today. ". 'Today's game is ...' in the bye week (SZ.8)
-- NXC-24 (sentence, say2): " your team has a bye this week. ". the week's results in the bye week (SZ.8): after ' Games of week number <n>. ', in the place of the player's own result
-- NXC-25 (sentence, say4): " the top seeds, the <team> and the <other>, have the only byes of the wild card round. ". the end of a regular season on the real calendar (D-129, the N. F. L.'s 14-team play-offs), after the N. F. C. wild card teams: the A. F. C.'s seed 1, then the N. F. C.'s
-- NXC-26 (sentence, say4): " Your team won the division title over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the player's division title and his team won it
 - NXC-27 (sentence, say4): " The <other> won the division title over your team on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the player's division title and another team won it
 - NXC-28 (sentence, say4): " Your team won the last wild card place over the <other> on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and the player's team won it
 - NXC-29 (sentence, say4): " The <other> won the last wild card place over your team on a tie-breaker: <step>. ". the end of a regular season on the real calendar (S-E3, D-202): after the byes' sentence, when a tie-breaker decided the conference's last wild card place and another team won it
@@ -22,9 +15,9 @@
 - NXC-41 (piece, say4): "net points in all games". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'net points'
 - NXC-42 (piece, say4): "a coin toss". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'coin toss'
 - NXC-43 (piece, say4): "the order of its division". a step of the N. F. L.'s tie-breakers, the <step> of NXC-26 to NXC-29 (S-E3, D-202): the step 'division order'
-- NXH-72 (help, say5): " Practice squad: up to 16 players, at most 6 veterans, formed at the roster cut. A squad player is elevated when an injury leaves his position with nobody, up to 3 times a season. ". F6 while the franchise is in use (D-136)
+- NXH-72 (help, say5): " Practice squad: up to 16 players, at most 6 veterans. A squad player plays only when he is elevated for a game, 3 times a season at most: by you, in place of a hurt player, or by the staff. ". F6 while the franchise is in use (D-136) (GitHub issue 19, D-247)
 - NXH-73 (help, say5): " Practice squad: the players a team keeps to practice with it but who do not play unless they are elevated for a game or signed. Elevated: moved up from the practice squad for one game. ". F7 glossary while the franchise is in use (D-136)
-- NXH-74 (help, say5): " F9, Franchise, practice squad: sign a squad player to your roster, add a free agent to the squad, release a squad player, protect squad players, or sign a player from another team's practice squad. ". F6 while the franchise is in use (D-136)
+- NXH-74 (help, say5): " F9, Franchise, practice squad: elevate a player for this game, sign one to your roster, add a free agent, release one, protect squad players, or sign from another team's squad. ". F6 while the franchise is in use (D-136) (GitHub issue 19, D-247)
 - NXH-76 (help, say5): " The play-offs of a franchise on the real calendar are the N. F. L.'s: 7 teams in each conference, and only the top seed rests in the wild card round. The division round is reseeded. ". F6 while the franchise is in use (D-129)
 - NXH-87 (help, say5): " Equal records are settled by the N. F. L.'s tie-breakers, the games between the teams first, and the standings follow them. ". F6 while the franchise is in use, after NXH-76 (S-E3, D-202)
 - NXH-77 (help, say5): " F9, Franchise, get the latest N. F. L. calendar asks the game's page on GitHub for the newest schedule, only when you choose it. ". F6 while the franchise is in use (D-128)
@@ -125,7 +118,7 @@
 - NXJ-P32 (menu, say5): "the practice squad rules". F9 practice squad item (D-187)
 - NXJ-P33 (help, say5): " the N. F. L. practice squad: up to 16 players, and a 17th place for an international player of the league's pathway program. ". F9 practice squad: the rules item, then NXJ-P34 and P35 (D-187; spec/NFL_EXTRA_FEATURES section 22)
 - NXJ-P34 (help, say5): " at most 6 of them may be veterans, players with more than two seasons; the others have two seasons or fewer. any free agent of any position may join it. ". F9 practice squad: the rules item, after NXJ-P33 (D-187)
-- NXJ-P35 (help, say5): " a squad player may be brought up for a game 3 times in the regular season and any number of times in the play-offs, at most 2 a game, and you may sign him to your roster. ". F9 practice squad: the rules item, after NXJ-P34 (D-187)
+- NXJ-P35 (help, say5): " a squad player may be elevated for a game 3 times in the regular season and any number of times in the play-offs, at most 2 a game, in place of a hurt player. you may also sign him to your roster. ". F9 practice squad: the rules item, after NXJ-P34 (D-187) (GitHub issue 19, D-247)
 - NXJ-P36 (sentence, say5): " the <team> signed <player>, <position>, from your practice squad to their roster. your practice squad now has <n> players. ". the weekly report: another team signed one of the player's squad men (S-E2, D-200)
 - NXJ-P37 (menu, say5): "protect squad players". F9 practice squad item (S-E2, D-200)
 - NXJ-P38 (sentence, say5): " protect squad players: other teams may sign your squad players to their roster, except the 4 you protect. <m> of <n> are protected. enter protects a player or ends his protection. ". F9 practice squad: the protections list's title (S-E2, D-200)
@@ -180,7 +173,7 @@
 - NXI-R26 (sentence, say5): " you have no returns from injured reserve left this season. ". F9 injured reserve: every return used (D-216)
 - NXI-R27 (sentence, say5): " <player> has returned <n> times this season, the most the rules allow. ". F9 injured reserve: one man's returns used (D-216)
 - NXI-R28 (sentence, say5): " <player>'s practice window has closed, so he stays on injured reserve for the rest of the season. ". F9 injured reserve, and the week's injury report: a window closed (D-216)
-- NXI-R30 (sentence, say5): " if <player> goes, your team has too few players of his position group. sign one first. ". F9 injured reserve: a family minimum (D-216)
+- NXI-R30 (sentence, say5): " if <player> goes, your team has too few players of his position group. sign one to your roster first. to play a practice squad player this week only, elevate him instead. ". F9 injured reserve: a family minimum (D-216) (GitHub issue 19, D-247)
 - NXI-R31 (sentence, say5): " the game has begun, so the reserve lists stay as they are. ". F9 injured reserve inside a game (D-216)
 - NXI-R32 (sentence, say5): " injured reserve is a matter of the season. everyone on a reserve list comes back to his roster at the roster cut. ". F9 injured reserve outside the season (D-216)
 - NXI-R33 (sentence, say5): " a hurt player on injured reserve leaves your 53, so you can sign another player in his place. he must miss at least <n> games. ". F9 injured reserve, the rules: line 1 (D-216)
@@ -194,6 +187,25 @@
 - NXI-R41 (sentence, say5): " your roster is full, and nobody on it can be released for him now. ". F9 injured reserve: no man to release (D-216)
 - NXI-R42 (sentence, say5): " that cannot be done now. ". F9 injured reserve: any other reason (the log has it) (D-216)
 - NXI-R43 (sentence, say5): " <player> comes back on a new contract of <contract>. ". F9 injured reserve: before the confirmation, a man the real rosters put on a list has no contract and signs one at the market price (GitHub issue 8)
+- NXI-A05 (answer, say2): "<player>, <position>, the stand-in the staff signed, the staff's choice". the first answer of the who-starts item when nobody of the team can play the place (GitHub issue 19, D-247)
+- NXI-A06 (answer, say2): "<player>, <position>, of your practice squad, elevated by the staff, the staff's choice". the first answer of the who-starts item when the staff's stand-in is a squad man (D-136) (GitHub issue 19, D-247)
+- NXI-A07 (answer, say2): "<player>, <position>, of your practice squad, rating <r>, age <a>: elevate him for this game, <n> elevations left". an answer of the who-starts item: a squad man the player may elevate, the regular season (GitHub issue 19, D-247)
+- NXI-A08 (answer, say2): "<player>, <position>, of your practice squad, rating <r>, age <a>: elevate him for this game". an answer of the who-starts item: a squad man the player may elevate, the play-offs (GitHub issue 19, D-247)
+- NXI-65 (sentence, say2): " <get> is elevated from your practice squad for this game and starts in place of <give>. he goes back to the squad after the game. ". the who-starts item, F9's injury report or the practice squad elevated a squad man (GitHub issue 19, D-247)
+- NXH-90 (help, say5): " A hurt player who does not play: the to-do list and F9, Franchise, injury report ask who starts in his place. Your practice squad players are offered too: one you choose is elevated for that game. ". F6 while the franchise is in use, after NXH-42 (GitHub issue 19, D-247)
+- NXJ-P60 (menu, say5): "elevate a player for this game". F9 practice squad item, the second (GitHub issue 19, D-247)
+- NXJ-P61 (sentence, say5): " which squad player do you elevate for this week's game? he starts in place of a hurt player who does not play. your practice squad, the best first. ". F9 practice squad, elevate: the list's title (GitHub issue 19, D-247)
+- NXJ-P62 (sentence, say5): " elevated for this week's game, in place of <player>. ". F9 practice squad: after a squad man the player elevated (GitHub issue 19, D-247)
+- NXJ-P63 (sentence, say5): " <player> has used his <n> elevations this season, the most the N. F. L. allows. to play him again, sign him to your roster. ". F9 practice squad, elevate: none left (GitHub issue 19, D-247)
+- NXJ-P64 (sentence, say5): " <n> squad players are already elevated for this game, the most the N. F. L. allows. ". F9 practice squad, elevate: the game's limit (GitHub issue 19, D-247)
+- NXJ-P65 (sentence, say5): " no hurt player of <player>'s position misses this week's game, so there is no place for him. a squad player you elevate starts in place of a hurt player. ". F9 practice squad, elevate: no place (GitHub issue 19, D-247)
+- NXJ-P66 (sentence, say5): " <player> may start in place of more than one hurt player. in place of whom? ". F9 practice squad, elevate: the list of places' title (GitHub issue 19, D-247)
+- NXJ-P67 (sentence, say5): " <player>, <position>, does not play this week. <get> starts in his place now. ". F9 practice squad, elevate: a place (GitHub issue 19, D-247)
+- NXJ-P68 (sentence, say5): " elevate <get> from your practice squad for this week's game, to start in place of <give>? he has <n> elevations left this season. press enter to elevate him, or escape to say no. ". F9 practice squad, elevate: the question, the regular season (GitHub issue 19, D-247)
+- NXJ-P69 (sentence, say5): " elevate <get> from your practice squad for this game, to start in place of <give>? press enter to elevate him, or escape to say no. ". F9 practice squad, elevate: the question, the play-offs (GitHub issue 19, D-247)
+- NXJ-P70 (sentence, say5): " <player> is elevated for this week's game, in place of <give>. send him back to the practice squad? then <get> starts. press enter to send him back, or escape to keep him. ". F9 practice squad, elevate: a man elevated already (GitHub issue 19, D-247)
+- NXJ-P71 (sentence, say5): " <player> goes back to your practice squad, and <get> starts in place of <give>. ". F9 practice squad, elevate: sent back (GitHub issue 19, D-247)
+- NXJ-P72 (sentence, say5): " your team has no game this week, so nobody is elevated. ". F9 practice squad, elevate: a bye week (GitHub issue 19, D-247)
 
 ## The real coaches and players (NX-N, SX.11)
 
@@ -271,11 +283,3 @@
 - BN62 (remark, say): " It is loud enough down there that the offense will need hand signals and a lot of patience. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN63 (remark, say): " Crowd noise is the home team's extra player, and it is working overtime today. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
 - BN64 (remark, say): " A few clouds are rolling through, but nothing that should bother anyone on the field. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN65 (remark, say): " There is a hush before the snap and a roar after the whistle. That is football on the radio, too. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN66 (remark, say): " The grass is holding up well, and the footing looks good for both teams. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN67 (remark, say): " You can tell the fans are into it from the way they stand for every third down. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN68 (remark, say): " The players' breath is showing in the huddle. It is that kind of day. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN69 (remark, say): " <commentator> is taking notes over there, and I would not want to see the exam. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN70 (remark, say): " <commentator> never misses a replay, and I never miss a chance to ask for one. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN71 (remark, say): " If you hear a pen clicking, that is <commentator> working on something to tell you next. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)
-- BN72 (remark, say): " <commentator> and I have a bet going on the next play. I will not say who is winning. ". pool BN default: radio banter, the announcer's aside (rule 0.27; not drawn since BC.2, D-180: BC.3 draws it on the broadcast's own generator; customizable)

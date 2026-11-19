@@ -17,6 +17,7 @@ engine reaches it only through `Game.game_injuries` (None in every other game: C
 """
 from __future__ import annotations
 
+from ...data import debuglog
 from ...game import outcome as O
 from ...game.gamestate import other
 from ...game.setup import Roster
@@ -323,6 +324,12 @@ class GameInjuries:
         if self.state is None:
             return
         record = self.record
+        if self.league.team in self.teams:               # D-247 (issue 19): the squad men the player brought up used an elevation, and go back
+            from . import practice
+            side = 1 if self.teams[0] == self.league.team else 2
+            for pid, used in practice.after_game(self.league, self.league.team, self.week, self.staff_of(side)):
+                debuglog.event("franchise", "practice_elevation_used", week=self.week, season=self.league.season, player=pid, used=used,
+                               playoffs=practice.playoffs(self.league, self.week))      # rule 0.15
         for row in record["stand_ins"]:
             if I.stand_in(self.league, row[0], row[1]) is None:
                 self.league.injuries["stand_ins"].append(list(row))
@@ -376,8 +383,9 @@ def report_lines(league: LeagueRecord, week: int, back: list, words, pools, rnd,
         lines.append(_status_line(words, player, I.row_of(league, player.id), week, None, league))
     table = I.lineup(league, team, week, staff)
     for position in D.PLACE_GROUPS:                             # the stand-ins who play this week as the decisions stand (rested players rest); nobody plays in a bye week
-        if not league.has_bye(team, week) and any(table[i][0] == (I.STAND_IN, position) for i in D.PLACES_OF[position]):
-            row = I.stand_in(league, team, position)
+        standing = {table[i][1] for i in D.PLACES_OF[position] if table[i][0] == (I.STAND_IN, position)}
+        row = I.stand_in(league, team, position)
+        if not league.has_bye(team, week) and row is not None and row[2] in standing:      # D-247: a squad man the player brought up is not the row's man
             lines.append(X.text("NXI-21", player=_plain(row[2]), position=words.position(position)))
     names = [_plain(league.players[pid].name) for pid in back if pid in league.players and league.players[pid].team == team]
     if names:
@@ -446,26 +454,40 @@ def lineup_choices(league: LeagueRecord, item_: dict) -> list:
     return I.cover_choices(league, item_["player"], item_["week"])
 
 
-def choice_text(words, player, staff: bool) -> str:
+def choice_text(words, player, staff: bool, league: LeagueRecord | None = None) -> str:
+    """One answer of who starts in a hurt man's place. D-247 (issue 19): the staff's stand-in (NXI-A05, or NXI-A06 for a squad man the staff brought
+    up) and a man of the practice squad the player may bring up for this game (NXI-A07 with his elevations left, NXI-A08 in the play-offs)."""
+    if isinstance(player, I.StandInChoice):
+        return X.text("NXI-A06" if player.squad else "NXI-A05", player=_plain(player.name), position=words.position(player.position))
+    from . import practice
+    if league is not None and practice.is_pick(league, player.id):
+        if practice.playoffs(league, league.gtp):
+            return X.text("NXI-A08", player=_plain(player.name), position=words.position_for(player), r=player.rating, a=player.age)
+        left = max(0, practice.ELEVATIONS - practice.elevations(league, player))
+        return X.text("NXI-A07", player=_plain(player.name), position=words.position_for(player), r=player.rating, a=player.age, n=left)
     return X.text("NXI-A03" if staff else "NXI-A04", player=_plain(player.name), position=words.position_for(player), r=player.rating, a=player.age)
 
 
 def lineup_view(words, league: LeagueRecord, item_: dict) -> tuple:
     player = league.players[item_["player"]]
     situation = [X.text("NXI-60", player=_plain(player.name), position=words.position_for(player))]
-    answers = [choice_text(words, choice, index == 0) for index, choice in enumerate(lineup_choices(league, item_))]
+    answers = [choice_text(words, choice, index == 0, league) for index, choice in enumerate(lineup_choices(league, item_))]
     return situation, answers
 
 
 def starts_text(league: LeagueRecord, pid: int, sub) -> str:
+    """D-247: a squad man the player brought up says so, and that he goes back to the squad after the game (NXI-65)."""
+    from . import practice
+    if sub.id is not None and practice.is_pick(league, sub.id):
+        return X.text("NXI-65", get=_plain(sub.name), give=_plain(league.players[pid].name))
     return X.text("NXI-61", get=_plain(sub.name), give=_plain(league.players[pid].name))
 
 
-def starter_for(league: LeagueRecord, pid: int, week: int):
-    """The player who starts in the place of the player's injured man `pid` this week as things stand (his choice, else the staff's), or None (a stand-in)."""
+def starter_name(league: LeagueRecord, pid: int, week: int) -> str:
+    """The name of the man who starts in the place of the player's injured man `pid` this week as things stand (his choice, else the staff's; a stand-in
+    or a squad man brought up too, D-247)."""
     table = I.lineup(league, league.team, week, staff=False)
-    first = table[league.players[pid].place][0]
-    return league.players.get(first) if isinstance(first, int) else None
+    return table[league.players[pid].place][1]
 
 
 def result_text(league: LeagueRecord, pid: int, play: bool) -> str:
@@ -483,7 +505,5 @@ def list_lines(words, league: LeagueRecord, week: int, staff: bool) -> list:
         else:
             out.append((line, None))
         if not staff and I.cover_choices(league, player.id, week):        # D-143 (NX-B1): who starts in his place; Enter chooses
-            starter = starter_for(league, player.id, week)
-            if starter is not None:
-                out.append((X.text("NXI-62", player=_plain(player.name), get=_plain(starter.name)), ("start", player.id)))
+            out.append((X.text("NXI-62", player=_plain(player.name), get=_plain(starter_name(league, player.id, week))), ("start", player.id)))   # D-247: a stand-in too
     return out

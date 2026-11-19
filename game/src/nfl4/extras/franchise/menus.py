@@ -26,7 +26,7 @@ from . import history, honors_flow, market_flow, mode, news, signings_flow, staf
 from .league import team_ref
 
 ROSTER_ORDER = D.ROSTER_ORDER
-HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-43", "NXH-44", "NXH-45", "NXH-46", "NXH-72", "NXH-74",
+HELP_LINES = {"116": ("NXH-34",), "117": ("NXH-35", "NXH-37", "NXH-39", "NXH-40", "NXH-41", "NXH-42", "NXH-90", "NXH-43", "NXH-44", "NXH-45", "NXH-46", "NXH-72", "NXH-74",
                 "NXH-76", "NXH-87", "NXH-77", "NXH-78", "NXH-82"),
               "118": ("NXH-36", "NXH-38", "NXH-73")}   # F5, F6 and F7 (H12, while the franchise is in use)
 PICKS_TOLD = ("first", "mine", "all")                          # nx_fr_picks_told: which picks of the draft are told (design 7.3)
@@ -150,14 +150,16 @@ def franchise_menu(g, speech, keys) -> None:
             if not choices:
                 return X.text("NXI-64")
             words = _words(g)
-            names = [injury_flow.choice_text(words, choice, index == 0) for index, choice in enumerate(choices)]
+            names = [injury_flow.choice_text(words, choice, index == 0, league) for index, choice in enumerate(choices)]
             picked = ListPicker(speech, keys, X.text("NXI-63", player=league.players[pid].name), len(names), lambda i: names[i]).run()
             if picked is None:
                 return None
             injuries.choose(league, pid, None if picked == 0 else choices[picked].id)
             for item in [i for i in league.todo if i["kind"] == D.TODO_LINEUP and i["player"] == pid]:
                 league.todo.remove(item)           # the question about his place is answered
-            debuglog.event("franchise", "lineup_chosen", week=week, player=pid, starts=choices[picked].id, staff=picked == 0, where="F9")   # rule 0.15
+            from . import practice
+            debuglog.event("franchise", "lineup_chosen", week=week, player=pid, starts=choices[picked].id, staff=picked == 0, where="F9",
+                           squad=picked > 0 and practice.is_pick(league, choices[picked].id))      # rule 0.15; D-247: a squad man brought up
             store.save()                           # written, then told (B-X53)
             rows[:] = injury_flow.list_lines(_words(g), league, week, staff)
             return injury_flow.starts_text(league, pid, choices[picked])

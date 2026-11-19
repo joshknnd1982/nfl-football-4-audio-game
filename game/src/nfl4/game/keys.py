@@ -52,6 +52,13 @@ WINDOWS_KEYS = frozenset(range(0xA6, 0xB8))
 # types text (a "typing" context, game/prompts.py) they stay themselves, so typing is not disturbed (nfl4's names keep only letters, digits and spaces, as the original's did).
 KEY_OPEN_BRACKET, KEY_CLOSE_BRACKET, KEY_SEMICOLON, KEY_APOSTROPHE = 219, 221, 186, 222
 ALTERNATIVE_KEYS = {KEY_OPEN_BRACKET: KEY_PAGE_UP, KEY_CLOSE_BRACKET: KEY_PAGE_DOWN, KEY_SEMICOLON: KEY_HOME, KEY_APOSTROPHE: KEY_END}
+# GitHub issue 19 (D-248, fixesforgames B-W52): codes that no key of a keyboard sends. Microsoft's "Virtual-Key Codes" page (SRC-OFFICIAL,
+# learn.microsoft.com/windows/win32/inputdev/virtual-key-codes, read 2026-11-19) lists them as Reserved (0x07, 0x0A-0B, 0x5E, 0x88-8F,
+# 0xC1-C2, 0xE0, 0xFC VK_NONAME), Unassigned (0x0E-0F, 0x97-9F, 0xE8) or Undefined (0x3A-40); 0xFF is not on the page at all. Programs send
+# them to keep a lone Alt or Windows key from opening a menu: a tester's game got 13 of vk 252 in 0.4 seconds while he held Alt with JAWS
+# running, and each reached the menu as a key, so it said its item 13 times (rule 0.28 (3)). post() drops them with a log line, in every mode.
+NOT_KEYS = frozenset({0x07, 0x0A, 0x0B, 0x0E, 0x0F, 0x5E, 0xC1, 0xC2, 0xE0, 0xE8, 0xFC, 0xFF} | set(range(0x3A, 0x41)) | set(range(0x88, 0x90))
+                     | set(range(0x97, 0xA0)))
 SPEAKING = 2                         # SpVoice.Status.RunningState while the voice speaks
 
 
@@ -152,6 +159,9 @@ class KeyInput:
         code = int(key_code)
         if code in WINDOWS_KEYS:                    # D-205: a key of Windows (volume, media, browser) is never the game's
             debuglog.event("key", "ignored", vk=code, why="a key of Windows", ctx=debuglog.current_context())
+            return
+        if code in NOT_KEYS:                        # issue 19 (D-248): a code no key sends (a screen reader's or a tool's mask key)
+            debuglog.event("key", "ignored", vk=code, why="not a key", ctx=debuglog.current_context())
             return
         if code in ALTERNATIVE_KEYS and not debuglog.typing_now():     # rule 0.38 (D-207): the laptop's stand-in key
             debuglog.event("key", "alternative", vk=code, as_code=ALTERNATIVE_KEYS[code], ctx=debuglog.current_context())

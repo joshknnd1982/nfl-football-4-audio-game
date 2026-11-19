@@ -299,6 +299,129 @@ def count_week(league, week: int) -> int:
     return charged
 
 
+# ----- the player's own elevations (GitHub issue 19, D-247) -----
+# The tester (issue 19, 2026-11-18): "If a player is hurt you should be able to elevate a player. This is not possible." His punter was out for 3
+# games, his punter group had nobody fit, so the staff had signed a made-up stand-in; he added a punter to his practice squad and found no way to
+# play him. The NFL (CBA Article 33 Section 5 (b), SRC-OFFICIAL as overthecap.com prints it: "a maximum of two players from its Practice Squad" a
+# game, regular season and play-offs, the elevation made in the game's week; three a player in a regular season, SRC-SECONDARY, the 2026 trackers):
+# a club brings a squad man up for one game and he goes back to the squad after it, with no signing. So the player may now choose a squad man of
+# the place's family (`eligible`: PLACE_FAMILIES, RETURN_COVER for a returner) to start in place of a hurt man who does not play this week: the
+# to-do list's "who starts in his place?", F9's injury report and F9, Franchise, practice squad, "elevate a squad player". The choice is a row of
+# injuries["chosen"] ([the hurt man, the squad man]; no new field, league.sav format 21); `injuries.lineup` plays him there (a stand-in's identity,
+# so he is never hurt and has no carries, at his own rating but never above the hurt man's); `after_game` counts the elevation when the game is
+# played (the regular season only) and sends him back to the squad (the row goes); `injuries.settle` drops a row left over (a bye, a game never
+# finished). The staff's own elevations (`elevate`, `count_week`) are unchanged.
+
+def is_pick(league, pid) -> bool:
+    """The man chosen to start in a hurt man's place is a squad man of the player's team (an elevation, not a man of the roster)."""
+    player = league.players.get(pid)
+    return player is not None and player.status == STATUS and player.team == league.team
+
+
+def picks(league) -> dict:
+    """The player's elevations this week: the hurt man's id -> the squad man's id."""
+    return {hurt: sub for hurt, sub in league.injuries.get("chosen", ()) if is_pick(league, sub)}
+
+
+def staff_elevated(league, team: int, week: int) -> set:
+    """The ids of the team's squad men the staff stands in for a group with nobody fit this week (D-136; count_week's own rule)."""
+    by_name = {p.name: p for p in squad(league, team)}
+    out = set()
+    for row in league.injuries["stand_ins"]:
+        player = by_name.get(row[2]) if row[0] == team else None
+        if player is not None and injuries.needs_stand_in(league, team, row[1], week) and not injuries.bench_covers(league, team, row[1], week):
+            out.add(player.id)
+    return out
+
+
+def elevated_now(league, week: int, except_hurt=None, except_name: str = "") -> set:
+    """The ids of the squad men the player's team brings up for this week's game: the staff's (`staff_elevated`) and the player's own (`picks`),
+    but the pick for `except_hurt` and the staff's man named `except_name` (the place being chosen now: a change there brings up no extra man)."""
+    team = league.team
+    found = {pid for pid in staff_elevated(league, team, week) if league.players[pid].name != except_name}
+    found |= {sub for hurt, sub in picks(league).items() if hurt != except_hurt}
+    return found
+
+
+def family_of(league, hurt) -> str | None:
+    """The engine's place group a squad man must fit to start in the hurt man's place (None: he has no place on the game day)."""
+    if hurt is None or hurt.place < 0:
+        return None
+    return D.POSITION_OF_PLACE[hurt.place]
+
+
+def elevation_choices(league, hurt_id: int, week: int, staff_name: str = "") -> list:
+    """The squad men of the player's team who may be brought up to start in place of his hurt man this week, the best of the nearest family first
+    (`eligible`): not more than PER_GAME a game with the staff's (the man the staff stands in at this place, `staff_name`, does not count), not a man
+    already brought up for another place or standing in for a group, and in the regular season one with elevations left."""
+    hurt = league.players.get(hurt_id)
+    group = family_of(league, hurt)
+    if group is None or group == "RET" or league.practice["season"] != league.season:
+        return []                                          # (a game day's returners are the chart's roles of active men, injury_flow.game_returners)
+    team = league.team
+    if len(elevated_now(league, week, except_hurt=hurt_id, except_name=staff_name)) >= PER_GAME:
+        return []
+    busy = {sub for h, sub in picks(league).items() if h != hurt_id}
+    standing = {row[2] for row in league.injuries["stand_ins"] if row[0] == team}
+    return [p for p in eligible(league, team, group, week) if p.id not in busy and p.name not in standing]
+
+
+def elevate_problem(league, player, week: int) -> str | None:
+    """Why the squad man cannot be brought up for this week's game at all (a short reason), or None: the per-place checks are `places_for`."""
+    if player is None or player.status != STATUS or player.team != league.team:
+        return "not a player of the practice squad"
+    if not playoffs(league, week) and elevations(league, player) >= ELEVATIONS:
+        return "no elevations left"
+    return None
+
+
+def places_for(league, player, week: int) -> list:
+    """The player's hurt men who do not play this week and whose place this squad man may take (`elevation_choices`), in place order. When it is
+    empty, `len(elevated_now(league, week)) >= PER_GAME` tells the game's limit from "no place of his family"."""
+    found = []
+    try:
+        staff_table = injuries.lineup(league, league.team, week, staff=False, use_chosen=False)
+    except injuries.LeagueError:                           # (a league the lineup cannot make: nothing to offer)
+        return []
+    for hurt, _state in injuries.hurt_of(league, league.team, week):
+        if hurt.place < 0 or injuries.plays(league, hurt, week, staff=False):
+            continue
+        first = staff_table[hurt.place]
+        staff_name = first[1] if not isinstance(first[0], int) else ""
+        if any(p.id == player.id for p in elevation_choices(league, hurt.id, week, staff_name)):
+            found.append(hurt)
+    return found
+
+
+def after_game(league, team: int, week: int, staff: bool) -> list:
+    """The player's game of `week` was played (injury_flow.GameInjuries.commit, before its injuries join): every squad man who started in a hurt
+    man's place by the player's choice used one elevation (the regular season; the play-offs count none) and goes back to the squad (his row of the
+    choices goes). Returns [(player id, elevations used)] for the log."""
+    if team != league.team:
+        return []
+    played: list = []
+    if not staff:
+        try:
+            injuries.lineup(league, team, week, staff=False, elevated=played)
+        except injuries.LeagueError:                       # (the game was played with this lineup; a league that cannot make it again counts nobody)
+            played = []
+    counted = []
+    for player in played:
+        if not playoffs(league, week):
+            key = str(player.id)
+            league.practice["elevations"][key] = league.practice["elevations"].get(key, 0) + 1
+        counted.append((player.id, elevations(league, player)))
+    drop_picks(league)
+    return counted
+
+
+def drop_picks(league) -> int:
+    """The player's elevations end with the game (or the week): every choice of a squad man goes (a man since signed to the roster stays chosen)."""
+    before = len(league.injuries.get("chosen", []))
+    league.injuries["chosen"] = [row for row in league.injuries.get("chosen", []) if not is_pick(league, row[1])]
+    return before - len(league.injuries["chosen"])
+
+
 def report_lines(league, words) -> list:
     """The weekly injury report's lines for the player's own squad players standing in (NXJ-P18): who is elevated, for which group, and the
     elevations he has left in the regular season."""

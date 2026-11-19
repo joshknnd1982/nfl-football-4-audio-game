@@ -5,6 +5,8 @@ game (the free agents' menu's own conditions, `signings_flow.closed_reason`, exc
 signed then too):
 
 * hear the practice squad: every squad player, the best first, with his position, age, rating and the elevations he has left;
+* elevate a squad player for this week's game (GitHub issue 19, D-247): a squad man starts in place of a hurt man of his family who does not play
+  this week, for this game only (the same choice as the injury report's "who starts for"); Enter on a man brought up sends him back;
 * sign a player to your roster: a squad player, and, when his group has no open place, the player of the group to release (his dead money said);
   one confirmation; he signs for the minimum for one season;
 * add a free agent to the squad (D-187): the position first (the Franchise's families), then that position's free agents of the season (the F9 free
@@ -32,9 +34,91 @@ from .signings_flow import _surnames, release_line
 
 def squad_line(words, league, player) -> str:
     if P.playoffs(league, league.gtp):                           # the play-offs: no limit of elevations
-        return X.text("NXJ-P01", player=words.named(player), position=words.position_for(player), a=player.age, r=player.rating)
-    left = max(0, P.ELEVATIONS - P.elevations(league, player))
-    return X.text("NXJ-P04", player=words.named(player), position=words.position_for(player), a=player.age, r=player.rating, n=left)
+        line = X.text("NXJ-P01", player=words.named(player), position=words.position_for(player), a=player.age, r=player.rating)
+    else:
+        left = max(0, P.ELEVATIONS - P.elevations(league, player))
+        line = X.text("NXJ-P04", player=words.named(player), position=words.position_for(player), a=player.age, r=player.rating, n=left)
+    hurt = next((h for h, sub in P.picks(league).items() if sub == player.id), None)
+    if hurt is not None:                                         # D-247: brought up for this week's game by the player
+        line += X.text("NXJ-P62", player=league.players[hurt].name)
+    return line
+
+
+def elevate_flow(g, speech, keys, store, words) -> str | None:
+    """GitHub issue 19 (D-247): bring a squad man up for this week's game, to start in place of a hurt man of his family who does not play, or send a
+    man brought up back to the squad. The squad man first, then (when he may take more than one place) whose place, one confirmation; made and
+    written, then told (B-X53), and logged (rule 0.15). Returns the sentence to say (None when the player left with Escape)."""
+    from . import injuries as I
+    from . import injury_flow
+    league = store.league
+
+    def say(text: str) -> None:
+        speech.stop()
+        speech.say_async(text)
+
+    def confirmed(text: str) -> bool:
+        say(text)
+        return keys.read_key() == KEY_ENTER
+
+    def pick_from(title: str, lines: list):
+        return ListPicker(speech, keys, title, len(lines), lambda i: lines[i]).run()
+
+    reason = closed_reason(g, league)
+    if reason is not None:
+        return reason
+    week = league.gtp
+    if not P.playoffs(league, week) and league.has_bye(league.team, week):
+        return X.text("NXJ-P72")
+    settings = getattr(getattr(g, "options", None), "settings", None)
+    if settings is not None and getattr(settings.game, "nx_fr_auto", False):
+        return X.text("NXI-55")                                   # the staff handles the lineup: its rule decides at the kick-off
+    members = P.squad(league, league.team)
+    if not members:
+        return X.text("NXJ-P05")
+    index = pick_from(X.text("NXJ-P61"), [squad_line(words, league, p) for p in members])
+    if index is None:
+        return None
+    player = members[index]
+    current = next((h for h, sub in P.picks(league).items() if sub == player.id), None)
+    if current is not None:                                       # brought up already: send him back to the squad?
+        I.choose(league, current, None)
+        staff_name = injury_flow.starter_name(league, current, week)
+        I.choose(league, current, player.id)
+        if not confirmed(X.text("NXJ-P70", player=player.name, give=league.players[current].name, get=staff_name)):
+            return X.text("NXI-R40", player=player.name)
+        I.choose(league, current, None)
+        debuglog.event("franchise", "practice_elevation_undone", week=week, season=league.season, player=player.id, hurt=current)   # rule 0.15
+        store.save()
+        return X.text("NXJ-P71", player=player.name, get=staff_name, give=league.players[current].name)
+    problem = P.elevate_problem(league, player, week)
+    if problem == "no elevations left":
+        return X.text("NXJ-P63", player=player.name, n=P.ELEVATIONS)
+    if problem is not None:
+        return X.text("NXJ-S18")
+    places = P.places_for(league, player, week)
+    if not places:
+        if len(P.elevated_now(league, week)) >= P.PER_GAME:
+            return X.text("NXJ-P64", n=P.PER_GAME)
+        return X.text("NXJ-P65", player=player.name)
+    hurt = places[0]
+    if len(places) > 1:
+        lines = [X.text("NXJ-P67", player=words.named(h), position=words.position_for(h), get=injury_flow.starter_name(league, h.id, week))
+                 for h in places]
+        chosen = pick_from(X.text("NXJ-P66", player=player.name), lines)
+        if chosen is None:
+            return None
+        hurt = places[chosen]
+    asked = (X.text("NXJ-P69", get=player.name, give=hurt.name) if P.playoffs(league, week) else
+             X.text("NXJ-P68", get=player.name, give=hurt.name, n=max(0, P.ELEVATIONS - P.elevations(league, player))))
+    if not confirmed(asked):
+        return X.text("NXI-R40", player=player.name)
+    I.choose(league, hurt.id, player.id)
+    for item in [i for i in league.todo if i["kind"] == D.TODO_LINEUP and i["player"] == hurt.id]:
+        league.todo.remove(item)                                  # the question about his place is answered
+    debuglog.event("franchise", "practice_elevated", week=week, season=league.season, player=player.id, position=player.position or player.pos,
+                   hurt=hurt.id, used=P.elevations(league, player), playoffs=P.playoffs(league, week))      # rule 0.15
+    store.save()                                                  # made and written, then told (B-X53)
+    return X.text("NXI-65", get=player.name, give=hurt.name)
 
 
 def agent_line(words, player) -> str:
@@ -177,6 +261,7 @@ def practice_menu(g, speech, keys, store, words) -> None:
     from . import squad_moves_flow as MF                            # S-E2 (D-200): protections and the other squads
 
     items = [Item(lambda: X.text("NXJ-P20"), enter=hear),
+             Item(lambda: X.text("NXJ-P60"), enter=lambda: elevate_flow(g, speech, keys, store, words)),      # issue 19 (D-247)
              Item(lambda: X.text("NXJ-P21"), enter=promote),
              Item(lambda: X.text("NXJ-P22"), enter=add),
              Item(lambda: X.text("NXJ-P23"), enter=release),
@@ -264,4 +349,4 @@ def add_flow(g, speech, keys, store, words) -> str | None:
     return X.text("NXJ-P15", player=player.name) if release is None else X.text("NXJ-P27", give=gone, get=player.name)
 
 
-__all__ = ["practice_menu", "squad_line", "add_flow", "agent_line", "D"]
+__all__ = ["practice_menu", "squad_line", "add_flow", "agent_line", "elevate_flow", "D"]

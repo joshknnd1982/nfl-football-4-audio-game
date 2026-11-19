@@ -184,8 +184,22 @@ def needs_stand_in(league: LeagueRecord, team: int, position: str, week: int, ou
 
 # ----- who plays each place -----
 
+def _squad_fits(league: LeagueRecord, team: int, pick, position: str, week: int) -> bool:
+    """D-247 (issue 19): the player's chosen man is a squad man of the team who may be brought up for a place of `position` this week."""
+    from . import practice
+    if pick is None or pick.status != practice.STATUS or pick.team != team:
+        return False
+    family = practice.RETURN_COVER if position == "RET" else practice.PLACE_FAMILIES.get(position, (position,))
+    return pick.pos in family and (practice.playoffs(league, week) or practice.elevations(league, pick) < practice.ELEVATIONS)
+
+
+def _per_game() -> int:
+    from . import practice
+    return practice.PER_GAME
+
+
 def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozenset(), extra_stand_ins=(), make=None, hurt_before=None,
-           use_chosen: bool = True) -> list:
+           use_chosen: bool = True, elevated: list | None = None) -> list:
     """The 34 places as they are played in the game of `week`: (identity, name, rating), identity the player's id or (STAND_IN, position). A place with
     nobody to play it takes the team's stand-in of its position; `make(position)` makes one when there is none (the week's `settle`, and a game in
     progress), else that is an error (every lineup after the week's draws has the stand-ins it needs). A place a substitute plays (the next man up, a
@@ -202,9 +216,22 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
     D-149 (NX-B2b, the 53-man roster): the staff's first choice for a hurt man's place is the best man of the team's bench of his position who plays (for a
     returner, a returner of the bench), each bench man once; he plays at his own rating but never above the hurt man's (no injury is a gain). A hurt
     quarterback's place so goes to the backup quarterback before any stand-in. The player may choose a bench man too. Only then the next man up, then the
-    stand-in (whose draw is still made in `settle`, so the league's draws stay the same)."""
+    stand-in (whose draw is still made in `settle`, so the league's draws stay the same).
+
+    D-247 (GitHub issue 19): the player's choice may be a man of his practice squad (practice.elevation_choices): he is brought up for this game and
+    plays the place with a stand-in's identity (never hurt, no carries) at his own rating, never above the hurt man's; at most practice.PER_GAME such
+    men, each once. `elevated`: a list the men brought up so are appended to (practice.after_game counts them)."""
     places: list = [None] * D.PLACE_COUNT
     chosen = chosen_map(league) if use_chosen and team == league.team and not staff else {}
+    squad_used: list = []                                      # D-247: the squad men the player brings up, in place order
+
+    def squad_entry(pick, hurt, position):
+        if pick is None or pick in squad_used or len(squad_used) >= _per_game() or not _squad_fits(league, team, pick, position, week):
+            return None
+        squad_used.append(pick)
+        if elevated is not None:
+            elevated.append(pick)
+        return (STAND_IN, position), pick.name, min(max(D.RATING_MIN, pick.rating), max(D.RATING_MIN, hurt.rating))
     playing: dict = {}
     known = rows(league)
     if hurt_before is not None:
@@ -264,6 +291,10 @@ def lineup(league: LeagueRecord, team: int, week: int, staff: bool, out=frozense
             if pick is not None and pick.id in playing and pick in bench_men.get(position, ()) and pick.id not in used_bench:
                 places[index] = bench_entry(pick, player)              # D-143, D-149: the player's choice, a man of his bench
                 continue
+            brought = squad_entry(pick, player, position) if pick is not None and pick.id not in playing else None
+            if brought is not None:
+                places[index] = brought                                # D-247: the player's choice, a man of his practice squad brought up
+                continue
             man = from_bench(position)
             if man is not None:
                 places[index] = bench_entry(man, player)               # D-149: the staff's choice, the best man of the bench
@@ -320,10 +351,22 @@ def choose(league: LeagueRecord, pid: int, sub: int | None) -> None:
     league.injuries["chosen"] = kept
 
 
+class StandInChoice:
+    """D-247 (issue 19): the staff's choice for a place nobody of the team can play this week, its stand-in: a man signed for the weeks (made up),
+    or a squad man the staff brought up (`squad`). Choosing it keeps the staff's rule (no choice is kept), as the first answer always does."""
+    id = None
+
+    def __init__(self, name: str, position: str, rating: int, squad: bool = False):
+        self.name, self.position, self.rating, self.squad = name, position, rating, squad
+
+
 def cover_choices(league: LeagueRecord, pid: int, week: int) -> list:
     """Who may start in place of the player's injured man `pid` this week: the staff's choice first (the next man up, the man today's rule picks), then
     every other player of his group who plays (for a returner: the backs and receivers who play, but the other returner), the best first. [] when he plays,
-    when the group has nobody fit (the staff's stand-in plays) or when there is only one man to choose (nothing to ask)."""
+    or when there is only one man to choose (nothing to ask).
+
+    D-247 (GitHub issue 19): then the men of his practice squad the player may bring up for this game (practice.elevation_choices); and when nobody of
+    the team can play the place (the staff's stand-in plays) the first choice is that stand-in (a StandInChoice) and the squad men follow."""
     player = league.players.get(pid)
     if player is None or player.status != "active" or player.team != league.team or player.place < 0:
         return []                                         # (SR.5: a hurt man the game day does not use leaves no place to fill)
@@ -335,8 +378,12 @@ def cover_choices(league: LeagueRecord, pid: int, week: int) -> list:
     except LeagueError:
         return []
     first = staff_table[player.place][0]
-    if not isinstance(first, int):
-        return []                                         # a stand-in (or an elevated squad player): nobody of his own team is fit
+    from . import practice
+    if not isinstance(first, int):                        # a stand-in (or a squad man the staff brought up): nobody of his own team is fit
+        name = staff_table[player.place][1]
+        standing = StandInChoice(name, D.POSITION_OF_PLACE[player.place], staff_table[player.place][2], name in practice.names(league, team))
+        choices = [standing] + practice.elevation_choices(league, pid, week, staff_name=name)
+        return choices if len(choices) > 1 else []
     place_group = D.POSITION_OF_PLACE[player.place]               # SR.5: the place he plays (a 3-4 edge man at linebacker, a receiver who returns)
     if place_group == "RET":
         returners = {o.id for o in league.group_of(team, "RET") if o is not None}
@@ -346,7 +393,7 @@ def cover_choices(league: LeagueRecord, pid: int, week: int) -> list:
         group += [q for q in league.bench(team, place_group) if q.pos != player.pos]
     group += league.bench(team, player.pos)                       # D-149: the men of the roster without a place may start in his place too
     others = sorted((q for q in group if q.id not in (pid, first) and plays(league, q, week, staff=False)), key=lambda q: (-q.rating, q.place))
-    choices = [league.players[first]] + others
+    choices = [league.players[first]] + others + practice.elevation_choices(league, pid, week)      # D-247: the squad men last
     return choices if len(choices) > 1 else []
 
 
@@ -563,6 +610,8 @@ def settle(league: LeagueRecord, week: int, rnd, surnames: list, done: WeekInjur
     league.injuries["hurt"][:] = keep
     still = {row[0] for row in keep}
     league.injuries["chosen"] = [row for row in league.injuries.get("chosen", []) if row[0] in still]     # D-143: a choice ends when he is back
+    from . import practice
+    practice.drop_picks(league)                                # D-247: a squad man brought up for last week's game is back on the squad
     for team in range(1, D.TEAMS + 1):
 
         def make(position, team=team):
